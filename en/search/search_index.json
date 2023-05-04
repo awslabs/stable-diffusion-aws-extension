@@ -1,0 +1,1 @@
+{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"]},"docs":[{"location":"","title":"Welcome","text":"<p>Stable Diffusion AWS Extension</p>"},{"location":"#placeholder","title":"Placeholder","text":""},{"location":"#placeholder-1","title":"Placeholder 1","text":""},{"location":"#placeholder-2","title":"Placeholder 2","text":""}]}
