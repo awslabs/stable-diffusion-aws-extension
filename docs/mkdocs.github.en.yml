@@ -8,19 +8,19 @@ theme:
 nav:
   - Implementation Guide:
     - Welcome: index.md
-    - Cost: cost.md
-    - Architecture overview: architecture.md
-    - Security: security.md
-    - Design considerations: regions.md
-    - CloudFormation template: template.md
-    - Automated deployment:
-        - Launch CloudFormation stack: deployment.md
-        - Update CloudFormation stack: deploy-add-delete-api.md 
-    - API Reference:
-      - Overview: api-explorer.md
-    - Upgrade the solution: upgrade.md
-    - Uninstall the solution: uninstall.md
-    - Additional resources: additional-resources.md
-    - FAQ: faq.md
-    - Source code: source.md
-    - Release Notes: revisions.md
+    # - Cost: cost.md
+    # - Architecture overview: architecture.md
+    # - Security: security.md
+    # - Design considerations: regions.md
+    # - CloudFormation template: template.md
+    # - Automated deployment:
+    #     - Launch CloudFormation stack: deployment.md
+    #     - Update CloudFormation stack: deploy-add-delete-api.md 
+    # - API Reference:
+    #   - Overview: api-explorer.md
+    # - Upgrade the solution: upgrade.md
+    # - Uninstall the solution: uninstall.md
+    # - Additional resources: additional-resources.md
+    # - FAQ: faq.md
+    # - Source code: source.md
+    # - Release Notes: revisions.md
