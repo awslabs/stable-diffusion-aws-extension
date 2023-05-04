@@ -1,0 +1,5 @@
+site_name: Stable Diffusion AWS Extension
+nav:
+  - Home: index.md
+theme: material
+
