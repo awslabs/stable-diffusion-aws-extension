@@ -1,0 +1,39 @@
+INHERIT: ./mkdocs.base.yml
+site_name: xxx解决方案
+site_description: xxx解决方案实施指南
+docs_dir: zh
+site_dir: ./site/zh
+theme:
+  language: zh
+nav:
+  - 实施指南:
+    - 方案概述:
+        - 概述: solution-overview/index.md
+        - 功能和优势: solution-overview/features-and-benefits.md
+        - 客户用例: solution-overview/use-cases.md
+        - 术语表: solution-overview/concepts.md
+    - 架构概览:
+        - 架构图: architecture-overview/architecture.md
+        - 架构设计思路: architecture-overview/design-considerations.md
+        - 架构细节: architecture-overview/architecture-details.md
+    - 部署前的规划:
+        - 成本预估: plan-deployment/cost.md
+        - 安全信息: plan-deployment/security.md
+        - 区域支持: plan-deployment/regions.md
+        - 配额信息: plan-deployment/quotas.md
+    - 部署解决方案:
+        - 模板信息: deployment/template.md
+        - 部署步骤: deployment/deployment.md
+    - 更新解决方案: update.md
+    - 卸载解决方案: uninstall.md
+    - 用户指南: user-guide/user-guide.md
+    - 开发者指南:
+        - 源代码: developer-guide/source.md
+    - 故障排除: troubleshooting.md
+    - 常见问题解答: faq.md 
+    - 文档修订信息: revisions.md
+    - 贡献人员: contributors.md
+
+
+
+

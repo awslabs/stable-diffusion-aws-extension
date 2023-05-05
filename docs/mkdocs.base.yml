@@ -1,0 +1,40 @@
+site_name: <solution name>
+site_url: https://awslabs.github.io/<solution-name>/
+repo_url: https://github.com/awslabs/<solution-name>
+repo_name: awslabs/<solution-name>
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+  favicon: images/aws-solutions.png
+  logo: images/aws-solutions.png
+  icon:
+      repo: fontawesome/brands/github
+  language: en
+
+extra:
+  generator: false
+  copyright: Copyright &copy; 2020 - 2023 Amazon Web Services
+  alternate:
+    - name: English
+      link: /<solution-name>/en/
+      lang: en
+    - name: 简体中文
+      link: /<solution-name>/zh/
+      lang: zh
+  bucket: aws-gcr-solutions
+  version: develop
+
+plugins:
+  - search
+  - include-markdown
+  - macros
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+
+

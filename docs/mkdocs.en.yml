@@ -1,0 +1,35 @@
+INHERIT: ./mkdocs.base.yml
+docs_dir: en
+site_dir: ./site/en
+theme:
+  language: en
+nav:
+  - Implementation Guide:
+    - Solution Overview:
+        - Overview: solution-overview/index.md
+        - Features and benefits: solution-overview/features-and-benefits.md
+        - Use cases: solution-overview/use-cases.md
+        - Concepts and definitions: solution-overview/concepts.md
+    - Architecture Overview:
+        - Architecture diagram: architecture-overview/architecture.md
+        - AWS Well-Architected design considerations: architecture-overview/design-considerations.md
+        - Architecture details: architecture-overview/architecture-details.md
+    - Plan your deployment:
+        - Cost: plan-deployment/cost.md
+        - Security: plan-deployment/security.md
+        - Supported regions: plan-deployment/regions.md
+        - Quotas: plan-deployment/quotas.md
+    - Deploy the solution:
+        - AWS CloudFormation template: deployment/template.md
+        - Deployment: deployment/deployment.md
+    - Update the solution: update.md
+    - Uninstall the solution: uninstall.md
+    - Use the solution: user-guide/user-guide.md
+    - Developer guide:
+        - Source code: developer-guide/source.md
+    - Troubleshooting: troubleshooting.md
+    - FAQ: faq.md 
+    - Revisions: revisions.md
+    - Contributors: contributors.md
+    - Notices: notices.md
+
