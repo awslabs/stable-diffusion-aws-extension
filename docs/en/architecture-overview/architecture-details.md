@@ -1,0 +1,1 @@
+This section describes the components and AWS services that make up this solution and the architecture details on how these components work together.
