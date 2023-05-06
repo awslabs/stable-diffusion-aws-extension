@@ -1,3 +1,24 @@
+# Stable Diffusion AWS Extensions
+
+## Introduction
+
+An extension of Stable Diffusion web UI, that aims to help customers quickly and conveniently utilize the powerful features of Amazon SageMaker for AIGC-related inference and training tasks, without worrying about performance bottlenecks and engineering issues such as request load balancing that may arise from single-machine deployment.
+
+As this solution is installed via an open source community plugin, users do not need to change their current user behavior or learn a new user interface platform, thus improving the user experience. At the same time, the non-intrusive code modification of this plugin helps users quickly catch up with the iterative community-related features. The supported features can be found [here](https://github.com/aws-samples/stable-diffusion-aws-extension/edit/main/README.md#features-supported).
+
+
+## Features Supported
+- txt2img
+- Dreambooth VXXX
+- ControlNet Vxxx
+- LoRa Vxxx
+
+## Installation
+
+
+## Documentation
+ The implementation guide can be found [here]().
+
 
 ## For contributor
 Setup your repo first:
