@@ -176,8 +176,8 @@ def get_model_list_by_type(model_type):
         ckpt_type = ckpt["type"]
         for ckpt_name in ckpt["name"]:
             ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-            checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
-            checkpoint_list.append(ckpt_name)
+            checkpoint_info[ckpt_type][ckpt_name[:-4]] = ckpt_s3_pos
+            checkpoint_list.append(ckpt_name[:-4])
 
     return checkpoint_list
 
@@ -218,7 +218,7 @@ def refresh_all_models():
             checkpoint_info[ckpt_type] = {} 
             for ckpt_name in ckpt["name"]:
                 ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-                checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+                checkpoint_info[ckpt_type][ckpt_name[:-4]] = ckpt_s3_pos
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
     log = "start upload model to s3..."
@@ -808,9 +808,10 @@ def create_ui():
             
             gr.HTML(value="Deploy New SageMaker Endpoint")
             with gr.Row():
-                instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
+                instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
+                instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox")
                 sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
-                sagemaker_deploy_button.click(sagemaker_deploy, inputs = [instance_type_textbox])
+                sagemaker_deploy_button.click(sagemaker_deploy, inputs = [instance_type_textbox, instance_count_textbox])
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", open=False):
@@ -819,11 +820,17 @@ def create_ui():
                 primary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_primary_model_name_in_the_cloud", label="Primary model (A) in the cloud")
                 create_refresh_button(primary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_A_in_the_cloud")
 
-                secondary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_secondary_model_name_in_the_cloud", label="secondary model (B) in the cloud")
+                secondary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_secondary_model_name_in_the_cloud", label="Secondary model (B) in the cloud")
                 create_refresh_button(secondary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_B_in_the_cloud")
 
-                tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_tertiary_model_name_in_the_cloud", label="tertiary model (C) in the cloud")
+                tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_tertiary_model_name_in_the_cloud", label="Tertiary model (C) in the cloud")
                 create_refresh_button(tertiary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_C_in_the_cloud")
+            # with gr.Row():
+            #     merge_job_dropdown = gr.Dropdown(merge_job_ids,
+            #                                 label="Merge Job IDs",
+            #                                 elem_id="merge_job_ids_dropdown"
+            #                                 )
+            #     txt2img_merge_job_ids_refresh_button = modules.ui.create_refresh_button(merge_job_dropdown, update_txt2img_merge_job_ids, lambda: {"choices": txt2img_merge_job_ids}, "refresh_txt2img_merge_job_ids")
             with gr.Row():
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge", variant='primary')
                 modelmerger_merge_on_cloud.click(
@@ -836,4 +843,4 @@ def create_ui():
                     outputs=[
                     ])
 
-    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, generate_on_cloud_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_textbox, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, generate_on_cloud_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_textbox, instance_count_textbox, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
