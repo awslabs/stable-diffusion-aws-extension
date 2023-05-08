@@ -51,11 +51,12 @@ function txt2img_config_save() {
 
                 put_with_xmlhttprequest(url, config_data)
                     .then((response) => {
-                        console.log(response);
+                        console.log('The configuration has been successfully uploaded to s3');
                         // Trigger a simple alert after the HTTP PUT has completed
                         alert(
                             "The configuration has been successfully uploaded."
                         );
+
                         // TODO: meet the cors issue, need to implement it later
                         // let inference_url = remote_url + 'inference/run-sagemaker-inference';
                         // console.log("api-key is ", api_key)
@@ -545,10 +546,10 @@ function scrap_ui_component_value_with_default(config) {
     );
     
     config["script_list"] = getElementValue(
-        "#script_list > label > div > div.wrap-inner.svelte-1g4zxts",
-        "textContent",
+        "#script_list > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "value",
         ""
-    ).textContent;
+    );
     
     config["script_txt2txt_xyz_plot_x_type"] = getElementValue(
         "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
