@@ -105,7 +105,7 @@ def getEndpointDeploymentJobList():
     try:
         sagemaker = boto3.client('sagemaker')
         ddb = boto3.resource('dynamodb')
-        endpoint_deployment_table = ddb.Table('SdAsyncInferenceStack-dev-SDendpointdeploymentjobC9FD0CE7-189DH131ZIB6G')
+        endpoint_deployment_table = ddb.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
         response = endpoint_deployment_table.scan()
         logger.info(f"endpoint deployment job list response is {str(response)}")
@@ -113,18 +113,20 @@ def getEndpointDeploymentJobList():
         # Get the list of SageMaker endpoints
         list_results = sagemaker.list_endpoints()
         sagemaker_endpoints = [ep_info['EndpointName'] for ep_info in list_results['Endpoints']]
+        logger.info(str(sagemaker_endpoints))
 
         # Filter the endpoint job list
         filtered_endpoint_jobs = []
         for job in response['Items']:
-            endpoint_name = job['endpoint_name']
-            deployment_job_id = job['EndpointDeploymentJobId']
+            if 'endpoint_name' in job:  
+                endpoint_name = job['endpoint_name']
+                deployment_job_id = job['EndpointDeploymentJobId']
 
-            if endpoint_name in sagemaker_endpoints:
-                filtered_endpoint_jobs.append(job)
-            else:
-                # Remove the job item from the DynamoDB table if the endpoint doesn't exist in SageMaker
-                endpoint_deployment_table.delete_item(Key={'EndpointDeploymentJobId': deployment_job_id})
+                if endpoint_name in sagemaker_endpoints:
+                    filtered_endpoint_jobs.append(job)
+                else:
+                    # Remove the job item from the DynamoDB table if the endpoint doesn't exist in SageMaker
+                    endpoint_deployment_table.delete_item(Key={'EndpointDeploymentJobId': deployment_job_id})
 
         return filtered_endpoint_jobs
 
@@ -237,15 +239,37 @@ def json_convert_to_payload(params_dict, checkpoint_info):
                        '[ControlNet] Pre Resolution': 31,
                        '[ControlNet] Pre Threshold A': 32,
                        '[ControlNet] Pre Threshold B': 33}
+        dropdown_index = [9, 10, 19, 20, 21, 24, 25, 29, 30]
         x_type = type_dict[params_dict['script_txt2txt_xyz_plot_x_type']]
         x_values = params_dict['script_txt2txt_xyz_plot_x_values']
         x_values_dropdown = params_dict['script_txt2txt_xyz_plot_x_values']
+        if x_type in dropdown_index:
+            if x_type == 10:
+                x_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+            elif x_type == 25:
+                x_values_dropdown = params_dict['sagemaker_controlnet_model']
+            x_values_dropdown = x_values_dropdown.split(":")
+        
         y_type = type_dict[params_dict['script_txt2txt_xyz_plot_y_type']]
         y_values = params_dict['script_txt2txt_xyz_plot_y_values']
         y_values_dropdown = params_dict['script_txt2txt_xyz_plot_y_values']
+        if y_type in dropdown_index:
+            if y_type == 10:
+                y_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+            elif y_type == 25:
+                y_values_dropdown = params_dict['sagemaker_controlnet_model']
+            y_values_dropdown = y_values_dropdown.split(":")
+        
         z_type = type_dict[params_dict['script_txt2txt_xyz_plot_z_type']]
         z_values = params_dict['script_txt2txt_xyz_plot_z_values']
         z_values_dropdown = params_dict['script_txt2txt_xyz_plot_z_values']
+        if z_type in dropdown_index:
+            if z_type == 10:
+                z_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+            elif z_type == 25:
+                z_values_dropdown = params_dict['sagemaker_controlnet_model']
+            z_values_dropdown = z_values_dropdown.split(":")
+        
         draw_legend = params_dict['script_txt2txt_xyz_plot_draw_legend']
         include_lone_images = params_dict['script_txt2txt_xyz_plot_include_lone_images']
         include_sub_grids = params_dict['script_txt2txt_xyz_plot_include_sub_grids']
@@ -287,7 +311,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     s_tmin = 0
     s_noise = 1 
 
-    selected_sd_model = params_dict['sagemaker_stable_diffuion_checkpoint'] #'my_girl_311.safetensors'my_style_132.safetensors my_style_132.safetensors
+    selected_sd_model = params_dict['sagemaker_stable_diffusion_checkpoint'] #'my_girl_311.safetensors'my_style_132.safetensors my_style_132.safetensors
     selected_cn_model = params_dict['sagemaker_controlnet_model']#['control_openpose-fp16.safetensors']#
     selected_hypernets = params_dict['sagemaker_hypernetwork_model']#['mjv4Hypernetwork_v1.pt']#'LuisapKawaii_v1.pt'
     selected_loras = params_dict['sagemaker_lora_model']#['hanfu_v30Song.safetensors']# 'cuteGirlMix4_v10.safetensors'
@@ -348,7 +372,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
         #with open(controlnet_image_path, "rb") as img:
         # controlnet_image = base64.b64encode(img.read())
 
-    endpoint_name = "infer-endpoint-ca0e"
+    endpoint_name = params_dict['sagemaker_endpoint'] #"infer-endpoint-ca0e"
     
     if contronet_enable:
         print('txt2img with controlnet!!!!!!!!!!')
