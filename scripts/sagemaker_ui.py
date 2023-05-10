@@ -23,16 +23,17 @@ from datetime import datetime
 import math
 
 inference_job_dropdown = None
+sagemaker_endpoint = None
 
 #TODO: convert to dynamically init the following variables
 sagemaker_endpoints = []
 txt2img_inference_job_ids = []
 
 sd_checkpoints = []
-textual_inversion_list = ['textual_inversion1','textual_inversion2','textual_inversion3']
-lora_list = ['lora1', 'lora2', 'lora3']
-hyperNetwork_list = ['hyperNetwork1', 'hyperNetwork2', 'hyperNetwork3']
-ControlNet_model_list = ['controlNet_model1', 'controlNet_model2', 'controlNet_model3']
+textual_inversion_list = []
+lora_list = []
+hyperNetwork_list = []
+ControlNet_model_list = []
 
 # Initial checkpoints information
 checkpoint_info = {}
@@ -41,7 +42,7 @@ checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "c
 stable_diffusion_list = []
 embeddings_list = []
 lora_list = []
-hypernetworks_list = ['xxx','yyy']
+hypernetworks_list = []
 controlnet_list = []
 for ckpt_type, ckpt_name in zip(checkpoint_type, checkpoint_name):
     checkpoint_info[ckpt_type] = {}
@@ -357,14 +358,29 @@ def generate_on_cloud(sagemaker_endpoint):
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
-def generate_on_cloud_no_input():
-    print(f"start cloud inference with empty payload")
+def generate_on_cloud_no_input(sagemaker_endpoint):
+    print(f"chosen ep {sagemaker_endpoint}")
+
+    if sagemaker_endpoint == '':
+        image_list = []  # Return an empty list if selected_value is None
+        info_text = ''
+        infotexts = "Failed! Please choose the endpoint in 'InService' states "
+        return image_list, info_text, plaintext_to_html(infotexts)
+
+    sagemaker_endpoint_status = sagemaker_endpoint.split("+")[1]
+
+    if sagemaker_endpoint_status != "InService":
+        image_list = []  # Return an empty list if selected_value is None
+        info_text = ''
+        infotexts = "Failed! Please choose the endpoint in 'InService' states "
+        return image_list, info_text, plaintext_to_html(infotexts)
     
     # stage 2: inference using endpoint_name
     headers = {
         "x-api-key": api_key,
         "Content-Type": "application/json"
     }
+    checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
     print(f"checkpointinfo is {payload}")
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
@@ -515,6 +531,7 @@ def create_ui():
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with gr.Column(variant='panel'):
                 with gr.Row():
+                    global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
                                              label="Select Cloud SageMaker Endpoint",
                                              elem_id="sagemaker_endpoint_dropdown"
@@ -535,7 +552,7 @@ def create_ui():
                 # generate_on_cloud_button_with_js.click(
                 #     # _js="txt2img_config_save",
                 #     fn=generate_on_cloud_no_input,
-                #     inputs=[],
+                #     inputs=[sagemaker_endpoint],
                 #     outputs=[]
                 # )
                 txt2img_config_save_button = gr.Button(value="Save Settings", variant='primary', elem_id="save_webui_component_to_cloud_button")
@@ -606,15 +623,15 @@ def create_ui():
             gr.HTML(value="Deploy New SageMaker Endpoint")
             with gr.Row():
                 # instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
-                instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", default='ml.g4dn.xlarge')
-                instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)
+                instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                # instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)
+                instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
 
             with gr.Row():
                 sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
-                sagemaker_deploy_button.click(_js="deploy_endpoint",
-                                            fn=sagemaker_deploy,
-                                            inputs=[instance_type_dropdown, instance_count_textbox],
-                                            outputs=[sagemaker_html_log])
+                sagemaker_deploy_button.click(sagemaker_deploy,
+                                            # _js="sagemaker_deploy_endpoint", \
+                                            inputs = [instance_type_dropdown, instance_count_dropdown])
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", open=False):
@@ -646,4 +663,4 @@ def create_ui():
                     outputs=[
                     ])
 
-    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_textbox, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
