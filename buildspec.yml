@@ -52,7 +52,8 @@ phases:
 artifacts:
   files:
     - deployment/**/*
-    - source/**/*
+    - infrastructure/**/*
+    - middleware_api/**/*
     - .gitignore
     - sonar-project.properties
     - buildspec.yml
