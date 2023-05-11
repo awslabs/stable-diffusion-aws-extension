@@ -7,8 +7,10 @@ env:
     - BSS_IMAGE_ASSET_TAG_PREFIX
     - BSS_IMAGE_ASSET_ACCOUNT_ID
     - BUILD_VERSION
+    - CN_ASSETS
     - GLOBAL_ASSETS
     - ECR_REPOS
+    - CN_ECR_REPOS
 
 phases:
   install:
@@ -31,6 +33,7 @@ phases:
         set -euxo pipefail
         __dir="${CODEBUILD_SRC_DIR}/deployment"
         function join_by { local IFS="$1"; shift; echo "$*"; }
+        export CN_ECR_REPOS=$(join_by , `cat "${__dir}/cn-ecr-repos"`)
       - export GLOBAL_ASSETS='custom-domain/,default/'
   build:
     commands:

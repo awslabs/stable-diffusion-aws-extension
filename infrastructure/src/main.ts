@@ -33,7 +33,7 @@ const app = new App();
 
 const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack', { env: devEnv });
 
-new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
+const inferenceStack = new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
   env: devEnv,
   api_gate_way: trainStack.apiGateway,
   // api_id: restful_api_id,
@@ -42,6 +42,6 @@ new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceSta
   snsTopic: trainStack.snsTopic,
 });
 
-// inferenceStack.addDependency(trainStack)
+inferenceStack.addDependency(trainStack)
 
 app.synth();
