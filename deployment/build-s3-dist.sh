@@ -13,7 +13,7 @@ run() {
 }
 
 __dir="$(cd "$(dirname $0)";pwd)"
-SRC_PATH="${__dir}/../infrastructure/src"
+SRC_PATH="${__dir}/../infrastructure/"
 
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo "Parameters not enough"
@@ -75,6 +75,7 @@ IFS=',' read -r -a prefixes <<< "$GLOBAL_ASSETS"
 mkdir -p ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}
 
 export BSS_FILE_ASSET_PREFIX="${FILE_ASSET_PREFIX}${prefixes[0]}"
+run pwd
 run npx cdk synth -c EnableDashboardCustomDomain=true --json --output ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}
 sed -i "s|<TEMPLATE_BUILD_VERSION>|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}*template.json
 mkdir -p ${GLOBAL_S3_ASSETS_PATH}/${prefixes[1]}
