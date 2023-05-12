@@ -188,6 +188,7 @@ export class SdTrainDeployStack extends Stack {
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
+      default: `stable-diffusion-aws-extension-${this.account}-${this.region}`
     });
 
     // Define the CORS configuration
