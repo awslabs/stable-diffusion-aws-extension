@@ -32,19 +32,19 @@ export class Middleware extends Stack {
       synthesizer: synthesizer()
   }) {
     super(scope, id, props);
-    const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack',
+    const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack',
      {
        env: devEnv,
-       synthesizer: synthesizer()
+      //  synthesizer: synthesizer()
      });
 
-    const inferenceStack = new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
+    const inferenceStack = new SDAsyncInferenceStack(this, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
       env: devEnv,
       api_gate_way: trainStack.apiGateway,
       s3_bucket: trainStack.s3Bucket,
       training_table: trainStack.trainingTable,
       snsTopic: trainStack.snsTopic,
-      synthesizer: synthesizer(),
+      // synthesizer: synthesizer(),
     });
 
     inferenceStack.addDependency(trainStack)
