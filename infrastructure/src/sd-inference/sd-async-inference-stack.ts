@@ -1,11 +1,11 @@
 import {
-    Stack,
     StackProps,
     Duration,
     Aws,
     RemovalPolicy,
     aws_ecr,
     CustomResource,
+    NestedStack,
 } from "aws-cdk-lib";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 
@@ -35,7 +35,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
     snsTopic: sns.Topic;
 }
 
-export class SDAsyncInferenceStack extends Stack {
+export class SDAsyncInferenceStack extends NestedStack {
     constructor(
         scope: Construct,
         id: string,

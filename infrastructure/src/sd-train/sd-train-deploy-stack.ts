@@ -8,8 +8,8 @@ import {
   aws_sns_subscriptions as sns_subscriptions,
   CfnParameter,
   RemovalPolicy,
-  Stack,
   StackProps,
+  NestedStack,
 } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -27,7 +27,7 @@ import { CreateTrainJobApi } from './train-job-create-api';
 import { UpdateTrainJobApi } from './train-job-update-api';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
-export class SdTrainDeployStack extends Stack {
+export class SdTrainDeployStack extends NestedStack {
 
   public readonly s3Bucket: aws_s3.Bucket;
   public readonly trainingTable: aws_dynamodb.Table;

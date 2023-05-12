@@ -1,11 +1,7 @@
 import { App, Stack, StackProps } from "aws-cdk-lib";
-
 import { Construct } from "constructs";
-import {
-    SDAsyncInferenceStack,
-    SDAsyncInferenceStackProps,
-} from "./sd-inference/sd-async-inference-stack";
 import { SdTrainDeployStack } from "./sd-train/sd-train-deploy-stack";
+import { SDAsyncInferenceStackProps,SDAsyncInferenceStack } from "./sd-inference/sd-async-inference-stack";
 import {
     BootstraplessStackSynthesizer,
     CompositeECRRepositoryAspect,
@@ -30,29 +26,30 @@ export class Middleware extends Stack {
         }
     ) {
         super(scope, id, props);
+
+        const trainStack = new SdTrainDeployStack(this, "SdDreamBoothTrainStack", {
+            env: devEnv,
+            synthesizer: synthesizer()
+        });
+
+        const inferenceStack = new SDAsyncInferenceStack(
+            this,
+            "SdAsyncInferenceStack-dev",
+            <SDAsyncInferenceStackProps>{
+                env: devEnv,
+                api_gate_way: trainStack.apiGateway,
+                s3_bucket: trainStack.s3Bucket,
+                training_table: trainStack.trainingTable,
+                snsTopic: trainStack.snsTopic,
+                synthesizer: synthesizer(),
+            }
+        );
+
+        inferenceStack.addDependency(trainStack);
     }
 }
-const trainStack = new SdTrainDeployStack(app, "SdDreamBoothTrainStack", {
-    env: devEnv,
-    synthesizer: synthesizer()
-});
 
-const inferenceStack = new SDAsyncInferenceStack(
-    app,
-    "SdAsyncInferenceStack-dev",
-    <SDAsyncInferenceStackProps>{
-        env: devEnv,
-        api_gate_way: trainStack.apiGateway,
-        s3_bucket: trainStack.s3Bucket,
-        training_table: trainStack.trainingTable,
-        snsTopic: trainStack.snsTopic,
-        synthesizer: synthesizer(),
-    }
-);
-
-inferenceStack.addDependency(trainStack);
-
-const middleware = new Middleware(
+new Middleware(
     app,
     "Stable-diffusion-aws-extension-middleware-stack",
     {
@@ -60,8 +57,6 @@ const middleware = new Middleware(
         synthesizer: synthesizer(),
     }
 );
-
-middleware.addDependency(inferenceStack);
 
 app.synth();
 // below lines are required if your application has Docker assets
