@@ -25,6 +25,11 @@
   "resolved" "https://registry.npmmirror.com/@aws-cdk/asset-node-proxy-agent-v5/-/asset-node-proxy-agent-v5-2.0.111.tgz"
   "version" "2.0.111"
 
+"@aws-cdk/aws-batch-alpha@^2.8.0-alpha.0":
+  "integrity" "sha512-cZa/2BJ5R7QxEoyC5DlhixxLsvV6QppjgS8dluMzNASwofgvyq4elt3ukBaOv/3riKBg/irYVFZuvaSSsxVTOg=="
+  "resolved" "https://registry.npmjs.org/@aws-cdk/aws-batch-alpha/-/aws-batch-alpha-2.8.0-alpha.0.tgz"
+  "version" "2.8.0-alpha.0"
+
 "@aws-cdk/aws-lambda-python-alpha@^2.73.0-alpha.0":
   "integrity" "sha512-oS5paLqWtnscg0u2HuPJ8nK8F8UahybHam3odS4skEUJwXomUeGrNj+UbtyPQNVmWRQPu2g9X0z/4z28whJw/A=="
   "resolved" "https://registry.npmjs.org/@aws-cdk/aws-lambda-python-alpha/-/aws-lambda-python-alpha-2.73.0-alpha.0.tgz"
@@ -1310,7 +1315,7 @@
   "resolved" "https://registry.npmmirror.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz"
   "version" "1.0.5"
 
-"aws-cdk-lib@^2.73.0", "aws-cdk-lib@2.73.0":
+"aws-cdk-lib@^2", "aws-cdk-lib@^2.73.0", "aws-cdk-lib@^2.8.0", "aws-cdk-lib@2.73.0":
   "integrity" "sha512-r9CUe3R7EThr9U0Eb7kQCK4Ee34TDeMH+bonvGD9rNRRTYDauvAgNCsx4DZYYksPrXLRzWjzVbuXAHaDDzWt+A=="
   "resolved" "https://registry.npmmirror.com/aws-cdk-lib/-/aws-cdk-lib-2.73.0.tgz"
   "version" "2.73.0"
@@ -1576,6 +1581,15 @@
   "integrity" "sha512-mzDSXIPaFwVDvZAHqZ9VlbyF4yyXRuX6IvB06WvPYkqJVO24kX1PPhv9bfpKNFZyxYFmmgo03HUiD8iklmJYRQ=="
   "resolved" "https://registry.npmmirror.com/case/-/case-1.6.3.tgz"
   "version" "1.6.3"
+
+"cdk-bootstrapless-synthesizer@^2.2.2":
+  "integrity" "sha512-/01W3olpLa2On4R+Z1AalQoa0R/co6x6OzSKgyWMuw0w/PeNKwNtmebrb8JjE8WCr/NWGinQUjGS3T6Q2bqeiQ=="
+  "resolved" "https://registry.npmjs.org/cdk-bootstrapless-synthesizer/-/cdk-bootstrapless-synthesizer-2.3.2.tgz"
+  "version" "2.3.2"
+  dependencies:
+    "@aws-cdk/aws-batch-alpha" "^2.8.0-alpha.0"
+    "aws-cdk-lib" "^2"
+    "constructs" "^10.0.5"
 
 "chalk@^2.0.0":
   "integrity" "sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ=="
