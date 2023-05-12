@@ -10,12 +10,7 @@ import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Aspects } from "aws-cdk-lib";
 
-export class Middleware extends Stack {
-  constructor(scope: Construct, id: string, props: StackProps = {}) {
-    super(scope, id, props);
 
-  }
-}
 
 // for development, use account/region from cdk cli
 const devEnv = {
@@ -31,24 +26,36 @@ const app = new App();
 
 // new SdTrainDeployStack(app, 'SdTrainDeployStack-dev', { env: devEnv });
 
-
-const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack',
+export class Middleware extends Stack {
+  constructor(scope: Construct, id: string, props: StackProps = {
+      env: devEnv,
+      synthesizer: synthesizer()
+  }) {
+    super(scope, id, props);
+    const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack',
      {
        env: devEnv,
        synthesizer: synthesizer()
      });
 
-const inferenceStack = new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
-  env: devEnv,
-  api_gate_way: trainStack.apiGateway,
-  // api_id: restful_api_id,
-  s3_bucket: trainStack.s3Bucket,
-  training_table: trainStack.trainingTable,
-  snsTopic: trainStack.snsTopic,
-  synthesizer: synthesizer(),
-});
+    const inferenceStack = new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
+      env: devEnv,
+      api_gate_way: trainStack.apiGateway,
+      s3_bucket: trainStack.s3Bucket,
+      training_table: trainStack.trainingTable,
+      snsTopic: trainStack.snsTopic,
+      synthesizer: synthesizer(),
+    });
 
-inferenceStack.addDependency(trainStack)
+    inferenceStack.addDependency(trainStack)
+  }
+}
+
+new Middleware(app, "Stable-diffusion-aws-extension-middleware-stack",{
+  env: devEnv,
+  synthesizer: synthesizer() 
+})
+
 
 app.synth();
 // below lines are required if your application has Docker assets
