@@ -20,11 +20,6 @@ const devEnv = {
 
 const app = new App();
 
-// new Middleware(app, 'stable-diffusion-extensions-dev', { env: devEnv });
-
-// new TxtImgInferenceCdkStack(app, 'TxtImgInferenceCdkStack-dev', { env: devEnv });
-
-// new SdTrainDeployStack(app, 'SdTrainDeployStack-dev', { env: devEnv });
 
 export class Middleware extends Stack {
   constructor(scope: Construct, id: string, props: StackProps = {
@@ -32,10 +27,14 @@ export class Middleware extends Stack {
       synthesizer: synthesizer()
   }) {
     super(scope, id, props);
-    const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack',
+    
+  }
+}
+
+const trainStack = new SdTrainDeployStack(app, 'SdDreamBoothTrainStack',
      {
        env: devEnv,
-       synthesizer: synthesizer()
+      //  synthesizer: synthesizer()
      });
 
     const inferenceStack = new SDAsyncInferenceStack(app, 'SdAsyncInferenceStack-dev', <SDAsyncInferenceStackProps>{
@@ -44,18 +43,17 @@ export class Middleware extends Stack {
       s3_bucket: trainStack.s3Bucket,
       training_table: trainStack.trainingTable,
       snsTopic: trainStack.snsTopic,
-      synthesizer: synthesizer(),
+      // synthesizer: synthesizer(),
     });
 
     inferenceStack.addDependency(trainStack)
-  }
-}
 
-new Middleware(app, "Stable-diffusion-aws-extension-middleware-stack",{
+const middleware = new Middleware(app, "Stable-diffusion-aws-extension-middleware-stack",{
   env: devEnv,
-  synthesizer: synthesizer() 
+  synthesizer: synthesizer(),
 })
 
+middleware.addDependency(inferenceStack)
 
 app.synth();
 // below lines are required if your application has Docker assets
