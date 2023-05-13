@@ -39,17 +39,20 @@ export class SDAsyncInferenceStack extends NestedStack {
     constructor(
         scope: Construct,
         id: string,
-        props?: SDAsyncInferenceStackProps
+        props: SDAsyncInferenceStackProps
     ) {
         super(scope, id, props);
         const srcImg = "public.ecr.aws/t6q0v9n4/aigc-webui-inference:latest";
 
-        const restful_api = apigw.RestApi.fromRestApiAttributes(
+        if (!props?.api_gate_way) {
+            throw new Error("api_gate_way is required");
+        }  
+        const restful_api = <apigw.RestApi>apigw.RestApi.fromRestApiAttributes(
             this,
             "ImportedRestApi",
             {
-                restApiId: props?.api_gate_way.restApiId ?? "",
-                rootResourceId: props?.api_gate_way.restApiRootResourceId ?? "",
+                restApiId: props.api_gate_way.restApiId ,
+                rootResourceId: props.api_gate_way.restApiRootResourceId,
             }
         );
 
@@ -164,13 +167,20 @@ export class SDAsyncInferenceStack extends NestedStack {
         const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
         // Add a POST method with prefix inference
-        // const inference = restful_api?.root.addResource('inference');
         const inference = restful_api?.root.addResource("inference");
-        inference?.addMethod("POST", txt2imgIntegration, {
+
+        if (!restful_api){
+            throw new Error("resful_api is needed")
+        }
+
+        if(!inference){
+            throw new Error("inference is undefined")
+        }
+        inference.addMethod("POST", txt2imgIntegration, {
             apiKeyRequired: true,
         });
 
-        inference?.addMethod("GET", txt2imgIntegration, {
+        inference.addMethod("GET", txt2imgIntegration, {
             apiKeyRequired: true,
         });
 
@@ -254,15 +264,6 @@ export class SDAsyncInferenceStack extends NestedStack {
             apiKeyRequired: true,
         });
 
-    // const test_output = inference.addResource('generate-s3-presigned-url-for-uploading',
-    //   {
-    //     defaultCorsPreflightOptions: {
-    //       allowOrigins: ['*'], // Allow all origins
-    //       allowMethods: ['GET', 'POST', 'OPTION', 'PUT'], // Specify the allowed methods
-    //       allowHeaders: ['*'], // Specify the allowed headers
-    //     },
-    //   }
-    // );
     const test_output = inference.addResource('generate-s3-presigned-url-for-uploading') 
     test_output.addCorsPreflight({
       allowOrigins: apigw.Cors.ALL_ORIGINS,
@@ -304,11 +305,17 @@ export class SDAsyncInferenceStack extends NestedStack {
         });
 
         const current_time = new Date().toISOString;
+
         const deployment = new apigw.Deployment(
             this,
             "rest-api-deployment" + current_time,
-            { api: restful_api }
+            { 
+                api: restful_api,
+                retainDeployments: false }
         );
+        restful_api._attachDeployment(deployment)
+        deployment.node.addDependency(test_output)
+
         deployment.addToLogicalId(new Date().toISOString());
         (deployment as any).resource.stageName = "prod";
 
