@@ -70,6 +70,9 @@ def get_current_date():
 
 def server_request(path):
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
     api_key = get_variable_from_json('api_token')
     headers = {
         "x-api-key": api_key,

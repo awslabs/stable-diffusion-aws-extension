@@ -189,8 +189,9 @@ def on_after_component_callback(component, **_kwargs):
 
 
 def update_connect_config(api_url, api_token):
-    # function code to call update the api_url and token
-    # Example usage
+    # Check if api_url ends with '/', if not append it
+    if not api_url.endswith('/'):
+        api_url += '/'
 
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
