@@ -141,11 +141,14 @@ def on_after_component_callback(component, **_kwargs):
                 )
         sagemaker_ui.modelmerger_merge_on_cloud.click(
                     fn=sagemaker_ui.modelmerger_on_cloud_func,
-                    inputs=[
-                        sagemaker_ui.primary_model_name,
-                        sagemaker_ui.secondary_model_name,
-                        sagemaker_ui.tertiary_model_name,
-                    ],
+                    # fn=None,
+                    _js="txt2img_config_save",
+                    inputs=[sagemaker_ui.sagemaker_endpoint],
+                    # inputs=[
+                    #     sagemaker_ui.primary_model_name,
+                    #     sagemaker_ui.secondary_model_name,
+                    #     sagemaker_ui.tertiary_model_name,
+                    # ],
                     outputs=[
                     ])
     # # hook logic for merge checkpoints
