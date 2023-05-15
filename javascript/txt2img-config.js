@@ -341,39 +341,39 @@ function scrap_ui_component_value(config) {
       }
         
     config["controlnet_enable"] = document.querySelector(
-        "#component-200 > label > input"
+        "#component-138 > label > input"
     ).checked;
 
     config["controlnet_lowVRAM_enable"] = document.querySelector(
-        "#component-201 > label > input"
+        "#component-139 > label > input"
     ).checked;
     config["controlnet_pixel_perfect"] = document.querySelector(
-        "#component-203 > label > input"
+        "#component-141 > label > input"
     ).checked;
     
     config["controlnet_allow_preview"] = document.querySelector("#txt2img_controlnet_ControlNet_preprocessor_preview > label > input").checked
    
-    config["controlnet_preprocessor"] = document.querySelector("#component-206 > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value
-    config["controlnet_model"] = document.querySelector("#component-208 > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value
+    config["controlnet_preprocessor"] = document.querySelector("#component-144 > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value
+    config["controlnet_model"] = document.querySelector("#component-146 > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value
     config["control_weight"] = document.querySelector(
-        "#component-213 > div.wrap.svelte-1cl284s > div > input"
+        "#component-151 > div.wrap.svelte-1cl284s > div > input"
     ).value;
     // document.querySelector("#component-213 > div.wrap.svelte-1cl284s > div > input")
     config["controlnet_starting_control_step"] = document.querySelector(
-        "#component-214 > div.wrap.svelte-1cl284s > div > input"
+        "#component-152 > div.wrap.svelte-1cl284s > div > input"
     ).value;
     config["controlnet_ending_control_step"] = document.querySelector(
-        "#component-215 > div.wrap.svelte-1cl284s > div > input"
+        "#component-153 > div.wrap.svelte-1cl284s > div > input"
     ).value;
     config["controlnet_control_mode(guess_mode)"] = document.querySelector(
-        "#component-222 > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input"
+        "#component-160 > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input"
     ).value;
     config["controlnet_resize_mode"] = document.querySelector(
-        "#component-223 > div.wrap.svelte-1p9xokt > label:nth-child(1) > input"
+        "#component-161 > div.wrap.svelte-1p9xokt > label:nth-child(1) > input"
     ).value;
     config[
         "controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit"
-    ] = document.querySelector("#component-224 > label > input").enabled;
+    ] = document.querySelector("#component-162 > label > input").enabled;
 
     config["script_txt2txt_prompt_matrix_prompt_type_positive"] =
         document.querySelector(
