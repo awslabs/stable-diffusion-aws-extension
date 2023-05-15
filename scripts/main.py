@@ -22,8 +22,8 @@ import html
 
 # TODO: Automaticly append the dependent module path.
 sys.path.append("extensions/sd_dreambooth_extension")
-sys.path.append("extensions/stable-diffusion-aws-extension")
-sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
+sys.path.append("extensions/aws-ai-solution-kit")
+sys.path.append("extensions/aws-ai-solution-kit/scripts")
 # TODO: Do not use the dreambooth status module.
 from dreambooth.shared import status
 from dreambooth import shared as dreambooth_shared
@@ -175,10 +175,10 @@ def on_after_component_callback(component, **_kwargs):
     #     with gr.Group():
     #         with gr.Accordion("Open for checkpoint merger in the cloud!", open=False):
     #             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
-    #                 primary_model_name = gr.Dropdown(label="Primary model (A) in the cloud", 
+    #                 primary_model_name = gr.Dropdown(label="Primary model (A) in the cloud",
     #                                                  choices=sorted(sagemaker_ui.update_sd_checkpoints()), elem_id="model_on_the_cloud")
-    #                 create_refresh_button(primary_model_name, sagemaker_ui.update_sd_checkpoints, 
-    #                                       lambda: {"choices": sorted(sagemaker_ui.update_sd_checkpoints())}, 
+    #                 create_refresh_button(primary_model_name, sagemaker_ui.update_sd_checkpoints,
+    #                                       lambda: {"choices": sorted(sagemaker_ui.update_sd_checkpoints())},
     #                                       "refresh primary model (A)")
 
                     # secondary_model_name = gr.Dropdown(modules.sd_models.checkpoint_tiles(), elem_id="modelmerger_secondary_model_name", label="Secondary model (B) in the cloud")
@@ -194,10 +194,10 @@ def update_connect_config(api_url, api_token):
 
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
-    global api_gateway_url 
+    global api_gateway_url
     api_gateway_url = get_variable_from_json('api_gateway_url')
-    global api_key 
-    api_key = get_variable_from_json('api_token') 
+    global api_key
+    api_key = get_variable_from_json('api_token')
     print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
     return "config updated to local config!"
 
@@ -267,9 +267,22 @@ script_callbacks.on_ui_tabs(on_ui_tabs)
 # create new tabs for create Model
 origin_callback = script_callbacks.ui_tabs_callback
 
+def avoid_duplicate_from_restart_ui(res):
+    for extension_ui in res:
+        if extension_ui[1] == 'Dreambooth':
+            for key in list(extension_ui[0].blocks):
+                val = extension_ui[0].blocks[key]
+                if type(val) is gr.Tab:
+                    if val.label == 'Select From Cloud':
+                        return True
+
+    return False
+
 
 def ui_tabs_callback():
     res = origin_callback()
+    if avoid_duplicate_from_restart_ui(res):
+        return res
     for extension_ui in res:
         if extension_ui[1] == 'Dreambooth':
             for key in list(extension_ui[0].blocks):
@@ -359,7 +372,7 @@ def ui_tabs_callback():
                                             cloud_db_new_model_src = gr.Dropdown(
                                                 label="Source Checkpoint",
                                                 choices=sorted(get_sd_cloud_models()),
-                                                elem_id="cloud_db_source_checkpoint_dropdown" 
+                                                elem_id="cloud_db_source_checkpoint_dropdown"
                                             )
                                             create_refresh_button(
                                                 cloud_db_new_model_src,
@@ -470,24 +483,30 @@ def get_cloud_db_models(types="dreambooth", status="Complete"):
     except Exception as e:
         print('Failed to get cloud models.')
         print(e)
+        return []
 
 def get_cloud_ckpts():
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    print("Get request for model list.")
-    if api_gateway_url is None:
-        print(f"failed to get the api_gateway_url, can not fetch date from remote")
-        return []
+    try:
+        api_gateway_url = get_variable_from_json('api_gateway_url')
+        print("Get request for model list.")
+        if api_gateway_url is None:
+            print(f"failed to get the api_gateway_url, can not fetch date from remote")
+            return []
 
-    url = api_gateway_url + "checkpoints?status=Active&types=dreambooth"
-    response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
-    if "checkpoints" not in response:
+        url = api_gateway_url + "checkpoints?status=Active&types=dreambooth"
+        response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
+        if "checkpoints" not in response:
+            return []
+        global ckpt_dict
+        for ckpt in response["checkpoints"]:
+            # Only get ckpts whose name is not empty.
+            if len(ckpt['name']) > 0:
+                ckpt_key = f"cloud-{ckpt['name'][0]}-{ckpt['id']}"
+                ckpt_dict[ckpt_key] = ckpt
+    except Exception as e:
+        print('Failed to get cloud ckpts.')
+        print(e)
         return []
-    global ckpt_dict
-    for ckpt in response["checkpoints"]:
-        # Only get ckpts whose name is not empty.
-        if len(ckpt['name']) > 0:
-            ckpt_key = f"cloud-{ckpt['name'][0]}-{ckpt['id']}"
-            ckpt_dict[ckpt_key] = ckpt
 
 def get_cloud_ckpt_name_list():
     get_cloud_ckpts()
@@ -495,7 +514,10 @@ def get_cloud_ckpt_name_list():
 
 def get_cloud_db_model_name_list():
     model_list = get_cloud_db_models()
-    model_name_list = [model['model_name'] for model in model_list]
+    if model_list is None:
+        model_name_list = []
+    else:
+        model_name_list = [model['model_name'] for model in model_list]
     return model_name_list
 
 # get local and cloud checkpoints.
@@ -595,10 +617,10 @@ def async_create_model_on_sagemaker(
         is_512=True,
 ):
     params = copy.deepcopy(locals())
-    if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0: 
+    if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0:
         logging.error("ckpt_path or model_name is not setting.")
         return
-    if re.match("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,30}$", params["new_model_name"]) is None: 
+    if re.match("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,30}$", params["new_model_name"]) is None:
         logging.error("model_name is not match pattern.")
         return
     ckpt_key = ckpt_path
