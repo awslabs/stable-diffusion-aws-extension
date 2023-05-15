@@ -69,14 +69,14 @@ def get_current_date():
     return formatted_date
 
 def server_request(path):
-    
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
     headers = {
         "x-api-key": api_key,
         "Content-Type": "application/json"
     }
     list_endpoint_url = urljoin(api_gateway_url, path)
     response = requests.get(list_endpoint_url, headers=headers)
-    # print(f"response for rest api {response.json()}")
     return response
 
 def datetime_to_short_form(datetime_str):
