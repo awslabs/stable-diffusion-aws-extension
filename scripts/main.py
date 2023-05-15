@@ -202,6 +202,7 @@ def update_connect_config(api_url, api_token):
     return "config updated to local config!"
 
 def test_aws_connect_config(api_url, api_token):
+    update_connect_config(api_url, apo_token)
     api_url = get_variable_from_json('api_gateway_url')
     api_token = get_variable_from_json('api_token')
     print(f"get the api_url:{api_url} and token: {api_token}............")
