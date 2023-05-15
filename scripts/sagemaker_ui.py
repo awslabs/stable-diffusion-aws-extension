@@ -446,8 +446,37 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
     r = response.json()
     print(f"response for rest api {r}")
 
-def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, tertiary_model_name):
-    print(f"function not implemented, current checkpoint_info is {checkpoint_info}")
+    try:
+        r = response.json()
+    except JSONDecodeError as e:
+        print(f"Failed to decode JSON response: {e}")
+        print(f"Raw server response: {response.text}")
+    else:
+        print(f"response for rest api {r}")
+        model_merge_id = r.get('model_merge_id')  # Assuming the response contains 'inference_id' field
+        job_status = get_inference_job(model_merge_id)
+        status = job_status['status']
+        print(f"status is {status}")
+
+def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
+    print(f"function under development, current checkpoint_info is {checkpoint_info}")
+    if api_gateway_url is None:
+        print(f"failed to get the api-gateway url, can not fetch remote data")
+        return []
+    modelmerge_url = f"{api_gateway_url}inference/run-model-merge"
+
+    payload = {
+        "primary_model_name" : primary_model_name,
+        "secondary_model_name" : secondary_model_name,
+        "tertiary_model_name" : teritary_model_name
+    }
+
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(modelmerge_url, json=payload, headers=headers)
 
 def txt2img_config_save():
     # placeholder for saving txt2img config

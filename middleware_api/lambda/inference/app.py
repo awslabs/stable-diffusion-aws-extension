@@ -42,6 +42,9 @@ sagemaker = boto3.client('sagemaker')
 inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
+# name for utils sagemaker endpoint name
+utils_endpoint_name = os.environ.get("SAGEMAKER_ENDPOINT_NAME")
+
 async def custom_exception_handler(request: Request, exc: HTTPException):
     headers = {
         "Access-Control-Allow-Headers": "Content-Type",
