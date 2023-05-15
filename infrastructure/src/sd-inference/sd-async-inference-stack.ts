@@ -33,6 +33,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
     s3_bucket: s3.Bucket;
     training_table: dynamodb.Table;
     snsTopic: sns.Topic;
+    default_endpoint_name: string;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -138,6 +139,7 @@ export class SDAsyncInferenceStack extends NestedStack {
                     STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
                     NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? "",
                     INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+                    SAGEMAKER_ENDPOINT_NAME: props.default_endpoint_name,
                 },
                 logRetention: RetentionDays.ONE_WEEK,
             }

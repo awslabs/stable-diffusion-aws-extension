@@ -42,6 +42,7 @@ export class Middleware extends Stack {
                 training_table: trainStack.trainingTable,
                 snsTopic: trainStack.snsTopic,
                 synthesizer: synthesizer(),
+                default_endpoint_name: trainStack.default_endpoint_name
             }
         );
 

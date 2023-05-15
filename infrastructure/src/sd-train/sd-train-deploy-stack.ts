@@ -35,6 +35,7 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly checkPointTable: aws_dynamodb.Table;
   public apiGateway: aws_apigateway.RestApi;
   public readonly snsTopic: aws_sns.Topic;
+  public readonly default_endpoint_name: string
 
   private readonly srcRoot='../middleware_api/lambda';
 
@@ -43,6 +44,7 @@ export class SdTrainDeployStack extends NestedStack {
     this.snsTopic = this.createSns();
     this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
+    this.default_endpoint_name = ""
 
     // Create DynamoDB table to store model job id
     this.modelTable = new dynamodb.Table(this, 'ModelTable', {
@@ -121,7 +123,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /model
-    new UpdateModelStatusRestApi(this, 'aigc-update-model-api', {
+    const modelStatusRestApi = new UpdateModelStatusRestApi(this, 'aigc-update-model-api', {
       s3Bucket: this.s3Bucket,
       router: routers.model,
       httpMethod: 'PUT',
@@ -131,6 +133,8 @@ export class SdTrainDeployStack extends NestedStack {
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
     });
+
+    this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName
 
     // GET /checkpoints
     new ListAllCheckPointsApi(this, 'list-all-ckpts-api', {

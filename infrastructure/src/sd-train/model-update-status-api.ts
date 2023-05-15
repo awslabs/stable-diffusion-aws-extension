@@ -34,6 +34,7 @@ export interface UpdateModelStatusRestApiProps {
 
 export class UpdateModelStatusRestApi {
 
+  public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
   private readonly machineType: string = 'ml.g4dn.2xlarge';
 
@@ -46,7 +47,6 @@ export class UpdateModelStatusRestApi {
   private readonly httpMethod: string;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly dockerRepo: aws_ecr.Repository;
-  private readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
 
   private readonly baseId: string;
 
