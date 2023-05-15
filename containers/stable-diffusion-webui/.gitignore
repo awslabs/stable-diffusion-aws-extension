@@ -26,6 +26,7 @@ __pycache__
 /user.css
 /.idea
 notification.mp3
+/SwinIR
 /textual_inversion
 .vscode
 /extensions
@@ -33,4 +34,3 @@ notification.mp3
 /test/stderr.txt
 /cache.json*
 /config_states/
-/.idea
