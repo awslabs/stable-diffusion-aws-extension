@@ -25,6 +25,10 @@ import math
 inference_job_dropdown = None
 sagemaker_endpoint = None
 
+primary_model_name = None
+secondary_model_name = None
+tertiary_model_name = None
+
 #TODO: convert to dynamically init the following variables
 sagemaker_endpoints = []
 txt2img_inference_job_ids = []
@@ -464,7 +468,7 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
     print(f"function under development, current checkpoint_info is {checkpoint_info}")
     if api_gateway_url is None:
-        print(f"failed to get the api-gateway url, can not fetch remote data")
+        print(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
         return []
     modelmerge_url = f"{api_gateway_url}inference/run-model-merge"
 
@@ -480,6 +484,14 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     }
 
     response = requests.post(modelmerge_url, json=payload, headers=headers)
+
+    try:
+        r = response.json()
+    except JSONDecodeError as e:
+        print(f"Failed to decode JSON response: {e}")
+        print(f"Raw server response: {response.text}")
+    else:
+        print(f"response for rest api {r}")
 
 def txt2img_config_save():
     # placeholder for saving txt2img config
@@ -678,12 +690,15 @@ def create_ui():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
+                global primary_model_name
                 primary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_primary_model_name_in_the_cloud", label="Primary model (A) in the cloud")
                 create_refresh_button(primary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_A_in_the_cloud")
 
+                global secondary_model_name
                 secondary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_secondary_model_name_in_the_cloud", label="Secondary model (B) in the cloud")
                 create_refresh_button(secondary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_B_in_the_cloud")
 
+                global tertiary_model_name
                 tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_tertiary_model_name_in_the_cloud", label="Tertiary model (C) in the cloud")
                 create_refresh_button(tertiary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_C_in_the_cloud")
             # with gr.Row():
@@ -693,15 +708,7 @@ def create_ui():
             #                                 )
             #     txt2img_merge_job_ids_refresh_button = modules.ui.create_refresh_button(merge_job_dropdown, update_txt2img_merge_job_ids, lambda: {"choices": txt2img_merge_job_ids}, "refresh_txt2img_merge_job_ids")
             with gr.Row():
-                modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge", variant='primary')
-                modelmerger_merge_on_cloud.click(
-                    fn=modelmerger_on_cloud_func,
-                    inputs=[
-                        primary_model_name,
-                        secondary_model_name,
-                        tertiary_model_name,
-                    ],
-                    outputs=[
-                    ])
+                global modelmerger_merge_on_cloud
+                modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
     return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud

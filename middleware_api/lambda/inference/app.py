@@ -732,6 +732,66 @@ async def get_hypernetwork_list():
 async def get_controlnet_model_list():
     return get_s3_objects(S3_BUCKET_NAME,'controlnet')
 
+@app.post("/inference/run-model-merge")
+async def run_model_merge(request: Request):
+    try:
+        logger.info('entering the run_model_merge function!')
+
+        # TODO: add logic for inference id
+        merge_id = get_uuid()
+
+        payload_checkpoint_info = await request.json()
+        print(f"!!!!!!!!!!input in json format {payload_checkpoint_info}")
+
+        params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
+
+        logger.info(json.dumps(params_dict))
+        payload = json_convert_to_payload(params_dict, payload_checkpoint_info)
+        print(f"input in json format {payload}")
+        
+        endpoint_name = payload["endpoint_name"]
+
+        predictor = Predictor(endpoint_name)
+
+        predictor = AsyncPredictor(predictor, name=endpoint_name)
+        predictor.serializer = JSONSerializer()
+        predictor.deserializer = JSONDeserializer()
+        prediction = predictor.predict_async(data=payload, inference_id=inference_id)
+        output_path = prediction.output_path
+
+        #put the item to inference DDB for later check status
+        current_time = str(datetime.now())
+        response = inference_table.put_item(
+            Item={
+                'InferenceJobId': inference_id,
+                'startTime': current_time,
+                'status': 'inprogress'
+            })
+        print(f"output_path is {output_path}")
+
+        headers = {
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        }
+
+        response = JSONResponse(content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}, headers=headers)
+        #response = JSONResponse(content={"inference_id": '6fa743f0-cb7a-496f-8205-dbd67df08be2', "status": "succeed", "output_path": ""}, headers=headers)
+        return response
+
+    except Exception as e:
+        logger.error(f"Error occurred: {str(e)}")
+
+        # raise HTTPException(status_code=500, detail=f"An error occurred during processing.{str(e)}")
+        headers = {
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        }
+
+        response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
+        return response
+
 
 
 #app.include_router(search) TODO: adding sub router for future

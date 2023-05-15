@@ -139,6 +139,15 @@ def on_after_component_callback(component, **_kwargs):
                     inputs=[sagemaker_ui.sagemaker_endpoint],
                     outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
                 )
+        sagemaker_ui.modelmerger_merge_on_cloud.click(
+                    fn=sagemaker_ui.modelmerger_on_cloud_func,
+                    inputs=[
+                        sagemaker_ui.primary_model_name,
+                        sagemaker_ui.secondary_model_name,
+                        sagemaker_ui.tertiary_model_name,
+                    ],
+                    outputs=[
+                    ])
     # # hook logic for merge checkpoints
     # global modelmerger_merge_component, modelmerger_merge_hook
     # is_modelmerger_merge_component = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'modelmerger_merge'
