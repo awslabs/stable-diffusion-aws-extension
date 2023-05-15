@@ -35,7 +35,7 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly checkPointTable: aws_dynamodb.Table;
   public apiGateway: aws_apigateway.RestApi;
   public readonly snsTopic: aws_sns.Topic;
-  public readonly default_endpoint_name: string
+  public readonly default_endpoint_name: string;
 
   private readonly srcRoot='../middleware_api/lambda';
 
@@ -44,7 +44,7 @@ export class SdTrainDeployStack extends NestedStack {
     this.snsTopic = this.createSns();
     this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
-    this.default_endpoint_name = ""
+    this.default_endpoint_name = '';
 
     // Create DynamoDB table to store model job id
     this.modelTable = new dynamodb.Table(this, 'ModelTable', {
@@ -134,7 +134,7 @@ export class SdTrainDeployStack extends NestedStack {
       checkpointTable: this.checkPointTable,
     });
 
-    this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName
+    this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
 
     // GET /checkpoints
     new ListAllCheckPointsApi(this, 'list-all-ckpts-api', {
@@ -192,7 +192,7 @@ export class SdTrainDeployStack extends NestedStack {
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: `stable-diffusion-aws-extension-${this.account}-${this.region}`
+      default: `stable-diffusion-aws-extension-${this.account}-${this.region}`,
     });
 
     // Define the CORS configuration
@@ -200,8 +200,8 @@ export class SdTrainDeployStack extends NestedStack {
       {
         allowedHeaders: ['*'],
         allowedMethods: [s3.HttpMethods.PUT],
-        allowedOrigins: ['*']
-      }
+        allowedOrigins: ['*'],
+      },
     ];
 
     //The code that defines your stack goes here
@@ -210,7 +210,7 @@ export class SdTrainDeployStack extends NestedStack {
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
-      cors: corsRules
+      cors: corsRules,
     });
   }
 

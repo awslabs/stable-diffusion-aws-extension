@@ -114,14 +114,17 @@ export class UpdateModelStatusRestApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:CreateBucket',
         's3:AbortMultipartUpload',
         's3:ListMultipartUploadParts',
         's3:ListBucketMultipartUploads',
       ],
-      resources: [`${this.s3Bucket.bucketArn}/*`,
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
         'arn:aws:s3:::*SageMaker*',
         'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        'arn:aws:s3:::*sagemaker*',
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
