@@ -22,8 +22,8 @@ import html
 
 # TODO: Automaticly append the dependent module path.
 sys.path.append("extensions/sd_dreambooth_extension")
-sys.path.append("extensions/aws-ai-solution-kit")
-sys.path.append("extensions/aws-ai-solution-kit/scripts")
+sys.path.append("extensions/stable-diffusion-aws-extension")
+sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 # TODO: Do not use the dreambooth status module.
 from dreambooth.shared import status
 from dreambooth import shared as dreambooth_shared
