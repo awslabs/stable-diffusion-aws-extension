@@ -15,7 +15,7 @@ env:
 phases:
   install:
     runtime-versions:
-      nodejs: 14
+      nodejs: 16
     commands:
       - echo "nothing to do in install"
   pre_build:
@@ -27,7 +27,7 @@ phases:
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
       - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
-      - export BUILD_VERSION=0.8.0-$(git rev-parse --short HEAD || echo latest)
+      - export BUILD_VERSION=0.9.0-$(git rev-parse --short HEAD || echo latest)
       - export CN_ASSETS='cn/'
       - |-
         set -euxo pipefail
