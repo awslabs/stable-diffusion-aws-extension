@@ -94,35 +94,37 @@ def datetime_to_short_form(datetime_str):
 def update_sagemaker_endpoints():
     global sagemaker_endpoints
 
-    response = server_request('inference/list-endpoint-deployment-jobs')
-    r = response.json()
-    print(f"guming debug>>update_sagemaker_endpoints, {r}")
-    if r:
-        sagemaker_endpoints.clear()  # Clear the existing list before appending new values
-        sagemaker_raw_endpoints = []
-        for obj in r:
-            # if "EndpointDeploymentJobId" in obj and obj.get('status') == 'success' and obj.get('endpoint_status') == "InService":
-            if "EndpointDeploymentJobId" in obj :
-                endpoint_name = obj["endpoint_name"]
-                endpoint_status = obj["endpoint_status"]
-                if "endTime" in obj: 
-                    endpoint_time = obj["endTime"]
-                else:
-                    endpoint_time = "N/A"
-                endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
-                sagemaker_raw_endpoints.append(endpoint_info)
-            # temp_list = []
-            # for obj in r:
-            #     complete_time = obj.get('completeTime')
-            #     inference_job_id = obj.get('InferenceJobId')
-            #     combined_string = f"{complete_time}-->{inference_job_id}"
-            #     temp_list.append((complete_time, combined_string))
+    try:
+        response = server_request('inference/list-endpoint-deployment-jobs')
+        r = response.json()
+        if r:
+            sagemaker_endpoints.clear()  # Clear the existing list before appending new values
+            sagemaker_raw_endpoints = []
+            for obj in r:
+                if "EndpointDeploymentJobId" in obj :
+                    if "endpoint_name" in obj:
+                        endpoint_name = obj["endpoint_name"]
+                        endpoint_status = obj["endpoint_status"]
+                    else:
+                        endpoint_name = obj["EndpointDeploymentJobId"]
+                        endpoint_status = obj["status"]
 
-        # Sort the list based on completeTime in descending order
-        sagemaker_endpoints= sorted(sagemaker_raw_endpoints, key=lambda x: x.split('+')[-1], reverse=True)
+                    if "endTime" in obj: 
+                        endpoint_time = obj["endTime"]
+                    else:
+                        endpoint_time = "N/A"
+                    endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
+                    sagemaker_raw_endpoints.append(endpoint_info)
 
-    else:
-        print("The API response is empty for update_sagemaker_endpoints().")
+            # Sort the list based on completeTime in descending order
+            sagemaker_endpoints= sorted(sagemaker_raw_endpoints, key=lambda x: x.split('+')[-1], reverse=True)
+
+        else:
+            print("The API response is empty for update_sagemaker_endpoints().")
+
+    except Exception as e:
+        print(f"An error occurred while updating SageMaker endpoints: {e}")
+
 
 def update_txt2img_inference_job_ids():
     global txt2img_inference_job_ids
@@ -164,22 +166,32 @@ def get_inference_job(inference_job_id):
     return response.json()
 
 def get_inference_job_image_output(inference_job_id):
-    response = server_request(f'inference/get-inference-job-image-output?jobID={inference_job_id}')
-    r = response.json()
-    txt2img_inference_job_image_list = []
-    for obj in r:
-        obj_value = str(obj)
-        txt2img_inference_job_image_list.append(obj_value)
-    return txt2img_inference_job_image_list
+    try:
+        response = server_request(f'inference/get-inference-job-image-output?jobID={inference_job_id}')
+        r = response.json()
+        txt2img_inference_job_image_list = []
+        for obj in r:
+            obj_value = str(obj)
+            txt2img_inference_job_image_list.append(obj_value)
+        return txt2img_inference_job_image_list
+    except Exception as e:
+        print(f"An error occurred while getting inference job image output: {e}")
+        return []
+
 
 def get_inference_job_param_output(inference_job_id):
-    response = server_request(f'inference/get-inference-job-param-output?jobID={inference_job_id}')
-    r = response.json()
-    txt2img_inference_job_param_list = []
-    for obj in r:
-        obj_value = str(obj)
-        txt2img_inference_job_param_list.append(obj_value)
-    return txt2img_inference_job_param_list 
+    try:
+        response = server_request(f'inference/get-inference-job-param-output?jobID={inference_job_id}')
+        r = response.json()
+        txt2img_inference_job_param_list = []
+        for obj in r:
+            obj_value = str(obj)
+            txt2img_inference_job_param_list.append(obj_value)
+        return txt2img_inference_job_param_list
+    except Exception as e:
+        print(f"An error occurred while getting inference job param output: {e}")
+        return []
+
 
 def download_images(image_urls: list, local_directory: str):
     if not os.path.exists(local_directory):
@@ -187,39 +199,46 @@ def download_images(image_urls: list, local_directory: str):
 
     image_list = []
     for url in image_urls:
-        response = requests.get(url)
-        if response.status_code == 200:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
             image_name = os.path.basename(url).split('?')[0]
             local_path = os.path.join(local_directory, image_name)
             
             with open(local_path, 'wb') as f:
                 f.write(response.content)
             image_list.append(local_path)
-        else:
-            print(f"Error downloading image {url}: {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading image {url}: {e}")
     return image_list
+
 
 def get_model_list_by_type(model_type):
     if api_gateway_url is None:
         print(f"failed to get the api-gateway url, can not fetch remote data")
         return []
     url = api_gateway_url + f"checkpoints?status=Active&types={model_type}"
-    response = requests.get(url=url, headers={'x-api-key': api_key})
-    json_response = response.json()
-    # print(f"response url json for model {model_type} is {json_response}")
+    try:
+        response = requests.get(url=url, headers={'x-api-key': api_key})
+        response.raise_for_status()
+        json_response = response.json()
 
-    if "checkpoints" not in json_response.keys():
+        if "checkpoints" not in json_response.keys():
+            return []
+
+        checkpoint_list = []
+        for ckpt in json_response["checkpoints"]:
+            ckpt_type = ckpt["type"]
+            for ckpt_name in ckpt["name"]:
+                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+                checkpoint_list.append(ckpt_name)
+
+        return checkpoint_list
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching model list: {e}")
         return []
 
-    checkpoint_list = []
-    for ckpt in json_response["checkpoints"]:
-        ckpt_type = ckpt["type"]
-        for ckpt_name in ckpt["name"]:
-            ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-            checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
-            checkpoint_list.append(ckpt_name)
-
-    return checkpoint_list
 
 def update_sd_checkpoints():
     model_type = "Stable-diffusion"
