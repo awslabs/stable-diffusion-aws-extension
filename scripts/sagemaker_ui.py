@@ -41,8 +41,8 @@ ControlNet_model_list = []
 
 # Initial checkpoints information
 checkpoint_info = {}
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet"]
-checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet"]
+checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "dreambooth"]
+checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet", "dreambooth"]
 stable_diffusion_list = []
 embeddings_list = []
 lora_list = []
@@ -53,7 +53,7 @@ for ckpt_type, ckpt_name in zip(checkpoint_type, checkpoint_name):
 
 # get api_gateway_url
 api_gateway_url = get_variable_from_json('api_gateway_url')
-api_key = get_variable_from_json('api_token') 
+api_key = get_variable_from_json('api_token')
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
@@ -109,7 +109,7 @@ def update_sagemaker_endpoints():
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
 
-                    if "endTime" in obj: 
+                    if "endTime" in obj:
                         endpoint_time = obj["endTime"]
                     else:
                         endpoint_time = "N/A"
@@ -204,7 +204,7 @@ def download_images(image_urls: list, local_directory: str):
             response.raise_for_status()
             image_name = os.path.basename(url).split('?')[0]
             local_path = os.path.join(local_directory, image_name)
-            
+
             with open(local_path, 'wb') as f:
                 f.write(response.content)
             image_list.append(local_path)
@@ -217,7 +217,13 @@ def get_model_list_by_type(model_type):
     if api_gateway_url is None:
         print(f"failed to get the api-gateway url, can not fetch remote data")
         return []
-    url = api_gateway_url + f"checkpoints?status=Active&types={model_type}"
+
+    url = api_gateway_url + f"checkpoints?status=Active"
+    if isinstance(model_type, list):
+        url += "&types=" + "&types=".join(model_type)
+    else:
+        url += f"&types={model_type}"
+
     try:
         response = requests.get(url=url, headers={'x-api-key': api_key})
         response.raise_for_status()
@@ -241,9 +247,9 @@ def get_model_list_by_type(model_type):
 
 
 def update_sd_checkpoints():
-    model_type = "Stable-diffusion"
+    model_type = ["Stable-diffusion", "dreambooth"]
     return get_model_list_by_type(model_type)
-    
+
 def get_texual_inversion_list():
     model_type = "embeddings"
     return get_model_list_by_type(model_type)
@@ -251,11 +257,11 @@ def get_texual_inversion_list():
 def get_lora_list():
     model_type = "Lora"
     return get_model_list_by_type(model_type)
-    
+
 def get_hypernetwork_list():
     model_type = "hypernetworks"
     return get_model_list_by_type(model_type)
-    
+
 def get_controlnet_model_list():
     model_type = "ControlNet"
     return get_model_list_by_type(model_type)
@@ -263,18 +269,18 @@ def get_controlnet_model_list():
 def refresh_all_models():
     print("Refresh checkpoints")
     api_gateway_url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token') 
+    api_key = get_variable_from_json('api_token')
     for rp, name in zip(checkpoint_type, checkpoint_name):
         url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
         response = requests.get(url=url, headers={'x-api-key': api_key})
         json_response = response.json()
         # print(f"response url json for model {rp} is {json_response}")
         if "checkpoints" not in json_response.keys():
-            checkpoint_info[rp] = {} 
+            checkpoint_info[rp] = {}
             continue
         for ckpt in json_response["checkpoints"]:
             ckpt_type = ckpt["type"]
-            checkpoint_info[ckpt_type] = {} 
+            checkpoint_info[ckpt_type] = {}
             for ckpt_name in ckpt["name"]:
                 ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
@@ -304,13 +310,13 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         parts_number = math.ceil(file_size.st_size/part_size)
         print('!!!!!!!!!!', file_size, parts_number)
 
-        #local_tar_path = f'{model_name}.tar'  
-        local_tar_path = model_name      
+        #local_tar_path = f'{model_name}.tar'
+        local_tar_path = model_name
         payload = {
             "checkpoint_type": rp,
             "filenames": [{
-            "filename": local_tar_path,
-            "parts_number": parts_number
+                "filename": local_tar_path,
+                "parts_number": parts_number
             }],
             "params": {"message": "placeholder for chkpts upload test"}
         }
@@ -321,7 +327,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
-        try: 
+        try:
             json_response = response.json()
             print(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
@@ -372,7 +378,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             os.system(f"rm {local_tar_path}")
         except Exception as e:
             print(f"fail to upload model {lp}, error: {e}")
-    
+
     print(f"Refresh checkpionts after upload...")
     refresh_all_models()
 
@@ -396,7 +402,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         image_list = []  # Return an empty list if selected_value is None
         info_text = ''
         infotexts = "Failed upload the config to cloud  "
-        return image_list, info_text, plaintext_to_html(infotexts) 
+        return image_list, info_text, plaintext_to_html(infotexts)
 
     sagemaker_endpoint_status = sagemaker_endpoint.split("+")[1]
 
@@ -405,7 +411,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         info_text = ''
         infotexts = "Failed! Please choose the endpoint in 'InService' states "
         return image_list, info_text, plaintext_to_html(infotexts)
-    
+
     # stage 2: inference using endpoint_name
     headers = {
         "x-api-key": api_key,
@@ -443,7 +449,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
             info_text = ''
             infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
             return image_list, info_text, plaintext_to_html(infotexts)
-            
+
 
 def sagemaker_deploy(instance_type, initial_instance_count=1):
     """ Create SageMaker endpoint for GPU inference.
@@ -457,8 +463,8 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
     print(f"start deploying instance type: {instance_type} with count {initial_instance_count}............")
 
     payload = {
-    "instance_type": instance_type,
-    "initial_instance_count": initial_instance_count
+        "instance_type": instance_type,
+        "initial_instance_count": initial_instance_count
     }
 
     deployment_url = f"{api_gateway_url}inference/deploy-sagemaker-endpoint"
@@ -537,7 +543,7 @@ def fake_gan(selected_value: str ):
         info_text = ''
 
     return image_list, info_text, plaintext_to_html(infotexts)
-    
+
 def display_inference_result(inference_id: str ):
     print(f"selected value is {inference_id}")
     if inference_id is not None:
@@ -584,8 +590,8 @@ def create_ui():
         get_inference_job_list()
     else:
         print(f"there is no api-gateway url and token in local file,")
-    
-    
+
+
     with gr.Group():
         with gr.Accordion("Open for SageMaker Inference!", open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
@@ -593,9 +599,9 @@ def create_ui():
                 with gr.Row():
                     global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                             label="Select Cloud SageMaker Endpoint",
-                                             elem_id="sagemaker_endpoint_dropdown"
-                                             )
+                                                     label="Select Cloud SageMaker Endpoint",
+                                                     elem_id="sagemaker_endpoint_dropdown"
+                                                     )
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():
                     sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
@@ -623,18 +629,18 @@ def create_ui():
                 #     outputs=[]
                 # )
             with gr.Row():
-                global inference_job_dropdown 
+                global inference_job_dropdown
                 global txt2img_inference_job_ids
                 inference_job_dropdown = gr.Dropdown(txt2img_inference_job_ids,
-                                            label="Inference Job IDs",
-                                            elem_id="txt2img_inference_job_ids_dropdown"
-                                            )
+                                                     label="Inference Job IDs",
+                                                     elem_id="txt2img_inference_job_ids_dropdown"
+                                                     )
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
- 
+
             with gr.Row():
                 gr.HTML(value="Extra Networks for Sagemaker Endpoint")
             #     advanced_model_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(sd_checkpoints)}, "refresh_sd_checkpoints")
-            
+
             with gr.Row():
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
                 create_refresh_button(
@@ -672,13 +678,13 @@ def create_ui():
                 lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
                 hypernetwork_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="HyperNetwork",elem_id="sd_hypernetwork_path_textbox")
                 controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
-            
+
             with gr.Row():
                 model_update_button = gr.Button(value="Upload models to S3", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
                 model_update_button.click(_js="model_update",
-                                        fn=sagemaker_upload_model_s3,
-                                        inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                        outputs=[sagemaker_html_log])
+                                          fn=sagemaker_upload_model_s3,
+                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
+                                          outputs=[sagemaker_html_log])
 
             gr.HTML(value="Deploy New SageMaker Endpoint")
             with gr.Row():
@@ -690,8 +696,8 @@ def create_ui():
             with gr.Row():
                 sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
                 sagemaker_deploy_button.click(sagemaker_deploy,
-                                            _js="deploy_endpoint", \
-                                            inputs = [instance_type_dropdown, instance_count_dropdown])
+                                              _js="deploy_endpoint", \
+                                              inputs = [instance_type_dropdown, instance_count_dropdown])
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", open=False):

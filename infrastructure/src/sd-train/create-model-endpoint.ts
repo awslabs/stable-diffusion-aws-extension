@@ -139,7 +139,6 @@ export class CreateModelSageMakerEndpoint {
         'sns:Publish',
         'sns:Receive',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [this.successTopic.topicArn, this.failureTopic.topicArn],
     }));
     return sagemakerRole;

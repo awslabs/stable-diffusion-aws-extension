@@ -1,5 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  Aws,
   aws_apigateway as apigw,
   aws_dynamodb,
   aws_ecr,
@@ -10,7 +11,6 @@ import {
   CustomResource,
   Duration,
   RemovalPolicy,
-  Aws,
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
@@ -36,7 +36,7 @@ export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
-  private readonly machineType: string = 'ml.g4dn.2xlarge';
+  private readonly machineType: string = 'ml.c6i.xlarge';
 
   private readonly src;
   private readonly scope: Construct;
@@ -188,7 +188,7 @@ class CreateModelInferenceImage {
   constructor(scope: Construct, srcImage: string) {
 
     this.dockerRepo = new aws_ecr.Repository(scope, `${this.id}-repo`, {
-      repositoryName: 'aigc-create-model',
+      repositoryName: 'aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteImages: true,
     });
@@ -202,6 +202,7 @@ class CreateModelInferenceImage {
     this.customJob = new CustomResource(scope, `${this.id}-cr-image`, {
       serviceToken: this.ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
+      removalPolicy: RemovalPolicy.RETAIN,
       properties: {
         SrcImage: `docker://${srcImage}`,
         DestImage: `docker://${this.dockerRepo.repositoryUri}:latest`,
