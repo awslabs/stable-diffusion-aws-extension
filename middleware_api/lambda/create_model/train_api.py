@@ -294,7 +294,7 @@ def check_train_job_status(event, context):
             field_name='checkpoint_status',
             value=checkpoint.checkpoint_status.value
         )
-        s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+        s3 = boto3.client('s3')
         bucket, key = split_s3_path(checkpoint.s3_location)
         s3_resp = s3.list_objects(
             Bucket=bucket,
