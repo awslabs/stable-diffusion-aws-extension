@@ -130,6 +130,8 @@ def getEndpointDeploymentJobList():
                 else:
                     # Remove the job item from the DynamoDB table if the endpoint doesn't exist in SageMaker
                     endpoint_deployment_table.delete_item(Key={'EndpointDeploymentJobId': deployment_job_id})
+            else:
+                filtered_endpoint_jobs.append(job) 
 
         return filtered_endpoint_jobs
 
