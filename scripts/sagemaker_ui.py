@@ -510,6 +510,26 @@ def txt2img_config_save():
     # placeholder for saving txt2img config
     pass
 
+def displayEndpointInfo(input_string: str):
+    print(f"selected value is {input_string}")
+    parts = input_string.split('+')
+
+    if len(parts) < 2:
+        return plaintext_to_html("")
+
+    endpoint_job_id, status = parts[0], parts[1]
+
+    if status == 'failed':
+        response = server_request(f'inference/get-endpoint-deployment-job?jobID={endpoint_job_id}')
+        # Do something with the response
+        r = response.json()
+        if "error" in r:
+            return plaintext_to_html(r["error"])
+        else:
+            return plaintext_to_html(r["EndpointDeploymentJobId"])
+    else:
+        return plaintext_to_html("")
+
 def fake_gan(selected_value: str ):
     print(f"selected value is {selected_value}")
     if selected_value is not None:
@@ -599,9 +619,10 @@ def create_ui():
                 with gr.Row():
                     global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                                     label="Select Cloud SageMaker Endpoint",
-                                                     elem_id="sagemaker_endpoint_dropdown"
-                                                     )
+                                             label="Select Cloud SageMaker Endpoint",
+                                             elem_id="sagemaker_endpoint_dropdown"
+                                             )
+
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():
                     sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")

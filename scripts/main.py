@@ -133,6 +133,13 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
         )
+
+        sagemaker_ui.sagemaker_endpoint.change(
+            fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[txt2img_html_info]
+        )
+
         sagemaker_ui.generate_on_cloud_button_with_js.click(
                     fn=sagemaker_ui.generate_on_cloud_no_input,
                     _js="txt2img_config_save",
