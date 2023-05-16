@@ -36,7 +36,7 @@ export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
-  private readonly machineType: string = 'ml.c6i.xlarge';
+  private readonly machineType: string = 'ml.c6i.8xlarge';
 
   private readonly src;
   private readonly scope: Construct;
