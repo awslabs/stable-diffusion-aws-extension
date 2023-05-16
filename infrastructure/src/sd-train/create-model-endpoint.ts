@@ -76,6 +76,7 @@ export class CreateModelSageMakerEndpoint {
           modelName: this.model.modelName,
           initialVariantWeight: 1.0,
           instanceType: props.machineType,
+          volumeSizeInGb: 512,
           variantName: 'main',
           initialInstanceCount: 1,
         },
