@@ -214,6 +214,12 @@ def download_images(image_urls: list, local_directory: str):
 
 
 def get_model_list_by_type(model_type):
+
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
     if api_gateway_url is None:
         print(f"failed to get the api-gateway url, can not fetch remote data")
         return []
@@ -320,7 +326,13 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             }],
             "params": {"message": "placeholder for chkpts upload test"}
         }
+        api_gateway_url = get_variable_from_json('api_gateway_url')
+        # Check if api_url ends with '/', if not append it
+        if not api_gateway_url.endswith('/'):
+            api_gateway_url += '/'
+        api_key = get_variable_from_json('api_token')
         print('!!!!!!api_gateway_url', api_gateway_url)
+
         url = str(api_gateway_url) + "checkpoint"
 
         print(f"Post request for upload s3 presign url: {url}")
@@ -412,6 +424,12 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         infotexts = "Failed! Please choose the endpoint in 'InService' states "
         return image_list, info_text, plaintext_to_html(infotexts)
 
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+
     # stage 2: inference using endpoint_name
     headers = {
         "x-api-key": api_key,
@@ -420,6 +438,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
     print(f"checkpointinfo is {payload}")
+
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
     try:
@@ -462,6 +481,12 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
     # function code to call sagemaker deploy api
     print(f"start deploying instance type: {instance_type} with count {initial_instance_count}............")
 
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+
     payload = {
         "instance_type": instance_type,
         "initial_instance_count": initial_instance_count
@@ -480,6 +505,12 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
 
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
     print(f"function under development, current checkpoint_info is {checkpoint_info}")
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+
     if api_gateway_url is None:
         print(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
         return []
