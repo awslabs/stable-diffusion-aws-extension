@@ -253,7 +253,7 @@ def get_model_list_by_type(model_type):
 
 
 def update_sd_checkpoints():
-    model_type = ["Stable-diffusion", "dreambooth"]
+    model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
 
 def get_texual_inversion_list():

@@ -186,11 +186,9 @@ class CreateModelInferenceImage {
 
 
   constructor(scope: Construct, srcImage: string) {
-
     this.dockerRepo = new aws_ecr.Repository(scope, `${this.id}-repo`, {
       repositoryName: 'aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteImages: true,
     });
 
     this.ecrDeployment = new ECRDeployment(scope, `${this.id}-ecr-deploy`, {
@@ -202,7 +200,6 @@ class CreateModelInferenceImage {
     this.customJob = new CustomResource(scope, `${this.id}-cr-image`, {
       serviceToken: this.ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
-      removalPolicy: RemovalPolicy.RETAIN,
       properties: {
         SrcImage: `docker://${srcImage}`,
         DestImage: `docker://${this.dockerRepo.repositoryUri}:latest`,

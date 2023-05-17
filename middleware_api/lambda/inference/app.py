@@ -537,10 +537,15 @@ async def run_sagemaker_inference(request: Request):
 
         predictor = Predictor(endpoint_name)
 
+        # adjust time out time to 1 hour
+        initial_args = {}
+        
+        initial_args["InvocationTimeoutSeconds"]=3600
+
         predictor = AsyncPredictor(predictor, name=endpoint_name)
         predictor.serializer = JSONSerializer()
         predictor.deserializer = JSONDeserializer()
-        prediction = predictor.predict_async(data=payload, inference_id=inference_id)
+        prediction = predictor.predict_async(data=payload, initial_args=initial_args, inference_id=inference_id)
         output_path = prediction.output_path
 
         #put the item to inference DDB for later check status
