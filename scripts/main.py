@@ -195,6 +195,8 @@ def on_ui_tabs():
             sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model")
             sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt")
         with gr.Row():
+            gr.HTML(value="Enter your API URL & Token to start the connection.", elem_id="hint_row")
+        with gr.Row():
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Connection Setting")
                 api_url_textbox = gr.Textbox(value=get_variable_from_json('api_gateway_url'), lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
