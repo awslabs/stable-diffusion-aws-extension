@@ -61,13 +61,6 @@ class SageMakerUI(scripts.Script):
         return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
     def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
         pass
-        # # dropdown.init_field = init_field
-
-        # dropdown.change(
-        #     fn=select_script,
-        #     inputs=[dropdown],
-        #     outputs=[script.group for script in self.selectable_scripts]
-        # )
 
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
@@ -158,53 +151,6 @@ def on_after_component_callback(component, **_kwargs):
                     # ],
                     outputs=[
                     ])
-    # # hook logic for merge checkpoints
-    # global modelmerger_merge_component, modelmerger_merge_hook
-    # is_modelmerger_merge_component = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'modelmerger_merge'
-    # if is_modelmerger_merge_component:
-    #     print("create model merge component")
-    #     modelmerger_merge_component = component
-    # if modelmerger_merge_component is not None and modelmerger_merge_hook is None:
-    #     modelmerger_merge_hook = "finish"
-    #     print("create merge in the cloud")
-    #     def get_model_list_by_type(model_type):
-    #         if api_gateway_url is None:
-    #             print(f"failed to get the api-gateway url, can not fetch remote data")
-    #             return []
-    #         url = api_gateway_url + f"checkpoints?status=Active&types={model_type}"
-    #         response = requests.get(url=url, headers={'x-api-key': api_key})
-    #         json_response = response.json()
-    #         # print(f"response url json for model {model_type} is {json_response}")
-
-    #         if "checkpoints" not in json_response.keys():
-    #             return []
-
-    #         checkpoint_list = []
-    #         for ckpt in json_response["checkpoints"]:
-    #             ckpt_type = ckpt["type"]
-    #             for ckpt_name in ckpt["name"]:
-    #                 ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-    #                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
-    #                 checkpoint_list.append(ckpt_name)
-
-    #         return checkpoint_list
-    #     def update_sd_checkpoints():
-    #         model_type = "Stable-diffusion"
-    #         return get_model_list_by_type(model_type)
-    #     with gr.Group():
-    #         with gr.Accordion("Open for checkpoint merger in the cloud!", open=False):
-    #             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
-    #                 primary_model_name = gr.Dropdown(label="Primary model (A) in the cloud",
-    #                                                  choices=sorted(sagemaker_ui.update_sd_checkpoints()), elem_id="model_on_the_cloud")
-    #                 create_refresh_button(primary_model_name, sagemaker_ui.update_sd_checkpoints,
-    #                                       lambda: {"choices": sorted(sagemaker_ui.update_sd_checkpoints())},
-    #                                       "refresh primary model (A)")
-
-                    # secondary_model_name = gr.Dropdown(modules.sd_models.checkpoint_tiles(), elem_id="modelmerger_secondary_model_name", label="Secondary model (B) in the cloud")
-                    # create_refresh_button(secondary_model_name, modules.sd_models.list_models, lambda: {"choices": modules.sd_models.checkpoint_tiles()}, "refresh_checkpoint_B")
-
-                    # tertiary_model_name = gr.Dropdown(modules.sd_models.checkpoint_tiles(), elem_id="modelmerger_tertiary_model_name", label="Tertiary model (C)")
-                    # create_refresh_button(tertiary_model_name, modules.sd_models.list_models, lambda: {"choices": modules.sd_models.checkpoint_tiles()}, "refresh_checkpoint_C")
 
 
 def update_connect_config(api_url, api_token):
@@ -235,27 +181,24 @@ def test_aws_connect_config(api_url, api_token):
         response = requests.get(target_url,headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
         r = response.json()
-        print(f"succeed test connection")
-        return "succeed test connection"
+        return "Successfully Connected"
     except requests.exceptions.RequestException as e:
         print(f"Error: Failed to get server request. Details: {e}")
         return "failed to connect to backend server, please check the url and token"
 
 def on_ui_tabs():
-    buildin_model_list = ['Buildin model 1','Buildin model 2','Buildin model 3']
+    buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
+        with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row"):
+            sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params")
+            sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params")
+            sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model")
+            sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt")
         with gr.Row():
-            gr.HTML(value="Select a pipeline to using SageMaker.", elem_id="hint_row")
-        with gr.Row().style(equal_height=False):
-            with gr.Column(variant="panel", elem_id="PipelinePanel"):
-                with gr.Tab("Select"):
-                    with gr.Row():
-                        db_model_name = gr.Dropdown(label='Pipeline', choices=["dreambooth_train"],elem_id="pipeline_drop_down")
-                        for job_link in job_link_list:
-                            gr.HTML(value=f"<span class='hhh'>{job_link}</span>")
-        with  gr.Row():
+            gr.HTML(value="Enter your API URL & Token to start the connection.", elem_id="hint_row")
+        with gr.Row():
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="AWS Connect Setting")
+                gr.HTML(value="AWS Connection Setting")
                 api_url_textbox = gr.Textbox(value=get_variable_from_json('api_gateway_url'), lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
                 api_token_textbox = gr.Textbox(value=get_variable_from_json('api_token'), lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
@@ -266,21 +209,21 @@ def on_ui_tabs():
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
                 test_connection_result = gr.Label();
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
-            with gr.Column(variant="panel", scale=2):
-                gr.HTML(value="Resource")
-                gr.Dataframe(
-                    headers=["Extension", "Column header", "Column Header"],
-                    datatype=["str", "str", "str"],
-                    row_count=5,
-                    col_count=(3, "fixed"),
-                    value=[['Dreambooth','Cell Value','Cell Value'],
-                           ['LoRA','Cell Value','Cell Value'],
-                           ['ControlNet','Cell Value','Cell Value']])
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="Model")
-                model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In")
+                gr.HTML(value="AWS Model Setting")
+                with gr.Tab("Select"):
+                    gr.HTML(value="AWS Built-in Model")
+                    model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
+                with gr.Tab("Create"):
+                    gr.HTML(value="AWS Custom Model")
+                    model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
+                    model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
+                    # model_create_button.click(_js="create_model",
+                    #                           fn=create_model,
+                    #                           inputs = [model_name_textbox],
+                    #                           outputs= [])
 
-    return (sagemaker_interface, "SageMaker", "sagemaker_interface"),
+    return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
 
 script_callbacks.on_after_component(on_after_component_callback)

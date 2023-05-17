@@ -38,9 +38,11 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly default_endpoint_name: string;
 
   private readonly srcRoot='../middleware_api/lambda';
+  private readonly parentScope: Construct;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+    this.parentScope = scope;
     this.snsTopic = this.createSns();
     this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
@@ -199,7 +201,7 @@ export class SdTrainDeployStack extends NestedStack {
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
     const hour = now.getHours().toString().padStart(2, '0');
-  
+
     return `${year}-${month}-${day}-${hour}`;
   }
 
@@ -209,7 +211,7 @@ export class SdTrainDeployStack extends NestedStack {
     const uuid = this.generateUUID();
     const currentTime = this.getCurrentTime();
     const generatedString = `${uuid}-${currentTime}`;
-    const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
+    const bucketName = new CfnParameter(this.parentScope, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
       default: `stable-diffusion-aws-extension-${generatedString}-${this.region}`,

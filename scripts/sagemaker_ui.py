@@ -642,9 +642,8 @@ def create_ui():
     else:
         print(f"there is no api-gateway url and token in local file,")
 
-
     with gr.Group():
-        with gr.Accordion("Open for SageMaker Inference!", open=False):
+        with gr.Accordion("Amazon SageMaker Inference", open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with gr.Column(variant='panel'):
                 with gr.Row():
@@ -690,7 +689,7 @@ def create_ui():
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
 
             with gr.Row():
-                gr.HTML(value="Extra Networks for Sagemaker Endpoint")
+                gr.HTML(value="Extra Networks for Cloud Inference")
             #     advanced_model_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(sd_checkpoints)}, "refresh_sd_checkpoints")
 
             with gr.Row():
@@ -732,7 +731,7 @@ def create_ui():
                 controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
 
             with gr.Row():
-                model_update_button = gr.Button(value="Upload models to S3", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
+                model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
                 model_update_button.click(_js="model_update",
                                           fn=sagemaker_upload_model_s3,
                                           inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],

@@ -348,7 +348,6 @@ export class UpdateTrainJobApi {
     const dockerRepo = new aws_ecr.Repository(this.scope, `${this.id}-repo`, {
       repositoryName: 'aigc-train-utils',
       removalPolicy: RemovalPolicy.DESTROY,
-      autoDeleteImages: true,
     });
 
     const ecrDeployment = new ECRDeployment(this.scope, `${this.id}-ecr-deploy`, {
