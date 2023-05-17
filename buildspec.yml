@@ -4,8 +4,6 @@ env:
   shell: bash
   exported-variables:
     - BSS_IMAGE_ASSET_REPOSITORY_NAME
-    - BSS_IMAGE_ASSET_TAG_PREFIX
-    - BSS_IMAGE_ASSET_ACCOUNT_ID
     - BUILD_VERSION
     - CN_ASSETS
     - GLOBAL_ASSETS
@@ -48,7 +46,7 @@ phases:
   post_build:
     commands:
       - echo "Retrieving next stage buildspec `date` in `pwd`"
-      - - aws s3 cp s3://${SOLUTIONS_BUILD_ASSETS_BUCKET:-aws-solutions-build-assets}/changelog-spec.yml ../buildspec.yml
+      - aws s3 cp s3://${SOLUTIONS_BUILD_ASSETS_BUCKET:-aws-solutions-build-assets}/changelog-spec.yml ../buildspec.yml
       - echo "Retrieving next stage buildspec complete"
       - echo "Post build completed on `date`"
 
