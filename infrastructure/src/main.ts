@@ -1,4 +1,4 @@
-import { App, Stack, StackProps, Aspects } from 'aws-cdk-lib';
+import { App, Stack, StackProps, Aspects, CfnParameter } from 'aws-cdk-lib';
 import {
   BootstraplessStackSynthesizer,
   CompositeECRRepositoryAspect,
@@ -27,9 +27,25 @@ export class Middleware extends Stack {
     super(scope, id, props);
     this.templateOptions.description = "(SO8032) - Stable-Diffusion AWS Extension";
 
+    // Create CfnParameters here
+    const emailParam = new CfnParameter(this, 'email', {
+      type: 'String',
+      description: 'Email address to receive notifications',
+      allowedPattern: '\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}',
+      default: 'example@example.com',
+    });
+
+    const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
+      type: 'String',
+      description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
+    });
+
+
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
       synthesizer: props.synthesizer,
+      emailParam: emailParam,
+      bucketName: bucketName
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
