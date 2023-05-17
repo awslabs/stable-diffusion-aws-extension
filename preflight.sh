@@ -14,19 +14,27 @@ REPO_FOLDER_LIST=(
     "sd_dreambooth_extension"
 )
 
-# Parse options
-TEMP=$(getopt -o x:y: --long initial-support-commit-b:,initial-support-commit-c: -n "$(basename "$0")" -- "$@")
+show_help() {
+    echo "Usage: $(basename "$0") -x/--initial_support_commit_controlnet <commit id> -y/--initial_support_commit_dreambooth <commit id>"
+}
+
+# Parse options with help of getopt
+TEMP=$(getopt -o x:y:h -l initial_support_commit_controlnet:,initial_support_commit_dreambooth:,help -n "$(basename "$0")" -- "$@")
 eval set -- "$TEMP"
 
 while true; do
     case "$1" in
-        -x|--initial-support-commit-b)
+        -x|--initial_support_commit_controlnet)
             initial_support_commit_controlnet="$2"
             shift 2
             ;;
-        -y|--initial-support-commit-c)
+        -y|--initial_support_commit_dreambooth)
             initial_support_commit_dreambooth="$2"
             shift 2
+            ;;
+        -h|--help)
+            show_help
+            exit
             ;;
         --)
             shift
