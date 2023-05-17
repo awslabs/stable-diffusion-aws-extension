@@ -27,7 +27,7 @@ phases:
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
       - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
-      - export BUILD_VERSION=0.9.0-$(git rev-parse --short HEAD || echo latest)
+      - export BUILD_VERSION=0.10.0-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
       - export CN_ASSETS='cn/'
       - |-
         set -euxo pipefail
@@ -48,7 +48,7 @@ phases:
   post_build:
     commands:
       - echo "Retrieving next stage buildspec `date` in `pwd`"
-      - aws s3 cp s3://${SOLUTIONS_BUILD_ASSETS_BUCKET:-solutions-build-assets}/changelog-spec.yml ../buildspec.yml
+      - - aws s3 cp s3://${SOLUTIONS_BUILD_ASSETS_BUCKET:-aws-solutions-build-assets}/changelog-spec.yml ../buildspec.yml
       - echo "Retrieving next stage buildspec complete"
       - echo "Post build completed on `date`"
 
