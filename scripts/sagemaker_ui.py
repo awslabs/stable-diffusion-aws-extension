@@ -41,8 +41,8 @@ ControlNet_model_list = []
 
 # Initial checkpoints information
 checkpoint_info = {}
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "dreambooth"]
-checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet", "dreambooth"]
+checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet"]
+checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet"]
 stable_diffusion_list = []
 embeddings_list = []
 lora_list = []
