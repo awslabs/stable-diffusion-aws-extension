@@ -43,11 +43,11 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly default_endpoint_name: string;
 
   private readonly srcRoot='../middleware_api/lambda';
-  private readonly parentScope: Construct;
+  // private readonly parentScope: Construct;
 
   constructor(scope: Construct, id: string, props?: SdTrainDeployStackProps) {
     super(scope, id, props);
-    this.parentScope = scope;
+    // this.parentScope = scope;
     
     // Check that props.emailParam and props.bucketName are not undefined
     if (!props || props.emailParam === undefined || props.bucketName === undefined) {
