@@ -60,7 +60,7 @@ export BSS_FILE_ASSET_REGION_SET="cn-north-1,cn-northwest-1"
 run mkdir -p ${GLOBAL_S3_ASSETS_PATH}/${CN_ASSETS}
 export BSS_FILE_ASSET_PREFIX="${FILE_ASSET_PREFIX}${CN_ASSETS}"
 run npx cdk synth -c TargetPartition=aws-cn --json --output ${GLOBAL_S3_ASSETS_PATH}/${CN_ASSETS}
-sed -i "s|<TEMPLATE_BUILD_VERSION>|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${CN_ASSETS}*template.json
+sed -i "s|@TEMPLATE_BUILD_VERSION@|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${CN_ASSETS}*template.json
 
 export BSS_IMAGE_ASSET_ACCOUNT_ID=${AWS_ASSET_ACCOUNT_ID}
 export BSS_FILE_ASSET_REGION_SET="$REGIONS"
@@ -77,11 +77,11 @@ mkdir -p ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}
 export BSS_FILE_ASSET_PREFIX="${FILE_ASSET_PREFIX}${prefixes[0]}"
 run pwd
 run npx cdk synth -c EnableDashboardCustomDomain=true --json --output ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}
-sed -i "s|<TEMPLATE_BUILD_VERSION>|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}*template.json
+sed -i "s|@TEMPLATE_BUILD_VERSION@|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${prefixes[0]}*template.json
 mkdir -p ${GLOBAL_S3_ASSETS_PATH}/${prefixes[1]}
 export BSS_FILE_ASSET_PREFIX="${FILE_ASSET_PREFIX}${prefixes[1]}"
 run npx cdk synth --json --output ${GLOBAL_S3_ASSETS_PATH}/${prefixes[1]}
-sed -i "s|<TEMPLATE_BUILD_VERSION>|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${prefixes[1]}*template.json
+sed -i "s|@TEMPLATE_BUILD_VERSION@|$BUILD_VERSION|"g ${GLOBAL_S3_ASSETS_PATH}/${prefixes[1]}*template.json
 
 run echo '763104351884.dkr.ecr.us-east-1.amazonaws.com'>>"${__dir}/ecr-repos"
 run echo '727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn'>>"${__dir}/cn-ecr-repos"
