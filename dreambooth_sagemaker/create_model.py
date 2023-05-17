@@ -13,21 +13,21 @@ import sagemaker
 sagemaker_session = sagemaker.Session()
 bucket = sagemaker_session.default_bucket()
 
-# EXECUTION_ROLE = "arn:aws:iam::683638520402:role/service-role/AmazonSageMaker-ExecutionRole-20221031T120168"
+EXECUTION_ROLE = "arn:aws:iam::683638520402:role/service-role/AmazonSageMaker-ExecutionRole-20221031T120168"
 # EXECUTION_ROLE = "arn:aws:iam::648149843064:role/SdDreamBoothTrainStack-aigcutilsendpointrole0A8729-8OSFWEAGUTCU"
 # EXECUTION_ROLE = "arn:aws:iam::991301791329:role/SdDreamBoothTrainStack-aigcputtrainapitrainrole6B3-NTIYQQZFBP87"
 # EXECUTION_ROLE = "arn:aws:iam::991301791329:role/SdDreamBoothTrainStack-aigcutilsendpointrole0A8729-L2PGDZBLK87E"
 # EXECUTION_ROLE = "arn:aws:sts::991301791329:assumed-role/SdDreamBoothTrainStack-aigcupdatemodelapirole2C5D6-FMUYQ5DEJPPI/aigc-update-model-api-update-model"
-EXECUTION_ROLE = "arn:aws:iam::991301791329:role/SdDreamBoothTrainStack-aigcutilsendpointrole0A8729-DBERLNVJJEAL"
+EXECUTION_ROLE = "arn:aws:iam::991301791329:role/service-role/AmazonSageMaker-ExecutionRole-20230413T171474"
 # INSTANCE_TYPE = "ml.g4dn.xlarge"
-INSTANCE_TYPE = "ml.c6i.8xlarge"
+INSTANCE_TYPE = "ml.c6i.xlarge"
 
 import boto3
 account_id = boto3.client('sts').get_caller_identity().get('Account')
 region_name = boto3.session.Session().region_name
 # image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-webui-dreambooth-create-model:latest'.format(account_id, region_name)
-# image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-webui-utils:latest'.format(account_id, region_name)
-image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-create-model:latest'.format(account_id, region_name)
+image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-webui-utils:latest'.format(account_id, region_name)
+# image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-create-model:latest'.format(account_id, region_name)
 # image_uri = '{0}.dkr.ecr.{1}.amazonaws.com/aigc-cpu-test:latest'.format(account_id, region_name)
 base_name = sagemaker.utils.base_name_from_image(image_uri)
 sagemaker = boto3.client('sagemaker')
@@ -81,8 +81,8 @@ def create_endpoint_config(name):
                         "NotificationConfig": {
                             # "SuccessTopic": "arn:aws:sns:us-east-1:648149843064:successCreateModel",
                             # "ErrorTopic": "arn:aws:sns:us-east-1:648149843064:failureCreateModel"
-                            "SuccessTopic": "arn:aws:sns:us-west-1:991301791329:successCreateModel",
-                            "ErrorTopic": "arn:aws:sns:us-west-1:991301791329:failureCreateModel"
+                            # "SuccessTopic": "arn:aws:sns:us-west-1:991301791329:successCreateModel",
+                            # "ErrorTopic": "arn:aws:sns:us-west-1:991301791329:failureCreateModel"
                         }
                     }
 

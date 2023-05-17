@@ -661,7 +661,7 @@ def async_create_model_on_sagemaker(
             return
         params["ckpt_path"] = ckpt_name_list[0].rstrip(".tar")
         payload = {
-            "model_type": "dreambooth",
+            "model_type": "Stable-diffusion",
             "name": new_model_name,
             "filenames": [],
             "params": {
@@ -692,7 +692,7 @@ def async_create_model_on_sagemaker(
         parts_number = math.ceil(file_size.st_size/part_size)
 
         payload = {
-            "model_type": "dreambooth",
+            "model_type": "Stable-diffusion",
             "name": new_model_name,
             "filenames": [{
                 "filename": local_tar_path,
