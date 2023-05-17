@@ -584,7 +584,7 @@ def async_prepare_for_training_on_sagemaker(
         print("Pack the class data file.")
         os.system(f"tar cvf {class_data_tar} {class_data_path}")
     payload = {
-        "train_type": "dreambooth",
+        "train_type": "Stable-diffusion",
         "model_id": model_id,
         "filenames": upload_files,
         "params": {
