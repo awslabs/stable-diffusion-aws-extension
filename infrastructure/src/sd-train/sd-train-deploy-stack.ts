@@ -189,7 +189,7 @@ export class SdTrainDeployStack extends NestedStack {
 
   // Generate a 10-character UUID
   private generateUUID(): string {
-    return Math.random().toString(36).substring(2, 12);
+    return Math.random().toString(36).substring(2, 6);
   }
 
   // Get the current time in the year-month-day-hour-minute format
@@ -199,9 +199,8 @@ export class SdTrainDeployStack extends NestedStack {
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const day = now.getDate().toString().padStart(2, '0');
     const hour = now.getHours().toString().padStart(2, '0');
-    const minute = now.getMinutes().toString().padStart(2, '0');
   
-    return `${year}-${month}-${day}-${hour}-${minute}`;
+    return `${year}-${month}-${day}-${hour}`;
   }
 
   private createS3Bucket(): s3.Bucket {
