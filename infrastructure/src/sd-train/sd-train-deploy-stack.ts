@@ -187,12 +187,32 @@ export class SdTrainDeployStack extends NestedStack {
     return snsTopic;
   }
 
+  // Generate a 10-character UUID
+  private generateUUID(): string {
+    return Math.random().toString(36).substring(2, 6);
+  }
+
+  // Get the current time in the year-month-day-hour-minute format
+  private getCurrentTime(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hour = now.getHours().toString().padStart(2, '0');
+  
+    return `${year}-${month}-${day}-${hour}`;
+  }
+
   private createS3Bucket(): s3.Bucket {
     // CDK parameters for API Gateway API Key and SageMaker endpoint name
+    // Generate the string using UUID and current time
+    const uuid = this.generateUUID();
+    const currentTime = this.getCurrentTime();
+    const generatedString = `${uuid}-${currentTime}`;
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: `stable-diffusion-aws-extension-${this.account}-${this.region}`,
+      default: `stable-diffusion-aws-extension-${generatedString}-${this.region}`,
     });
 
     // Define the CORS configuration
