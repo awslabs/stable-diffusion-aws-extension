@@ -8,10 +8,10 @@ import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inferenc
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 
 // for development, use account/region from cdk cli
-const devEnv = {
-  account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION,
-};
+// const devEnv = {
+//   account: process.env.CDK_DEFAULT_ACCOUNT,
+//   region: process.env.CDK_DEFAULT_REGION,
+// };
 
 const app = new App();
 
@@ -20,7 +20,7 @@ export class Middleware extends Stack {
     scope: Construct,
     id: string,
     props: StackProps = {
-      env: devEnv,
+      // env: devEnv,
       synthesizer: synthesizer(),
     },
   ) {
@@ -28,20 +28,20 @@ export class Middleware extends Stack {
     this.templateOptions.description = "(SO8032) - Stable-Diffusion AWS Extension";
 
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
-      env: devEnv,
-      synthesizer: synthesizer(),
+      // env: devEnv,
+      synthesizer: props.synthesizer,
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
       this,
       'SdAsyncInferenceStack-dev',
             <SDAsyncInferenceStackProps>{
-              env: devEnv,
+              // env: devEnv,
               api_gate_way: trainStack.apiGateway,
               s3_bucket: trainStack.s3Bucket,
               training_table: trainStack.trainingTable,
               snsTopic: trainStack.snsTopic,
-              synthesizer: synthesizer(),
+              synthesizer: props.synthesizer,
               default_endpoint_name: trainStack.default_endpoint_name,
             },
     );
@@ -54,7 +54,7 @@ new Middleware(
   app,
   'Stable-diffusion-aws-extension-middleware-stack',
   {
-    env: devEnv,
+    // env: devEnv,
     synthesizer: synthesizer(),
   },
 );
