@@ -48,13 +48,6 @@ def update_model_job_api(raw_event, context):
             }
 
         model_job = ModelJob(**raw_training_job)
-        resp = train_job_exec(model_job, CreateModelStatus[event.status])
-        ddb_service.update_item(
-            table=model_table,
-            key={'id': event.model_id},
-            field_name='job_status',
-            value=event.status
-        )
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': model_job.checkpoint_id
         })
@@ -66,6 +59,14 @@ def update_model_job_api(raw_event, context):
 
         ckpt = CheckPoint(**raw_checkpoint)
         complete_mulipart_upload(ckpt, event.multi_parts_tags)
+
+        resp = train_job_exec(model_job, CreateModelStatus[event.status])
+        ddb_service.update_item(
+            table=model_table,
+            key={'id': event.model_id},
+            field_name='job_status',
+            value=event.status
+        )
         return resp
     except ClientError as e:
         logger.error(e)

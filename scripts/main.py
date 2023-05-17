@@ -133,12 +133,31 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
         )
+
+        sagemaker_ui.sagemaker_endpoint.change(
+            fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[txt2img_html_info]
+        )
+
         sagemaker_ui.generate_on_cloud_button_with_js.click(
                     fn=sagemaker_ui.generate_on_cloud_no_input,
                     _js="txt2img_config_save",
                     inputs=[sagemaker_ui.sagemaker_endpoint],
                     outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
                 )
+        sagemaker_ui.modelmerger_merge_on_cloud.click(
+                    fn=sagemaker_ui.modelmerger_on_cloud_func,
+                    # fn=None,
+                    _js="txt2img_config_save",
+                    inputs=[sagemaker_ui.sagemaker_endpoint],
+                    # inputs=[
+                    #     sagemaker_ui.primary_model_name,
+                    #     sagemaker_ui.secondary_model_name,
+                    #     sagemaker_ui.tertiary_model_name,
+                    # ],
+                    outputs=[
+                    ])
     # # hook logic for merge checkpoints
     # global modelmerger_merge_component, modelmerger_merge_hook
     # is_modelmerger_merge_component = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'modelmerger_merge'
@@ -189,8 +208,9 @@ def on_after_component_callback(component, **_kwargs):
 
 
 def update_connect_config(api_url, api_token):
-    # function code to call update the api_url and token
-    # Example usage
+    # Check if api_url ends with '/', if not append it
+    if not api_url.endswith('/'):
+        api_url += '/'
 
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
@@ -202,7 +222,7 @@ def update_connect_config(api_url, api_token):
     return "config updated to local config!"
 
 def test_aws_connect_config(api_url, api_token):
-    update_connect_config(api_url, apo_token)
+    update_connect_config(api_url, api_token)
     api_url = get_variable_from_json('api_gateway_url')
     api_token = get_variable_from_json('api_token')
     print(f"get the api_url:{api_url} and token: {api_token}............")

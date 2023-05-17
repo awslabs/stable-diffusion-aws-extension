@@ -9,7 +9,7 @@ from _types import MultipartFileReq, CheckPoint
 
 
 def get_s3_presign_urls(bucket_name, base_key, filenames) -> Dict[str, str]:
-    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+    s3 = boto3.client('s3')
     presign_url_map = {}
     for filename in filenames:
         key = f'{base_key}/{filename}'
@@ -35,7 +35,7 @@ def batch_get_s3_multipart_signed_urls(bucket_name, base_key, filenames: [Multip
 
 
 def get_s3_multipart_signed_urls(bucket_name, key, parts_number) -> Any:
-    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+    s3 = boto3.client('s3')
     response = s3.create_multipart_upload(
         Bucket=bucket_name,
         Key=key,
@@ -74,7 +74,7 @@ def get_base_checkpoint_s3_key(_type: str, name: str, request_id: str) -> str:
 
 
 def complete_mulipart_upload(ckpt: CheckPoint, filename_etag):
-    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+    s3 = boto3.client('s3')
     if 'multipart_upload' in ckpt.params:
         multipart = ckpt.params['multipart_upload']
         for filename, val in multipart.items():

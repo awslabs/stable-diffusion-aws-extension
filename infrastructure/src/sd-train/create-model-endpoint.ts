@@ -76,6 +76,7 @@ export class CreateModelSageMakerEndpoint {
           modelName: this.model.modelName,
           initialVariantWeight: 1.0,
           instanceType: props.machineType,
+          volumeSizeInGb: 512,
           variantName: 'main',
           initialInstanceCount: 1,
         },
@@ -138,7 +139,6 @@ export class CreateModelSageMakerEndpoint {
         'sns:Publish',
         'sns:Receive',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [this.successTopic.topicArn, this.failureTopic.topicArn],
     }));
     return sagemakerRole;
