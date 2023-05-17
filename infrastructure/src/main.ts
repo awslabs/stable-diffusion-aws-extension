@@ -25,6 +25,7 @@ export class Middleware extends Stack {
     },
   ) {
     super(scope, id, props);
+    this.templateOptions.description = "(SO8032) - Stable-Diffusion AWS Extension";
 
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       env: devEnv,
