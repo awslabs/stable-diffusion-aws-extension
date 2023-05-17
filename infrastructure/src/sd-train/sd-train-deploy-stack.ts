@@ -38,9 +38,11 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly default_endpoint_name: string;
 
   private readonly srcRoot='../middleware_api/lambda';
+  private readonly parentScope: Construct;
 
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+    this.parentScope = scope;
     this.snsTopic = this.createSns();
     this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
@@ -189,10 +191,10 @@ export class SdTrainDeployStack extends NestedStack {
 
   private createS3Bucket(): s3.Bucket {
     // CDK parameters for API Gateway API Key and SageMaker endpoint name
-    const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
+    const bucketName = new CfnParameter(this.parentScope, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: `stable-diffusion-aws-extension-${this.account}-${this.region}`,
+      // default: `stable-diffusion-aws-extension-${this.account}-${this.region}`,
     });
 
     // Define the CORS configuration
