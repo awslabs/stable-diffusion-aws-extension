@@ -104,7 +104,40 @@ def create_train_job_api(raw_event, context):
 
 # GET /trains
 def list_all_train_jobs_api(event, context):
-    raise NotImplemented
+    _filter = {}
+    if 'queryStringParameters' not in event:
+        return {
+            'statusCode': '500',
+            'error': 'query parameter status and types are needed'
+        }
+
+    parameters = event['queryStringParameters']
+    if 'types' in parameters and len(parameters['types']) > 0:
+        _filter['train_type'] = parameters['types']
+
+    if 'status' in parameters and len(parameters['status']) > 0:
+        _filter['job_status'] = parameters['status']
+
+    resp = ddb_service.scan(table=train_table, filters=_filter)
+    if resp is None or len(resp) == 0:
+        return {
+            'statusCode': 200,
+            'trainJobs': []
+        }
+
+    train_jobs = []
+    for tr in resp:
+        train_job = TrainJob(**(ddb_service.deserialize(tr)))
+        train_jobs.append({
+            'id': train_job.id,
+            'status': train_job.job_status.value,
+            'trainType': train_job.train_type,
+        })
+
+    raise {
+        'statusCode': 200,
+        'trainJobs': train_jobs
+    }
 
 
 # PUT /train used to kickoff a train job step function
@@ -302,7 +335,11 @@ def check_train_job_status(event, context):
         )
         checkpoint.checkpoint_names = []
         for obj in s3_resp['Contents']:
-            checkpoint.checkpoint_names.append(obj['Key'].replace(f'{key}/', ""))
+            checkpoint_name = obj['Key'].replace(f'{key}/', "")
+            if 'training_params' in training_job.params and 'model_name' in training_job.params['training_params']:
+                checkpoint_name = f"{training_job.params['training_params']['model_name']}/" + checkpoint_name
+
+            checkpoint.checkpoint_names.append(checkpoint_name)
 
         ddb_service.update_item(
             table=checkpoint_table,
