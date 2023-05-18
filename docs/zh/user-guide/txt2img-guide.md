@@ -18,9 +18,10 @@
 
 * ## 上传推理所需模型
 
-    1. 点击**xxx**旁边的刷新按钮，以查看哪些已经存储在s3上的模型可以用于txt2img的推理
-
-    2. 对于需要上传的模型
+    1. 点击**Stable Diffusion Checkpoint**和**Extra Networks for Cloud Inference**旁边的刷新按钮，以查看哪些已经存储在s3上的模型可以用于txt2img的推理
+![Refresh models](../images/refresh-models.png)
+    2. 对于需要上传的模型，在 **Upload Models to Cloud**上面输入对应模型的绝对地址，并且点击上传按钮
+![Upload models](../images/upload-models.png)
 
 * ## 选取合适的推理节点
 
