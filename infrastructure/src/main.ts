@@ -1,4 +1,4 @@
-import { App, Stack, StackProps, Aspects, CfnParameter } from 'aws-cdk-lib';
+import { App, Stack, StackProps, Aspects, CfnParameter, CfnOutput } from 'aws-cdk-lib';
 import {
   BootstraplessStackSynthesizer,
   CompositeECRRepositoryAspect,
@@ -63,6 +63,23 @@ export class Middleware extends Stack {
     );
 
     inferenceStack.addDependency(trainStack);
+
+    // Adding Outputs for apiGateway and s3Bucket
+    new CfnOutput(this, 'ApiGatewayUrl', {
+      value: trainStack.apiGateway.url,
+      description: 'API Gateway URL',
+    });
+
+    new CfnOutput(this, 'S3BucketName', {
+      value: trainStack.s3Bucket.bucketName,
+      description: 'S3 Bucket Name',
+    });
+
+    new CfnOutput(this, 'SNSTopicName', {
+      value: trainStack.snsTopic.topicName,
+      description: 'SNS Topic Name to get train and inference result notification',
+    });
+
   }
 }
 
