@@ -97,12 +97,13 @@ def getInferenceJob(inference_job_id):
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
         )
         logger.info(resp)
+        record_list = resp['Items']
+        if len(record_list) == 0:
+            raise Exception("There is no inference job info item for id:" + inference_job_id)
+        return record_list[0]
     except Exception as e:
         logger.error(e)
-    record_list = resp['Items']
-    if len(record_list) == 0:
-        raise Exception("There is no inference job info item for id:" + inference_job_id)
-    return record_list[0]
+        return {}  # Return an empty object when an exception occurs
     
 def getEndpointDeploymentJobList():
     try:
@@ -578,6 +579,15 @@ async def run_sagemaker_inference(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
+        current_time = str(datetime.now())
+        response = inference_table.put_item(
+            Item={
+                'InferenceJobId': inference_id,
+                'startTime': current_time,
+                'status': 'failure',
+                'error': f"error info {str(e)}"}
+            })
+         
         response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
         return response
 
