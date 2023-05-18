@@ -242,7 +242,7 @@ def get_model_list_by_type(model_type):
         for ckpt in json_response["checkpoints"]:
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
                 checkpoint_list.append(ckpt_name)
 
@@ -276,20 +276,23 @@ def refresh_all_models():
     print("Refresh checkpoints")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    for rp, name in zip(checkpoint_type, checkpoint_name):
-        url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
-        response = requests.get(url=url, headers={'x-api-key': api_key})
-        json_response = response.json()
-        # print(f"response url json for model {rp} is {json_response}")
-        if "checkpoints" not in json_response.keys():
-            checkpoint_info[rp] = {}
-            continue
-        for ckpt in json_response["checkpoints"]:
-            ckpt_type = ckpt["type"]
-            checkpoint_info[ckpt_type] = {}
-            for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-                checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+    try:
+        for rp, name in zip(checkpoint_type, checkpoint_name):
+            url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
+            response = requests.get(url=url, headers={'x-api-key': api_key})
+            json_response = response.json()
+            # print(f"response url json for model {rp} is {json_response}")
+            if "checkpoints" not in json_response.keys():
+                checkpoint_info[rp] = {}
+                continue
+            for ckpt in json_response["checkpoints"]:
+                ckpt_type = ckpt["type"]
+                checkpoint_info[ckpt_type] = {}
+                for ckpt_name in ckpt["name"]:
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
+                    checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+    except Exception as e:
+        print(f"Error refresh all models: {e}") 
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
     log = "start upload model to s3..."
@@ -679,7 +682,7 @@ def create_ui():
                 #     inputs=[],
                 #     outputs=[]
                 # )
-            with gr.Row():
+            with gr.Row(variant='panel'):
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
                 inference_job_dropdown = gr.Dropdown(txt2img_inference_job_ids,
@@ -692,7 +695,7 @@ def create_ui():
                 gr.HTML(value="Extra Networks for Cloud Inference")
             #     advanced_model_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(sd_checkpoints)}, "refresh_sd_checkpoints")
 
-            with gr.Row():
+            with gr.Row(variant='panel'):
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
                 create_refresh_button(
                     textual_inversion_dropdown,
@@ -707,7 +710,7 @@ def create_ui():
                     lambda: {"choices": sorted(get_lora_list())},
                     "refresh_lora",
                 )
-            with gr.Row():
+            with gr.Row(variant='panel'):
                 hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
                 create_refresh_button(
                     hyperNetwork_dropdown,
@@ -723,7 +726,7 @@ def create_ui():
                     "refresh_controlnet",
                 )
 
-            with gr.Row():
+            with gr.Row(variant='panel'):
                 sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
                 textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
                 lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
@@ -738,7 +741,7 @@ def create_ui():
                                           outputs=[sagemaker_html_log])
 
             gr.HTML(value="Deploy New SageMaker Endpoint")
-            with gr.Row():
+            with gr.Row(variant='panel'):
                 # instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
                 instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
                 # instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)
@@ -751,7 +754,7 @@ def create_ui():
                                               inputs = [instance_type_dropdown, instance_count_dropdown])
 
     with gr.Group():
-        with gr.Accordion("Open for Checkpoint Merge in the Cloud!", open=False):
+        with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
                 global primary_model_name
