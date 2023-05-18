@@ -95,6 +95,25 @@ def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path):
     s3_client.upload_file(tar_name, bucket_name, os.path.join(s3_folder_path, tar_name))
     os.system(f"rm {tar_name}")
 
+def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Add the directory to the object_name
+    if directory:
+        object_name = f"{directory}/{object_name}"
+
+    # Upload the file
+    try:
+        s3_client = boto3.client('s3')
+        s3_client.upload_file(file_name, bucket, object_name)
+        print(f"File {file_name} uploaded to {bucket}/{object_name}")
+    except Exception as e:
+        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
+        return False
+    return True
+
 def upload_file_to_s3_by_presign_url(local_path, s3_presign_url):
     response = requests.put(s3_presign_url, open(local_path, "rb"))
     response.raise_for_status()
@@ -148,9 +167,6 @@ def download_file_from_s3(bucket_name, s3_file_path, local_file_path):
     s3_client = boto3.client('s3')
     s3_client.download_file(bucket_name, s3_file_path, local_file_path)
 
-def upload_file_to_s3(local_file_path, bucket_name, s3_file_path):
-    s3_client = boto3.client('s3')
-    s3_client.upload_file(local_file_path, bucket_name, s3_file_path)
 
 def get_bucket_name_from_s3_url(s3_path) -> str:
     o = urlparse(s3_path, allow_fragments=False)
