@@ -94,6 +94,7 @@ def datetime_to_short_form(datetime_str):
 def update_sagemaker_endpoints():
     global sagemaker_endpoints
 
+    sagemaker_endpoints.clear()
     try:
         response = server_request('inference/list-endpoint-deployment-jobs')
         r = response.json()
@@ -163,6 +164,7 @@ def get_inference_job_list():
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
+    print(f"response of get_inference_job is {str(response)}")
     return response.json()
 
 def get_inference_job_image_output(inference_job_id):
@@ -444,6 +446,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
+    print(f"Raw server response: {response.text}") 
     try:
         r = response.json()
     except JSONDecodeError as e:
@@ -452,6 +455,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
     else:
         print(f"response for rest api {r}")
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
+        print(f"inference_id is {inference_id}")
 
         # Loop until the get_inference_job status is 'succeed' or 'failed'
         while True:
@@ -668,7 +672,7 @@ def create_ui():
                 #     outputs=[sagemaker_html_log]
                 # )
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button")
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True)
                 # generate_on_cloud_button_with_js.click(
                 #     # _js="txt2img_config_save",
                 #     fn=generate_on_cloud_no_input,
