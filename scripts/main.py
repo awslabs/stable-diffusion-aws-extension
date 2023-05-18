@@ -71,7 +71,7 @@ def on_after_component_callback(component, **_kwargs):
                                (getattr(component, 'elem_id', None) == 'model_name' or \
                                 (getattr(component, 'label', None) == 'Model' and getattr(component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
     is_cloud_dreambooth_model_name = type(component) is gr.Dropdown and \
-                               getattr(component, 'elem_id', None) == 'cloud_db_model_name'
+                                     getattr(component, 'elem_id', None) == 'cloud_db_model_name'
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
@@ -134,23 +134,23 @@ def on_after_component_callback(component, **_kwargs):
         )
 
         sagemaker_ui.generate_on_cloud_button_with_js.click(
-                    fn=sagemaker_ui.generate_on_cloud_no_input,
-                    _js="txt2img_config_save",
-                    inputs=[sagemaker_ui.sagemaker_endpoint],
-                    outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
-                )
+            fn=sagemaker_ui.generate_on_cloud_no_input,
+            _js="txt2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
+        )
         sagemaker_ui.modelmerger_merge_on_cloud.click(
-                    fn=sagemaker_ui.modelmerger_on_cloud_func,
-                    # fn=None,
-                    _js="txt2img_config_save",
-                    inputs=[sagemaker_ui.sagemaker_endpoint],
-                    # inputs=[
-                    #     sagemaker_ui.primary_model_name,
-                    #     sagemaker_ui.secondary_model_name,
-                    #     sagemaker_ui.tertiary_model_name,
-                    # ],
-                    outputs=[
-                    ])
+            fn=sagemaker_ui.modelmerger_on_cloud_func,
+            # fn=None,
+            _js="txt2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            # inputs=[
+            #     sagemaker_ui.primary_model_name,
+            #     sagemaker_ui.secondary_model_name,
+            #     sagemaker_ui.tertiary_model_name,
+            # ],
+            outputs=[
+            ])
 
 
 def update_connect_config(api_url, api_token):
@@ -205,9 +205,9 @@ def on_ui_tabs():
                 api_token_textbox = gr.Textbox(value=get_variable_from_json('api_token'), lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
-                                        fn=update_connect_config,
-                                        inputs = [api_url_textbox, api_token_textbox],
-                                        outputs= [])
+                                         fn=update_connect_config,
+                                         inputs = [api_url_textbox, api_token_textbox],
+                                         outputs= [])
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
                 test_connection_result = gr.Label();
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
@@ -362,6 +362,18 @@ def ui_tabs_callback():
                                         label="Extract EMA Weights", value=False
                                     )
                                     cloud_db_train_unfrozen = gr.Checkbox(label="Unfreeze Model", value=False, elem_id="cloud_db_unfreeze_model_checkbox")
+                                    with gr.Row():
+                                        gr.HTML(value="<b>Model Creation Jobs Details:<b/>")
+                                    with gr.Row():
+                                        gr.Dataframe(
+                                            headers=["id", "model name", "status"],
+                                            datatype=["str", "str", "str"],
+                                            col_count=(3, "fixed"),
+                                            value=get_create_model_job_list,
+                                            interactive=False,
+                                            every=3
+                                            # show_progress=True
+                                        )
 
                                 def toggle_new_rows(create_from):
                                     return gr.update(visible=create_from), gr.update(visible=not create_from)
@@ -632,9 +644,9 @@ def async_create_model_on_sagemaker(
         json_response = response.json()
         model_id = json_response["job"]["id"]
         payload = {
-                "model_id": model_id,
-                "status": "Creating",
-                "multi_parts_tags": {}
+            "model_id": model_id,
+            "status": "Creating",
+            "multi_parts_tags": {}
         }
     elif params["ckpt_path"].startswith("local-"):
         # The ckpt path has a hash suffix?
@@ -704,7 +716,7 @@ def cloud_create_model(
 def cloud_train(
         train_model_name: str,
         local_model_name=False
-    ):
+):
     # Get data path and class data path.
     print(f"Start cloud training {train_model_name}")
     config = wrap_get_local_config("dummy_local_model")
@@ -768,7 +780,26 @@ def get_train_job_list():
     url += "trains?types=Stable-diffusion"
     response = requests.get(url=url, headers={'x-api-key': api_key}).json()
     table = []
+    response['trainJobs'].reverse()
     for trainJob in response['trainJobs']:
         table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+
+    return table
+
+
+def get_create_model_job_list():
+    # Start creating model on cloud.
+    url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+    if url is None or api_key is None:
+        logging.error("Url or API-Key is not setting.")
+        return []
+
+    url += "models?types=Stable-diffusion"
+    response = requests.get(url=url, headers={'x-api-key': api_key}).json()
+    table = []
+    response['models'].reverse()
+    for model in response['models']:
+        table.append([model['id'][:6], model['model_name'], model["status"]])
 
     return table
