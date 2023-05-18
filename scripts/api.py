@@ -247,8 +247,9 @@ def upload_model(model_type, model_name, model_s3_pos):
 def download_and_update(model_type, model_name, model_s3_pos):
     #download from s3
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
-    os.system(f"tar xvf {model_name}")
-    os.system(f"rm {model_name}")
+    tar_name = model_s3_pos.split('/')[-1]
+    os.system(f"tar xvf {tar_name}")
+    os.system(f"rm {tar_name}")
     os.system("df -h")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()

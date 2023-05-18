@@ -242,7 +242,7 @@ def get_model_list_by_type(model_type):
         for ckpt in json_response["checkpoints"]:
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
                 checkpoint_list.append(ckpt_name)
 
@@ -289,7 +289,7 @@ def refresh_all_models():
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
-                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
         print(f"Error refresh all models: {e}") 
