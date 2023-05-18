@@ -346,7 +346,7 @@ export class UpdateTrainJobApi {
 
   private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
     const dockerRepo = new aws_ecr.Repository(this.scope, `${this.id}-repo`, {
-      repositoryName: 'aigc-train-utils',
+      repositoryName: 'aigc-webui-dreambooth-training',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 

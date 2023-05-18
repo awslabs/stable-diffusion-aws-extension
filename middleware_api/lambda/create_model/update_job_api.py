@@ -162,9 +162,6 @@ def get_object(bucket: str, key: str):
     return content
 
 
-
-
-
 def train_job_exec(model_job: ModelJob, action: CreateModelStatus):
     if model_job.job_status == CreateModelStatus.Creating and \
             (action != CreateModelStatus.Fail or action != CreateModelStatus.Complete):
