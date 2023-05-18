@@ -410,7 +410,7 @@ def get_sorted_lora_cloud_models():
 def get_cloud_model_snapshots():
     return ["ran", "swam", "slept"]
 
-def get_cloud_db_models(types="dreambooth", status="Complete"):
+def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
         print("Get request for model list.")
