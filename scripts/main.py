@@ -313,6 +313,18 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         gr.HTML(value="Cloud DB Status:")
                                         cloud_db_status = gr.HTML(elem_id="db_status", value="")
+                                    with gr.Row():
+                                        gr.HTML(value="<b>Training Jobs Details:<b/>")
+                                    with gr.Row():
+                                        gr.Dataframe(
+                                            headers=["id", "model name", "status", "sagemaker train name"],
+                                            datatype=["str", "str", "str", "str"],
+                                            col_count=(4, "fixed"),
+                                            value=get_train_job_list,
+                                            interactive=False,
+                                            every=3
+                                            # show_progress=True
+                                        )
                                 with gr.Tab('Create From Cloud'):
                                     with gr.Column():
                                         cloud_db_create_model = gr.Button(
@@ -743,3 +755,20 @@ def cloud_train(
             # Start creating model on cloud.
             response = requests.put(url=url, json=payload, headers={'x-api-key': api_key}).json()
             print(f"Start training response:\n{response}")
+
+
+def get_train_job_list():
+    # Start creating model on cloud.
+    url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+    if url is None or api_key is None:
+        logging.error("Url or API-Key is not setting.")
+        return []
+
+    url += "trains?types=Stable-diffusion"
+    response = requests.get(url=url, headers={'x-api-key': api_key}).json()
+    table = []
+    for trainJob in response['trainJobs']:
+        table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+
+    return table

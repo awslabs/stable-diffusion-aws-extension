@@ -24,6 +24,7 @@ import { UpdateModelStatusRestApi } from './model-update-status-api';
 import { RestApiGateway } from './rest-api-gateway';
 
 import { CreateTrainJobApi } from './train-job-create-api';
+import { ListAllTrainJobsApi } from './train-job-listall-api';
 import { UpdateTrainJobApi } from './train-job-update-api';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -48,7 +49,7 @@ export class SdTrainDeployStack extends NestedStack {
   constructor(scope: Construct, id: string, props?: SdTrainDeployStackProps) {
     super(scope, id, props);
     // this.parentScope = scope;
-    
+
     // Check that props.emailParam and props.bucketName are not undefined
     if (!props || props.emailParam === undefined || props.bucketName === undefined) {
       throw new Error('emailParam and bucketName must be provided');
@@ -86,12 +87,22 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // api gateway setup
-    const restApi = new RestApiGateway(this, ['model', 'models', 'checkpoint', 'checkpoints', 'train']);
+    const restApi = new RestApiGateway(this, ['model', 'models', 'checkpoint', 'checkpoints', 'train', 'trains']);
     this.apiGateway = restApi.apiGateway;
     const routers = restApi.routers;
 
+    // GET /trains
+    new ListAllTrainJobsApi(this, 'aigc-trains', {
+      commonLayer: commonLayer,
+      httpMethod: 'GET',
+      router: routers.trains,
+      s3Bucket: this.s3Bucket,
+      srcRoot: this.srcRoot,
+      trainTable: this.trainingTable,
+    });
+
     // POST /train
-    new CreateTrainJobApi(this, 'aigc-create-train-api', {
+    new CreateTrainJobApi(this, 'aigc-create-train', {
       checkpointTable: this.checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -103,7 +114,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /train
-    new UpdateTrainJobApi(this, 'aigc-put-train-api', {
+    new UpdateTrainJobApi(this, 'aigc-put-train', {
       checkpointTable: this.checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
@@ -116,7 +127,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /model
-    new CreateModelJobApi(this, 'aigc-create-model-api', {
+    new CreateModelJobApi(this, 'aigc-create-model', {
       router: routers.model,
       s3Bucket: this.s3Bucket,
       srcRoot: this.srcRoot,
@@ -127,7 +138,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /models
-    new ListAllModelJobApi(this, 'aigc-listall-model-api', {
+    new ListAllModelJobApi(this, 'aigc-listall-model', {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: this.modelTable,
@@ -136,7 +147,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /model
-    const modelStatusRestApi = new UpdateModelStatusRestApi(this, 'aigc-update-model-api', {
+    const modelStatusRestApi = new UpdateModelStatusRestApi(this, 'aigc-update-model', {
       s3Bucket: this.s3Bucket,
       router: routers.model,
       httpMethod: 'PUT',
@@ -150,7 +161,7 @@ export class SdTrainDeployStack extends NestedStack {
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
 
     // GET /checkpoints
-    new ListAllCheckPointsApi(this, 'list-all-ckpts-api', {
+    new ListAllCheckPointsApi(this, 'aigc-list-all-ckpts', {
       s3Bucket: this.s3Bucket,
       checkpointTable: this.checkPointTable,
       commonLayer: commonLayer,
@@ -160,7 +171,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /checkpoint
-    new CreateCheckPointApi(this, 'create-ckpt-api', {
+    new CreateCheckPointApi(this, 'aigc-create-ckpt', {
       checkpointTable: this.checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -170,7 +181,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /checkpoint
-    new UpdateCheckPointApi(this, 'update-ckpt-api', {
+    new UpdateCheckPointApi(this, 'aigc-update-ckpt', {
       checkpointTable: this.checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',

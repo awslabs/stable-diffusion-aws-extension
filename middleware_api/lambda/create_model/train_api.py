@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from typing import Any
 import sagemaker
-from botocore.config import Config
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
@@ -128,13 +127,19 @@ def list_all_train_jobs_api(event, context):
     train_jobs = []
     for tr in resp:
         train_job = TrainJob(**(ddb_service.deserialize(tr)))
+        model_name = 'not_applied'
+        if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
+            model_name = train_job.params['training_params']['model_name']
+
         train_jobs.append({
             'id': train_job.id,
+            'modelName': model_name,
             'status': train_job.job_status.value,
             'trainType': train_job.train_type,
+            'sagemakerTrainName': train_job.sagemaker_train_name,
         })
 
-    raise {
+    return {
         'statusCode': 200,
         'trainJobs': train_jobs
     }
@@ -351,7 +356,6 @@ def check_train_job_status(event, context):
         )
 
         training_job.params['resp'] = {
-            'status': 'Failed',
             'raw_resp': resp
         }
 
