@@ -586,7 +586,7 @@ async def run_sagemaker_inference(request: Request):
                 'startTime': current_time,
                 'status': 'failure',
                 'error': f"error info {str(e)}"}
-            })
+            )
          
         response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
         return response
