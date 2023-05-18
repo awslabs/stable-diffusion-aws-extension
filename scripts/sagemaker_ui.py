@@ -276,20 +276,23 @@ def refresh_all_models():
     print("Refresh checkpoints")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    for rp, name in zip(checkpoint_type, checkpoint_name):
-        url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
-        response = requests.get(url=url, headers={'x-api-key': api_key})
-        json_response = response.json()
-        # print(f"response url json for model {rp} is {json_response}")
-        if "checkpoints" not in json_response.keys():
-            checkpoint_info[rp] = {}
-            continue
-        for ckpt in json_response["checkpoints"]:
-            ckpt_type = ckpt["type"]
-            checkpoint_info[ckpt_type] = {}
-            for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
-                checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+    try:
+        for rp, name in zip(checkpoint_type, checkpoint_name):
+            url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
+            response = requests.get(url=url, headers={'x-api-key': api_key})
+            json_response = response.json()
+            # print(f"response url json for model {rp} is {json_response}")
+            if "checkpoints" not in json_response.keys():
+                checkpoint_info[rp] = {}
+                continue
+            for ckpt in json_response["checkpoints"]:
+                ckpt_type = ckpt["type"]
+                checkpoint_info[ckpt_type] = {}
+                for ckpt_name in ckpt["name"]:
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                    checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
+    except Exception as e:
+        print(f"Error refresh all models: {e}") 
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
     log = "start upload model to s3..."
