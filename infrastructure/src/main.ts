@@ -1,4 +1,4 @@
-import { App, Stack, StackProps, Aspects, CfnParameter } from 'aws-cdk-lib';
+import { App, Stack, StackProps, Aspects, CfnParameter, CfnOutput } from 'aws-cdk-lib';
 import {
   BootstraplessStackSynthesizer,
   CompositeECRRepositoryAspect,
@@ -6,6 +6,7 @@ import {
 import { Construct } from 'constructs';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import * as crypto from 'crypto';
 
 // for development, use account/region from cdk cli
 // const devEnv = {
@@ -35,9 +36,21 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
+    // Create a short version of the UUID
+    const shortUuid = crypto.randomBytes(4).toString('hex');
+    // Create a timestamp
+    let date = new Date();
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}-${date.getHours().toString().padStart(2, '0')}`;
+    // Create a truncated or hashed version of the stack name
+    const truncatedStackName = this.stackName.substring(0, 20);
+    // Create the bucket name, making sure it's under 63 characters
+    const defaultBucketName = `${truncatedStackName}-${shortUuid}-${formattedDate}`.toLowerCase();
+
+
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
+      default: defaultBucketName.substring(0,63),
     });
 
 
@@ -63,6 +76,23 @@ export class Middleware extends Stack {
     );
 
     inferenceStack.addDependency(trainStack);
+
+    // Adding Outputs for apiGateway and s3Bucket
+    new CfnOutput(this, 'ApiGatewayUrl', {
+      value: trainStack.apiGateway.url,
+      description: 'API Gateway URL',
+    });
+
+    new CfnOutput(this, 'S3BucketName', {
+      value: trainStack.s3Bucket.bucketName,
+      description: 'S3 Bucket Name',
+    });
+
+    new CfnOutput(this, 'SNSTopicName', {
+      value: trainStack.snsTopic.topicName,
+      description: 'SNS Topic Name to get train and inference result notification',
+    });
+
   }
 }
 

@@ -171,8 +171,10 @@ def test_aws_connect_config(api_url, api_token):
     update_connect_config(api_url, api_token)
     api_url = get_variable_from_json('api_gateway_url')
     api_token = get_variable_from_json('api_token')
+    if not api_url.endswith('/'):
+        api_url += '/'
     print(f"get the api_url:{api_url} and token: {api_token}............")
-    target_url = urljoin(api_url, 'inference/test-connection')
+    target_url = f'{api_url}inference/test-connection'
     headers = {
         "x-api-key": api_token,
         "Content-Type": "application/json"
