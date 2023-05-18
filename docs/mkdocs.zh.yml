@@ -8,7 +8,7 @@ theme:
 nav:
   - 实施指南:
     - 方案概述:
-        - 概述: solution-overview/index.md
+        - 概述: index.md
         - 功能和优势: solution-overview/features-and-benefits.md
         - 客户用例: solution-overview/use-cases.md
         - 术语表: solution-overview/concepts.md
