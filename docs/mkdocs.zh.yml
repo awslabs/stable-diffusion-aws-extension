@@ -1,6 +1,6 @@
 INHERIT: ./mkdocs.base.yml
-site_name: xxx解决方案
-site_description: xxx解决方案实施指南
+site_name: Stable Diffusion 亚马逊云科技插件解决方案
+site_description: Stable Diffusion 亚马逊云科技插件解决方案实施指南
 docs_dir: zh
 site_dir: ./site/zh
 theme:
@@ -29,7 +29,7 @@ nav:
     - 用户指南: 
         - 准备工作: user-guide/preparation.md
         - Txt2img: user-guide/txt2img-guide.md
-        - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
+        # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
         - Dreambooth: user-guide/dreambooth-guide.md
     - 开发者指南:
         - 源代码: developer-guide/source.md
