@@ -41,8 +41,8 @@ ControlNet_model_list = []
 
 # Initial checkpoints information
 checkpoint_info = {}
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "dreambooth"]
-checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet", "dreambooth"]
+checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet"]
+checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet"]
 stable_diffusion_list = []
 embeddings_list = []
 lora_list = []
@@ -82,7 +82,7 @@ def server_request(path):
         "x-api-key": api_key,
         "Content-Type": "application/json"
     }
-    list_endpoint_url = urljoin(api_gateway_url, path)
+    list_endpoint_url = f'{api_gateway_url}{path}'
     response = requests.get(list_endpoint_url, headers=headers)
     return response
 
@@ -253,7 +253,7 @@ def get_model_list_by_type(model_type):
 
 
 def update_sd_checkpoints():
-    model_type = ["Stable-diffusion", "dreambooth"]
+    model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
 
 def get_texual_inversion_list():

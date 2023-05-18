@@ -182,7 +182,12 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
     for type_id in range(models_num):
         model_type = models_type_list[type_id]
         selected_models_name = selected_models[model_type]
-        local_models = os.listdir(models_path[model_type])
+        local_models = []
+        for path, subdirs, files in os.walk(models_path[model_type]):
+            for name in files:
+                full_path_name = os.path.join(path, name) 
+                name_local = os.path.relpath(full_path_name, models_path[model_type])
+                local_models.append(name_local)
         for selected_model_name in selected_models_name:
             models_used_count[model_type].add_models_ref(selected_model_name)
             if selected_model_name in local_models:
