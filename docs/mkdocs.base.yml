@@ -1,7 +1,7 @@
-site_name: <solution name>
-site_url: https://awslabs.github.io/<solution-name>/
-repo_url: https://github.com/awslabs/<solution-name>
-repo_name: awslabs/<solution-name>
+site_name: stable-diffusion-aws-extension
+site_url: https://awslabs.github.io/stable-diffusion-aws-extension/
+repo_url: https://github.com/awslabs/stable-diffusion-aws-extension
+repo_name: awslabs/stable-diffusion-aws-extension
 
 theme:
   name: material
@@ -18,10 +18,10 @@ extra:
   copyright: Copyright &copy; 2020 - 2023 Amazon Web Services
   alternate:
     - name: English
-      link: /<solution-name>/en/
+      link: /stable-diffusion-aws-extension/en/
       lang: en
     - name: 简体中文
-      link: /<solution-name>/zh/
+      link: /stable-diffusion-aws-extension/zh/
       lang: zh
   bucket: aws-gcr-solutions
   version: develop
