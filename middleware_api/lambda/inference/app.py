@@ -594,9 +594,9 @@ async def run_sagemaker_inference(request: Request):
 @app.post("/inference/deploy-sagemaker-endpoint")
 async def deploy_sagemaker_endpoint(request: Request):
     logger.info("entering the deploy_sagemaker_endpoint function!")
+    endpoint_deployment_id = get_uuid()
     try:
         payload = await request.json()
-        endpoint_deployment_id = get_uuid()
         logger.info(f"input in json format {payload}")
         payload['endpoint_deployment_id'] = endpoint_deployment_id
 
@@ -620,7 +620,16 @@ async def deploy_sagemaker_endpoint(request: Request):
         return 0
     except Exception as e:
         logger.error(f"error calling run-sagemaker-inference with exception: {e}")
-        raise e
+        #put the item to inference DDB for later check status
+        current_time = str(datetime.now())
+        response = endpoint_deployment_table.put_item(
+        Item={
+            'EndpointDeploymentJobId': endpoint_deployment_id,
+            'startTime': current_time,
+            'status': 'failed',
+            'error': str(e)
+        })
+        return 0
 
 @app.get("/inference/list-endpoint-deployment-jobs")
 async def list_endpoint_deployment_jobs():
