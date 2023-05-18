@@ -757,18 +757,18 @@ function scrap_ui_component_value_with_default(config) {
     }
     
     config["controlnet_enable"] = getElementValue(
-        "#component-201 > label > input",
+        "#component-138 > label > input",
         "checked",
         false
     );
     
     config["controlnet_lowVRAM_enable"] = getElementValue(
-        "#component-202 > label > input",
+        "#component-139> label > input",
         "checked",
         false
     );
     config["controlnet_pixel_perfect"] = getElementValue(
-        "#component-204 > label > input",
+        "#component-141> label > input",
         "checked",
         false
     );
@@ -780,90 +780,90 @@ function scrap_ui_component_value_with_default(config) {
     );
     
     config["controlnet_preprocessor"] = getElementValue(
-        "#component-207 > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#component-144> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
     config["controlnet_model"] = getElementValue(
-        "#component-209 > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#component-146> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
     config["controlnet_weight"] = getElementValue(
-        "#component-214 > div.wrap.svelte-1cl284s > div > input",
+        "#component-151> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
     // document.querySelector("#component-214 > div.wrap.svelte-1cl284s > div > input")
     // getElementValue("#component-213 > div.wrap.svelte-1cl284s > div > input")
     config["controlnet_starting_control_step"] = getElementValue(
-        "#component-215 > div.wrap.svelte-1cl284s > div > input",
+        "#component-152> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_ending_control_step"] = getElementValue(
-        "#component-216 > div.wrap.svelte-1cl284s > div > input",
+        "#component-153> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#component-223 > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#component-223 > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#component-223 > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_just_resize"] = getElementValue(
-        "#component-223 > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
-        "#component-224 > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
-        "#component-224 > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config[
         "controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit"
-    ] = getElementValue("#component-224 > label > input", "enabled", false);
+    ] = getElementValue("#component-161> label > input", "enabled", false);
     
     // Completed when Preprocessor is null
 
     // Start when Preprocessor is canny
     config["controlnet_preprocessor_resolution"] = getElementValue(
-        "#component-219 > div.wrap.svelte-1cl284s > div > input",
+        "#component-156> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
     config["controlnet_canny_low_threshold"] = getElementValue(
-        "#component-220 > div.wrap.svelte-1cl284s > div > input",
+        "#component-157> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
 
     config["controlnet_canny_high_threshold"] = getElementValue(
-        "#component-221 > div.wrap.svelte-1cl284s > div > input",
+        "#component-158> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     ) 
