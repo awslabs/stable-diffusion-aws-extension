@@ -29,8 +29,8 @@ jobs:
 
       - name: Build mkdocs
         run: |
-          mkdocs build -f ./docs/mkdocs.github.en.yml
-          mkdocs build -f ./docs/mkdocs.github.zh.yml
+          mkdocs build -f ./docs/mkdocs.en.yml
+          mkdocs build -f ./docs/mkdocs.zh.yml
           cp -av ./docs/index.html ./docs/site
 
       - name: Deploy

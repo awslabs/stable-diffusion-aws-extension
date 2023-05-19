@@ -1,7 +1,3 @@
-Stable Diffusion AWS Extension
+本解决方案旨在帮助客户XXX。
 
-## Placeholder
 
-### Placeholder 1
-
-### Placeholder 2

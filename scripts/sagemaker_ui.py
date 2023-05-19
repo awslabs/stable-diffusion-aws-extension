@@ -94,6 +94,7 @@ def datetime_to_short_form(datetime_str):
 def update_sagemaker_endpoints():
     global sagemaker_endpoints
 
+    sagemaker_endpoints.clear()
     try:
         response = server_request('inference/list-endpoint-deployment-jobs')
         r = response.json()
@@ -163,6 +164,7 @@ def get_inference_job_list():
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
+    print(f"response of get_inference_job is {str(response)}")
     return response.json()
 
 def get_inference_job_image_output(inference_job_id):
@@ -452,6 +454,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
+    print(f"Raw server response: {response.text}") 
     try:
         r = response.json()
     except JSONDecodeError as e:
@@ -460,6 +463,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
     else:
         print(f"response for rest api {r}")
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
+        print(f"inference_id is {inference_id}")
 
         # Loop until the get_inference_job status is 'succeed' or 'failed'
         while True:
@@ -676,7 +680,7 @@ def create_ui():
                 #     outputs=[sagemaker_html_log]
                 # )
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button")
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True)
                 # generate_on_cloud_button_with_js.click(
                 #     # _js="txt2img_config_save",
                 #     fn=generate_on_cloud_no_input,
@@ -690,7 +694,7 @@ def create_ui():
                 #     inputs=[],
                 #     outputs=[]
                 # )
-            with gr.Row(variant='panel'):
+            with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
                 inference_job_dropdown = gr.Dropdown(txt2img_inference_job_ids,
@@ -703,7 +707,7 @@ def create_ui():
                 gr.HTML(value="Extra Networks for Cloud Inference")
             #     advanced_model_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(sd_checkpoints)}, "refresh_sd_checkpoints")
 
-            with gr.Row(variant='panel'):
+            with gr.Row():
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
                 create_refresh_button(
                     textual_inversion_dropdown,
@@ -718,7 +722,7 @@ def create_ui():
                     lambda: {"choices": sorted(get_lora_list())},
                     "refresh_lora",
                 )
-            with gr.Row(variant='panel'):
+            with gr.Row():
                 hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
                 create_refresh_button(
                     hyperNetwork_dropdown,
@@ -734,7 +738,7 @@ def create_ui():
                     "refresh_controlnet",
                 )
 
-            with gr.Row(variant='panel'):
+            with gr.Row():
                 sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
                 textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
                 lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
@@ -749,7 +753,7 @@ def create_ui():
                                           outputs=[sagemaker_html_log])
 
             gr.HTML(value="Deploy New SageMaker Endpoint")
-            with gr.Row(variant='panel'):
+            with gr.Row():
                 # instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
                 instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
                 # instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)

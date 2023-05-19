@@ -7,8 +7,8 @@ theme:
   name: material
   features:
     - navigation.tabs
-  favicon: images/aws-solutions.png
-  logo: images/aws-solutions.png
+  favicon: https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico
+  logo: https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico
   icon:
       repo: fontawesome/brands/github
   language: en
