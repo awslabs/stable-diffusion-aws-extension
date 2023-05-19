@@ -665,17 +665,26 @@ async def get_inference_job_image_output(jobID: str = None) -> List[str]:
 
     logger.info(f"Entering get_inference_job_image_output function with jobId: {inference_jobId}")
 
-    job_record = getInferenceJob(inference_jobId)
+    try:
+        job_record = getInferenceJob(inference_jobId)
+    except Exception as e:
+        logger.error(f"Error getting inference job: {str(e)}")
+        return []
 
     # Assuming the job_record contains a list of image names
-    image_names = job_record["image_names"]
+    image_names = job_record.get("image_names", [])
 
     presigned_urls = []
 
     for image_name in image_names:
-        image_key = f"out/{inference_jobId}/result/{image_name}"
-        presigned_url = generate_presigned_url(S3_BUCKET_NAME, image_key)
-        presigned_urls.append(presigned_url)
+        try:
+            image_key = f"out/{inference_jobId}/result/{image_name}"
+            presigned_url = generate_presigned_url(S3_BUCKET_NAME, image_key)
+            presigned_urls.append(presigned_url)
+        except Exception as e:
+            logger.error(f"Error generating presigned URL for image {image_name}: {str(e)}")
+            # Continue with the next image if this one fails
+            continue
 
     return presigned_urls
 
@@ -689,12 +698,20 @@ async def get_inference_job_param_output(jobID: str = None) -> List[str]:
 
     logger.info(f"Entering get_inference_job_param_output function with jobId: {inference_jobId}")
 
-    job_record = getInferenceJob(inference_jobId)
+    try:
+        job_record = getInferenceJob(inference_jobId)
+    except Exception as e:
+        logger.error(f"Error getting inference job: {str(e)}")
+        return []
 
     presigned_url = ""
 
-    json_key = f"out/{inference_jobId}/result/{inference_jobId}_param.json"
-    presigned_url = generate_presigned_url(S3_BUCKET_NAME, json_key)
+    try:
+        json_key = f"out/{inference_jobId}/result/{inference_jobId}_param.json"
+        presigned_url = generate_presigned_url(S3_BUCKET_NAME, json_key)
+    except Exception as e:
+        logger.error(f"Error generating presigned URL: {str(e)}")
+        return []
 
     return [presigned_url]
 
@@ -721,16 +738,25 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
     if not key:
         raise HTTPException(status_code=400, detail="Key parameter is required")
 
-    presigned_url = s3.generate_presigned_url(
-        'put_object',
-        Params={
-            'Bucket': s3_bucket_name,
-            'Key': key,
-            'ContentType': 'text/plain;charset=UTF-8'
-        },
-        ExpiresIn=3600,
-        HttpMethod='PUT'
-    )
+    try:
+        presigned_url = s3.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket': s3_bucket_name,
+                'Key': key,
+                'ContentType': 'text/plain;charset=UTF-8'
+            },
+            ExpiresIn=3600,
+            HttpMethod='PUT'
+        )
+    except Exception as e:
+        headers = {
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        }
+        return JSONResponse(content=str(e), status_code=500, headers=headers)
+
     headers = {
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Origin": "*",
