@@ -500,10 +500,15 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
     print(f"start deploying instance type: {instance_type} with count {initial_instance_count}............")
 
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+
+    # check if api_gateway_url and api_key are set
+    if api_gateway_url is None or api_key is None:
+        print("api_gateway_url and api_key are not set")
+        return
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
         api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
 
     payload = {
         "instance_type": instance_type,
