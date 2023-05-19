@@ -218,13 +218,16 @@ def download_images(image_urls: list, local_directory: str):
 def get_model_list_by_type(model_type):
 
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+
+    # check if api_gateway_url and api_key are set
+    if api_gateway_url is None or api_key is None:
+        print("api_gateway_url or api_key is not set")
+        return []
+
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
         api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    if api_gateway_url is None:
-        print(f"failed to get the api-gateway url, can not fetch remote data")
-        return []
 
     url = api_gateway_url + f"checkpoints?status=Active"
     if isinstance(model_type, list):
@@ -242,6 +245,10 @@ def get_model_list_by_type(model_type):
 
         checkpoint_list = []
         for ckpt in json_response["checkpoints"]:
+            if "name" not in ckpt:
+                continue
+            if ckpt["name"] is None:
+                continue
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
                 ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
@@ -249,7 +256,7 @@ def get_model_list_by_type(model_type):
                 checkpoint_list.append(ckpt_name)
 
         return checkpoint_list
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         print(f"Error fetching model list: {e}")
         return []
 
@@ -288,6 +295,10 @@ def refresh_all_models():
                 checkpoint_info[rp] = {}
                 continue
             for ckpt in json_response["checkpoints"]:
+                if "name" not in ckpt:
+                    continue
+                if ckpt["name"] is None:
+                    continue
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
