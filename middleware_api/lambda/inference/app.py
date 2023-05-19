@@ -92,6 +92,10 @@ def getInferenceJobList():
 
     
 def getInferenceJob(inference_job_id):
+    if not inference_job_id:
+        logger.error("Invalid inference job id")
+        raise ValueError("Inference job id must not be None or empty")
+
     try:
         resp = inference_table.query(
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
@@ -99,11 +103,12 @@ def getInferenceJob(inference_job_id):
         logger.info(resp)
         record_list = resp['Items']
         if len(record_list) == 0:
-            raise Exception("There is no inference job info item for id:" + inference_job_id)
+            logger.error(f"No inference job info item for id: {inference_job_id}")
+            raise ValueError(f"There is no inference job info item for id: {inference_job_id}")
         return record_list[0]
     except Exception as e:
-        logger.error(e)
-        return {}  # Return an empty object when an exception occurs
+        logger.error(f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
+        raise
     
 def getEndpointDeploymentJobList():
     try:
@@ -584,6 +589,7 @@ async def run_sagemaker_inference(request: Request):
             Item={
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
+                'completeTime': current_time,
                 'status': 'failure',
                 'error': f"error info {str(e)}"}
             )
@@ -627,6 +633,7 @@ async def deploy_sagemaker_endpoint(request: Request):
             'EndpointDeploymentJobId': endpoint_deployment_id,
             'startTime': current_time,
             'status': 'failed',
+            'completeTime': current_time, 
             'error': str(e)
         })
         return 0
@@ -653,7 +660,11 @@ async def get_endpoint_deployment_job(jobID: str = None):
 async def get_inference_job(jobID: str = None):
     inference_jobId = jobID
     logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
-    return getInferenceJob(inference_jobId)
+    try:
+        return getInferenceJob(inference_jobId)
+    except Exception as e:
+        logger.error(f"Error getting inference job: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/inference/get-inference-job-image-output")
 async def get_inference_job_image_output(jobID: str = None) -> List[str]:

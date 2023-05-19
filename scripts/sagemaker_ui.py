@@ -143,6 +143,8 @@ def get_inference_job_list():
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
             temp_list = []
             for obj in r:
+                if obj.get('completeTime') is None:
+                    continue
                 complete_time = obj.get('completeTime')
                 inference_job_id = obj.get('InferenceJobId')
                 combined_string = f"{complete_time}-->{inference_job_id}"
