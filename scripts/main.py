@@ -777,12 +777,15 @@ def get_train_job_list():
         logging.error("Url or API-Key is not setting.")
         return []
 
-    url += "trains?types=Stable-diffusion"
-    response = requests.get(url=url, headers={'x-api-key': api_key}).json()
     table = []
-    response['trainJobs'].reverse()
-    for trainJob in response['trainJobs']:
-        table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+    try:
+        url += "trains?types=Stable-diffusion"
+        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
+        response['trainJobs'].reverse()
+        for trainJob in response['trainJobs']:
+            table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+    except requests.exceptions.RequestException as e:
+        print(f"exception {e}")
 
     return table
 
@@ -795,11 +798,14 @@ def get_create_model_job_list():
         logging.error("Url or API-Key is not setting.")
         return []
 
-    url += "models?types=Stable-diffusion"
-    response = requests.get(url=url, headers={'x-api-key': api_key}).json()
     table = []
-    response['models'].reverse()
-    for model in response['models']:
-        table.append([model['id'][:6], model['model_name'], model["status"]])
+    try:
+        url += "models?types=Stable-diffusion"
+        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
+        response['models'].reverse()
+        for model in response['models']:
+            table.append([model['id'][:6], model['model_name'], model["status"]])
+    except requests.exceptions.RequestException as e:
+        print(f"exception {e}")
 
     return table
