@@ -240,6 +240,10 @@ def get_model_list_by_type(model_type):
 
         checkpoint_list = []
         for ckpt in json_response["checkpoints"]:
+            if "name" not in ckpt:
+                continue
+            if ckpt["name"] is None:
+                continue
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
                 ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
@@ -247,7 +251,7 @@ def get_model_list_by_type(model_type):
                 checkpoint_list.append(ckpt_name)
 
         return checkpoint_list
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         print(f"Error fetching model list: {e}")
         return []
 
@@ -286,6 +290,10 @@ def refresh_all_models():
                 checkpoint_info[rp] = {}
                 continue
             for ckpt in json_response["checkpoints"]:
+                if "name" not in ckpt:
+                    continue
+                if ckpt["name"] is None:
+                    continue
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
