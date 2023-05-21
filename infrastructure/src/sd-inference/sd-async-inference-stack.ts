@@ -115,6 +115,13 @@ export class SDAsyncInferenceStack extends NestedStack {
       inference_ecr_url: inferenceECR_url,
     });
 
+    const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal('sagemaker.amazonaws.com'),
+        new iam.ServicePrincipal('lambda.amazonaws.com')
+      )
+    });
+
     // Create a Lambda function for inference
     const inferenceLambda = new lambda.DockerImageFunction(
       this,
@@ -141,6 +148,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           SAGEMAKER_ENDPOINT_NAME: props.default_endpoint_name,
         },
+        role:inferenceLambdaRole,
         logRetention: RetentionDays.ONE_WEEK,
       },
     );
@@ -157,9 +165,10 @@ export class SDAsyncInferenceStack extends NestedStack {
           's3:List*',
           's3:PutObject',
           's3:GetObject',
+          's3:CreateBucket',
           'sns:*',
           'states:*',
-          'dynamodb:*',
+          'dynamodb:*'
         ],
         resources: ['*'],
       }),
