@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage: ./preflight_check.sh -x [initial_support_commit_controlnet] -y [initial_support_commit_dreambooth]
-# ecc84a28 83d7f75c
+# 23c0c803 926ae204
 
 # Fixed repo URLs list
 REPO_URL_LIST=(
