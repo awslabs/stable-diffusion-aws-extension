@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - dev
-    tags:
-      - sync-to-main
-  # schedule:
-  #   # sync every 2 weeks
-  #   - cron:  '0 0 1,15 * *'
+  schedule:
+    # sync every 2 weeks at midnight
+    - cron:  '0 0 1,15 * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
