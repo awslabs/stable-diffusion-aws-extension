@@ -1,9 +1,6 @@
 name: Auto Sync Dev to Main
 
 on:
-  push:
-    branches:
-      - dev
   schedule:
     # sync every 2 weeks at midnight
     - cron:  '0 0 1,15 * *'
