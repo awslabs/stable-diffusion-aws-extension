@@ -1,0 +1,37 @@
+name: Auto Sync Dev to Main
+
+on:
+  push:
+    branches:
+      - dev
+  schedule:
+    - cron:  '0 0 * * *' # Sync every day at midnight
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync_branches:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v2
+      with:
+        ref: dev
+        fetch-depth: 0
+
+    - name: Configure Git
+      run: |
+        git config --global user.email "yike5460@github.com"
+        git config --global user.name "yike5460"
+
+    - name: Merge dev into main
+      run: |
+        git checkout main
+        git merge dev --no-edit
+        git push origin main
+
+    - name: Handle merge conflicts
+      run: |
+        if git ls-files -u | grep -q . ; then
+          echo "Merge conflict detected. Please resolve manually."
+          exit 1
+        fi
