@@ -2,11 +2,11 @@
 
 Update time: 20230522
 
-webui/lora 5ab7f213 (20230502)
+webui/lora 89f9faa63388756314e8a1d96cf86bf5e0663045
 
-controlnet 23c0c803 (20230503)
+controlnet 7c674f8364227d63e1628fc29fa8619d33c56674
 
-dreambooth 926ae204 (20230331)
+dreambooth 926ae204ef5de17efca2059c334b6098492a0641
 
 # How to play with /stable-diffusion-webui
 
