@@ -64,8 +64,6 @@ class SageMakerUI(scripts.Script):
 
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
-    # if getattr(component, 'elem_id', None) is not None:
-    #     print(getattr(component, 'elem_id', None))
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
@@ -239,9 +237,7 @@ def on_ui_tabs():
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>") 
                     with gr.Row():
-                        # instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
                         instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-                        # instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)
                         instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
 
                     with gr.Row():
@@ -267,10 +263,6 @@ def on_ui_tabs():
                     gr.HTML(value="AWS Custom Model")
                     model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
                     model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
-                    # model_create_button.click(_js="create_model",
-                    #                           fn=create_model,
-                    #                           inputs = [model_name_textbox],
-                    #                           outputs= [])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
