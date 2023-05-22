@@ -154,6 +154,7 @@ def update_connect_config(api_url, api_token):
     global api_key
     api_key = get_variable_from_json('api_token')
     print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
+    sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "config updated to local config!"
 
 def test_aws_connect_config(api_url, api_token):
@@ -178,6 +179,7 @@ def test_aws_connect_config(api_url, api_token):
         return "failed to connect to backend server, please check the url and token"
 
 def on_ui_tabs():
+    import modules.ui
     buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
         with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row"):
@@ -190,15 +192,33 @@ def on_ui_tabs():
         with gr.Row():
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Connection Setting")
-                api_url_textbox = gr.Textbox(value=get_variable_from_json('api_gateway_url'), lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
-                api_token_textbox = gr.Textbox(value=get_variable_from_json('api_token'), lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
+                global api_gateway_url
+                api_gateway_url = get_variable_from_json('api_gateway_url')
+                global api_key
+                api_key = get_variable_from_json('api_token')
+                with gr.Row():
+                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
+                    def update_api_gateway_url():
+                        global api_gateway_url
+                        api_gateway_url = get_variable_from_json('api_gateway_url')
+                        return api_gateway_url
+                    # modules.ui.create_refresh_button(api_url_textbox, get_variable_from_json('api_gateway_url'), lambda: {"value": get_variable_from_json('api_gateway_url')}, "refresh_api_gate_way")
+                    modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url, lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
+                with gr.Row():
+                    def update_api_key():
+                        global api_key
+                        api_key = get_variable_from_json('api_token')
+                        return api_key
+                    api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
+                    modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
+
+                test_connection_result = gr.Label();
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
                                          inputs = [api_url_textbox, api_token_textbox],
-                                         outputs= [])
+                                         outputs= [test_connection_result])
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
-                test_connection_result = gr.Label();
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>") 
