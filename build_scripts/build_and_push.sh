@@ -72,7 +72,7 @@ cp ${dockerfile} .
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-# docker build  -t ${image_name} -f ${dockerfile} .
+docker build  -t ${image_name} -f ${dockerfile} .
 # docker tag ${image_name} ${fullname}
 
 # docker push ${fullname}
@@ -95,6 +95,6 @@ aws ecr-public get-login-password --region us-east-1 | docker login --username A
 # echo $public_repo
 
 fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:latest"
-docker tag ${image}:latest ${fullname}
+docker tag ${image_name}:latest ${fullname}
 docker push ${fullname}
 echo $fullname
