@@ -284,7 +284,6 @@ def get_controlnet_model_list():
     return get_model_list_by_type(model_type)
 
 def refresh_all_models():
-    print("Refresh checkpoints")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     try:

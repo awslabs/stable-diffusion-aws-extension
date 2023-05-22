@@ -75,25 +75,19 @@ def on_after_component_callback(component, **_kwargs):
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
-        print('Add SageMaker button')
         db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
     if is_dreambooth_model_name:
-        print('Get local model name')
         db_model_name = component
     if is_cloud_dreambooth_model_name:
-        print('Get cloud model name')
         cloud_db_model_name = component
     if is_dreambooth_use_txt2img:
-        print('Get use tet2img')
         db_use_txt2img = component
     if is_db_save_config:
-        print('Get save config button')
         db_save_config = component
     # After all requiment comment is loaded, add the SageMaker training button click callback function.
     if cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
             (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name):
-        print('Create click callback')
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
             fn=cloud_train,
@@ -110,13 +104,10 @@ def on_after_component_callback(component, **_kwargs):
     is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img'
     is_txt2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img'
     if is_txt2img_gallery:
-        print("create txt2img gallery")
         txt2img_gallery = component
     if is_txt2img_generation_info:
-        print("create txt2img generation info")
         txt2img_generation_info = component
     if is_txt2img_html_info:
-        print("create txt2img html info")
         txt2img_html_info = component
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and txt2img_gallery is not None and txt2img_generation_info is not None and txt2img_html_info is not None and txt2img_show_hook is None:
@@ -439,7 +430,6 @@ def get_cloud_model_snapshots():
 def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        print("Get request for model list.")
         if api_gateway_url is None:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
@@ -478,7 +468,6 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
 def get_cloud_ckpts():
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        print("Get request for model list.")
         if api_gateway_url is None:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
@@ -494,7 +483,6 @@ def get_cloud_ckpts():
                 ckpt_key = f"cloud-{ckpt['name'][0]}-{ckpt['id']}"
                 ckpt_dict[ckpt_key] = ckpt
     except Exception as e:
-        print('Failed to get cloud ckpts.')
         print(e)
         return []
 
