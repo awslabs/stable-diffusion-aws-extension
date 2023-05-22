@@ -23,4 +23,4 @@ RUN pip install omegaconf
 
 RUN rm /opt/ml/code/requirements.txt
 WORKDIR /opt/ml/code
-ENV SAGEMAKER_PROGRAM extensions/aws-ai-solution-kit/sagemaker_entrypoint_json.py
+ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint_json.py
