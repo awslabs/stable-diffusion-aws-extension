@@ -12,91 +12,6 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-// function txt2img_config_save(endpoint_value) {
-//     var config = {};
-
-//     // const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value;
-//     // const sagemaker_ep_info_array = sagemaker_ep_info.split("+")
-//     // const sagemaker_ep_status = sagemaker_ep_info_array[1]
-
-//     // if (sagemaker_ep_status != "InService") {
-//     //     alert(
-//     //         "Save settings failed! Please choose an endpoint in in-service status!"
-//     //     );
-
-//     //     return 0
-//     // }
-
-//     // now it's all special case under txt2img_settings div element
-//     // scrap_ui_component_value(config);
-
-//     console.log(JSON.stringify(endpoint_value))
-//     scrap_ui_component_value_with_default(config);
-
-
-//     // store config in local storage for debugging
-//     localStorage.setItem("txt2imgConfig", JSON.stringify(config));
-
-//     //following code is to get s3 presigned url from middleware and upload the ui parameters
-//     const key = "config/aigc.json";
-//     let remote_url = config["aws_api_gateway_url"];
-//     if (!remote_url.endsWith("/")) {
-//         remote_url += "/";
-//     }
-//     let get_presigned_s3_url = remote_url;
-//     get_presigned_s3_url += "inference/generate-s3-presigned-url-for-uploading";
-//     const api_key = config["aws_api_token"];
-
-//     const config_presigned_url =  getPresignedUrl(
-//         get_presigned_s3_url,
-//         api_key,
-//         key,
-//         function (error, presignedUrl) {
-//             if (error) {
-//                 console.error("Error fetching presigned URL:", error);
-//             } else {
-//                 // console.log("Presigned URL:", presignedUrl);
-//                 const url = presignedUrl.replace(/"/g, "");
-//                 // console.log("url:", url);
-
-//                 // Upload configuration JSON file to S3 bucket with pre-signed URL
-//                 const config_data = JSON.stringify(config);
-//                 // console.log(config_data)
-
-//                 put_with_xmlhttprequest(url, config_data)
-//                     .then((response) => {
-//                         console.log('The configuration has been successfully uploaded to s3');
-//                         // Trigger a simple alert after the HTTP PUT has completed
-//                         alert(
-//                             "The configuration has been successfully uploaded."
-//                         );
-//                         return endpoint_value
-
-//                         // TODO: meet the cors issue, need to implement it later
-//                         // let inference_url = remote_url + 'inference/run-sagemaker-inference';
-//                         // console.log("api-key is ", api_key)
-//                         // postToApiGateway(inference_url, api_key, config_data, function (error, response) {
-//                         //     if (error) {
-//                         //         console.error("Error posting to API Gateway:", error);
-//                         //     } else {
-//                         //         console.log("Successfully posted to API Gateway:", response);
-//                         //         alert("Succeed trigger the remote sagemaker inference.");
-//                         //         // You can also add an alert or any other action you'd like to perform on success
-//                         //     }
-//                         // })
-//                     })
-//                     .catch((error) => {
-//                         console.log(error);
-//                         alert(
-//                             "An error occurred while uploading the configuration."
-//                         );
-//                         return "FAILURE"
-//                     });
-//             }
-//         }
-//     );
-//     return endpoint_value
-// }
 
 async function txt2img_config_save(endpoint_value) {
     var config = {};
@@ -755,115 +670,120 @@ function scrap_ui_component_value_with_default(config) {
         console.log("imgElement is null or undefined");
         config["txt2img_controlnet_ControlNet_input_image"] = "";
     }
-    
+
+    // Start grapping controlnet related ui values
     config["controlnet_enable"] = getElementValue(
-        "#component-138 > label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_enable_checkbox > label > input",
         "checked",
         false
     );
     
     config["controlnet_lowVRAM_enable"] = getElementValue(
-        "#component-139> label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
         "checked",
         false
     );
+
     config["controlnet_pixel_perfect"] = getElementValue(
-        "#component-141> label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_pixel_perfect_checkbox > label > input",
         "checked",
         false
     );
     
     config["controlnet_allow_preview"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_preprocessor_preview > label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
         "checked",
         false
     );
+
     
     config["controlnet_preprocessor"] = getElementValue(
-        "#component-144> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
+
     config["controlnet_model"] = getElementValue(
-        "#component-146> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
+
     config["controlnet_weight"] = getElementValue(
-        "#component-151> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_weight_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
-    // document.querySelector("#component-214 > div.wrap.svelte-1cl284s > div > input")
-    // getElementValue("#component-213 > div.wrap.svelte-1cl284s > div > input")
+
     config["controlnet_starting_control_step"] = getElementValue(
-        "#component-152> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_start_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_ending_control_step"] = getElementValue(
-        "#component-153> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_ending_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_just_resize"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
-        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
-        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config[
         "controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit"
-    ] = getElementValue("#component-161> label > input", "enabled", false);
+    ] = getElementValue("#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox> label > input", "enabled", false);
     
     // Completed when Preprocessor is null
 
     // Start when Preprocessor is canny
     config["controlnet_preprocessor_resolution"] = getElementValue(
-        "#component-156> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_resolution_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
+
     config["controlnet_canny_low_threshold"] = getElementValue(
-        "#component-157> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_threshold_A_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
 
     config["controlnet_canny_high_threshold"] = getElementValue(
-        "#component-158> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     ) 
