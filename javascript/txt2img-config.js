@@ -467,9 +467,14 @@ function scrap_ui_component_value_with_default(config) {
     );
 
     config[
-        "controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit"
-    ] = getElementValue("#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox> label > input", "enabled", false);
+        "controlnet_loopback_automatically"
+    ] = getElementValue(
+        "#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox > label > input",
+        "checked", 
+        false
+    );
     
+
     // Completed when Preprocessor is null
 
     // Start when Preprocessor is canny
