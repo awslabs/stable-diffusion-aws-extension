@@ -655,10 +655,8 @@ def display_inference_result(inference_id: str ):
 
     return image_list, info_text, plaintext_to_html(infotexts)
 
-def create_ui():
-    global txt2img_gallery, txt2img_generation_info
-    import modules.ui
-
+def init_refresh_resource_list_from_cloud():
+    print(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         update_sagemaker_endpoints()
         refresh_all_models()
@@ -668,7 +666,13 @@ def create_ui():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,")
+        print(f"there is no api-gateway url and token in local file,") 
+
+def create_ui():
+    global txt2img_gallery, txt2img_generation_info
+    import modules.ui
+
+    init_refresh_resource_list_from_cloud()
 
     with gr.Group():
         with gr.Accordion("Amazon SageMaker Inference", open=False):
@@ -687,7 +691,7 @@ def create_ui():
                     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True)
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids

@@ -82,8 +82,7 @@ def upload_folder_to_s3(local_folder_path, bucket_name, s3_folder_path):
 
 
 def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path):
-    tar_path = f"{local_folder_path}.tar"
-    tar_name = os.path.basename(tar_path)
+    tar_name = f"{os.path.basename(local_folder_path)}.tar"
     os.system(f'tar cvf {tar_name} {local_folder_path}')
     # tar = tarfile.open(tar_path, "w:gz")
     # for root, dirs, files in os.walk(local_folder_path):
@@ -152,11 +151,11 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
         bucket.download_file(obj.key, os.path.join(local_sub_folder_path, obj_basename))  # save to same path
 
 
-def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path):
+def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir="."):
     s3_client = boto3.client('s3')
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
     # tar_name = os.path.basename(s3_tar_path)
-    os.system(f"tar xvf {local_tar_path}")
+    os.system(f"tar xvf {local_tar_path} -C {target_dir}")
     # tar = tarfile.open(local_tar_path, "r")
     # tar.extractall()
     # tar.close()
