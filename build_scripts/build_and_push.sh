@@ -15,6 +15,10 @@ then
     exit 1
 fi
 
+if [ -d "stable-diffusion-webui" ]; then
+    echo "Removing existing project..."
+    rm -rf stable-diffusion-webui
+fi
 
 # Sync github repo contents
 cp ../install.sh .
@@ -42,18 +46,18 @@ fi
 region=$(aws configure get region)
 # region=${region:-us-west-2}
 
-
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image}:latest"
+image_name="stable-diffusion-aws-extension/${image}"
+fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:latest"
 
 # If the repository doesn't exist in ECR, create it.
 
-desc_output=$(aws ecr describe-repositories --repository-names ${image} 2>&1)
+desc_output=$(aws ecr describe-repositories --repository-names ${image_name} 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --repository-name "${image}" > /dev/null
+        aws ecr create-repository --repository-name "${image_name}" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
@@ -61,48 +65,36 @@ fi
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
 #aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
-aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+# aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
 cp ${dockerfile} .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-docker build  -t ${image} -f ${dockerfile} .
-docker tag ${image} ${fullname}
+# docker build  -t ${image_name} -f ${dockerfile} .
+# docker tag ${image_name} ${fullname}
 
-docker push ${fullname}
-echo $fullname
+# docker push ${fullname}
+# echo $fullname
 
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+# Push to public ecr
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
 
-public_repo="initial"
+# public_repo="initial"
 
-desc_output=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 2>&1)
+# desc_output=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 2>&1)
 
-if echo ${desc_output} | grep -q RepositoryNotFoundException
-then
-        public_repo=$(aws ecr-public create-repository --repository-name ${image} --region us-east-1 | jq --raw-output '.repository.repositoryUri')
-else
-        public_repo=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 | jq --raw-output '.repositories[].repositoryUri')
-fi
-
-# if [ $? -ne 0 ]
+# if echo ${desc_output} | grep -q RepositoryNotFoundException
 # then
-#     echo "debug!!"
-#     if echo ${desc_output} | grep -q RepositoryNotFoundException
-#     then
-#             public_repo=$(aws ecr-public create-repository --repository-name ${image} --region us-east-1 | jq --raw-output '.repository.repositoryUri')
-#     else
-#             public_repo=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 | jq --raw-output '.repositories[].repositoryUri')
-#     fi
+#         public_repo=$(aws ecr-public create-repository --repository-name ${image} --region us-east-1 | jq --raw-output '.repository.repositoryUri')
 # else
-#     echo "-ne"
+#         public_repo=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 | jq --raw-output '.repositories[].repositoryUri')
 # fi
 
-echo $public_repo
+# echo $public_repo
 
-fullname="$public_repo:latest"
-docker tag ${image} ${fullname}
+fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:latest"
+docker tag ${image}:latest ${fullname}
 docker push ${fullname}
 echo $fullname

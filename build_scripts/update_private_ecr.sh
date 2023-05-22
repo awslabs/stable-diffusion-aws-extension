@@ -45,16 +45,16 @@ fi
 
 aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
-if [ "$image" == "aigc-webui-utils" ]; then
-    repo_id="e2t2y5y0"
-elif [ "$image" == "aigc-webui-inference" ]; then
-    repo_id="l7s6x2w8"
-elif [ "$image" == "aigc-webui-dreambooth-train" ]; then
-    repo_id="e2t2y5y0"
-fi
+# if [ "$image" == "aigc-webui-utils" ]; then
+#     repo_id="e2t2y5y0"
+# elif [ "$image" == "aigc-webui-inference" ]; then
+#     repo_id="l7s6x2w8"
+# elif [ "$image" == "aigc-webui-dreambooth-train" ]; then
+#     repo_id="e2t2y5y0"
+# fi
 
 repo_name=${image}
-complete_command="FROM public.ecr.aws/${repo_id}/${repo_name}:latest"
+complete_command="FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/${repo_name}:latest"
 
 echo $complete_command
 
