@@ -1,1 +1,1 @@
-FROM public.ecr.aws/l7s6x2w8/aigc-webui-inference:latest
+FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:latest

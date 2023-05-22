@@ -27,17 +27,18 @@ region=$(aws configure get region)
 # region=${region:-us-west-2}
 
 
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image}:latest"
 
 # If the repository doesn't exist in ECR, create it.
+image_name="stable-diffusion-aws-extension/${image}"
+fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:latest"
 
-desc_output=$(aws ecr describe-repositories --repository-names ${image} 2>&1)
+desc_output=$(aws ecr describe-repositories --repository-names ${image_name} 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --repository-name "${image}" > /dev/null
+        aws ecr create-repository --repository-name "${image_name}" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
@@ -62,8 +63,8 @@ echo $complete_command > Dockerfile
 
 docker logout public.ecr.aws
 
-docker build  -t ${image} -f Dockerfile .
-docker tag ${image} ${fullname}
+docker build  -t ${image_name} -f Dockerfile .
+docker tag ${image_name} ${fullname}
 
 docker push ${fullname}
 echo $fullname
