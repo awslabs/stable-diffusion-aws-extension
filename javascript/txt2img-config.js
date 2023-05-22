@@ -373,115 +373,120 @@ function scrap_ui_component_value_with_default(config) {
         console.log("imgElement is null or undefined");
         config["txt2img_controlnet_ControlNet_input_image"] = "";
     }
-    
+
+    // Start grapping controlnet related ui values
     config["controlnet_enable"] = getElementValue(
-        "#component-138 > label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_enable_checkbox > label > input",
         "checked",
         false
     );
     
     config["controlnet_lowVRAM_enable"] = getElementValue(
-        "#component-139> label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
         "checked",
         false
     );
+
     config["controlnet_pixel_perfect"] = getElementValue(
-        "#component-141> label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_pixel_perfect_checkbox > label > input",
         "checked",
         false
     );
     
     config["controlnet_allow_preview"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_preprocessor_preview > label > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
         "checked",
         false
     );
+
     
     config["controlnet_preprocessor"] = getElementValue(
-        "#component-144> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
+
     config["controlnet_model"] = getElementValue(
-        "#component-146> label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
         "value",
         ""
     );
+
     config["controlnet_weight"] = getElementValue(
-        "#component-151> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_weight_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
-    // document.querySelector("#component-214 > div.wrap.svelte-1cl284s > div > input")
-    // getElementValue("#component-213 > div.wrap.svelte-1cl284s > div > input")
+
     config["controlnet_starting_control_step"] = getElementValue(
-        "#component-152> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_start_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_ending_control_step"] = getElementValue(
-        "#component-153> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_ending_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_just_resize"] = getElementValue(
-        "#component-160> div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
-        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
-        "#component-161> div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config[
         "controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit"
-    ] = getElementValue("#component-161> label > input", "enabled", false);
+    ] = getElementValue("#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox> label > input", "enabled", false);
     
     // Completed when Preprocessor is null
 
     // Start when Preprocessor is canny
     config["controlnet_preprocessor_resolution"] = getElementValue(
-        "#component-156> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_resolution_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
+
     config["controlnet_canny_low_threshold"] = getElementValue(
-        "#component-157> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_threshold_A_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
 
     config["controlnet_canny_high_threshold"] = getElementValue(
-        "#component-158> div.wrap.svelte-1cl284s > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     ) 

@@ -57,15 +57,13 @@ class SageMakerUI(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_txt2img):
-        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui()
-        return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
-    def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
+        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui()
+        return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+    def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
         pass
 
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
-    # if getattr(component, 'elem_id', None) is not None:
-    #     print(getattr(component, 'elem_id', None))
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
@@ -202,6 +200,51 @@ def on_ui_tabs():
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
                 test_connection_result = gr.Label();
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
+            with gr.Column(variant="panel", scale=1.5):
+                gr.HTML(value="<u><b>Cloud Assets Management</b></u>") 
+                sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+                with gr.Blocks(title="Upload Model to S3", variant="panel"):
+                    gr.HTML(value="Upload Model to S3") 
+                    with gr.Row():
+                        with gr.Column(variant="panel"):
+                            sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
+                        with gr.Column(variant="panel"):
+                            textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
+                    with gr.Row():
+                        with gr.Column(variant="panel"):
+                            lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
+                            controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
+                        with gr.Column(variant="panel"):
+                            hypernetwork_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="HyperNetwork",elem_id="sd_hypernetwork_path_textbox")
+
+                    with gr.Row():
+                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
+                        model_update_button.click(_js="model_update",
+                                          fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
+                                          outputs=[test_connection_result])
+                
+
+                with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
+                    gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>") 
+                    with gr.Row():
+                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                        instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
+
+                    with gr.Row():
+                        sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
+                        sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
+                                              _js="deploy_endpoint", \
+                                              inputs = [instance_type_dropdown, instance_count_dropdown],
+                                              outputs=[test_connection_result])
+                
+                with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=["endpoint1", "endpoint2", "endpoint3", "endpoint4"], value=["endpoint1", "endpoint2"], multiselect=True, interactive=False, label="")
+                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',interactive=False, elem_id="sagemaker_endpoint_delete_button")
+
+                
+                    
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Model Setting")
                 with gr.Tab("Select"):
@@ -211,10 +254,6 @@ def on_ui_tabs():
                     gr.HTML(value="AWS Custom Model")
                     model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
                     model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
-                    # model_create_button.click(_js="create_model",
-                    #                           fn=create_model,
-                    #                           inputs = [model_name_textbox],
-                    #                           outputs= [])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
