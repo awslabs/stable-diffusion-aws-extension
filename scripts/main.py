@@ -259,9 +259,16 @@ def on_ui_tabs():
                                               outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>")
-                    sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=["endpoint1", "endpoint2", "endpoint3", "endpoint4"], value=["endpoint1", "endpoint2"], multiselect=True, interactive=False, label="")
-                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',interactive=False, elem_id="sagemaker_endpoint_delete_button")
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    with gr.Row():
+                        sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints, multiselect=True, label="Select Cloud SageMaker Endpoint")
+                        modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
+                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',elem_id="sagemaker_endpoint_delete_button")
+                    sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
+                                              _js="delete_sagemaker_endpoint", \
+                                              inputs = [sagemaker_endpoint_delete_dropdown],
+                                              outputs=[test_connection_result])
+
 
 
 
