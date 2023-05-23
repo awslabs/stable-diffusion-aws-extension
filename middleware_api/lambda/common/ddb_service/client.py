@@ -75,7 +75,26 @@ class DynamoDbUtilsService:
             self.logger.error(f'table {table} keys_values: {key_values}')
             raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
 
-    def scan(self, table: str, filters: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
+    def query_latest_item(self, table: str, key_values: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            filter_expressions, expression_values = self._get_ddb_filter(key_values)
+
+            resp = self.client.query(
+                TableName=table,
+                KeyConditionExpression=filter_expressions,
+                ExpressionAttributeValues=expression_values,
+                Limit=1,
+            )
+            named_ = ScanOutput(**resp)
+            if 'Items' not in named_:
+                return dict()
+            res = self.deserialize(named_['Items'][0])
+            return res
+        except ClientError as e:
+            self.logger.error(f'table {table} keys_values: {key_values}')
+            raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
+
+    def _get_ddb_filter(self, filters: Dict[str, Any]):
         prepare_filter_expressions = []
         prefix = ':'
         expression_values = {}
@@ -95,25 +114,29 @@ class DynamoDbUtilsService:
                 prepare_filter_expressions.append('{} = {}'.format(key, prefix+key))
                 expression_values[prefix+key] = self._convert(val)
         filter_expressions = ' AND '.join(prepare_filter_expressions)
+        return filter_expressions, expression_values
+
+    def scan(self, table: str, filters: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
         # expression_values = self._serialize(filters, prefix)
+        filter_expressions, expression_values = self._get_ddb_filter(filters)
 
         resp = self.client.scan(
             TableName=table,
             FilterExpression=filter_expressions,
-            ExpressionAttributeValues=expression_values
+            ExpressionAttributeValues=expression_values,
         )
         self.logger.info('scan response: %s', json.dumps(resp))
         named_ = ScanOutput(**resp)
         # FIXME: handle failures
         return named_['Items']
 
-    def get_all(self, table: str) -> List[dict[str, Any]]:
-        resp = self.client.scan(TableName=table)
-        named_ = ScanOutput(**resp)
-        result = []
-        for item in named_['Items']:
-            result.append(self.deserialize(item))
-        return result
+    # def _get_all(self, table: str) -> List[dict[str, Any]]:
+    #     resp = self.client.scan(TableName=table)
+    #     named_ = ScanOutput(**resp)
+    #     result = []
+    #     for item in named_['Items']:
+    #         result.append(self.deserialize(item))
+    #     return result
 
     def delete_item(self, table: str, keys: dict[str, Any]):
         keys = self._serialize(keys)

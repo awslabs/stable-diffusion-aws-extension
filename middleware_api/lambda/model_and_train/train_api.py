@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -11,9 +12,9 @@ import sagemaker
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import publish_msg
-from common_tools import get_s3_presign_urls, split_s3_path
-from _types import TrainJob, TrainJobStatus, ModelJob, CreateModelStatus, CheckPoint, CheckPointStatus
-from create_model_async_job import DecimalEncoder
+from common_tools import get_s3_presign_urls, split_s3_path, DecimalEncoder
+from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
+
 
 bucket_name = os.environ.get('S3_BUCKET')
 train_table = os.environ.get('TRAIN_TABLE')
@@ -53,7 +54,7 @@ def create_train_job_api(raw_event, context):
                 'error': f'model with id {event.model_id} is not found'
             }
 
-        model = ModelJob(**model_raw)
+        model = Model(**model_raw)
         if model.job_status != CreateModelStatus.Complete:
             return {
                 'statusCode': 500,
@@ -68,7 +69,8 @@ def create_train_job_api(raw_event, context):
             id=request_id,
             checkpoint_type=event.train_type,
             s3_location=f's3://{bucket_name}/{base_key}/output',
-            checkpoint_status=CheckPointStatus.Initial
+            checkpoint_status=CheckPointStatus.Initial,
+            timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
 
@@ -80,6 +82,7 @@ def create_train_job_api(raw_event, context):
             train_type=event.train_type,
             input_s3_location=f's3://{bucket_name}/{input_location}',
             checkpoint_id=checkpoint.id,
+            timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -136,6 +139,7 @@ def list_all_train_jobs_api(event, context):
             'modelName': model_name,
             'status': train_job.job_status.value,
             'trainType': train_job.train_type,
+            'created': train_job.timestamp,
             'sagemakerTrainName': train_job.sagemaker_train_name,
         })
 
@@ -177,7 +181,7 @@ def _start_train_job(train_job_id: str):
             'error': f'model with id {train_job.model_id} is not found'
         }
 
-    model = ModelJob(**model_raw)
+    model = Model(**model_raw)
 
     raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
         'id': train_job.checkpoint_id
@@ -260,6 +264,7 @@ def _start_train_job(train_job_id: str):
             'job': {
                 'id': train_job.id,
                 'status': train_job.job_status.value,
+                'created': train_job.timestamp,
                 'trainType': train_job.train_type,
                 'params': train_job.params,
                 'input_location': train_job.input_s3_location
@@ -362,14 +367,14 @@ def check_train_job_status(event, context):
     # fixme: this is ugly
     ddb_service.update_item(
         table=train_table,
-        key={'id': train_job_id},
+        key={'id': training_job.id},
         field_name='job_status',
         value=training_job.job_status.value
     )
 
     ddb_service.update_item(
         table=train_table,
-        key={'id': train_job_id},
+        key={'id': training_job.id},
         field_name='params',
         value=training_job.params
     )

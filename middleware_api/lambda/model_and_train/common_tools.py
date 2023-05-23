@@ -1,7 +1,8 @@
+import json
+import decimal
 from typing import Dict, Any
 
 import boto3
-from botocore.config import Config
 from datetime import datetime
 from datetime import timedelta
 
@@ -73,7 +74,7 @@ def get_base_checkpoint_s3_key(_type: str, name: str, request_id: str) -> str:
     return f'{_type}/checkpoint/{name}/{request_id}'
 
 
-def complete_mulipart_upload(ckpt: CheckPoint, filename_etag):
+def complete_multipart_upload(ckpt: CheckPoint, filename_etag):
     s3 = boto3.client('s3')
     if 'multipart_upload' in ckpt.params:
         multipart = ckpt.params['multipart_upload']
@@ -101,4 +102,15 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # if passed in object is instance of Decimal
+        # convert it to a string
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+
+        #️ otherwise use the default behavior
+        return json.JSONEncoder.default(self, obj)
 

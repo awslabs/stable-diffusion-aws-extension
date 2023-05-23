@@ -221,10 +221,10 @@ def on_ui_tabs():
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
             with gr.Column(variant="panel", scale=1.5):
-                gr.HTML(value="<u><b>Cloud Assets Management</b></u>") 
+                gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
                 with gr.Blocks(title="Upload Model to S3", variant="panel"):
-                    gr.HTML(value="Upload Model to S3") 
+                    gr.HTML(value="Upload Model to S3")
                     with gr.Row():
                         with gr.Column(variant="panel"):
                             sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
@@ -243,10 +243,10 @@ def on_ui_tabs():
                                           fn=sagemaker_ui.sagemaker_upload_model_s3,
                                           inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
                                           outputs=[test_connection_result])
-                
+
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>") 
+                    gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
                     with gr.Row():
                         instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
                         instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
@@ -257,14 +257,14 @@ def on_ui_tabs():
                                               _js="deploy_endpoint", \
                                               inputs = [instance_type_dropdown, instance_count_dropdown],
                                               outputs=[test_connection_result])
-                
+
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>")
                     sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=["endpoint1", "endpoint2", "endpoint3", "endpoint4"], value=["endpoint1", "endpoint2"], multiselect=True, interactive=False, label="")
                     sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',interactive=False, elem_id="sagemaker_endpoint_delete_button")
 
-                
-                    
+
+
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Model Setting")
                 with gr.Tab("Select"):
@@ -820,7 +820,7 @@ def get_train_job_list():
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
+    if not url or not api_key:
         logging.error("Url or API-Key is not setting.")
         return []
 
@@ -828,7 +828,7 @@ def get_train_job_list():
     try:
         url += "trains?types=Stable-diffusion"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['trainJobs'].reverse()
+        response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for trainJob in response['trainJobs']:
             table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
     except requests.exceptions.RequestException as e:
@@ -841,7 +841,7 @@ def get_create_model_job_list():
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
+    if not url or not api_key:
         logging.error("Url or API-Key is not setting.")
         return []
 
@@ -849,7 +849,7 @@ def get_create_model_job_list():
     try:
         url += "models?types=Stable-diffusion"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['models'].reverse()
+        response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for model in response['models']:
             table.append([model['id'][:6], model['model_name'], model["status"]])
     except requests.exceptions.RequestException as e:

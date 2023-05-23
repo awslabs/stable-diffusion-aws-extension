@@ -106,7 +106,7 @@ export class CreateTrainJobApi {
   private createTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-handler`, <PythonFunctionProps>{
       functionName: `${this.id}-model`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',

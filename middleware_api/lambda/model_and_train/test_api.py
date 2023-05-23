@@ -23,7 +23,7 @@ class MockContext:
 class ModelsApiTest(TestCase):
 
     def test_upload(self):
-        from create_model_job_api import create_model_api
+        from model_api import create_model_api
         resp = create_model_api({
             "model_type": "dreambooth",
             "name": "test_upload",
@@ -53,7 +53,7 @@ class ModelsApiTest(TestCase):
         upload_with_put(url)
 
     def test_model_update(self):
-        from update_job_api import update_model_job_api
+        from model_api import update_model_job_api
         update_model_job_api({
             'model_id': 'asdfasdf',
             'status': 'Creating',
@@ -62,7 +62,7 @@ class ModelsApiTest(TestCase):
 
     def test_process(self):
         data = {}  # sample data
-        from create_model.update_job_api import process_result
+        from model_api import process_result
         process_result(data, {})
 
     def test_convert(self):
@@ -72,19 +72,19 @@ class ModelsApiTest(TestCase):
         print(obj)
 
     def test_list_all(self):
-        from create_model.create_model_job_api import list_all_models_api
+        from model_api import list_all_models_api
         resp = list_all_models_api({}, {})
         print(resp)
 
     def test_s3(self):
         # split s3://alvindaiyan-aigc-testing-playground/models/7a77d369-142c-4091-91e1-9278566a6a4f.out
-        from create_model.update_job_api import split_s3_path
+        from model_api import split_s3_path
         bucket, key = split_s3_path('s3://path')
-        from create_model.update_job_api import get_object
+        from model_api import get_object
         get_object(bucket=bucket, key=key)
 
     def test_list_checkpoints(self):
-        from create_model.checkpoint_api import list_all_checkpoints_api
+        from model_and_train.checkpoint_api import list_all_checkpoints_api
         resp = list_all_checkpoints_api({}, {})
         print(resp)
 
@@ -110,7 +110,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_update_train_job_api(self):
-        from create_model.train_api import update_train_job_api
+        from model_and_train.train_api import update_train_job_api
         update_train_job_api({
             "train_job_id": "asdfasdf",
             "status": "Training"
@@ -161,33 +161,13 @@ class ModelsApiTest(TestCase):
         part_size = 1 * 1024 * 1024
         file_size = os.stat(large_file_location)
         print(file_size.st_size)
-        parts_number = math.ceil(file_size.st_size / part_size)
+        parts_number = math.ceil(file_size.st_size / part_size)  # parts = 5
         print(parts_number)
-        # parts = 5
 
-        from datetime import datetime
-        from datetime import timedelta
-        response = s3.create_multipart_upload(
-            Bucket=bucket,
-            Key=key,
-            Expires=datetime.now() + timedelta(seconds=3600 * 24 * 7)
-        )
-
-        upload_id = response['UploadId']
-
-        presign_urls = []
-
-        for i in range(1, parts_number + 1):
-            presign_url = s3.generate_presigned_url(
-                ClientMethod='upload_part',
-                Params={
-                    'Bucket': bucket,
-                    'Key': key,
-                    'UploadId': upload_id,
-                    'PartNumber': i
-                }
-            )
-            presign_urls.append(presign_url)
+        from common_tools import get_s3_multipart_signed_urls
+        presign_url_resp = get_s3_multipart_signed_urls(bucket, key, parts_number)
+        presign_urls = presign_url_resp['s3_signed_urls']
+        upload_id = presign_url_resp['UploadId']
 
         with open(large_file_location, 'rb') as f:
             parts = []
@@ -220,8 +200,8 @@ class ModelsApiTest(TestCase):
                 print(response)
 
     def test_batch_get_s3_multipart_signed_urls(self):
-        from create_model.common_tools import batch_get_s3_multipart_signed_urls
-        from create_model._types import MultipartFileReq
+        from model_and_train.common_tools import batch_get_s3_multipart_signed_urls
+        from model_and_train._types import MultipartFileReq
         resp = batch_get_s3_multipart_signed_urls(
             'bucket',
             'test-multipart-api',
@@ -242,3 +222,16 @@ class ModelsApiTest(TestCase):
         print(response)
         for obj in response['Contents']:
             print(obj['Key'].replace(key, ""))
+
+    def test_timestamp(self):
+        import datetime
+        timestamp = datetime.datetime.now().timestamp()
+        print(timestamp)
+        print(type(timestamp))
+
+    def test_get_item(self):
+        from model_api import ddb_service, model_table
+        resp = ddb_service.get_item(table=model_table, key_values={
+            "id": "262676e1-9b57-4ff3-a876-4e1de5ff5d25"
+        })
+        print(resp)

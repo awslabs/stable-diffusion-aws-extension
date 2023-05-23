@@ -26,7 +26,7 @@ export class Middleware extends Stack {
     },
   ) {
     super(scope, id, props);
-    this.templateOptions.description = "(SO8032) - Stable-Diffusion AWS Extension";
+    this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
     // Create CfnParameters here
     const emailParam = new CfnParameter(this, 'email', {
@@ -50,7 +50,7 @@ export class Middleware extends Stack {
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: defaultBucketName.substring(0,63),
+      default: defaultBucketName.substring(0, 63),
     });
 
 
@@ -58,7 +58,7 @@ export class Middleware extends Stack {
       // env: devEnv,
       synthesizer: props.synthesizer,
       emailParam: emailParam,
-      bucketName: bucketName
+      bucketName: bucketName,
     });
 
     const inferenceStack = new SDAsyncInferenceStack(

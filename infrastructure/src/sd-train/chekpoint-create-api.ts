@@ -99,7 +99,7 @@ export class CreateCheckPointApi {
   private createCheckpointApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-create`, <PythonFunctionProps>{
       functionName: `${this.baseId}-create-checkpoint`,
-      entry: `${this.src}/create_model`,
+      entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'checkpoint_api.py',
