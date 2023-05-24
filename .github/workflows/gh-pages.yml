@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - docs/**
+  # make it manual trigger
+  workflow_dispatch:
 
 jobs:
   deploy:
