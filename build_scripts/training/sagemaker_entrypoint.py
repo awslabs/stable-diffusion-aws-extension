@@ -8,7 +8,8 @@ import pickle
 import logging
 import base64
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+# logger.setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
 import boto3
 
@@ -151,7 +152,7 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
             continue
         target_dir = re.sub("\.tar$", "", class_data_tar)
         os.makedirs(target_dir, exist_ok=True)
-        input_path = os.path.join(get_path_from_s3_path(s3_input_path), class_data_tar, target_dir)
+        input_path = os.path.join(get_path_from_s3_path(s3_input_path), class_data_tar)
         logger.info(f"Download class data from s3 {input_bucket_name} {input_path} to {target_dir} {class_data_tar}")
         download_folder_from_s3_by_tar(input_bucket_name, input_path, class_data_tar, target_dir)
 

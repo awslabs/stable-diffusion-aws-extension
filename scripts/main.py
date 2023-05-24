@@ -594,14 +594,20 @@ def async_prepare_for_training_on_sagemaker(
     upload_files.append(db_config_tar)
     data_tar_list = []
     for data_path in data_path_list:
-        data_tar = f'data_{data_path.replace("/", "-")}.tar'
+        if len(data_path) == 0:
+            data_tar_list.append("")
+            continue
+        data_tar = f'data-{data_path.replace("/", "-")}.tar'
         data_tar_list.append(data_tar)
         print("Pack the data file.")
         os.system(f"tar cvf {data_tar} {data_path}")
         upload_files.append(data_tar)
     class_data_tar_list = []
     for class_data_path in class_data_path_list:
-        class_data_tar = f'class_data_{class_data_path.replace("/", "-")}.tar'
+        if len(class_data_path) == 0:
+            class_data_tar_list.append("")
+            continue
+        class_data_tar = f'class-data-{class_data_path.replace("/", "-")}.tar'
         class_data_tar_list.append(class_data_tar)
         upload_files.append(class_data_tar)
         print("Pack the class data file.")
@@ -777,10 +783,8 @@ def cloud_train(
     data_path_list = []
     class_data_path_list = []
     for concept in config.concepts():
-        if concept.instance_data_dir:
-            data_path_list.append(concept.instance_data_dir)
-        if concept.class_data_dir:
-            class_data_path_list.append(concept.class_data_dir)
+        data_path_list.append(concept.instance_data_dir)
+        class_data_path_list.append(concept.class_data_dir)
     model_list = get_cloud_db_models()
     db_config_path = "models/dreambooth/dummy_local_model/db_config.json"
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
