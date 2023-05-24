@@ -1,32 +1,26 @@
-# 打开Amazon SageMaker Inference面板
+# 使用txt2img进行云上推理
 
-![Sagemaker Inference面板](../images/open-sagemaker-inference-2.png)
-
-
+您可以打开txt2img标签页，通过结合使用txt2img原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的txt2img推理工作。 
 
 
 
-# 利用txt2img进行推理
 
-* ### 上传推理所需模型
+1. 进入**txt2img**标签页，展开**Amazon SageMaker Inference**面板。
+![Sagemaker Inference面板](../images/txt2img-sagemaker-inference.png)
+2. 输入推理所需参数。同于本地推理，您可以按需编辑**txt2img**原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。
+3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
+    !!! Important "提示" 
+        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击**Generate on Cloud**开启云上推理功能时会报错。
 
-    1. 点击**Stable Diffusion Checkpoint**和**Extra Networks for Cloud Inference**旁边的刷新按钮，以查看哪些已经存储在s3上的模型可以用于txt2img的推理
-![Refresh models](../images/refresh-models.png)
-    2. 对于需要上传的模型，在 **Upload Models to Cloud**上面输入对应模型的绝对地址（可以填写一个或者多个），并且点击上传按钮。可以通过终端看到，上传逻辑是基于multi-part实现
-![Upload models](../images/upload-models.png)
-![Multi part](../images/multi-part-upload.png)
+4. 点击模型下拉框右侧的刷新按钮，选择推理所需的**Stable Diffusion Checkpoint**（必选，可多选）及其他所需的**Extra Networks for Cloud Inference**（可选，并且可多模型多选叠加）。
+5. 点击**Generate on Cloud**。
+6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。txt2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to img2img**等，进行后续工作流。
+> **补充：** 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为**推理时间->inference id**。
 
-* ### 输入推理所需参数
-
-    1. 点击**Select Cloud SageMaker Endpoint**旁边的刷新按钮，选择处于**InService**状态的推理节点。注意，如果选择处于其他状态的推理节点，或者没有选择推理节点，点击**Generate on Cloud**会报错。
-    2. 选择合适的**Stable Diffusion Checkpoint**，比如这里选择**v1-5-pruned-emaonly.safetensors**。注意，所有的模型都可以多选。
-    3. 输入提示词**a cute dog**等其他需要的参数，然后点击**Generate on Cloud**。 
-    ![generate on cloud](../images/generate-on-cloud-txt2img.png)
-    4. 这时候点击**Inference Job IDs**旁边的刷新按钮，可以看到新产生一条记录，格式为**推理时间->inference id** (整个列表也会按照推理时间进行排序)
-    ![refresh inference job id](../images/refresh-inference-id.png)
-    5. 当切换到对应的inference id并且推理结束后，会在右上角看到推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to img2img**等
-    ![generate results](../images/generate-results.png)
+![generate results](../images/generate-results.png)
 
 
 
-# Controlnet的使用方法
+
+
+## 使用ControlNet进行云上推理
