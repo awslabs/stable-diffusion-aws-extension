@@ -256,7 +256,7 @@ export class UpdateTrainJobApi {
   private updateTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-updateTrainJob`, <PythonFunctionProps>{
       functionName: `${this.id}-update-train-job`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',
@@ -298,7 +298,7 @@ export class UpdateTrainJobApi {
   private checkTrainingJobStatusLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-checkTrainingJobStatus`, <PythonFunctionProps>{
       functionName: `${this.id}-train-state-check`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',
@@ -323,7 +323,7 @@ export class UpdateTrainJobApi {
   private processTrainingJobResultLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-processTrainingJobResult`, <PythonFunctionProps>{
       functionName: `${this.id}-train-result-process`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       role: this.sfnLambdaRole,

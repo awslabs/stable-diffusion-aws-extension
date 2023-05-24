@@ -2,13 +2,12 @@ import datetime
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Optional, Dict
-
+from typing import Any, Dict
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
-from create_model.common_tools import get_base_checkpoint_s3_key, get_s3_presign_urls, \
-    batch_get_s3_multipart_signed_urls, complete_mulipart_upload
+from model_and_train.common_tools import get_base_checkpoint_s3_key, \
+    batch_get_s3_multipart_signed_urls, complete_multipart_upload
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -48,7 +47,8 @@ def list_all_checkpoints_api(event, context):
             's3Location': ckpt.s3_location,
             'type': ckpt.checkpoint_type,
             'status': ckpt.checkpoint_status.value,
-            'name': ckpt.checkpoint_names
+            'name': ckpt.checkpoint_names,
+            'created': ckpt.timestamp,
         })
 
     return {
@@ -106,6 +106,7 @@ def create_checkpoint_api(raw_event, context):
             checkpoint_names=filenames_only,
             checkpoint_status=CheckPointStatus.Initial,
             params=checkpoint_params,
+            timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         return {
@@ -153,12 +154,12 @@ def update_checkpoint_api(raw_event, context):
         ddb_service.update_item(
             table=checkpoint_table,
             key={
-                'id': event.checkpoint_id
+                'id': checkpoint.id,
             },
             field_name='checkpoint_status',
             value=new_status
         )
-        complete_mulipart_upload(checkpoint, event.multi_parts_tags)
+        complete_multipart_upload(checkpoint, event.multi_parts_tags)
         return {
             'statusCode': 200,
             'checkpoint': {

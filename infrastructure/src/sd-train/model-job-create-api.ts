@@ -96,10 +96,10 @@ export class CreateModelJobApi {
   private createModelJobApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-handler`, <PythonFunctionProps>{
       functionName: `${this.baseId}-model`,
-      entry: `${this.src}/create_model`,
+      entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'create_model_job_api.py',
+      index: 'model_api.py',
       handler: 'create_model_api',
       timeout: Duration.seconds(900),
       role: this.iamRole(),

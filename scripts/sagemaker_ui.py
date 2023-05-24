@@ -109,11 +109,16 @@ def update_sagemaker_endpoints():
                     else:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
+                    
+                    # Skip if status is 'deleted'
+                    if endpoint_status == 'deleted':
+                        continue
 
                     if "endTime" in obj:
                         endpoint_time = obj["endTime"]
                     else:
                         endpoint_time = "N/A"
+                    
                     endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
                     sagemaker_raw_endpoints.append(endpoint_info)
 
@@ -488,6 +493,43 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
             infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
             return image_list, info_text, plaintext_to_html(infotexts)
 
+def sagemaker_endpoint_delete(delete_endpoint_list):
+    print(f"start delete sagemaker endpoint delete function")
+    print(f"delete endpoint list: {delete_endpoint_list}")
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+
+    delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
+    print(f"delete endpoint list: {delete_endpoint_list}")
+
+    # check if api_gateway_url and api_key are set
+    if api_gateway_url is None or api_key is None:
+        print("api_gateway_url and api_key are not set")
+        return
+
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+
+    payload = {
+        "delete_endpoint_list": delete_endpoint_list,
+    }
+
+    deployment_url = f"{api_gateway_url}inference/delete-sagemaker-endpoint"
+
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(deployment_url, json=payload, headers=headers)
+        r = response.json()
+        print(f"response for rest api {r}")
+        return "Endpoint delete completed"
+    except Exception as e:
+        return f"Failed to delete sagemaker endpoint with exception: {e}"
+    
 
 def sagemaker_deploy(instance_type, initial_instance_count=1):
     """ Create SageMaker endpoint for GPU inference.

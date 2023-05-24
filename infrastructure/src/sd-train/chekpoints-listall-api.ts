@@ -76,7 +76,7 @@ export class ListAllCheckPointsApi {
   private listAllCheckpointsApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
       functionName: `${this.baseId}-listall-checkpoints`,
-      entry: `${this.src}/create_model`,
+      entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'checkpoint_api.py',

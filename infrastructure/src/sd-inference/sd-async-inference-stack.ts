@@ -123,6 +123,10 @@ export class SDAsyncInferenceStack extends NestedStack {
       )
     });
 
+    inferenceLambdaRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+    );
+
     // Create a Lambda function for inference
     const inferenceLambda = new lambda.DockerImageFunction(
       this,
@@ -216,6 +220,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     list_endpoint_deployment_jobs.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,
     });
+
+    const delete_deployment_jobs = inference.addResource(
+      'delete-sagemaker-endpoint');
+      delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
+        apiKeyRequired: true,
+      }) 
 
     const list_inference_jobs = inference.addResource(
       'list-inference-jobs',
