@@ -76,7 +76,7 @@ export class ListAllTrainJobsApi {
   private listAllTrainJobsApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
       functionName: `${this.baseId}-listall`,
-      entry: `${this.src}/create_model`,
+      entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',

@@ -109,11 +109,16 @@ def update_sagemaker_endpoints():
                     else:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
+                    
+                    # Skip if status is 'deleted'
+                    if endpoint_status == 'deleted':
+                        continue
 
                     if "endTime" in obj:
                         endpoint_time = obj["endTime"]
                     else:
                         endpoint_time = "N/A"
+                    
                     endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
                     sagemaker_raw_endpoints.append(endpoint_info)
 
@@ -488,6 +493,43 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
             infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
             return image_list, info_text, plaintext_to_html(infotexts)
 
+def sagemaker_endpoint_delete(delete_endpoint_list):
+    print(f"start delete sagemaker endpoint delete function")
+    print(f"delete endpoint list: {delete_endpoint_list}")
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+
+    delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
+    print(f"delete endpoint list: {delete_endpoint_list}")
+
+    # check if api_gateway_url and api_key are set
+    if api_gateway_url is None or api_key is None:
+        print("api_gateway_url and api_key are not set")
+        return
+
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+
+    payload = {
+        "delete_endpoint_list": delete_endpoint_list,
+    }
+
+    deployment_url = f"{api_gateway_url}inference/delete-sagemaker-endpoint"
+
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(deployment_url, json=payload, headers=headers)
+        r = response.json()
+        print(f"response for rest api {r}")
+        return "Endpoint delete completed"
+    except Exception as e:
+        return f"Failed to delete sagemaker endpoint with exception: {e}"
+    
 
 def sagemaker_deploy(instance_type, initial_instance_count=1):
     """ Create SageMaker endpoint for GPU inference.
@@ -655,10 +697,8 @@ def display_inference_result(inference_id: str ):
 
     return image_list, info_text, plaintext_to_html(infotexts)
 
-def create_ui():
-    global txt2img_gallery, txt2img_generation_info
-    import modules.ui
-
+def init_refresh_resource_list_from_cloud():
+    print(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         update_sagemaker_endpoints()
         refresh_all_models()
@@ -668,7 +708,13 @@ def create_ui():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,")
+        print(f"there is no api-gateway url and token in local file,") 
+
+def create_ui():
+    global txt2img_gallery, txt2img_generation_info
+    import modules.ui
+
+    init_refresh_resource_list_from_cloud()
 
     with gr.Group():
         with gr.Accordion("Amazon SageMaker Inference", open=False):
@@ -687,7 +733,7 @@ def create_ui():
                     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True)
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids

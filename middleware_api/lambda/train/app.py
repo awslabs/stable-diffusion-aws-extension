@@ -9,6 +9,8 @@ dynamodb = boto3.resource('dynamodb')
 # Get DynamoDB table name from environment variable
 TABLE_NAME = os.environ.get("TABLE_NAME", "TrainingTable")
 
+
+# Deprecated
 # context unused in this example
 def lambda_handler(event, _context):
     # Store input training id into DynamoDB
@@ -29,5 +31,3 @@ def lambda_handler(event, _context):
             "message": "Training started"
         })
     }
-
-    

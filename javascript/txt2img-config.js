@@ -1,3 +1,40 @@
+//This function is created to mitigate refresh get old value issue
+window.onload = function() {
+    let counter = 0; // Add a counter
+    let limit = 2; // Set the limit to the desired number of iterations
+    let intervalId = setInterval(function() {
+      
+      console.log("click refresh when page reloaded"); 
+
+      let selectors = [
+        "#refresh_api_gateway_url",
+        "#refresh_api_token",
+        "#refresh_sagemaker_endpoints",
+        "#refresh_sd_checkpoints",
+        "#refresh_txt2img_inference_job_ids",
+        "#refresh_textual_inversion"
+      ];
+
+      for (let selector of selectors) {
+        let element = document.querySelector(selector);
+
+        if (element != null) {
+          element.click();
+        } else {
+          console.warn(`Could not find element with selector: ${selector}`);
+        }
+      }
+
+      counter++; // Increment the counter
+
+      if (counter === limit) {
+        console.log("refresh time:" + counter); 
+        clearInterval(intervalId); // Stop the interval once the limit is reached
+      }
+    }, 1000); // 1 second
+};
+
+
 // Save configuration in txt2img panel
 function getDomValue(selector, defaultValue, isTextContent = false) {
     try {
