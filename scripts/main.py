@@ -42,6 +42,11 @@ txt2img_show_hook = None
 txt2img_gallery = None
 txt2img_generation_info = None
 txt2img_html_info = None
+
+img2img_show_hook = None
+img2img_gallery = None
+img2img_generation_info = None
+img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 job_link_list = []
@@ -140,7 +145,26 @@ def on_after_component_callback(component, **_kwargs):
             # ],
             outputs=[
             ])
-
+        # Hook image display logic
+    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook
+    is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
+    is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
+    is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
+    if is_img2img_gallery:
+        img2img_gallery = component
+    if is_img2img_generation_info:
+        img2img_generation_info = component
+    if is_img2img_html_info:
+        img2img_html_info = component
+        # return test
+    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None:
+        img2img_show_hook = "finish"
+        sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+            fn=sagemaker_ui.generate_on_cloud_no_input,
+            _js="txt2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+        )
 
 def update_connect_config(api_url, api_token):
     # Check if api_url ends with '/', if not append it
