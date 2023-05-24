@@ -7,6 +7,10 @@ window.onload = function() {
       console.log("click refresh when page reloaded"); 
       document.querySelector("#refresh_api_gateway_url").click();
       document.querySelector("#refresh_api_token").click();
+      document.querySelector("#refresh_sagemaker_endpoints").click();
+      document.querySelector("#refresh_sd_checkpoints").click();
+      document.querySelector("#refresh_txt2img_inference_job_ids").click();
+      document.querySelector("#refresh_textual_inversion").click();
 
       counter++; // Increment the counter
 
