@@ -31,6 +31,7 @@ nav:
         - Txt2img: user-guide/txt2img-guide.md
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
         - Dreambooth: user-guide/dreambooth-guide.md
+        - CloudAssetsManagement: user-guide/CloudAssetsManage.md
     - 开发者指南:
         - 源代码: developer-guide/source.md
     - 故障排除: troubleshooting.md
