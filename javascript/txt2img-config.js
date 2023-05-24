@@ -5,21 +5,35 @@ window.onload = function() {
     let intervalId = setInterval(function() {
       
       console.log("click refresh when page reloaded"); 
-      document.querySelector("#refresh_api_gateway_url").click();
-      document.querySelector("#refresh_api_token").click();
-      document.querySelector("#refresh_sagemaker_endpoints").click();
-      document.querySelector("#refresh_sd_checkpoints").click();
-      document.querySelector("#refresh_txt2img_inference_job_ids").click();
-      document.querySelector("#refresh_textual_inversion").click();
+
+      let selectors = [
+        "#refresh_api_gateway_url",
+        "#refresh_api_token",
+        "#refresh_sagemaker_endpoints",
+        "#refresh_sd_checkpoints",
+        "#refresh_txt2img_inference_job_ids",
+        "#refresh_textual_inversion"
+      ];
+
+      for (let selector of selectors) {
+        let element = document.querySelector(selector);
+
+        if (element != null) {
+          element.click();
+        } else {
+          console.warn(`Could not find element with selector: ${selector}`);
+        }
+      }
 
       counter++; // Increment the counter
 
       if (counter === limit) {
-      console.log(counter); 
+        console.log("refresh time:" + counter); 
         clearInterval(intervalId); // Stop the interval once the limit is reached
       }
-    }, 1000); // 300 milliseconds = 0.3 seconds
-  };
+    }, 1000); // 1 second
+};
+
 
 // Save configuration in txt2img panel
 function getDomValue(selector, defaultValue, isTextContent = false) {
