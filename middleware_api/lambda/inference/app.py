@@ -315,6 +315,8 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     hr_second_pass_steps = int(params_dict['txt2img_hires_steps']) #hr_second_pass_steps,
     firstphase_width = int(params_dict['txt2img_hr_resize_x'])#: 0, 
     firstphase_height = int(params_dict['txt2img_hr_resize_y'])#: 0, 
+    hr_resize_x = int(params_dict['txt2img_hr_resize_x'])
+    hr_resize_y = int(params_dict['txt2img_hr_resize_y'])
     styles = params_dict['txt2img_styles']#: ["None", "None"], 
     if styles == "":
         styles = []
@@ -406,7 +408,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             guessmode = "Controlnet is more important"
         pixel_perfect = params_dict['controlnet_pixel_perfect'] #:"False"
         allow_preview = params_dict['controlnet_allow_preview']
-        loopback = params_dict['controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit']
+        loopback = params_dict['controlnet_loopback_automatically']
 
 
     endpoint_name = checkpoint_info['sagemaker_endpoint'] #"infer-endpoint-ca0e"
@@ -430,7 +432,12 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "enable_hr": enable_hr, 
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
-            "firstphase_height": firstphase_height, 
+            "firstphase_height": firstphase_height,
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
@@ -464,6 +471,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
                         "mask": "",
                         "module": controlnet_module,
                         "model": controlnet_model,
+                        "loopback": loopback,
                         "weight": weight,
                         "resize_mode": resize_mode,
                         "lowvram": lowvram,
@@ -501,6 +509,11 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
             "firstphase_height": firstphase_height, 
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
