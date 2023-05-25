@@ -55,7 +55,8 @@ export class UpdateTrainJobApi {
   private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
   private readonly sfnLambdaRole: aws_iam.Role;
-  private readonly srcImg: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-dreambooth-training:latest';
+  // private readonly srcImg: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-dreambooth-training:latest';
+  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:latest';
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
@@ -255,7 +256,7 @@ export class UpdateTrainJobApi {
   private updateTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-updateTrainJob`, <PythonFunctionProps>{
       functionName: `${this.id}-update-train-job`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',
@@ -297,7 +298,7 @@ export class UpdateTrainJobApi {
   private checkTrainingJobStatusLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-checkTrainingJobStatus`, <PythonFunctionProps>{
       functionName: `${this.id}-train-state-check`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'train_api.py',
@@ -322,7 +323,7 @@ export class UpdateTrainJobApi {
   private processTrainingJobResultLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-processTrainingJobResult`, <PythonFunctionProps>{
       functionName: `${this.id}-train-result-process`,
-      entry: `${this.srcRoot}/create_model`,
+      entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       role: this.sfnLambdaRole,
@@ -346,7 +347,7 @@ export class UpdateTrainJobApi {
 
   private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
     const dockerRepo = new aws_ecr.Repository(this.scope, `${this.id}-repo`, {
-      repositoryName: 'aigc-webui-dreambooth-training',
+      repositoryName: 'stable-diffusion-aws-extension/aigc-webui-dreambooth-training',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 

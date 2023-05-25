@@ -17,8 +17,9 @@ class CheckPointStatus(Enum):
 
 
 @dataclasses.dataclass
-class ModelJob:
+class Model:
     id: str
+    timestamp: float
     name: str
     checkpoint_id: str
     model_type: str
@@ -39,6 +40,7 @@ class ModelJob:
 @dataclasses.dataclass
 class CheckPoint:
     id: str
+    timestamp: float
     checkpoint_type: str
     s3_location: str
     checkpoint_status: CheckPointStatus
@@ -61,16 +63,17 @@ class TrainJobStatus(Enum):
 @dataclasses.dataclass
 class TrainJob:
     id: str
+    timestamp: float
     model_id: str
+    checkpoint_id: str
     train_type: str
     job_status: TrainJobStatus
     input_s3_location: str
-    checkpoint_id: str
     sagemaker_train_name: Optional[str] = ''
     sagemaker_sfn_arn: Optional[str] = ''
     params: Optional[dict[str, Any]] = None
     # { 'model': 'model.tar', 'data1': 'data1.tar' }
-    # base s3: s3://bucket/dreambooth/123-123-0123/
+    # base s3: s3://bucket/Stable-diffusion/123-123-0123/
 
     def __post_init__(self):
         if type(self.job_status) == str:

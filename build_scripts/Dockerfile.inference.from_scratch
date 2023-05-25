@@ -37,11 +37,11 @@ WORKDIR /opt/ml/code
 
 # ENV SAGEMAKER_PROGRAM sagemaker_dreambooth_train.py
 
-# copy vae model to folder models
-RUN mkdir /opt/ml/code/vae_models
-COPY models/vae_models /opt/ml/code/vae_models
-RUN mkdir /opt/ml/code/models
-RUN cp -r /opt/ml/code/vae_models/* /opt/ml/code/models
+# # copy vae model to folder models
+# RUN mkdir /opt/ml/code/vae_models
+# COPY models/vae_models /opt/ml/code/vae_models
+# RUN mkdir /opt/ml/code/models
+# RUN cp -r /opt/ml/code/vae_models/* /opt/ml/code/models
 ENV ON_DOCKER true
 
 # install libtcmalloc to solve memory leak for multi model switch 

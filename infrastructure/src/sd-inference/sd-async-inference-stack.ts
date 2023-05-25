@@ -43,7 +43,8 @@ export class SDAsyncInferenceStack extends NestedStack {
     props: SDAsyncInferenceStackProps,
   ) {
     super(scope, id, props);
-    const srcImg = 'public.ecr.aws/l7s6x2w8/aigc-webui-inference:latest';
+    // const srcImg = 'public.ecr.aws/l7s6x2w8/aigc-webui-inference:latest';
+    const srcImg = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:latest';
 
     if (!props?.api_gate_way) {
       throw new Error('api_gate_way is required');
@@ -121,6 +122,10 @@ export class SDAsyncInferenceStack extends NestedStack {
         new iam.ServicePrincipal('lambda.amazonaws.com')
       )
     });
+
+    inferenceLambdaRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+    );
 
     // Create a Lambda function for inference
     const inferenceLambda = new lambda.DockerImageFunction(
@@ -215,6 +220,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     list_endpoint_deployment_jobs.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,
     });
+
+    const delete_deployment_jobs = inference.addResource(
+      'delete-sagemaker-endpoint');
+      delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
+        apiKeyRequired: true,
+      }) 
 
     const list_inference_jobs = inference.addResource(
       'list-inference-jobs',
@@ -396,7 +407,7 @@ export class SDAsyncInferenceStack extends NestedStack {
       this,
       'aigc-webui-inference-repo',
       {
-        repositoryName: 'aigc-webui-inference',
+        repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
         removalPolicy: RemovalPolicy.DESTROY,
       },
     );

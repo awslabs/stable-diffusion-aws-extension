@@ -17,7 +17,7 @@ from typing import List
 
 import boto3
 from botocore.client import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 import json
 import uuid
 
@@ -154,13 +154,30 @@ def getEndpointDeployJob(endpoint_deploy_job_id):
         resp = endpoint_deployment_table.query(
             KeyConditionExpression=Key('EndpointDeploymentJobId').eq(endpoint_deploy_job_id)
         )
-        log.info(resp)
+        logger.info(resp)
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
     record_list = resp['Items']
     if len(record_list) == 0:
-        raise Exception("There is no endpoint deployment job info item for id:" + endpoint_deploy_job_id)
+        logger.error("There is no endpoint deployment job info item for id:" + endpoint_deploy_job_id)
+        return {}
     return record_list[0]
+
+def getEndpointDeployJob_with_endpoint_name(endpoint_name):
+    try:
+        resp = endpoint_deployment_table.scan(
+            FilterExpression=Attr('endpoint_name').eq(endpoint_name)
+        )
+        logger.info(resp)
+    except Exception as e:
+        logger.error(e)
+
+    record_list = resp['Items']
+    if len(record_list) == 0:
+        logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)
+        return {}
+
+    return record_list[0] 
 
 def get_s3_objects(bucket_name, folder_name):
     # Ensure the folder name ends with a slash
@@ -298,6 +315,8 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     hr_second_pass_steps = int(params_dict['txt2img_hires_steps']) #hr_second_pass_steps,
     firstphase_width = int(params_dict['txt2img_hr_resize_x'])#: 0, 
     firstphase_height = int(params_dict['txt2img_hr_resize_y'])#: 0, 
+    hr_resize_x = int(params_dict['txt2img_hr_resize_x'])
+    hr_resize_y = int(params_dict['txt2img_hr_resize_y'])
     styles = params_dict['txt2img_styles']#: ["None", "None"], 
     if styles == "":
         styles = []
@@ -389,7 +408,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             guessmode = "Controlnet is more important"
         pixel_perfect = params_dict['controlnet_pixel_perfect'] #:"False"
         allow_preview = params_dict['controlnet_allow_preview']
-        loopback = params_dict['controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit']
+        loopback = params_dict['controlnet_loopback_automatically']
 
 
     endpoint_name = checkpoint_info['sagemaker_endpoint'] #"infer-endpoint-ca0e"
@@ -413,7 +432,12 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "enable_hr": enable_hr, 
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
-            "firstphase_height": firstphase_height, 
+            "firstphase_height": firstphase_height,
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
@@ -447,6 +471,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
                         "mask": "",
                         "module": controlnet_module,
                         "model": controlnet_model,
+                        "loopback": loopback,
                         "weight": weight,
                         "resize_mode": resize_mode,
                         "lowvram": lowvram,
@@ -484,6 +509,11 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
             "firstphase_height": firstphase_height, 
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
@@ -637,6 +667,83 @@ async def deploy_sagemaker_endpoint(request: Request):
             'error': str(e)
         })
         return 0
+
+@app.post("/inference/delete-sagemaker-endpoint")
+async def delete_sagemaker_endpoint(request: Request):
+    logger.info("entering the delete_sagemaker_endpoint function!")
+    try:
+        payload = await request.json()
+        delete_endpoint_list = payload.get('delete_endpoint_list', [])
+        logger.info(f"delete endpoint list: {delete_endpoint_list}")
+
+        # delete sagemaker endpoints and update DynamoDB in the same loop
+        for endpoint in delete_endpoint_list:
+            try:
+                # check if endpoint exists
+                try:
+                    response = sagemaker.describe_endpoint(EndpointName=endpoint)
+                    print(response)
+    
+                    logger.info(f"Deleting endpoint: {endpoint}")
+                    # If the endpoint exists and you want to delete it, you can do so here:
+                    sagemaker.delete_endpoint(EndpointName=endpoint)
+
+                except (BotoCoreError, ClientError) as error:
+                    if error.response['Error']['Code'] == 'ResourceNotFound':
+                        print("Endpoint not found, no need to delete.")
+                    else:
+                        # Handle other potential errors
+                        print(error)
+                
+                # update DynamoDB status
+                resp = getEndpointDeployJob(endpoint)
+                if resp:
+                    endpoint_deployment_job_id = resp['EndpointDeploymentJobId']
+                    logger.info(f"Updating DynamoDB status for: {endpoint_deployment_job_id}")
+                    endpoint_deployment_table.update_item(
+                        Key={
+                            'EndpointDeploymentJobId': endpoint_deployment_job_id
+                        },
+                        UpdateExpression="SET #s = :s",
+                        ExpressionAttributeNames={
+                            '#s': 'status'
+                        },
+                        ExpressionAttributeValues={
+                            ':s': 'deleted'
+                        }
+                    )
+                else:
+                    resp = getEndpointDeployJob_with_endpoint_name(endpoint)
+                    if resp:
+                        endpoint_deployment_job_id = resp['EndpointDeploymentJobId']
+                        logger.info(f"Updating DynamoDB status for: {endpoint_deployment_job_id}")
+                        endpoint_deployment_table.update_item(
+                            Key={
+                                'EndpointDeploymentJobId': endpoint_deployment_job_id
+                            },
+                            UpdateExpression="SET #s = :s",
+                            ExpressionAttributeNames={
+                                '#s': 'status'
+                            },
+                            ExpressionAttributeValues={
+                                ':s': 'deleted'
+                            }
+                        )
+                    else:
+                        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint}")
+
+            except ClientError as e:
+                if e.response['Error']['Code'] in ['ValidationException', 'ResourceNotFoundException']:
+                    logger.error(f"Endpoint or DynamoDB item {endpoint} does not exist, skipping")
+                else:
+                    raise
+
+        logger.info("Successfully processed endpoint deletions and status updates")
+        return 0
+    except Exception as e:
+        logger.error(f"error deleting sagemaker endpoint with exception: {e}")
+        return 0
+
 
 @app.get("/inference/list-endpoint-deployment-jobs")
 async def list_endpoint_deployment_jobs():

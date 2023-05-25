@@ -17,6 +17,12 @@ function deploy_endpoint(instance_type_dropdown, instance_count_textbox){
     return [instance_type_dropdown, instance_count_textbox];
 }
 
+function delete_sagemaker_endpoint(endpoint_list){
+    console.log("Endpoint delete with input: " + endpoint_list);
+    document.querySelector("#html_log_txt2img").innerHTML = "Endpoint delete started. Please wait...";
+    return [endpoint_list];
+}
+
 function update_auth_settings(api_url_textbox, api_token_textbox){
     console.log("Settings update started with input: " + api_url_textbox + ", " + api_token_textbox)
     res = confirm("You are about to update authentication settings. Do you want to continue?");

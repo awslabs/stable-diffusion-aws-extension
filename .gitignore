@@ -3,6 +3,7 @@ models/
 respositories/
 __pycache__/
 dataset/
+stable-diffusion-webui
 extensions/sd_dreambooth_extension
 extensions/sd-webui-controlnet
 cache.json

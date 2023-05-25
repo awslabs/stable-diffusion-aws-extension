@@ -35,7 +35,8 @@ export interface UpdateModelStatusRestApiProps {
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
+  // private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
+  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:latest';
   private readonly machineType: string = 'ml.c6i.8xlarge';
 
   private readonly src;
@@ -142,10 +143,10 @@ export class UpdateModelStatusRestApi {
   private updateModelJobApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-handler`, <PythonFunctionProps>{
       functionName: `${this.baseId}-update-model`,
-      entry: `${this.src}/create_model`,
+      entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'update_job_api.py',
+      index: 'model_api.py',
       handler: 'update_model_job_api',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
@@ -187,7 +188,7 @@ class CreateModelInferenceImage {
 
   constructor(scope: Construct, srcImage: string) {
     this.dockerRepo = new aws_ecr.Repository(scope, `${this.id}-repo`, {
-      repositoryName: 'aigc-webui-utils',
+      repositoryName: 'stable-diffusion-aws-extension/aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 

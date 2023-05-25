@@ -57,15 +57,13 @@ class SageMakerUI(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_txt2img):
-        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui()
-        return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
-    def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
+        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui()
+        return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+    def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
         pass
 
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
-    # if getattr(component, 'elem_id', None) is not None:
-    #     print(getattr(component, 'elem_id', None))
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
@@ -75,25 +73,19 @@ def on_after_component_callback(component, **_kwargs):
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
-        print('Add SageMaker button')
         db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
     if is_dreambooth_model_name:
-        print('Get local model name')
         db_model_name = component
     if is_cloud_dreambooth_model_name:
-        print('Get cloud model name')
         cloud_db_model_name = component
     if is_dreambooth_use_txt2img:
-        print('Get use tet2img')
         db_use_txt2img = component
     if is_db_save_config:
-        print('Get save config button')
         db_save_config = component
     # After all requiment comment is loaded, add the SageMaker training button click callback function.
     if cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
             (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name):
-        print('Create click callback')
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
             fn=cloud_train,
@@ -110,13 +102,10 @@ def on_after_component_callback(component, **_kwargs):
     is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img'
     is_txt2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img'
     if is_txt2img_gallery:
-        print("create txt2img gallery")
         txt2img_gallery = component
     if is_txt2img_generation_info:
-        print("create txt2img generation info")
         txt2img_generation_info = component
     if is_txt2img_html_info:
-        print("create txt2img html info")
         txt2img_html_info = component
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and txt2img_gallery is not None and txt2img_generation_info is not None and txt2img_html_info is not None and txt2img_show_hook is None:
@@ -165,6 +154,7 @@ def update_connect_config(api_url, api_token):
     global api_key
     api_key = get_variable_from_json('api_token')
     print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
+    sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "config updated to local config!"
 
 def test_aws_connect_config(api_url, api_token):
@@ -189,6 +179,7 @@ def test_aws_connect_config(api_url, api_token):
         return "failed to connect to backend server, please check the url and token"
 
 def on_ui_tabs():
+    import modules.ui
     buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
         with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row"):
@@ -201,16 +192,86 @@ def on_ui_tabs():
         with gr.Row():
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Connection Setting")
-                api_url_textbox = gr.Textbox(value=get_variable_from_json('api_gateway_url'), lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
-                api_token_textbox = gr.Textbox(value=get_variable_from_json('api_token'), lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
+                global api_gateway_url
+                api_gateway_url = get_variable_from_json('api_gateway_url')
+                global api_key
+                api_key = get_variable_from_json('api_token')
+                with gr.Row():
+                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
+                    def update_api_gateway_url():
+                        global api_gateway_url
+                        api_gateway_url = get_variable_from_json('api_gateway_url')
+                        return api_gateway_url
+                    # modules.ui.create_refresh_button(api_url_textbox, get_variable_from_json('api_gateway_url'), lambda: {"value": get_variable_from_json('api_gateway_url')}, "refresh_api_gate_way")
+                    modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url, lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
+                with gr.Row():
+                    def update_api_key():
+                        global api_key
+                        api_key = get_variable_from_json('api_token')
+                        return api_key
+                    api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
+                    modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
+
+                test_connection_result = gr.Label();
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
                                          inputs = [api_url_textbox, api_token_textbox],
-                                         outputs= [])
+                                         outputs= [test_connection_result])
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
-                test_connection_result = gr.Label();
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
+            with gr.Column(variant="panel", scale=1.5):
+                gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
+                sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+                with gr.Blocks(title="Upload Model to S3", variant="panel"):
+                    gr.HTML(value="Upload Model to S3")
+                    with gr.Row():
+                        with gr.Column(variant="panel"):
+                            sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
+                        with gr.Column(variant="panel"):
+                            textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
+                    with gr.Row():
+                        with gr.Column(variant="panel"):
+                            lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
+                            controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
+                        with gr.Column(variant="panel"):
+                            hypernetwork_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="HyperNetwork",elem_id="sd_hypernetwork_path_textbox")
+
+                    with gr.Row():
+                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
+                        model_update_button.click(_js="model_update",
+                                          fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
+                                          outputs=[test_connection_result])
+
+
+                with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
+                    gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
+                    with gr.Row():
+                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                        instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
+
+                    with gr.Row():
+                        sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
+                        sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
+                                              _js="deploy_endpoint", \
+                                              inputs = [instance_type_dropdown, instance_count_dropdown],
+                                              outputs=[test_connection_result])
+
+                with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    with gr.Row():
+                        sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints, multiselect=True, label="Select Cloud SageMaker Endpoint")
+                        modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
+                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',elem_id="sagemaker_endpoint_delete_button")
+                    sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
+                                              _js="delete_sagemaker_endpoint", \
+                                              inputs = [sagemaker_endpoint_delete_dropdown],
+                                              outputs=[test_connection_result])
+
+
+
+
             with gr.Column(variant="panel", scale=1):
                 gr.HTML(value="AWS Model Setting")
                 with gr.Tab("Select"):
@@ -220,10 +281,6 @@ def on_ui_tabs():
                     gr.HTML(value="AWS Custom Model")
                     model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
                     model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
-                    # model_create_button.click(_js="create_model",
-                    #                           fn=create_model,
-                    #                           inputs = [model_name_textbox],
-                    #                           outputs= [])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
@@ -439,7 +496,6 @@ def get_cloud_model_snapshots():
 def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        print("Get request for model list.")
         if api_gateway_url is None:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
@@ -478,7 +534,6 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
 def get_cloud_ckpts():
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        print("Get request for model list.")
         if api_gateway_url is None:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
@@ -494,7 +549,6 @@ def get_cloud_ckpts():
                 ckpt_key = f"cloud-{ckpt['name'][0]}-{ckpt['id']}"
                 ckpt_dict[ckpt_key] = ckpt
     except Exception as e:
-        print('Failed to get cloud ckpts.')
         print(e)
         return []
 
@@ -540,14 +594,20 @@ def async_prepare_for_training_on_sagemaker(
     upload_files.append(db_config_tar)
     data_tar_list = []
     for data_path in data_path_list:
-        data_tar = f'data_{data_path.replace("/", "-")}.tar'
+        if len(data_path) == 0:
+            data_tar_list.append("")
+            continue
+        data_tar = f'data-{data_path.replace("/", "-")}.tar'
         data_tar_list.append(data_tar)
         print("Pack the data file.")
         os.system(f"tar cvf {data_tar} {data_path}")
         upload_files.append(data_tar)
     class_data_tar_list = []
     for class_data_path in class_data_path_list:
-        class_data_tar = f'class_data_{class_data_path.replace("/", "-")}.tar'
+        if len(class_data_path) == 0:
+            class_data_tar_list.append("")
+            continue
+        class_data_tar = f'class-data-{class_data_path.replace("/", "-")}.tar'
         class_data_tar_list.append(class_data_tar)
         upload_files.append(class_data_tar)
         print("Pack the class data file.")
@@ -723,10 +783,8 @@ def cloud_train(
     data_path_list = []
     class_data_path_list = []
     for concept in config.concepts():
-        if concept.instance_data_dir:
-            data_path_list.append(concept.instance_data_dir)
-        if concept.class_data_dir:
-            class_data_path_list.append(concept.class_data_dir)
+        data_path_list.append(concept.instance_data_dir)
+        class_data_path_list.append(concept.class_data_dir)
     model_list = get_cloud_db_models()
     db_config_path = "models/dreambooth/dummy_local_model/db_config.json"
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
@@ -773,7 +831,7 @@ def get_train_job_list():
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
+    if not url or not api_key:
         logging.error("Url or API-Key is not setting.")
         return []
 
@@ -781,7 +839,7 @@ def get_train_job_list():
     try:
         url += "trains?types=Stable-diffusion"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['trainJobs'].reverse()
+        response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for trainJob in response['trainJobs']:
             table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
     except requests.exceptions.RequestException as e:
@@ -794,7 +852,7 @@ def get_create_model_job_list():
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
+    if not url or not api_key:
         logging.error("Url or API-Key is not setting.")
         return []
 
@@ -802,7 +860,7 @@ def get_create_model_job_list():
     try:
         url += "models?types=Stable-diffusion"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['models'].reverse()
+        response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for model in response['models']:
             table.append([model['id'][:6], model['model_name'], model["status"]])
     except requests.exceptions.RequestException as e:

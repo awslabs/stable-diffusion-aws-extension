@@ -109,11 +109,16 @@ def update_sagemaker_endpoints():
                     else:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
+                    
+                    # Skip if status is 'deleted'
+                    if endpoint_status == 'deleted':
+                        continue
 
                     if "endTime" in obj:
                         endpoint_time = obj["endTime"]
                     else:
                         endpoint_time = "N/A"
+                    
                     endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
                     sagemaker_raw_endpoints.append(endpoint_info)
 
@@ -284,7 +289,6 @@ def get_controlnet_model_list():
     return get_model_list_by_type(model_type)
 
 def refresh_all_models():
-    print("Refresh checkpoints")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     try:
@@ -489,6 +493,43 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
             infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
             return image_list, info_text, plaintext_to_html(infotexts)
 
+def sagemaker_endpoint_delete(delete_endpoint_list):
+    print(f"start delete sagemaker endpoint delete function")
+    print(f"delete endpoint list: {delete_endpoint_list}")
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_key = get_variable_from_json('api_token')
+
+    delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
+    print(f"delete endpoint list: {delete_endpoint_list}")
+
+    # check if api_gateway_url and api_key are set
+    if api_gateway_url is None or api_key is None:
+        print("api_gateway_url and api_key are not set")
+        return
+
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+
+    payload = {
+        "delete_endpoint_list": delete_endpoint_list,
+    }
+
+    deployment_url = f"{api_gateway_url}inference/delete-sagemaker-endpoint"
+
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(deployment_url, json=payload, headers=headers)
+        r = response.json()
+        print(f"response for rest api {r}")
+        return "Endpoint delete completed"
+    except Exception as e:
+        return f"Failed to delete sagemaker endpoint with exception: {e}"
+    
 
 def sagemaker_deploy(instance_type, initial_instance_count=1):
     """ Create SageMaker endpoint for GPU inference.
@@ -524,9 +565,13 @@ def sagemaker_deploy(instance_type, initial_instance_count=1):
         "Content-Type": "application/json"
     }
 
-    response = requests.post(deployment_url, json=payload, headers=headers)
-    r = response.json()
-    print(f"response for rest api {r}")
+    try:
+        response = requests.post(deployment_url, json=payload, headers=headers)
+        r = response.json()
+        print(f"response for rest api {r}")
+        return "Endpoint deployment started"
+    except Exception as e:
+        return f"Failed to start endpoint deployment with exception: {e}"
 
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
     print(f"function under development, current checkpoint_info is {checkpoint_info}")
@@ -652,10 +697,8 @@ def display_inference_result(inference_id: str ):
 
     return image_list, info_text, plaintext_to_html(infotexts)
 
-def create_ui():
-    global txt2img_gallery, txt2img_generation_info
-    import modules.ui
-
+def init_refresh_resource_list_from_cloud():
+    print(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         update_sagemaker_endpoints()
         refresh_all_models()
@@ -665,7 +708,13 @@ def create_ui():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,")
+        print(f"there is no api-gateway url and token in local file,") 
+
+def create_ui():
+    global txt2img_gallery, txt2img_generation_info
+    import modules.ui
+
+    init_refresh_resource_list_from_cloud()
 
     with gr.Group():
         with gr.Accordion("Amazon SageMaker Inference", open=False):
@@ -683,27 +732,8 @@ def create_ui():
                     sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
                     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
-                # generate_on_cloud_button = gr.Button(value="Button for debug controlnet", variant='primary', elem_id="generate_on_cloud_local_config_button")
-                # generate_on_sagemaker_endpointcloud_button.click(
-                #     fn=generate_on_cloud,
-                #     inputs=[],
-                #     outputs=[sagemaker_html_log]
-                # )
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True)
-                # generate_on_cloud_button_with_js.click(
-                #     # _js="txt2img_config_save",
-                #     fn=generate_on_cloud_no_input,
-                #     inputs=[sagemaker_endpoint],
-                #     outputs=[]
-                # )
-                # txt2img_config_save_button = gr.Button(value="Save Settings", variant='primary', elem_id="save_webui_component_to_cloud_button")
-                # txt2img_config_save_button.click(
-                #     _js="txt2img_config_save",
-                #     fn=None,
-                #     inputs=[],
-                #     outputs=[]
-                # )
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
@@ -715,7 +745,6 @@ def create_ui():
 
             with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")
-            #     advanced_model_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(sd_checkpoints)}, "refresh_sd_checkpoints")
 
             with gr.Row():
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
@@ -748,33 +777,6 @@ def create_ui():
                     "refresh_controlnet",
                 )
 
-            with gr.Row():
-                sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
-                textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
-                lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
-                hypernetwork_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="HyperNetwork",elem_id="sd_hypernetwork_path_textbox")
-                controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
-
-            with gr.Row():
-                model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
-                model_update_button.click(_js="model_update",
-                                          fn=sagemaker_upload_model_s3,
-                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                          outputs=[sagemaker_html_log])
-
-            gr.HTML(value="Deploy New SageMaker Endpoint")
-            with gr.Row():
-                # instance_type_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance type, e.g. ml.g4dn.xlarge", label="SageMaker Instance Type",elem_id="sagemaker_inference_instance_type_textbox")
-                instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-                # instance_count_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter Instance count, e.g. 1,2", label="SageMaker Instance Count",elem_id="sagemaker_inference_instance_count_textbox", default=1)
-                instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
-
-            with gr.Row():
-                sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
-                sagemaker_deploy_button.click(sagemaker_deploy,
-                                              _js="deploy_endpoint", \
-                                              inputs = [instance_type_dropdown, instance_count_dropdown])
-
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
@@ -790,14 +792,8 @@ def create_ui():
                 global tertiary_model_name
                 tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()), elem_id="modelmerger_tertiary_model_name_in_the_cloud", label="Tertiary model (C) in the cloud")
                 create_refresh_button(tertiary_model_name, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_checkpoint_C_in_the_cloud")
-            # with gr.Row():
-            #     merge_job_dropdown = gr.Dropdown(merge_job_ids,
-            #                                 label="Merge Job IDs",
-            #                                 elem_id="merge_job_ids_dropdown"
-            #                                 )
-            #     txt2img_merge_job_ids_refresh_button = modules.ui.create_refresh_button(merge_job_dropdown, update_txt2img_merge_job_ids, lambda: {"choices": txt2img_merge_job_ids}, "refresh_txt2img_merge_job_ids")
             with gr.Row():
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
-    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, instance_type_dropdown, instance_count_dropdown, sagemaker_deploy_button, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
