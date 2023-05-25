@@ -25,7 +25,7 @@ Diagram below is the brief view of internal workflow between our extension and m
 The major function of middleware is to provide RESTful API for WebUI extension to interact with AWS cloud resource (SageMaker, S3 etc.) with OpenAPI conformant schema, it will handling the request authentication, request dispatch to specific SageMaker/S3 API (SageMaker.jumpstart/model/predictor/estimator/tuner/utils etc.) and model lifecycle.
 Diagram below is the overall architecture of middleware, including API Gateway and Lambda to fulfill the RESTful API function and Step Function to orchestrate the model lifecycle.
 
-![middleware](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/be36c1f2-fd3d-45f2-8696-8658e4ee6f9d)
+![middleware](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/50a869a2-6c4c-4d43-9c1c-596bd50c54d6)
 
 ## How to get started
 Please refer to [user guide](https://aws-samples.github.io/stable-diffusion-aws-extension/en/) to get started.

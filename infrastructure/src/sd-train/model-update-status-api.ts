@@ -36,7 +36,7 @@ export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   // private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
-  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils';
+  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:latest';
   private readonly machineType: string = 'ml.c6i.8xlarge';
 
   private readonly src;
@@ -188,7 +188,7 @@ class CreateModelInferenceImage {
 
   constructor(scope: Construct, srcImage: string) {
     this.dockerRepo = new aws_ecr.Repository(scope, `${this.id}-repo`, {
-      repositoryName: 'aigc-webui-utils',
+      repositoryName: 'stable-diffusion-aws-extension/aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 

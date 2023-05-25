@@ -407,7 +407,7 @@ export class SDAsyncInferenceStack extends NestedStack {
       this,
       'aigc-webui-inference-repo',
       {
-        repositoryName: 'aigc-webui-inference',
+        repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
         removalPolicy: RemovalPolicy.DESTROY,
       },
     );
