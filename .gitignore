@@ -43,3 +43,4 @@ notification.mp3
 /test/stderr.txt
 /cache.json
 local-tests/
+infrastructure/yarn.lock
