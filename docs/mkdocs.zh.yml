@@ -10,14 +10,14 @@ nav:
     - 方案概述:
         - 概述: index.md
         - 功能和优势: solution-overview/features-and-benefits.md
-        - 客户用例: solution-overview/use-cases.md
-        - 术语表: solution-overview/concepts.md
+        #- 客户用例: solution-overview/use-cases.md
+        #- 术语表: solution-overview/concepts.md
     - 架构概览:
         - 架构图: architecture-overview/architecture.md
-        - 架构设计思路: architecture-overview/design-considerations.md
+        #- 架构设计思路: architecture-overview/design-considerations.md
         - 架构细节: architecture-overview/architecture-details.md
+    - 成本预估: cost.md
     - 部署前的规划:
-        - 成本预估: plan-deployment/cost.md
         - 安全信息: plan-deployment/security.md
         - 区域支持: plan-deployment/regions.md
         - 配额信息: plan-deployment/quotas.md
@@ -28,16 +28,16 @@ nav:
     - 卸载解决方案: uninstall.md
     - 用户指南: 
         - 准备工作: user-guide/preparation.md
+        - CloudAssetsManagement: user-guide/CloudAssetsManage.md
         - Txt2img: user-guide/txt2img-guide.md
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
         - Dreambooth: user-guide/dreambooth-guide.md
-        - CloudAssetsManagement: user-guide/CloudAssetsManage.md
     - 开发者指南:
         - 源代码: developer-guide/source.md
     - 故障排除: troubleshooting.md
     - 常见问题解答: faq.md 
     - 文档修订信息: revisions.md
-    - 贡献人员: contributors.md
+    #- 贡献人员: contributors.md
 
 
 

@@ -193,13 +193,6 @@ export class SdTrainDeployStack extends NestedStack {
 
   private createSns(emailParam: CfnParameter): aws_sns.Topic {
     // CDK parameters for SNS email address
-    // const emailParam = new CfnParameter(this, 'email', {
-    //   type: 'String',
-    //   description: 'Email address to receive notifications',
-    //   allowedPattern: '\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}',
-    //   default: 'example@example.com',
-    // });
-
     // Create SNS topic for notifications
     const snsTopic = new aws_sns.Topic(this, 'StableDiffusionSnsTopic');
 
