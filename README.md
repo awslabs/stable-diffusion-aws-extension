@@ -47,7 +47,7 @@ To set up the development environment, you will need have AWS account and tools 
    git clone https://github.com/aws-labs/stable-diffusion-aws-extension.git
    ```
 
-3. Install the middleware by click the [link](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/0.9.0-latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to navigate to AWS CloudFormation console to install CloudFormation template directly. Or you can user AWS CDK to deploy the middleware with following step 4:
+3. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/0.9.0-latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly. Or you can user AWS CDK to deploy the middleware with following step 4:
 
    
 4. (Optional for AWS CDK method) Deploy the project to your AWS account (make sure your current profile has Administrator access, with AWS CDK, Docker installed):
