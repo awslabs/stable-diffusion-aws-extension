@@ -14,7 +14,7 @@ nav:
         - 术语表: solution-overview/concepts.md
     - 架构概览:
         - 架构图: architecture-overview/architecture.md
-        - 架构设计思路: architecture-overview/design-considerations.md
+        #- 架构设计思路: architecture-overview/design-considerations.md
         - 架构细节: architecture-overview/architecture-details.md
     - 部署前的规划:
         - 成本预估: plan-deployment/cost.md

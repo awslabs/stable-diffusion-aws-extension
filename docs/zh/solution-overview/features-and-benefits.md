@@ -5,10 +5,11 @@
 
 | **功能**  | **支持版本** |
 | ------------- | ------------- |
-| txt2img  | Content Cell  |
-| img2img  | Content Cell  |
-| ControlNet  | Content Cell  |
-| Dreambooth  | Content Cell  |
+| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | Content Cell  |
+| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | Content Cell  |
+| [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)  | V1.1.189  |
+| [Dreambooth](https://github.com/d8ahazard/sd_dreambooth_extension)  | Content Cell  |
+| [Image browser](https://github.com/yfszzx/stable-diffusion-webui-images-browser)  | Content Cell  |
 
 
 
