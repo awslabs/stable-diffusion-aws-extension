@@ -196,6 +196,12 @@ def update_model_job_api(raw_event, context):
             field_name='job_status',
             value=event.status
         )
+        ddb_service.update_item(
+            table=checkpoint_table,
+            key={'id': ckpt.id},
+            field_name='checkpoint_status',
+            value=CheckPointStatus.Active.value
+        )
         return resp
     except ClientError as e:
         logger.error(e)
@@ -330,6 +336,7 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
         "db_create_model_payload": json.dumps({
             "s3_output_path": job.output_s3_location,  # output object
             "s3_input_path": checkpoint.s3_location,
+            "ckpt_names": checkpoint.checkpoint_names,
             "param": job.params,
             "job_id": job.id
         }, cls=DecimalEncoder),

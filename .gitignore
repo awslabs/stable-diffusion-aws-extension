@@ -43,5 +43,3 @@ notification.mp3
 /test/stderr.txt
 /cache.json
 local-tests/
-yarn.lock
-package-lock.json
