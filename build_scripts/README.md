@@ -2,11 +2,11 @@
 
 Update time: 20230522
 
-webui/lora 89f9faa63388756314e8a1d96cf86bf5e0663045
-
-controlnet 7c674f8364227d63e1628fc29fa8619d33c56674
-
-dreambooth 926ae204ef5de17efca2059c334b6098492a0641
+| Supported Framework/Extension | Version No.| Update date | Commit ID |
+| --------------------- | --------- | --------------------- | --------- |
+| stable-diffusion-webui|1.2.1|20230514| 89f9faa63388756314e8a1d96cf86bf5e0663045 | 
+| sd-webui-controlnet | v1.1.189| 20230522| 7c674f8364227d63e1628fc29fa8619d33c56674 |
+| sd_dreambooth_extension | N/A| 20230301| 926ae204ef5de17efca2059c334b6098492a0641 |
 
 # How to play with /stable-diffusion-webui
 
