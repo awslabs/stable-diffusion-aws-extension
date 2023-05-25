@@ -782,9 +782,9 @@ def cloud_train(
     config = wrap_get_local_config("dummy_local_model")
     data_path_list = []
     class_data_path_list = []
-    for concept in config.concepts():
-        data_path_list.append(concept.instance_data_dir)
-        class_data_path_list.append(concept.class_data_dir)
+    for concept in config.concepts_list:
+        data_path_list.append(concept["instance_data_dir"])
+        class_data_path_list.append(concept["class_data_dir"])
     model_list = get_cloud_db_models()
     db_config_path = "models/dreambooth/dummy_local_model/db_config.json"
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
