@@ -19,7 +19,7 @@
         <link rel="next" href="../design-considerations/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
@@ -693,6 +693,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
+        CloudAssetsManagement
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
         Txt2img
       </a>
@@ -868,15 +882,10 @@
 
   <h1>架构图</h1>
 
-<p>下图展示的是使用默认参数部署本解决方案在亚马逊云科技中构建的环境。</p>
-<p><img alt="architecture" src="./images/arch.png" /></p>
-<p>图：方案架构</p>
-<p>本解决方案在您的亚马逊云科技账户中部署Amazon CloudFormation模板并完成以下设置。</p>
-<ol>
-<li></li>
-<li></li>
-<li></li>
-</ol>
+<p>该方案的整体架构由两个组件组成：插件和中间件。该插件基于WebUI社区扩展且安装在WebUI上，负责为用户提供与中间件交互的用户界面。中间件是一组部署在用户AWS账户上的AWS资源，负责为插件提供 RESTful API来与AWS云上资源进行交互。整个解决方案为用户提供了在AWS上训练和部署模型的无缝体验，具有以下特点：
+- <strong>用户体验</strong>：现有工作流程没有改变，用户仍然可以使用社区WebUI借由第三方插件来训练和部署模型。
+- <strong>可扩展性</strong>：现有工作负载包括训练和推理等可以在AWS SageMaker上轻松扩展和加速。
+- <strong>社区原生</strong>：所提供的插件作为社区WebUI的一部分，将始终开源并与社区一起不断发展。</p>
 
 
 

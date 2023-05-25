@@ -17,7 +17,7 @@
         <link rel="next" href="../../plan-deployment/cost/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
@@ -818,7 +818,16 @@
 
   <h1>Architecture details</h1>
 
-<p>This section describes the components and AWS services that make up this solution and the architecture details on how these components work together.</p>
+<p>Diagram below is the brief view of internal workflow between our extension and middleware, user will keep launching community WebUI onto standalone EC2/local server with our extension installed, while the training and inference part will be pass onto AWS cloud (SageMaker, S3 etc.) through the RESTful API provided by middleware installed on user’s AWS account. Note the middleware is per AWS account, means it could be installed separately as work node to communicate with WebUI as control node, user only need to input endpoint URL and API key per account to decide which specific AWS account will be used for successive jobs.
+<img alt="workflow" src="../../images/workflow.png" />
+<center>Overall Workflow</center></p>
+<p>The major function of middleware is to provide RESTful API for WebUI extension to interact with AWS cloud resource (SageMaker, S3 etc.) with OpenAPI conformant schema, it will handling the request authentication, request dispatch to specific SageMaker/S3 API (SageMaker.jumpstart/model/predictor/estimator/tuner/utils etc.) and model lifecycle.
+Diagram below is the overall architecture of middleware, including API Gateway and Lambda to fulfill the RESTful API function and Step Function to orchestrate the model lifecycle.
+<img alt="middleware" src="../../images/middleware.png" />
+<center>Middleware Architecture</center></p>
+<p>To keep container image of extension in sync with community, additional CI/CD pipeline (fig shown below) may needed to auto track community commits and pack &amp; build new container image, then user can easily launch latest extension without any manual operation.
+<img alt="cicd" src="../../images/cicd.png" />
+<center>Image CI/CD Workflow</center></p>
 
 
 

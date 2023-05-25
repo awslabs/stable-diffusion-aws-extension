@@ -19,7 +19,7 @@
         <link rel="next" href="../use-cases/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.13">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
@@ -63,6 +63,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -346,9 +351,45 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          功能和优势
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         功能和优势
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    主要功能
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    产品优势
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -693,6 +734,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
+        CloudAssetsManagement
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
         Txt2img
       </a>
@@ -850,6 +905,28 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    主要功能
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    产品优势
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -868,7 +945,42 @@
 
   <h1>功能和优势</h1>
 
-<p>The <solution name> provides the following features:</p>
+<h2 id="_1">主要功能</h2>
+<p>本解决方案支持以下Stable Diffusion WebUI的原生功能/第三方插件的云上工作：</p>
+<table>
+<thead>
+<tr>
+<th><strong>功能</strong></th>
+<th><strong>支持版本</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>txt2img</td>
+<td>Content Cell</td>
+</tr>
+<tr>
+<td>img2img</td>
+<td>Content Cell</td>
+</tr>
+<tr>
+<td>ControlNet</td>
+<td>Content Cell</td>
+</tr>
+<tr>
+<td>Dreambooth</td>
+<td>Content Cell</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">产品优势</h2>
+<ul>
+<li><strong>安装便捷</strong>。本解决方案使用CloudFormation一键部署AWS中间件，搭配社区原生Stable Diffusion WebUI插件安装形式一键安装，即可赋能用户快速使用Amazon SageMaker云上资源，进行推理和训练工作。</li>
+<li><strong>社区原生</strong>。WebUI界面与后端分离，用户无需改变现有Stable Diffusion WebUI的使用习惯，WebUI可以在任何支持的终端启动而没有GPU的限制，原有训练，推理等任务通过插件所提供的功能迁移到Amazon SageMaker。</li>
+<li><strong>可扩展性强</strong>。方案插件以及中间件代码开源，采取非侵入式设计，有助于用户快速跟上社区相关功能的迭代，从WebUI本体到广受欢迎的Dreambooth、ControlNet等插件。</li>
+<li><strong>优化资源配置</strong>。用户可按需选择云上资源，进行批量推理及模型训练，极大提升效率。</li>
+<li><strong>协作性强</strong>。依托于开源社区强大资源，通过插件形式可以与其他开发者合作，有助于更快速迭代产品，为用户提供更有用、易用的产品。</li>
+</ul>
 
 
 
