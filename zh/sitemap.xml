@@ -71,11 +71,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/plan-deployment/cost/</loc>
-         <lastmod>2023-05-25</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/plan-deployment/quotas/</loc>
          <lastmod>2023-05-25</lastmod>
          <changefreq>daily</changefreq>

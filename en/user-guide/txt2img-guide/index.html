@@ -8,20 +8,16 @@
       
       
       
-        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/user-guide/">
+        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/txt2img-guide/">
       
       
-        <link rel="prev" href="../../uninstall/">
-      
-      
-        <link rel="next" href="../../developer-guide/source/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
-        <title>Use the solution - stable-diffusion-aws-extension</title>
+        <title>使用txt2img进行云上推理 - stable-diffusion-aws-extension</title>
       
     
     
@@ -62,6 +58,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#txt2img" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -94,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Use the solution
+              使用txt2img进行云上推理
             
           </span>
         </div>
@@ -192,8 +193,6 @@
         
   
   
-    
-  
 
 
   
@@ -205,7 +204,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link md-tabs__link--active">
+      <a href="../.." class="md-tabs__link">
         Implementation Guide
       </a>
     </li>
@@ -263,16 +262,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
       
       
       
@@ -281,7 +278,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Implementation Guide
@@ -638,19 +635,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../user-guide.md" class="md-nav__link">
         Use the solution
       </a>
-      
     </li>
   
 
@@ -797,6 +786,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -814,9 +805,53 @@
   
 
 
-  <h1>Use the solution</h1>
-
-
+<h1 id="txt2img">使用txt2img进行云上推理</h1>
+<p>您可以打开txt2img标签页，通过结合使用txt2img原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的txt2img推理工作。 </p>
+<ol>
+<li>进入<strong>txt2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。
+<img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
+<li>输入推理所需参数。同于本地推理，您可以按需编辑<strong>txt2img</strong>原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。</li>
+<li>
+<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。
+    !!! Important "提示" 
+        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击<strong>Generate on Cloud</strong>开启云上推理功能时会报错。</p>
+</li>
+<li>
+<p>点击模型下拉框右侧的刷新按钮，选择推理所需的<strong>Stable Diffusion Checkpoint</strong>（必选，可多选）及其他所需的<strong>Extra Networks for Cloud Inference</strong>（可选，并且可多模型多选叠加）。</p>
+</li>
+<li>点击<strong>Generate on Cloud</strong>。</li>
+<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
+<p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;inference id</strong>。</p>
+</blockquote>
+</li>
+</ol>
+<p><img alt="generate results" src="../../images/generate-results.png" /></p>
+<h1 id="controlnet">Controlnet的使用方法</h1>
+<ul>
+<li>
+<h3 id="openpose">openpose的使用方式</h3>
+<ol>
+<li>
+<p>打开ControlNet面板，勾选<strong>Enabel</strong>，选择<strong>Preprocessor</strong>为<strong>openpose</strong>，同时上传图片。</p>
+<p><img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></p>
+</li>
+<li>
+<p>在<strong>Amazon SageMaker Inference</strong>面板的里面选择<strong>Stable Diffusion Checkpoint</strong>和<strong>ControlNet-Model</strong>。比如
+这里是<strong>v1-5-pruned-emaonly.safetensors</strong>和<strong>control_openpose-fp16.safetensors</strong>。保留之前的提示词<strong>a cute dog</strong>
+，然后点击<strong>Generate on Cloud</strong>。</p>
+<p><img alt="Choose-controlnet-model" src="../../images/choose-controlnet-model.png" /></p>
+</li>
+<li>
+<p>这时候点击<strong>Inference Job IDs</strong>旁边的刷新按钮，可以看到新产生一条记录，格式为<strong>推理时间-&gt;inference id</strong> (整个列表也会按照推理时间进行排序)
+<img alt="refresh inference job id-controlnet" src="../../images/refresh-inference-id-controlnet.png" /></p>
+</li>
+<li>
+<p>当切换到对应的inference id并且推理结束后，会在右上角看到推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等
+<img alt="generate results controlnet" src="../../images/cute-dog-controlnet.png" /></p>
+</li>
+</ol>
+</li>
+</ul>
 
 
 

@@ -131,7 +131,27 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/user-guide/</loc>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/CloudAssetsManage/</loc>
+         <lastmod>2023-05-25</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/checkpoint-merge-guide/</loc>
+         <lastmod>2023-05-25</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/dreambooth-guide/</loc>
+         <lastmod>2023-05-25</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/preparation/</loc>
+         <lastmod>2023-05-25</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/txt2img-guide/</loc>
          <lastmod>2023-05-25</lastmod>
          <changefreq>daily</changefreq>
     </url>
