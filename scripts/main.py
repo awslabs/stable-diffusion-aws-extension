@@ -48,6 +48,8 @@ job_link_list = []
 ckpt_dict = {}
 
 base_model_folder = "models/sagemaker_dreambooth/"
+async_inference_choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge",\
+                         "ml.g5.xlarge","ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     def title(self):
@@ -248,7 +250,7 @@ def on_ui_tabs():
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
                     with gr.Row():
-                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
                         instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
 
                     with gr.Row():
@@ -259,7 +261,7 @@ def on_ui_tabs():
                                               outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>")
                     with gr.Row():
                         sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints, multiselect=True, label="Select Cloud SageMaker Endpoint")
                         modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
@@ -689,9 +691,11 @@ def async_create_model_on_sagemaker(
             logging.error("Checkpoint name error.")
             return
         params["ckpt_path"] = ckpt_name_list[0].rstrip(".tar")
+        ckpt_info = ckpt_dict[ckpt_key]
         payload = {
             "model_type": "Stable-diffusion",
             "name": new_model_name,
+            "checkpoint_id": ckpt_info["id"],
             "filenames": [],
             "params": {
                 "ckpt_from_cloud": True,

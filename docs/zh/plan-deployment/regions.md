@@ -13,8 +13,9 @@
 - 欧洲（法兰克福）区域:   eu-central-1
 - 亚太地区（东京）区域:   ap-northeast-1
 - 亚太地区（首尔）区域:   ap-northeast-2
+- 亚太区域（大阪）区域:   ap-northeast-3
 - 亚太地区（新加坡）区域:   ap-southeast-1
 - 亚太地区（悉尼）区域:   ap-southeast-2
 - 亚太地区（孟买）区域:   ap-south-1
 - 亚太地区（香港）区域:   ap-east-1
-
+                
