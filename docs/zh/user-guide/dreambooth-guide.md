@@ -4,7 +4,7 @@
 
 ## 创建模型
 
-1. 打开**Dreambooth**标签页，模块**Model**的标签页**Create From Cloud**
+1. 打开**Dreambooth**标签页，模块**Model**的标签页**Create From Cloud**。
 ![Creat model tab](../images/open-create-model-tab.png)
 2. 在**Name**文本框输入所需创建模型名称。
 

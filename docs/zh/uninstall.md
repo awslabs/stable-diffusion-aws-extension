@@ -1,4 +1,8 @@
-要卸载Stable Diffusion AWS Extension解决方案，请删除CloudFormation堆栈。
+!!! Warning "警告"
+    如果卸载解决方案，您可能会丢失在此部署下于云上训练的模型、推理的图片和账户使用日志等。
+
+
+要卸载Stable Diffusion亚马逊云科技插件解决方案，请删除CloudFormation堆栈。
 
 您可以使用亚马逊云科技管理控制台或CLI删除CloudFormation堆栈。
 
@@ -7,6 +11,8 @@
 1. 登录AWS CloudFormation控制台。
 2. 在**堆栈**页面上，选择此方案的安装堆栈。
 3. 选择**删除**。
+
+
 
 ## 使用CLI删除堆栈
 
