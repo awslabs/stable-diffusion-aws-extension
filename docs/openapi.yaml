@@ -6,150 +6,129 @@ info:
 
 paths:
   # This operation can be redundant if we get the pre-signed URL instead
-
-  /sagemaker/create-middleware-train-job:
-    post:
-      summary: Generate pre-signed S3 URL to upload data and job id
-      operationId: createMiddlewareTrainJob
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                instanceType:
-                  type: string
-                instanceNum:
-                  type: number
-                trainParam:
-                  type: object
+  /inference/list-endpoint-deployment-jobs:
+    get:
+      summary: Get a list of endpoint deployment jobs
+      operationId: listEndpointDeploymentJobs
       responses:
         '200':
-          description: Successfully generated pre-signed URL and job id
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  # s3 bucket root path
-                  s3Url:
-                    type: string
-                  trainJobId:
-                    type: string
+          description: Returns a list of endpoint deployment jobs
 
-  /sagemaker/upload-data-complete:
-    post:
-      summary: Upload data complete for training job
-      operationId: updateDataComplete
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                trainJobId:
-                  type: string
+  /inference/list-inference-jobs:
+    get:
+      summary: Get a list of inference jobs
+      operationId: listInferenceJobs
       responses:
         '200':
-          description: Finish upload data for training
+          description: Returns a list of inference jobs
 
-  /sagemaker/train-sagemaker-model:
-    post:
-      summary: Train a SageMaker model
-      operationId: trainSageMakerModel
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                # bucket s3 root path
-                s3Url:
-                  type: string
-                trainJobId:
-                  type: string
-                instanceType:
-                  type: string
-                instanceNum:
-                  type: number
-                trainParam:
-                  type: object
-                sagemakerImageUrl:
-                  type: string
-      responses:
-        '200':
-          description: Successfully trained model
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  trainingJobArn:
-                    type: string
-
-  /sagemaker/deploy-webui-api-server:
-    post:
-        summary: Deploy a model operator server by Sagemaker serverless inference. This server can be used for model creating and model merging.
-        operationId: deployWebuiApiServer
-        requestBody:
+  /inference/get-endpoint-deployment-job:
+    get:
+      summary: Get a specific endpoint deployment job
+      operationId: getEndpointDeploymentJob
+      parameters:
+        - name: jobID
+          in: query
           required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sagemakerImgUri:
-                    type: string
-                  instanceType:
-                    type: string
-        responses:
-          '200':
-            description: Successfully deployed the model operator server
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    endpointName:
-                      type: string
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the specific endpoint deployment job
 
-  /sagemaker/create-dreambooth-model:
-    post:
-        summary: Create dreambooth model
-        operationId: createDreamboothModel
-        requestBody:
+  /inference/get-inference-job:
+    get:
+      summary: Get a specific inference job
+      operationId: getInferenceJob
+      parameters:
+        - name: jobID
+          in: query
           required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  # endpoint from /sagemaker/deploy-webui-api-server
-                  endpointName:
-                    type: string
-                  S3Url:
-                    type: string
-                  modelParam:
-                    type: object
-        responses:
-          '200':
-            description: Successfully create the dreambooth model 
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    status:
-                      type: string
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the specific inference job
 
+  /inference/get-inference-job-image-output:
+    get:
+      summary: Get image output for a specific inference job
+      operationId: getInferenceJobImageOutput
+      parameters:
+        - name: jobID
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns a list of presigned URLs for each image output of the inference job
 
-  /sagemaker/deploy-sagemaker-endpoint:
+  /inference/get-inference-job-param-output:
+    get:
+      summary: Get param output for a specific inference job
+      operationId: getInferenceJobParamOutput
+      parameters:
+        - name: jobID
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns a list containing a presigned URL for the JSON parameter output of the inference job
+
+  /inference/generate-s3-presigned-url-for-uploading:
+    get:
+      summary: Generate a presigned URL for uploading to S3
+      operationId: generateS3PresignedUrlForUploading
+      parameters:
+        - name: s3_bucket_name
+          in: query
+          schema:
+            type: string
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns a presigned URL for uploading to S3
+
+  /inference/get-texual-inversion-list:
+    get:
+      summary: Get a list of 'texual_inversion' objects
+      operationId: getTexualInversionList
+      responses:
+        '200':
+          description: Returns a list of 'texual_inversion' objects from S3
+
+  /inference/get-lora-list:
+    get:
+      summary: Get a list of 'lora' objects
+      operationId: getLoraList
+      responses:
+        '200':
+          description: Returns a list of 'lora' objects from S3
+
+  /inference/get-hypernetwork-list:
+    get:
+      summary: Get a list of 'hypernetwork' objects
+      operationId: getHypernetworkList
+      responses:
+        '200':
+          description: Returns a list of 'hypernetwork' objects from S3
+
+  /inference/get-controlnet-model-list:
+    get:
+      summary: Get a list of 'controlnet' objects
+      operationId: getControlnetModelList# There is more to the API, so I will continue.
+
+  /inference/run-model-merge:
     post:
-      summary: Deploy a SageMaker Endpoint for Inference
-      operationId: deploySageMakerEndpoint
+      summary: Run model merge
+      operationId: runModelMerge
       requestBody:
         required: true
         content:
@@ -157,76 +136,11 @@ paths:
             schema:
               type: object
               properties:
-                sagemakerImgUri:
-                  type: string
-                instanceType:
-                  type: string
-                instanceNum:
-                  type: number
-      responses:
-        '200':
-          description: Successfully deployed the endpoint
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  endpointName:
-                    type: string
-
-  /sagemaker/update-sagemaker-endpoint:
-    post:
-      summary: Update models in an endpoint (Async)
-      operationId: updatetSagemaker
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                endpointName:
-                  type: string
-                S3Url:
-                  type: string
-                modelParam:
+                checkpoint_info:
                   type: object
       responses:
         '200':
-          description: Successfully update modes in the endpoint
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
+          description: Returns the inference ID, status, endpoint name, and output path
 
 
-  /sagemaker/run-sagemaker-inference:
-    post:
-      summary: Run inference on a SageMaker model (Async)
-      operationId: runSageMakerInference
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                endpointName:
-                  type: string
-                S3Url:
-                  type: string
-                modelParam:
-                  type: object
-      responses:
-        '200':
-          description: Successfully ran inference
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  inferenceJobArn:
-                    type: string
+ 
