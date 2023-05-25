@@ -585,7 +585,7 @@ def move_model_to_tmp(_, app: FastAPI):
     tgt_file_dict = get_file_md5_dict(f"/tmp/{model_tmp_dir}")
     is_complete = True
     for file in src_file_dict:
-        logging.info(f"Src file {file} md5 {src_file_dict[md5]}")
+        logging.info(f"Src file {file} md5 {src_file_dict[file]}")
         if file not in tgt_file_dict:
             is_complete = False
             break
