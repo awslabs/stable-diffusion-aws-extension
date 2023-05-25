@@ -338,7 +338,8 @@ def check_train_job_status(event, context):
             value=checkpoint.checkpoint_status.value
         )
         s3 = boto3.client('s3')
-        bucket, key = split_s3_path(checkpoint.s3_location)
+        bucket, base_key = split_s3_path(checkpoint.s3_location)
+        key = f"{base_key}/{training_job.params['training_params']['model_name']}"
         s3_resp = s3.list_objects(
             Bucket=bucket,
             Prefix=key,
@@ -347,7 +348,7 @@ def check_train_job_status(event, context):
         for obj in s3_resp['Contents']:
             checkpoint_name = obj['Key'].replace(f'{key}/', "")
             if 'training_params' in training_job.params and 'model_name' in training_job.params['training_params']:
-                checkpoint_name = f"{training_job.params['training_params']['model_name']}/" + checkpoint_name
+                checkpoint_name = f"{training_job.params['training_params']['model_name']}/{checkpoint_name}"
 
             checkpoint.checkpoint_names.append(checkpoint_name)
 
