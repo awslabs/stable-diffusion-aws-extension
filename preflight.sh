@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage: ./preflight_check.sh -x [initial_support_commit_controlnet] -y [initial_support_commit_dreambooth]
-# 23c0c803 926ae204
+# 7c674f83 926ae204
 
 # Fixed repo URLs list
 REPO_URL_LIST=(
@@ -47,10 +47,10 @@ while true; do
     esac
 done
 
-# built the initial support commit list from option or default
+# built the initial support commit list from option or default value if not provided
 INITIAL_SUPPORT_COMMIT_LIST=(
-    "$initial_support_commit_controlnet"
-    "$initial_support_commit_dreambooth"
+    "${initial_support_commit_controlnet:-7c674f83}"
+    "${initial_support_commit_dreambooth:-926ae204}"
 )
 
 # Function to get supported commit list

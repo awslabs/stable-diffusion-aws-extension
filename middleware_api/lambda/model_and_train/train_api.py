@@ -329,6 +329,21 @@ def check_train_job_status(event, context):
 
         checkpoint = CheckPoint(**raw_checkpoint)
         checkpoint.checkpoint_status = CheckPointStatus.Active
+        s3 = boto3.client('s3')
+        bucket, key = split_s3_path(checkpoint.s3_location)
+        s3_resp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=key,
+        )
+        checkpoint.checkpoint_names = []
+        if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
+            for obj in s3_resp['Contents']:
+                checkpoint_name = obj['Key'].replace(f'{key}/', "")
+                checkpoint.checkpoint_names.append(checkpoint_name)
+        else:
+            training_job.job_status = TrainJobStatus.Fail
+            checkpoint.checkpoint_status = CheckPointStatus.Initial
+
         ddb_service.update_item(
             table=checkpoint_table,
             key={
@@ -337,20 +352,6 @@ def check_train_job_status(event, context):
             field_name='checkpoint_status',
             value=checkpoint.checkpoint_status.value
         )
-        s3 = boto3.client('s3')
-        bucket, key = split_s3_path(checkpoint.s3_location)
-        s3_resp = s3.list_objects(
-            Bucket=bucket,
-            Prefix=key,
-        )
-        checkpoint.checkpoint_names = []
-        for obj in s3_resp['Contents']:
-            checkpoint_name = obj['Key'].replace(f'{key}/', "")
-            if 'training_params' in training_job.params and 'model_name' in training_job.params['training_params']:
-                checkpoint_name = f"{training_job.params['training_params']['model_name']}/" + checkpoint_name
-
-            checkpoint.checkpoint_names.append(checkpoint_name)
-
         ddb_service.update_item(
             table=checkpoint_table,
             key={
