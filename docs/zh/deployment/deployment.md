@@ -33,7 +33,7 @@
 您可以在AWS CloudFormation控制台的状态列中查看堆栈的状态。创建完成后即可看到状态为CREATE_COMPLETE。
 
 ### 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。
-1. 打开已部署的Stable Diffusion WebUI界面，进入**Extensions**标签页 - **Install from URL**子标签页，在**URL from extension's git repository**文本框输入本解决方案repository地址 [https://github.com/aws-samples/stable-diffusion-aws-extension.git](https://github.com/aws-samples/stable-diffusion-aws-extension.git)，点击**Install**。
+1. 打开已部署的Stable Diffusion WebUI界面，进入**Extensions**标签页 - **Install from URL**子标签页，在**URL from extension's git repository**文本框输入本解决方案repository地址 [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git)，点击**Install**。
 2. 点击**Installed**子标签页，点击**Apply and restart UI**，WebUI会多出一个**Amazon SageMaker**标签页，表明已完成插件安装。
 
 
