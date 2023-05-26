@@ -14,7 +14,7 @@
         <link rel="prev" href="../..">
       
       
-        <link rel="next" href="../use-cases/">
+        <link rel="next" href="../../architecture-overview/architecture/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
@@ -61,6 +61,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#features" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -344,38 +349,46 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Features and benefits
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         Features and benefits
       </a>
       
-    </li>
-  
+        
 
-            
-          
-            
-              
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
   
-    <li class="md-nav__item">
-      <a href="../use-cases/" class="md-nav__link">
-        Use cases
-      </a>
-    </li>
   
-
-            
-          
-            
-              
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    Features
+  </a>
   
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits" class="md-nav__link">
+    Benefits
+  </a>
   
+</li>
+      
+    </ul>
   
-    <li class="md-nav__item">
-      <a href="../concepts/" class="md-nav__link">
-        Concepts and definitions
-      </a>
+</nav>
+      
     </li>
   
 
@@ -423,20 +436,6 @@
     <li class="md-nav__item">
       <a href="../../architecture-overview/architecture/" class="md-nav__link">
         Architecture diagram
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../architecture-overview/design-considerations/" class="md-nav__link">
-        AWS Well-Architected design considerations
       </a>
     </li>
   
@@ -800,6 +799,28 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benefits" class="md-nav__link">
+    Benefits
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -818,7 +839,60 @@
 
   <h1>Features and benefits</h1>
 
-<p>The <solution name> provides the following features:</p>
+<h2 id="features">Features</h2>
+<p>This solution supports the cloud-based operations of the following native features/third-party extensions of Stable Diffusion WebUI:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Feature</strong></th>
+<th><strong>Supported Version</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">Stable Diffusion WebUI</a></td>
+<td>V1.2.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">img2img</a></td>
+<td>V1.2.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">LoRa</a></td>
+<td>V1.2.1</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Mikubill/sd-webui-controlnet">ControlNet</a></td>
+<td>V1.1.189</td>
+</tr>
+<tr>
+<td><a href="https://github.com/d8ahazard/sd_dreambooth_extension">Dreambooth</a></td>
+<td>20230331</td>
+</tr>
+<tr>
+<td><a href="https://github.com/yfszzx/stable-diffusion-webui-images-browser">Image browser</a></td>
+<td>Latest</td>
+</tr>
+</tbody>
+</table>
+<h2 id="benefits">Benefits</h2>
+<ul>
+<li>
+<p><strong>Convenient Installation</strong>: This solution leverages CloudFormation for easy deployment of AWS middleware. Combined with the installation of the native Stable Diffusion WebUI features and third-party extensions, users can quickly utilize Amazon SageMaker's cloud resources for inference, training and finetuning tasks.</p>
+</li>
+<li>
+<p><strong>Native Integration</strong>: The WebUI interface is decoupled from the backend, allowing users to retain their existing usage habits with Stable Diffusion WebUI. The WebUI can be launched on any supported terminal without GPU limitations. Existing inference, training and finetuning tasks can be migrated to Amazon SageMaker using the functionality provided by the solution.</p>
+</li>
+<li>
+<p><strong>Strong Scalability</strong>: The solution's extension and middleware code are open source and designed with a non-intrusive approach. This facilitates rapid adoption of community-related features, ranging from the core WebUI to popular thrid-party extensions like Dreambooth and ControlNet.</p>
+</li>
+<li>
+<p><strong>Optimized Resource Configuration</strong>: Users can choose cloud resources based on their needs for batch inference and model training, significantly enhancing efficiency.</p>
+</li>
+<li>
+<p><strong>Strong Collaboration</strong>: With the support of the open-source community, collaboration with other developers is facilitated through the extension framework. This helps accelerate product iteration, providing users with more useful and user-friendly products.</p>
+</li>
+</ul>
 
 
 

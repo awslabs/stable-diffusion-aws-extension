@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#deployment-overview" class="md-skip">
+        <a href="#prerequisition" class="md-skip">
           Skip to content
         </a>
       
@@ -348,34 +348,6 @@
 
             
           
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../solution-overview/use-cases/" class="md-nav__link">
-        Use cases
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../solution-overview/concepts/" class="md-nav__link">
-        Concepts and definitions
-      </a>
-    </li>
-  
-
-            
-          
         </ul>
       </nav>
     </li>
@@ -418,20 +390,6 @@
     <li class="md-nav__item">
       <a href="../../architecture-overview/architecture/" class="md-nav__link">
         Architecture diagram
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../architecture-overview/design-considerations/" class="md-nav__link">
-        AWS Well-Architected design considerations
       </a>
     </li>
   
@@ -628,6 +586,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisition" class="md-nav__link">
+    Prerequisition
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deployment-overview" class="md-nav__link">
     Deployment overview
   </a>
@@ -638,6 +603,39 @@
   <a href="#deployment-steps" class="md-nav__link">
     Deployment steps
   </a>
+  
+    <nav class="md-nav" aria-label="Deployment steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-launch-the-aws-cloudformation-template-into-your-aws-account" class="md-nav__link">
+    Step 1: Launch the AWS CloudFormation template into your AWS account.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-install-stable-diffusion-aws-extension-extension-in-your-stable-diffusion-webui" class="md-nav__link">
+    Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI.
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#future-step" class="md-nav__link">
+    Future Step
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -848,6 +846,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequisition" class="md-nav__link">
+    Prerequisition
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deployment-overview" class="md-nav__link">
     Deployment overview
   </a>
@@ -858,6 +863,39 @@
   <a href="#deployment-steps" class="md-nav__link">
     Deployment steps
   </a>
+  
+    <nav class="md-nav" aria-label="Deployment steps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-launch-the-aws-cloudformation-template-into-your-aws-account" class="md-nav__link">
+    Step 1: Launch the AWS CloudFormation template into your AWS account.
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-install-stable-diffusion-aws-extension-extension-in-your-stable-diffusion-webui" class="md-nav__link">
+    Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI.
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI.">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#future-step" class="md-nav__link">
+    Future Step
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -882,47 +920,36 @@
   <h1>Deployment</h1>
 
 <p>Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.</p>
-<p><strong>Time to deploy</strong>: Approximately [10] minutes</p>
+<p><strong>Time to deploy</strong>: Approximately 15 minutes</p>
+<h2 id="prerequisition">Prerequisition</h2>
+<p>User needs to install <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">Stable Diffusion WebUI</a> in advance.</p>
 <h2 id="deployment-overview">Deployment overview</h2>
 <p>Use the following steps to deploy this solution on AWS. </p>
 <ul>
-<li>Launch the AWS CloudFormation template into your AWS account.</li>
-<li>Review the template parameters, and adjust them if necessary.</li>
+<li>Step 1: Launch the AWS CloudFormation template into your AWS account.</li>
+<li>Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI. </li>
 </ul>
 <h2 id="deployment-steps">Deployment steps</h2>
+<h3 id="step-1-launch-the-aws-cloudformation-template-into-your-aws-account">Step 1: Launch the AWS CloudFormation template into your AWS account.</h3>
 <p>This automated AWS CloudFormation template deploys the solution in the AWS Cloud.</p>
 <ol>
-<li>Sign in to the AWS Management Console and use [Launch solution in AWS Standard Regions][launch-template] to launch the AWS CloudFormation template.   </li>
-<li>The template launches in the US East (N. Virginia) Region by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
+<li>Sign in to the AWS Management Console and use <a href="">Launch solution in AWS Standard Regions</a> to launch the AWS CloudFormation template.   </li>
+<li>The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
 <li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
-<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. For information about naming character limitations, refer to [IAM and STS Limits][iam-limit] in the <code>AWS Identity and Access Management User Guide</code>.</li>
-<li>
-<p>Under <strong>Parameters</strong>, review the parameters for the template and modify them as necessary. This solution uses the following default values.</p>
-<table>
-<thead>
-<tr>
-<th align="center">Parameter</th>
-<th align="center">Default</th>
-<th align="left">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>
-<p>Choose <strong>Next</strong>.</p>
-</li>
+<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. Under <strong>Parameters</strong>, enter a correct email address for future notice receiving，choose <strong>Next</strong>.
+    !!! Important "Notice" 
+        Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription.</li>
 <li>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</li>
-<li>On the <strong>Review</strong> page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources.</li>
-<li>Choose <strong>Create stack</strong> to deploy the stack.</li>
+<li>On the <strong>Review</strong> page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose <strong>Create stack</strong> to deploy the stack.</li>
 </ol>
-<p>You can view the status of the stack in the AWS CloudFormation Console in the <strong>Status</strong> column. You should receive a CREATE_COMPLETE status in approximately [10] minutes.</p>
+<p>You can view the status of the stack in the AWS CloudFormation Console in the <strong>Status</strong> column. You should receive a CREATE_COMPLETE status in approximately 15 minutes.</p>
+<h2 id="step-2-install-stable-diffusion-aws-extension-extension-in-your-stable-diffusion-webui">Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI.</h2>
+<ol>
+<li>Open the Stable Diffusion WebUI, navigate to the <strong>Extensions</strong> tab - <strong>Install from URL</strong> subtab, and enter the repository address of this solution <a href="https://github.com/awslabs/stable-diffusion-aws-extension.git">https://github.com/awslabs/stable-diffusion-aws-extension.git</a> in the <strong>URL from extension's git repository</strong> text box. Click <strong>Install</strong>.</li>
+<li>Navigate to <strong>Installed</strong> subtab, click <strong>Apply and restart UI</strong>. The <strong>Amazon SageMaker</strong> tab will appear in the WebUI, indicating that the extension installation has been completed.</li>
+</ol>
+<h3 id="future-step">Future Step</h3>
+<p>After successful stack creation, you can find relevant information in the <strong>Outputs</strong> tab of AWS CloudFormation.</p>
 
 
 
