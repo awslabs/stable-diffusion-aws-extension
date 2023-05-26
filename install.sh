@@ -5,7 +5,6 @@ git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 
 # Go to stable-diffusion-webui directory
 cd stable-diffusion-webui
-
 # Reset to specific commit
 git reset --hard 89f9faa63388756314e8a1d96cf86bf5e0663045
 

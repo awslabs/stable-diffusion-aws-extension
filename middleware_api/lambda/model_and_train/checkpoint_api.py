@@ -99,6 +99,12 @@ def create_checkpoint_api(raw_event, context):
             file = MultipartFileReq(**f)
             filenames_only.append(file.filename)
 
+        if len(filenames_only) == 0:
+            return {
+                'statusCode': 400,
+                'errorMsg': 'no checkpoint name (file names) detected'
+            }
+
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
@@ -151,6 +157,8 @@ def update_checkpoint_api(raw_event, context):
 
         checkpoint = CheckPoint(**raw_checkpoint)
         new_status = CheckPointStatus[event.status]
+        complete_multipart_upload(checkpoint, event.multi_parts_tags)
+        # if complete part failed, then no update
         ddb_service.update_item(
             table=checkpoint_table,
             key={
@@ -159,7 +167,6 @@ def update_checkpoint_api(raw_event, context):
             field_name='checkpoint_status',
             value=new_status
         )
-        complete_multipart_upload(checkpoint, event.multi_parts_tags)
         return {
             'statusCode': 200,
             'checkpoint': {

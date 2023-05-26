@@ -6,7 +6,7 @@ import datetime
 import logging
 import os
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -40,6 +40,7 @@ class Event:
     name: str
     params: dict[str, Any]
     filenames: [MultipartFileReq]
+    checkpoint_id: Optional[str] = ""
 
 
 # POST /model
@@ -50,45 +51,72 @@ def create_model_api(raw_event, context):
 
     try:
         # todo: check if duplicated name and new_model_name only for Completed and Model
+        if not event.checkpoint_id and len(event.filenames) == 0:
+            return {
+                'statusCode': 400,
+                'errMsg': 'either checkpoint_id or filenames need to be provided'
+            }
 
         base_key = get_base_model_s3_key(_type, event.name, request_id)
-        checkpoint_base_key = get_base_checkpoint_s3_key(_type, event.name, request_id)
-        presign_url_map = batch_get_s3_multipart_signed_urls(
-            bucket_name=bucket_name,
-            base_key=checkpoint_base_key,
-            filenames=event.filenames
-        )
-        filenames_only = []
-        for f in event.filenames:
-            file = MultipartFileReq(**f)
-            filenames_only.append(file.filename)
-
-        checkpoint_params = {'created': str(datetime.datetime.now()), 'multipart_upload': {
-        }}
-        multiparts_resp = {}
-        for key, val in presign_url_map.items():
-            checkpoint_params['multipart_upload'][key] = {
-                'upload_id': val['upload_id'],
-                'bucket': val['bucket'],
-                'key': val['key'],
-            }
-            multiparts_resp[key] = val['s3_signed_urls']
         timestamp = datetime.datetime.now().timestamp()
-        checkpoint = CheckPoint(
-            id=request_id,
-            checkpoint_type=event.model_type,
-            s3_location=f's3://{bucket_name}/{get_base_checkpoint_s3_key(_type, event.name, request_id)}',
-            checkpoint_names=filenames_only,
-            checkpoint_status=CheckPointStatus.Initial,
-            params=checkpoint_params,
-            timestamp=timestamp
-        )
-        ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+        multiparts_resp = {}
+        if not event.checkpoint_id:
+            checkpoint_base_key = get_base_checkpoint_s3_key(_type, event.name, request_id)
+            presign_url_map = batch_get_s3_multipart_signed_urls(
+                bucket_name=bucket_name,
+                base_key=checkpoint_base_key,
+                filenames=event.filenames
+            )
+            filenames_only = []
+            for f in event.filenames:
+                file = MultipartFileReq(**f)
+                filenames_only.append(file.filename)
+
+            checkpoint_params = {'created': str(datetime.datetime.now()), 'multipart_upload': {
+            }}
+
+            for key, val in presign_url_map.items():
+                checkpoint_params['multipart_upload'][key] = {
+                    'upload_id': val['upload_id'],
+                    'bucket': val['bucket'],
+                    'key': val['key'],
+                }
+                multiparts_resp[key] = val['s3_signed_urls']
+
+            checkpoint = CheckPoint(
+                id=request_id,
+                checkpoint_type=event.model_type,
+                s3_location=f's3://{bucket_name}/{get_base_checkpoint_s3_key(_type, event.name, request_id)}',
+                checkpoint_names=filenames_only,
+                checkpoint_status=CheckPointStatus.Initial,
+                params=checkpoint_params,
+                timestamp=timestamp
+            )
+            ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+            checkpoint_id = checkpoint.id
+        else:
+            raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
+                'id': event.checkpoint_id,
+            })
+            if raw_checkpoint is None:
+                return {
+                    'status': 500,
+                    'error': f'create model ckpt with id {event.checkpoint_id} is not found'
+                }
+
+            checkpoint = CheckPoint(**raw_checkpoint)
+            if checkpoint.checkpoint_status != CheckPointStatus.Active:
+                return {
+                    'status': 400,
+                    'error': f'checkpoint with id ({checkpoint.id}) is not Active to use'
+                }
+            checkpoint_id = checkpoint.id
+
         model_job = Model(
             id=request_id,
             name=event.name,
             output_s3_location=f's3://{bucket_name}/{base_key}/output',
-            checkpoint_id=checkpoint.id,
+            checkpoint_id=checkpoint_id,
             model_type=_type,
             job_status=CreateModelStatus.Initial,
             params=event.params,
@@ -187,7 +215,14 @@ def update_model_job_api(raw_event, context):
             }
 
         ckpt = CheckPoint(**raw_checkpoint)
-        complete_multipart_upload(ckpt, event.multi_parts_tags)
+        if ckpt.checkpoint_status == ckpt.checkpoint_status.Initial:
+            complete_multipart_upload(ckpt, event.multi_parts_tags)
+            ddb_service.update_item(
+                table=checkpoint_table,
+                key={'id': ckpt.id},
+                field_name='checkpoint_status',
+                value=CheckPointStatus.Active.value
+            )
 
         resp = _exec(model_job, CreateModelStatus[event.status])
         ddb_service.update_item(
@@ -195,12 +230,6 @@ def update_model_job_api(raw_event, context):
             key={'id': model_job.id},
             field_name='job_status',
             value=event.status
-        )
-        ddb_service.update_item(
-            table=checkpoint_table,
-            key={'id': ckpt.id},
-            field_name='checkpoint_status',
-            value=CheckPointStatus.Active.value
         )
         return resp
     except ClientError as e:

@@ -98,7 +98,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path):
                 os.system(tar_command)
                 logger.info(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
                 print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
-                upload_file_to_s3(output_tar, output_bucket_name, s3_output_path)
+                upload_file_to_s3(output_tar, output_bucket_name, os.path.join(s3_output_path, model_name))
 
 def hack_db_config(db_config, db_config_file_path, model_name, data_tar_list, class_data_tar_list):
     for k in db_config:

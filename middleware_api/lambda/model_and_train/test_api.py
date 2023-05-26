@@ -214,14 +214,14 @@ class ModelsApiTest(TestCase):
         from botocore.config import Config
         s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
         bucket = 'alvindaiyan-aigc-testing-playground'
-        key = 'dreambooth/checkpoint/db-training-test-1/51b8d59b-ba48-4f79-964f-05f2190f5bc3/'
+        key = 'Stable-diffusion/checkpoint/dytest004/8d3a46e6-756e-47a5-a138-66d66f8ffec6'
         response = s3.list_objects(
             Bucket=bucket,
             Prefix=key,
         )
         print(response)
         for obj in response['Contents']:
-            print(obj['Key'].replace(key, ""))
+            print(obj['Key'].replace(f'{key}/', ""))
 
     def test_timestamp(self):
         import datetime

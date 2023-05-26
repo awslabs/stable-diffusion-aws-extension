@@ -8,11 +8,11 @@ nav:
     - Solution Overview:
         - Overview: index.md
         - Features and benefits: solution-overview/features-and-benefits.md
-        - Use cases: solution-overview/use-cases.md
-        - Concepts and definitions: solution-overview/concepts.md
+        #- Use cases: solution-overview/use-cases.md
+       # - Concepts and definitions: solution-overview/concepts.md
     - Architecture Overview:
         - Architecture diagram: architecture-overview/architecture.md
-        - AWS Well-Architected design considerations: architecture-overview/design-considerations.md
+       # - AWS Well-Architected design considerations: architecture-overview/design-considerations.md
         - Architecture details: architecture-overview/architecture-details.md
     - Plan your deployment:
         - Cost: plan-deployment/cost.md
