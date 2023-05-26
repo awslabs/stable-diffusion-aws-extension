@@ -297,8 +297,8 @@ def refresh_all_models():
             response = requests.get(url=url, headers={'x-api-key': api_key})
             json_response = response.json()
             # print(f"response url json for model {rp} is {json_response}")
+            checkpoint_info[rp] = {}
             if "checkpoints" not in json_response.keys():
-                checkpoint_info[rp] = {}
                 continue
             for ckpt in json_response["checkpoints"]:
                 if "name" not in ckpt:
