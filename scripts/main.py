@@ -193,7 +193,7 @@ def on_ui_tabs():
             gr.HTML(value="Enter your API URL & Token to start the connection.", elem_id="hint_row")
         with gr.Row():
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="AWS Connection Setting")
+                gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
                 global api_gateway_url
                 api_gateway_url = get_variable_from_json('api_gateway_url')
                 global api_key
@@ -214,7 +214,8 @@ def on_ui_tabs():
                     api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
                     modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
 
-                test_connection_result = gr.Label();
+                global test_connection_result 
+                test_connection_result = gr.Label(title="Output"); 
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
@@ -275,7 +276,7 @@ def on_ui_tabs():
 
 
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="AWS Model Setting")
+                gr.HTML(value="<u><b>AWS Model Setting</b></u>")
                 with gr.Tab("Select"):
                     gr.HTML(value="AWS Built-in Model")
                     model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
@@ -283,6 +284,10 @@ def on_ui_tabs():
                     gr.HTML(value="AWS Custom Model")
                     model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
                     model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
+                
+                # with gr.Blocks(title="Output", variant='panel'):
+                #     test_connection_result = gr.Label();
+                    
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
