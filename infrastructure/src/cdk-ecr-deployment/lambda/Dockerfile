@@ -14,20 +14,7 @@ RUN yum -y install \
     libassuan-devel \
     libudev-devel
 
-ENV GOOS=linux \
-    GOARCH=amd64 \
-    GO111MODULE=on \
-    GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 
-WORKDIR /ws
+WORKDIR /asset
 
-COPY go.mod go.sum ./
-
-RUN go mod download -x
-
-COPY . /ws
-
-RUN mkdir -p /asset/ && \
-    make OUTPUT=/asset/main && \
-    file /asset/main && \
-    ls -lh /asset/main
+COPY main ./
