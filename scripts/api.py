@@ -258,12 +258,10 @@ def download_and_update(model_type, model_name, model_s3_pos):
     if model_type == 'embeddings':
         sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)
     if model_type == 'ControlNet':
-        controlnet_script_path = './extensions/sd-webui-controlnet/scripts/controlnet.py'
-        sys.path.append("extensions/sd-webui-controlnet")
-        base_scripts.current_basedir = './extensions/sd-webui-controlnet/'
-        script_loading.load_module(controlnet_script_path)
+        sys.path.append("extensions/sd-webui-controlnet/scripts/")
+        import global_state
+        global_state.update_cn_models()
         sys.path.remove("extensions/sd-webui-controlnet")
-        base_scripts.current_basedir = paths.script_path
 
 def post_invocations(selected_models, b64images):
     #generated_images_s3uri = os.environ.get('generated_images_s3uri', None)

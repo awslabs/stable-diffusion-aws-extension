@@ -222,7 +222,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             variations_delimiter = "comma"
         else:
             variations_delimiter = "space"
-        margin_size = params_dict['script_txt2txt_prompt_matrix_margin_size']
+        margin_size = int(params_dict['script_txt2txt_prompt_matrix_margin_size'])
         script_args = [put_at_start, different_seeds, prompt_type, variations_delimiter, margin_size]
 
     if script_name == 'Prompts from file or textbox':
@@ -849,7 +849,6 @@ def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
 
 @app.get("/inference/generate-s3-presigned-url-for-uploading")
 async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, key: str = None):
-    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
     if not s3_bucket_name:
         s3_bucket_name = S3_BUCKET_NAME
 
