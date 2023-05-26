@@ -222,7 +222,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             variations_delimiter = "comma"
         else:
             variations_delimiter = "space"
-        margin_size = params_dict['script_txt2txt_prompt_matrix_margin_size']
+        margin_size = int(params_dict['script_txt2txt_prompt_matrix_margin_size'])
         script_args = [put_at_start, different_seeds, prompt_type, variations_delimiter, margin_size]
 
     if script_name == 'Prompts from file or textbox':
