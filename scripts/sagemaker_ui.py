@@ -363,7 +363,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         try:
             json_response = response.json()
-            print(f"Response json {json_response}")
+            # print(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
             print(f"Upload to S3 {s3_base}")
