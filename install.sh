@@ -13,7 +13,7 @@ git reset --hard 89f9faa63388756314e8a1d96cf86bf5e0663045
 cd extensions
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/aws-samples/stable-diffusion-aws-extension.git
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
 
 # Checkout aigc branch
 cd stable-diffusion-aws-extension
