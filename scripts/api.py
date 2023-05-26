@@ -60,7 +60,7 @@ from dreambooth.ui_functions import create_model
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
