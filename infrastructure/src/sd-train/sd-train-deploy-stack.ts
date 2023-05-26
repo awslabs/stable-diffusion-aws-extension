@@ -126,7 +126,6 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: this.trainingTable,
       userTopic: this.snsTopic,
-      instanceType: props.modelInfInstancetype,
     });
 
     // POST /model
@@ -159,6 +158,7 @@ export class SdTrainDeployStack extends NestedStack {
       modelTable: this.modelTable,
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
+      trainMachineType: props.modelInfInstancetype,
     });
 
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
