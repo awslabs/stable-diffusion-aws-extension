@@ -35,6 +35,7 @@ export interface UpdateTrainJobApiProps{
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
+  instanceType: string;
 }
 
 export class UpdateTrainJobApi {
@@ -57,7 +58,7 @@ export class UpdateTrainJobApi {
   private readonly sfnLambdaRole: aws_iam.Role;
   // private readonly srcImg: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-dreambooth-training:latest';
   private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:latest';
-  private readonly instanceType: string = 'ml.g4dn.2xlarge';
+  private readonly instanceType: string;
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
     this.id = id;
@@ -71,6 +72,7 @@ export class UpdateTrainJobApi {
     this.httpMethod = props.httpMethod;
     this.router = props.router;
     this.trainTable = props.trainTable;
+    this.instanceType = props.instanceType;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
     this.sfnLambdaRole = this.getStepFunctionLambdaRole();
     [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);

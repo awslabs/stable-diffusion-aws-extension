@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { App, Stack, StackProps, Aspects, CfnParameter, CfnOutput } from 'aws-cdk-lib';
 import {
   BootstraplessStackSynthesizer,
@@ -6,13 +7,6 @@ import {
 import { Construct } from 'constructs';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
-import * as crypto from 'crypto';
-
-// for development, use account/region from cdk cli
-// const devEnv = {
-//   account: process.env.CDK_DEFAULT_ACCOUNT,
-//   region: process.env.CDK_DEFAULT_REGION,
-// };
 
 const app = new App();
 
@@ -27,6 +21,24 @@ export class Middleware extends Stack {
   ) {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
+
+    const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
+      type: 'String',
+      description: 'your token for api authentication',
+      allowedPattern: '[A-Za-z0-9]+',
+      minLength: 20,
+      maxLength: 20,
+      // API Key value should be at least 20 characters
+      default: '09876543210987654321',
+    });
+
+    const utilInstanceType = new CfnParameter(this, 'train-model-inference-inst-type', {
+      type: 'String',
+      description: 'ec2 instance type for operation including ckpt merge, model create etc.',
+      allowedValues: ['ml.c6i.8xlarge'], // todo: add more
+      // API Key value should be at least 20 characters
+      default: 'ml.c6i.8xlarge',
+    });
 
     // Create CfnParameters here
     const emailParam = new CfnParameter(this, 'email', {
@@ -46,7 +58,6 @@ export class Middleware extends Stack {
     // Create the bucket name, making sure it's under 63 characters
     const defaultBucketName = `${truncatedStackName}-${shortUuid}-${formattedDate}`.toLowerCase();
 
-
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
@@ -59,6 +70,8 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       emailParam: emailParam,
       bucketName: bucketName,
+      apiKey: apiKeyParam.valueAsString,
+      modelInfInstancetype: utilInstanceType.valueAsString,
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
@@ -83,6 +96,11 @@ export class Middleware extends Stack {
       description: 'API Gateway URL',
     });
 
+    new CfnOutput(this, 'ApiGatewayUrlToken', {
+      value: apiKeyParam.valueAsString,
+      description: 'API Gateway Token',
+    });
+
     new CfnOutput(this, 'S3BucketName', {
       value: trainStack.s3Bucket.bucketName,
       description: 'S3 Bucket Name',
@@ -92,7 +110,6 @@ export class Middleware extends Stack {
       value: trainStack.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
     });
-
   }
 }
 
