@@ -30,6 +30,7 @@ export interface UpdateModelStatusRestApiProps {
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
   checkpointTable: aws_dynamodb.Table;
+  trainMachineType: string;
 }
 
 export class UpdateModelStatusRestApi {
@@ -37,7 +38,7 @@ export class UpdateModelStatusRestApi {
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   // private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
   private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:latest';
-  private readonly machineType: string = 'ml.c6i.8xlarge';
+  private readonly machineType: string;
 
   private readonly src;
   private readonly scope: Construct;
@@ -55,6 +56,7 @@ export class UpdateModelStatusRestApi {
     this.scope = scope;
     this.router = props.router;
     this.baseId = id;
+    this.machineType = props.trainMachineType;
     this.modelTable = props.modelTable;
     this.httpMethod = props.httpMethod;
     this.src = props.srcRoot;

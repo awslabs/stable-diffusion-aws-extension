@@ -297,8 +297,8 @@ def refresh_all_models():
             response = requests.get(url=url, headers={'x-api-key': api_key})
             json_response = response.json()
             # print(f"response url json for model {rp} is {json_response}")
+            checkpoint_info[rp] = {}
             if "checkpoints" not in json_response.keys():
-                checkpoint_info[rp] = {}
                 continue
             for ckpt in json_response["checkpoints"]:
                 if "name" not in ckpt:
@@ -363,7 +363,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         try:
             json_response = response.json()
-            print(f"Response json {json_response}")
+            # print(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
             print(f"Upload to S3 {s3_base}")

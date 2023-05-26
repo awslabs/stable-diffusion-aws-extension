@@ -60,7 +60,7 @@ from dreambooth.ui_functions import create_model
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
@@ -261,7 +261,7 @@ def download_and_update(model_type, model_name, model_s3_pos):
         sys.path.append("extensions/sd-webui-controlnet/scripts/")
         import global_state
         global_state.update_cn_models()
-        sys.path.remove("extensions/sd-webui-controlnet")
+        sys.path.remove("extensions/sd-webui-controlnet/scripts/")
 
 def post_invocations(selected_models, b64images):
     #generated_images_s3uri = os.environ.get('generated_images_s3uri', None)
