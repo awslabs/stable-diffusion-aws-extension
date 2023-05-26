@@ -35,9 +35,9 @@ export class Middleware extends Stack {
     const utilInstanceType = new CfnParameter(this, 'train-model-inference-inst-type', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
-      allowedValues: ['ml.c6i.8xlarge'], // todo: add more
+      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'], // todo: add more
       // API Key value should be at least 20 characters
-      default: 'ml.c6i.8xlarge',
+      default: 'ml.r5.large',
     });
 
     // Create CfnParameters here
