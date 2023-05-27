@@ -61,7 +61,6 @@ export class Middleware extends Stack {
     const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
       type: 'String',
       description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: defaultBucketName.substring(0, 63),
     });
 
 
