@@ -149,10 +149,12 @@ def get_inference_job_list():
             temp_list = []
             for obj in r:
                 if obj.get('completeTime') is None:
-                    continue
-                complete_time = obj.get('completeTime')
+                    complete_time = obj.get('startTime')
+                else:
+                    complete_time = obj.get('completeTime')
+                status = obj.get('status')     
                 inference_job_id = obj.get('InferenceJobId')
-                combined_string = f"{complete_time}-->{inference_job_id}"
+                combined_string = f"{complete_time}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
             # Sort the list based on completeTime in descending order
@@ -475,7 +477,9 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         print(f"inference_id is {inference_id}")
 
         # Loop until the get_inference_job status is 'succeed' or 'failed'
-        while True:
+        max_attempts = 10
+        attempt_count = 0
+        while attempt_count < max_attempts:
             job_status = get_inference_job(inference_id)
             status = job_status['status']
             if status == 'succeed':
@@ -484,14 +488,20 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
                 print(f"Inference job failed: {job_status.get('error', 'No error message provided')}")
                 break
             time.sleep(3)  # You can adjust the sleep time as needed
+            attempt_count += 1
 
         if status == 'succeed':
             return display_inference_result(inference_id)
-        else:
+        elif status == 'failure':
             image_list = []  # Return an empty list if selected_value is None
             info_text = ''
             infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
             return image_list, info_text, plaintext_to_html(infotexts)
+        else:
+            image_list = []  # Return an empty list if selected_value is None
+            info_text = ''
+            infotexts = f"Inference time is longer than 30 seconds, please go to inference job Id dropdown to check the status"
+            return image_list, info_text, plaintext_to_html(infotexts) 
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
@@ -637,7 +647,10 @@ def fake_gan(selected_value: str ):
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
-        inference_job_id = parts[1].strip()
+        inference_job_id = parts[2].strip()
+        inference_job_status = parts[1].strip()
+        if inference_job_status == 'inprogress':
+            return [], [], plaintext_to_html('inference still in progress') 
         images = get_inference_job_image_output(inference_job_id)
         image_list = []
         image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
