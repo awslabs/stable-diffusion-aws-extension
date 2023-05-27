@@ -21,6 +21,7 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
+import * as python from '@aws-cdk/aws-lambda-python-alpha';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -342,51 +343,58 @@ export class SDAsyncInferenceStack extends NestedStack {
     deployment.addToLogicalId(new Date().toISOString());
     (deployment as any).resource.stageName = 'prod';
 
-    // Create a Lambda function for inference
-    const handler = new lambda.DockerImageFunction(
+    const handler = new python.PythonFunction(
       this,
-      'InferenceResultNotification',
+      "InferenceResultNotification",
       {
-        code: lambda.DockerImageCode.fromImageAsset(
-          '../middleware_api/lambda/inference_result_notification',
-        ),
-        timeout: Duration.minutes(15),
-        memorySize: 1024,
-        environment: {
-          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
-          DDB_TRAINING_TABLE_NAME:
-                        props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME:
-                        sd_endpoint_deployment_job_table.tableName,
-          S3_BUCKET: props?.s3_bucket.bucketName ?? '',
-          ACCOUNT_ID: Aws.ACCOUNT_ID,
-          REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
-          STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
-          NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-          INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
-        },
-        logRetention: RetentionDays.ONE_WEEK,
-      },
-    );
-
-    // Grant Lambda permission to invoke SageMaker endpoint
-    handler.addToRolePolicy(
+          entry: path.join(
+              __dirname,
+              "../../../middleware_api/lambda/inference_result_notification"
+          ),
+          runtime: lambda.Runtime.PYTHON_3_9,
+          handler: "lambda_handler",
+          index: 'app.py', // optional, defaults to 'index.py'
+          memorySize: 256,
+          timeout: Duration.seconds(900),
+          environment: {
+              DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
+              DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
+              DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: sd_endpoint_deployment_job_table.tableName,
+              S3_BUCKET: props?.s3_bucket.bucketName ?? '',
+              ACCOUNT_ID: Aws.ACCOUNT_ID,
+              REGION_NAME: Aws.REGION,
+              SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
+              SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+              STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
+              NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
+              INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+          },
+          bundling: {
+              buildArgs: {
+                  PIP_INDEX_URL: "https://pypi.org/simple/",
+                  PIP_EXTRA_INDEX_URL: "https://pypi.org/simple/",
+              }
+          },
+          logRetention: RetentionDays.ONE_WEEK,
+      }
+  );
+  
+  // Grant Lambda permission to invoke SageMaker endpoint
+  handler.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: [
-          'sagemaker:*',
-          's3:Get*',
-          's3:List*',
-          's3:PutObject',
-          's3:GetObject',
-          'sns:*',
-          'states:*',
-          'dynamodb:*',
-        ],
-        resources: ['*'],
+          actions: [
+              'sagemaker:*',
+              's3:Get*',
+              's3:List*',
+              's3:PutObject',
+              's3:GetObject',
+              'sns:*',
+              'states:*',
+              'dynamodb:*',
+          ],
+          resources: ['*'],
       }),
-    );
+  );
 
     //adding model to data directory of s3 bucket
     if (props?.s3_bucket != undefined) {

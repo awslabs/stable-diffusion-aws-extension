@@ -601,7 +601,6 @@ async def run_sagemaker_inference(request: Request):
         }
 
         response = JSONResponse(content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}, headers=headers)
-        #response = JSONResponse(content={"inference_id": '6fa743f0-cb7a-496f-8205-dbd67df08be2', "status": "succeed", "output_path": ""}, headers=headers)
         return response
 
     except Exception as e:
@@ -870,14 +869,14 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
         headers = {
             "Access-Control-Allow-Headers": "*",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT"
         }
         return JSONResponse(content=str(e), status_code=500, headers=headers)
 
     headers = {
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT"
     }
 
     response = JSONResponse(content=presigned_url, headers=headers)
