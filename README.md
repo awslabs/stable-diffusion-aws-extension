@@ -78,6 +78,7 @@ To set up the development environment, you will need have AWS account and tools 
      arn:aws:cloudformation:us-east-1:{ACCOUNT_NUMBER}:stack/Stable-diffusion-aws-extension-middleware-stack/{ARN}
    ```
 5. Go to AWS CloudFormation console, find the stack you just created, click "Outputs" tab, you will see the API Gateway URL, API Token. You will need them later.
+![Screen Shot 2023-05-28 at 20 35 11](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/743312ea-2cc8-4a2b-bfb8-dcb60cb8862e)
 
 ### Set up the extension in WebUI console
 
