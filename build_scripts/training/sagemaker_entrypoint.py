@@ -111,7 +111,7 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     input_path = os.path.join(get_path_from_s3_path(s3_input_path), "db_config.tar")
     logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
     download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar")
-    download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config.json"
+    download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
     os.system(f"mv {download_db_config_path} {target_db_config_path}")
