@@ -259,7 +259,7 @@ def download_and_update(model_type, model_name, model_s3_pos):
         sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)
     if model_type == 'ControlNet':
         sys.path.append("extensions/sd-webui-controlnet/scripts/")
-        import global_state
+        from scripts import global_state
         global_state.update_cn_models()
         sys.path.remove("extensions/sd-webui-controlnet/scripts/")
 
