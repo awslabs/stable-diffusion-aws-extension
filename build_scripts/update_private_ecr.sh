@@ -6,11 +6,17 @@
 # The argument to this script is the image name. This will be used as the image on the local
 # machine and combined with the account and region to form the repository name for ECR.
 image=$1
+tag=$2
 
 if [ "$image" = "" ]
 then
     echo "Usage: $0 <image-name>"
     exit 1
+fi
+
+if [ "$tag" = "" ]
+then
+    tag=latest
 fi
 
 # Get the account number associated with the current IAM credentials
@@ -55,7 +61,7 @@ aws ecr get-login-password --region ${region} | docker login -u AWS --password-s
 # fi
 
 repo_name=${image}
-complete_command="FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/${repo_name}:latest"
+complete_command="FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/${repo_name}:${tag}"
 
 echo $complete_command
 
