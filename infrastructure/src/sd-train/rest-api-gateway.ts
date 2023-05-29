@@ -1,6 +1,5 @@
 import {
   CfnOutput,
-  CfnParameter,
   aws_apigateway as apigw,
 } from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
@@ -14,22 +13,15 @@ export class RestApiGateway {
   public readonly routers: {[key: string]: Resource} = {};
   private readonly scope: Construct;
 
-  constructor(scope: Construct, routes: string[]) {
+  constructor(scope: Construct, apiKey: string, routes: string[]) {
     this.scope = scope;
-    [this.apiGateway, this.apiKey] = this.createApigw();
+    [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
     for (let route of routes) {
       this.routers[route] = this.apiGateway.root.addResource(route);
     }
   }
 
-  private createApigw(): [apigw.RestApi, string] {
-    const apiKeyParam = new CfnParameter(this.scope, 'sd-extension-api-key', {
-      type: 'String',
-      description: 'API Key for Stable Diffusion extension',
-      // API Key value should be at least 20 characters
-      default: '09876543210987654321',
-    });
-
+  private createApigw(apiKeyStr: string): [apigw.RestApi, string] {
     const apiAccessLogGroup = new logs.LogGroup(
       this.scope,
       'aigc-api-logs',
@@ -54,7 +46,7 @@ export class RestApiGateway {
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey('sd-extension-api-key', {
       apiKeyName: 'sd-extension-api-key',
-      value: apiKeyParam.valueAsString,
+      value: apiKeyStr,
     });
 
     const usagePlan = api.addUsagePlan('sd-extension-api-usage-plan', {});
@@ -67,6 +59,6 @@ export class RestApiGateway {
       value: api.url,
     });
 
-    return [api, apiKeyParam.valueAsString];
+    return [api, apiKeyStr];
   }
 }

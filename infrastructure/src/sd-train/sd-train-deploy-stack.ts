@@ -31,6 +31,8 @@ import { UpdateTrainJobApi } from './train-job-update-api';
 export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
   bucketName: CfnParameter;
+  apiKey: string;
+  modelInfInstancetype: string;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -87,7 +89,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // api gateway setup
-    const restApi = new RestApiGateway(this, ['model', 'models', 'checkpoint', 'checkpoints', 'train', 'trains']);
+    const restApi = new RestApiGateway(this, props.apiKey, ['model', 'models', 'checkpoint', 'checkpoints', 'train', 'trains']);
     this.apiGateway = restApi.apiGateway;
     const routers = restApi.routers;
 
@@ -156,6 +158,7 @@ export class SdTrainDeployStack extends NestedStack {
       modelTable: this.modelTable,
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
+      trainMachineType: props.modelInfInstancetype,
     });
 
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
