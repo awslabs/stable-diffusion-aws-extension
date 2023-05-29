@@ -213,7 +213,7 @@ export class SdTrainDeployStack extends NestedStack {
     const corsRules: s3.CorsRule[] = [
       {
         allowedHeaders: ['*'],
-        allowedMethods: [s3.HttpMethods.PUT],
+        allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.HEAD, s3.HttpMethods.GET],
         allowedOrigins: ['*'],
       },
     ];

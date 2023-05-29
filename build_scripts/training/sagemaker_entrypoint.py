@@ -100,29 +100,6 @@ def upload_model_to_s3_v2(model_name, s3_output_path):
                 print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
                 upload_file_to_s3(output_tar, output_bucket_name, os.path.join(s3_output_path, model_name))
 
-def hack_db_config(db_config, db_config_file_path, model_name, data_tar_list, class_data_tar_list):
-    for k in db_config:
-        if k == "model_dir":
-            db_config[k] = re.sub(".+/(models/dreambooth/).+$", f"\\1{model_name}", db_config[k])
-        elif k == "pretrained_model_name_or_path":
-            db_config[k] = re.sub(".+/(models/dreambooth/).+(working)$", f"\\1{model_name}/\\2", db_config[k])
-        elif k == "model_name":
-            db_config[k] = db_config[k].replace("dummy_local_model", model_name)
-        elif k == "concepts_list":
-            for concept, data_tar, class_data_tar in zip(db_config[k], data_tar_list, class_data_tar_list):
-                if len(data_tar) > 0:
-                    concept["instance_data_dir"] = os.path.basename(re.sub("\.tar$", "", data_tar))
-                else:
-                    concept["instance_data_dir"] = ""
-                if len(class_data_tar) > 0:
-                    concept["class_data_dir"] = os.path.basename(re.sub("\.tar$", "", class_data_tar))
-                else:
-                    concept["class_data_dir"] = ""
-        # else:
-        #     db_config[k] = db_config[k].replace("dummy_local_model", model_name)
-    with open(db_config_file_path, "w") as db_config_file_w:
-        json.dump(db_config, db_config_file_w)
-
 def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
     s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar')
@@ -134,23 +111,31 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     input_path = os.path.join(get_path_from_s3_path(s3_input_path), "db_config.tar")
     logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
     download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar")
-    db_config_path = f"models/dreambooth/{model_name}/db_config.json"
-    with open("models/dreambooth/dummy_local_model/db_config.json") as db_config_file:
+    download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config.json"
+    target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
+    logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
+    os.system(f"mv {download_db_config_path} {target_db_config_path}")
+    with open(target_db_config_path) as db_config_file:
         db_config = json.load(db_config_file)
-    hack_db_config(db_config, db_config_path, model_name, data_tar_list, class_data_tar_list)
+    data_list = []
+    class_data_list = []
+    for concept in db_config["concepts_list"]:
+        data_list.append(concept["instance_data_dir"])
+        class_data_list.append(concept["class_data_dir"])
+    # hack_db_config(db_config, db_config_path, model_name, data_tar_list, class_data_tar_list)
 
-    for data_tar in data_tar_list:
-        if len(data_tar) == 0:
+    for data, data_tar in zip(data_list, data_tar_list):
+        if len(data) == 0:
             continue
-        target_dir = re.sub("\.tar$", "", data_tar)
+        target_dir = data
         os.makedirs(target_dir, exist_ok=True)
         input_path = os.path.join(get_path_from_s3_path(s3_input_path), data_tar)
         logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir} {data_tar}")
         download_folder_from_s3_by_tar(input_bucket_name, input_path, data_tar, target_dir)
-    for class_data_tar in class_data_tar_list:
-        if len(class_data_tar) == 0:
+    for class_data, class_data_tar in zip(class_data_list, class_data_tar_list):
+        if len(class_data) == 0:
             continue
-        target_dir = re.sub("\.tar$", "", class_data_tar)
+        target_dir = class_data
         os.makedirs(target_dir, exist_ok=True)
         input_path = os.path.join(get_path_from_s3_path(s3_input_path), class_data_tar)
         logger.info(f"Download class data from s3 {input_bucket_name} {input_path} to {target_dir} {class_data_tar}")
