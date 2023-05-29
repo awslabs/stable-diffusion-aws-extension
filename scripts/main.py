@@ -1,49 +1,31 @@
-import sagemaker
-import re
-import time
-import math
-import json
-import threading
+import sys
 import requests
-import copy
-import os
 import logging
 import gradio as gr
 import modules.scripts as scripts
-from modules import shared, devices, script_callbacks, processing, masking, images, sd_models
+from modules import script_callbacks
 from modules.ui import create_refresh_button
-from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
 from utils import save_variable_to_json
 
-import sys
-import pickle
-import html
-
-# TODO: Automaticly append the dependent module path.
-sys.path.append("extensions/sd_dreambooth_extension")
-sys.path.append("extensions/stable-diffusion-aws-extension")
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
-# TODO: Do not use the dreambooth status module.
-from dreambooth.shared import status
-from dreambooth import shared as dreambooth_shared
-# from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
-from dreambooth.ui_functions import load_model_params, load_params
-from dreambooth.dataclasses.db_config import save_config, from_file
-from urllib.parse import urljoin
 import sagemaker_ui
 
-from dreambooth_on_cloud.train import (
-    cloud_train,
-    get_cloud_db_model_name_list,
-    get_train_job_list,
-)
-from dreambooth_on_cloud.create_model import (
-    get_sd_cloud_models,
-    get_create_model_job_list,
-    wrap_load_model_params,
-    cloud_create_model,
-)
+try:
+    from dreambooth_on_cloud.train import (
+        cloud_train,
+        get_cloud_db_model_name_list,
+        wrap_load_model_params,
+        get_train_job_list,
+    )
+    from dreambooth_on_cloud.create_model import (
+        get_sd_cloud_models,
+        get_create_model_job_list,
+        cloud_create_model,
+    )
+except Exception as e:
+    logging.error("Dreambooth on cloud module is not support.")
+    logging.error(e)
 
 db_model_name = None
 cloud_db_model_name = None
