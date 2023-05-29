@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template to deploy the Stable Diffusion Web UI by Automatic1111
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: sd-sg
+      GroupDescription: Security group for SD WebUI EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 7860
+          ToPort: 7860
+          CidrIp: 0.0.0.0/0
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c5.2xlarge
+      ImageId: ami-0d0c6a887ce442603
+      KeyName: !Ref KeyName
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 300
+            VolumeType: gp2
+      "Tags" : [
+            {"Key" : "Name", "Value" : "sd-on-aws"},
+        ]
+      SecurityGroups:
+        - Ref: SecurityGroup
+      UserData:
+        'Fn::Base64': |
+            #!/bin/bash
+            sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+            sudo apt-get update
+            sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
+            cd /home/ubuntu
+            git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+            sudo chown -R ubuntu:ubuntu stable-diffusion-webui/
+            cd stable-diffusion-webui
+            sudo -u ubuntu python3 -m venv venv
+            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > log.txt
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+  MyEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt MyEIP.AllocationId
+      InstanceId: !Ref EC2Instance
+
+Outputs:
+  InstancePublicIp:
+    Description: Public IP of our instance.
+    Value: !GetAtt EC2Instance.PublicIp
