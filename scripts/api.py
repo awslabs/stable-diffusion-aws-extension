@@ -29,8 +29,8 @@ from modules.textual_inversion import textual_inversion
 import modules.shared as shared
 import modules.extras
 import sys
-sys.path.append("extensions/aws-ai-solution-kit")
-from scripts.models import *
+sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
+from models import InvocationsRequest
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
@@ -38,8 +38,12 @@ from utils import ModelsRef
 import uuid
 import boto3
 
-sys.path.append("extensions/sd_dreambooth_extension")
-from dreambooth.ui_functions import create_model
+try:
+    sys.path.append("extensions/sd_dreambooth_extension")
+    from dreambooth.ui_functions import create_model
+except Exception as e:
+    logging.error("Dreambooth on cloud module is not support in api.")
+    logging.error(e)
 
 # try:
 #     from dreambooth import shared
