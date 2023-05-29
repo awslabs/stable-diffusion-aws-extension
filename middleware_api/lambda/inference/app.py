@@ -34,10 +34,11 @@ STEP_FUNCTION_ARN = os.environ.get('STEP_FUNCTION_ARN')
 DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+REGION_NAME = os.environ['AWS_REGION']
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 ddb_client = boto3.resource('dynamodb')
-s3 = boto3.client('s3')
+s3 = boto3.client('s3', region_name=REGION_NAME)
 sagemaker = boto3.client('sagemaker')
 inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
