@@ -8,6 +8,7 @@
 dockerfile=$1
 image=$2
 mode=$3
+tag=$4
 
 if [ "$image" = "" ] || [ "$dockerfile" = "" ]
 then
@@ -33,6 +34,11 @@ then
     cd -
 fi
 
+if [ "$tag" = "" ]
+then
+    tag=latest
+fi
+
 # Get the account number associated with the current IAM credentials
 account=$(aws sts get-caller-identity --query Account --output text)
 
@@ -47,7 +53,7 @@ region=$(aws configure get region)
 # region=${region:-us-west-2}
 
 image_name="stable-diffusion-aws-extension/${image}"
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:latest"
+fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 
 # If the repository doesn't exist in ECR, create it.
 
@@ -94,7 +100,7 @@ aws ecr-public get-login-password --region us-east-1 | docker login --username A
 
 # echo $public_repo
 
-fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:latest"
-docker tag ${image_name}:latest ${fullname}
+fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
+docker tag ${image_name}:${tag} ${fullname}
 docker push ${fullname}
 echo $fullname
