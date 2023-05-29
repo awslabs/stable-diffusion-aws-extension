@@ -12,11 +12,12 @@ nav:
         - 功能和优势: solution-overview/features-and-benefits.md
         #- 客户用例: solution-overview/use-cases.md
         #- 术语表: solution-overview/concepts.md
+    - 成本预估: cost.md
     - 架构概览:
         - 架构图: architecture-overview/architecture.md
         #- 架构设计思路: architecture-overview/design-considerations.md
         - 架构细节: architecture-overview/architecture-details.md
-    - 成本预估: cost.md
+    
     - 部署前的规划:
         - 安全信息: plan-deployment/security.md
         - 区域支持: plan-deployment/regions.md
