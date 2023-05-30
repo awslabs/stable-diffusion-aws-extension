@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
 import boto3
 
-sys.path.append(os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
+sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
 from utils import download_file_from_s3, download_folder_from_s3_by_tar, upload_file_to_s3, upload_folder_to_s3_by_tar
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 

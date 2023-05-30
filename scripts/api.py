@@ -10,6 +10,7 @@ import zipfile
 import time
 from pathlib import Path
 from typing import List, Union
+import copy
 
 import requests
 from PIL import Image
@@ -371,15 +372,17 @@ def sagemaker_api(_, app: FastAPI):
                     else:
                         ckpt_from_s3 = False
                     if not db_create_model_params['from_hub']:
-                        if not ckpt_from_s3:
-                            logger.info(f"ckpt from s3")
-                            s3_input_path = db_create_model_payload["s3_input_path"]
-                        else:
-                            logger.info(f"ckpt from local")
+                        if ckpt_from_s3:
                             s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
+                            local_model_path = db_create_model_params["ckpt_path"]
+                            input_path = get_path_from_s3_path(s3_input_path)
+                            logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                        else:
+                            s3_input_path = db_create_model_payload["s3_input_path"]
+                            local_model_path = f'{db_create_model_params["ckpt_path"]}.tar'
+                            input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
+                            logger.info(f"ckpt from local {input_path} {local_model_path}")
                         input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-                        local_model_path = f'{db_create_model_params["ckpt_path"]}.tar'
-                        input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
                         logging.info("Check disk usage before download.")
                         os.system("df -h")
                         logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")

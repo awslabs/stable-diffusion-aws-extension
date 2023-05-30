@@ -1,28 +1,18 @@
-#import sagemaker
 import re
-import math
 import json
-import threading
 import requests
-import copy
 import os
-import logging
-from modules import sd_models
-from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
-from utils import get_variable_from_json
-
 import sys
-import pickle
-import html
+import logging
+from utils import upload_file_to_s3_by_presign_url
+from utils import get_variable_from_json
 
 # TODO: Automaticly append the dependent module path.
 sys.path.append("extensions/sd_dreambooth_extension")
-sys.path.append("extensions/stable-diffusion-aws-extension")
-sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 # TODO: Do not use the dreambooth status module.
 from dreambooth import shared as dreambooth_shared
 # from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
-from dreambooth.ui_functions import load_model_params, load_params
+from dreambooth.ui_functions import load_model_params
 from dreambooth.dataclasses.db_config import save_config, from_file
 base_model_folder = "models/sagemaker_dreambooth/"
 
@@ -115,7 +105,7 @@ def async_prepare_for_training_on_sagemaker(
         data_tar = f'data-{data_path.replace("/", "-").strip("-")}.tar'
         data_tar_list.append(data_tar)
         print("Pack the data file.")
-        os.system(f"tar cvf {data_tar} {data_path}")
+        os.system(f"tar cf {data_tar} {data_path}")
         upload_files.append(data_tar)
     class_data_tar_list = []
     for class_data_path in class_data_path_list:
@@ -126,7 +116,7 @@ def async_prepare_for_training_on_sagemaker(
         class_data_tar_list.append(class_data_tar)
         upload_files.append(class_data_tar)
         print("Pack the class data file.")
-        os.system(f"tar cvf {class_data_tar} {class_data_path}")
+        os.system(f"tar cf {class_data_tar} {class_data_path}")
     payload = {
         "train_type": "Stable-diffusion",
         "model_id": model_id,
@@ -190,7 +180,7 @@ def cloud_train(
         data_path_list.append(concept["instance_data_dir"].replace("/", "-").strip("-"))
         class_data_path_list.append(concept["class_data_dir"].replace("/", "-").strip("-"))
     model_list = get_cloud_db_models()
-    new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config.json")
+    new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
     hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list)
 
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
@@ -217,18 +207,6 @@ def cloud_train(
         "train_job_id": job_id,
         "status": "Training"
     }
-    # Start creating model on cloud.
-    url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
-        return
-    url += "train"
-    payload = {
-        "train_job_id": job_id,
-        "status": "Training"
-    }
-    # Start creating model on cloud.
     response = requests.put(url=url, json=payload, headers={'x-api-key': api_key}).json()
     print(f"Start training response:\n{response}")
 
