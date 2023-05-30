@@ -237,7 +237,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_presign_urls(self):
-        from common_tools import get_s3_presign_urls
+        from common.util import get_s3_presign_urls
         bucket = 'alvindaiyan-aigc-testing-playground'
         key = 'test_upload_manual/yan'
         resp = get_s3_presign_urls(bucket_name=bucket, base_key=key, filenames=["test"])

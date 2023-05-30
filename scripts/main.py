@@ -223,8 +223,8 @@ def on_ui_tabs():
                     api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
                     modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
 
-                global test_connection_result 
-                test_connection_result = gr.Label(title="Output"); 
+                global test_connection_result
+                test_connection_result = gr.Label(title="Output");
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
@@ -281,22 +281,101 @@ def on_ui_tabs():
                                               inputs = [sagemaker_endpoint_delete_dropdown],
                                               outputs=[test_connection_result])
 
-
-
-
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="<u><b>AWS Model Setting</b></u>")
-                with gr.Tab("Select"):
-                    gr.HTML(value="AWS Built-in Model")
-                    model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
-                with gr.Tab("Create"):
-                    gr.HTML(value="AWS Custom Model")
-                    model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
-                    model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
-                
-                # with gr.Blocks(title="Output", variant='panel'):
-                #     test_connection_result = gr.Label();
-                    
+                with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
+                    gr.HTML(value="<u><b>AWS Model Setting</b></u>")
+                    with gr.Tab("Select"):
+                        gr.HTML(value="AWS Built-in Model")
+                        model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
+                    with gr.Tab("Create"):
+                        gr.HTML(value="AWS Custom Model")
+                        model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
+                        model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
+
+                with gr.Blocks(title="Create AWS dataset", variant='panel'):
+                    gr.HTML(value="<u><b>AWS Dataset Creation</b></u>")
+                    def upload_file(files):
+                        file_paths = [file.name for file in files]
+                        return file_paths
+
+                    file_output = gr.File()
+                    upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"], file_count="multiple")
+                    upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
+
+                    def create_dataset(files, dataset_name, dataset_desc):
+                        print(dataset_name)
+                        dataset_content = []
+                        file_path_lookup = {}
+                        for file in files:
+                            # {
+                            #     "filename": "/Users/cyanda/Documents/avatar.png",
+                            #     "name": "another_name",
+                            #     "type": "png",
+                            #     "params": {
+                            #         "description": "this is uploaded for testing"
+                            #     }
+                            # }
+                            orig_name = file.name.split(os.sep)[-1]
+                            file_path_lookup[orig_name] = file.name
+                            dataset_content.append(
+                                {
+                                    "filename": orig_name,
+                                    "name": orig_name,
+                                    "type": "image",
+                                    "params": {}
+                                }
+                            )
+
+                        payload = {
+                            "dataset_name": dataset_name,
+                            "content": dataset_content,
+                            "params": {
+                                "description": dataset_desc
+                            }
+                        }
+
+                        url = get_variable_from_json('api_gateway_url') + '/dataset'
+                        api_key = get_variable_from_json('api_token')
+
+                        raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                        raw_response.raise_for_status()
+                        response = raw_response.json()
+
+                        print(f"Start upload sample files response:\n{response}")
+                        for filename, presign_url in response['s3PresignUrl'].items():
+                            file_path = file_path_lookup[filename]
+                            with open(file_path, 'rb') as f:
+                                response = requests.put(presign_url, f)
+                                print(response)
+                                response.raise_for_status()
+
+                        payload = {
+                            "dataset_name": dataset_name,
+                            "status": "Enabled"
+                        }
+
+                        raw_response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                        raw_response.raise_for_status()
+                        print(raw_response.json())
+                        return f'Complete Dataset {dataset_name} creation', None, None, None, None
+
+                    dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name", label="Dataset Name",elem_id="sd_dataset_name_textbox")
+                    dataset_description_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset description", label="Dataset Description",elem_id="sd_dataset_description_textbox")
+                    create_dataset_button = gr.Button("Create Dataset", variant="primary", elem_id="sagemaker_dataset_create_button") # size=(200, 50)
+                    dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+                    create_dataset_button.click(
+                        fn=create_dataset,
+                        inputs=[upload_button, dataset_name_upload, dataset_description_upload],
+                        outputs=[
+                            dataset_create_result,
+                            dataset_name_upload,
+                            dataset_description_upload,
+                            file_output,
+                            upload_button
+                        ],
+                        show_progress=True
+                    )
+
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 

@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
-from model_and_train.common_tools import get_base_checkpoint_s3_key, \
+from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
@@ -60,7 +60,6 @@ def list_all_checkpoints_api(event, context):
 @dataclass
 class CreateCheckPointEvent:
     checkpoint_type: str
-    # filenames: [str]
     filenames: [MultipartFileReq]
     params: dict[str, Any]
 

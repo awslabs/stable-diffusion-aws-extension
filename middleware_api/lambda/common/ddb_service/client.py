@@ -29,7 +29,7 @@ class DynamoDbUtilsService:
             if not entries or len(entries) == 0:
                 return None
 
-            ddb_data = DynamoDbUtilsService._serialize(entries)
+            ddb_data = self._serialize(entries)
             resp = self.client.put_item(
                 TableName=table,
                 Item=ddb_data
@@ -40,6 +40,21 @@ class DynamoDbUtilsService:
         except Exception as e:
             self.logger.error(f'table {table} put item failed -> {entries}: {e}')
             raise Exception(f'table {table} put item failed -> {entries}: {e}')
+
+    def batch_put_items(self, table_items: Dict[str, List[Dict[str, Any]]]) -> Any:
+        try:
+            if not table_items or len(table_items) == 0:
+                return None
+
+            _items = {}
+            for table, items in table_items.items():
+                _items[table] = [{'PutRequest': {'Item': self._serialize(item)}} for item in items]
+
+            resp = self.client.batch_write_item(RequestItems=_items)
+            return resp
+        except Exception as e:
+            self.logger.error(f'batch put failed: {e}')
+            raise Exception(f'batch put failed: {e}')
 
     def update_item(self, table: str, key: Dict[str, Any], field_name: str, value: Any):
         search_keys = self._serialize(key)
@@ -90,6 +105,21 @@ class DynamoDbUtilsService:
                 return dict()
             res = self.deserialize(named_['Items'][0])
             return res
+        except ClientError as e:
+            self.logger.error(f'table {table} keys_values: {key_values}')
+            raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
+
+    def query_items(self, table: str, key_values: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
+        try:
+            filter_expressions, expression_values = self._get_ddb_filter(key_values)
+
+            resp = self.client.query(
+                TableName=table,
+                KeyConditionExpression=filter_expressions,
+                ExpressionAttributeValues=expression_values,
+            )
+            named_ = ScanOutput(**resp)
+            return named_['Items']
         except ClientError as e:
             self.logger.error(f'table {table} keys_values: {key_values}')
             raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
