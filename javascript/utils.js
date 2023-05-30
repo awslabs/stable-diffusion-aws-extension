@@ -13,7 +13,6 @@ function model_update(sd_checkpoints_path, textual_inversion_path, lora_path, hy
 
 function deploy_endpoint(instance_type_dropdown, instance_count_textbox){
     console.log("Endpoint deployment started with input: " + instance_type_dropdown + ", " + instance_count_textbox);
-    document.querySelector("#html_log_txt2img").innerHTML = "Endpoint deployment started. Please wait...";
     return [instance_type_dropdown, instance_count_textbox];
 }
 
