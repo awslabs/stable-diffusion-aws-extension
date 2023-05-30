@@ -55,10 +55,10 @@ def create_endpoint_config(endpoint_config_name, s3_output_path, model_name, ini
             AsyncInferenceConfig={
                 "OutputConfig": {
                     "S3OutputPath": s3_output_path,
-                    "NotificationConfig": {
-                        "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                        "ErrorTopic": ASYNC_ERROR_TOPIC 
-                    }
+                    # "NotificationConfig": {
+                    #     "SuccessTopic": ASYNC_SUCCESS_TOPIC,
+                    #     "ErrorTopic": ASYNC_ERROR_TOPIC 
+                    # }
                 }
             },
             ProductionVariants=[
@@ -119,8 +119,8 @@ s3_client = boto3.client('s3')
 load_dotenv()
 
 EXECUTION_ROLE = os.environ['Role']
-ASYNC_SUCCESS_TOPIC = os.environ["SNS_INFERENCE_SUCCESS"]
-ASYNC_ERROR_TOPIC = os.environ["SNS_INFERENCE_ERROR"]
+# ASYNC_SUCCESS_TOPIC = os.environ["SNS_INFERENCE_SUCCESS"]
+# ASYNC_ERROR_TOPIC = os.environ["SNS_INFERENCE_ERROR"]
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
