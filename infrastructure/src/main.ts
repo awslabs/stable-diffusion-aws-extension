@@ -23,7 +23,7 @@ export class Middleware extends Stack {
 
     const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
       type: 'String',
-      description: 'your token for api authentication',
+      description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
       allowedPattern: '[A-Za-z0-9]+',
       minLength: 20,
       maxLength: 20,
