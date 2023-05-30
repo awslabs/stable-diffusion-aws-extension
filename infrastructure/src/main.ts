@@ -23,7 +23,7 @@ export class Middleware extends Stack {
 
     const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
       type: 'String',
-      description: 'your token for api authentication',
+      description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
       allowedPattern: '[A-Za-z0-9]+',
       minLength: 20,
       maxLength: 20,
@@ -31,7 +31,7 @@ export class Middleware extends Stack {
       default: '09876543210987654321',
     });
 
-    const utilInstanceType = new CfnParameter(this, 'train-model-inference-inst-type', {
+    const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
       allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'], // todo: add more

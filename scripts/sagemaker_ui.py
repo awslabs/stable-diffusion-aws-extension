@@ -142,6 +142,7 @@ def origin_update_txt2img_inference_job_ids():
 def get_inference_job_list():
     global txt2img_inference_job_ids
     try:
+        txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
         response = server_request('inference/list-inference-jobs')
         r = response.json()
         if r:
@@ -476,32 +477,38 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
         print(f"inference_id is {inference_id}")
 
-        # Loop until the get_inference_job status is 'succeed' or 'failed'
-        max_attempts = 10
-        attempt_count = 0
-        while attempt_count < max_attempts:
-            job_status = get_inference_job(inference_id)
-            status = job_status['status']
-            if status == 'succeed':
-                break
-            elif status == 'failure':
-                print(f"Inference job failed: {job_status.get('error', 'No error message provided')}")
-                break
-            time.sleep(3)  # You can adjust the sleep time as needed
-            attempt_count += 1
+        image_list = []  # Return an empty list if selected_value is None
+        info_text = ''
+        infotexts = f"Inference id is {inference_id}, please go to inference job Id dropdown to check the status"
+        return image_list, info_text, plaintext_to_html(infotexts) 
 
-        if status == 'succeed':
-            return display_inference_result(inference_id)
-        elif status == 'failure':
-            image_list = []  # Return an empty list if selected_value is None
-            info_text = ''
-            infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
-            return image_list, info_text, plaintext_to_html(infotexts)
-        else:
-            image_list = []  # Return an empty list if selected_value is None
-            info_text = ''
-            infotexts = f"Inference time is longer than 30 seconds, please go to inference job Id dropdown to check the status"
-            return image_list, info_text, plaintext_to_html(infotexts) 
+        # TODO: temp comment the while loop since it will block user to click inference
+        # # Loop until the get_inference_job status is 'succeed' or 'failed'
+        # max_attempts = 10
+        # attempt_count = 0
+        # while attempt_count < max_attempts:
+        #     job_status = get_inference_job(inference_id)
+        #     status = job_status['status']
+        #     if status == 'succeed':
+        #         break
+        #     elif status == 'failure':
+        #         print(f"Inference job failed: {job_status.get('error', 'No error message provided')}")
+        #         break
+        #     time.sleep(3)  # You can adjust the sleep time as needed
+        #     attempt_count += 1
+
+        # if status == 'succeed':
+        #     return display_inference_result(inference_id)
+        # elif status == 'failure':
+        #     image_list = []  # Return an empty list if selected_value is None
+        #     info_text = ''
+        #     infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
+        #     return image_list, info_text, plaintext_to_html(infotexts)
+        # else:
+        #     image_list = []  # Return an empty list if selected_value is None
+        #     info_text = ''
+        #     infotexts = f"Inference time is longer than 30 seconds, please go to inference job Id dropdown to check the status"
+        #     return image_list, info_text, plaintext_to_html(infotexts) 
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
@@ -746,7 +753,7 @@ def create_ui():
                     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
+                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=False)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids

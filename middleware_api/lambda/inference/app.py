@@ -330,7 +330,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     batch_size = int(params_dict['txt2img_batch_size'])#: 1, 
     n_iter = int(params_dict['txt2img_batch_count'])
     steps = int(params_dict['txt2img_steps'])#: 20, 
-    cfg_scale = int(params_dict['txt2img_cfg_scale'])#: 7, 
+    cfg_scale = float(params_dict['txt2img_cfg_scale'])#: 7, 
     width = int(params_dict['txt2img_width'])#: 512, 
     height = int(params_dict['txt2img_height'])#: 512, 
     restore_faces = params_dict['txt2img_restore_faces']#: "False", 
@@ -396,8 +396,8 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             resize_mode = "Resize and Fill"
         lowvram = params_dict['controlnet_lowVRAM_enable'] #: "False",
         processor_res = int(params_dict['controlnet_preprocessor_resolution'])
-        threshold_a = int(params_dict['controlnet_canny_low_threshold'])
-        threshold_b = int(params_dict['controlnet_canny_high_threshold'])
+        threshold_a = float(params_dict['controlnet_canny_low_threshold'])
+        threshold_b = float(params_dict['controlnet_canny_high_threshold'])
         #guidance = 1,
         guidance_start = float(params_dict['controlnet_starting_control_step']) #: 0,
         guidance_end = float(params_dict['controlnet_ending_control_step']) #: 1,

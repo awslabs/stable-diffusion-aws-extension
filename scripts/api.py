@@ -10,6 +10,7 @@ import zipfile
 import time
 from pathlib import Path
 from typing import List, Union
+import copy
 
 import requests
 from PIL import Image
@@ -29,8 +30,8 @@ from modules.textual_inversion import textual_inversion
 import modules.shared as shared
 import modules.extras
 import sys
-sys.path.append("extensions/aws-ai-solution-kit")
-from scripts.models import *
+sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
+from models import InvocationsRequest
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
@@ -38,8 +39,12 @@ from utils import ModelsRef
 import uuid
 import boto3
 
-sys.path.append("extensions/sd_dreambooth_extension")
-from dreambooth.ui_functions import create_model
+try:
+    sys.path.append("extensions/sd_dreambooth_extension")
+    from dreambooth.ui_functions import create_model
+except Exception as e:
+    logging.error("Dreambooth on cloud module is not support in api.")
+    logging.error(e)
 
 # try:
 #     from dreambooth import shared
@@ -258,10 +263,10 @@ def download_and_update(model_type, model_name, model_s3_pos):
     if model_type == 'embeddings':
         sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)
     if model_type == 'ControlNet':
-        sys.path.append("extensions/sd-webui-controlnet/scripts/")
-        import global_state
+        #sys.path.append("extensions/sd-webui-controlnet/scripts/")
+        from scripts import global_state
         global_state.update_cn_models()
-        sys.path.remove("extensions/sd-webui-controlnet/scripts/")
+        #sys.path.remove("extensions/sd-webui-controlnet/scripts/")
 
 def post_invocations(selected_models, b64images):
     #generated_images_s3uri = os.environ.get('generated_images_s3uri', None)
@@ -367,15 +372,17 @@ def sagemaker_api(_, app: FastAPI):
                     else:
                         ckpt_from_s3 = False
                     if not db_create_model_params['from_hub']:
-                        if not ckpt_from_s3:
-                            logger.info(f"ckpt from s3")
-                            s3_input_path = db_create_model_payload["s3_input_path"]
-                        else:
-                            logger.info(f"ckpt from local")
+                        if ckpt_from_s3:
                             s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
+                            local_model_path = db_create_model_params["ckpt_path"]
+                            input_path = get_path_from_s3_path(s3_input_path)
+                            logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                        else:
+                            s3_input_path = db_create_model_payload["s3_input_path"]
+                            local_model_path = f'{db_create_model_params["ckpt_path"]}.tar'
+                            input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
+                            logger.info(f"ckpt from local {input_path} {local_model_path}")
                         input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-                        local_model_path = f'{db_create_model_params["ckpt_path"]}.tar'
-                        input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
                         logging.info("Check disk usage before download.")
                         os.system("df -h")
                         logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
