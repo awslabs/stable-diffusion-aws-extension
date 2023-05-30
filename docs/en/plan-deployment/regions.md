@@ -1,4 +1,4 @@
-As of [November] 2021, this solution is supported in the following Amazon Web Services Regions:
+As of June 2023, this solution is supported in the following Amazon Web Services Regions:
 
 - us-east-1 (Virginia)
 - us-east-2 (Ohio)  

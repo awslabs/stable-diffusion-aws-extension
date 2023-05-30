@@ -2,7 +2,7 @@
 
 You are responsible for the cost of AWS services used when running this solution. 
 
-As of May 2023, for example, based on generating 1000 images per day and training Dreambooth 10 times as the benchmark, the estimated cost of using this solution in the US West (Oregon) (us-west-2) is $583 per month.
+As of June 2023, for example, based on generating 1000 images per day and training Dreambooth 10 times as the benchmark, the estimated cost of using this solution in the US West (Oregon) (us-west-2) is $583 per month.
 
 
 
