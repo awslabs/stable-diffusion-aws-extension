@@ -14,10 +14,12 @@ RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/
     && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
 
 RUN pip install tensorflow==2.10
+RUN pip install xformers==0.0.17
 RUN pip install pydantic
 RUN pip install safetensors
 RUN pip install omegaconf
 
 RUN rm /opt/ml/code/requirements.txt
 WORKDIR /opt/ml/code
+ENV TORCHDYNAMO_DISABLE 1
 ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint.py
