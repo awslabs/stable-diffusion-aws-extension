@@ -245,7 +245,7 @@ def on_ui_tabs():
                         model_update_button.click(_js="model_update",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
                                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                                  outputs=[test_connection_result])
+                                                  outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
 
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
