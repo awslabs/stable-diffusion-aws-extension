@@ -11,13 +11,17 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/CloudAssetsManage/">
       
       
+        <link rel="prev" href="../preparation/">
+      
+      
+        <link rel="next" href="../txt2img-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
-        <title>CloudAssetsManage - stable-diffusion-aws-extension</title>
+        <title>Main tab - stable-diffusion-aws-extension</title>
       
     
     
@@ -59,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#main-tab" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              CloudAssetsManage
+              Main tab
             
           </span>
         </div>
@@ -193,6 +197,8 @@
         
   
   
+    
+  
 
 
   
@@ -204,7 +210,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         Implementation Guide
       </a>
     </li>
@@ -262,14 +268,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
@@ -278,7 +286,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Implementation Guide
@@ -547,7 +555,7 @@
   
     <li class="md-nav__item">
       <a href="../../deployment/deployment/" class="md-nav__link">
-        Deployment
+        Deployment step
       </a>
     </li>
   
@@ -556,20 +564,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        Update the solution
-      </a>
     </li>
   
 
@@ -593,11 +587,157 @@
               
   
   
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+          Use the solution
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          Use the solution
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
   
     <li class="md-nav__item">
-      <a href="../user-guide.md" class="md-nav__link">
-        Use the solution
+      <a href="../preparation/" class="md-nav__link">
+        Preparation
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Main tab
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Main tab
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upload-model" class="md-nav__link">
+    Upload Model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#amazon-sagemaker-endpoint-management" class="md-nav__link">
+    Amazon SageMaker Endpoint Management
+  </a>
+  
+    <nav class="md-nav" aria-label="Amazon SageMaker Endpoint Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deploy-new-endpoint" class="md-nav__link">
+    Deploy new endpoint
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#delete-deployed-endpoints" class="md-nav__link">
+    Delete deployed endpoints
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../txt2img-guide/" class="md-nav__link">
+        txt2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dreambooth-guide/" class="md-nav__link">
+        Dreambooth guide
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -614,17 +754,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           Developer guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           Developer guide
         </label>
@@ -699,20 +839,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributors/" class="md-nav__link">
-        Contributors
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notices/" class="md-nav__link">
         Notices
       </a>
@@ -744,6 +870,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -752,30 +880,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    上传训练模型
+  <a href="#upload-model" class="md-nav__link">
+    Upload Model
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#amazon-sagemaker" class="md-nav__link">
-    Amazon SageMaker推理节点管理
+  <a href="#amazon-sagemaker-endpoint-management" class="md-nav__link">
+    Amazon SageMaker Endpoint Management
   </a>
   
-    <nav class="md-nav" aria-label="Amazon SageMaker推理节点管理">
+    <nav class="md-nav" aria-label="Amazon SageMaker Endpoint Management">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    部署推理节点
+  <a href="#deploy-new-endpoint" class="md-nav__link">
+    Deploy new endpoint
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    删除已部署推理节点
+  <a href="#delete-deployed-endpoints" class="md-nav__link">
+    Delete deployed endpoints
   </a>
   
 </li>
@@ -803,34 +931,36 @@
   
 
 
-  <h1>CloudAssetsManage</h1>
-
-<p>本章节将详细介绍本解决方案提供的便捷云上资源管理方式。</p>
-<h2 id="_1">上传训练模型</h2>
-<p>如需在txt2img使用非云端推理模型，您只需按下列步骤完成推理模型上传，即可按<a href="">这里</a>步骤完成模型调用及推理。</p>
+<h1 id="main-tab">Main Tab</h1>
+<p>This chapter will provide a detailed overview of the convenient cloud-based resource management approach offered by this solution.</p>
+<h2 id="upload-model">Upload Model</h2>
+<p>To use extra models for inference, you will need to upload model through steps below, and follow steps <a href="../txt2img-guide/">here</a> to inference with extra models.</p>
 <ol>
-<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。
+<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
 <img alt="Upload Models to S3" src="../../images/Upload-models.png" /></li>
-<li>在对应的模型输入本地文件地址。</li>
-<li>点击<strong>Upload Models to Cloud</strong>，启动模型上传。</li>
-<li>上传完成后，会在 XXX 看到提示。</li>
-</ol>
-<h2 id="amazon-sagemaker">Amazon SageMaker推理节点管理</h2>
-<h3 id="_2">部署推理节点</h3>
-<ol>
-<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块的<strong>Deploy New SageMaker Endpoint</strong>区域。</li>
-<li>选择推理实例类型<strong>SageMaker Instance Type</strong>和数目<strong>Please select Instance count</strong>，点击<strong>Deploy</strong>, 可以在XXX看到<strong>Endpoint deployment started. Please wait...</strong>的提示信息。
-<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
-<li>您可进入<strong>txt2img</strong>的<strong>Amazon SageMaker Inference</strong>模块的下拉菜单<strong>Select Cloud SageMaker Endpoint</strong>，刷新并看到当前所有推理节点的部署状态。<blockquote>
-<p><strong>补充：</strong> 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。</p>
+<li>
+<p>Enter the local model path under correspoding model text box. </p>
+<blockquote>
+<p><strong>Note</strong>: You can upload multiple kinds of models by entering multiple local model paths in text box.</p>
 </blockquote>
 </li>
-<li>等待大约10分钟，即可看到最新推理节点的状态变成<strong>InService</strong>，表明推理节点部署成功。</li>
+<li>
+<p>Click <strong>Upload Models to Cloud</strong> to start uploading process.</p>
+</li>
+<li>Message ** will appear once uploading completes.</li>
 </ol>
-<h3 id="_3">删除已部署推理节点</h3>
+<h2 id="amazon-sagemaker-endpoint-management">Amazon SageMaker Endpoint Management</h2>
+<h3 id="deploy-new-endpoint">Deploy new endpoint</h3>
 <ol>
-<li>点击<strong>Select Cloud SageMaker Endpoint</strong>列表右侧刷新按钮，刷新下拉列表，选择需要删除的推理节点。</li>
-<li>点击<strong>Delete</strong>，XXX处显示XXX提示信息，完成推理节点删除。</li>
+<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>, <strong>Deploy New SageMaker Endpoint</strong>, select Amazon SageMaker instance type for inference under <strong>SageMaker Instance Type</strong>, and count in <strong>Please select Instance count</strong>, click <strong>Deploy</strong>, message <em>Endpoint deployment started</em> will appear on the left side.</li>
+<li>You can navigate to tab <strong>txt2img</strong>, session <strong>Amazon SageMaker Inference</strong>, refresh and select drop down list <strong>Select Cloud SageMaker Endpoint</strong> to check all the deployment status of endpoints.
+    &gt; <strong>Note:</strong> The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time。</li>
+<li>It will take around 10 mins for endpoint deployment status changing to <em>InService</em>, which indicates that the endpoint has been successfully deployed.</li>
+</ol>
+<h3 id="delete-deployed-endpoints">Delete deployed endpoints</h3>
+<ol>
+<li>Refresh and select endpoint(s) under dropdown list of <strong>Select Cloud SageMaker Endpoint</strong>.</li>
+<li>Click <strong>Delete</strong>, message <em>Endpoint delete completed</em> will appear on left side, which indicates that the selected endpoint(s) havs been successfully deleted.</li>
 </ol>
 
 

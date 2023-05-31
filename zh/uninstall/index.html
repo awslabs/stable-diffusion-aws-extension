@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/uninstall/">
       
       
-        <link rel="prev" href="../update/">
+        <link rel="prev" href="../deployment/deployment/">
       
       
         <link rel="next" href="../user-guide/preparation/">
@@ -575,20 +575,6 @@
               
   
   
-  
-    <li class="md-nav__item">
-      <a href="../update/" class="md-nav__link">
-        更新解决方案
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
     
   
   
@@ -654,17 +640,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
           用户指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_8">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_7">
           <span class="md-nav__icon md-icon"></span>
           用户指南
         </label>
@@ -691,7 +677,7 @@
   
     <li class="md-nav__item">
       <a href="../user-guide/CloudAssetsManage/" class="md-nav__link">
-        CloudAssetsManagement
+        主标签页
       </a>
     </li>
   
@@ -705,7 +691,7 @@
   
     <li class="md-nav__item">
       <a href="../user-guide/txt2img-guide/" class="md-nav__link">
-        Txt2img
+        txt2img指南
       </a>
     </li>
   
@@ -719,7 +705,7 @@
   
     <li class="md-nav__item">
       <a href="../user-guide/dreambooth-guide/" class="md-nav__link">
-        Dreambooth
+        Dreambooth指南
       </a>
     </li>
   
@@ -744,17 +730,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           开发者指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           开发者指南
         </label>
@@ -889,7 +875,7 @@
 
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
-<p>如果卸载解决方案，您可能会丢失在此部署下于云上训练的模型、推理的图片和账户使用日志等。</p>
+<p>卸载该解决方案将同时删除由此堆栈创建的Amazon SageMaker资源（例如端点），指示模型训练、微调和推理日志和映射关系的DynamoDB表，AWS Lambda相关函数和AWS Step Functions等。</p>
 </div>
 <p>要卸载Stable Diffusion亚马逊云科技插件解决方案，请删除CloudFormation堆栈。</p>
 <p>您可以使用亚马逊云科技管理控制台或CLI删除CloudFormation堆栈。</p>

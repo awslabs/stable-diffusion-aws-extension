@@ -11,13 +11,17 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/dreambooth-guide/">
       
       
+        <link rel="prev" href="../txt2img-guide/">
+      
+      
+        <link rel="next" href="../../developer-guide/source/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
-        <title>打开Dreambooth面板 - stable-diffusion-aws-extension</title>
+        <title>Dreambooth guide - stable-diffusion-aws-extension</title>
       
     
     
@@ -59,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#dreambooth" class="md-skip">
+        <a href="#dreambooth-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              打开Dreambooth面板
+              Dreambooth guide
             
           </span>
         </div>
@@ -193,6 +197,8 @@
         
   
   
+    
+  
 
 
   
@@ -204,7 +210,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         Implementation Guide
       </a>
     </li>
@@ -262,14 +268,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
@@ -278,7 +286,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Implementation Guide
@@ -547,7 +555,7 @@
   
     <li class="md-nav__item">
       <a href="../../deployment/deployment/" class="md-nav__link">
-        Deployment
+        Deployment step
       </a>
     </li>
   
@@ -556,20 +564,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        Update the solution
-      </a>
     </li>
   
 
@@ -593,11 +587,137 @@
               
   
   
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+          Use the solution
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          Use the solution
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
   
     <li class="md-nav__item">
-      <a href="../user-guide.md" class="md-nav__link">
-        Use the solution
+      <a href="../preparation/" class="md-nav__link">
+        Preparation
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CloudAssetsManage/" class="md-nav__link">
+        Main tab
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../txt2img-guide/" class="md-nav__link">
+        txt2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Dreambooth guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Dreambooth guide
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-model" class="md-nav__link">
+    Create Model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#train-model" class="md-nav__link">
+    Train Model
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -614,17 +734,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           Developer guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           Developer guide
         </label>
@@ -699,20 +819,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributors/" class="md-nav__link">
-        Contributors
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notices/" class="md-nav__link">
         Notices
       </a>
@@ -747,6 +853,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-model" class="md-nav__link">
+    Create Model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#train-model" class="md-nav__link">
+    Train Model
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -763,55 +891,36 @@
   
 
 
-<h1 id="dreambooth">打开Dreambooth面板</h1>
-<p><img alt="Dreambooth tab" src="../../images/open-dreambooth-tab.png" /></p>
-<h1 id="_1">创建模型</h1>
-<ul>
+<h1 id="dreambooth-guide">Dreambooth Guide</h1>
+<p>You can open <strong>Dreambooth</strong> tab, by combining the use with native Dreambooth, the tab <strong>Create from Cloud</strong> and <strong>Select from Cloud</strong> that newly added by the solution, you can achieve  cloud-based model creating and training in Dreambooth.</p>
+<h2 id="create-model">Create Model</h2>
+<ol>
+<li>Open <strong>Dreambooth</strong> tab, <strong>Model</strong> subtab <strong>Create From Cloud</strong>.
+<img alt="Creat model tab" src="../../images/open-create-model-tab.png" /></li>
 <li>
-<p>选择Create From Cloud面板 
-<img alt="Creat model tab" src="../../images/open-create-model-tab.png" /></p>
+<p>Enter a model name in the <strong>Name</strong> text box.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>Please note the naming format requirements: the name can only contain alphanumeric characters and dashes ("-").</p>
+</div>
 </li>
 <li>
-<p>输入模型名称，请注意格式要求，只能包含字母数字和“-”
-<img alt="Enter model name" src="../../images/enter-model-name.png" /></p>
-</li>
-<li>
-<p>选择checkpoint文件，包含两种形式，以local开头的是本地存储的checkpoint文件，以cloud开头的是存储在S3上的checkpoint文件
+<p>Select one checkpoint under <strong>Source Checkpoint</strong> dropdown list.</p>
+<blockquote>
+<p><strong>Note：</strong> The checkpoint files here include two sources: files starting with "local" are locally stored checkpoint files, while those starting with "cloud" are checkpoint files stored on Amazon S3. For first-time use, it is recommended to select a local checkpoint file.
 <img alt="Select checkpoint" src="../../images/select-checkpoint.png" /></p>
+</blockquote>
 </li>
-<li>
-<p>首次使用可以选择local checkpoint文件
-<img alt="Select local checkpoint" src="../../images/select-local-checkpoint.png" /></p>
-</li>
-<li>
-<p>点击Create Model From Cloud按钮，开始创建模型
-<img alt="Click create model button" src="../../images/click-create-model-button.png" /></p>
-</li>
-</ul>
-<h1 id="_2">选择模型</h1>
-<ul>
-<li>
-<p>选择Select From Cloud面板 
-<img alt="Select model tab" src="../../images/open-select-model-tab.png" /></p>
-</li>
-<li>
-<p>选择模型
-<img alt="Select model tab" src="../../images/select-model.png" /></p>
-</li>
-<li>设置训练参数
-<img alt="Input setting" src="../../images/input-setting.png" /></li>
-<li>设置训练数据
-<img alt="Input dataset" src="../../images/input-dataset.png" />
-<img alt="Input prompt" src="../../images/input-prompt.png" /></li>
-</ul>
-<h1 id="_3">训练</h1>
-<ul>
-<li>点击SageMaker训练按钮
-<img alt="Click train button" src="../../images/click-sagemaker-train.png" /></li>
-<li>训练完成后可以收到邮件通知，并且在inference tab中可以加载训练完成的模型
-<img alt="Load trained model step1" src="../../images/load-trained-model-1.png" />
-<img alt="Load trained model step2" src="../../images/load-trained-model-2.png" /></li>
-</ul>
+<li>Click <strong>Create Model From Cloud</strong> to start model creation on cloud. <strong>Model Creation Jobs Details</strong> field will instantly update with the progress of the model creation job. When the status changes to <em>Complete</em>, it indicates that the model creation is finished.</li>
+</ol>
+<h2 id="train-model">Train Model</h2>
+<ol>
+<li>Open <strong>Dreambooth</strong> tab, <strong>Model</strong> subtab, <strong>Select From Cloud</strong>.</li>
+<li>Fresh and select the model from <strong>Model</strong> dropd down list that need to train.</li>
+<li>Set corresponding parameters in <strong>Input</strong> session.</li>
+<li>Click <strong>SageMaker Train</strong> to start model training task. The <strong>Training Job Details</strong> section will be updated in real-time with the status of the model training job. When the status changes to <em>Complete</em>, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.</li>
+<li>Future steps. For example: Navigate to <strong>txt2img</strong> tab <strong>Amazon SageMaker Inference</strong> panel, check trained model by refreshing <strong>Stable Diffusion Checkpoint</strong> dropdown list.  </li>
+</ol>
 
 
 

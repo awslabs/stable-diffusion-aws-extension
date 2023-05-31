@@ -16,7 +16,7 @@
         <link rel="prev" href="../template/">
       
       
-        <link rel="next" href="../../update/">
+        <link rel="next" href="../../uninstall/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
@@ -623,15 +623,15 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     后续操作
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -646,20 +646,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        更新解决方案
-      </a>
     </li>
   
 
@@ -690,17 +676,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
           用户指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_8">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_7">
           <span class="md-nav__icon md-icon"></span>
           用户指南
         </label>
@@ -727,7 +713,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
-        CloudAssetsManagement
+        主标签页
       </a>
     </li>
   
@@ -741,7 +727,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
-        Txt2img
+        txt2img指南
       </a>
     </li>
   
@@ -755,7 +741,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
-        Dreambooth
+        Dreambooth指南
       </a>
     </li>
   
@@ -780,17 +766,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           开发者指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           开发者指南
         </label>
@@ -925,15 +911,15 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_4" class="md-nav__link">
     后续操作
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -974,7 +960,7 @@
 <li>登录到AWS管理控制台，点击链接创建AWS CloudFormation模版。</li>
 <li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
 <li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
-<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，请输入正确的邮箱用来未来接受通知。点击<strong>下一步</strong>。</li>
+<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，在<strong>aigcbucketname</strong>部分输入一个有效的桶名称，主要用于本堆栈需要的上传数据和存储结果。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>sdextensionapikey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>部分</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击<strong>下一步</strong>。</li>
 </ol>
 <div class="admonition important">
 <p class="admonition-title">提示</p>
@@ -990,7 +976,7 @@
 <li>打开已部署的Stable Diffusion WebUI界面，进入<strong>Extensions</strong>标签页 - <strong>Install from URL</strong>子标签页，在<strong>URL from extension's git repository</strong>文本框输入本解决方案repository地址 <a href="https://github.com/awslabs/stable-diffusion-aws-extension.git">https://github.com/awslabs/stable-diffusion-aws-extension.git</a>，点击<strong>Install</strong>。</li>
 <li>点击<strong>Installed</strong>子标签页，点击<strong>Apply and restart UI</strong>，WebUI会多出一个<strong>Amazon SageMaker</strong>标签页，表明已完成插件安装。</li>
 </ol>
-<h3 id="_4">后续操作</h3>
+<h2 id="_4">后续操作</h2>
 <p>堆栈创建成功后，您可以在AWS CloudFormation的输出（Outputs）标签页中查询相关信息。</p>
 
 

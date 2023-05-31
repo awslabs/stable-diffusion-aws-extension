@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/uninstall/">
       
       
-        <link rel="prev" href="../update/">
+        <link rel="prev" href="../deployment/deployment/">
       
       
-        <link rel="next" href="../developer-guide/source/">
+        <link rel="next" href="../user-guide/preparation/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#uninstall-the-stack-using-the-aws-management-console" class="md-skip">
+        <a href="#uninstall-stable-diffusion-extension-on-aws" class="md-skip">
           Skip to content
         </a>
       
@@ -555,7 +555,7 @@
   
     <li class="md-nav__item">
       <a href="../deployment/deployment/" class="md-nav__link">
-        Deployment
+        Deployment step
       </a>
     </li>
   
@@ -573,20 +573,6 @@
               
   
   
-  
-    <li class="md-nav__item">
-      <a href="../update/" class="md-nav__link">
-        Update the solution
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
     
   
   
@@ -594,6 +580,8 @@
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
+      
+        
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
@@ -610,6 +598,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">
@@ -646,10 +636,86 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+          Use the solution
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          Use the solution
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../user-guide/user-guide.md" class="md-nav__link">
-        Use the solution
+      <a href="../user-guide/preparation/" class="md-nav__link">
+        Preparation
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/CloudAssetsManage/" class="md-nav__link">
+        Main tab
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/txt2img-guide/" class="md-nav__link">
+        txt2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-guide/dreambooth-guide/" class="md-nav__link">
+        Dreambooth guide
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -666,17 +732,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           Developer guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           Developer guide
         </label>
@@ -751,20 +817,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributors/" class="md-nav__link">
-        Contributors
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../notices/" class="md-nav__link">
         Notices
       </a>
@@ -795,6 +847,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">
@@ -835,9 +889,12 @@
   
 
 
-  <h1>Uninstall the solution</h1>
-
-<p>To uninstall the XXX solution, you must delete the AWS CloudFormation stack. </p>
+<h1 id="uninstall-stable-diffusion-extension-on-aws">Uninstall Stable Diffusion Extension on AWS</h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>By uninstalling the solution, the Amazon SageMaker resources created by this stack (for example endpoints), DynamoDB tables that indicates the model training, finetuning and inference logs and mapping relationship, AWS Lambda related functions, AWS Step Functions and so on will be deleted simultaneously.</p>
+</div>
+<p>To uninstall the Stable Diffusion Extension on AWS solution, you must delete the AWS CloudFormation stack. </p>
 <p>You can use either the AWS Management Console or the AWS Command Line Interface (AWS CLI) to delete the CloudFormation stack.</p>
 <h2 id="uninstall-the-stack-using-the-aws-management-console">Uninstall the stack using the AWS Management Console</h2>
 <ol>

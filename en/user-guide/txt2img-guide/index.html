@@ -11,13 +11,17 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/txt2img-guide/">
       
       
+        <link rel="prev" href="../CloudAssetsManage/">
+      
+      
+        <link rel="next" href="../dreambooth-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
     
     
       
-        <title>使用txt2img进行云上推理 - stable-diffusion-aws-extension</title>
+        <title>txt2img guide - stable-diffusion-aws-extension</title>
       
     
     
@@ -59,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#txt2img" class="md-skip">
+        <a href="#txt2img-guide" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              使用txt2img进行云上推理
+              txt2img guide
             
           </span>
         </div>
@@ -193,6 +197,8 @@
         
   
   
+    
+  
 
 
   
@@ -204,7 +210,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         Implementation Guide
       </a>
     </li>
@@ -262,14 +268,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
@@ -278,7 +286,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Implementation Guide
@@ -547,7 +555,7 @@
   
     <li class="md-nav__item">
       <a href="../../deployment/deployment/" class="md-nav__link">
-        Deployment
+        Deployment step
       </a>
     </li>
   
@@ -556,20 +564,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        Update the solution
-      </a>
     </li>
   
 
@@ -593,11 +587,150 @@
               
   
   
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+          Use the solution
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          Use the solution
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
   
     <li class="md-nav__item">
-      <a href="../user-guide.md" class="md-nav__link">
-        Use the solution
+      <a href="../preparation/" class="md-nav__link">
+        Preparation
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../CloudAssetsManage/" class="md-nav__link">
+        Main tab
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          txt2img guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        txt2img guide
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-inference" class="md-nav__link">
+    General Inference
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlnet-guide" class="md-nav__link">
+    Controlnet Guide
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlnet Guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openpose-use-guide" class="md-nav__link">
+    openpose use guide
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dreambooth-guide/" class="md-nav__link">
+        Dreambooth guide
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -614,17 +747,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           Developer guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           Developer guide
         </label>
@@ -699,20 +832,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributors/" class="md-nav__link">
-        Contributors
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notices/" class="md-nav__link">
         Notices
       </a>
@@ -747,6 +866,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-inference" class="md-nav__link">
+    General Inference
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#controlnet-guide" class="md-nav__link">
+    Controlnet Guide
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlnet Guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openpose-use-guide" class="md-nav__link">
+    openpose use guide
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -763,52 +917,40 @@
   
 
 
-<h1 id="txt2img">使用txt2img进行云上推理</h1>
-<p>您可以打开txt2img标签页，通过结合使用txt2img原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的txt2img推理工作。 </p>
+<h1 id="txt2img-guide">txt2img Guide</h1>
+<p>You can open the <strong>txt2img</strong> tab to perform text-to-image inference using the combined functionality of the native region of txt2img and the newly added "Amazon SageMaker Inference" panel in the solution. This allows you to invoke cloud resources for txt2img inference tasks.</p>
+<h2 id="general-inference">General Inference</h2>
 <ol>
-<li>进入<strong>txt2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。
+<li>Navigate to <strong>txt2img</strong> tab, open <strong>Amazon SageMaker Inference</strong> panel. 
 <img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
-<li>输入推理所需参数。同于本地推理，您可以按需编辑<strong>txt2img</strong>原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。</li>
+<li>Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native <strong>txt2img</strong>, including prompts, negative prompts, sampling parameters, and inference parameters.</li>
 <li>
-<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。
-    !!! Important "提示" 
-        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击<strong>Generate on Cloud</strong>开启云上推理功能时会报错。</p>
+<p>Select an endpoint for inference. Refresh and select an endpoint from <strong>Select Cloud SageMaker Endpoint</strong> dropdown list that is in the <em>InService</em> state.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click <strong>Generate on Cloud</strong> to initiate cloud-based inference.</p>
+</div>
 </li>
 <li>
-<p>点击模型下拉框右侧的刷新按钮，选择推理所需的<strong>Stable Diffusion Checkpoint</strong>（必选，可多选）及其他所需的<strong>Extra Networks for Cloud Inference</strong>（可选，并且可多模型多选叠加）。</p>
+<p>Fresh and select <strong>Stable Diffusion Checkpoint</strong> (required single select) and other extra models needed in <strong>Extra Networks for Cloud Inference</strong> (optional, multi-selection allowed).</p>
 </li>
-<li>点击<strong>Generate on Cloud</strong>。</li>
-<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
-<p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;inference id</strong>。</p>
+<li>Click <strong>Generate on Cloud</strong>.</li>
+<li>Check inference result. Fresh and select the top option among <strong>Inference Job ID</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the <strong>txt2img</strong> tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to img2img</strong>.<blockquote>
+<p><strong>Note：</strong> The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of <em>inference time -&gt; inference id</em>.</p>
 </blockquote>
 </li>
 </ol>
 <p><img alt="generate results" src="../../images/generate-results.png" /></p>
-<h1 id="controlnet">Controlnet的使用方法</h1>
+<h2 id="controlnet-guide">Controlnet Guide</h2>
 <ul>
 <li>
-<h3 id="openpose">openpose的使用方式</h3>
-<ol>
-<li>
-<p>打开ControlNet面板，勾选<strong>Enabel</strong>，选择<strong>Preprocessor</strong>为<strong>openpose</strong>，同时上传图片。</p>
-<p><img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></p>
+<h3 id="openpose-use-guide">openpose use guide</h3>
 </li>
-<li>
-<p>在<strong>Amazon SageMaker Inference</strong>面板的里面选择<strong>Stable Diffusion Checkpoint</strong>和<strong>ControlNet-Model</strong>。比如
-这里是<strong>v1-5-pruned-emaonly.safetensors</strong>和<strong>control_openpose-fp16.safetensors</strong>。保留之前的提示词<strong>a cute dog</strong>
-，然后点击<strong>Generate on Cloud</strong>。</p>
-<p><img alt="Choose-controlnet-model" src="../../images/choose-controlnet-model.png" /></p>
-</li>
-<li>
-<p>这时候点击<strong>Inference Job IDs</strong>旁边的刷新按钮，可以看到新产生一条记录，格式为<strong>推理时间-&gt;inference id</strong> (整个列表也会按照推理时间进行排序)
-<img alt="refresh inference job id-controlnet" src="../../images/refresh-inference-id-controlnet.png" /></p>
-</li>
-<li>
-<p>当切换到对应的inference id并且推理结束后，会在右上角看到推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等
-<img alt="generate results controlnet" src="../../images/cute-dog-controlnet.png" /></p>
-</li>
-</ol>
-</li>
+<li>Open ControlNet panel, check <strong>Enable</strong>, select <strong>openpose</strong> from <strong>Preprocessor</strong>, and then upload am image.
+<img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></li>
+<li>Open <strong>Amazon SageMaker Inference</strong>panel, select one checkpoint from <strong>Stable Diffusion Checkpoint</strong> and one model from <strong>ControlNet-Model</strong>. For example: below is the ineference based on <strong>v1-5-pruned-emaonly.safetensors</strong> and <strong>control_openpose-fp16.safetensors</strong>, prompts <strong>a cute dog</strong>, click <strong>Generate on Cloud</strong>.
+<img alt="Choose-controlnet-model" src="../../images/choose-controlnet-model.png" /></li>
+<li>Refresh and select the top Inference Job from <strong>Inference Job IDs</strong>, inference result will be dispaly in <strong>Output</strong> section.</li>
 </ul>
 
 

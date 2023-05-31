@@ -582,20 +582,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        更新解决方案
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../uninstall/" class="md-nav__link">
         卸载解决方案
       </a>
@@ -615,17 +601,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
           用户指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_8">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_7">
           <span class="md-nav__icon md-icon"></span>
           用户指南
         </label>
@@ -652,7 +638,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
-        CloudAssetsManagement
+        主标签页
       </a>
     </li>
   
@@ -666,7 +652,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
-        Txt2img
+        txt2img指南
       </a>
     </li>
   
@@ -680,7 +666,7 @@
   
     <li class="md-nav__item">
       <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
-        Dreambooth
+        Dreambooth指南
       </a>
     </li>
   
@@ -705,17 +691,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           开发者指南
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           开发者指南
         </label>
@@ -826,41 +812,49 @@
 
   <h1>配额信息</h1>
 
-<p>为了在您的 AWS 账户中增加 SageMaker 的 ml.g4dn.2xlarge 实例的配额，您可以按照以下步骤操作：</p>
+<p>为了在您的 AWS 账户中增加Amazon SageMaker的相关配额，您可以按照以下步骤操作：</p>
 <ol>
 <li>
-<p>登录 AWS 管理控制台： 导航至 服务配额控制台。</p>
+<p>登录<strong>AWS 管理控制台</strong>： 导航至<strong>服务配额控制台</strong>。</p>
 </li>
 <li>
-<p>选择 AWS 服务： 在导航面板中，选择 'AWS 服务'。</p>
+<p>选择<strong>AWS 服务</strong>： 在导航面板中，选择<strong>AWS 服务</strong>。</p>
 </li>
 <li>
-<p>选择 AWS 服务： 从列表中选择 'Amazon SageMaker'，或者在搜索框中输入服务名称。</p>
+<p>从列表中选择<em>Amazon SageMaker</em>，或者在搜索框中输入服务名称。</p>
 </li>
 <li>
-<p>请求配额增加： 如果配额是可调整的，您可以选择按钮或名称，然后选择 '请求配额增加'。</p>
+<p>请求配额增加： 如果配额是可调整的，您可以选择按钮或名称，然后选择<strong>请求配额增加</strong>。</p>
 </li>
 <li>
-<p>更改配额值： 在 '更改配额值' 字段中输入新值。新值必须大于当前值。</p>
+<p>更改配额值： 在<strong>更改配额值</strong>字段中输入新值。新值必须大于当前值。</p>
 </li>
 <li>
-<p>提交请求： 点击 '请求' 向 AWS 提交您的配额增加请求。</p>
+<p>提交请求： 点击<strong>请求</strong>向 AWS提交您的配额增加请求。</p>
+<div class="admonition important">
+<p class="admonition-title">注意</p>
+<p>某些AWS服务可能只在某些区域可用。如果你在不同的区域有配额增加请求，请确保首先选择适当的区域。</p>
+</div>
 </li>
 </ol>
-<p>请注意，某些 AWS 服务可能只在某些区域可用。如果你在不同的区域有配额增加请求，请确保首先选择适当的区域。</p>
 <p>在您提交配额增加请求后，您可以跟踪其状态：</p>
 <ol>
 <li>
-<p>查看请求状态： 返回 服务配额控制台，并从导航面板中选择 '仪表板'。对于待处理的请求，选择请求的状态以打开请求收据。请求的初始状态是 '待处理'。当状态更改为 '已请求配额' 后，您将在 AWS 支持处看到案例编号。选择案例编号以打开您的请求票据。</p>
+<p>查看请求状态： 返回<strong>服务配额控制台</strong>，并从导航面板中选择<strong>仪表板</strong>。对于待处理的请求，选择请求的状态以打开请求收据。请求的初始状态是<em>待处理</em>。当状态更改为<em>已请求配额</em>后，您将在 AWS 支持处看到案例编号。选择案例编号以打开您的请求票据。</p>
 </li>
 <li>
-<p>检查配额请求历史： 要查看任何待处理或最近已解决的请求，选择服务配额控制台导航面板中的 '配额请求历史'。</p>
+<p>检查配额请求历史： 要查看任何待处理或最近已解决的请求，选择服务配额控制台导航面板中的<strong>配额请求历史</strong>。</p>
+<div class="admonition important">
+<p class="admonition-title">注意</p>
+<p>配额增加请求不会获得优先支持，可能需要一些时间来处理。如果您有紧急请求，请考虑直接联系AWS支持。</p>
+</div>
 </li>
 </ol>
-<p>记住，配额增加请求不会获得优先支持，可能需要一些时间来处理。如果您有紧急请求，请考虑直接联系 AWS 支持。
-请参考AWS如下文档去获取更多关于配额信息:
-1. https://docs.aws.amazon.com/general/latest/gr/sagemaker.html
-2. https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html</p>
+<p>请参考AWS如下文档去获取更多关于配额信息:</p>
+<ul>
+<li><a href="https://docs.aws.amazon.com/general/latest/gr/sagemaker.html">Amazon SageMaker Service配额</a></li>
+<li><a href="https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html">请求增加配额</a></li>
+</ul>
 
 
 

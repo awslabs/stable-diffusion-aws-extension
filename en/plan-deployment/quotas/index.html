@@ -62,6 +62,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#quotas" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -495,6 +500,8 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
       
       <a href="./" class="md-nav__link md-nav__link--active">
         Quotas
@@ -560,7 +567,7 @@
   
     <li class="md-nav__item">
       <a href="../../deployment/deployment/" class="md-nav__link">
-        Deployment
+        Deployment step
       </a>
     </li>
   
@@ -569,20 +576,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../update/" class="md-nav__link">
-        Update the solution
-      </a>
     </li>
   
 
@@ -607,10 +600,86 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
+          Use the solution
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_7">
+          <span class="md-nav__icon md-icon"></span>
+          Use the solution
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../../user-guide/user-guide.md" class="md-nav__link">
-        Use the solution
+      <a href="../../user-guide/preparation/" class="md-nav__link">
+        Preparation
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
+        Main tab
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
+        txt2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+        Dreambooth guide
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -627,17 +696,17 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
       
       
       
-        <label class="md-nav__link" for="__nav_1_9" id="__nav_1_9_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
           Developer guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_9_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_1_9">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_1_8">
           <span class="md-nav__icon md-icon"></span>
           Developer guide
         </label>
@@ -712,20 +781,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributors/" class="md-nav__link">
-        Contributors
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../notices/" class="md-nav__link">
         Notices
       </a>
@@ -757,6 +812,8 @@
   
   
   
+    
+  
   
 </nav>
                   </div>
@@ -774,9 +831,38 @@
   
 
 
-  <h1>Quotas</h1>
-
-
+<h1 id="quotas">Quotas</h1>
+<p>To increase the quota of the Amazon SageMaker resources in your AWS account, you can follow these steps:</p>
+<ol>
+<li>Log in to the <strong>AWS Management Console</strong> and navigate to the <strong>Service Quotas</strong> console.</li>
+<li>Select <strong>AWS services</strong> from the navigation panel.</li>
+<li>Select <strong>Amazon SageMaker</strong> from the list, or type the service name in the search box.</li>
+<li>Request a quota increase: If the quota is adjustable, you can select the button or name, then select <strong>Request quota increase</strong>.</li>
+<li>Change the quota value: Enter the new value in the <strong>Change quota value</strong> field. The new value must be greater than the current value.</li>
+<li>
+<p>Submit the request: Click <strong>Request</strong> to submit your quota increase request to AWS.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>Please note that some AWS services may only be available in certain regions. If you have quota increase requests in different regions, make sure to first select the appropriate region.</p>
+</div>
+</li>
+</ol>
+<p>After you submit a quota increase request, you can track its status:</p>
+<ol>
+<li>View the request status: Return to the <strong>Service Quotas</strong> console and select <strong>Dashboard</strong> from the navigation panel. For pending requests, select the status of the request to open the request receipt. The initial status of the request is <strong>Pending</strong>. When the status changes to <strong>Quota Requested</strong>, you will see a case number at AWS Support. Select the case number to open your request receipt.</li>
+<li>
+<p>Check the quota request history: To view any pending or recently resolved requests, select <strong>Quota request history</strong> from the Service Quotas console navigation panel.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>Kindly be noticed that quota increase requests do not receive priority support and may take some time to process. If you have an urgent request, consider contacting AWS Support directly.</p>
+</div>
+</li>
+</ol>
+<p>Please refer to the following AWS documents for more information about quotas:</p>
+<ul>
+<li><a href="https://docs.aws.amazon.com/general/latest/gr/sagemaker.html">Amazon SageMaker Service Quotas</a></li>
+<li><a href="https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html">Requesting a Quota Increase</a></li>
+</ul>
 
 
 
