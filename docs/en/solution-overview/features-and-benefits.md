@@ -2,7 +2,7 @@
 
 This solution supports the cloud-based operations of the following native features/third-party extensions of Stable Diffusion WebUI:
 
-| **Feature**  | **Supported Version** |
+| **Feature**  | **Supported Version** | **Support Function** |
 | ------------- | ------------- |
 | [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  |
 | [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  |

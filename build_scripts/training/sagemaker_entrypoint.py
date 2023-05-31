@@ -151,6 +151,8 @@ def sync_status(job_id, bucket_name, model_dir):
     sync_status_thread.start()
 
 def main(s3_input_path, s3_output_path, params):
+    import launch
+    launch.prepare_environment()
     params = params["training_params"]
     model_name = params["model_name"]
     s3_model_path = params["s3_model_path"]

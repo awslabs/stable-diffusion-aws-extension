@@ -36,6 +36,6 @@ nav:
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md 
     - Revisions: revisions.md
-    - Contributors: contributors.md
+    #- Contributors: contributors.md
     - Notices: notices.md
 
