@@ -48,18 +48,10 @@ export class Middleware extends Stack {
     });
 
 
-    const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
-      type: 'String',
-      minLength: 1,
-      description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-    });
-
-
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
       synthesizer: props.synthesizer,
       emailParam: emailParam,
-      bucketName: bucketName,
       apiKey: apiKeyParam.valueAsString,
       modelInfInstancetype: utilInstanceType.valueAsString,
     });

@@ -68,24 +68,6 @@ def get_uuid():
     uuid_str = str(uuid.uuid4())
     return uuid_str
 
-def updateInferenceJobTable(inference_id, status):
-    #update the inference DDB for the job status
-    response = inference_table.get_item(
-            Key={
-                "InferenceJobId": inference_id,
-            })
-    inference_resp = response['Item']
-    if not inference_resp:
-        raise Exception(f"Failed to get the inference job item with inference id:{inference_id}")
-
-    response = inference_table.update_item(
-            Key={
-                "InferenceJobId": inference_id,
-            },
-            UpdateExpression="set status = :r",
-            ExpressionAttributeValues={':r': status},
-            ReturnValues="UPDATED_NEW")
-
 def getInferenceJobList():
     response = inference_table.scan()
     logger.info(f"inference job list response is {str(response)}")
@@ -189,13 +171,11 @@ def get_s3_objects(bucket_name, folder_name):
     response = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_name)
 
     # Extract object names from the response
-    # object_names = [obj['Key'] for obj in response.get('Contents', []) if obj['Key'] != folder_name]
     object_names = [obj['Key'][len(folder_name):] for obj in response.get('Contents', []) if obj['Key'] != folder_name]
 
     return object_names
  
 def load_json_from_s3(bucket_name, key):
-    # Create an S3 client
 
     # Get the JSON file from the specified bucket and key
     response = s3.get_object(Bucket=bucket_name, Key=key)
@@ -544,9 +524,6 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     return payload
  
 # Global exception capture
-# All exception handling in the code can be written as: raise BizException(code=500, message="XXXX")
-# Among them, code is the business failure code, and message is the content of the failure
-# biz_exception(app)
 stepf_client = boto3.client('stepfunctions')
 
 @app.get("/")
@@ -558,7 +535,6 @@ async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
 
-        # TODO: add logic for inference id
         inference_id = get_uuid()
 
         payload_checkpoint_info = await request.json()
@@ -576,7 +552,6 @@ async def run_sagemaker_inference(request: Request):
 
         # adjust time out time to 1 hour
         initial_args = {}
-        
         initial_args["InvocationTimeoutSeconds"]=3600
 
         predictor = AsyncPredictor(predictor, name=endpoint_name)
