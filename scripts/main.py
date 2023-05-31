@@ -3,10 +3,12 @@ import requests
 import logging
 import gradio as gr
 import modules.scripts as scripts
+import os
 from modules import script_callbacks
 from modules.ui import create_refresh_button
 from utils import get_variable_from_json
 from utils import save_variable_to_json
+
 
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 import sagemaker_ui
