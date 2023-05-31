@@ -117,7 +117,9 @@ def list_datasets_api(event, context):
         dataset_info = DatasetInfo(**(ddb_service.deserialize(tr)))
         datasets.append({
             'datasetName': dataset_info.dataset_name,
+            's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
             'status': dataset_info.dataset_status.value,
+            'timestamp': dataset_info.timestamp,
             **dataset_info.params
         })
 
