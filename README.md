@@ -40,7 +40,7 @@ To set up the development environment, you will need have AWS account and tools 
 ### Install the extension:
 
 1. Make sure you already have WebUI installed and running, following [stable-diffusion-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) if not.
-2. Install the extension from "Available" tab in WebUI Extension tab or input the address "https://github.com/aws-labs/stable-diffusion-aws-extension.git" in "Install from URL" directly. Moreover, you can also install the extension under the repo by running the following command:
+2. Install the extension from "Available" tab in WebUI Extension tab or input the address "https://github.com/awslabs/stable-diffusion-aws-extension.git" in "Install from URL" directly. Moreover, you can also install the extension under the repo by running the following command:
 
    ```bash
    cd extensions/
@@ -107,7 +107,7 @@ Thus we plan to contribute a solution aiming to mitigate above issue and provide
 
 ## What is the user tuturial
 We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
-Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://aws-samples.github.io/stable-diffusion-aws-extension/en/) for more details.
+Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
 ![UIProcess](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/3c6961d0-e1f9-4bee-b370-892978063781)
 
 ## What is the overall architecture & workflow

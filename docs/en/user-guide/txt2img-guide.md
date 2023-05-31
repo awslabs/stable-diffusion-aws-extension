@@ -11,6 +11,7 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 
     !!! Important "Notice" 
         This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
+
 4. Fresh and select **Stable Diffusion Checkpoint** (required single select) and other extra models needed in **Extra Networks for Cloud Inference** (optional, multi-selection allowed).
 5. Click **Generate on Cloud**.
 6. Check inference result. Fresh and select the top option among **Inference Job ID** dropdown list. The **Output** section in the top-right area of the **txt2img** tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking **Save** or **Send to img2img**.
