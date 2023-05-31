@@ -1,5 +1,5 @@
 !!! Warning "警告"
-    如果卸载解决方案，您可能会丢失在此部署下于云上训练的模型、推理的图片和账户使用日志等。
+    卸载该解决方案将同时删除由此堆栈创建的Amazon SageMaker资源（例如端点），指示模型训练、微调和推理日志和映射关系的DynamoDB表，AWS Lambda相关函数和AWS Step Functions等。
 
 
 要卸载Stable Diffusion亚马逊云科技插件解决方案，请删除CloudFormation堆栈。

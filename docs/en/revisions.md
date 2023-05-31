@@ -1,3 +1,3 @@
 | Date          | Change            |
 |---------------|-------------------|
-| [November] 2021 | Intitial release  |
+| June 2023 | Intitial release  |

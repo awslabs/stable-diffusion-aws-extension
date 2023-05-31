@@ -12,7 +12,8 @@ import sagemaker
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import publish_msg
-from common_tools import get_s3_presign_urls, split_s3_path, DecimalEncoder
+from common_tools import split_s3_path, DecimalEncoder
+from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 

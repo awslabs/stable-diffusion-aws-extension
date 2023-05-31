@@ -1,0 +1,324 @@
+openapi: "3.0.1"
+info:
+  title: "Stable Diffusion Train and Deploy API"
+  description: "This service is used to train and deploy Stable Diffusion models."
+  version: "2023-05-28T12:29:27Z"
+servers:
+- url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
+  variables:
+    basePath:
+      default: "prod"
+paths:
+  /inference/get-texual-inversion-list:
+    get:
+      security:
+      - api_key: []
+  /checkpoints:
+    get:
+      parameters:
+      - name: "types"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      - name: "status"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "500":
+          description: "500 response"
+          content: {}
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /models:
+    get:
+      parameters:
+      - name: "types"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      - name: "status"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /inference/get-inference-job-image-output:
+    get:
+      security:
+      - api_key: []
+  /inference/get-hypernetwork-list:
+    get:
+      security:
+      - api_key: []
+  /inference/get-controlnet-model-list:
+    get:
+      security:
+      - api_key: []
+  /inference/get-lora-list:
+    get:
+      security:
+      - api_key: []
+  /inference/get-inference-job-param-output:
+    get:
+      security:
+      - api_key: []
+  /inference/generate-s3-presigned-url-for-uploading:
+    get:
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /inference/run-sagemaker-inference:
+    post:
+      security:
+      - api_key: []
+  /:
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /inference/list-inference-jobs:
+    get:
+      security:
+      - api_key: []
+  /trains:
+    get:
+      parameters:
+      - name: "types"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      - name: "status"
+        in: "query"
+        required: true
+        schema:
+          type: "string"
+      responses:
+        "500":
+          description: "500 response"
+          content: {}
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /train:
+    put:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    post:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /checkpoint:
+    put:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    post:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /inference:
+    get:
+      security:
+      - api_key: []
+    post:
+      security:
+      - api_key: []
+  /inference/list-endpoint-deployment-jobs:
+    get:
+      security:
+      - api_key: []
+  /inference/deploy-sagemaker-endpoint:
+    post:
+      security:
+      - api_key: []
+  /inference/delete-sagemaker-endpoint:
+    post:
+      security:
+      - api_key: []
+  /model:
+    put:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    post:
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
+      security:
+      - api_key: []
+    options:
+      responses:
+        "204":
+          description: "204 response"
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: "string"
+            Access-Control-Allow-Methods:
+              schema:
+                type: "string"
+            Access-Control-Allow-Headers:
+              schema:
+                type: "string"
+          content: {}
+  /inference/get-inference-job:
+    get:
+      security:
+      - api_key: []
+  /inference/test-connection:
+    get:
+      responses:
+        "200":
+          description: "200 response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Empty"
+      security:
+      - api_key: []
+  /inference/get-endpoint-deployment-job:
+    get:
+      security:
+      - api_key: []
+components:
+  schemas:
+    Empty:
+      title: "Empty Schema"
+      type: "object"
+  securitySchemes:
+    api_key:
+      type: "apiKey"
+      name: "x-api-key"
+      in: "header"
