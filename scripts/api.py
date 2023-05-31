@@ -379,7 +379,7 @@ def sagemaker_api(_, app: FastAPI):
                             logger.info(f"ckpt from s3 {input_path} {local_model_path}")
                         else:
                             s3_input_path = db_create_model_payload["s3_input_path"]
-                            local_model_path = f'{db_create_model_params["ckpt_path"]}.tar'
+                            local_model_path = db_create_model_params["ckpt_path"]
                             input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
                             logger.info(f"ckpt from local {input_path} {local_model_path}")
                         input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
