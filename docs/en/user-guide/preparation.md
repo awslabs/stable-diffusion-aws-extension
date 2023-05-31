@@ -1,11 +1,11 @@
-## 连接Stable Diffusion WebUI与AWS账号
+# Connet Stable Diffusion WebUI with AWS Account
 
-### 前提条件
-您需要已经成功完成解决方案的部署。
+## Prerequisites
+You need to have successfully completed the deployment of the solution.
 
-### 操作步骤
-1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
-2. 从堆栈列表中选择方案的根堆栈，而不是嵌套堆栈。列表中嵌套堆栈的名称旁边会显示嵌套（NESTED）。
-3. 打开输出（Outputs）标签页，找到APIGatewayUrl对应的URL，并复制。
-4. 打开Stable Diffusion WebUI中的**Amazon SageMaker**标签页，在**API URL**文本框粘贴步骤3得到的URL。在**API Token**输入09876543210987654321。点击**Update Setting**，会得到*Successfully Updated Config*的确认信息。
-5. 点击**Test Connection**，得到*Successfully Connected*确认信息，表明现在Stable Diffusion WebUI已经成功与后端部署堆栈的AWS账户链接。
+## Steps
+1. Visit [AWS CloudFormation Console](https://console.aws.amazon.com/cloudformation/)。
+2. Select the root stack of the solution you created from stack list, rather than the nested stacks. The nested stacks will be indicated as 'NESTED' next to their names in the list.
+3. Open **Outputs** tab, find URL of **APIGatewayUrl** and copy。
+4. Open **Stable Diffusion WebUI**, nagivate to **Amazon SageMaker**tab，paste the URL copied from step 3 under **API URL**. Paste API token copied from step 3 into field of **API Token**. Click **Update Setting**，*config updated to local config!* message will appear. 
+5. Click **Test Connection**, *Successfully Connected* message will appear, which indicates that Stable Diffusion WebUI has been successfully connected with AWS account of the backend deployed stack.

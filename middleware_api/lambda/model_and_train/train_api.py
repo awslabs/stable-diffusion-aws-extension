@@ -12,7 +12,8 @@ import sagemaker
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import publish_msg
-from common_tools import get_s3_presign_urls, split_s3_path, DecimalEncoder
+from common_tools import split_s3_path, DecimalEncoder
+from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 
@@ -213,11 +214,15 @@ def _start_train_job(train_job_id: str):
             "s3-output-path": checkpoint.s3_location,
         })
 
+        final_instance_type = instance_type
+        if 'training_params' in train_job.params and 'training_instance_type' in train_job.params['training_params']:
+            final_instance_type = train_job.params['training_params']['training_instance_type']
+
         est = sagemaker.estimator.Estimator(
             image_uri,
             sagemaker_role_arn,
             instance_count=1,
-            instance_type=instance_type,
+            instance_type=final_instance_type,
             volume_size=125,
             base_job_name=f'{model.name}',
             hyperparameters=hyperparameters,

@@ -1,41 +1,33 @@
-# 使用txt2img进行云上推理
+# txt2img Guide
 
-您可以打开txt2img标签页，通过结合使用txt2img原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的txt2img推理工作。 
+You can open the **txt2img** tab to perform text-to-image inference using the combined functionality of the native region of txt2img and the newly added "Amazon SageMaker Inference" panel in the solution. This allows you to invoke cloud resources for txt2img inference tasks.
 
+## General Inference
 
-
-
-1. 进入**txt2img**标签页，展开**Amazon SageMaker Inference**面板。
+1. Navigate to **txt2img** tab, open **Amazon SageMaker Inference** panel. 
 ![Sagemaker Inference面板](../images/txt2img-sagemaker-inference.png)
-2. 输入推理所需参数。同于本地推理，您可以按需编辑**txt2img**原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。
-3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
-    !!! Important "提示" 
-        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击**Generate on Cloud**开启云上推理功能时会报错。
+2. Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native **txt2img**, including prompts, negative prompts, sampling parameters, and inference parameters.
+3. Select an endpoint for inference. Refresh and select an endpoint from **Select Cloud SageMaker Endpoint** dropdown list that is in the *InService* state.
 
-4. 点击模型下拉框右侧的刷新按钮，选择推理所需的**Stable Diffusion Checkpoint**（必选，可多选）及其他所需的**Extra Networks for Cloud Inference**（可选，并且可多模型多选叠加）。
-5. 点击**Generate on Cloud**。
-6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。txt2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to img2img**等，进行后续工作流。
-> **补充：** 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为**推理时间->inference id**。
+    !!! Important "Notice" 
+        This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
+
+4. Fresh and select **Stable Diffusion Checkpoint** (required single select) and other extra models needed in **Extra Networks for Cloud Inference** (optional, multi-selection allowed).
+5. Click **Generate on Cloud**.
+6. Check inference result. Fresh and select the top option among **Inference Job ID** dropdown list. The **Output** section in the top-right area of the **txt2img** tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking **Save** or **Send to img2img**.
+> **Note：** The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of *inference time -> inference id*.
 
 ![generate results](../images/generate-results.png)
 
 
 
-# Controlnet的使用方法
 
-* ### openpose的使用方式
-    1. 打开ControlNet面板，勾选**Enabel**，选择**Preprocessor**为**openpose**，同时上传图片。
-    
-        ![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
-    
-    2. 在**Amazon SageMaker Inference**面板的里面选择**Stable Diffusion Checkpoint**和**ControlNet-Model**。比如
-    这里是**v1-5-pruned-emaonly.safetensors**和**control_openpose-fp16.safetensors**。保留之前的提示词**a cute dog**
-    ，然后点击**Generate on Cloud**。
 
-        ![Choose-controlnet-model](../images/choose-controlnet-model.png)
+## Controlnet Guide
 
-    3. 这时候点击**Inference Job IDs**旁边的刷新按钮，可以看到新产生一条记录，格式为**推理时间->inference id** (整个列表也会按照推理时间进行排序)
-    ![refresh inference job id-controlnet](../images/refresh-inference-id-controlnet.png)
-
-    4. 当切换到对应的inference id并且推理结束后，会在右上角看到推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to img2img**等
-    ![generate results controlnet](../images/cute-dog-controlnet.png)
+* ### openpose use guide
+1. Open ControlNet panel, check **Enable**, select **openpose** from **Preprocessor**, and then upload am image.
+![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
+2. Open **Amazon SageMaker Inference**panel, select one checkpoint from **Stable Diffusion Checkpoint** and one model from **ControlNet-Model**. For example: below is the ineference based on **v1-5-pruned-emaonly.safetensors** and **control_openpose-fp16.safetensors**, prompts **a cute dog**, click **Generate on Cloud**.
+![Choose-controlnet-model](../images/choose-controlnet-model.png)
+3. Refresh and select the top Inference Job from **Inference Job IDs**, inference result will be dispaly in **Output** section.

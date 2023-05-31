@@ -7,10 +7,11 @@ import {
   aws_sns,
   aws_sns_subscriptions as sns_subscriptions,
   CfnParameter,
+  NestedStack,
   RemovalPolicy,
   StackProps,
-  NestedStack,
 } from 'aws-cdk-lib';
+import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
@@ -18,6 +19,10 @@ import { Construct } from 'constructs';
 import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
 import { ListAllCheckPointsApi } from './chekpoints-listall-api';
+import { CreateDatasetApi } from './dataset-create-api';
+import { UpdateDatasetApi } from './dataset-update-api';
+import { ListAllDatasetItemsApi } from './datasets-item-listall-api';
+import { ListAllDatasetsApi } from './datasets-listall-api';
 import { CreateModelJobApi } from './model-job-create-api';
 import { ListAllModelJobApi } from './model-job-listall-api';
 import { UpdateModelStatusRestApi } from './model-update-status-api';
@@ -30,7 +35,6 @@ import { UpdateTrainJobApi } from './train-job-update-api';
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
-  bucketName: CfnParameter;
   apiKey: string;
   modelInfInstancetype: string;
 }
@@ -41,6 +45,8 @@ export class SdTrainDeployStack extends NestedStack {
   public readonly trainingTable: aws_dynamodb.Table;
   public readonly modelTable: aws_dynamodb.Table;
   public readonly checkPointTable: aws_dynamodb.Table;
+  public readonly datasetInfoTable: aws_dynamodb.Table;
+  public readonly datasetItemTable: aws_dynamodb.Table;
   public apiGateway: aws_apigateway.RestApi;
   public readonly snsTopic: aws_sns.Topic;
   public readonly default_endpoint_name: string;
@@ -53,12 +59,12 @@ export class SdTrainDeployStack extends NestedStack {
     // this.parentScope = scope;
 
     // Check that props.emailParam and props.bucketName are not undefined
-    if (!props || props.emailParam === undefined || props.bucketName === undefined) {
+    if (!props || props.emailParam === undefined ) {
       throw new Error('emailParam and bucketName must be provided');
     }
     // Use the parameters passed from Middleware
     this.snsTopic = this.createSns(props.emailParam);
-    this.s3Bucket = this.createS3Bucket(props.bucketName);
+    this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
     this.default_endpoint_name = '';
 
@@ -88,8 +94,41 @@ export class SdTrainDeployStack extends NestedStack {
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
+    this.datasetInfoTable = new dynamodb.Table(this, 'DatasetInfoTable', {
+      tableName: 'DatasetInfoTable',
+      partitionKey: {
+        name: 'dataset_name',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    this.datasetItemTable = new dynamodb.Table(this, 'DatasetItemTable', {
+      tableName: 'DatasetItemTable',
+      partitionKey: {
+        name: 'dataset_name',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'sort_key',
+        type: AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
     // api gateway setup
-    const restApi = new RestApiGateway(this, props.apiKey, ['model', 'models', 'checkpoint', 'checkpoints', 'train', 'trains']);
+    const restApi = new RestApiGateway(this, props.apiKey, [
+      'model',
+      'models',
+      'checkpoint',
+      'checkpoints',
+      'train',
+      'trains',
+      'dataset',
+      'datasets',
+    ]);
     this.apiGateway = restApi.apiGateway;
     const routers = restApi.routers;
 
@@ -192,6 +231,49 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: this.s3Bucket,
       srcRoot: this.srcRoot,
     });
+
+    // POST /dataset
+    new CreateDatasetApi(this, 'aigc-create-dataset', {
+      commonLayer: commonLayer,
+      datasetInfoTable: this.datasetInfoTable,
+      datasetItemTable: this.datasetItemTable,
+      httpMethod: 'POST',
+      router: routers.dataset,
+      s3Bucket: this.s3Bucket,
+      srcRoot: this.srcRoot,
+    });
+
+    // PUT /dataset
+    new UpdateDatasetApi(this, 'aigc-update-dataset', {
+      commonLayer: commonLayer,
+      datasetInfoTable: this.datasetInfoTable,
+      datasetItemTable: this.datasetItemTable,
+      httpMethod: 'PUT',
+      router: routers.dataset,
+      s3Bucket: this.s3Bucket,
+      srcRoot: this.srcRoot,
+    });
+
+    // GET /datasets
+    new ListAllDatasetsApi(this, 'aigc-listall-datasets', {
+      commonLayer: commonLayer,
+      datasetInfoTable: this.datasetInfoTable,
+      httpMethod: 'GET',
+      router: routers.datasets,
+      s3Bucket: this.s3Bucket,
+      srcRoot: this.srcRoot,
+    });
+
+    // GET /dataset/{dataset_name}/data
+    new ListAllDatasetItemsApi(this, 'aigc-listall-dataset-items', {
+      commonLayer: commonLayer,
+      datasetInfoTable: this.datasetInfoTable,
+      datasetItemsTable: this.datasetItemTable,
+      httpMethod: 'GET',
+      router: routers.dataset,
+      s3Bucket: this.s3Bucket,
+      srcRoot: this.srcRoot,
+    });
   }
 
   private createSns(emailParam: CfnParameter): aws_sns.Topic {
@@ -207,7 +289,7 @@ export class SdTrainDeployStack extends NestedStack {
     return snsTopic;
   }
 
-  private createS3Bucket(bucketName: CfnParameter): s3.Bucket {
+  private createS3Bucket(): s3.Bucket {
 
     // Define the CORS configuration
     const corsRules: s3.CorsRule[] = [
@@ -220,7 +302,6 @@ export class SdTrainDeployStack extends NestedStack {
 
     //The code that defines your stack goes here
     return new s3.Bucket(this, 'aigc-bucket', {
-      bucketName: bucketName.valueAsString,
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
