@@ -7,7 +7,6 @@ function generate_on_cloud(sagemaker_endpoint){
 
 function model_update(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path){
     console.log("Model update started with input: " + sd_checkpoints_path + ", " + textual_inversion_path + ", " + lora_path + ", " + hypernetwork_path + ", " + controlnet_model_path);
-    document.querySelector("#html_log_txt2img").innerHTML = "Model update started. Please wait...";
     return [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path];
 }
 
@@ -18,7 +17,6 @@ function deploy_endpoint(instance_type_dropdown, instance_count_textbox){
 
 function delete_sagemaker_endpoint(endpoint_list){
     console.log("Endpoint delete with input: " + endpoint_list);
-    document.querySelector("#html_log_txt2img").innerHTML = "Endpoint delete started. Please wait...";
     return [endpoint_list];
 }
 
