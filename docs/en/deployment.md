@@ -2,31 +2,31 @@ Before you launch the solution, review the architecture, supported regions, and 
 
 **Time to deploy**: Approximately [10] minutes
 
+## Prerequsite
+
+Users need to prepare a computer running linux system in advance 
+
 ## Deployment overview
 
 Use the following steps to deploy this solution on AWS. 
 
-- Launch the AWS CloudFormation template into your AWS account.
-- Review the template parameters, and adjust them if necessary.
+- Step1: Launch the Amazon CloudFormation template in your AWS account.
+- Step2: Install the plugin Stable Diffusion AWS Extension via the install script.
 
 ## Deployment steps
 
 This automated AWS CloudFormation template deploys the solution in the AWS Cloud.
 
 1. Sign in to the AWS Management Console and use [Launch solution in AWS Standard Regions][launch-template] to launch the AWS CloudFormation template.   
-2. The template launches in the US East (N. Virginia) Region by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.
+2. By default, the template will launch in the default locale after you log into the console. To launch the solution in a specific Amazon Web Service region, select it from the Region drop-down list in the console navigation bar.
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
-4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. For information about naming character limitations, refer to [IAM and STS Limits][iam-limit] in the `AWS Identity and Access Management User Guide`.
-5. Under **Parameters**, review the parameters for the template and modify them as necessary. This solution uses the following default values.
+4. On the **Specify stack details** page, assign a name that is unique within the account and meets the naming requirements for your solution stack. In the **Parameters** section, enter a valid email address in **email** to receive future notifications. In the **sdextensionapikey** field, please enter a 20-character string containing a combination of numbers and letters; if not provided, the default is "09876543210987654321". Select the Amazon EC2 instance type in **utilscpuinsttype**, which is mainly used for operations including model creation and model merging. Click **Next**.
+5. On the **Configure Stack Options** page, choose **Next**.
+6. On the **Previe** page, review and confirm the settings. Make sure to select the checkbox confirming that the template will create Amazon Identity and Access Management (IAM) resources. And make sure to check the boxes for other features required by AWS CloudFormation. Select **Submit** to deploy the stack.
+7. Wait until the status of the main stack changes to **CREATE_COMPLETE**, please record **ApiGatewayUrl** in the **Outpts** section
+and **ApiGateWayUrlToken**
 
-    |      Parameter      |    Default   |                                                      Description                                                      |
-    |:-------------------:|:------------:|:--------------------------------------------------------------------------------------------------------------|
-
-6. Choose **Next**.
-7. On the **Configure stack options** page, choose **Next**.
-8. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources.
-9. Choose **Create stack** to deploy the stack.
-
-You can view the status of the stack in the AWS CloudFormation Console in the **Status** column. You should receive a CREATE_COMPLETE status in approximately [10] minutes.
+!!! Important "Hint"
+    Please check the inbox of your reserved mailbox in time, and in the email with the subject "AWS Notification - Subscription Confirmation", click the "Confirm subscription" hyperlink and follow the prompts to complete the subscription.
 
 
