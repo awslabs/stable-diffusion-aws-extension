@@ -184,11 +184,11 @@ def on_ui_tabs():
     import modules.ui
     buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
-        with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row"):
-            sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params")
-            sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params")
-            sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model")
-            sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt")
+        with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
+            sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
+            sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params", visible=False)
+            sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model", visible=False)
+            sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt", visible=False)
         with gr.Row():
             gr.HTML(value="Enter your API URL & Token to start the connection.", elem_id="hint_row")
         with gr.Row():
@@ -199,7 +199,7 @@ def on_ui_tabs():
                 global api_key
                 api_key = get_variable_from_json('api_token')
                 with gr.Row():
-                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
+                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url of Middle", label="API Url",elem_id="aws_middleware_api")
                     def update_api_gateway_url():
                         global api_gateway_url
                         api_gateway_url = get_variable_from_json('api_gateway_url')
@@ -273,15 +273,16 @@ def on_ui_tabs():
                                                            outputs=[test_connection_result])
 
             with gr.Column(variant="panel", scale=1):
-                with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>AWS Model Setting</b></u>")
-                    with gr.Tab("Select"):
-                        gr.HTML(value="AWS Built-in Model")
-                        model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
-                    with gr.Tab("Create"):
-                        gr.HTML(value="AWS Custom Model")
-                        model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
-                        model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
+                # TODO: uncomment if implemented, comment since the tab component do not has visible parameter
+                # with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel', visible=False):
+                #     gr.HTML(value="<u><b>AWS Model Setting</b></u>", visible=False)
+                #     with gr.Tab("Select"):
+                #         gr.HTML(value="AWS Built-in Model", visible=False)
+                #         model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model", visible=False)
+                #     with gr.Tab("Create"):
+                #         gr.HTML(value="AWS Custom Model", visible=False)
+                #         model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name", visible=False)
+                #         model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model", visible=False)
 
                 with gr.Blocks(title="Create AWS dataset", variant='panel'):
                     gr.HTML(value="<u><b>AWS Dataset Creation</b></u>")

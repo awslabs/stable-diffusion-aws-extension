@@ -1,6 +1,6 @@
 在部署解决方案之前，建议您先查看本指南中有关架构图和区域支持等信息。然后按照下面的说明配置解决方案并将其部署到您的帐户中。
 
-部署时间：约 15 分钟
+部署时间：约 25 分钟
 
 ## 前提条件
 <!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
@@ -23,7 +23,7 @@
 
 此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
 
-1. 登录到AWS管理控制台，点击链接创建AWS CloudFormation模版。
+1. 登录到AWS管理控制台，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json)。
 2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
 3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
 4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，在**email**处输入一个正确的电子邮件地址，以便接收将来的通知。在**sdextensionapikey**字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在**utilscpuinsttype**选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击**下一步**。
