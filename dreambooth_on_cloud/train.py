@@ -86,7 +86,7 @@ def async_prepare_for_training_on_sagemaker(
         data_path_list: list,
         class_data_path_list: list,
         db_config_path: str,
-        model_type: str
+        model_type: str,
         training_instance_type: str
 ):
     url = get_variable_from_json('api_gateway_url')
