@@ -1,4 +1,9 @@
 // Sagemaker Train!
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function db_start_sagemaker_train() {
     console.log("Sagemaker training");
     console.log(arguments);

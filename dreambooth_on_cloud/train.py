@@ -86,6 +86,7 @@ def async_prepare_for_training_on_sagemaker(
         data_path_list: list,
         class_data_path_list: list,
         db_config_path: str,
+        model_type: str,
         training_instance_type: str
 ):
     url = get_variable_from_json('api_gateway_url')
@@ -98,36 +99,44 @@ def async_prepare_for_training_on_sagemaker(
     db_config_tar = f"db_config.tar"
     os.system(f"tar cvf {db_config_tar} {db_config_path}")
     upload_files.append(db_config_tar)
-    data_tar_list = []
+    new_data_list = []
     for data_path in data_path_list:
         if len(data_path) == 0:
-            data_tar_list.append("")
+            new_data_list.append("")
             continue
-        data_tar = f'data-{data_path.replace("/", "-").strip("-")}.tar'
-        data_tar_list.append(data_tar)
-        print("Pack the data file.")
-        os.system(f"tar cf {data_tar} {data_path}")
-        upload_files.append(data_tar)
-    class_data_tar_list = []
+        if not data_path.startswith("s3://"):
+            data_tar = f'data-{data_path.replace("/", "-").strip("-")}.tar'
+            new_data_list.append(data_tar)
+            print("Pack the data file.")
+            os.system(f"tar cf {data_tar} {data_path}")
+            upload_files.append(data_tar)
+        else:
+            new_data_list.append(data_path)
+    new_class_data_list = []
     for class_data_path in class_data_path_list:
         if len(class_data_path) == 0:
-            class_data_tar_list.append("")
+            new_class_data_list.append("")
             continue
-        class_data_tar = f'class-data-{class_data_path.replace("/", "-").strip("-")}.tar'
-        class_data_tar_list.append(class_data_tar)
-        upload_files.append(class_data_tar)
-        print("Pack the class data file.")
-        os.system(f"tar cf {class_data_tar} {class_data_path}")
+        if not class_data_path.startswith("s3://"):
+            class_data_tar = f'class-data-{class_data_path.replace("/", "-").strip("-")}.tar'
+            new_class_data_list.append(class_data_tar)
+            upload_files.append(class_data_tar)
+            print("Pack the class data file.")
+            os.system(f"tar cf {class_data_tar} {class_data_path}")
+        else:
+            new_class_data_list.append(class_data_path)
     payload = {
-        "train_type": "Stable-diffusion",
+        "train_type": model_type,
         "model_id": model_id,
         "filenames": upload_files,
         "params": {
             "training_params": {
                 "s3_model_path": s3_model_path,
                 "model_name": model_name,
-                "data_tar_list": data_tar_list,
-                "class_data_tar_list": class_data_tar_list,
+                "data_tar_list": new_data_list,
+                "class_data_tar_list": new_class_data_list,
+                "s3_data_path_list": new_data_list,
+                "s3_class_data_path_list": new_class_data_list,
                 "training_instance_type": training_instance_type
             }
         }
@@ -135,6 +144,7 @@ def async_prepare_for_training_on_sagemaker(
     print("Post request for upload s3 presign url.")
     response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
     json_response = response.json()
+    print(json_response)
     for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
@@ -180,11 +190,15 @@ def cloud_train(
     for concept in config["concepts_list"]:
         local_data_path_list.append(concept["instance_data_dir"])
         local_class_data_path_list.append(concept["class_data_dir"])
-        data_path_list.append(concept["instance_data_dir"].replace("/", "-").strip("-"))
-        class_data_path_list.append(concept["class_data_dir"].replace("/", "-").strip("-"))
+        data_path_list.append(concept["instance_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
+        class_data_path_list.append(concept["class_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
     model_list = get_cloud_db_models()
     new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
     hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list)
+    if config["save_lora_for_extra_net"] == True:
+        model_type = "Lora"
+    else:
+        model_type = "Stable-diffusion"
 
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
@@ -198,7 +212,8 @@ def cloud_train(
     #                                 args=(model_id, model_name, s3_model_path,data_path, class_data_path))
     # upload_thread.start()
     response = async_prepare_for_training_on_sagemaker(
-        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list, new_db_config_path, training_instance_type)
+        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
+        new_db_config_path, model_type, training_instance_type)
     job_id = response["job"]["id"]
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -267,7 +282,7 @@ def get_sorted_cloud_dataset():
         response = raw_response.json()
         response['datasets'].sort(key=lambda t:t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
         return response['datasets']
-    except requests.exections.RequestException as e:
+    except Exception as e:
         print(f"exception {e}")
         return []
 
