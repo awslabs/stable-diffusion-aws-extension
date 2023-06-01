@@ -74,7 +74,8 @@ cd stable-diffusion-webui
 #### **Option 1**: Use AWS Cloudformation Template
 1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
 
-   ![Screen Shot 2023-05-28 at 18 45 11](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/dfc17d02-c1c1-4be7-ac00-76b08b920381)
+<img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
+
 
 >**Notice** : We prefer use deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for arround 2 hours. That mean user need to wait arround 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
