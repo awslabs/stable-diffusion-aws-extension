@@ -136,6 +136,7 @@ def async_prepare_for_training_on_sagemaker(
     print("Post request for upload s3 presign url.")
     response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
     json_response = response.json()
+    print(json_response)
     for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
@@ -273,7 +274,7 @@ def get_sorted_cloud_dataset():
         response = raw_response.json()
         response['datasets'].sort(key=lambda t:t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
         return response['datasets']
-    except requests.exections.RequestException as e:
+    except Exception as e:
         print(f"exception {e}")
         return []
 

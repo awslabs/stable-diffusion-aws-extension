@@ -86,9 +86,17 @@ cd stable-diffusion-webui
    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
    cd infrastructure/
    npm install
-   npx cdk deploy --parameters api-token=<your token for api authentication>\
-   --parameters sub-email-address=<your subscribe email to receive notification>\
-   --parameters util-instance-type=<ec2 instance type for operations including ckpt merge, model create etc.>
+   npx cdk bootstrap
+   npx cdk deploy
+   ```
+   You can specify the following three parameters:
+   * **sub-email-address**: your subscribe email to receive notification, the email will get endpoint deployment error
+   * **api-token: your token** of api key for api authentication
+   * **util-instance-type**: c2 instance type for operations including ckpt merge, model create etc. Candidate is [**ml.r5.large, ml.r5.xlarge, ml.c6i.2xlarge, ml.c6i.4xlarge,ml.r5.large**]
+   ```
+   npx cdk deploy --parameters api-token=<XXXXXXX>\
+   --parameters sub-email-address=<YOUREMAIL@XXX.COM>\
+   --parameters util-instance-type=<ml.r5.large | ml.r5.xlarge| ml.c6i.2xlarge | ml.c6i.4xlarge | ml.r5.large>
    ```
    The project build and deployment will take about 5 minutes and the first time can be longer due to container image packaging. Once the project deployed successfully to your AWS account, you will see output similar below:
 
