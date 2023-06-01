@@ -35,7 +35,6 @@ import { UpdateTrainJobApi } from './train-job-update-api';
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
-  bucketName: CfnParameter;
   apiKey: string;
   modelInfInstancetype: string;
 }
@@ -60,12 +59,12 @@ export class SdTrainDeployStack extends NestedStack {
     // this.parentScope = scope;
 
     // Check that props.emailParam and props.bucketName are not undefined
-    if (!props || props.emailParam === undefined || props.bucketName === undefined) {
+    if (!props || props.emailParam === undefined ) {
       throw new Error('emailParam and bucketName must be provided');
     }
     // Use the parameters passed from Middleware
     this.snsTopic = this.createSns(props.emailParam);
-    this.s3Bucket = this.createS3Bucket(props.bucketName);
+    this.s3Bucket = this.createS3Bucket();
     const commonLayer = this.commonLayer();
     this.default_endpoint_name = '';
 
@@ -290,7 +289,7 @@ export class SdTrainDeployStack extends NestedStack {
     return snsTopic;
   }
 
-  private createS3Bucket(bucketName: CfnParameter): s3.Bucket {
+  private createS3Bucket(): s3.Bucket {
 
     // Define the CORS configuration
     const corsRules: s3.CorsRule[] = [
@@ -303,7 +302,6 @@ export class SdTrainDeployStack extends NestedStack {
 
     //The code that defines your stack goes here
     return new s3.Bucket(this, 'aigc-bucket', {
-      bucketName: bucketName.valueAsString,
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,

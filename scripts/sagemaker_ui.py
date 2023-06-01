@@ -109,7 +109,7 @@ def update_sagemaker_endpoints():
                     else:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
-                    
+
                     # Skip if status is 'deleted'
                     if endpoint_status == 'deleted':
                         continue
@@ -118,7 +118,7 @@ def update_sagemaker_endpoints():
                         endpoint_time = obj["endTime"]
                     else:
                         endpoint_time = "N/A"
-                    
+
                     endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
                     sagemaker_raw_endpoints.append(endpoint_info)
 
@@ -153,7 +153,7 @@ def get_inference_job_list():
                     complete_time = obj.get('startTime')
                 else:
                     complete_time = obj.get('completeTime')
-                status = obj.get('status')     
+                status = obj.get('status')
                 inference_job_id = obj.get('InferenceJobId')
                 combined_string = f"{complete_time}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
@@ -314,7 +314,7 @@ def refresh_all_models():
                     ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
-        print(f"Error refresh all models: {e}") 
+        print(f"Error refresh all models: {e}")
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
     log = "start upload model to s3..."
@@ -419,7 +419,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     print(f"Refresh checkpionts after upload...")
     refresh_all_models()
 
-    return plaintext_to_html(log)
+    return plaintext_to_html(log), None, None, None, None, None
 
 def generate_on_cloud(sagemaker_endpoint):
     print(f"checkpiont_info {checkpoint_info}")
@@ -466,7 +466,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
-    print(f"Raw server response: {response.text}") 
+    print(f"Raw server response: {response.text}")
     try:
         r = response.json()
     except JSONDecodeError as e:
@@ -480,7 +480,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         image_list = []  # Return an empty list if selected_value is None
         info_text = ''
         infotexts = f"Inference id is {inference_id}, please go to inference job Id dropdown to check the status"
-        return image_list, info_text, plaintext_to_html(infotexts) 
+        return image_list, info_text, plaintext_to_html(infotexts)
 
         # TODO: temp comment the while loop since it will block user to click inference
         # # Loop until the get_inference_job status is 'succeed' or 'failed'
@@ -508,7 +508,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
         #     image_list = []  # Return an empty list if selected_value is None
         #     info_text = ''
         #     infotexts = f"Inference time is longer than 30 seconds, please go to inference job Id dropdown to check the status"
-        #     return image_list, info_text, plaintext_to_html(infotexts) 
+        #     return image_list, info_text, plaintext_to_html(infotexts)
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
@@ -546,7 +546,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
         return "Endpoint delete completed"
     except Exception as e:
         return f"Failed to delete sagemaker endpoint with exception: {e}"
-    
+
 
 def sagemaker_deploy(instance_type, initial_instance_count=1):
     """ Create SageMaker endpoint for GPU inference.
@@ -657,7 +657,7 @@ def fake_gan(selected_value: str ):
         inference_job_id = parts[2].strip()
         inference_job_status = parts[1].strip()
         if inference_job_status == 'inprogress':
-            return [], [], plaintext_to_html('inference still in progress') 
+            return [], [], plaintext_to_html('inference still in progress')
         images = get_inference_job_image_output(inference_job_id)
         image_list = []
         image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
@@ -728,7 +728,7 @@ def init_refresh_resource_list_from_cloud():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,") 
+        print(f"there is no api-gateway url and token in local file,")
 
 def create_ui():
     global txt2img_gallery, txt2img_generation_info
