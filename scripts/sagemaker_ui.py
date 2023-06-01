@@ -325,7 +325,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     refresh_all_models()
 
     for lp, rp in zip(local_paths, checkpoint_type):
-        if lp == "":
+        if lp == "" or not lp:
             continue
         print(f"lp is {lp}")
         model_name = lp.split("/")[-1]
