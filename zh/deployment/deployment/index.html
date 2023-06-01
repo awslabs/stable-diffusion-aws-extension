@@ -617,21 +617,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2stable-diffusion-webuistable-diffusion-aws-extension" class="md-nav__link">
-    步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。
+  <a href="#2stable-diffusion-aws-extension" class="md-nav__link">
+    步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-api-urlapi-token" class="md-nav__link">
+    步骤3: 配置API Url和API Token
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    后续操作
-  </a>
   
 </li>
       
@@ -905,21 +905,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2stable-diffusion-webuistable-diffusion-aws-extension" class="md-nav__link">
-    步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。
+  <a href="#2stable-diffusion-aws-extension" class="md-nav__link">
+    步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-api-urlapi-token" class="md-nav__link">
+    步骤3: 配置API Url和API Token
   </a>
   
 </li>
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    后续操作
-  </a>
   
 </li>
       
@@ -944,40 +944,77 @@
   <h1>部署步骤</h1>
 
 <p>在部署解决方案之前，建议您先查看本指南中有关架构图和区域支持等信息。然后按照下面的说明配置解决方案并将其部署到您的帐户中。</p>
-<p>部署时间：约 15 分钟</p>
+<p>部署时间：约 25 分钟</p>
 <h2 id="_1">前提条件</h2>
-<p>用户需提前部署好本地的<a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">Stable Diffusion WebUI</a>。</p>
+<!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
+<p>用户需要提前准备一台运行linux系统的电脑</p>
 <h2 id="_2">部署概述</h2>
 <p>在亚马逊云科技上部署本解决方案主要包括以下过程：</p>
 <ul>
 <li>步骤1：在您的亚马逊云科技账户中启动Amazon CloudFormation模板。</li>
-<li>步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。</li>
+</ul>
+<!-- - 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。 -->
+<ul>
+<li>步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。</li>
+<li>步骤3: 配置API Url和API Token</li>
 </ul>
 <h2 id="_3">部署步骤</h2>
 <h3 id="1amazon-cloudformation">步骤1：在您的亚马逊云科技账户中启动Amazon CloudFormation模板。</h3>
 <p>此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。</p>
 <ol>
-<li>登录到AWS管理控制台，点击链接创建AWS CloudFormation模版。</li>
+<li>登录到AWS管理控制台，点击链接<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json">Stable-Diffusion-AWS-Extension.template</a>。</li>
 <li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
 <li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
-<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，在<strong>aigcbucketname</strong>部分输入一个有效的桶名称，主要用于本堆栈需要的上传数据和存储结果。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>sdextensionapikey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>部分</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击<strong>下一步</strong>。</li>
+<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>sdextensionapikey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>utilscpuinsttype</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击<strong>下一步</strong>。</li>
+<li>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</li>
+<li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
+<li>您可以在 AWS CloudFormation 控制台的 <strong>状态</strong> 列中查看堆栈的状态。您应该会在大约 15 分钟内收到<strong>CREATE_COMPLETE</strong>状态。</li>
 </ol>
 <div class="admonition important">
 <p class="admonition-title">提示</p>
 <p>请及时检查您预留邮箱的收件箱，并在主题为“AWS Notification - Subscription Confirmation”的邮件中，点击“Confirm subscription”超链接，按提示完成订阅。</p>
 </div>
+<h3 id="2stable-diffusion-aws-extension">步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。</h3>
 <ol>
-<li>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</li>
-<li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
+<li>在提前准备的运行linux的电脑的工作目录下，运行以下命令下载最新的安装脚本
+<div class="highlight"><pre><span></span><code>wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
+</code></pre></div></li>
+<li>运行安装脚本
+<div class="highlight"><pre><span></span><code>sh install.sh
+</code></pre></div></li>
+<li>移步到install.sh下载的stable-diffusion-webui文件夹
+<div class="highlight"><pre><span></span><code>cd stable-diffusion-webui
+</code></pre></div></li>
+<li>对于不带GPU的机器，可以通过以下命令启动webui
+<div class="highlight"><pre><span></span><code>./webui.sh --skip-torch-cuda-test
+</code></pre></div></li>
+<li>对于带GPU的机器，可以通过以下命令启动webui
+<div class="highlight"><pre><span></span><code>./webui.sh
+</code></pre></div></li>
 </ol>
-<p>您可以在AWS CloudFormation控制台的状态列中查看堆栈的状态。创建完成后即可看到状态为CREATE_COMPLETE。</p>
-<h3 id="2stable-diffusion-webuistable-diffusion-aws-extension">步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。</h3>
+<h3 id="3-api-urlapi-token">步骤3: 配置API Url和API Token</h3>
 <ol>
-<li>打开已部署的Stable Diffusion WebUI界面，进入<strong>Extensions</strong>标签页 - <strong>Install from URL</strong>子标签页，在<strong>URL from extension's git repository</strong>文本框输入本解决方案repository地址 <a href="https://github.com/awslabs/stable-diffusion-aws-extension.git">https://github.com/awslabs/stable-diffusion-aws-extension.git</a>，点击<strong>Install</strong>。</li>
-<li>点击<strong>Installed</strong>子标签页，点击<strong>Apply and restart UI</strong>，WebUI会多出一个<strong>Amazon SageMaker</strong>标签页，表明已完成插件安装。</li>
+<li>
+<p>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>。</p>
+</li>
+<li>
+<p>从堆栈列表中选择方案的根堆栈，而不是嵌套堆栈。列表中嵌套堆栈的名称旁边会显示嵌套（NESTED）。</p>
+</li>
+<li>
+<p>打开输出（Outputs）标签页，找到<strong>APIGatewayUrl</strong>和<strong>ApiGatewayUrlToken</strong>对应的数值，并复制。</p>
+</li>
+<li>
+<p>打开Stable Diffusion WebUI中的<strong>Amazon SageMaker</strong>标签页，在<strong>API URL</strong>文本框粘贴步骤3得到的URL。在<strong>API Token</strong>输入步骤3得到的token。点击<strong>Test Connection</strong>，会得到<strong>Successfully Connected</strong>的确认信息。</p>
+</li>
+<li>
+<p>点击<strong>Update Setting</strong>更新配置文件，这样下次就能得到对应的信息</p>
+</li>
 </ol>
-<h2 id="_4">后续操作</h2>
-<p>堆栈创建成功后，您可以在AWS CloudFormation的输出（Outputs）标签页中查询相关信息。</p>
+<!-- 1. 打开已部署的Stable Diffusion WebUI界面，进入**Extensions**标签页 - **Install from URL**子标签页，在**URL from extension's git repository**文本框输入本解决方案repository地址 [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git)，点击**Install**。
+2. 点击**Installed**子标签页，点击**Apply and restart UI**，WebUI会多出一个**Amazon SageMaker**标签页，表明已完成插件安装。 -->
+
+<!-- ## 后续操作
+堆栈创建成功后，您可以在AWS CloudFormation的输出（Outputs）标签页中查询相关信息。 -->
 
 
 

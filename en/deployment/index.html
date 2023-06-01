@@ -59,7 +59,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#deployment-overview" class="md-skip">
+        <a href="#prerequsite" class="md-skip">
           Skip to content
         </a>
       
@@ -800,6 +800,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#prerequsite" class="md-nav__link">
+    Prerequsite
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#deployment-overview" class="md-nav__link">
     Deployment overview
   </a>
@@ -835,46 +842,30 @@
 
 <p>Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.</p>
 <p><strong>Time to deploy</strong>: Approximately [10] minutes</p>
+<h2 id="prerequsite">Prerequsite</h2>
+<p>Users need to prepare a computer running linux system in advance </p>
 <h2 id="deployment-overview">Deployment overview</h2>
 <p>Use the following steps to deploy this solution on AWS. </p>
 <ul>
-<li>Launch the AWS CloudFormation template into your AWS account.</li>
-<li>Review the template parameters, and adjust them if necessary.</li>
+<li>Step1: Launch the Amazon CloudFormation template in your AWS account.</li>
+<li>Step2: Install the plugin Stable Diffusion AWS Extension via the install script.</li>
 </ul>
 <h2 id="deployment-steps">Deployment steps</h2>
 <p>This automated AWS CloudFormation template deploys the solution in the AWS Cloud.</p>
 <ol>
 <li>Sign in to the AWS Management Console and use [Launch solution in AWS Standard Regions][launch-template] to launch the AWS CloudFormation template.   </li>
-<li>The template launches in the US East (N. Virginia) Region by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
+<li>By default, the template will launch in the default locale after you log into the console. To launch the solution in a specific Amazon Web Service region, select it from the Region drop-down list in the console navigation bar.</li>
 <li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
-<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. For information about naming character limitations, refer to [IAM and STS Limits][iam-limit] in the <code>AWS Identity and Access Management User Guide</code>.</li>
-<li>
-<p>Under <strong>Parameters</strong>, review the parameters for the template and modify them as necessary. This solution uses the following default values.</p>
-<table>
-<thead>
-<tr>
-<th align="center">Parameter</th>
-<th align="center">Default</th>
-<th align="left">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-<td></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</li>
-<li>
-<p>Choose <strong>Next</strong>.</p>
-</li>
-<li>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</li>
-<li>On the <strong>Review</strong> page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources.</li>
-<li>Choose <strong>Create stack</strong> to deploy the stack.</li>
+<li>On the <strong>Specify stack details</strong> page, assign a name that is unique within the account and meets the naming requirements for your solution stack. In the <strong>Parameters</strong> section, enter a valid email address in <strong>email</strong> to receive future notifications. In the <strong>sdextensionapikey</strong> field, please enter a 20-character string containing a combination of numbers and letters; if not provided, the default is "09876543210987654321". Select the Amazon EC2 instance type in <strong>utilscpuinsttype</strong>, which is mainly used for operations including model creation and model merging. Click <strong>Next</strong>.</li>
+<li>On the <strong>Configure Stack Options</strong> page, choose <strong>Next</strong>.</li>
+<li>On the <strong>Previe</strong> page, review and confirm the settings. Make sure to select the checkbox confirming that the template will create Amazon Identity and Access Management (IAM) resources. And make sure to check the boxes for other features required by AWS CloudFormation. Select <strong>Submit</strong> to deploy the stack.</li>
+<li>Wait until the status of the main stack changes to <strong>CREATE_COMPLETE</strong>, please record <strong>ApiGatewayUrl</strong> in the <strong>Outpts</strong> section
+and <strong>ApiGateWayUrlToken</strong></li>
 </ol>
-<p>You can view the status of the stack in the AWS CloudFormation Console in the <strong>Status</strong> column. You should receive a CREATE_COMPLETE status in approximately [10] minutes.</p>
+<div class="admonition important">
+<p class="admonition-title">Hint</p>
+<p>Please check the inbox of your reserved mailbox in time, and in the email with the subject "AWS Notification - Subscription Confirmation", click the "Confirm subscription" hyperlink and follow the prompts to complete the subscription.</p>
+</div>
 
 
 

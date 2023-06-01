@@ -906,7 +906,7 @@
 
 
 <h1 id="txt2img">使用txt2img进行云上推理</h1>
-<p>您可以打开txt2img标签页，通过结合使用txt2img原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的txt2img推理工作。 </p>
+<p>您可以打开<strong>txt2img</strong>标签页，通过结合使用<strong>txt2img</strong>原生区域及解决方案新增面板<strong>Amazon SageMaker Inference</strong>，实现调用云上资源的<strong>txt2img</strong>推理工作。 </p>
 <h2 id="txt2img_1">txt2img的使用方法</h2>
 <ol>
 <li>进入<strong>txt2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。
@@ -923,8 +923,8 @@
 <p>点击模型下拉框右侧的刷新按钮，选择推理所需的<strong>Stable Diffusion Checkpoint</strong>（必选，可多选）及其他所需的<strong>Extra Networks for Cloud Inference</strong>（可选，并且可多模型多选叠加）。</p>
 </li>
 <li>点击<strong>Generate on Cloud</strong>。</li>
-<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
-<p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;inference id</strong>。</p>
+<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
+<p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;推理状态（succeed/in progress/fail)-&gt;inference id</strong>。</p>
 </blockquote>
 </li>
 </ol>

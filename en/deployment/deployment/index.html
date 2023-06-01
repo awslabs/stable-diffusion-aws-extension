@@ -621,15 +621,15 @@
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#step-2-install-the-plugin-stable-diffusion-aws-extension-through-the-installation-script" class="md-nav__link">
+    Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.
+  </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#future-step" class="md-nav__link">
-    Future step
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -923,15 +923,15 @@
   
 </li>
         
-      </ul>
-    </nav>
+          <li class="md-nav__item">
+  <a href="#step-2-install-the-plugin-stable-diffusion-aws-extension-through-the-installation-script" class="md-nav__link">
+    Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.
+  </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#future-step" class="md-nav__link">
-    Future step
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -958,7 +958,7 @@
 <p>Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.</p>
 <p><strong>Time to deploy</strong>: Approximately 15 minutes</p>
 <h2 id="prerequisition">Prerequisition</h2>
-<p>User needs to install <a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui">Stable Diffusion WebUI</a> in advance.</p>
+<p>Users need to prepare a computer running linux system in advance</p>
 <h2 id="deployment-overview">Deployment overview</h2>
 <p>Use the following steps to deploy this solution on AWS. </p>
 <ul>
@@ -990,8 +990,26 @@
 <li>Open the Stable Diffusion WebUI, navigate to the <strong>Extensions</strong> tab - <strong>Install from URL</strong> subtab, and enter the repository address of this solution <a href="https://github.com/awslabs/stable-diffusion-aws-extension.git">https://github.com/awslabs/stable-diffusion-aws-extension.git</a> in the <strong>URL from extension's git repository</strong> text box. Click <strong>Install</strong>.</li>
 <li>Navigate to <strong>Installed</strong> subtab, click <strong>Apply and restart UI</strong>. The <strong>Amazon SageMaker</strong> tab will appear in the WebUI, indicating that the extension installation has been completed.</li>
 </ol>
-<h2 id="future-step">Future step</h2>
-<p>After successful stack creation, you can find relevant information in the <strong>Outputs</strong> tab of AWS CloudFormation.</p>
+<h3 id="step-2-install-the-plugin-stable-diffusion-aws-extension-through-the-installation-script">Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.</h3>
+<ol>
+<li>In the working directory of the computer running linux prepared in advance, run the following command to download the latest installation script
+<div class="highlight"><pre><span></span><code>wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
+</code></pre></div></li>
+<li>Run the installation script
+<div class="highlight"><pre><span></span><code>sh install.sh
+</code></pre></div></li>
+<li>Move to the stable-diffusion-webui folder downloaded by install.sh
+<div class="highlight"><pre><span></span><code>cd stable-diffusion-webui
+</code></pre></div></li>
+<li>For machines without GPU, you can start the webui with the following command
+<div class="highlight"><pre><span></span><code>./webui.sh --skip-torch-cuda-test
+</code></pre></div></li>
+<li>For machines with GPU, you can start the webui with the following command
+<div class="highlight"><pre><span></span><code>./webui.sh
+</code></pre></div></li>
+</ol>
+<!-- ## Future step
+After successful stack creation, you can find relevant information in the **Outputs** tab of AWS CloudFormation. -->
 
 
 
