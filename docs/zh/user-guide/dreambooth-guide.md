@@ -1,5 +1,5 @@
 # 使用Dreambooth进行云上模型训练
-您可以打开**Dreambooth**标签页，通过结合使用**Dreambooth**原生区域及解决方案新增面板‘Amazon SageMaker Inference‘，实现调用云上资源的**Dreambooth**云上模型训练工作。 
+您可以打开**Dreambooth**标签页，通过结合使用**Dreambooth**原生区域及解决方案新增面板**Amazon SageMaker Inference**，实现调用云上资源的**Dreambooth**云上模型训练工作。 
 
 
 ## 创建模型

@@ -74,6 +74,7 @@ def create_train_job_api(raw_event, context):
             timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+        train_input_s3_location = f's3://{bucket_name}/{input_location}'
 
         train_job = TrainJob(
             id=request_id,
@@ -81,7 +82,7 @@ def create_train_job_api(raw_event, context):
             job_status=TrainJobStatus.Initial,
             params=event.params,
             train_type=event.train_type,
-            input_s3_location=f's3://{bucket_name}/{input_location}',
+            input_s3_location=train_input_s3_location,
             checkpoint_id=checkpoint.id,
             timestamp=datetime.datetime.now().timestamp()
         )
@@ -93,7 +94,8 @@ def create_train_job_api(raw_event, context):
                 'id': train_job.id,
                 'status': train_job.job_status.value,
                 'trainType': train_job.train_type,
-                'params': train_job.params
+                'params': train_job.params,
+                'input_location': train_input_s3_location,
             },
             's3PresignUrl': presign_url_map
         }
@@ -215,7 +217,9 @@ def _start_train_job(train_job_id: str):
         })
 
         final_instance_type = instance_type
-        if 'training_params' in train_job.params and 'training_instance_type' in train_job.params['training_params']:
+        if 'training_params' in train_job.params \
+                and 'training_instance_type' in train_job.params['training_params'] and \
+                train_job.params['training_params']['training_instance_type']:
             final_instance_type = train_job.params['training_params']['training_instance_type']
 
         est = sagemaker.estimator.Estimator(
