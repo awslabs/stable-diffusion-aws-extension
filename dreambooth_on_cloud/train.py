@@ -86,6 +86,7 @@ def async_prepare_for_training_on_sagemaker(
         data_path_list: list,
         class_data_path_list: list,
         db_config_path: str,
+        model_type: str,
         training_instance_type: str
 ):
     url = get_variable_from_json('api_gateway_url')
@@ -119,7 +120,7 @@ def async_prepare_for_training_on_sagemaker(
         print("Pack the class data file.")
         os.system(f"tar cf {class_data_tar} {class_data_path}")
     payload = {
-        "train_type": "Stable-diffusion",
+        "train_type": model_type,
         "model_id": model_id,
         "filenames": upload_files,
         "params": {
@@ -135,6 +136,7 @@ def async_prepare_for_training_on_sagemaker(
     print("Post request for upload s3 presign url.")
     response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
     json_response = response.json()
+    print(json_response)
     for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
@@ -185,6 +187,10 @@ def cloud_train(
     model_list = get_cloud_db_models()
     new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
     hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list)
+    if config["use_lora"] == True:
+        model_type = "Lora"
+    else:
+        model_type = "Stable-diffusion"
 
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
@@ -198,7 +204,8 @@ def cloud_train(
     #                                 args=(model_id, model_name, s3_model_path,data_path, class_data_path))
     # upload_thread.start()
     response = async_prepare_for_training_on_sagemaker(
-        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list, new_db_config_path, training_instance_type)
+        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
+        new_db_config_path, model_type, training_instance_type)
     job_id = response["job"]["id"]
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -267,7 +274,7 @@ def get_sorted_cloud_dataset():
         response = raw_response.json()
         response['datasets'].sort(key=lambda t:t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
         return response['datasets']
-    except requests.exections.RequestException as e:
+    except Exception as e:
         print(f"exception {e}")
         return []
 

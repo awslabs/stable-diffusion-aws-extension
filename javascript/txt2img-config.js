@@ -136,13 +136,13 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
-    config["script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate"] =
+    config["script_txt2txt_checkbox_iterate_every_line"] =
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate > label > input",
             "checked",
             false
         );
-    config["script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch"] =
+    config["script_txt2txt_checkbox_iterate_all_lines"] =
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch > label > input",
             "checked",

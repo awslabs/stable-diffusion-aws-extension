@@ -3,8 +3,7 @@ Before you launch the solution, review the architecture, supported regions, and 
 **Time to deploy**: Approximately 15 minutes
 
 ## Prerequisition
-User needs to install [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) in advance.
-
+Users need to prepare a computer running linux system in advance
 
 
 ## Deployment overview
@@ -37,7 +36,28 @@ You can view the status of the stack in the AWS CloudFormation Console in the **
 1. Open the Stable Diffusion WebUI, navigate to the **Extensions** tab - **Install from URL** subtab, and enter the repository address of this solution [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git) in the **URL from extension's git repository** text box. Click **Install**.
 2. Navigate to **Installed** subtab, click **Apply and restart UI**. The **Amazon SageMaker** tab will appear in the WebUI, indicating that the extension installation has been completed.
 
+### Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.
+1. In the working directory of the computer running linux prepared in advance, run the following command to download the latest installation script
+```
+wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
+```
+2. Run the installation script
+```
+sh install.sh
+```
+3. Move to the stable-diffusion-webui folder downloaded by install.sh
+```
+cd stable-diffusion-webui
+```
+4. For machines without GPU, you can start the webui with the following command
+```
+./webui.sh --skip-torch-cuda-test
+```
+5. For machines with GPU, you can start the webui with the following command
+```
+./webui.sh
+```
 
-## Future step
-After successful stack creation, you can find relevant information in the **Outputs** tab of AWS CloudFormation.
+<!-- ## Future step
+After successful stack creation, you can find relevant information in the **Outputs** tab of AWS CloudFormation. -->
 
