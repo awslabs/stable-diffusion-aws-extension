@@ -10,6 +10,8 @@ To set up the development environment, you will need have AWS account and tools 
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
 - Docker
 
+>**Notice** :This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
+
 ### Source Code Structure
 
 ```
@@ -21,37 +23,64 @@ To set up the development environment, you will need have AWS account and tools 
 ├── NOTICE
 ├── README.md
 ├── THIRD-PARTY-LICENSES.txt
-├── build_scripts -- scripts to build the extension
-├── buildspec.yml -- buildspec file for CodeBuild
+├── build_scripts -- scripts to build the docker images, we use these scripts to build docker images on cloud
+├── buildspec.yml -- buildspec file for CodeBuild, we have code pipeline to use this buildspec to transfer the CDK assets to Cloudformation templates
 ├── deployment    -- scripts to deploy the CloudFormation template
 ├── docs
 ├── dreambooth_sagemaker -- SageMaker support for dreambooth
-├── infrastructure -- CDK project to deploy the middleware
+├── infrastructure -- CDK project to deploy the middleware, all the middle ware infrastructure code is in this directory
 ├── install.py -- install dependencies for the extension
-├── install.sh --  install other extension with fixed version
+├── install.sh --  script to set the webui and extension to specific version
 ├── javascript -- javascript code for the extension
-├── middleware_api -- middleware api denifition
+├── middleware_api -- middleware api denifition and lambda code
 ├── preflight.sh -- version compatibility check
 ├── sagemaker_entrypoint_json.py -- wrapper function for SageMaker
-├── scripts -- extension implementation
+├── scripts -- extension related code for WebUI
 └── utils.py -- wrapper function for configure options
 ```
 
-### Install the extension:
+## How to install:
 
-1. Make sure you already have WebUI installed and running, following [stable-diffusion-ui](https://github.com/AUTOMATIC1111/stable-diffusion-webui) if not.
-2. Install the extension from "Available" tab in WebUI Extension tab or input the address "https://github.com/awslabs/stable-diffusion-aws-extension.git" in "Install from URL" directly. Moreover, you can also install the extension under the repo by running the following command:
 
-   ```bash
-   cd extensions/
-   git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-   ```
+### **Part1**: Install the stable-diffusion-webui and extension
 
-3. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough. Or you can user AWS CDK to deploy the middleware with following step 4:
+1. In the working directory of a Linux computer prepared in advance, run the following command to download the latest installation script:
+```bash
+wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
+```
+2. Run the installation script, this script will try to git clone following repos and put the extensions on stable-diffusion-webui extension directory:
+   * stable-diffusion-webui
+   * stable-diffusion-aws-extension
+   * sd-webui-controlnet
+   * sd_dreambooth_extension
+```bash
+sh install.sh
+```
+>**Notice** :The version of the downloaded repos has been set in the install.sh script, please do not manually change the version, we have tested on the version set in the script.
+3. Move to the stable-diffusion-webui folder downloaded by install.sh:
+```bash
+cd stable-diffusion-webui
+```
+4. For machines without a GPU, you can start the web UI using the following command:
+```bash
+./webui.sh --skip-torch-cuda-test
+```
+5. For machines with a GPU, you can start the web UI using the following command:
+```bash
+./webui.sh
+```
 
-   ![Screen Shot 2023-05-28 at 18 45 11](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/dfc17d02-c1c1-4be7-ac00-76b08b920381)
+### **Part2**: Install Middleware On AWS Cloud
+#### **Option 1**: Use AWS Cloudformation Template
+1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
 
-4. (Optional for AWS CDK method) Deploy the project to your AWS account (make sure your current profile has Administrator access, with AWS CDK, Docker installed):
+<img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
+
+
+>**Notice** : We prefer use deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for arround 2 hours. That mean user need to wait arround 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
+
+#### **Option 2**: Use AWS CDK(Cloud Development Kit)
+1. Deploy the project to your AWS account (make sure your current profile has Administrator access, with AWS CDK, Docker installed):
 
    ```bash
    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
@@ -80,7 +109,7 @@ To set up the development environment, you will need have AWS account and tools 
 5. Go to AWS CloudFormation console, find the stack you just created, click "Outputs" tab, you will see the API Gateway URL, API Token. You will need them later.
 ![Screen Shot 2023-05-28 at 20 35 11](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/743312ea-2cc8-4a2b-bfb8-dcb60cb8862e)
 
-### Set up the extension in WebUI console
+## Set up the extension in WebUI console
 
 1. Go back the WebUI console, and choose "AWS SageMaker" tab, enter the API Gateway URL and API token you just got from CloudFormation/CDK output, click "Update Setting" and "Test Connection" button to make sure the connection is successful. Or you can create new file called ```sagemaker_ui.json``` for the same purpose, the file should be placed under stable diffusion root folder and the content should be like below:
    
