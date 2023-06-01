@@ -86,6 +86,8 @@ def async_prepare_for_training_on_sagemaker(
         data_path_list: list,
         class_data_path_list: list,
         db_config_path: str,
+        model_type: str,
+        training_instance_type: str
 ):
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -118,7 +120,7 @@ def async_prepare_for_training_on_sagemaker(
         print("Pack the class data file.")
         os.system(f"tar cf {class_data_tar} {class_data_path}")
     payload = {
-        "train_type": "Stable-diffusion",
+        "train_type": model_type,
         "model_id": model_id,
         "filenames": upload_files,
         "params": {
@@ -127,6 +129,7 @@ def async_prepare_for_training_on_sagemaker(
                 "model_name": model_name,
                 "data_tar_list": data_tar_list,
                 "class_data_tar_list": class_data_tar_list,
+                "training_instance_type": training_instance_type
             }
         }
     }
@@ -163,7 +166,8 @@ def wrap_save_config(model_name):
 
 def cloud_train(
         train_model_name: str,
-        local_model_name=False
+        local_model_name=False,
+        training_instance_type: str= ""
 ):
     # Get data path and class data path.
     print(f"Start cloud training {train_model_name}")
@@ -182,6 +186,10 @@ def cloud_train(
     model_list = get_cloud_db_models()
     new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
     hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list)
+    if config["use_lora"] == True:
+        model_type = "Lora"
+    else:
+        model_type = "Stable-diffusion"
 
     # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
@@ -195,7 +203,8 @@ def cloud_train(
     #                                 args=(model_id, model_name, s3_model_path,data_path, class_data_path))
     # upload_thread.start()
     response = async_prepare_for_training_on_sagemaker(
-        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list, new_db_config_path)
+        model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
+        new_db_config_path, model_type, training_instance_type)
     job_id = response["job"]["id"]
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -249,3 +258,24 @@ def get_create_model_job_list():
         print(f"exception {e}")
 
     return table
+
+
+def get_sorted_cloud_dataset():
+    url = get_variable_from_json('api_gateway_url') + 'datasets?dataset_status=Enabled'
+    api_key = get_variable_from_json('api_token')
+    if not url or not api_key:
+        logging.error("Url or API-Key is not setting.")
+        return []
+
+    try:
+        raw_response = requests.get(url=url, headers={'x-api-key': api_key})
+        raw_response.raise_for_status()
+        response = raw_response.json()
+        response['datasets'].sort(key=lambda t:t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
+        return response['datasets']
+    except requests.exections.RequestException as e:
+        print(f"exception {e}")
+        return []
+
+
+

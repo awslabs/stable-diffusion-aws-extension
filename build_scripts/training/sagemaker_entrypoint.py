@@ -89,9 +89,9 @@ def upload_model_to_s3_v2(model_name, s3_output_path):
     for root, dirs, files in os.walk(local_path):
         for file in files:
             if file.endswith('.safetensors'):
-                model_name = re.sub('\.safetensors$', '', file)
+                ckpt_name = re.sub('\.safetensors$', '', file)
                 safetensors = os.path.join(root, file)
-                yaml = os.path.join(root, f"{model_name}.yaml")
+                yaml = os.path.join(root, f"{ckpt_name}.yaml")
                 output_tar = file
                 tar_command = f"tar cvf {output_tar} {safetensors} {yaml}"
                 print(tar_command)

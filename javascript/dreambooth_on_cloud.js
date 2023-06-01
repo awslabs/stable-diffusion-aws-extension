@@ -1,4 +1,9 @@
 // Sagemaker Train!
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function db_start_sagemaker_train() {
     console.log("Sagemaker training");
     console.log(arguments);
@@ -11,7 +16,7 @@ function db_start_sagemaker_train() {
     save_config();
     // let sagemaker_train = gradioApp().getElementById("db_sagemaker_train");
     // sagemaker_train.style.display = "block";
-    return filterArgs(2, arguments);
+    return filterArgs(3, arguments)
 }
 
 function check_create_model_params() {

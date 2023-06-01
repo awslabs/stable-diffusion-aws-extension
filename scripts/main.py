@@ -2,13 +2,12 @@ import sys
 import requests
 import logging
 import gradio as gr
-import modules.scripts as scripts
 import os
+import modules.scripts as scripts
 from modules import script_callbacks
 from modules.ui import create_refresh_button
 from utils import get_variable_from_json
 from utils import save_variable_to_json
-
 
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 import sagemaker_ui
@@ -19,6 +18,7 @@ try:
         get_cloud_db_model_name_list,
         wrap_load_model_params,
         get_train_job_list,
+        get_sorted_cloud_dataset
     )
     from dreambooth_on_cloud.create_model import (
         get_sd_cloud_models,
@@ -31,6 +31,7 @@ except Exception as e:
 
 db_model_name = None
 cloud_db_model_name = None
+cloud_train_instance_type = None
 db_use_txt2img = None
 db_sagemaker_train = None
 db_save_config = None
@@ -58,13 +59,15 @@ class SageMakerUI(scripts.Script):
         pass
 
 def on_after_component_callback(component, **_kwargs):
-    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
+    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, cloud_train_instance_type
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
                                 (getattr(component, 'label', None) == 'Model' and getattr(component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
     is_cloud_dreambooth_model_name = type(component) is gr.Dropdown and \
                                      getattr(component, 'elem_id', None) == 'cloud_db_model_name'
+    is_machine_type_for_train = type(component) is gr.Dropdown and \
+                                getattr(component, 'elem_id', None) == 'cloud_train_instance_type'
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
@@ -73,14 +76,17 @@ def on_after_component_callback(component, **_kwargs):
         db_model_name = component
     if is_cloud_dreambooth_model_name:
         cloud_db_model_name = component
+    if is_machine_type_for_train:
+        cloud_train_instance_type = component
     if is_dreambooth_use_txt2img:
         db_use_txt2img = component
     if is_db_save_config:
         db_save_config = component
     # After all requiment comment is loaded, add the SageMaker training button click callback function.
-    if cloud_db_model_name is not None and db_model_name is not None and \
+    if cloud_train_instance_type is not None and \
+            cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
-            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name):
+            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train):
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
             fn=cloud_train,
@@ -88,6 +94,7 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[
                 cloud_db_model_name,
                 db_use_txt2img,
+                cloud_train_instance_type
             ],
             outputs=[]
         )
@@ -236,9 +243,9 @@ def on_ui_tabs():
                     with gr.Row():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="model_update",
-                                          fn=sagemaker_ui.sagemaker_upload_model_s3,
-                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                          outputs=[test_connection_result])
+                                                  fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                                  inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
+                                                  outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
 
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
@@ -250,9 +257,9 @@ def on_ui_tabs():
                     with gr.Row():
                         sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
                         sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
-                                              _js="deploy_endpoint", \
-                                              inputs = [instance_type_dropdown, instance_count_dropdown],
-                                              outputs=[test_connection_result])
+                                                      _js="deploy_endpoint", \
+                                                      inputs = [instance_type_dropdown, instance_count_dropdown],
+                                                      outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
@@ -261,9 +268,9 @@ def on_ui_tabs():
                         modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
                     sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',elem_id="sagemaker_endpoint_delete_button")
                     sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
-                                              _js="delete_sagemaker_endpoint", \
-                                              inputs = [sagemaker_endpoint_delete_dropdown],
-                                              outputs=[test_connection_result])
+                                                           _js="delete_sagemaker_endpoint", \
+                                                           inputs = [sagemaker_endpoint_delete_dropdown],
+                                                           outputs=[test_connection_result])
 
             with gr.Column(variant="panel", scale=1):
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
@@ -291,14 +298,6 @@ def on_ui_tabs():
                         dataset_content = []
                         file_path_lookup = {}
                         for file in files:
-                            # {
-                            #     "filename": "/Users/cyanda/Documents/avatar.png",
-                            #     "name": "another_name",
-                            #     "type": "png",
-                            #     "params": {
-                            #         "description": "this is uploaded for testing"
-                            #     }
-                            # }
                             orig_name = file.name.split(os.sep)[-1]
                             file_path_lookup[orig_name] = file.name
                             dataset_content.append(
@@ -381,6 +380,8 @@ def avoid_duplicate_from_restart_ui(res):
     return False
 
 
+cloud_datasets = []
+
 def ui_tabs_callback():
     res = origin_callback()
     if avoid_duplicate_from_restart_ui(res):
@@ -417,6 +418,46 @@ def ui_tabs_callback():
                                             lambda: {"choices": sorted(get_cloud_model_snapshots())},
                                             "refresh_db_snapshots",
                                         )
+
+                                    with gr.Row():
+                                        cloud_train_instance_type = gr.Dropdown(
+                                            label="Sagemaker Train Instance Type",
+                                            choices=['ml.g4dn.2xlarge'],
+                                            elem_id="cloud_train_instance_type",
+                                            info='select sagemaker Train Instance Type'
+                                        )
+
+                                    with gr.Row():
+                                        global cloud_datasets
+                                        cloud_datasets = get_sorted_cloud_dataset()
+
+                                        cloud_dataset_name = gr.Dropdown(
+                                            label="Dataset From Cloud",
+                                            choices=[d['datasetName'] for d in cloud_datasets],
+                                            elem_id="cloud_dataset_dropdown",
+                                            type="index",
+                                            info='select datasets from cloud'
+                                        )
+
+                                        def refresh_datasets():
+                                            global cloud_datasets
+                                            cloud_datasets = get_sorted_cloud_dataset()
+                                            return cloud_datasets
+
+                                        def refresh_datasets_dropdown():
+                                            global cloud_datasets
+                                            cloud_datasets = get_sorted_cloud_dataset()
+                                            return {"choices": [d['datasetName'] for d in cloud_datasets]}
+
+                                        create_refresh_button(
+                                            cloud_dataset_name,
+                                            refresh_datasets,
+                                            refresh_datasets_dropdown,
+                                            "refresh_cloud_dataset",
+                                        )
+                                    with gr.Row():
+                                        dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text').style(show_copy_button=True)
+                                        cloud_dataset_name.select(fn=lambda idx: cloud_datasets[idx]['s3'], inputs=[cloud_dataset_name], outputs=dataset_s3_output)
                                     with gr.Row(visible=False) as lora_model_row:
                                         cloud_db_lora_model_name = gr.Dropdown(
                                             label="Lora Model", choices=get_sorted_lora_cloud_models(),
