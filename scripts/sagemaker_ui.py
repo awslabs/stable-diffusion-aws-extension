@@ -261,7 +261,7 @@ def get_model_list_by_type(model_type):
                 continue
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
+                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
                 checkpoint_list.append(ckpt_name)
 
