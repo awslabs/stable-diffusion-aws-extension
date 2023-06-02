@@ -26,7 +26,8 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: c5.2xlarge
-      ImageId: ami-0d0c6a887ce442603
+      # ImageId: ami-0d0c6a887ce442603
+      ImageId: ami-0261755bbcb8c4a84
       KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -49,6 +50,11 @@ Resources:
             sudo chown -R ubuntu:ubuntu stable-diffusion-webui/
             cd stable-diffusion-webui
             sudo -u ubuntu python3 -m venv venv
+            cd extensions
+            git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+            cd stable-diffusion-aws-extension
+            ./pre-flight.sh -s
+            cd ../../
             sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > log.txt
 
   MyEIP:

@@ -119,12 +119,12 @@ version_sync() {
     if [ "$(ls -A ../../extensions)" ]; then
         echo "The extension folder is not empty, please make sure it is empty before running this script."
         # confirm to proceed
-        read -p "Do you want to proceed? (y/n) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Exiting..."
-            exit 1
-        fi
+        # read -p "Do you want to proceed? (y/n) " -n 1 -r
+        # echo
+        # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        #     echo "Exiting..."
+        #     exit 1
+        # fi
     fi
 
     cd ../../
