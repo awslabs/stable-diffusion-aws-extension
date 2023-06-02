@@ -98,7 +98,7 @@ cd stable-diffusion-webui
    --parameters sub-email-address=<YOUREMAIL@XXX.COM>\
    --parameters util-instance-type=<ml.r5.large | ml.r5.xlarge| ml.c6i.2xlarge | ml.c6i.4xlarge | ml.r5.large>
    ```
-   The project build and deployment will take about 5 minutes and the first time can be longer due to container image packaging. Once the project deployed successfully to your AWS account, you will see output similar below:
+   The project build and deployment will take about 25 minutes and the first time can be longer due to container image packaging. Once the project deployed successfully to your AWS account, you will see output similar below:
 
    ```text
      Stable-diffusion-aws-extension-middleware-stack: creating CloudFormation changeset...

@@ -6,7 +6,7 @@ from typing import Any, List
 
 from common.ddb_service.client import DynamoDbUtilsService
 from _types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
-from common.util import get_s3_presign_urls
+from common.util import get_s3_presign_urls, generate_presign_url
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -156,6 +156,7 @@ def list_data_by_dataset(event, context):
             'key': item.sort_key,
             'name': item.name,
             'type': item.type,
+            'preview_url': generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
             'dataStatus': item.data_status.value,
             **item.params
         })

@@ -22,8 +22,8 @@ class DatasetItem:
         if type(self.data_status) == str:
             self.data_status = DataStatus[self.data_status]
 
-    def get_s3_key(self, bucket, base_key):
-        return f's3://{bucket}/{base_key}/{self.name}'
+    def get_s3_key(self):
+        return f'dataset/{self.dataset_name}/{self.name}'
 
 
 class DatasetStatus(Enum):
