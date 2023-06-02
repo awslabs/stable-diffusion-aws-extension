@@ -7,6 +7,7 @@ import sys
 from urllib.parse import urlparse
 import requests
 import json
+import gradio as gr
 
 sys.path.append(os.getcwd())
 # from modules.timer import Timer
@@ -118,26 +119,31 @@ def upload_file_to_s3_by_presign_url(local_path, s3_presign_url):
     response.raise_for_status()
 
 def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_size):
-
+    integral_uploaded = False
     with open(local_path, "rb") as f:
         parts = []
         try:
             for i, signed_url in enumerate(signed_urls):
                 file_data = f.read(part_size)
                 response = requests.put(signed_url, data=file_data)
+                response.raise_for_status()
                 etag = response.headers['ETag']
                 parts.append({
                     'ETag': etag,
                     'PartNumber': i + 1
                 })
                 print(f'model upload part {i+1}: {response}')
+
+            integral_uploaded = True
             return parts
         except Exception as e:
             print(e)
+            gr.Error(f'Upload file{local_path} failed, please try again. If still not work, contact your admin')
+        finally:
+            if not integral_uploaded:
+                gr.Error(f'Upload file {local_path} not complete, please try again or create new one.')
+                raise Exception('failed at multipart')
 
-
-            # response = requests.put(s3_presign_url, open(local_path, "rb"))
-    # response.raise_for_status()
 
 def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
     s3_resource = boto3.resource('s3')
