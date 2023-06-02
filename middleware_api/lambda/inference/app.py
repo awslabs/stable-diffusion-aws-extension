@@ -373,7 +373,10 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     contronet_enable = get_param_value(params_dict, 'controlnet_enable')
     if contronet_enable:
         controlnet_module = get_param_value(params_dict, 'controlnet_preprocessor', defaultValue=None)
-        controlnet_model = os.path.splitext(selected_cn_model[0])[0]
+        if len(selected_cn_model) < 1:
+            controlnet_model = "None"
+        else:
+            controlnet_model = os.path.splitext(selected_cn_model[0])[0]
         controlnet_image = get_param_value(params_dict, 'txt2img_controlnet_ControlNet_input_image', defaultValue=None)
         controlnet_image = controlnet_image.split(',')[1]
         weight = float(get_param_value(params_dict, 'controlnet_weight', defaultValue=1)) #1,
