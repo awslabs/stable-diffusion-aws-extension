@@ -288,3 +288,17 @@ def get_sorted_cloud_dataset():
 
 
 
+def wrap_load_params(self, params_dict):
+    for key, value in params_dict.items():
+        if hasattr(self, key):
+            setattr(self, key, value)
+    if self.instance_data_dir:
+        if self.instance_data_dir.startswith("s3://"):
+            self.is_valid = True
+        else:
+            self.is_valid = os.path.isdir(self.instance_data_dir)
+        if not self.is_valid:
+            print(f"Invalid Dataset Directory: {self.instance_data_dir}")
+
+from dreambooth.dataclasses.db_concept import Concept
+Concept.load_params = wrap_load_params

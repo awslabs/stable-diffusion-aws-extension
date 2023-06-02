@@ -2,14 +2,14 @@
 
 This solution supports the cloud-based operations of the following native features/third-party extensions of Stable Diffusion WebUI:
 
-| **Feature**  | **Supported Version** | **Support Function** |
-| ------------- | ------------- |
-| [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  |
-| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  |
-| [LoRa](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  |
-| [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)  | V1.1.189  |
-| [Dreambooth](https://github.com/d8ahazard/sd_dreambooth_extension)  | 20230331  |
-| [Image browser](https://github.com/yfszzx/stable-diffusion-webui-images-browser)  | Latest  |
+| **Feature**  | **Supported Version** | **Note** |
+| ------------- | ------------- | ------------- |
+| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  | |
+| [LoRa](https://github.com/AUTOMATIC1111/stable-diffusion-webui)  | V1.2.1  | |
+| [ControlNet](https://github.com/Mikubill/sd-webui-controlnet)  | V1.1.189  | Not support preprocessor 'inpaint_global_harmonious'|
+| [Dreambooth](https://github.com/d8ahazard/sd_dreambooth_extension)  | 20230331  | |
+| [Image browser](https://github.com/yfszzx/stable-diffusion-webui-images-browser)  | Latest  | |
+| img2img | Coming by end of June 2023 | |
 
 
 ## Benefits
