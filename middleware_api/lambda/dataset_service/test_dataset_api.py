@@ -59,7 +59,7 @@ class DatasetApiTest(TestCase):
         from dataset_api import list_data_by_dataset
         resp = list_data_by_dataset({
             "pathStringParameters": {
-                "dataset_name": "test_dataset"
+                "dataset_name": "demo-001"
             }
         }, {})
         print(resp)

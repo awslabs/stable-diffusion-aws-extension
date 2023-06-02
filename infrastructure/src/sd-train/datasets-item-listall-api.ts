@@ -70,6 +70,18 @@ export class ListAllDatasetItemsApi {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        's3:GetObject',
+        's3:ListBucket',
+      ],
+      resources: [`${this.s3Bucket.bucketArn}/*`,
+        'arn:aws:s3:::*SageMaker*',
+        'arn:aws:s3:::*Sagemaker*',
+        'arn:aws:s3:::*sagemaker*'],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',

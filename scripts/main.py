@@ -8,6 +8,7 @@ from modules import script_callbacks
 from modules.ui import create_refresh_button
 from utils import get_variable_from_json
 from utils import save_variable_to_json
+from PIL import Image
 
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 import sagemaker_ui
@@ -29,6 +30,7 @@ except Exception as e:
     logging.error("Dreambooth on cloud module is not support.")
     logging.error(e)
 
+cloud_datasets = []
 db_model_name = None
 cloud_db_model_name = None
 cloud_train_instance_type = None
@@ -42,7 +44,7 @@ txt2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge",\
+async_inference_choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
                          "ml.g5.xlarge","ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
 
 class SageMakerUI(scripts.Script):
@@ -285,80 +287,132 @@ def on_ui_tabs():
                 #         model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model", visible=False)
 
                 with gr.Blocks(title="Create AWS dataset", variant='panel'):
-                    gr.HTML(value="<u><b>AWS Dataset Creation</b></u>")
-                    def upload_file(files):
-                        file_paths = [file.name for file in files]
-                        return file_paths
+                    gr.HTML(value="<u><b>AWS Dataset Management</b></u>")
+                    with gr.Tab("Create"):
+                        def upload_file(files):
+                            file_paths = [file.name for file in files]
+                            return file_paths
 
-                    file_output = gr.File()
-                    upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"], file_count="multiple")
-                    upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
+                        file_output = gr.File()
+                        upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"], file_count="multiple")
+                        upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
-                    def create_dataset(files, dataset_name, dataset_desc):
-                        print(dataset_name)
-                        dataset_content = []
-                        file_path_lookup = {}
-                        for file in files:
-                            orig_name = file.name.split(os.sep)[-1]
-                            file_path_lookup[orig_name] = file.name
-                            dataset_content.append(
-                                {
-                                    "filename": orig_name,
-                                    "name": orig_name,
-                                    "type": "image",
-                                    "params": {}
+                        def create_dataset(files, dataset_name, dataset_desc):
+                            print(dataset_name)
+                            dataset_content = []
+                            file_path_lookup = {}
+                            for file in files:
+                                orig_name = file.name.split(os.sep)[-1]
+                                file_path_lookup[orig_name] = file.name
+                                dataset_content.append(
+                                    {
+                                        "filename": orig_name,
+                                        "name": orig_name,
+                                        "type": "image",
+                                        "params": {}
+                                    }
+                                )
+
+                            payload = {
+                                "dataset_name": dataset_name,
+                                "content": dataset_content,
+                                "params": {
+                                    "description": dataset_desc
                                 }
+                            }
+
+                            url = get_variable_from_json('api_gateway_url') + '/dataset'
+                            api_key = get_variable_from_json('api_token')
+
+                            raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                            raw_response.raise_for_status()
+                            response = raw_response.json()
+
+                            print(f"Start upload sample files response:\n{response}")
+                            for filename, presign_url in response['s3PresignUrl'].items():
+                                file_path = file_path_lookup[filename]
+                                with open(file_path, 'rb') as f:
+                                    response = requests.put(presign_url, f)
+                                    print(response)
+                                    response.raise_for_status()
+
+                            payload = {
+                                "dataset_name": dataset_name,
+                                "status": "Enabled"
+                            }
+
+                            raw_response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                            raw_response.raise_for_status()
+                            print(raw_response.json())
+                            return f'Complete Dataset {dataset_name} creation', None, None, None, None
+
+                        dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name", label="Dataset Name",elem_id="sd_dataset_name_textbox")
+                        dataset_description_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset description", label="Dataset Description",elem_id="sd_dataset_description_textbox")
+                        create_dataset_button = gr.Button("Create Dataset", variant="primary", elem_id="sagemaker_dataset_create_button") # size=(200, 50)
+                        dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+                        create_dataset_button.click(
+                            fn=create_dataset,
+                            inputs=[upload_button, dataset_name_upload, dataset_description_upload],
+                            outputs=[
+                                dataset_create_result,
+                                dataset_name_upload,
+                                dataset_description_upload,
+                                file_output,
+                                upload_button
+                            ],
+                            show_progress=True
+                        )
+
+                    with gr.Tab('Browse'):
+                        with gr.Row():
+                            global cloud_datasets
+                            cloud_datasets = get_sorted_cloud_dataset()
+
+                            cloud_dataset_name = gr.Dropdown(
+                                label="Dataset From Cloud",
+                                choices=[d['datasetName'] for d in cloud_datasets],
+                                elem_id="cloud_dataset_dropdown",
+                                type="index",
+                                info='select datasets from cloud'
                             )
 
-                        payload = {
-                            "dataset_name": dataset_name,
-                            "content": dataset_content,
-                            "params": {
-                                "description": dataset_desc
-                            }
-                        }
+                            def refresh_datasets():
+                                global cloud_datasets
+                                cloud_datasets = get_sorted_cloud_dataset()
+                                return cloud_datasets
 
-                        url = get_variable_from_json('api_gateway_url') + '/dataset'
-                        api_key = get_variable_from_json('api_token')
+                            def refresh_datasets_dropdown():
+                                global cloud_datasets
+                                cloud_datasets = get_sorted_cloud_dataset()
+                                return {"choices": [d['datasetName'] for d in cloud_datasets]}
 
-                        raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-                        raw_response.raise_for_status()
-                        response = raw_response.json()
+                            create_refresh_button(
+                                cloud_dataset_name,
+                                refresh_datasets,
+                                refresh_datasets_dropdown,
+                                "refresh_cloud_dataset",
+                            )
+                        with gr.Row():
+                            dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text').style(show_copy_button=True)
+                        with gr.Row():
+                            dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
+                        with gr.Row():
+                            dataset_gallery = gr.Gallery(
+                                label="Dataset images", show_label=False, elem_id="gallery",
+                            ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
 
-                        print(f"Start upload sample files response:\n{response}")
-                        for filename, presign_url in response['s3PresignUrl'].items():
-                            file_path = file_path_lookup[filename]
-                            with open(file_path, 'rb') as f:
-                                response = requests.put(presign_url, f)
-                                print(response)
-                                response.raise_for_status()
+                            def get_results_from_datasets(dataset_idx):
+                                ds = cloud_datasets[dataset_idx]
 
-                        payload = {
-                            "dataset_name": dataset_name,
-                            "status": "Enabled"
-                        }
+                                url = f"{get_variable_from_json('api_gateway_url')}/dataset/{ds['datasetName']}/data"
+                                api_key = get_variable_from_json('api_token')
+                                raw_response = requests.get(url=url, headers={'x-api-key': api_key})
+                                raw_response.raise_for_status()
+                                dataset_items = [ (Image.open(requests.get(item['preview_url'], stream=True).raw), item['key']) for item in raw_response.json()['data']]
+                                return ds['s3'], ds['description'], dataset_items
 
-                        raw_response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
-                        raw_response.raise_for_status()
-                        print(raw_response.json())
-                        return f'Complete Dataset {dataset_name} creation', None, None, None, None
+                            cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name], outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
 
-                    dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name", label="Dataset Name",elem_id="sd_dataset_name_textbox")
-                    dataset_description_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset description", label="Dataset Description",elem_id="sd_dataset_description_textbox")
-                    create_dataset_button = gr.Button("Create Dataset", variant="primary", elem_id="sagemaker_dataset_create_button") # size=(200, 50)
-                    dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
-                    create_dataset_button.click(
-                        fn=create_dataset,
-                        inputs=[upload_button, dataset_name_upload, dataset_description_upload],
-                        outputs=[
-                            dataset_create_result,
-                            dataset_name_upload,
-                            dataset_description_upload,
-                            file_output,
-                            upload_button
-                        ],
-                        show_progress=True
-                    )
 
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
@@ -381,7 +435,6 @@ def avoid_duplicate_from_restart_ui(res):
     return False
 
 
-cloud_datasets = []
 
 def ui_tabs_callback():
     res = origin_callback()
@@ -427,38 +480,6 @@ def ui_tabs_callback():
                                             elem_id="cloud_train_instance_type",
                                             info='select sagemaker Train Instance Type'
                                         )
-
-                                    with gr.Row():
-                                        global cloud_datasets
-                                        cloud_datasets = get_sorted_cloud_dataset()
-
-                                        cloud_dataset_name = gr.Dropdown(
-                                            label="Dataset From Cloud",
-                                            choices=[d['datasetName'] for d in cloud_datasets],
-                                            elem_id="cloud_dataset_dropdown",
-                                            type="index",
-                                            info='select datasets from cloud'
-                                        )
-
-                                        def refresh_datasets():
-                                            global cloud_datasets
-                                            cloud_datasets = get_sorted_cloud_dataset()
-                                            return cloud_datasets
-
-                                        def refresh_datasets_dropdown():
-                                            global cloud_datasets
-                                            cloud_datasets = get_sorted_cloud_dataset()
-                                            return {"choices": [d['datasetName'] for d in cloud_datasets]}
-
-                                        create_refresh_button(
-                                            cloud_dataset_name,
-                                            refresh_datasets,
-                                            refresh_datasets_dropdown,
-                                            "refresh_cloud_dataset",
-                                        )
-                                    with gr.Row():
-                                        dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text').style(show_copy_button=True)
-                                        cloud_dataset_name.select(fn=lambda idx: cloud_datasets[idx]['s3'], inputs=[cloud_dataset_name], outputs=dataset_s3_output)
                                     with gr.Row(visible=False) as lora_model_row:
                                         cloud_db_lora_model_name = gr.Dropdown(
                                             label="Lora Model", choices=get_sorted_lora_cloud_models(),
