@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./preflight_check.sh -x [initial_support_commit_controlnet] -y [initial_support_commit_dreambooth]
+# Usage: ./pre-flight_check.sh -x [initial_support_commit_controlnet] -y [initial_support_commit_dreambooth]
 # 7c674f83 926ae204
 
 # Fixed repo URLs list
@@ -15,7 +15,7 @@ REPO_FOLDER_LIST=(
 )
 
 show_help() {
-    echo "Usage: $(basename "$0") -x/--initial_support_commit_controlnet <commit id> -y/--initial_support_commit_dreambooth <commit id>"
+    echo "Usage: $(basename "$0") -x <commit id> -y <commit id>"
 }
 
 # Parse options with help of getopt
@@ -47,6 +47,7 @@ while true; do
     esac
 done
 
+INITIAL_SUPPORT_COMMIT_ROOT="89f9faa6"
 # built the initial support commit list from option or default value if not provided
 INITIAL_SUPPORT_COMMIT_LIST=(
     "${initial_support_commit_controlnet:-7c674f83}"
@@ -71,6 +72,30 @@ get_latest_commit_id() {
     git ls-remote "$repo_url" HEAD | cut -f1
 }
 
+# check if root folder suppport
+LATEST_ROOT_COMMIT=$(get_latest_commit_id "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git")
+# echo -e "Latest commit id for WebUI: \n$LATEST_ROOT_COMMIT"
+SUPPORTED_ROOT_COMMITS=$(cd ../../ && get_supported_commit_list "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git" "$INITIAL_SUPPORT_COMMIT_ROOT" "$LATEST_ROOT_COMMIT")
+# echo -e "Supported commit ids for WebUI: \n$SUPPORTED_ROOT_COMMITS"
+
+# get current commit id for repo
+CUR_ROOT_COMMIT=$(cd ../../ && git rev-parse HEAD)
+echo -e "Current commit id for WebUI: $CUR_ROOT_COMMIT"
+if [ -n "$LATEST_ROOT_COMMIT" ]; then
+    if ! echo "$SUPPORTED_ROOT_COMMITS" | grep -q "$CUR_ROOT_COMMIT"; then
+        # warn with red color
+        echo "Warning: WebUI's latest commit is not in the minimum supported commit list."
+        echo -e "\033[31mPreflight check for WebUI is failed.\033[0m"
+        echo -e "==========================================================================="
+        echo
+    else
+        echo "WebUI's latest commit is in the minimum supported commit list."
+        echo -e "\033[34mPreflight check for WebUI is successful.\033[0m"
+        echo -e "==========================================================================="
+        echo
+    fi
+fi
+
 # Get the parent directory of the script
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 PARENT_DIR=$(dirname "$SCRIPT_DIR")
@@ -81,26 +106,29 @@ for repo_folder in "${REPO_FOLDER_LIST[@]}"; do
     index=$((index+1))
     # check if the repo folder exists
     if [ -d "${PARENT_DIR}/${repo_folder}/.git" ]; then
-        echo "Repo ${repo_folder} exists in the parent directory of the script."
+        echo -e "Repo ${repo_folder} exists in the parent directory of the script."
         # cd to the repo folder
         cd "${PARENT_DIR}/${repo_folder}"
         # get the current commit id for the repo
         LATEST_COMMIT=$(get_latest_commit_id "${REPO_URL_LIST[$index-1]}")
-        echo "Latest commit id for Repo ${repo_folder}: $LATEST_COMMIT"
+        # echo -e "Latest commit id for Repo ${repo_folder}: \n$LATEST_COMMIT"
         # use such index to set the repo url
         SUPPORTED_COMMITS=$(get_supported_commit_list "${REPO_URL_LIST[$index-1]}" "${INITIAL_SUPPORT_COMMIT_LIST[$index-1]}" "$LATEST_COMMIT")
-        echo "Supported commit ids for Repo ${repo_folder} are $SUPPORTED_COMMITS"
+        # echo -e "Supported commit ids for Repo ${repo_folder} are \n$SUPPORTED_COMMITS"
+        CUR_COMMIT=$(git rev-parse HEAD)
         # check if the latest commit id is in the scope of the supported commit list, warn the user if not, and hint success if yes
         if [ -n "$LATEST_COMMIT" ]; then
-            if ! echo "$SUPPORTED_COMMITS" | grep -q "$LATEST_COMMIT"; then
+            if ! echo "$SUPPORTED_COMMITS" | grep -q "$CUR_COMMIT"; then
                 # warn with red color
-                echo "Warning: Repo ${repo_folder}'s latest commit is not in the supported commit list."
+                echo "Warning: Repo ${repo_folder}'s latest commit is not in the minimum supported commit list."
                 echo -e "\033[31mPreflight check for Repo ${repo_folder} is failed.\033[0m"
                 echo -e "==========================================================================="
+                echo
             else
-                echo "Repo ${repo_folder}'s latest commit is in the supported commit list."
+                echo "Repo ${repo_folder}'s latest commit is in the minimum supported commit list."
                 echo -e "\033[34mPreflight check for Repo ${repo_folder} is successful.\033[0m"
                 echo -e "==========================================================================="
+                echo
             fi
         fi
         # back to the parent directory
