@@ -11,7 +11,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: sd-sg
+      GroupName: !Sub ${AWS::StackName}-sg
       GroupDescription: Security group for SD WebUI EC2 instance
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -26,7 +26,11 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: c5.2xlarge
-      ImageId: ami-0d0c6a887ce442603
+      # ImageId: ami-0d0c6a887ce442603
+      ImageId: ami-0261755bbcb8c4a84
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ec2
       KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -46,10 +50,15 @@ Resources:
             sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
             cd /home/ubuntu
             git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-            sudo chown -R ubuntu:ubuntu stable-diffusion-webui/
-            cd stable-diffusion-webui
+            cd extensions
+            git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+            cd stable-diffusion-aws-extension/
+            ./pre-flight.sh -s
+            cd ..
+            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
+            cd ..
             sudo -u ubuntu python3 -m venv venv
-            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > log.txt
+            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > webui-log.txt
 
   MyEIP:
     Type: AWS::EC2::EIP
