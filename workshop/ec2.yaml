@@ -52,10 +52,12 @@ Resources:
             sudo -u ubuntu python3 -m venv venv
             cd extensions
             git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/
             cd stable-diffusion-aws-extension
+            git checkout dev
             ./pre-flight.sh -s
             cd ../../
-            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > log.txt
+            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > webui-log.txt
 
   MyEIP:
     Type: AWS::EC2::EIP
