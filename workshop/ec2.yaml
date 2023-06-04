@@ -11,7 +11,7 @@ Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: sd-sg
+      GroupName: !Sub ${AWS::StackName}-sg
       GroupDescription: Security group for SD WebUI EC2 instance
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -52,9 +52,9 @@ Resources:
             sudo -u ubuntu python3 -m venv venv
             cd extensions
             git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/
-            cd stable-diffusion-aws-extension
+            cd stable-diffusion-aws-extension/
             git checkout dev
+            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/
             ./pre-flight.sh -s
             cd ../../
             sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > webui-log.txt
