@@ -50,7 +50,7 @@ Resources:
             sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
             cd /home/ubuntu
             git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-            cd extensions
+            cd stable-diffusion-webui/extensions
             git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
             cd stable-diffusion-aws-extension/
             ./pre-flight.sh -s
@@ -69,6 +69,7 @@ Resources:
       InstanceId: !Ref EC2Instance
 
 Outputs:
-  InstancePublicIp:
-    Description: Public IP of our instance.
-    Value: !GetAtt EC2Instance.PublicIp
+  WebUIURL:
+    Description: URL for Stable Diffusion Web UI
+    # add port 7860 to the end of the URL
+    Value: !Sub http://${MyEIP.PublicIp}:7860
