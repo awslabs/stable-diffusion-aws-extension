@@ -212,16 +212,16 @@ class ModelsApiTest(TestCase):
     def test_list_bucket_objects(self):
         import boto3
         from botocore.config import Config
-        s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+        s3 = boto3.client('s3')
         bucket = 'alvindaiyan-aigc-testing-playground'
-        key = 'dreambooth/checkpoint/db-training-test-1/51b8d59b-ba48-4f79-964f-05f2190f5bc3/'
+        key = 'Stable-diffusion/checkpoint/dytest004/8d3a46e6-756e-47a5-a138-66d66f8ffec6'
         response = s3.list_objects(
             Bucket=bucket,
             Prefix=key,
         )
         print(response)
         for obj in response['Contents']:
-            print(obj['Key'].replace(key, ""))
+            print(obj['Key'].replace(f'{key}/', ""))
 
     def test_timestamp(self):
         import datetime
@@ -235,3 +235,19 @@ class ModelsApiTest(TestCase):
             "id": "262676e1-9b57-4ff3-a876-4e1de5ff5d25"
         })
         print(resp)
+
+    def test_presign_urls(self):
+        from common.util import get_s3_presign_urls
+        bucket = 'alvindaiyan-aigc-testing-playground'
+        key = 'test_upload_manual/yan'
+        resp = get_s3_presign_urls(bucket_name=bucket, base_key=key, filenames=["test"])
+        print(resp)
+
+
+    def test_s3_download(self):
+        import boto3
+        s3 = boto3.client('s3')
+        bucket = 'alvindaiyan-aigc-testing-playground'
+        key = 'test_upload_manual/yan'
+        s3.list_objects_v2()
+        s3.download_file(bucket, key, 'test')

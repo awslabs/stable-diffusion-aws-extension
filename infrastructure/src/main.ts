@@ -6,13 +6,6 @@ import {
 import { Construct } from 'constructs';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
-import * as crypto from 'crypto';
-
-// for development, use account/region from cdk cli
-// const devEnv = {
-//   account: process.env.CDK_DEFAULT_ACCOUNT,
-//   region: process.env.CDK_DEFAULT_REGION,
-// };
 
 const app = new App();
 
@@ -28,6 +21,24 @@ export class Middleware extends Stack {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
+    const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
+      type: 'String',
+      description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
+      allowedPattern: '[A-Za-z0-9]+',
+      minLength: 20,
+      maxLength: 20,
+      // API Key value should be at least 20 characters
+      default: '09876543210987654321',
+    });
+
+    const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
+      type: 'String',
+      description: 'ec2 instance type for operation including ckpt merge, model create etc.',
+      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'], // todo: add more
+      // API Key value should be at least 20 characters
+      default: 'ml.r5.large',
+    });
+
     // Create CfnParameters here
     const emailParam = new CfnParameter(this, 'email', {
       type: 'String',
@@ -36,29 +47,13 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
-    // Create a short version of the UUID
-    const shortUuid = crypto.randomBytes(4).toString('hex');
-    // Create a timestamp
-    let date = new Date();
-    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}-${date.getHours().toString().padStart(2, '0')}`;
-    // Create a truncated or hashed version of the stack name
-    const truncatedStackName = this.stackName.substring(0, 20);
-    // Create the bucket name, making sure it's under 63 characters
-    const defaultBucketName = `${truncatedStackName}-${shortUuid}-${formattedDate}`.toLowerCase();
-
-
-    const bucketName = new CfnParameter(this, 'aigc-bucket-name', {
-      type: 'String',
-      description: 'Base bucket for aigc solution to use. Mainly for uploading data files and storing results',
-      default: defaultBucketName.substring(0, 63),
-    });
-
 
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
       synthesizer: props.synthesizer,
       emailParam: emailParam,
-      bucketName: bucketName,
+      apiKey: apiKeyParam.valueAsString,
+      modelInfInstancetype: utilInstanceType.valueAsString,
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
@@ -83,6 +78,11 @@ export class Middleware extends Stack {
       description: 'API Gateway URL',
     });
 
+    new CfnOutput(this, 'ApiGatewayUrlToken', {
+      value: apiKeyParam.valueAsString,
+      description: 'API Gateway Token',
+    });
+
     new CfnOutput(this, 'S3BucketName', {
       value: trainStack.s3Bucket.bucketName,
       description: 'S3 Bucket Name',
@@ -92,7 +92,6 @@ export class Middleware extends Stack {
       value: trainStack.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
     });
-
   }
 }
 

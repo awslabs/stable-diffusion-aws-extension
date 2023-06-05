@@ -1,40 +1,40 @@
-#import sagemaker
-import re
-import time
-import math
-import json
-import threading
+import sys
 import requests
-import copy
-import os
 import logging
 import gradio as gr
+import os
 import modules.scripts as scripts
-from modules import shared, devices, script_callbacks, processing, masking, images, sd_models
+from modules import script_callbacks
 from modules.ui import create_refresh_button
-from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
 from utils import save_variable_to_json
+from PIL import Image
 
-import sys
-import pickle
-import html
-
-# TODO: Automaticly append the dependent module path.
-sys.path.append("extensions/sd_dreambooth_extension")
-sys.path.append("extensions/stable-diffusion-aws-extension")
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
-# TODO: Do not use the dreambooth status module.
-from dreambooth.shared import status
-from dreambooth import shared as dreambooth_shared
-# from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
-from dreambooth.ui_functions import load_model_params, load_params
-from dreambooth.dataclasses.db_config import save_config, from_file
-from urllib.parse import urljoin
 import sagemaker_ui
 
+try:
+    from dreambooth_on_cloud.train import (
+        async_cloud_train,
+        get_cloud_db_model_name_list,
+        wrap_load_model_params,
+        get_train_job_list,
+        get_sorted_cloud_dataset
+    )
+    from dreambooth_on_cloud.create_model import (
+        get_sd_cloud_models,
+        get_create_model_job_list,
+        cloud_create_model,
+    )
+except Exception as e:
+    logging.error("Dreambooth on cloud module is not support.")
+    logging.error(e)
+
+cloud_datasets = []
+training_job_dashboard = None
 db_model_name = None
 cloud_db_model_name = None
+cloud_train_instance_type = None
 db_use_txt2img = None
 db_sagemaker_train = None
 db_save_config = None
@@ -49,10 +49,9 @@ img2img_generation_info = None
 img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
-job_link_list = []
-ckpt_dict = {}
 
-base_model_folder = "models/sagemaker_dreambooth/"
+async_inference_choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
+                         "ml.g5.xlarge","ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     def title(self):
@@ -68,14 +67,17 @@ class SageMakerUI(scripts.Script):
         pass
 
 def on_after_component_callback(component, **_kwargs):
-    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name
+    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, cloud_train_instance_type, training_job_dashboard
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
                                 (getattr(component, 'label', None) == 'Model' and getattr(component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
     is_cloud_dreambooth_model_name = type(component) is gr.Dropdown and \
                                      getattr(component, 'elem_id', None) == 'cloud_db_model_name'
+    is_machine_type_for_train = type(component) is gr.Dropdown and \
+                                getattr(component, 'elem_id', None) == 'cloud_train_instance_type'
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
+    is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id', None) == 'training_job_dashboard'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
         db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
@@ -83,23 +85,29 @@ def on_after_component_callback(component, **_kwargs):
         db_model_name = component
     if is_cloud_dreambooth_model_name:
         cloud_db_model_name = component
+    if is_training_job_dashboard:
+        training_job_dashboard = component
+    if is_machine_type_for_train:
+        cloud_train_instance_type = component
     if is_dreambooth_use_txt2img:
         db_use_txt2img = component
     if is_db_save_config:
         db_save_config = component
     # After all requiment comment is loaded, add the SageMaker training button click callback function.
-    if cloud_db_model_name is not None and db_model_name is not None and \
+    if training_job_dashboard is not None and cloud_train_instance_type is not None and \
+            cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
-            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name):
+            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train or is_training_job_dashboard):
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
-            fn=cloud_train,
+            fn=async_cloud_train,
             _js="db_start_sagemaker_train",
             inputs=[
                 cloud_db_model_name,
                 db_use_txt2img,
+                cloud_train_instance_type
             ],
-            outputs=[]
+            outputs=[training_job_dashboard]
         )
     # Hook image display logic
     global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook
@@ -206,22 +214,22 @@ def on_ui_tabs():
     import modules.ui
     buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
-        with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row"):
-            sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params")
-            sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params")
-            sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model")
-            sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt")
+        with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
+            sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
+            sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params", visible=False)
+            sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model", visible=False)
+            sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt", visible=False)
         with gr.Row():
             gr.HTML(value="Enter your API URL & Token to start the connection.", elem_id="hint_row")
         with gr.Row():
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="AWS Connection Setting")
+                gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
                 global api_gateway_url
                 api_gateway_url = get_variable_from_json('api_gateway_url')
                 global api_key
                 api_key = get_variable_from_json('api_token')
                 with gr.Row():
-                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url", label="API Url",elem_id="aws_middleware_api")
+                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url of Middle", label="API Url",elem_id="aws_middleware_api")
                     def update_api_gateway_url():
                         global api_gateway_url
                         api_gateway_url = get_variable_from_json('api_gateway_url')
@@ -236,7 +244,8 @@ def on_ui_tabs():
                     api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
                     modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
 
-                test_connection_result = gr.Label();
+                global test_connection_result
+                test_connection_result = gr.Label(title="Output");
                 aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
@@ -264,47 +273,175 @@ def on_ui_tabs():
                     with gr.Row():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="model_update",
-                                          fn=sagemaker_ui.sagemaker_upload_model_s3,
-                                          inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                          outputs=[test_connection_result])
+                                                  fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                                  inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
+                                                  outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
 
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
                     with gr.Row():
-                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"], elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
                         instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
 
                     with gr.Row():
                         sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
                         sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
-                                              _js="deploy_endpoint", \
-                                              inputs = [instance_type_dropdown, instance_count_dropdown],
-                                              outputs=[test_connection_result])
+                                                      _js="deploy_endpoint", \
+                                                      inputs = [instance_type_dropdown, instance_count_dropdown],
+                                                      outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b>(Work In Progress)</u>") 
+                    gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
                     with gr.Row():
                         sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints, multiselect=True, label="Select Cloud SageMaker Endpoint")
                         modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
                     sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',elem_id="sagemaker_endpoint_delete_button")
                     sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
-                                              _js="delete_sagemaker_endpoint", \
-                                              inputs = [sagemaker_endpoint_delete_dropdown],
-                                              outputs=[test_connection_result])
-
-
-
+                                                           _js="delete_sagemaker_endpoint", \
+                                                           inputs = [sagemaker_endpoint_delete_dropdown],
+                                                           outputs=[test_connection_result])
 
             with gr.Column(variant="panel", scale=1):
-                gr.HTML(value="AWS Model Setting")
-                with gr.Tab("Select"):
-                    gr.HTML(value="AWS Built-in Model")
-                    model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model")
-                with gr.Tab("Create"):
-                    gr.HTML(value="AWS Custom Model")
-                    model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name")
-                    model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model")
+                # TODO: uncomment if implemented, comment since the tab component do not has visible parameter
+                # with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel', visible=False):
+                #     gr.HTML(value="<u><b>AWS Model Setting</b></u>", visible=False)
+                #     with gr.Tab("Select"):
+                #         gr.HTML(value="AWS Built-in Model", visible=False)
+                #         model_select_dropdown = gr.Dropdown(buildin_model_list, label="Select Built-In Model", elem_id="aws_select_model", visible=False)
+                #     with gr.Tab("Create"):
+                #         gr.HTML(value="AWS Custom Model", visible=False)
+                #         model_name_textbox = gr.Textbox(value="", lines=1, placeholder="Please enter model name", label="Model Name", visible=False)
+                #         model_create_button = gr.Button(value="Create Model", variant='primary',elem_id="aws_create_model", visible=False)
+
+                with gr.Blocks(title="Create AWS dataset", variant='panel'):
+                    gr.HTML(value="<u><b>AWS Dataset Management</b></u>")
+                    with gr.Tab("Create"):
+                        def upload_file(files):
+                            file_paths = [file.name for file in files]
+                            return file_paths
+
+                        file_output = gr.File()
+                        upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"], file_count="multiple")
+                        upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
+
+                        def create_dataset(files, dataset_name, dataset_desc):
+                            print(dataset_name)
+                            dataset_content = []
+                            file_path_lookup = {}
+                            for file in files:
+                                orig_name = file.name.split(os.sep)[-1]
+                                file_path_lookup[orig_name] = file.name
+                                dataset_content.append(
+                                    {
+                                        "filename": orig_name,
+                                        "name": orig_name,
+                                        "type": "image",
+                                        "params": {}
+                                    }
+                                )
+
+                            payload = {
+                                "dataset_name": dataset_name,
+                                "content": dataset_content,
+                                "params": {
+                                    "description": dataset_desc
+                                }
+                            }
+
+                            url = get_variable_from_json('api_gateway_url') + '/dataset'
+                            api_key = get_variable_from_json('api_token')
+
+                            raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                            raw_response.raise_for_status()
+                            response = raw_response.json()
+
+                            print(f"Start upload sample files response:\n{response}")
+                            for filename, presign_url in response['s3PresignUrl'].items():
+                                file_path = file_path_lookup[filename]
+                                with open(file_path, 'rb') as f:
+                                    response = requests.put(presign_url, f)
+                                    print(response)
+                                    response.raise_for_status()
+
+                            payload = {
+                                "dataset_name": dataset_name,
+                                "status": "Enabled"
+                            }
+
+                            raw_response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                            raw_response.raise_for_status()
+                            print(raw_response.json())
+                            return f'Complete Dataset {dataset_name} creation', None, None, None, None
+
+                        dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name", label="Dataset Name",elem_id="sd_dataset_name_textbox")
+                        dataset_description_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset description", label="Dataset Description",elem_id="sd_dataset_description_textbox")
+                        create_dataset_button = gr.Button("Create Dataset", variant="primary", elem_id="sagemaker_dataset_create_button") # size=(200, 50)
+                        dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+                        create_dataset_button.click(
+                            fn=create_dataset,
+                            inputs=[upload_button, dataset_name_upload, dataset_description_upload],
+                            outputs=[
+                                dataset_create_result,
+                                dataset_name_upload,
+                                dataset_description_upload,
+                                file_output,
+                                upload_button
+                            ],
+                            show_progress=True
+                        )
+
+                    with gr.Tab('Browse'):
+                        with gr.Row():
+                            global cloud_datasets
+                            cloud_datasets = get_sorted_cloud_dataset()
+
+                            cloud_dataset_name = gr.Dropdown(
+                                label="Dataset From Cloud",
+                                choices=[d['datasetName'] for d in cloud_datasets],
+                                elem_id="cloud_dataset_dropdown",
+                                type="index",
+                                info='select datasets from cloud'
+                            )
+
+                            def refresh_datasets():
+                                global cloud_datasets
+                                cloud_datasets = get_sorted_cloud_dataset()
+                                return cloud_datasets
+
+                            def refresh_datasets_dropdown():
+                                global cloud_datasets
+                                cloud_datasets = get_sorted_cloud_dataset()
+                                return {"choices": [d['datasetName'] for d in cloud_datasets]}
+
+                            create_refresh_button(
+                                cloud_dataset_name,
+                                refresh_datasets,
+                                refresh_datasets_dropdown,
+                                "refresh_cloud_dataset",
+                            )
+                        with gr.Row():
+                            dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text').style(show_copy_button=True)
+                        with gr.Row():
+                            dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
+                        with gr.Row():
+                            dataset_gallery = gr.Gallery(
+                                label="Dataset images", show_label=False, elem_id="gallery",
+                            ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
+
+                            def get_results_from_datasets(dataset_idx):
+                                ds = cloud_datasets[dataset_idx]
+
+                                url = f"{get_variable_from_json('api_gateway_url')}/dataset/{ds['datasetName']}/data"
+                                api_key = get_variable_from_json('api_token')
+                                raw_response = requests.get(url=url, headers={'x-api-key': api_key})
+                                raw_response.raise_for_status()
+                                dataset_items = [ (Image.open(requests.get(item['preview_url'], stream=True).raw), item['key']) for item in raw_response.json()['data']]
+                                return ds['s3'], ds['description'], dataset_items
+
+                            cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name], outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
+
+
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
@@ -324,6 +461,7 @@ def avoid_duplicate_from_restart_ui(res):
                         return True
 
     return False
+
 
 
 def ui_tabs_callback():
@@ -362,6 +500,14 @@ def ui_tabs_callback():
                                             lambda: {"choices": sorted(get_cloud_model_snapshots())},
                                             "refresh_db_snapshots",
                                         )
+
+                                    with gr.Row():
+                                        cloud_train_instance_type = gr.Dropdown(
+                                            label="Sagemaker Train Instance Type",
+                                            choices=['ml.g4dn.2xlarge'],
+                                            elem_id="cloud_train_instance_type",
+                                            info='select sagemaker Train Instance Type'
+                                        )
                                     with gr.Row(visible=False) as lora_model_row:
                                         cloud_db_lora_model_name = gr.Dropdown(
                                             label="Lora Model", choices=get_sorted_lora_cloud_models(),
@@ -397,13 +543,14 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
                                     with gr.Row():
-                                        gr.Dataframe(
+                                        training_job_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status", "sagemaker train name"],
                                             datatype=["str", "str", "str", "str"],
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
                                             interactive=False,
-                                            every=3
+                                            every=3,
+                                            elem_id='training_job_dashboard'
                                             # show_progress=True
                                         )
                                 with gr.Tab('Create From Cloud'):
@@ -446,7 +593,7 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         gr.HTML(value="<b>Model Creation Jobs Details:<b/>")
                                     with gr.Row():
-                                        gr.Dataframe(
+                                        createmodel_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status"],
                                             datatype=["str", "str", "str"],
                                             col_count=(3, "fixed"),
@@ -495,15 +642,13 @@ def ui_tabs_callback():
                                         cloud_db_512_model,
                                     ],
                                     outputs=[
-                                        # cloud_db_model_name,
-                                        # cloud_db_model_path,
-                                        # cloud_db_revision,
-                                        # cloud_db_epochs,
-                                        # cloud_db_src,
-                                        # cloud_db_has_ema,
-                                        # cloud_db_v2,
-                                        # cloud_db_resolution,
-                                        # cloud_db_status,
+                                        createmodel_dashboard
+                                        # cloud_db_new_model_name
+                                        # cloud_db_create_from_hub
+                                        # cloud_db_512_model
+                                        # cloud_db_new_model_url
+                                        # cloud_db_new_model_token
+                                        # cloud_db_new_model_src
                                     ]
                                 )
                     break
@@ -516,378 +661,3 @@ def get_sorted_lora_cloud_models():
 
 def get_cloud_model_snapshots():
     return ["ran", "swam", "slept"]
-
-def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
-    try:
-        api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
-            print(f"failed to get the api_gateway_url, can not fetch date from remote")
-            return []
-        url = f"{api_gateway_url}models?"
-        if types:
-            url = f"{url}types={types}&"
-        if status:
-            url = f"{url}status={status}&"
-        url = url.strip("&")
-        response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
-        model_list = []
-        if "models" not in response:
-            return []
-        for model in response["models"]:
-            model_list.append(model)
-            params = model['params']
-            if 'resp' in params:
-                db_config = params['resp']['config_dict']
-                # TODO:
-                model_dir = f"{base_model_folder}/{model['model_name']}"
-                for k in db_config:
-                    if type(db_config[k]) is str:
-                        db_config[k] = db_config[k].replace("/opt/ml/code/", "")
-                        db_config[k] = db_config[k].replace("models/dreambooth/", base_model_folder)
-
-                if not os.path.exists(model_dir):
-                    os.makedirs(model_dir, exist_ok=True)
-                with open(f"{model_dir}/db_config.json", "w") as db_config_file:
-                    json.dump(db_config, db_config_file)
-        return model_list
-    except Exception as e:
-        print('Failed to get cloud models.')
-        print(e)
-        return []
-
-def get_cloud_ckpts():
-    try:
-        api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
-            print(f"failed to get the api_gateway_url, can not fetch date from remote")
-            return []
-
-        url = api_gateway_url + "checkpoints?status=Active&types=Stable-diffusion"
-        response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
-        if "checkpoints" not in response:
-            return []
-        global ckpt_dict
-        for ckpt in response["checkpoints"]:
-            # Only get ckpts whose name is not empty.
-            if len(ckpt['name']) > 0:
-                ckpt_key = f"cloud-{ckpt['name'][0]}-{ckpt['id']}"
-                ckpt_dict[ckpt_key] = ckpt
-    except Exception as e:
-        print(e)
-        return []
-
-def get_cloud_ckpt_name_list():
-    get_cloud_ckpts()
-    return ckpt_dict.keys()
-
-def get_cloud_db_model_name_list():
-    model_list = get_cloud_db_models()
-    if model_list is None:
-        model_name_list = []
-    else:
-        model_name_list = [model['model_name'] for model in model_list]
-    return model_name_list
-
-# get local and cloud checkpoints.
-def get_sd_cloud_models():
-    sd_models.list_models()
-    local_sd_list = sd_models.checkpoints_list
-    names = []
-    for key in local_sd_list:
-        names.append(f"local-{key}")
-    names += get_cloud_ckpt_name_list()
-    return names
-
-def async_prepare_for_training_on_sagemaker(
-        model_id: str,
-        model_name: str,
-        s3_model_path: str,
-        data_path_list: list,
-        class_data_path_list: list,
-        db_config_path: str,
-):
-    url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
-        return
-    url += "train"
-    upload_files = []
-    db_config_tar = f"db_config.tar"
-    os.system(f"tar cvf {db_config_tar} {db_config_path}")
-    upload_files.append(db_config_tar)
-    data_tar_list = []
-    for data_path in data_path_list:
-        if len(data_path) == 0:
-            data_tar_list.append("")
-            continue
-        data_tar = f'data-{data_path.replace("/", "-")}.tar'
-        data_tar_list.append(data_tar)
-        print("Pack the data file.")
-        os.system(f"tar cvf {data_tar} {data_path}")
-        upload_files.append(data_tar)
-    class_data_tar_list = []
-    for class_data_path in class_data_path_list:
-        if len(class_data_path) == 0:
-            class_data_tar_list.append("")
-            continue
-        class_data_tar = f'class-data-{class_data_path.replace("/", "-")}.tar'
-        class_data_tar_list.append(class_data_tar)
-        upload_files.append(class_data_tar)
-        print("Pack the class data file.")
-        os.system(f"tar cvf {class_data_tar} {class_data_path}")
-    payload = {
-        "train_type": "Stable-diffusion",
-        "model_id": model_id,
-        "filenames": upload_files,
-        "params": {
-            "training_params": {
-                "s3_model_path": s3_model_path,
-                "model_name": model_name,
-                "data_tar_list": data_tar_list,
-                "class_data_tar_list": class_data_tar_list,
-            }
-        }
-    }
-    print("Post request for upload s3 presign url.")
-    response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-    json_response = response.json()
-    for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
-        upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
-    return json_response
-
-def wrap_load_model_params(model_name):
-    origin_model_path = dreambooth_shared.dreambooth_models_path
-    setattr(dreambooth_shared, 'dreambooth_models_path', base_model_folder)
-    resp = load_model_params(model_name)
-    setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
-    return resp
-
-def wrap_get_local_config(model_name):
-    config = from_file(model_name)
-    return config
-
-def wrap_get_cloud_config(model_name):
-    origin_model_path = dreambooth_shared.dreambooth_models_path
-    setattr(dreambooth_shared, 'dreambooth_models_path', base_model_folder)
-    config = from_file(model_name)
-    setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
-    return config
-
-def wrap_save_config(model_name):
-    origin_model_path = dreambooth_shared.dreambooth_models_path
-    setattr(dreambooth_shared, 'dreambooth_models_path', base_model_folder)
-    save_config(model_name)
-    setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
-
-def async_create_model_on_sagemaker(
-        new_model_name: str,
-        ckpt_path: str,
-        from_hub=False,
-        new_model_url="",
-        new_model_token="",
-        extract_ema=False,
-        train_unfrozen=False,
-        is_512=True,
-):
-    params = copy.deepcopy(locals())
-    if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0:
-        logging.error("ckpt_path or model_name is not setting.")
-        return
-    if re.match("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,30}$", params["new_model_name"]) is None:
-        logging.error("model_name is not match pattern.")
-        return
-    ckpt_key = ckpt_path
-    url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-    if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
-        return
-    url += "model"
-    if params["ckpt_path"].startswith("cloud-"):
-        if params["ckpt_path"] not in ckpt_dict:
-            logging.error("Cloud checkpoint is not exist.")
-            return
-        ckpt_name_list = ckpt_dict[ckpt_key]["name"]
-        if len(ckpt_name_list) == 0:
-            logging.error("Checkpoint name error.")
-            return
-        params["ckpt_path"] = ckpt_name_list[0].rstrip(".tar")
-        payload = {
-            "model_type": "Stable-diffusion",
-            "name": new_model_name,
-            "filenames": [],
-            "params": {
-                "ckpt_from_cloud": True,
-                "s3_ckpt_path": ckpt_dict[ckpt_key]["s3Location"],
-                "create_model_params": params
-            }
-        }
-        print("Post request for upload s3 presign url.")
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-        json_response = response.json()
-        model_id = json_response["job"]["id"]
-        payload = {
-            "model_id": model_id,
-            "status": "Creating",
-            "multi_parts_tags": {}
-        }
-    elif params["ckpt_path"].startswith("local-"):
-        # The ckpt path has a hash suffix?
-        params["ckpt_path"] = " ".join(params["ckpt_path"].split(" ")[:1])
-        params["ckpt_path"] = params["ckpt_path"].lstrip("local-")
-        # Prepare for creating model on cloud.
-        local_model_path = f'models/Stable-diffusion/{params["ckpt_path"]}'
-        local_tar_path = f'{params["ckpt_path"]}.tar'
-
-        part_size = 1000 * 1024 * 1024
-        file_size = os.stat(local_model_path)
-        parts_number = math.ceil(file_size.st_size/part_size)
-
-        payload = {
-            "model_type": "Stable-diffusion",
-            "name": new_model_name,
-            "filenames": [{
-                "filename": local_tar_path,
-                "parts_number": parts_number
-            }],
-            "params": {"create_model_params": params}
-        }
-        print("Post request for upload s3 presign url.")
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-        json_response = response.json()
-        model_id = json_response["job"]["id"]
-        multiparts_tags=[]
-        if not from_hub:
-            print("Pack the model file.")
-            os.system(f"tar cvf {local_tar_path} {local_model_path}")
-            s3_base = json_response["job"]["s3_base"]
-            print(f"Upload to S3 {s3_base}")
-            print(f"Model ID: {model_id}")
-            # Upload src model to S3.
-            s3_signed_urls_resp = response.json()["s3PresignUrl"][local_tar_path]
-            multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
-                local_tar_path,
-                s3_signed_urls_resp,
-                part_size
-            )
-            payload = {
-                "model_id": model_id,
-                "status": "Creating",
-                "multi_parts_tags": {local_tar_path: multiparts_tags}
-            }
-    else:
-        logging.error("Create model params error.")
-        return
-    # Start creating model on cloud.
-    response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
-    print(response)
-
-def cloud_create_model(
-        new_model_name: str,
-        ckpt_path: str,
-        from_hub=False,
-        new_model_url="",
-        new_model_token="",
-        extract_ema=False,
-        train_unfrozen=False,
-        is_512=True,
-):
-    upload_thread = threading.Thread(target=async_create_model_on_sagemaker,
-                                     args=(new_model_name, ckpt_path, from_hub, new_model_url, new_model_token, extract_ema, train_unfrozen, is_512))
-    upload_thread.start()
-
-def cloud_train(
-        train_model_name: str,
-        local_model_name=False
-):
-    # Get data path and class data path.
-    print(f"Start cloud training {train_model_name}")
-    config = wrap_get_local_config("dummy_local_model")
-    data_path_list = []
-    class_data_path_list = []
-    for concept in config.concepts():
-        data_path_list.append(concept.instance_data_dir)
-        class_data_path_list.append(concept.class_data_dir)
-    model_list = get_cloud_db_models()
-    db_config_path = "models/dreambooth/dummy_local_model/db_config.json"
-    # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
-    # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
-    # os.system(f"cp {dummy_db_config_path} {db_config_path}")
-    for model in model_list:
-        model_id = model["id"]
-        model_name = model["model_name"]
-        model_s3_path = model["output_s3_location"]
-        if model_name == train_model_name:
-            # upload_thread = threading.Thread(target=async_prepare_for_training_on_sagemaker,
-            #                                 args=(model_id, model_name, s3_model_path,data_path, class_data_path))
-            # upload_thread.start()
-            response = async_prepare_for_training_on_sagemaker(
-                model_id, model_name, model_s3_path, data_path_list, class_data_path_list, db_config_path)
-            job_id = response["job"]["id"]
-            url = get_variable_from_json('api_gateway_url')
-            api_key = get_variable_from_json('api_token')
-            if url is None or api_key is None:
-                logging.error("Url or API-Key is not setting.")
-                break
-            url += "train"
-            payload = {
-                "train_job_id": job_id,
-                "status": "Training"
-            }
-            # Start creating model on cloud.
-            url = get_variable_from_json('api_gateway_url')
-            api_key = get_variable_from_json('api_token')
-            if url is None or api_key is None:
-                logging.error("Url or API-Key is not setting.")
-                break
-            url += "train"
-            payload = {
-                "train_job_id": job_id,
-                "status": "Training"
-            }
-            # Start creating model on cloud.
-            response = requests.put(url=url, json=payload, headers={'x-api-key': api_key}).json()
-            print(f"Start training response:\n{response}")
-
-
-def get_train_job_list():
-    # Start creating model on cloud.
-    url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-    if not url or not api_key:
-        logging.error("Url or API-Key is not setting.")
-        return []
-
-    table = []
-    try:
-        url += "trains?types=Stable-diffusion"
-        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-        for trainJob in response['trainJobs']:
-            table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
-    except requests.exceptions.RequestException as e:
-        print(f"exception {e}")
-
-    return table
-
-
-def get_create_model_job_list():
-    # Start creating model on cloud.
-    url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-    if not url or not api_key:
-        logging.error("Url or API-Key is not setting.")
-        return []
-
-    table = []
-    try:
-        url += "models?types=Stable-diffusion"
-        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-        for model in response['models']:
-            table.append([model['id'][:6], model['model_name'], model["status"]])
-    except requests.exceptions.RequestException as e:
-        print(f"exception {e}")
-
-    return table

@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
-from model_and_train.common_tools import get_base_checkpoint_s3_key, \
+from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
@@ -60,7 +60,6 @@ def list_all_checkpoints_api(event, context):
 @dataclass
 class CreateCheckPointEvent:
     checkpoint_type: str
-    # filenames: [str]
     filenames: [MultipartFileReq]
     params: dict[str, Any]
 
@@ -98,6 +97,12 @@ def create_checkpoint_api(raw_event, context):
         for f in event.filenames:
             file = MultipartFileReq(**f)
             filenames_only.append(file.filename)
+
+        if len(filenames_only) == 0:
+            return {
+                'statusCode': 400,
+                'errorMsg': 'no checkpoint name (file names) detected'
+            }
 
         checkpoint = CheckPoint(
             id=request_id,
@@ -151,6 +156,8 @@ def update_checkpoint_api(raw_event, context):
 
         checkpoint = CheckPoint(**raw_checkpoint)
         new_status = CheckPointStatus[event.status]
+        complete_multipart_upload(checkpoint, event.multi_parts_tags)
+        # if complete part failed, then no update
         ddb_service.update_item(
             table=checkpoint_table,
             key={
@@ -159,7 +166,6 @@ def update_checkpoint_api(raw_event, context):
             field_name='checkpoint_status',
             value=new_status
         )
-        complete_multipart_upload(checkpoint, event.multi_parts_tags)
         return {
             'statusCode': 200,
             'checkpoint': {

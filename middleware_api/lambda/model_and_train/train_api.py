@@ -12,7 +12,8 @@ import sagemaker
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import publish_msg
-from common_tools import get_s3_presign_urls, split_s3_path, DecimalEncoder
+from common_tools import split_s3_path, DecimalEncoder
+from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 
@@ -73,6 +74,7 @@ def create_train_job_api(raw_event, context):
             timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+        train_input_s3_location = f's3://{bucket_name}/{input_location}'
 
         train_job = TrainJob(
             id=request_id,
@@ -80,7 +82,7 @@ def create_train_job_api(raw_event, context):
             job_status=TrainJobStatus.Initial,
             params=event.params,
             train_type=event.train_type,
-            input_s3_location=f's3://{bucket_name}/{input_location}',
+            input_s3_location=train_input_s3_location,
             checkpoint_id=checkpoint.id,
             timestamp=datetime.datetime.now().timestamp()
         )
@@ -92,7 +94,8 @@ def create_train_job_api(raw_event, context):
                 'id': train_job.id,
                 'status': train_job.job_status.value,
                 'trainType': train_job.train_type,
-                'params': train_job.params
+                'params': train_job.params,
+                'input_location': train_input_s3_location,
             },
             's3PresignUrl': presign_url_map
         }
@@ -213,11 +216,17 @@ def _start_train_job(train_job_id: str):
             "s3-output-path": checkpoint.s3_location,
         })
 
+        final_instance_type = instance_type
+        if 'training_params' in train_job.params \
+                and 'training_instance_type' in train_job.params['training_params'] and \
+                train_job.params['training_params']['training_instance_type']:
+            final_instance_type = train_job.params['training_params']['training_instance_type']
+
         est = sagemaker.estimator.Estimator(
             image_uri,
             sagemaker_role_arn,
             instance_count=1,
-            instance_type=instance_type,
+            instance_type=final_instance_type,
             volume_size=125,
             base_job_name=f'{model.name}',
             hyperparameters=hyperparameters,
@@ -329,6 +338,21 @@ def check_train_job_status(event, context):
 
         checkpoint = CheckPoint(**raw_checkpoint)
         checkpoint.checkpoint_status = CheckPointStatus.Active
+        s3 = boto3.client('s3')
+        bucket, key = split_s3_path(checkpoint.s3_location)
+        s3_resp = s3.list_objects(
+            Bucket=bucket,
+            Prefix=key,
+        )
+        checkpoint.checkpoint_names = []
+        if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
+            for obj in s3_resp['Contents']:
+                checkpoint_name = obj['Key'].replace(f'{key}/', "")
+                checkpoint.checkpoint_names.append(checkpoint_name)
+        else:
+            training_job.job_status = TrainJobStatus.Fail
+            checkpoint.checkpoint_status = CheckPointStatus.Initial
+
         ddb_service.update_item(
             table=checkpoint_table,
             key={
@@ -337,20 +361,6 @@ def check_train_job_status(event, context):
             field_name='checkpoint_status',
             value=checkpoint.checkpoint_status.value
         )
-        s3 = boto3.client('s3')
-        bucket, key = split_s3_path(checkpoint.s3_location)
-        s3_resp = s3.list_objects(
-            Bucket=bucket,
-            Prefix=key,
-        )
-        checkpoint.checkpoint_names = []
-        for obj in s3_resp['Contents']:
-            checkpoint_name = obj['Key'].replace(f'{key}/', "")
-            if 'training_params' in training_job.params and 'model_name' in training_job.params['training_params']:
-                checkpoint_name = f"{training_job.params['training_params']['model_name']}/" + checkpoint_name
-
-            checkpoint.checkpoint_names.append(checkpoint_name)
-
         ddb_service.update_item(
             table=checkpoint_table,
             key={

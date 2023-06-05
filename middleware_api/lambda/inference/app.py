@@ -34,10 +34,11 @@ STEP_FUNCTION_ARN = os.environ.get('STEP_FUNCTION_ARN')
 DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+REGION_NAME = os.environ['AWS_REGION']
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 
 ddb_client = boto3.resource('dynamodb')
-s3 = boto3.client('s3')
+s3 = boto3.client('s3', region_name=REGION_NAME)
 sagemaker = boto3.client('sagemaker')
 inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
@@ -66,24 +67,6 @@ app.exception_handler(HTTPException)(custom_exception_handler)
 def get_uuid():
     uuid_str = str(uuid.uuid4())
     return uuid_str
-
-def updateInferenceJobTable(inference_id, status):
-    #update the inference DDB for the job status
-    response = inference_table.get_item(
-            Key={
-                "InferenceJobId": inference_id,
-            })
-    inference_resp = response['Item']
-    if not inference_resp:
-        raise Exception(f"Failed to get the inference job item with inference id:{inference_id}")
-
-    response = inference_table.update_item(
-            Key={
-                "InferenceJobId": inference_id,
-            },
-            UpdateExpression="set status = :r",
-            ExpressionAttributeValues={':r': status},
-            ReturnValues="UPDATED_NEW")
 
 def getInferenceJobList():
     response = inference_table.scan()
@@ -188,13 +171,11 @@ def get_s3_objects(bucket_name, folder_name):
     response = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_name)
 
     # Extract object names from the response
-    # object_names = [obj['Key'] for obj in response.get('Contents', []) if obj['Key'] != folder_name]
     object_names = [obj['Key'][len(folder_name):] for obj in response.get('Contents', []) if obj['Key'] != folder_name]
 
     return object_names
  
 def load_json_from_s3(bucket_name, key):
-    # Create an S3 client
 
     # Get the JSON file from the specified bucket and key
     response = s3.get_object(Bucket=bucket_name, Key=key)
@@ -205,31 +186,40 @@ def load_json_from_s3(bucket_name, key):
 
     return data
 
+def get_param_value(params_dict, key, defaultValue="false"):
+    try:
+        param_value = params_dict[key]
+    except Exception as e:
+        print(f"can not found {key} and use default value {defaultValue}")
+        param_value = defaultValue
+         
+    return param_value
+
 def json_convert_to_payload(params_dict, checkpoint_info):
     # Need to generate the payload from data_dict here:
-    script_name = params_dict['script_list']
+    script_name = get_param_value(params_dict, 'script_list', defaultValue="None")
     if script_name == "None":
         script_name = ""
     script_args = []
     if script_name == 'Prompt matrix':
-        put_at_start = params_dict['script_txt2txt_prompt_matrix_put_at_start']
-        different_seeds = params_dict['script_txt2txt_prompt_matrix_different_seeds']
-        if params_dict['script_txt2txt_prompt_matrix_prompt_type_positive']:
+        put_at_start = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_put_at_start')
+        different_seeds = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_different_seeds')
+        if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_prompt_type_positive', defaultValue="positive"):
             prompt_type = "positive"
         else:
             prompt_type = "negative"
-        if params_dict['script_txt2txt_prompt_matrix_variations_delimiter_comma']: 
+        if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_variations_delimiter_comma', defaultValue="comma"): 
             variations_delimiter = "comma"
         else:
             variations_delimiter = "space"
-        margin_size = params_dict['script_txt2txt_prompt_matrix_margin_size']
+        margin_size = int(get_param_value(params_dict, 'script_txt2txt_prompt_matrix_margin_size', defaultValue=0))
         script_args = [put_at_start, different_seeds, prompt_type, variations_delimiter, margin_size]
 
     if script_name == 'Prompts from file or textbox':
-        checkbox_iterate = params_dict['script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate']
-        checkbox_iterate_batch = params_dict['script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch']
-        list_prompt_inputs = params_dict['script_txt2txt_prompts_from_file_or_textbox_prompt_txt']
-        lines = [x.strip() for x in list_prompt_inputs.decode('utf8', errors='ignore').split("\n")]
+        checkbox_iterate = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_every_line')
+        checkbox_iterate_batch = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_all_lines')
+        list_prompt_inputs = get_param_value(params_dict, 'script_txt2txt_prompts_from_file_or_textbox_prompt_txt', defaultValue="")
+        lines = [x.strip() for x in list_prompt_inputs.split("\n")]
         script_args = [checkbox_iterate, checkbox_iterate_batch, "\n".join(lines)]
 
     if script_name == 'X/Y/Z plot':
@@ -268,70 +258,72 @@ def json_convert_to_payload(params_dict, checkpoint_info):
                        '[ControlNet] Pre Threshold A': 32,
                        '[ControlNet] Pre Threshold B': 33}
         dropdown_index = [9, 10, 19, 20, 21, 24, 25, 29, 30]
-        x_type = type_dict[params_dict['script_txt2txt_xyz_plot_x_type']]
-        x_values = params_dict['script_txt2txt_xyz_plot_x_values']
-        x_values_dropdown = params_dict['script_txt2txt_xyz_plot_x_values']
+        x_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_type', defaultValue="Nothing")]
+        x_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
+        x_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
         if x_type in dropdown_index:
             if x_type == 10:
-                x_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+                x_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
             elif x_type == 25:
-                x_values_dropdown = params_dict['sagemaker_controlnet_model']
+                x_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
             x_values_dropdown = x_values_dropdown.split(":")
         
-        y_type = type_dict[params_dict['script_txt2txt_xyz_plot_y_type']]
-        y_values = params_dict['script_txt2txt_xyz_plot_y_values']
-        y_values_dropdown = params_dict['script_txt2txt_xyz_plot_y_values']
+        y_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_type', defaultValue="Nothing")]
+        y_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
+        y_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
         if y_type in dropdown_index:
             if y_type == 10:
-                y_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+                y_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
             elif y_type == 25:
-                y_values_dropdown = params_dict['sagemaker_controlnet_model']
+                y_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
             y_values_dropdown = y_values_dropdown.split(":")
         
-        z_type = type_dict[params_dict['script_txt2txt_xyz_plot_z_type']]
-        z_values = params_dict['script_txt2txt_xyz_plot_z_values']
-        z_values_dropdown = params_dict['script_txt2txt_xyz_plot_z_values']
+        z_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_type', defaultValue="Nothing")]
+        z_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
+        z_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
         if z_type in dropdown_index:
             if z_type == 10:
-                z_values_dropdown = params_dict['sagemaker_stable_diffusion_checkpoint']
+                z_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
             elif z_type == 25:
-                z_values_dropdown = params_dict['sagemaker_controlnet_model']
+                z_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
             z_values_dropdown = z_values_dropdown.split(":")
         
-        draw_legend = params_dict['script_txt2txt_xyz_plot_draw_legend']
-        include_lone_images = params_dict['script_txt2txt_xyz_plot_include_lone_images']
-        include_sub_grids = params_dict['script_txt2txt_xyz_plot_include_sub_grids']
-        no_fixed_seeds = params_dict['script_txt2txt_xyz_plot_no_fixed_seeds']
-        margin_size = int(params_dict['script_txt2txt_xyz_plot_margin_size'])
+        draw_legend = get_param_value(params_dict, 'script_txt2txt_xyz_plot_draw_legend')
+        include_lone_images = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_lone_images')
+        include_sub_grids = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_sub_grids')
+        no_fixed_seeds = get_param_value(params_dict, 'script_txt2txt_xyz_plot_no_fixed_seeds')
+        margin_size = int(get_param_value(params_dict, 'script_txt2txt_xyz_plot_margin_size', defaultValue=0))
         script_args = [x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown, z_type, z_values, z_values_dropdown, draw_legend, include_lone_images, include_sub_grids, no_fixed_seeds, margin_size]
 
     # get all parameters from ui-config.json
-    prompt = params_dict['txt2img_prompt'] #'chinese, beautiful woman' # 'a busy city street in a modern city | illustration | cinematic lighting' #
-    negative_prompt = params_dict['txt2img_neg_prompt']#: "", 
-    enable_hr = params_dict['txt2img_enable_hr'] #: "False", 
-    denoising_strength = float(params_dict['txt2img_denoising_strength']) #: 0.7, 
-    hr_scale = float(params_dict['txt2img_hr_scale'])
-    hr_upscaler = params_dict['txt2img_hr_upscaler'] #hr_upscaler,
-    hr_second_pass_steps = int(params_dict['txt2img_hires_steps']) #hr_second_pass_steps,
-    firstphase_width = int(params_dict['txt2img_hr_resize_x'])#: 0, 
-    firstphase_height = int(params_dict['txt2img_hr_resize_y'])#: 0, 
-    styles = params_dict['txt2img_styles']#: ["None", "None"], 
+    prompt = get_param_value(params_dict, 'txt2img_prompt', defaultValue="") 
+    negative_prompt = get_param_value(params_dict, 'txt2img_neg_prompt', defaultValue="") 
+    enable_hr = get_param_value(params_dict, 'txt2img_enable_hr')
+    denoising_strength = float(get_param_value(params_dict, 'txt2img_denoising_strength', defaultValue=0.7))
+    hr_scale = float(get_param_value(params_dict, 'txt2img_hr_scale', defaultValue=2.0))
+    hr_upscaler = get_param_value(params_dict, 'txt2img_hr_upscaler', defaultValue="Latent")
+    hr_second_pass_steps = int(get_param_value(params_dict, 'txt2img_hires_steps', defaultValue=0))
+    firstphase_width = int(get_param_value(params_dict, 'txt2img_hr_resize_x', defaultValue=0))
+    firstphase_height = int(get_param_value(params_dict, 'txt2img_hr_resize_y', defaultValue=0))
+    hr_resize_x = int(get_param_value(params_dict, 'txt2img_hr_resize_x', defaultValue=0))
+    hr_resize_y = int(get_param_value(params_dict, 'txt2img_hr_resize_y', defaultValue=0))
+    styles = get_param_value(params_dict, 'txt2img_styles', defaultValue=["None", "None"])
     if styles == "":
         styles = []
-    seed = float(params_dict['txt2img_seed'])#: -1.0, 
-    subseed = float(params_dict['txt2img_subseed'])#: -1.0, 
-    subseed_strength = float(params_dict['txt2img_subseed_strength'])#: 0, 
-    seed_resize_from_h = int(params_dict['txt2img_seed_resize_from_h'])#: 0, 
-    seed_resize_from_w = int(params_dict['txt2img_seed_resize_from_w'])#: 0, 
-    sampler_index = params_dict['txt2img_sampling_method']#: "Euler a", 
-    batch_size = int(params_dict['txt2img_batch_size'])#: 1, 
-    n_iter = int(params_dict['txt2img_batch_count'])
-    steps = int(params_dict['txt2img_steps'])#: 20, 
-    cfg_scale = int(params_dict['txt2img_cfg_scale'])#: 7, 
-    width = int(params_dict['txt2img_width'])#: 512, 
-    height = int(params_dict['txt2img_height'])#: 512, 
-    restore_faces = params_dict['txt2img_restore_faces']#: "False", 
-    tiling = params_dict['txt2img_tiling']#: "False", 
+    seed = float(get_param_value(params_dict, 'txt2img_seed', defaultValue=-1.0)) 
+    subseed = float(get_param_value(params_dict, 'txt2img_subseed', defaultValue=-1.0))
+    subseed_strength = float(get_param_value(params_dict, 'txt2img_subseed_strength', defaultValue=0))
+    seed_resize_from_h = int(get_param_value(params_dict, 'txt2img_seed_resize_from_h', defaultValue=0))
+    seed_resize_from_w = int(get_param_value(params_dict, 'txt2img_seed_resize_from_w', defaultValue=0)) 
+    sampler_index = get_param_value(params_dict, 'txt2img_sampling_method', defaultValue="Euler a")
+    batch_size = int(get_param_value(params_dict, 'txt2img_batch_size', defaultValue=1)) 
+    n_iter = int(get_param_value(params_dict, 'txt2img_batch_count', defaultValue=1))
+    steps = int(get_param_value(params_dict, 'txt2img_steps', defaultValue=20))
+    cfg_scale = float(get_param_value(params_dict, 'txt2img_cfg_scale', defaultValue=7))
+    width = int(get_param_value(params_dict, 'txt2img_width', defaultValue=512))
+    height = int(get_param_value(params_dict, 'txt2img_height', defaultValue=512))
+    restore_faces = get_param_value(params_dict, 'txt2img_restore_faces')
+    tiling = get_param_value(params_dict, 'txt2img_tiling')
     override_settings = {}
     eta = 1
     s_churn = 0
@@ -339,11 +331,11 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     s_tmin = 0
     s_noise = 1 
 
-    selected_sd_model = params_dict['sagemaker_stable_diffusion_checkpoint'] #'my_girl_311.safetensors'my_style_132.safetensors my_style_132.safetensors
-    selected_cn_model = params_dict['sagemaker_controlnet_model']#['control_openpose-fp16.safetensors']#
-    selected_hypernets = params_dict['sagemaker_hypernetwork_model']#['mjv4Hypernetwork_v1.pt']#'LuisapKawaii_v1.pt'
-    selected_loras = params_dict['sagemaker_lora_model']#['hanfu_v30Song.safetensors']# 'cuteGirlMix4_v10.safetensors'
-    selected_embeddings = params_dict['sagemaker_texual_inversion_model']#['pureerosface_v1.pt']#'corneo_marin_kitagawa.pt''pureerosface_v1.pt'
+    selected_sd_model = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="") 
+    selected_cn_model = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="")
+    selected_hypernets = get_param_value(params_dict, 'sagemaker_hypernetwork_model', defaultValue="")
+    selected_loras = get_param_value(params_dict, 'sagemaker_lora_model', defaultValue="")
+    selected_embeddings = get_param_value(params_dict, 'sagemaker_texual_inversion_model', defaultValue="")
     
     if selected_sd_model == "":
         selected_sd_model = ['v1-5-pruned-emaonly.safetensors']
@@ -378,35 +370,37 @@ def json_convert_to_payload(params_dict, checkpoint_info):
         if lora_name not in prompt:
             prompt = prompt + f"<lora:{lora_name}:1>"
     
-    contronet_enable = params_dict['controlnet_enable']
+    contronet_enable = get_param_value(params_dict, 'controlnet_enable')
     if contronet_enable:
-        controlnet_module = params_dict['controlnet_preprocessor']
-        controlnet_model = os.path.splitext(selected_cn_model[0])[0]
-        controlnet_image = params_dict['txt2img_controlnet_ControlNet_input_image'] #None
+        controlnet_module = get_param_value(params_dict, 'controlnet_preprocessor', defaultValue=None)
+        if len(selected_cn_model) < 1:
+            controlnet_model = "None"
+        else:
+            controlnet_model = os.path.splitext(selected_cn_model[0])[0]
+        controlnet_image = get_param_value(params_dict, 'txt2img_controlnet_ControlNet_input_image', defaultValue=None)
         controlnet_image = controlnet_image.split(',')[1]
-        weight = float(params_dict['controlnet_weight']) #1,
-        if params_dict['controlnet_resize_mode_just_resize']:
+        weight = float(get_param_value(params_dict, 'controlnet_weight', defaultValue=1)) #1,
+        if get_param_value(params_dict, 'controlnet_resize_mode_just_resize'):
             resize_mode = "Just Resize" # "Crop and Resize",
-        if params_dict['controlnet_resize_mode_Crop_and_Resize']:
+        if get_param_value(params_dict, 'controlnet_resize_mode_Crop_and_Resize'):
             resize_mode = "Crop and Resize"
-        if params_dict['controlnet_resize_mode_Resize_and_Fill']:
+        if get_param_value(params_dict, 'controlnet_resize_mode_Resize_and_Fill'):
             resize_mode = "Resize and Fill"
-        lowvram = params_dict['controlnet_lowVRAM_enable'] #: "False",
-        processor_res = int(params_dict['controlnet_preprocessor_resolution'])
-        threshold_a = int(params_dict['controlnet_canny_low_threshold'])
-        threshold_b = int(params_dict['controlnet_canny_high_threshold'])
-        #guidance = 1,
-        guidance_start = float(params_dict['controlnet_starting_control_step']) #: 0,
-        guidance_end = float(params_dict['controlnet_ending_control_step']) #: 1,
-        if params_dict['controlnet_control_mode_balanced']:
+        lowvram = get_param_value(params_dict, 'controlnet_lowVRAM_enable') #: "False",
+        processor_res = int(get_param_value(params_dict, 'controlnet_preprocessor_resolution', defaultValue=512))
+        threshold_a = float(get_param_value(params_dict, 'controlnet_canny_low_threshold', defaultValue=0))
+        threshold_b = float(get_param_value(params_dict, 'controlnet_canny_high_threshold', defaultValue=1))
+        guidance_start = float(get_param_value(params_dict, 'controlnet_starting_control_step', defaultValue=0)) #: 0,
+        guidance_end = float(get_param_value(params_dict, 'controlnet_ending_control_step', defaultValue=1)) #: 1,
+        if get_param_value(params_dict, 'controlnet_control_mode_balanced'):
             guessmode = "Balanced"
-        if params_dict['controlnet_control_mode_my_prompt_is_more_important']:
+        if get_param_value(params_dict, 'controlnet_control_mode_my_prompt_is_more_important'):
             guessmode = "My prompt is more important"
-        if params_dict['controlnet_control_mode_controlnet_is_more_important']:
+        if get_param_value(params_dict, 'controlnet_control_mode_controlnet_is_more_important'):
             guessmode = "Controlnet is more important"
-        pixel_perfect = params_dict['controlnet_pixel_perfect'] #:"False"
-        allow_preview = params_dict['controlnet_allow_preview']
-        loopback = params_dict['controlnet_loopback_automatically_send_generated_images_to_this_controlnet_unit']
+        pixel_perfect = get_param_value(params_dict, 'controlnet_pixel_perfect')
+        allow_preview = get_param_value(params_dict, 'controlnet_allow_preview')
+        loopback = get_param_value(params_dict, 'controlnet_loopback_automatically')
 
 
     endpoint_name = checkpoint_info['sagemaker_endpoint'] #"infer-endpoint-ca0e"
@@ -430,7 +424,12 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "enable_hr": enable_hr, 
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
-            "firstphase_height": firstphase_height, 
+            "firstphase_height": firstphase_height,
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
@@ -464,6 +463,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
                         "mask": "",
                         "module": controlnet_module,
                         "model": controlnet_model,
+                        "loopback": loopback,
                         "weight": weight,
                         "resize_mode": resize_mode,
                         "lowvram": lowvram,
@@ -501,6 +501,11 @@ def json_convert_to_payload(params_dict, checkpoint_info):
             "denoising_strength": denoising_strength, 
             "firstphase_width": firstphase_width, 
             "firstphase_height": firstphase_height, 
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y, 
             "prompt": prompt, 
             "styles": styles, 
             "seed": seed, 
@@ -530,9 +535,6 @@ def json_convert_to_payload(params_dict, checkpoint_info):
     return payload
  
 # Global exception capture
-# All exception handling in the code can be written as: raise BizException(code=500, message="XXXX")
-# Among them, code is the business failure code, and message is the content of the failure
-# biz_exception(app)
 stepf_client = boto3.client('stepfunctions')
 
 @app.get("/")
@@ -544,7 +546,6 @@ async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
 
-        # TODO: add logic for inference id
         inference_id = get_uuid()
 
         payload_checkpoint_info = await request.json()
@@ -562,7 +563,6 @@ async def run_sagemaker_inference(request: Request):
 
         # adjust time out time to 1 hour
         initial_args = {}
-        
         initial_args["InvocationTimeoutSeconds"]=3600
 
         predictor = AsyncPredictor(predictor, name=endpoint_name)
@@ -588,7 +588,6 @@ async def run_sagemaker_inference(request: Request):
         }
 
         response = JSONResponse(content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}, headers=headers)
-        #response = JSONResponse(content={"inference_id": '6fa743f0-cb7a-496f-8205-dbd67df08be2', "status": "succeed", "output_path": ""}, headers=headers)
         return response
 
     except Exception as e:
@@ -836,7 +835,6 @@ def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
 
 @app.get("/inference/generate-s3-presigned-url-for-uploading")
 async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, key: str = None):
-    s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
     if not s3_bucket_name:
         s3_bucket_name = S3_BUCKET_NAME
 
@@ -858,14 +856,14 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
         headers = {
             "Access-Control-Allow-Headers": "*",
             "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+            "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT"
         }
         return JSONResponse(content=str(e), status_code=500, headers=headers)
 
     headers = {
         "Access-Control-Allow-Headers": "*",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT"
     }
 
     response = JSONResponse(content=presigned_url, headers=headers)

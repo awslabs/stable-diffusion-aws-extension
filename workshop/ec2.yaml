@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: A CloudFormation template to deploy the Stable Diffusion Web UI by Automatic1111
+
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+Mappings:
+  RegionToAmiId:
+    ap-south-1:
+      AMI: ami-089b78354e92adbc4
+    eu-north-1:
+      AMI: ami-09f0506c9ef0fb473
+    eu-west-3:
+      AMI: ami-000cbe82b60906d24
+    eu-west-2:
+      AMI: ami-00f314baca4922fe3
+    eu-west-1:
+      AMI: ami-020fc399c31009b50
+    ap-northeast-3:
+      AMI: ami-00615a13ea1ff3de8
+    ap-northeast-2:
+      AMI: ami-07d16c043aa8e5153
+    ap-northeast-1:
+      AMI: ami-0ba151ad81cdd97be
+    ca-central-1:
+      AMI: ami-0c0ef44e5ccbd075f
+    sa-east-1:
+      AMI: ami-0efc6acdb081d5a82
+    ap-east-1:
+      AMI: ami-0476827462b538638
+    ap-southeast-1:
+      AMI: ami-01079af93e791f059
+    ap-southeast-2:
+      AMI: ami-0c30788ba2f3b701c
+    eu-central-1:
+      AMI: ami-08046b3f92ed2f520
+    us-east-1:
+      AMI: ami-031cf125b681ca3e0
+    us-east-2:
+      AMI: ami-0d68d031be2577777
+    us-west-1:
+      AMI: ami-0cab1ec90365016c6
+    us-west-2:
+      AMI: ami-01cb61d12413ba783
+
+Resources:
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${AWS::StackName}-sg
+      GroupDescription: Security group for SD WebUI EC2 instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 7860
+          ToPort: 7860
+          CidrIp: 0.0.0.0/0
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: c5.2xlarge
+      ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
+      KeyName: !Ref KeyName
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 300
+            VolumeType: gp2
+      "Tags" : [
+            {"Key" : "Name", "Value" : "sd-on-aws"},
+        ]
+      SecurityGroups:
+        - Ref: SecurityGroup
+      UserData:
+        'Fn::Base64': |
+            #!/bin/bash
+            sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+            sudo apt-get update
+            sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
+            cd /home/ubuntu
+            git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+            cd stable-diffusion-webui/extensions
+            git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+            cd stable-diffusion-aws-extension/
+            ./pre-flight.sh -s
+            cd ..
+            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
+            cd ..
+            sudo -u ubuntu python3 -m venv venv
+            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > webui-log.txt
+
+  MyEIP:
+    Type: AWS::EC2::EIP
+  MyEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt MyEIP.AllocationId
+      InstanceId: !Ref EC2Instance
+
+Outputs:
+  WebUIURL:
+    Description: URL for Stable Diffusion Web UI
+    # add port 7860 to the end of the URL
+    Value: !Sub http://${MyEIP.PublicIp}:7860

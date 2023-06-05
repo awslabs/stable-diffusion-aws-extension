@@ -12,7 +12,8 @@ window.onload = function() {
         "#refresh_sagemaker_endpoints",
         "#refresh_sd_checkpoints",
         "#refresh_txt2img_inference_job_ids",
-        "#refresh_textual_inversion"
+        "#refresh_textual_inversion",
+        "#refresh_sagemaker_endpoints_delete"
       ];
 
       for (let selector of selectors) {
@@ -89,6 +90,16 @@ async function txt2img_config_save(endpoint_value) {
     }
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+async function txt2img_config_save_test(endpoint_value) {
+  console.log("Before sleep");
+  await sleep(5000);
+  console.log("After sleep");
+}
+
 function scrap_ui_component_value_with_default(config) {
     const getElementValue = (selector, property, defaultValue) => {
         const element = document.querySelector(selector);
@@ -125,13 +136,13 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
-    config["script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate"] =
+    config["script_txt2txt_checkbox_iterate_every_line"] =
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate > label > input",
             "checked",
             false
         );
-    config["script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch"] =
+    config["script_txt2txt_checkbox_iterate_all_lines"] =
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch > label > input",
             "checked",
@@ -628,10 +639,12 @@ function put_with_xmlhttprequest(config_url, config_data) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", config_url, true);
-        //   xhr.setRequestHeader("Content-Type", "application/json");
 
         xhr.onreadystatechange = () => {
             if (xhr.readyState === 4) {
+                // Print all response headers to the console
+                console.log(xhr.getAllResponseHeaders());
+
                 if (xhr.status >= 200 && xhr.status < 300) {
                     resolve(xhr.responseText);
                 } else {
@@ -641,12 +654,15 @@ function put_with_xmlhttprequest(config_url, config_data) {
         };
 
         xhr.onerror = () => {
+            // Print all response headers to the console
+            console.log(xhr.getAllResponseHeaders());
             reject("Network error");
         };
 
         xhr.send(config_data);
     });
 }
+
 
 function getPresignedUrl(remote_url, api_key, key) {
     return new Promise((resolve, reject) => {
