@@ -160,7 +160,11 @@ Diagram below is the brief view of internal workflow between our extension and m
 The major function of middleware is to provide RESTful API for WebUI extension to interact with AWS cloud resource (SageMaker, S3 etc.) with OpenAPI conformant schema, it will handling the request authentication, request dispatch to specific SageMaker/S3 API (SageMaker.jumpstart/model/predictor/estimator/tuner/utils etc.) and model lifecycle.
 Diagram below is the overall architecture of middleware, including API Gateway and Lambda to fulfill the RESTful API function and Step Function to orchestrate the model lifecycle.
 
-![middleware](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/50a869a2-6c4c-4d43-9c1c-596bd50c54d6)
+![middleware](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/8d871565-5792-4a7c-87c9-53fc66d96a5c)
+
+- Users in the WebUI console will use the assigned API token to trigger a request to API Gateway while being authenticated. (Note: AWS credentials are not required in AWS WebUI)
+- API Gateway will route requests to Lambda with different functions according to URL prefixes to implement corresponding tasks (for example, model uploading, checkpoint merging), model training, and model inference. At the same time, the Lambda function records operational metadata into DynamoDB (eg, inferred parameters, model name) for subsequent query and correlation.
+- During the training process, the Step Function will be called to orchestrate the training process, which includes using Amazon SageMaker for training and SNS for training status notification. During the inference process, the Lambda function will call Amazon SageMaker for asynchronous inference. Training data, models and checkpoints will be stored in S3 buckets separated by different prefixes.
 
 ## Version
 Beta
