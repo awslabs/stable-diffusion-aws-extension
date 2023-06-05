@@ -61,6 +61,7 @@ def async_create_model_on_sagemaker(
         train_unfrozen=False,
         is_512=True,
 ):
+    params = copy.deepcopy(locals())
     integral_check = False
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -71,7 +72,6 @@ def async_create_model_on_sagemaker(
     url += "model"
     model_id = ""
     try:
-        params = copy.deepcopy(locals())
         if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0:
             logging.error("ckpt_path or model_name is not setting.")
             return
