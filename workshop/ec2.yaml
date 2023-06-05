@@ -7,6 +7,45 @@ Parameters:
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
+Mappings:
+  RegionToAmiId:
+    ap-south-1:
+      AMI: ami-0851b76e8b1bce90b
+    eu-north-1:
+      AMI: ami-0820d427f94ae9361
+    eu-west-3:
+      AMI: ami-023038f3ce67e7ac0
+    eu-west-2:
+      AMI: ami-065536dd9c2967f5c
+    eu-west-1:
+      AMI: ami-05147510eb2885c80
+    ap-northeast-3:
+      AMI: ami-0c7062e55d588c875
+    ap-northeast-2:
+      AMI: ami-022e92c3ed0cdee09
+    ap-northeast-1:
+      AMI: ami-07dc8296b13424b72
+    ca-central-1:
+      AMI: ami-0940df33750ae6e7f
+    sa-east-1:
+      AMI: ami-08fc9d46cd1bf888e
+    ap-east-1:
+      AMI: ami-0903d269fa9044c6b
+    ap-southeast-1:
+      AMI: ami-000892e0bc49a951d
+    ap-southeast-2:
+      AMI: ami-0f4b7f08ad2dc7197
+    eu-central-1:
+      AMI: ami-05210ba6bdf75db36
+    us-east-1:
+      AMI: ami-0a99b06fad09f48df
+    us-east-2:
+      AMI: ami-0a7a5669a8a7e55ae
+    us-west-1:
+      AMI: ami-0499d7290c9470715
+    us-west-2:
+      AMI: ami-09faf71ea24d57248
+
 Resources:
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -26,11 +65,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: c5.2xlarge
-      # ImageId: ami-0d0c6a887ce442603
-      ImageId: ami-0261755bbcb8c4a84
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-ec2
+      ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
       KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
