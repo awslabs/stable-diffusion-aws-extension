@@ -11,7 +11,7 @@ output=""
 
 # Loop through each region and find the matching AMI
 for region in $REGIONS; do
-  ami_id=$(aws ec2 describe-images --filters "Name=name,Values=$AMI_NAME_PATTERN" --region "$region" --query 'Images[0].ImageId' --output text)
+  ami_id=$(aws ec2 describe-images --filters "Name=name,Values=$AMI_NAME_PATTERN" "Name=owner-id,Values=099720109477" --region "$region" --query 'Images[0].ImageId' --output text)
   
   if [ "$ami_id" != "None" ]; then
     output+="$region:\n  AMI: $ami_id\n"
