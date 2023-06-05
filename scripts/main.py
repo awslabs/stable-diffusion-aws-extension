@@ -15,7 +15,7 @@ import sagemaker_ui
 
 try:
     from dreambooth_on_cloud.train import (
-        cloud_train,
+        async_cloud_train,
         get_cloud_db_model_name_list,
         wrap_load_model_params,
         get_train_job_list,
@@ -31,6 +31,7 @@ except Exception as e:
     logging.error(e)
 
 cloud_datasets = []
+training_job_dashboard = None
 db_model_name = None
 cloud_db_model_name = None
 cloud_train_instance_type = None
@@ -61,7 +62,7 @@ class SageMakerUI(scripts.Script):
         pass
 
 def on_after_component_callback(component, **_kwargs):
-    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, cloud_train_instance_type
+    global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, cloud_train_instance_type, training_job_dashboard
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
@@ -71,6 +72,7 @@ def on_after_component_callback(component, **_kwargs):
     is_machine_type_for_train = type(component) is gr.Dropdown and \
                                 getattr(component, 'elem_id', None) == 'cloud_train_instance_type'
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
+    is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id', None) == 'training_job_dashboard'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
         db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
@@ -78,6 +80,8 @@ def on_after_component_callback(component, **_kwargs):
         db_model_name = component
     if is_cloud_dreambooth_model_name:
         cloud_db_model_name = component
+    if is_training_job_dashboard:
+        training_job_dashboard = component
     if is_machine_type_for_train:
         cloud_train_instance_type = component
     if is_dreambooth_use_txt2img:
@@ -85,20 +89,20 @@ def on_after_component_callback(component, **_kwargs):
     if is_db_save_config:
         db_save_config = component
     # After all requiment comment is loaded, add the SageMaker training button click callback function.
-    if cloud_train_instance_type is not None and \
+    if training_job_dashboard is not None and cloud_train_instance_type is not None and \
             cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
-            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train):
+            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train or is_training_job_dashboard):
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
-            fn=cloud_train,
+            fn=async_cloud_train,
             _js="db_start_sagemaker_train",
             inputs=[
                 cloud_db_model_name,
                 db_use_txt2img,
                 cloud_train_instance_type
             ],
-            outputs=[]
+            outputs=[training_job_dashboard]
         )
     # Hook image display logic
     global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook
@@ -515,13 +519,14 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
                                     with gr.Row():
-                                        gr.Dataframe(
+                                        training_job_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status", "sagemaker train name"],
                                             datatype=["str", "str", "str", "str"],
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
                                             interactive=False,
-                                            every=3
+                                            every=3,
+                                            elem_id='training_job_dashboard'
                                             # show_progress=True
                                         )
                                 with gr.Tab('Create From Cloud'):
@@ -564,7 +569,7 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         gr.HTML(value="<b>Model Creation Jobs Details:<b/>")
                                     with gr.Row():
-                                        gr.Dataframe(
+                                        createmodel_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status"],
                                             datatype=["str", "str", "str"],
                                             col_count=(3, "fixed"),
@@ -613,15 +618,13 @@ def ui_tabs_callback():
                                         cloud_db_512_model,
                                     ],
                                     outputs=[
-                                        # cloud_db_model_name,
-                                        # cloud_db_model_path,
-                                        # cloud_db_revision,
-                                        # cloud_db_epochs,
-                                        # cloud_db_src,
-                                        # cloud_db_has_ema,
-                                        # cloud_db_v2,
-                                        # cloud_db_resolution,
-                                        # cloud_db_status,
+                                        createmodel_dashboard
+                                        # cloud_db_new_model_name
+                                        # cloud_db_create_from_hub
+                                        # cloud_db_512_model
+                                        # cloud_db_new_model_url
+                                        # cloud_db_new_model_token
+                                        # cloud_db_new_model_src
                                     ]
                                 )
                     break
