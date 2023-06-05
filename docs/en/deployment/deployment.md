@@ -1,9 +1,9 @@
 Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.
 
-**Time to deploy**: Approximately 15 minutes
+**Time to deploy**: Approximately 25 minutes.
 
 ## Prerequisition
-Users need to prepare a computer running linux system in advance
+Users need to prepare a computer running linux system in advance.
 
 
 ## Deployment overview

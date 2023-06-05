@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 import boto3
 
 sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
-from utils import download_file_from_s3, download_folder_from_s3_by_tar, upload_file_to_s3, upload_folder_to_s3_by_tar
+from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 
 os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
@@ -110,12 +110,14 @@ def download_data(data_list, s3_data_path_list, s3_input_path):
             input_bucket_name = get_bucket_name_from_s3_path(data_tar)
             input_path = get_path_from_s3_path(data_tar)
             local_tar_path = data_tar.replace("s3://", "").replace("/", "-")
+            logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir} {local_tar_path}")
+            download_folder_from_s3(input_bucket_name, input_path, target_dir)
         else:
             input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
             input_path = os.path.join(get_path_from_s3_path(s3_input_path), data_tar)
             local_tar_path = data_tar
-        logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir} {local_tar_path}")
-        download_folder_from_s3_by_tar(input_bucket_name, input_path, local_tar_path, target_dir)
+            logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir} {local_tar_path}")
+            download_folder_from_s3_by_tar(input_bucket_name, input_path, local_tar_path, target_dir)
 
 def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)

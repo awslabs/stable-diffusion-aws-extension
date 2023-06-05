@@ -43,7 +43,12 @@ To set up the development environment, you will need have AWS account and tools 
 
 
 ### **Part1**: Install the stable-diffusion-webui and extension
+#### **Option 1 (Recommended)**: Use one click AWS Cloudformation Template to install the EC2 instance with WebUI and extension
+1. Install the EC2 by using [CloudFormation Template](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml) to install CloudFormation template directly
+2. Select the EC2 instance key pair, and keep click with default operation to create the stack
+3. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the WebUIURL value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
 
+#### **Option 2**: Use script if you already had a EC2 instance (Ubuntu 20.04 LTS recommended) without WebUI installed
 1. In the working directory of a Linux computer prepared in advance, run the following command to download the latest installation script:
 ```bash
 wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
@@ -72,7 +77,7 @@ cd stable-diffusion-webui
 
 ### **Part2**: Install Middleware On AWS Cloud
 #### **Option 1**: Use AWS Cloudformation Template
-1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://us-east-1.console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/create/template?stackName=Stable-Diffusion-AWS-Extension&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
+1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
 
 <img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
