@@ -30,7 +30,7 @@ function check_create_model_params() {
         do_save = alert("Please select a checkpoint");
     }
     else if (re.exec(arguments[0]) == null) {
-        do_save = alert("Please change another model name");
+        do_save = alert("Please change another model name, only letter and number are allowed");
     }
     let filtered_args = filterArgs(8, arguments);
     console.log(arguments)
