@@ -10,41 +10,41 @@ Parameters:
 Mappings:
   RegionToAmiId:
     ap-south-1:
-      AMI: ami-0851b76e8b1bce90b
+      AMI: ami-089b78354e92adbc4
     eu-north-1:
-      AMI: ami-0820d427f94ae9361
+      AMI: ami-09f0506c9ef0fb473
     eu-west-3:
-      AMI: ami-023038f3ce67e7ac0
+      AMI: ami-000cbe82b60906d24
     eu-west-2:
-      AMI: ami-065536dd9c2967f5c
+      AMI: ami-00f314baca4922fe3
     eu-west-1:
-      AMI: ami-05147510eb2885c80
+      AMI: ami-020fc399c31009b50
     ap-northeast-3:
-      AMI: ami-0c7062e55d588c875
+      AMI: ami-00615a13ea1ff3de8
     ap-northeast-2:
-      AMI: ami-022e92c3ed0cdee09
+      AMI: ami-07d16c043aa8e5153
     ap-northeast-1:
-      AMI: ami-07dc8296b13424b72
+      AMI: ami-0ba151ad81cdd97be
     ca-central-1:
-      AMI: ami-0940df33750ae6e7f
+      AMI: ami-0c0ef44e5ccbd075f
     sa-east-1:
-      AMI: ami-08fc9d46cd1bf888e
+      AMI: ami-0efc6acdb081d5a82
     ap-east-1:
-      AMI: ami-0903d269fa9044c6b
+      AMI: ami-0476827462b538638
     ap-southeast-1:
-      AMI: ami-000892e0bc49a951d
+      AMI: ami-01079af93e791f059
     ap-southeast-2:
-      AMI: ami-0f4b7f08ad2dc7197
+      AMI: ami-0c30788ba2f3b701c
     eu-central-1:
-      AMI: ami-05210ba6bdf75db36
+      AMI: ami-08046b3f92ed2f520
     us-east-1:
-      AMI: ami-0a99b06fad09f48df
+      AMI: ami-031cf125b681ca3e0
     us-east-2:
-      AMI: ami-0a7a5669a8a7e55ae
+      AMI: ami-0d68d031be2577777
     us-west-1:
-      AMI: ami-0499d7290c9470715
+      AMI: ami-0cab1ec90365016c6
     us-west-2:
-      AMI: ami-09faf71ea24d57248
+      AMI: ami-01cb61d12413ba783
 
 Resources:
   SecurityGroup:
