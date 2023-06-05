@@ -159,7 +159,7 @@ version_sync() {
 }
 
 # Parse options with help of getopt
-TEMP=$(getopt -o x:y:h:ps -l initial_support_commit_controlnet:,initial_support_commit_dreambooth:,help,pre-flight,version-sync -n "$(basename "$0")" -- "$@")
+TEMP=$(getopt -o x:y:hps -l initial_support_commit_controlnet:,initial_support_commit_dreambooth:,help,pre-flight,version-sync -n "$(basename "$0")" -- "$@")
 eval set -- "$TEMP"
 
 while true; do
