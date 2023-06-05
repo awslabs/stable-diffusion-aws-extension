@@ -6,7 +6,7 @@ git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 # Go to stable-diffusion-webui directory
 cd stable-diffusion-webui
 # Reset to specific commit
-git reset --hard b6af0a3809ea869fb180633f9affcae4b199ffcf
+git reset --hard baf6946e06249c5af9851c60171692c44ef633e0
 
 # Go to "extensions" directory
 cd extensions

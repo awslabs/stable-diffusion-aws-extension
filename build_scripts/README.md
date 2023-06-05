@@ -4,7 +4,7 @@ Update time: 20230605
 
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
-| stable-diffusion-webui|1.3.1|20230602| b6af0a3809ea869fb180633f9affcae4b199ffcf |
+| stable-diffusion-webui|1.3.2|20230605|baf6946e06249c5af9851c60171692c44ef633e0 |
 | sd-webui-controlnet | v1.1.216| 20230605| f36493878b299c367bc51f2935fd7e6d19188569 |
 | sd_dreambooth_extension | 1.0.14| 20230604| b396af26b7906aa82a29d8847e756396cb2c28fb |
 
