@@ -47,7 +47,6 @@ then
     exit 255
 fi
 
-
 # Get the region defined in the current configuration (default to us-west-2 if none defined)
 region=$(aws configure get region)
 # region=${region:-us-west-2}
@@ -78,7 +77,7 @@ cp ${dockerfile} .
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-docker build  -t ${image_name} -f ${dockerfile} .
+docker build  -t ${image_name}:${tag} -f ${dockerfile} .
 # docker tag ${image_name} ${fullname}
 
 # docker push ${fullname}
@@ -86,19 +85,6 @@ docker build  -t ${image_name} -f ${dockerfile} .
 
 # Push to public ecr
 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
-
-# public_repo="initial"
-
-# desc_output=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 2>&1)
-
-# if echo ${desc_output} | grep -q RepositoryNotFoundException
-# then
-#         public_repo=$(aws ecr-public create-repository --repository-name ${image} --region us-east-1 | jq --raw-output '.repository.repositoryUri')
-# else
-#         public_repo=$(aws ecr-public describe-repositories --repository-name ${image} --region us-east-1 | jq --raw-output '.repositories[].repositoryUri')
-# fi
-
-# echo $public_repo
 
 fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
 docker tag ${image_name}:${tag} ${fullname}

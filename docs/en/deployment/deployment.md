@@ -1,9 +1,9 @@
 Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.
 
-**Time to deploy**: Approximately 15 minutes
+**Time to deploy**: Approximately 25 minutes.
 
 ## Prerequisition
-Users need to prepare a computer running linux system in advance
+Users need to prepare a computer running linux system in advance.
 
 
 ## Deployment overview
@@ -24,17 +24,14 @@ This automated AWS CloudFormation template deploys the solution in the AWS Cloud
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
 4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. Under **Parameters**, enter a valid bucket name under **aigcbucketname** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for **sdextensionapikey**, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. Choose **Next**.
 
-    !!! Important "Notice" 
-        Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription, and the message of 'Subscription confirmed!' appears.
 
 5. On the **Configure stack options** page, choose **Next**.
 6. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
 
 You can view the status of the stack in the AWS CloudFormation Console in the **Status** column. You should receive a CREATE_COMPLETE status in approximately 15 minutes.
 
-### Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI. 
-1. Open the Stable Diffusion WebUI, navigate to the **Extensions** tab - **Install from URL** subtab, and enter the repository address of this solution [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git) in the **URL from extension's git repository** text box. Click **Install**.
-2. Navigate to **Installed** subtab, click **Apply and restart UI**. The **Amazon SageMaker** tab will appear in the WebUI, indicating that the extension installation has been completed.
+!!! Important "Notice" 
+    Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription, and the message of 'Subscription confirmed!' appears.
 
 ### Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.
 1. In the working directory of the computer running linux prepared in advance, run the following command to download the latest installation script
@@ -57,7 +54,10 @@ cd stable-diffusion-webui
 ```
 ./webui.sh
 ```
-
+<!-- 
+### Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI. 
+1. Open the Stable Diffusion WebUI, navigate to the **Extensions** tab - **Install from URL** subtab, and enter the repository address of this solution [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git) in the **URL from extension's git repository** text box. Click **Install**.
+2. Navigate to **Installed** subtab, click **Apply and restart UI**. The **Amazon SageMaker** tab will appear in the WebUI, indicating that the extension installation has been completed. -->
 <!-- ## Future step
 After successful stack creation, you can find relevant information in the **Outputs** tab of AWS CloudFormation. -->
 
