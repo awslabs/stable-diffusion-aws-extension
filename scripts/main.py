@@ -134,9 +134,9 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.sagemaker_endpoint],
             outputs=[txt2img_html_info]
         )
-        elem_id = getattr(component, "elem_id", None)
-        if elem_id == "generate_on_cloud_with_cloud_config_button":
-            sagemaker_ui.generate_on_cloud_button_with_js.click(
+        # elem_id = getattr(component, "elem_id", None)
+        # if elem_id == "generate_on_cloud_with_cloud_config_button":
+        sagemaker_ui.generate_on_cloud_button_with_js.click(
                 fn=sagemaker_ui.generate_on_cloud_no_input,
                 _js="txt2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint],
