@@ -633,7 +633,7 @@ def ui_tabs_callback():
 script_callbacks.ui_tabs_callback = ui_tabs_callback
 
 def get_sorted_lora_cloud_models():
-    return ["ran", "ate", "slept"]
+    return []
 
 def get_cloud_model_snapshots():
-    return ["ran", "swam", "slept"]
+    return []
