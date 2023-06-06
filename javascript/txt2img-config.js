@@ -276,13 +276,13 @@ function scrap_ui_component_value_with_default(config) {
     );
     
     config["script_list"] = getElementValue(
-        "#script_list > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_list > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
     
     config["script_txt2txt_xyz_plot_x_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -292,7 +292,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["script_txt2txt_xyz_plot_y_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_y_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_y_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -302,7 +302,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["script_txt2txt_xyz_plot_z_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_z_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_z_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -318,7 +318,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["txt2img_sampling_method"] = getElementValue(
-        "#txt2img_sampling > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -331,50 +331,50 @@ function scrap_ui_component_value_with_default(config) {
     
     //sagemaker endpoint
     // config["sagemaker_endpoint"] = getElementValue(
-    //     "#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+    //     "#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
     //     "value",
     //     ""
     // );
-    // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value.split("+")[0];
-    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value;
+    // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value.split("+")[0];
+    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;
     const sagemaker_ep_info_array = sagemaker_ep_info.split("+");
     config["sagemaker_endpoint"] = sagemaker_ep_info_array[0];
 
     //stable diffusion checkpoint
     const sd_checkpoint = document.querySelector(
-        "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const sd_tokens = sd_checkpoint.querySelectorAll(".token.svelte-1g4zxts");
+    const sd_tokens = sd_checkpoint.querySelectorAll(".token.svelte-aqlk7e");
     const sd_values = [];
     
     sd_tokens.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         sd_values.push(spanValue);
     });
     config["sagemaker_stable_diffusion_checkpoint"] = sd_values.join(":");
     
     //Textual Inversion
     const wrapInner = document.querySelector(
-        "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens = wrapInner.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens = wrapInner.querySelectorAll(".token.svelte-aqlk7e");
     const values = [];
     
     tokens.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values.push(spanValue);
     });
     config["sagemaker_texual_inversion_model"] = values.join(":");
     
     //LoRa
     const wrapInner1 = document.querySelector(
-        "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens1 = wrapInner1.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens1 = wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
     const values1 = [];
     
     tokens1.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values1.push(spanValue);
     });
     config["sagemaker_lora_model"] = values1.join(":");
@@ -382,13 +382,13 @@ function scrap_ui_component_value_with_default(config) {
     
     //HyperNetwork
     const wrapInner2 = document.querySelector(
-        "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens2 = wrapInner2.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens2 = wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
     const values2 = [];
     
     tokens2.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values2.push(spanValue);
     });
     config["sagemaker_hypernetwork_model"] = values2.join(":");
@@ -396,13 +396,13 @@ function scrap_ui_component_value_with_default(config) {
     
     //ControlNet model
     const wrapInner3 = document.querySelector(
-        "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens3 = wrapInner3.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens3 = wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
     const values3 = [];
     
     tokens3.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values3.push(spanValue);
     });
     config["sagemaker_controlnet_model"] = values3.join(":");
@@ -449,13 +449,13 @@ function scrap_ui_component_value_with_default(config) {
 
     
     config["controlnet_preprocessor"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
 
     config["controlnet_model"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
