@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: A CloudFormation template to deploy the Stable Diffusion Web UI by Automatic1111
-
+Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
 Parameters:
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
