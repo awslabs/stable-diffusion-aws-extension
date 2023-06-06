@@ -42,6 +42,11 @@ txt2img_show_hook = None
 txt2img_gallery = None
 txt2img_generation_info = None
 txt2img_html_info = None
+
+img2img_show_hook = None
+img2img_gallery = None
+img2img_generation_info = None
+img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
@@ -52,11 +57,11 @@ class SageMakerUI(scripts.Script):
     def title(self):
         return "SageMaker embeddings"
 
-    def show(self, is_txt2img):
+    def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def ui(self, is_txt2img):
-        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui()
+    def ui(self, is_img2img):
+        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
         return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
     def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
         pass
@@ -129,13 +134,14 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.sagemaker_endpoint],
             outputs=[txt2img_html_info]
         )
-
+        # elem_id = getattr(component, "elem_id", None)
+        # if elem_id == "generate_on_cloud_with_cloud_config_button":
         sagemaker_ui.generate_on_cloud_button_with_js.click(
-            fn=sagemaker_ui.generate_on_cloud_no_input,
-            _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
-        )
+                fn=sagemaker_ui.generate_on_cloud_no_input,
+                _js="txt2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint],
+                outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
+            )
         sagemaker_ui.modelmerger_merge_on_cloud.click(
             fn=sagemaker_ui.modelmerger_on_cloud_func,
             # fn=None,
@@ -148,7 +154,28 @@ def on_after_component_callback(component, **_kwargs):
             # ],
             outputs=[
             ])
-
+        # Hook image display logic
+    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook
+    is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
+    is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
+    is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
+    if is_img2img_gallery:
+        img2img_gallery = component
+    if is_img2img_generation_info:
+        img2img_generation_info = component
+    if is_img2img_html_info:
+        img2img_html_info = component
+        # return test
+    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None:
+        img2img_show_hook = "finish"
+        elem_id = getattr(component, "elem_id", None)
+        if elem_id == "generate_on_cloud_with_cloud_config_button_img2img":
+            sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+                fn=sagemaker_ui.generate_on_cloud_no_input,
+                _js="txt2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+            )
 
 def update_connect_config(api_url, api_token):
     # Check if api_url ends with '/', if not append it
