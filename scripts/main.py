@@ -180,9 +180,14 @@ def on_after_component_callback(component, **_kwargs):
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None:
         img2img_show_hook = "finish"
-        elem_id = getattr(component, "elem_id", None)
-        if elem_id == "generate_on_cloud_with_cloud_config_button_img2img":
-            sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+        sagemaker_ui.inference_job_dropdown.change(
+            fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
+            inputs=[sagemaker_ui.inference_job_dropdown],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+        )
+        # elem_id = getattr(component, "elem_id", None)
+        # if elem_id == "generate_on_cloud_with_cloud_config_button_img2img":
+        sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.generate_on_cloud_no_input,
                 _js="txt2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint],
