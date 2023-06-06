@@ -39,13 +39,17 @@ from utils import ModelsRef
 import uuid
 import boto3
 
+dreambooth_available = True
+def dummy_function(*args, **kwargs):
+    return None
+
 try:
     sys.path.append("extensions/sd_dreambooth_extension")
     from dreambooth.ui_functions import create_model
 except Exception as e:
-    logging.error("Dreambooth on cloud module is not support in api.")
-    logging.error(e)
-
+    logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
+    dreambooth_available = False
+    create_model = dummy_function
 # try:
 #     from dreambooth import shared
 #     from dreambooth.dataclasses.db_concept import Concept
