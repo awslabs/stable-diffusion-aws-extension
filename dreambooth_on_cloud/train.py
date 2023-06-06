@@ -244,9 +244,9 @@ def cloud_train(
             "train_job_id": job_id,
             "status": "Training"
         }
-        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key}).json()
+        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
-        print(f"Start training response:\n{response}")
+        print(f"Start training response:\n{response.json()}")
         integral_check = True
     except Exception as e:
         gr.Error(f'train job {train_model_name} failed: {str(e)}')
@@ -259,7 +259,7 @@ def cloud_train(
                     "status": "Fail"
                 }
                 response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
-                print(f'training job failed but updated the job status {response}')
+                print(f'training job failed but updated the job status {response.json()}')
 
 def async_cloud_train(*args):
     upload_thread = threading.Thread(target=cloud_train,
