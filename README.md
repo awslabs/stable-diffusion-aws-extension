@@ -1,46 +1,9 @@
 # Stable Diffusion AWS Extension
 This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.
 
-## How to get started
+## How to get started:
 
-### Prerequisite
-
-To set up the development environment, you will need have AWS account and tools with preferred version below to install from source code:
-- NPM, Node
-- [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
-- Docker
-
->**Notice** :This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
-
-### Source Code Structure
-
-```
-.
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── NOTICE
-├── README.md
-├── THIRD-PARTY-LICENSES.txt
-├── build_scripts -- scripts to build the docker images, we use these scripts to build docker images on cloud
-├── buildspec.yml -- buildspec file for CodeBuild, we have code pipeline to use this buildspec to transfer the CDK assets to Cloudformation templates
-├── deployment    -- scripts to deploy the CloudFormation template
-├── docs
-├── dreambooth_sagemaker -- SageMaker support for dreambooth
-├── infrastructure -- CDK project to deploy the middleware, all the middle ware infrastructure code is in this directory
-├── install.py -- install dependencies for the extension
-├── install.sh --  script to set the webui and extension to specific version
-├── javascript -- javascript code for the extension
-├── middleware_api -- middleware api denifition and lambda code
-├── preflight.sh -- version compatibility check
-├── sagemaker_entrypoint_json.py -- wrapper function for SageMaker
-├── scripts -- extension related code for WebUI
-└── utils.py -- wrapper function for configure options
-```
-
-## How to install:
-
+>**Notice** : This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
 
 ### **Part1**: Install the stable-diffusion-webui and extension
 #### **Option 1 (Recommended)**: Use one click AWS Cloudformation Template to install the EC2 instance with WebUI and extension
@@ -85,6 +48,12 @@ cd stable-diffusion-webui
 >**Notice** : We prefer use deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for arround 2 hours. That mean user need to wait arround 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
 #### **Option 2**: Use AWS CDK(Cloud Development Kit)
+**Prerequisite**
+To set up the development environment, you will need have AWS account and tools with preferred version below to install from source code:
+- NPM, Node
+- [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
+- Docker
+
 1. Deploy the project to your AWS account (make sure your current profile has Administrator access, with AWS CDK, Docker installed):
 
    ```bash
@@ -160,10 +129,48 @@ Diagram below is the brief view of internal workflow between our extension and m
 The major function of middleware is to provide RESTful API for WebUI extension to interact with AWS cloud resource (SageMaker, S3 etc.) with OpenAPI conformant schema, it will handling the request authentication, request dispatch to specific SageMaker/S3 API (SageMaker.jumpstart/model/predictor/estimator/tuner/utils etc.) and model lifecycle.
 Diagram below is the overall architecture of middleware, including API Gateway and Lambda to fulfill the RESTful API function and Step Function to orchestrate the model lifecycle.
 
-![middleware](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/50a869a2-6c4c-4d43-9c1c-596bd50c54d6)
+![middleware](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/8d871565-5792-4a7c-87c9-53fc66d96a5c)
+
+- Users in the WebUI console will use the assigned API token to trigger a request to API Gateway while being authenticated. (Note: AWS credentials are not required in AWS WebUI)
+- API Gateway will route requests to Lambda with different functions according to URL prefixes to implement corresponding tasks (for example, model uploading, checkpoint merging), model training, and model inference. At the same time, the Lambda function records operational metadata into DynamoDB (eg, inferred parameters, model name) for subsequent query and correlation.
+- During the training process, the Step Function will be called to orchestrate the training process, which includes using Amazon SageMaker for training and SNS for training status notification. During the inference process, the Lambda function will call Amazon SageMaker for asynchronous inference. Training data, models and checkpoints will be stored in S3 buckets separated by different prefixes.
+
+### Source Code Structure
+
+```
+.
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── NOTICE
+├── README.md
+├── THIRD-PARTY-LICENSES.txt
+├── build_scripts -- scripts to build the docker images, we use these scripts to build docker images on cloud
+├── buildspec.yml -- buildspec file for CodeBuild, we have code pipeline to use this buildspec to transfer the CDK assets to Cloudformation templates
+├── deployment    -- scripts to deploy the CloudFormation template
+├── docs
+├── dreambooth_sagemaker -- SageMaker support for dreambooth
+├── infrastructure -- CDK project to deploy the middleware, all the middle ware infrastructure code is in this directory
+├── install.py -- install dependencies for the extension
+├── install.sh --  script to set the webui and extension to specific version
+├── javascript -- javascript code for the extension
+├── middleware_api -- middleware api denifition and lambda code
+├── pre-flight.sh -- version compatibility check & install
+├── sagemaker_entrypoint_json.py -- wrapper function for SageMaker
+├── scripts -- extension related code for WebUI
+└── utils.py -- wrapper function for configure options
+```
 
 ## Version
+Beta
+
+## Changelog
 Alpha
+- txt2img (ckpt merge, training, inference)
+- dreambooth, controlnet plugin support
+- compatible version (commit id), webui - "89f9faa6", controlnet - "7c674f83", dreambooth - "926ae204"
+
 
 
 
