@@ -13,6 +13,10 @@ from PIL import Image
 sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 import sagemaker_ui
 
+dreambooth_available = True
+def dummy_function(*args, **kwargs):
+    return []
+
 try:
     from dreambooth_on_cloud.train import (
         async_cloud_train,
@@ -27,8 +31,16 @@ try:
         cloud_create_model,
     )
 except Exception as e:
-    logging.error("Dreambooth on cloud module is not support.")
-    logging.error(e)
+    logging.warning("[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
+    dreambooth_available = False
+    cloud_train = dummy_function
+    get_cloud_db_model_name_list = dummy_function
+    wrap_load_model_params = dummy_function
+    get_train_job_list = dummy_function
+    get_sorted_cloud_dataset = dummy_function
+    get_sd_cloud_models = dummy_function
+    get_create_model_job_list = dummy_function
+    cloud_create_model = dummy_function
 
 cloud_datasets = []
 training_job_dashboard = None
