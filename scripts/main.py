@@ -556,6 +556,9 @@ def ui_tabs_callback():
                                         gr.HTML(value="Cloud DB Status:")
                                         cloud_db_status = gr.HTML(elem_id="db_status", value="")
                                     with gr.Row():
+                                        gr.HTML(value="Experimental Shared Source:")
+                                        cloud_db_shared_diffusers_path = gr.HTML()
+                                    with gr.Row():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
                                     with gr.Row():
                                         training_job_dashboard = gr.Dataframe(
@@ -638,6 +641,7 @@ def ui_tabs_callback():
                                         cloud_db_v2,
                                         cloud_db_has_ema,
                                         cloud_db_src,
+                                        cloud_db_shared_diffusers_path,
                                         cloud_db_snapshot,
                                         cloud_db_lora_model_name,
                                         cloud_db_status,
