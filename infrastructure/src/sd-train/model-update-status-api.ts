@@ -36,7 +36,7 @@ export interface UpdateModelStatusRestApiProps {
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:latest';
+  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:dev';
   private readonly machineType: string;
 
   private readonly src;
