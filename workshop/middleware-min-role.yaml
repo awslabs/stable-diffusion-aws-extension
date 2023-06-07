@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  PolicyName:
+    Type: String
+    Description: The name of the IAM policy that will be created
+
+  RoleName:
+    Type: String
+    Description: The name of the IAM role that will be created
+
+Resources:
+  CfnPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Ref PolicyName
+      Path: /
+      PolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "VisualEditor0",
+              "Effect": "Allow",
+              "Action": [
+                  "logs:ListTagsLogGroup",
+                  "kms:Decrypt",
+                  "lambda:PublishLayerVersion",
+                  "dynamodb:DescribeContributorInsights",
+                  "dynamodb:ListTagsOfResource",
+                  "iam:CreateRole",
+                  "iam:AttachRolePolicy",
+                  "ecr:ListTagsForResource",
+                  "iam:PutRolePolicy",
+                  "dynamodb:DeleteTable",
+                  "ecr:DeleteRepository",
+                  "dynamodb:UpdateContinuousBackups",
+                  "iam:DetachRolePolicy",
+                  "dynamodb:DescribeTable",
+                  "kms:Encrypt",
+                  "iam:DeleteRolePolicy",
+                  "dynamodb:DescribeContinuousBackups",
+                  "kms:DescribeKey",
+                  "ecr:TagResource",
+                  "dynamodb:DescribeKinesisStreamingDestination",
+                  "kms:CreateGrant",
+                  "ecr:GetLifecyclePolicy",
+                  "iam:GetRole",
+                  "logs:DescribeLogGroups",
+                  "ecr:GetDownloadUrlForLayer",
+                  "iam:DeleteRole",
+                  "dynamodb:DescribeTimeToLive",
+                  "logs:CreateLogGroup",
+                  "dynamodb:CreateTable",
+                  "iam:CreateServiceLinkedRole",
+                  "kms:GenerateDataKey",
+                  "ecr:BatchGetImage",
+                  "logs:PutRetentionPolicy",
+                  "iam:GetRolePolicy",
+                  "ecr:GetRepositoryPolicy"
+              ],
+              "Resource": [
+                "arn:aws:lambda:*:*:layer:*",
+                "arn:aws:dynamodb:*:*:table/*",
+                "arn:aws:iam::*:role/*",
+                "arn:aws:kms:*:*:key/*",
+                "arn:aws:logs:*:*:log-group:*",
+                "arn:aws:ecr:*:*:repository/*"
+              ]
+            },
+            {
+              "Sid": "VisualEditor1",
+              "Effect": "Allow",
+              "Action": "lambda:DeleteLayerVersion",
+              "Resource": "arn:aws:lambda:*:*:layer:*:*"
+            },
+            {
+              "Sid": "VisualEditor2",
+              "Effect": "Allow",
+              "Action": [
+                  "lambda:CreateFunction",
+                  "lambda:GetLayerVersion",
+                  "s3:CreateBucket",
+                  "s3:GetBucketPolicy",
+                  "iam:PassRole",
+                  "ec2:DescribeNetworkInterfaces",
+                  "s3:PutBucketTagging",
+                  "lambda:GetRuntimeManagementConfig",
+                  "sagemaker:*",
+                  "lambda:DeleteFunction",
+                  "ecr:DescribeRepositories",
+                  "s3:DeleteBucket",
+                  "states:*",
+                  "sns:*",
+                  "s3:PutBucketPublicAccessBlock",
+                  "apigateway:*",
+                  "lambda:InvokeFunction",
+                  "lambda:GetFunction",
+                  "ecr:CreateRepository",
+                  "s3:PutBucketCORS",
+                  "lambda:GetFunctionCodeSigningConfig",
+                  "s3:GetObject",
+                  "lambda:AddPermission",
+                  "s3:PutBucketPolicy",
+                  "lambda:RemovePermission"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+
+  CfnRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+      ManagedPolicyArns:
+        - !Ref CfnPolicy
+      Path: /

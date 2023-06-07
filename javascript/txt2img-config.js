@@ -50,7 +50,7 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-async function txt2img_config_save(endpoint_value) {
+async function txt2img_config_save(endpoint_value, type) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
@@ -81,12 +81,12 @@ async function txt2img_config_save(endpoint_value) {
 
         console.log('The configuration has been successfully uploaded to s3');
         // alert("The configuration has been successfully uploaded.");
-        return endpoint_value;
+        return [endpoint_value, type];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
         alert("An error occurred while uploading the configuration.");
-        return "FAILURE";
+        return ["FAILURE", type];
     }
 }
 
@@ -479,19 +479,19 @@ function scrap_ui_component_value_with_default(config) {
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );

@@ -537,7 +537,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
 # Global exception capture
 stepf_client = boto3.client('stepfunctions')
 
-@app.get("/")
+@app.get("/inference")
 def root():
     return {"message": const.SOLUTION_NAME}
 
