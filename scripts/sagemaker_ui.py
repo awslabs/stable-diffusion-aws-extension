@@ -427,8 +427,22 @@ def generate_on_cloud(sagemaker_endpoint):
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
-def generate_on_cloud_no_input(sagemaker_endpoint):
+def call_txt2img_inference(sagemaker_endpoint):
+    return call_remote_inference(sagemaker_endpoint, 'txt2img')
+
+def call_img2img_inference(sagemaker_endpoint):
+    return call_remote_inference(sagemaker_endpoint, 'img2img')
+
+def call_interrogate_clip(sagemaker_endpoint):
+    return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
+
+def call_interrogate_deepbooru(sagemaker_endpoint):
+    return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
+
+
+def call_remote_inference(sagemaker_endpoint, type):
     print(f"chosen ep {sagemaker_endpoint}")
+    print(f"inference type is {type}")
 
     if sagemaker_endpoint == '':
         image_list = []  # Return an empty list if selected_value is None
@@ -462,6 +476,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
     }
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
+    payload['inference_type'] = type
     print(f"checkpointinfo is {payload}")
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
@@ -756,6 +771,8 @@ def create_ui(is_img2img):
                 if not is_img2img:
                     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
                 global generate_on_cloud_button_with_js_img2img
+                global interrogate_clip_on_cloud_button
+                global interrogate_deep_booru_on_cloud_button
                 if is_img2img:
                     with gr.Row():
                         with gr.Column():
