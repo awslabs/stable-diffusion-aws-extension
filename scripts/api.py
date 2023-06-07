@@ -31,7 +31,7 @@ import modules.shared as shared
 import modules.extras
 import sys
 sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
-from models import InvocationsRequest
+from sdae_models import InvocationsRequest
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
