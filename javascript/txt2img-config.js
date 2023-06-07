@@ -479,19 +479,19 @@ function scrap_ui_component_value_with_default(config) {
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
