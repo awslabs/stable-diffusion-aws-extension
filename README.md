@@ -44,6 +44,13 @@ cd stable-diffusion-webui
 
 <img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
+For users who need explicit IAM permissions for strict account control, we provide [CloudFormation template](https://github.com/awslabs/stable-diffusion-aws-extension/blob/dev/workshop/middleware-min-role.yaml) to help system administrators create IAM roles with minimal permissions, user can create & delete middleware CloudFormation templates through newly such created roles.
+
+**Create new mininum role first, e.g. sd-min-role.**
+![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/148841f6-8fad-4166-8f02-8a306b177459)
+
+**Specify such role in Cloudformation creation.**
+![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/3121c876-79d4-48a2-8260-be80c480b893)
 
 >**Notice** : We prefer use deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for arround 2 hours. That mean user need to wait arround 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
