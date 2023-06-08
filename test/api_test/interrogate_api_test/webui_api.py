@@ -9,10 +9,10 @@ start_time = time.time()
 
 url = "http://127.0.0.1:7860"
 
-print("webui api test for clip")
+print("webui api test for clip:")
 
 with open("test.png", "rb") as img:
-    test_img = base64.b64encode(img.read())
+    test_img = str(base64.b64encode(img.read()), 'utf-8')
 
 payload = {
     "image":test_img,
@@ -20,31 +20,32 @@ payload = {
 }
 
 # 
-response = requests.post(url=f'{url}/invocations', json=payload)
+response = requests.post(url=f'{url}/sdapi/v1/interrogate', json=payload)
 
 print(f"run time is {time.time()-start_time}")
 
-print(f"response is {response}")
+# print(f"response is {response}")
 
 r = response.json()
 
-print(f"json response is {r}")
+prompt_message = r["caption"]
 
-# for i in r['images']:
-#     image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+print(f"prompt message : {prompt_message}")
 
-#     png_payload = {
-#         "image": "data:image/png;base64," + i
-#     }
-#     response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+print("webui api test for deepbooru:")
 
-#     pnginfo = PngImagePlugin.PngInfo()
-#     pnginfo.add_text("parameters", response2.json().get("info"))
-#     image.save('output.png', pnginfo=pnginfo)
+payload = {
+    "image":test_img,
+    "model":"deepdanbooru"
+}
 
-# print("webui api test for deepdanbooru")
+# 
+response = requests.post(url=f'{url}/sdapi/v1/interrogate', json=payload)
 
-# payload = {
-#     "image":"",
-#     "model":"deepdanbooru"
-# }
+print(f"run time is {time.time()-start_time}")
+
+r = response.json()
+
+prompt_message = r["caption"]
+
+print(f"prompt message : {prompt_message}")
