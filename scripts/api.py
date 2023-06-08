@@ -1,46 +1,23 @@
-import base64
-import functools
 import hashlib
-# import io
 import json
 import logging
 import os
 import traceback
-import zipfile
 import time
-from pathlib import Path
-from typing import List, Union
 import copy
 
 import requests
-from PIL import Image
-from fastapi import FastAPI, Response, Query, Body, Form, Header
-from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
-from pydantic import BaseModel, Field
-from starlette import status
-from starlette.requests import Request
+from fastapi import FastAPI
 
-from modules.api.api import Api
 # from modules import sd_hijack, sd_models, sd_vae, script_loading, paths
 from modules import sd_models
-import modules.scripts as base_scripts
-from modules.hypernetworks import hypernetwork
-from modules.textual_inversion import textual_inversion
 # import modules.shared as shared
 import modules.extras
 import sys
-# sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
-# from sdae_models import InvocationsRequest
 from aws_extension.models import InvocationsRequest
 from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path
 import requests
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
-from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
-from utils import ModelsRef
-import uuid
-import boto3
+from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
 
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
@@ -153,30 +130,6 @@ logger = logging.getLogger(__name__)
 #         headers={"Content-Disposition": f"attachment; filename={db_model_name}{name_part}_images.zip"}
 #     )
 
-# def base64_to_pil(im_b64) -> Image:
-#     im_b64 = bytes(im_b64, 'utf-8')
-#     im_bytes = base64.b64decode(im_b64)  # im_bytes is a binary image
-#     im_file = io.BytesIO(im_bytes)  # convert image to file-like object
-#     img = Image.open(im_file)
-#     return img
-
-# def decode_base64_to_image(encoding):
-#     if encoding.startswith("data:image/"):
-#         encoding = encoding.split(";")[1].split(",")[1]
-#     return Image.open(io.BytesIO(base64.b64decode(encoding)))
-
-# def file_to_base64(file_path) -> str:
-#     with open(file_path, "rb") as f:
-#         im_b64 = base64.b64encode(f.read())
-#         return str(im_b64, 'utf-8')
-
-# def get_bucket_and_key(s3uri):
-#         pos = s3uri.find('/', 5)
-#         bucket = s3uri[5 : pos]
-#         key = s3uri[pos + 1 : ]
-#         return bucket, key
-
-
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
 
@@ -200,12 +153,6 @@ def sagemaker_api(_, app: FastAPI):
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
                 #response_info = response.json()
                 #print(response_info.keys())
-                return response.json()
-            elif req.task == 'controlnet_txt2img':  
-                response = requests.post(url=f'http://0.0.0.0:8080/controlnet/txt2img', json=json.loads(req.controlnet_txt2img_payload.json()))
-                #response_info = response.json()
-                #print(response_info.keys())
-                #post_invocations(selected_models, response_info['images'])
                 return response.json()
             elif req.task == 'image-to-image':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=json.loads(req.img2img_payload.json()))

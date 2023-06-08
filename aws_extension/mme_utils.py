@@ -124,23 +124,3 @@ def get_bucket_and_key(s3uri):
         bucket = s3uri[5 : pos]
         key = s3uri[pos + 1 : ]
         return bucket, key
-
-def post_invocations(selected_models, b64images):
-    #generated_images_s3uri = os.environ.get('generated_images_s3uri', None)
-    bucket = selected_models['bucket']
-    s3_base_dir = selected_models['base_dir']
-    output_folder = selected_models['output']
-    generated_images_s3uri = os.path.join(bucket,s3_base_dir,output_folder)
-    s3_client = boto3.client('s3')
-    if generated_images_s3uri:
-        #generated_images_s3uri = f'{generated_images_s3uri}{username}/'
-        bucket, key = get_bucket_and_key(generated_images_s3uri)
-        for b64image in b64images:
-            image = decode_base64_to_image(b64image)
-            output = io.BytesIO()
-            image.save(output, format='JPEG')
-            image_id = str(uuid.uuid4())
-            s3_client.put_object(
-                Body=output.getvalue(),
-                Bucket=bucket,
-                Key=f'{key}/{image_id}.png')
