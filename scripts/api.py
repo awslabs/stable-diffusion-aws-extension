@@ -129,6 +129,98 @@ logger = logging.getLogger(__name__)
 #         media_type="application/x-zip-compressed",
 #         headers={"Content-Disposition": f"attachment; filename={db_model_name}{name_part}_images.zip"}
 #     )
+def merge_model_on_cloud(req):
+    def modelmerger(*args):
+        try:
+            results = modules.extras.run_modelmerger(*args)
+        except Exception as e:
+            print(f"Error loading/saving model file: {e}")
+            print(traceback.format_exc(), file=sys.stderr)
+            # modules.sd_models.list_models()  # to remove the potentially missing models from the list
+            return [None, None, None, None, f"Error merging checkpoints: {e}"]
+        return results
+
+    merge_checkpoint_payload = req.merge_checkpoint_payload
+    primary_model_name = merge_checkpoint_payload["primary_model_name"]
+    secondary_model_name = merge_checkpoint_payload["secondary_model_name"]
+    tertiary_model_name = merge_checkpoint_payload["teritary_model_name"]
+    interp_method = merge_checkpoint_payload["interp_method"]
+    interp_amount = merge_checkpoint_payload["interp_amount"]
+    save_as_half = merge_checkpoint_payload["save_as_half"]
+    custom_name = merge_checkpoint_payload["custom_name"]
+    checkpoint_format = merge_checkpoint_payload["checkpoint_format"]
+    config_source = merge_checkpoint_payload["config_source"]
+    bake_in_vae = merge_checkpoint_payload["bake_in_vae"]
+    discard_weights = merge_checkpoint_payload["discard_weights"]
+    save_metadata = merge_checkpoint_payload["save_metadata"]
+    merge_model_s3_pos = merge_checkpoint_payload["merge_model_s3"]
+
+    # upload checkpoints from cloud to local variable
+    model_type = 'Stable-diffusion'
+    checkpoint_info = req.checkpoint_info
+    selected_model_s3_pos = checkpoint_info[model_type][primary_model_name]
+    download_model(primary_model_name, selected_model_s3_pos)
+    selected_model_s3_pos = checkpoint_info[model_type][secondary_model_name]
+    download_model(secondary_model_name, selected_model_s3_pos)
+    if tertiary_model_name:
+        selected_model_s3_pos = checkpoint_info[model_type][tertiary_model_name]
+        download_model(tertiary_model_name, selected_model_s3_pos)
+
+    sd_models.list_models()
+
+    for model_name in sd_models.checkpoints_list.keys():
+        raw_name = model_name[:-13]
+        if raw_name == primary_model_name:
+            primary_model_name = model_name
+        if raw_name == secondary_model_name:
+            secondary_model_name = model_name
+        if raw_name == tertiary_model_name:
+            tertiary_model_name = model_name
+
+    print(f"sd model checkpoint list is {sd_models.checkpoints_list}")
+
+    [primary_model_name, secondary_model_name, tertiary_model_name, component_dict_sd_model_checkpoints, modelmerger_result] = \
+        modelmerger("fake_id_task", primary_model_name, secondary_model_name, tertiary_model_name, \
+        interp_method, interp_amount, save_as_half, custom_name, checkpoint_format, config_source, \
+        bake_in_vae, discard_weights, save_metadata)
+
+    output_model_position = modelmerger_result[20:]
+
+    # check whether yaml exists
+    merge_model_name = output_model_position.split('/')[-1].replace(' ','\ ')
+
+    yaml_position = output_model_position[:-len(output_model_position.split('.')[-1])]+'yaml'
+    yaml_states = os.path.isfile(yaml_position)
+
+    new_merge_model_name = merge_model_name.replace('(','_').replace(')','_')
+
+    base_path = models_path[model_type]
+
+    merge_model_name_complete_path = base_path + '/' + merge_model_name
+    new_merge_model_name_complete_path = base_path + '/' + new_merge_model_name
+    merge_model_name_complete_path = merge_model_name_complete_path.replace('(','\(').replace(')','\)')
+    os.system(f"mv {merge_model_name_complete_path} {new_merge_model_name_complete_path}")
+
+    model_yaml = (merge_model_name[:-len(merge_model_name.split('.')[-1])]+'yaml').replace('(','\(').replace(')','\)')
+    model_yaml_complete_path = base_path + '/' + model_yaml
+    
+    print(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
+
+    if yaml_states:
+        new_model_yaml = model_yaml.replace('(','_').replace(')','_')
+        new_model_yaml_complete_path = base_path + '/' + new_model_yaml
+        os.system(f"mv {model_yaml_complete_path} {new_model_yaml_complete_path}")
+        os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} {new_model_yaml_complete_path}")
+    else:
+        os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} ")
+
+    os.system(f'./tools/s5cmd cp {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
+    os.system(f'rm {new_merge_model_name_complete_path}')
+    os.system(f'rm {new_model_yaml_complete_path}')
+
+    print(f"output model path is {output_model_position}")
+
+    return output_model_position
 
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
@@ -256,114 +348,9 @@ def sagemaker_api(_, app: FastAPI):
                     logging.info("Check disk usage after request.")
                     os.system("df -h")
             elif req.task == 'merge-checkpoint':
-                r"""
-                task: merge checkpoint
-                db_create_model_payload:
-                    :s3_input_path: S3 path for download src model.
-                    :s3_output_path: S3 path for upload generated model.
-                    :job_id: job id.
-                    :param
-                        :new_model_name: generated model name.
-                        :new_model_src: S3 path for download src model.
-                        :from_hub=False,
-                        :new_model_url="",
-                        :new_model_token="",
-                        :extract_ema=False,
-                        :train_unfrozen=False,
-                        :is_512=True,
-                """
                 try:
-                    def modelmerger(*args):
-                        try:
-                            results = modules.extras.run_modelmerger(*args)
-                        except Exception as e:
-                            print(f"Error loading/saving model file: {e}")
-                            print(traceback.format_exc(), file=sys.stderr)
-                            # modules.sd_models.list_models()  # to remove the potentially missing models from the list
-                            return [None, None, None, None, f"Error merging checkpoints: {e}"]
-                        return results
 
-                    merge_checkpoint_payload = req.merge_checkpoint_payload
-                    primary_model_name = merge_checkpoint_payload["primary_model_name"]
-                    secondary_model_name = merge_checkpoint_payload["secondary_model_name"]
-                    tertiary_model_name = merge_checkpoint_payload["teritary_model_name"]
-                    interp_method = merge_checkpoint_payload["interp_method"]
-                    interp_amount = merge_checkpoint_payload["interp_amount"]
-                    save_as_half = merge_checkpoint_payload["save_as_half"]
-                    custom_name = merge_checkpoint_payload["custom_name"]
-                    checkpoint_format = merge_checkpoint_payload["checkpoint_format"]
-                    config_source = merge_checkpoint_payload["config_source"]
-                    bake_in_vae = merge_checkpoint_payload["bake_in_vae"]
-                    discard_weights = merge_checkpoint_payload["discard_weights"]
-                    save_metadata = merge_checkpoint_payload["save_metadata"]
-                    merge_model_s3_pos = merge_checkpoint_payload["merge_model_s3"]
-
-                    # upload checkpoints from cloud to local variable
-                    model_type = 'Stable-diffusion'
-                    checkpoint_info = req.checkpoint_info
-                    selected_model_s3_pos = checkpoint_info[model_type][primary_model_name]
-                    download_model(primary_model_name, selected_model_s3_pos)
-                    selected_model_s3_pos = checkpoint_info[model_type][secondary_model_name]
-                    download_model(secondary_model_name, selected_model_s3_pos)
-                    if tertiary_model_name:
-                        selected_model_s3_pos = checkpoint_info[model_type][tertiary_model_name]
-                        download_model(tertiary_model_name, selected_model_s3_pos)
-
-                    sd_models.list_models()
-
-                    for model_name in sd_models.checkpoints_list.keys():
-                        raw_name = model_name[:-13]
-                        if raw_name == primary_model_name:
-                            primary_model_name = model_name
-                        if raw_name == secondary_model_name:
-                            secondary_model_name = model_name
-                        if raw_name == tertiary_model_name:
-                            tertiary_model_name = model_name
-
-                    print(f"sd model checkpoint list is {sd_models.checkpoints_list}")
-
-                    [primary_model_name, secondary_model_name, tertiary_model_name, component_dict_sd_model_checkpoints, modelmerger_result] = \
-                        modelmerger("fake_id_task", primary_model_name, secondary_model_name, tertiary_model_name, \
-                        interp_method, interp_amount, save_as_half, custom_name, checkpoint_format, config_source, \
-                        bake_in_vae, discard_weights, save_metadata)
-
-                    output_model_position = modelmerger_result[20:]
-
-                    # check whether yaml exists
-                    merge_model_name = output_model_position.split('/')[-1].replace(' ','\ ')
-
-                    yaml_position = output_model_position[:-len(output_model_position.split('.')[-1])]+'yaml'
-                    yaml_states = os.path.isfile(yaml_position)
-
-                    new_merge_model_name = merge_model_name.replace('(','_').replace(')','_')
-
-                    base_path = models_path[model_type]
-
-                    merge_model_name_complete_path = base_path + '/' + merge_model_name
-                    new_merge_model_name_complete_path = base_path + '/' + new_merge_model_name
-                    merge_model_name_complete_path = merge_model_name_complete_path.replace('(','\(').replace(')','\)')
-                    os.system(f"mv {merge_model_name_complete_path} {new_merge_model_name_complete_path}")
-
-                    model_yaml = (merge_model_name[:-len(merge_model_name.split('.')[-1])]+'yaml').replace('(','\(').replace(')','\)')
-                    model_yaml_complete_path = base_path + '/' + model_yaml
-                    
-                    print(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
-
-                    if yaml_states:
-                        new_model_yaml = model_yaml.replace('(','_').replace(')','_')
-                        new_model_yaml_complete_path = base_path + '/' + new_model_yaml
-                        os.system(f"mv {model_yaml_complete_path} {new_model_yaml_complete_path}")
-                        os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} {new_model_yaml_complete_path}")
-                    else:
-                        os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} ")
-
-                    os.system(f'./tools/s5cmd cp {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
-                    os.system(f'rm {new_merge_model_name_complete_path}')
-                    os.system(f'rm {new_model_yaml_complete_path}')
-
-                    print(f"output model path is {output_model_position}")
-                    
-                    # upload merge results , merge task info to s3
+                    output_model_position = merge_model_on_cloud(req)
 
                     response = {
                         "statusCode": 200,
