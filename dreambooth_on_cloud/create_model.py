@@ -12,6 +12,9 @@ from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
 import gradio as gr
 
+logging.basicConfig(filename='sd-aws-ext.log', level=logger.debug, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 job_link_list = []
 ckpt_dict = {}
 base_model_folder = "models/sagemaker_dreambooth/"
@@ -67,25 +70,25 @@ def async_create_model_on_sagemaker(
     api_key = get_variable_from_json('api_token')
 
     if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return
     url += "model"
     model_id = ""
     try:
         if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0:
-            logging.error("ckpt_path or model_name is not setting.")
+            logger.debug("ckpt_path or model_name is not setting.")
             return
         if re.match("^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,30}$", params["new_model_name"]) is None:
-            logging.error("model_name is not match pattern.")
+            logger.debug("model_name is not match pattern.")
             return
         ckpt_key = ckpt_path
         if params["ckpt_path"].startswith("cloud-"):
             if params["ckpt_path"] not in ckpt_dict:
-                logging.error("Cloud checkpoint is not exist.")
+                logger.debug("Cloud checkpoint is not exist.")
                 return
             ckpt_name_list = ckpt_dict[ckpt_key]["name"]
             if len(ckpt_name_list) == 0:
-                logging.error("Checkpoint name error.")
+                logger.debug("Checkpoint name error.")
                 return
             params["ckpt_path"] = ckpt_name_list[0].rstrip(".tar")
             ckpt_info = ckpt_dict[ckpt_key]
@@ -156,7 +159,7 @@ def async_create_model_on_sagemaker(
                     "multi_parts_tags": {local_tar_path: multiparts_tags}
                 }
         else:
-            logging.error("Create model params error.")
+            logger.debug("Create model params error.")
             return
         # Start creating model on cloud.
         response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
@@ -211,7 +214,7 @@ def get_create_model_job_list():
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     if not url or not api_key:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return []
 
     global local_job_cache
