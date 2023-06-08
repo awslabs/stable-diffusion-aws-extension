@@ -335,18 +335,9 @@ def sagemaker_api(_, app: FastAPI):
                 # response = self.img2imgapi(req.img2img_payload)
                 # shared.opts.data = default_options
                 return response.json()
-            elif req.task == 'extras-single-image':
-                # response = self.extras_single_image_api(req.extras_single_payload)
-                # shared.opts.data = default_options
-                response = None
-                return response
-            elif req.task == 'extras-batch-images':
-                # response = self.extras_batch_images_api(req.extras_batch_payload)
-                # shared.opts.data = default_options
-                response = None
-                return response                
-            # elif req.task == 'sd-models':
-            #     return self.get_sd_models()
+            elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.img2img_payload.json()))
+                return response.json()
             elif req.task == 'db-create-model':
                 r"""
                 task: db-create-model
