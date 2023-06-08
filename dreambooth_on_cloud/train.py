@@ -270,7 +270,6 @@ def async_cloud_train(*args):
     train_job_list.insert(0, ['', args[0], 'Initialed at Local', ''])
     return train_job_list
 
-
 def get_train_job_list():
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
@@ -308,8 +307,6 @@ def get_sorted_cloud_dataset():
     except Exception as e:
         print(f"exception {e}")
         return []
-
-
 
 def wrap_load_params(self, params_dict):
     for key, value in params_dict.items():

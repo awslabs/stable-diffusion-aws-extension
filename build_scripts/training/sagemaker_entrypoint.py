@@ -14,11 +14,11 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 import boto3
 
 sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
+sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
 from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 
 os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
-sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
@@ -85,7 +85,10 @@ def upload_model_to_s3(model_name, s3_output_path):
 def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
     s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
-    local_path = os.path.join(f"models/{model_type}", model_name)
+    if model_type == "Stable-diffusion":
+        local_path = os.path.join(f"models/{model_type}", model_name)
+    elif model_type == "Lora":
+        local_path = f"models/{model_type}"
     for root, dirs, files in os.walk(local_path):
         for file in files:
             if file.endswith('.safetensors'):
@@ -96,6 +99,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
                     output_tar = file
                     tar_command = f"tar cvf {output_tar} {safetensors} {yaml}"
                 elif model_type == "Lora":
+                    output_tar = file
                     tar_command = f"tar cvf {output_tar} {safetensors}"
                 print(tar_command)
                 os.system(tar_command)
