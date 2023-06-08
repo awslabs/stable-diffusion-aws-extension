@@ -476,7 +476,7 @@ def call_remote_inference(sagemaker_endpoint, type):
     }
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
-    payload['inference_type'] = type
+    payload['task_type'] = type
     print(f"checkpointinfo is {payload}")
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
