@@ -50,10 +50,17 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-async function txt2img_config_save(endpoint_value, type) {
+async function txt2img_config_save(endpoint_value, init_img_inpaint, init_mask_inpaint) {
     var config = {};
+    console.log(init_img_inpaint);
+    console.log(init_mask_inpaint);
+
 
     console.log(JSON.stringify(endpoint_value))
+
+    config["img2img_inpaint"]=init_img_inpaint;
+    config['img2img_mask_inpaint']=init_mask_inpaint;
+
     scrap_ui_component_value_with_default(config);
 
     // store config in local storage for debugging
@@ -81,12 +88,12 @@ async function txt2img_config_save(endpoint_value, type) {
 
         console.log('The configuration has been successfully uploaded to s3');
         // alert("The configuration has been successfully uploaded.");
-        return [endpoint_value, type];
+        return [endpoint_value,"", ""];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
         alert("An error occurred while uploading the configuration.");
-        return ["FAILURE", type];
+        return ["FAILURE", "", ""];
     }
 }
 

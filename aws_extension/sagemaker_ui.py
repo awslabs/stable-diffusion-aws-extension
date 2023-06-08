@@ -430,13 +430,13 @@ def generate_on_cloud(sagemaker_endpoint):
 def call_txt2img_inference(sagemaker_endpoint):
     return call_remote_inference(sagemaker_endpoint, 'txt2img')
 
-def call_img2img_inference(sagemaker_endpoint):
+def call_img2img_inference(sagemaker_endpoint, **args):
     return call_remote_inference(sagemaker_endpoint, 'img2img')
 
-def call_interrogate_clip(sagemaker_endpoint):
+def call_interrogate_clip(sagemaker_endpoint, **args):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
 
-def call_interrogate_deepbooru(sagemaker_endpoint):
+def call_interrogate_deepbooru(sagemaker_endpoint, **args):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
 
 

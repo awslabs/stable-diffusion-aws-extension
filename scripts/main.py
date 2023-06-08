@@ -168,18 +168,34 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[
             ])
         # Hook image display logic
-    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook
+    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, init_img_inpaint, init_mask_inpaint
     is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
     is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
     is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
+
+    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+    is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
+
     if is_img2img_gallery:
         img2img_gallery = component
     if is_img2img_generation_info:
         img2img_generation_info = component
     if is_img2img_html_info:
         img2img_html_info = component
-        # return test
-    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None and sagemaker_ui.interrogate_clip_on_cloud_button is not None and sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None:
+    if is_init_img_inpaint:
+        init_img_inpaint = component
+    if is_init_mask_inpaint:
+        init_mask_inpaint = component
+
+    if sagemaker_ui.inference_job_dropdown is not None and \
+            img2img_gallery is not None and \
+            img2img_generation_info is not None and \
+            img2img_html_info is not None and \
+            img2img_show_hook is None and \
+            sagemaker_ui.interrogate_clip_on_cloud_button is not None and \
+            sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None and\
+            init_img_inpaint is not None and \
+            init_mask_inpaint is not None:
         img2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
@@ -203,9 +219,9 @@ def on_after_component_callback(component, **_kwargs):
         sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
                 _js="txt2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint],
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img_inpaint, init_mask_inpaint],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-            )
+        )
 
 def update_connect_config(api_url, api_token):
     # Check if api_url ends with '/', if not append it
