@@ -10,8 +10,9 @@ from utils import get_variable_from_json
 from utils import save_variable_to_json
 from PIL import Image
 
-sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
-import sagemaker_ui
+# sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
+# import sagemaker_ui
+from aws_extension import sagemaker_ui
 
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
