@@ -10,8 +10,9 @@ from utils import get_variable_from_json
 from utils import save_variable_to_json
 from PIL import Image
 
-sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
-import sagemaker_ui
+# sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
+# import sagemaker_ui
+from aws_extension import sagemaker_ui
 
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
@@ -149,7 +150,7 @@ def on_after_component_callback(component, **_kwargs):
         # elem_id = getattr(component, "elem_id", None)
         # if elem_id == "generate_on_cloud_with_cloud_config_button":
         sagemaker_ui.generate_on_cloud_button_with_js.click(
-                fn=sagemaker_ui.generate_on_cloud_no_input,
+                fn=sagemaker_ui.call_txt2img_inference,
                 _js="txt2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint],
                 outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
@@ -178,17 +179,29 @@ def on_after_component_callback(component, **_kwargs):
     if is_img2img_html_info:
         img2img_html_info = component
         # return test
-    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None:
+    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None and sagemaker_ui.interrogate_clip_on_cloud_button is not None and sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None:
         img2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
             inputs=[sagemaker_ui.inference_job_dropdown],
             outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
         )
-        # elem_id = getattr(component, "elem_id", None)
-        # if elem_id == "generate_on_cloud_with_cloud_config_button_img2img":
+
+        sagemaker_ui.interrogate_clip_on_cloud_button.click(
+            fn=sagemaker_ui.call_interrogate_clip,
+            _js="txt2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
+        )
+
+        sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
+            fn=sagemaker_ui.call_interrogate_deepbooru,
+            _js="txt2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
+        )
         sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
-                fn=sagemaker_ui.generate_on_cloud_no_input,
+                fn=sagemaker_ui.call_img2img_inference,
                 _js="txt2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]

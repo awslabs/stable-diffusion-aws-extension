@@ -50,7 +50,7 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-async function txt2img_config_save(endpoint_value) {
+async function txt2img_config_save(endpoint_value, type) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
@@ -81,12 +81,12 @@ async function txt2img_config_save(endpoint_value) {
 
         console.log('The configuration has been successfully uploaded to s3');
         // alert("The configuration has been successfully uploaded.");
-        return endpoint_value;
+        return [endpoint_value, type];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
         alert("An error occurred while uploading the configuration.");
-        return "FAILURE";
+        return ["FAILURE", type];
     }
 }
 
