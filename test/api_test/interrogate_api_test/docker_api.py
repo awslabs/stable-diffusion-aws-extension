@@ -7,7 +7,8 @@ import time
 
 start_time = time.time()
 
-url = "http://127.0.0.1:8082"
+# url = "http://127.0.0.1:8082"
+url = "http://localhost:8082"
 
 print("docker api test for clip:")
 
@@ -23,13 +24,15 @@ payload = {
 }
 
 # 
-response = requests.post(url=f'{url}/inovations', json=payload)
+response = requests.post(url=f'{url}/invocations', json=payload)
 
 print(f"run time is {time.time()-start_time}")
 
-# print(f"response is {response}")
+print(f"response is {response}")
 
 r = response.json()
+
+print(f"response is {r}")
 
 prompt_message = r["caption"]
 
