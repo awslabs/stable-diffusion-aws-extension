@@ -57,7 +57,7 @@ SageMaker Inference <=> S3 bucket
 .
 └── opt
     └── ml
-        └── model                     <-----------r----------- s3://aigc-bucket/checkpoint/custom & s3://aigc-bucket/Stable-diffusion/checkpoint/<model-name>/<request-id> & s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/output
+        └── model                     <-----------r----------- s3://aigc-bucket/checkpoint/custom & s3://aigc-bucket/<model-type>/checkpoint/<model-name>/<request-id> & s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/output
 
 Create Model <=> S3 bucket
 .
