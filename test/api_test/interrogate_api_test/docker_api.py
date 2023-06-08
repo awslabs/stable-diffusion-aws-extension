@@ -17,7 +17,7 @@ with open("test.png", "rb") as img:
 
 payload = {
     "task": "interrogate_clip",
-    "interrogate_paylod": {
+    "interrogate_payload": {
         "image":test_img,
         "model":"clip"
     }
@@ -28,11 +28,7 @@ response = requests.post(url=f'{url}/invocations', json=payload)
 
 print(f"run time is {time.time()-start_time}")
 
-print(f"response is {response}")
-
 r = response.json()
-
-print(f"response is {r}")
 
 prompt_message = r["caption"]
 
@@ -42,7 +38,7 @@ print("docker api test for deepbooru:")
 
 payload = {
     "task": "interrogate_clip",
-    "interrogate_paylod": {
+    "interrogate_payload": {
         "image":test_img,
         "model":"deepdanbooru"
     }
