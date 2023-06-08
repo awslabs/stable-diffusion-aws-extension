@@ -82,18 +82,21 @@ def upload_model_to_s3(model_name, s3_output_path):
     print(f"Upload check point to s3 {local_path} {output_bucket_name} {s3_output_path}")
     upload_folder_to_s3_by_tar(local_path, output_bucket_name, s3_output_path)
 
-def upload_model_to_s3_v2(model_name, s3_output_path):
+def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
     s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
-    local_path = os.path.join("models/Stable-diffusion", model_name)
+    local_path = os.path.join(f"models/{model_type}", model_name)
     for root, dirs, files in os.walk(local_path):
         for file in files:
             if file.endswith('.safetensors'):
                 ckpt_name = re.sub('\.safetensors$', '', file)
                 safetensors = os.path.join(root, file)
-                yaml = os.path.join(root, f"{ckpt_name}.yaml")
-                output_tar = file
-                tar_command = f"tar cvf {output_tar} {safetensors} {yaml}"
+                if model_type == "Stable-diffusion":
+                    yaml = os.path.join(root, f"{ckpt_name}.yaml")
+                    output_tar = file
+                    tar_command = f"tar cvf {output_tar} {safetensors} {yaml}"
+                elif model_type == "Lora":
+                    tar_command = f"tar cvf {output_tar} {safetensors}"
                 print(tar_command)
                 os.system(tar_command)
                 logger.info(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
@@ -202,6 +205,7 @@ def main(s3_input_path, s3_output_path, params):
     launch.prepare_environment()
     params = params["training_params"]
     model_name = params["model_name"]
+    model_type = params["model_type"]
     s3_model_path = params["s3_model_path"]
     s3_data_path_list = params["data_tar_list"]
     s3_class_data_path_list = params["class_data_tar_list"]
@@ -210,7 +214,7 @@ def main(s3_input_path, s3_output_path, params):
     prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
-    upload_model_to_s3_v2(model_name, s3_output_path)
+    upload_model_to_s3_v2(model_name, s3_output_path, model_type)
 
 def test():
     model_name = "qiaohu-1-1"

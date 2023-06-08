@@ -135,6 +135,7 @@ def async_prepare_for_training_on_sagemaker(
             "training_params": {
                 "s3_model_path": s3_model_path,
                 "model_name": model_name,
+                "model_type": model_type,
                 "data_tar_list": new_data_list,
                 "class_data_tar_list": new_class_data_list,
                 "s3_data_path_list": new_data_list,
