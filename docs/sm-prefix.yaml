@@ -1,0 +1,72 @@
+SageMaker Training <=> S3 bucket (Official)
+.
+├── opt
+│   └── ml
+│       ├── input
+│       │   ├── data
+│       │   │   ├── channel 1 <-----------r----------- s3://bucket-data1
+│       │   │   └── channel N <-----------r----------- s3://bucket-dataN
+│       │   └── config
+│       │       ├── hyperparameters.json
+│       │       ├── inputdataconfig.json
+│       │       └── resourceconfig.json
+│       ├── output
+│       │   ├── data          -----------w-----------> s3://output-path/<job-name>-<timestamp>/output/output.tar.gz
+│       │   └── failure
+│       ├── model             -----------w-----------> s3://output-path/<job-name>-<timestamp>/output/model.tar.gz
+│       ├── checkpoints       <-----------r/w-----------> s3://checkpoint-dest
+│       └── code
+└── tmp
+
+estimator = Estimator(
+  checkpoint_s3_uri='s3://checkpoint-dest',
+  output_path='s3://output-path',
+  base_job_name='job-name',
+  input_mode='File',
+)
+
+estimator.fit(inputs={
+  'channel1': 's3://bucket-data1',
+  ...
+  'channelN': 's3://bucket-dataN',})
+
+
+More info refer to 
+- https://docs.aws.amazon.com/sagemaker/latest/dg/model-train-storage.html#model-train-storage-env-var-summary
+- https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-training-algo-output.html
+
+======================================================================================================================================
+
+SageMaker Training <=> S3 bucket (Current)
+.
+└── opt
+    └── ml
+        └── stable-diffusion-webui
+            ├── <dataset>             <-----------r----------- s3://aigc-bucket/dataset & s3://aigc-bucket/<request-id>/input
+            ├── extensions
+            ├── ...
+            └── model
+                ├── dreambooth        <-----------r----------- s3://aigc-bucket/<request-id>/output
+                │   └── model-name
+                │       └── db_config.json
+                ├── stable-diffusion  -----------w-----------> s3://aigc-bucket/<request-id>/output
+                │   └── model-name
+                └── Lora
+
+SageMaker Inference <=> S3 bucket
+.
+└── opt
+    └── ml
+        └── model                     <-----------r----------- s3://aigc-bucket/model & s3://aigc-bucket/<request-id>/output
+
+Create Model <=> S3 bucket
+.
+└── opt
+    └── ml
+        └── model                     <-----------r----------- s3://aigc-bucket/model & s3://aigc-bucket/<request-id>/output
+                                      -----------w-----------> s3://aigc-bucket/<request-id>/output
+
+Mapping Relationship:
+- output:model = 1:1
+- output:<job-name>-<timestamp> = 1:1
+
