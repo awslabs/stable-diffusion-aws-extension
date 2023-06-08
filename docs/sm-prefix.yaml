@@ -42,14 +42,14 @@ SageMaker Training <=> S3 bucket (Current)
 └── opt
     └── ml
         └── stable-diffusion-webui
-            ├── <dataset>             <-----------r----------- s3://aigc-bucket/dataset & s3://aigc-bucket/<request-id>/input
+            ├── <dataset>             <-----------r----------- s3://aigc-bucket/dataset & s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/input
             ├── extensions
             ├── ...
             └── model
-                ├── dreambooth        <-----------r----------- s3://aigc-bucket/<request-id>/output
+                ├── dreambooth        <-----------r----------- s3://aigc-bucket/Stable-diffusion/model/<model-name>/<request-id>/output
                 │   └── model-name
                 │       └── db_config.json
-                ├── stable-diffusion  -----------w-----------> s3://aigc-bucket/<request-id>/output
+                ├── stable-diffusion  -----------w-----------> s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/output
                 │   └── model-name
                 └── Lora
 
@@ -57,14 +57,14 @@ SageMaker Inference <=> S3 bucket
 .
 └── opt
     └── ml
-        └── model                     <-----------r----------- s3://aigc-bucket/model & s3://aigc-bucket/<request-id>/output
+        └── model                     <-----------r----------- s3://aigc-bucket/checkpoint/custom & s3://aigc-bucket/Stable-diffusion/checkpoint/<model-name>/<request-id> & s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/output
 
 Create Model <=> S3 bucket
 .
 └── opt
     └── ml
-        └── model                     <-----------r----------- s3://aigc-bucket/model & s3://aigc-bucket/<request-id>/output
-                                      -----------w-----------> s3://aigc-bucket/<request-id>/output
+        └── model                     <-----------r----------- s3://aigc-bucket/checkpoint/custom & s3://aigc-bucket/Stable-diffusion/checkpoint/<model-name>/<request-id> & s3://aigc-bucket/Stable-diffusion/train/<model-name>/<request-id>/output
+                                      -----------w-----------> s3://aigc-bucket/Stable-diffusion/model/<model-name>/<request-id>/output
 
 Mapping Relationship:
 - output:model = 1:1
