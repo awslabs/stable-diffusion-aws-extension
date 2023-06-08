@@ -537,7 +537,7 @@ def json_convert_to_payload(params_dict, checkpoint_info):
 # Global exception capture
 stepf_client = boto3.client('stepfunctions')
 
-@app.get("/")
+@app.get("/inference")
 def root():
     return {"message": const.SOLUTION_NAME}
 
@@ -550,6 +550,8 @@ async def run_sagemaker_inference(request: Request):
 
         payload_checkpoint_info = await request.json()
         print(f"!!!!!!!!!!input in json format {payload_checkpoint_info}")
+        task_type = payload_checkpoint_info.get('task_type')
+        print(f"Task Type: {task_type}")
 
         params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
 
@@ -577,7 +579,8 @@ async def run_sagemaker_inference(request: Request):
             Item={
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
-                'status': 'inprogress'
+                'status': 'inprogress',
+                'taskType': task_type
             })
         print(f"output_path is {output_path}")
 
@@ -607,6 +610,7 @@ async def run_sagemaker_inference(request: Request):
                 'startTime': current_time,
                 'completeTime': current_time,
                 'status': 'failure',
+                'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
             )
          

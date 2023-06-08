@@ -9,13 +9,26 @@ import logging
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
 
-# TODO: Automaticly append the dependent module path.
-sys.path.append("extensions/sd_dreambooth_extension")
-# TODO: Do not use the dreambooth status module.
-from dreambooth import shared as dreambooth_shared
-# from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
-from dreambooth.ui_functions import load_model_params
-from dreambooth.dataclasses.db_config import save_config, from_file
+dreambooth_available = True
+def dummy_function(*args, **kwargs):
+    return None
+
+try:
+    # TODO: Automaticly append the dependent module path.
+    sys.path.append("extensions/sd_dreambooth_extension")
+    # TODO: Do not use the dreambooth status module.
+    from dreambooth import shared as dreambooth_shared
+    # from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
+    from dreambooth.ui_functions import load_model_params
+    from dreambooth.dataclasses.db_config import save_config, from_file
+except Exception as e:
+    logging.warning("[train]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
+    dreambooth_available = False
+    dreambooth_shared = dummy_function
+    load_model_params = dummy_function
+    save_config = dummy_function
+    from_file = dummy_function
+
 base_model_folder = "models/sagemaker_dreambooth/"
 
 def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
@@ -232,9 +245,9 @@ def cloud_train(
             "train_job_id": job_id,
             "status": "Training"
         }
-        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key}).json()
+        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
-        print(f"Start training response:\n{response}")
+        print(f"Start training response:\n{response.json()}")
         integral_check = True
     except Exception as e:
         gr.Error(f'train job {train_model_name} failed: {str(e)}')
@@ -247,7 +260,7 @@ def cloud_train(
                     "status": "Fail"
                 }
                 response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
-                print(f'training job failed but updated the job status {response}')
+                print(f'training job failed but updated the job status {response.json()}')
 
 def async_cloud_train(*args):
     upload_thread = threading.Thread(target=cloud_train,

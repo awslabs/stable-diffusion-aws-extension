@@ -50,7 +50,7 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-async function txt2img_config_save(endpoint_value) {
+async function txt2img_config_save(endpoint_value, type) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
@@ -81,12 +81,12 @@ async function txt2img_config_save(endpoint_value) {
 
         console.log('The configuration has been successfully uploaded to s3');
         // alert("The configuration has been successfully uploaded.");
-        return endpoint_value;
+        return [endpoint_value, type];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
         alert("An error occurred while uploading the configuration.");
-        return "FAILURE";
+        return ["FAILURE", type];
     }
 }
 
@@ -479,19 +479,19 @@ function scrap_ui_component_value_with_default(config) {
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
@@ -627,6 +627,146 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
+
+    // get the img2img component
+
+    //document.querySelector("#img2img_prompt > label > textarea")
+    config["img2img_prompt"] = getElementValue(
+        "#img2img_prompt > label > textarea",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_neg_prompt > label > textarea")
+    config["img2img_neg_prompt"] = getElementValue(
+        "#img2img_neg_prompt > label > textarea",
+        "value",
+        ""
+    )
+    
+    // Resize mode
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
+    config["img2img_resize_mode_just_resize"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input",
+        "checked",
+        false
+    );
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_resize_mode_crop_and_resize"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input")
+    config["img2img_resize_mode_resize_and_fill"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "checked",
+        false
+    );
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input")
+    config["img2img_resize_mode_just_resize_latent_upscale"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input",
+        "checked",
+        false
+    );
+    
+    // img2img sampling method
+    // document.querySelector("#img2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
+    config["img2img_sampling_method"] = getElementValue(
+        "#img2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+        "value",
+        ""
+    );
+    
+    // document.querySelector("#img2img_steps > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_sampling_steps"] = getElementValue(
+        "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_restore_faces > label > input")
+    config["img2img_restore_faces"] = getElementValue(
+        "#img2img_restore_faces > label > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_tiling > label > input")
+    config["img2img_tiling"] = getElementValue(
+        "#img2img_tiling > label > input",
+        "checked",
+        false
+    );
+
+    // Resize to
+    // document.querySelector("#img2img_width > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_width"] = getElementValue(
+        "#img2img_width > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_height > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_height"] = getElementValue(
+        "#img2img_height > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_batch_count > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_batch_count"] = getElementValue(
+        "#img2img_batch_count > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_batch_size > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_batch_size"] = getElementValue(
+        "#img2img_batch_size > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_cfg_scale"] = getElementValue(
+        "#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_denoising_strength"] = getElementValue(
+        "#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed > label > input")
+    config["img2img_seed"] = getElementValue(
+        "#img2img_seed > label > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_subseed_show > label > input")
+    config["img2img_subseed_show"] = getElementValue(
+        "#img2img_subseed_show > label > input",
+        "checked",
+        false
+    );
+
+
+    // Resize by
+    // document.querySelector("#img2img_scale > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_scale"] = getElementValue(
+        "#img2img_scale > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // end of img2img component
     
 
     

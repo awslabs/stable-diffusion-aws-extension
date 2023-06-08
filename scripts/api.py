@@ -30,8 +30,9 @@ from modules.textual_inversion import textual_inversion
 import modules.shared as shared
 import modules.extras
 import sys
-sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
-from models import InvocationsRequest
+# sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
+# from sdae_models import InvocationsRequest
+from aws_extension.models import InvocationsRequest
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
@@ -39,13 +40,17 @@ from utils import ModelsRef
 import uuid
 import boto3
 
+dreambooth_available = True
+def dummy_function(*args, **kwargs):
+    return None
+
 try:
     sys.path.append("extensions/sd_dreambooth_extension")
     from dreambooth.ui_functions import create_model
 except Exception as e:
-    logging.error("Dreambooth on cloud module is not support in api.")
-    logging.error(e)
-
+    logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
+    dreambooth_available = False
+    create_model = dummy_function
 # try:
 #     from dreambooth import shared
 #     from dreambooth.dataclasses.db_concept import Concept
@@ -330,18 +335,9 @@ def sagemaker_api(_, app: FastAPI):
                 # response = self.img2imgapi(req.img2img_payload)
                 # shared.opts.data = default_options
                 return response.json()
-            elif req.task == 'extras-single-image':
-                # response = self.extras_single_image_api(req.extras_single_payload)
-                # shared.opts.data = default_options
-                response = None
-                return response
-            elif req.task == 'extras-batch-images':
-                # response = self.extras_batch_images_api(req.extras_batch_payload)
-                # shared.opts.data = default_options
-                response = None
-                return response                
-            # elif req.task == 'sd-models':
-            #     return self.get_sd_models()
+            elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.interrogate_payload.json()))
+                return response.json()
             elif req.task == 'db-create-model':
                 r"""
                 task: db-create-model
