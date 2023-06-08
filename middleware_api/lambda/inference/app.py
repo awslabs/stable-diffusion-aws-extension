@@ -610,7 +610,7 @@ async def run_sagemaker_inference(request: Request):
                 'startTime': current_time,
                 'completeTime': current_time,
                 'status': 'failure',
-                'taskType': task_type or "unknown"
+                'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
             )
          
