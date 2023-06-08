@@ -1,7 +1,7 @@
 import base64
 import functools
 import hashlib
-import io
+# import io
 import json
 import logging
 import os
@@ -23,16 +23,18 @@ from starlette import status
 from starlette.requests import Request
 
 from modules.api.api import Api
-from modules import sd_hijack, sd_models, sd_vae, script_loading, paths
+# from modules import sd_hijack, sd_models, sd_vae, script_loading, paths
+from modules import sd_models
 import modules.scripts as base_scripts
 from modules.hypernetworks import hypernetwork
 from modules.textual_inversion import textual_inversion
-import modules.shared as shared
+# import modules.shared as shared
 import modules.extras
 import sys
 # sys.path = ["extensions/stable-diffusion-aws-extension/scripts"] + sys.path
 # from sdae_models import InvocationsRequest
 from aws_extension.models import InvocationsRequest
+from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 from utils import download_file_from_s3, download_folder_from_s3, download_folder_from_s3_by_tar, upload_folder_to_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
@@ -74,234 +76,109 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class InstanceData(BaseModel):
-    data: str = Field(title="File data", description="Base64 representation of the file or URL")
-    name: str = Field(title="File name", description="File name to save image as")
-    txt: str = Field(title="Prompt", description="Training prompt for image")
+# class InstanceData(BaseModel):
+#     data: str = Field(title="File data", description="Base64 representation of the file or URL")
+#     name: str = Field(title="File name", description="File name to save image as")
+#     txt: str = Field(title="Prompt", description="Training prompt for image")
 
 
-class ImageData:
-    def __init__(self, name, prompt, data):
-        self.name = name
-        self.prompt = prompt
-        self.data = data
+# class ImageData:
+#     def __init__(self, name, prompt, data):
+#         self.name = name
+#         self.prompt = prompt
+#         self.data = data
 
-    def dict(self):
-        return {
-            "name": self.name,
-            "data": self.data,
-            "txt": self.prompt
-        }
-
-
-class DbImagesRequest(BaseModel):
-    imageList: List[InstanceData] = Field(title="Images",
-                                          description="List of images to work on. Must be Base64 strings")
+#     def dict(self):
+#         return {
+#             "name": self.name,
+#             "data": self.data,
+#             "txt": self.prompt
+#         }
 
 
-import asyncio
-
-active = False
-
-
-def is_running():
-    return False
+# class DbImagesRequest(BaseModel):
+#     imageList: List[InstanceData] = Field(title="Images",
+#                                           description="List of images to work on. Must be Base64 strings")
 
 
-def run_in_background(func, *args, **kwargs):
-    """
-    Wrapper function to run a non-asynchronous method as a task in the event loop.
-    """
+# import asyncio
 
-    async def wrapper():
-        global active
-        new_func = functools.partial(func, *args, **kwargs)
-        await asyncio.get_running_loop().run_in_executor(None, new_func)
-        active = False
-
-    asyncio.create_task(wrapper())
+# active = False
 
 
-def zip_files(db_model_name, files, name_part=""):
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "a",
-                         zipfile.ZIP_DEFLATED, False) as zip_file:
-        for file in files:
-            if isinstance(file, str):
-                logger.debug(f"Zipping img: {file}")
-                if os.path.exists(file) and os.path.isfile(file):
-                    parent_path = os.path.join(Path(file).parent, Path(file).name)
-                    zip_file.write(file, arcname=parent_path)
-                    check_txt = os.path.join(os.path.splitext(file)[0], ".txt")
-                    if os.path.exists(check_txt):
-                        logger.debug(f"Zipping txt: {check_txt}")
-                        parent_path = os.path.join(Path(check_txt).parent, Path(check_txt).name)
-                        zip_file.write(check_txt, arcname=parent_path)
-            else:
-                img_byte_arr = io.BytesIO()
-                file.save(img_byte_arr, format='PNG')
-                img_byte_arr = img_byte_arr.getvalue()
-                file_name = hashlib.sha1(file.tobytes()).hexdigest()
-                image_filename = f"{file_name}.png"
-                zip_file.writestr(image_filename, img_byte_arr)
-    zip_file.close()
-    return StreamingResponse(
-        iter([zip_buffer.getvalue()]),
-        media_type="application/x-zip-compressed",
-        headers={"Content-Disposition": f"attachment; filename={db_model_name}{name_part}_images.zip"}
-    )
+# def is_running():
+#     return False
 
-def base64_to_pil(im_b64) -> Image:
-    im_b64 = bytes(im_b64, 'utf-8')
-    im_bytes = base64.b64decode(im_b64)  # im_bytes is a binary image
-    im_file = io.BytesIO(im_bytes)  # convert image to file-like object
-    img = Image.open(im_file)
-    return img
 
-def decode_base64_to_image(encoding):
-    if encoding.startswith("data:image/"):
-        encoding = encoding.split(";")[1].split(",")[1]
-    return Image.open(io.BytesIO(base64.b64decode(encoding)))
+# def run_in_background(func, *args, **kwargs):
+#     """
+#     Wrapper function to run a non-asynchronous method as a task in the event loop.
+#     """
 
-def file_to_base64(file_path) -> str:
-    with open(file_path, "rb") as f:
-        im_b64 = base64.b64encode(f.read())
-        return str(im_b64, 'utf-8')
+#     async def wrapper():
+#         global active
+#         new_func = functools.partial(func, *args, **kwargs)
+#         await asyncio.get_running_loop().run_in_executor(None, new_func)
+#         active = False
 
-def get_bucket_and_key(s3uri):
-        pos = s3uri.find('/', 5)
-        bucket = s3uri[5 : pos]
-        key = s3uri[pos + 1 : ]
-        return bucket, key
+#     asyncio.create_task(wrapper())
 
-CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors"]
-models_type_list = ['Stable-diffusion', 'hypernetworks', 'Lora', 'ControlNet', 'embeddings']
-models_used_count = {key: ModelsRef() for key in models_type_list}
-models_path = {key: None for key in models_type_list}
-models_path['Stable-diffusion'] = 'models/Stable-diffusion'
-models_path['ControlNet'] = 'models/ControlNet'
-models_path['hypernetworks'] = 'models/hypernetworks'
-models_path['Lora'] = 'models/Lora'
-models_path['embeddings'] = 'embeddings'
-disk_path = '/tmp'
-#disk_path = '/'
-def checkspace_and_update_models(selected_models, checkpoint_info):
-    models_num = len(models_type_list)
-    space_free_size = selected_models['space_free_size']
-    os.system("df -h")
-    for type_id in range(models_num):
-        model_type = models_type_list[type_id]
-        selected_models_name = selected_models[model_type]
-        local_models = []
-        for path, subdirs, files in os.walk(models_path[model_type]):
-            for name in files:
-                full_path_name = os.path.join(path, name) 
-                name_local = os.path.relpath(full_path_name, models_path[model_type])
-                local_models.append(name_local)
-        for selected_model_name in selected_models_name:
-            models_used_count[model_type].add_models_ref(selected_model_name)
-            if selected_model_name in local_models:
-                continue
-            else:
-                st = os.statvfs(disk_path)
-                free = (st.f_bavail * st.f_frsize)
-                print('!!!!!!!!!!!!current free space is', free)
-                if free < space_free_size:
-                    #### delete least used model to get more space ########
-                    space_check_succese = False
-                    for i in range(models_num):
-                        type_id_check = (type_id + i)%models_num
-                        type_check = models_type_list[type_id_check]
-                        selected_models_name_check = selected_models[type_check]
-                        print(os.listdir(models_path[type_check]))
-                        local_models_check = [f for f in os.listdir(models_path[type_check]) if os.path.splitext(f)[1] in CN_MODEL_EXTS]
-                        if len(local_models_check) == 0:
-                            continue
-                        sorted_local_modles = models_used_count[type_check].get_sorted_models(local_models_check)
-                        for local_model in sorted_local_modles:
-                            if local_model in selected_models_name_check:
-                                continue
-                            else:
-                                os.remove(os.path.join(models_path[type_check], local_model))
-                                print('remove models', os.path.join(models_path[type_check], local_model))
-                                models_used_count[type_check].remove_model_ref(local_model)
-                                st = os.statvfs(disk_path)
-                                free = (st.f_bavail * st.f_frsize)
-                                print('!!!!!!!!!!!!current free space is', free)
-                                if free > space_free_size:
-                                    space_check_succese = True
-                                    break
-                        if space_check_succese:
-                            break
-                    if not space_check_succese:
-                        print('can not get enough space to download models!!!!!!')
-                        return
-                ####down load models######
-                selected_model_s3_pos = checkpoint_info[model_type][selected_model_name] 
-                download_and_update(model_type, selected_model_name, selected_model_s3_pos)
-    
-    shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]
-    sd_models.reload_model_weights()
-    sd_vae.reload_vae_weights()
 
-def download_model(model_name, model_s3_pos):
-    #download from s3
-    os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
-    os.system(f"tar xvf {model_name}")
+# def zip_files(db_model_name, files, name_part=""):
+#     zip_buffer = io.BytesIO()
+#     with zipfile.ZipFile(zip_buffer, "a",
+#                          zipfile.ZIP_DEFLATED, False) as zip_file:
+#         for file in files:
+#             if isinstance(file, str):
+#                 logger.debug(f"Zipping img: {file}")
+#                 if os.path.exists(file) and os.path.isfile(file):
+#                     parent_path = os.path.join(Path(file).parent, Path(file).name)
+#                     zip_file.write(file, arcname=parent_path)
+#                     check_txt = os.path.join(os.path.splitext(file)[0], ".txt")
+#                     if os.path.exists(check_txt):
+#                         logger.debug(f"Zipping txt: {check_txt}")
+#                         parent_path = os.path.join(Path(check_txt).parent, Path(check_txt).name)
+#                         zip_file.write(check_txt, arcname=parent_path)
+#             else:
+#                 img_byte_arr = io.BytesIO()
+#                 file.save(img_byte_arr, format='PNG')
+#                 img_byte_arr = img_byte_arr.getvalue()
+#                 file_name = hashlib.sha1(file.tobytes()).hexdigest()
+#                 image_filename = f"{file_name}.png"
+#                 zip_file.writestr(image_filename, img_byte_arr)
+#     zip_file.close()
+#     return StreamingResponse(
+#         iter([zip_buffer.getvalue()]),
+#         media_type="application/x-zip-compressed",
+#         headers={"Content-Disposition": f"attachment; filename={db_model_name}{name_part}_images.zip"}
+#     )
 
-def upload_model(model_type, model_name, model_s3_pos):
-    #upload model to s3
-    os.system(f"tar cvf {model_name} {models_path[model_type]}/{model_name}")
-    os.system(f'./tools/s5cmd cp {model_name} {model_s3_pos}') 
+# def base64_to_pil(im_b64) -> Image:
+#     im_b64 = bytes(im_b64, 'utf-8')
+#     im_bytes = base64.b64decode(im_b64)  # im_bytes is a binary image
+#     im_file = io.BytesIO(im_bytes)  # convert image to file-like object
+#     img = Image.open(im_file)
+#     return img
 
-def download_and_update(model_type, model_name, model_s3_pos):
-    #download from s3
-    os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
-    tar_name = model_s3_pos.split('/')[-1]
-    os.system(f"tar xvf {tar_name}")
-    os.system(f"rm {tar_name}")
-    os.system("df -h")
-    if model_type == 'Stable-diffusion':
-        sd_models.list_models()
-    if model_type == 'hypernetworks':
-        shared.reload_hypernetworks()
-    if model_type == 'embeddings':
-        sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)
-    if model_type == 'ControlNet':
-        #sys.path.append("extensions/sd-webui-controlnet/scripts/")
-        from scripts import global_state
-        global_state.update_cn_models()
-        #sys.path.remove("extensions/sd-webui-controlnet/scripts/")
+# def decode_base64_to_image(encoding):
+#     if encoding.startswith("data:image/"):
+#         encoding = encoding.split(";")[1].split(",")[1]
+#     return Image.open(io.BytesIO(base64.b64decode(encoding)))
 
-def post_invocations(selected_models, b64images):
-    #generated_images_s3uri = os.environ.get('generated_images_s3uri', None)
-    bucket = selected_models['bucket']
-    s3_base_dir = selected_models['base_dir']
-    output_folder = selected_models['output']
-    generated_images_s3uri = os.path.join(bucket,s3_base_dir,output_folder)
-    s3_client = boto3.client('s3')
-    if generated_images_s3uri:
-        #generated_images_s3uri = f'{generated_images_s3uri}{username}/'
-        bucket, key = get_bucket_and_key(generated_images_s3uri)
-        for b64image in b64images:
-            image = decode_base64_to_image(b64image)
-            output = io.BytesIO()
-            image.save(output, format='JPEG')
-            image_id = str(uuid.uuid4())
-            s3_client.put_object(
-                Body=output.getvalue(),
-                Bucket=bucket,
-                Key=f'{key}/{image_id}.png')
+# def file_to_base64(file_path) -> str:
+#     with open(file_path, "rb") as f:
+#         im_b64 = base64.b64encode(f.read())
+#         return str(im_b64, 'utf-8')
+
+# def get_bucket_and_key(s3uri):
+#         pos = s3uri.find('/', 5)
+#         bucket = s3uri[5 : pos]
+#         key = s3uri[pos + 1 : ]
+#         return bucket, key
+
 
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
-    # @app.exception_handler(RequestValidationError)
-    # async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    #     return JSONResponse(
-    #         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-    #         content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
-    #     )
-            
 
     @app.post("/invocations")
     def invocations(req: InvocationsRequest):
@@ -311,7 +188,7 @@ def sagemaker_api(_, app: FastAPI):
         """
         print('-------invocation------')
         print(req)
-        print(f"json is {json.loads(req.json())}")
+        # print(f"json is {json.loads(req.json())}")
 
         if req.task == 'text-to-image' or req.task == 'controlnet_txt2img':
             selected_models = req.models
