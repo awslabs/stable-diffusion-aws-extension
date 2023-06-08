@@ -7,7 +7,7 @@ import logging
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
 
-logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='sd-aws-ext.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # TODO: Automaticly append the dependent module path.
