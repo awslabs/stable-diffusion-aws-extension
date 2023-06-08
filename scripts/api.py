@@ -336,7 +336,7 @@ def sagemaker_api(_, app: FastAPI):
                 # shared.opts.data = default_options
                 return response.json()
             elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.img2img_payload.json()))
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.interrogate_payload.json()))
                 return response.json()
             elif req.task == 'db-create-model':
                 r"""

@@ -7,60 +7,51 @@ import time
 
 start_time = time.time()
 
-url = "http://127.0.0.1:7860"
+url = "http://127.0.0.1:8082"
+
+print("docker api test for clip:")
+
+with open("test.png", "rb") as img:
+    test_img = str(base64.b64encode(img.read()), 'utf-8')
 
 payload = {
-    "task": "text-to-image", 
-    "txt2img_payload": {
-        "enable_hr": "False", 
-        "denoising_strength": 0.7, 
-        "firstphase_width": 0, 
-        "firstphase_height": 0, 
-        "prompt": "girl", 
-        "styles": ["None", "None"], 
-        "seed": -1.0, 
-        "subseed": -1.0, 
-        "subseed_strength": 0, 
-        "seed_resize_from_h": 0, 
-        "seed_resize_from_w": 0, 
-        "sampler_index": "Euler a", 
-        "batch_size": 1, 
-        "n_iter": 1, 
-        "steps": 20, 
-        "cfg_scale": 7, 
-        "width": 768, 
-        "height": 768, 
-        "restore_faces": "False", 
-        "tiling": "False", 
-        "negative_prompt": "", 
-        "eta": 1, 
-        "s_churn": 0, 
-        "s_tmax": 1, 
-        "s_tmin": 0, 
-        "s_noise": 1, 
-        "override_settings": {}, 
-        "script_args": [0, "False", "False", "False" "", 1, "", 0, "", "True", "True", "True"]}, 
-        "username": ""
+    "task": "interrogate_clip",
+    "interrogate_paylod": {
+        "image":test_img,
+        "model":"clip"
+    }
 }
 
-# response = requests.post(url=f'{url}/origin-invocations', json=payload)
-response = requests.post(url=f'{url}/invocations', json=payload)
-# response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+# 
+response = requests.post(url=f'{url}/inovations', json=payload)
 
 print(f"run time is {time.time()-start_time}")
 
-print(f"response is {response}")
+# print(f"response is {response}")
 
 r = response.json()
 
-for i in r['images']:
-    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+prompt_message = r["caption"]
 
-    png_payload = {
-        "image": "data:image/png;base64," + i
+print(f"prompt message : {prompt_message}")
+
+print("docker api test for deepbooru:")
+
+payload = {
+    "task": "interrogate_clip",
+    "interrogate_paylod": {
+        "image":test_img,
+        "model":"deepdanbooru"
     }
-    response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+}
 
-    pnginfo = PngImagePlugin.PngInfo()
-    pnginfo.add_text("parameters", response2.json().get("info"))
-    image.save('output.png', pnginfo=pnginfo)
+# 
+response = requests.post(url=f'{url}/invocations', json=payload)
+
+print(f"run time is {time.time()-start_time}")
+
+r = response.json()
+
+prompt_message = r["caption"]
+
+print(f"prompt message : {prompt_message}")
