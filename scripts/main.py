@@ -168,11 +168,23 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[
             ])
         # Hook image display logic
-    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, init_img_inpaint, init_mask_inpaint
+    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
+            init_img, \
+            sketch, \
+            init_img_with_mask, \
+            inpaint_color_sketch, \
+            init_img_inpaint, \
+            init_mask_inpaint
     is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
     is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
     is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
 
+    is_init_img = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_image'
+    is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
+    is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+    is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
+     
+    
     is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
     is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
 
@@ -182,6 +194,15 @@ def on_after_component_callback(component, **_kwargs):
         img2img_generation_info = component
     if is_img2img_html_info:
         img2img_html_info = component
+
+    if is_init_img:
+        init_img = component
+    if is_sketch:
+        sketch = component
+    if is_init_img_with_mask:
+        init_img_with_mask = component
+    if is_inpaint_color_sketch:
+        inpaint_color_sketch = component
     if is_init_img_inpaint:
         init_img_inpaint = component
     if is_init_mask_inpaint:
@@ -194,34 +215,38 @@ def on_after_component_callback(component, **_kwargs):
             img2img_show_hook is None and \
             sagemaker_ui.interrogate_clip_on_cloud_button is not None and \
             sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None and\
+            init_img is not None and \
+            sketch is not None and \
+            init_img_with_mask is not None and \
+            inpaint_color_sketch is not None and \
             init_img_inpaint is not None and \
             init_mask_inpaint is not None:
-        img2img_show_hook = "finish"
-        sagemaker_ui.inference_job_dropdown.change(
-            fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-            inputs=[sagemaker_ui.inference_job_dropdown],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-        )
-
-        sagemaker_ui.interrogate_clip_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_clip,
-            _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
-        )
-
-        sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_deepbooru,
-            _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
-        )
-        sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
-                fn=sagemaker_ui.call_img2img_inference,
-                _js="txt2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint, init_img_inpaint, init_mask_inpaint],
+            img2img_show_hook = "finish"
+            sagemaker_ui.inference_job_dropdown.change(
+                fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
+                inputs=[sagemaker_ui.inference_job_dropdown],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-        )
+            )
+
+            sagemaker_ui.interrogate_clip_on_cloud_button.click(
+                fn=sagemaker_ui.call_interrogate_clip,
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
+            )
+
+            sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
+                fn=sagemaker_ui.call_interrogate_deepbooru,
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
+            )
+            sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+                fn=sagemaker_ui.call_img2img_inference,
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+            )
 
 def update_connect_config(api_url, api_token):
     # Check if api_url ends with '/', if not append it
