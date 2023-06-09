@@ -677,6 +677,7 @@ def fake_gan(selected_value: str ):
             return [], [], plaintext_to_html('inference still in progress')
 
         if inference_job_taskType in ["txt2img", "img2img"]:    
+            prompt_txt = ''
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
             image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
@@ -690,22 +691,28 @@ def fake_gan(selected_value: str ):
 
             json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
-            f = open(json_file)
-
-            log_file = json.load(f)
-
-            info_text = log_file["info"]
-
-            infotexts = json.loads(info_text)["infotexts"][0]
+            if os.path.isfile(json_file):
+                with open(json_file) as f:
+                    log_file = json.load(f)
+                    info_text = log_file["info"]
+                    infotexts = json.loads(info_text)["infotexts"][0]
+            else:
+                print(f"File {json_file} does not exist.")
+                info_text = 'something wrong when trying to download the inference parameters'
+                infotexts = 'something wrong when trying to download the inference parameters'
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
-            
-            
+            prompt_txt = ''
+            image_list = []  # Return an empty list if selected_value is None
+            json_list = []
+            info_text = '' 
+            infotexts = ''
     else:
+        prompt_txt = ''
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''
 
-    return image_list, info_text, plaintext_to_html(infotexts)
+    return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 def display_inference_result(inference_id: str ):
     print(f"selected value is {inference_id}")

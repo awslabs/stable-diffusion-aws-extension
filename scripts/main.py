@@ -181,7 +181,7 @@ def on_after_component_callback(component, **_kwargs):
     is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
     is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
 
-    is_img2img_prompt = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_promt'
+    is_img2img_prompt = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'img2img_prompt'
     is_init_img = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_image'
     is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
     is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
@@ -232,6 +232,7 @@ def on_after_component_callback(component, **_kwargs):
                 fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
                 inputs=[sagemaker_ui.inference_job_dropdown],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+                # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
 
             sagemaker_ui.interrogate_clip_on_cloud_button.click(
