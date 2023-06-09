@@ -194,6 +194,12 @@ stepf_client = boto3.client('stepfunctions')
 def root():
     return {"message": const.SOLUTION_NAME}
 
+def get_curent_time():
+    # Get the current time
+    now = datetime.now()
+    formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+    return formatted_time
+
 @app.post("/inference/run-sagemaker-inference")
 async def run_sagemaker_inference(request: Request):
     try:
@@ -256,7 +262,7 @@ async def run_sagemaker_inference(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
-        current_time = str(datetime.now())
+        current_time = get_curent_time()
         response = inference_table.put_item(
             Item={
                 'InferenceJobId': inference_id,
@@ -572,7 +578,7 @@ async def run_model_merge(request: Request):
         output_path = prediction.output_path
 
         #put the item to inference DDB for later check status
-        current_time = str(datetime.now())
+        current_time = get_curent_time()
         response = inference_table.put_item(
             Item={
                 'InferenceJobId': inference_id,
