@@ -430,13 +430,13 @@ def generate_on_cloud(sagemaker_endpoint):
 def call_txt2img_inference(sagemaker_endpoint):
     return call_remote_inference(sagemaker_endpoint, 'txt2img')
 
-def call_img2img_inference(sagemaker_endpoint, **args):
-    return call_remote_inference(sagemaker_endpoint, 'img2img')
+def call_img2img_inference(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return call_remote_inference(endpoint_value, 'img2img')
 
-def call_interrogate_clip(sagemaker_endpoint, **args):
+def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
 
-def call_interrogate_deepbooru(sagemaker_endpoint, **args):
+def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
 
 
