@@ -154,8 +154,9 @@ def get_inference_job_list():
                 else:
                     complete_time = obj.get('completeTime')
                 status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
                 inference_job_id = obj.get('InferenceJobId')
-                combined_string = f"{complete_time}-->{status}-->{inference_job_id}"
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
             # Sort the list based on completeTime in descending order
