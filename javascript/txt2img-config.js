@@ -93,11 +93,8 @@ async function txt2img_config_save(endpoint_value) {
     }
 }
 
-async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_img_inpaint, init_mask_inpaint) {
+async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
     var config = {};
-    console.log(init_img_inpaint);
-    console.log(init_mask_inpaint);
-
 
     console.log(JSON.stringify(endpoint_value))
 
