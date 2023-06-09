@@ -33,3 +33,10 @@ git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
 cd sd_dreambooth_extension
 git reset --hard b396af26b7906aa82a29d8847e756396cb2c28fb
 cd ..
+
+# Clone stable-diffusion-webui-rembg
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+# Go to stable-diffusion-webui-rembg directory and reset to specific commit
+cd stable-diffusion-webui-rembg
+cd ..
