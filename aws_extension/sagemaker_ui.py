@@ -670,30 +670,36 @@ def fake_gan(selected_value: str ):
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
-        inference_job_id = parts[2].strip()
-        inference_job_status = parts[1].strip()
+        inference_job_id = parts[3].strip()
+        inference_job_status = parts[2].strip()
+        inference_job_taskType = parts[1].strip()
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
+        if inference_job_taskType in ["txt2img", "img2img"]:    
+            images = get_inference_job_image_output(inference_job_id)
+            image_list = []
+            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
+            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
+            json_list = []
+            json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
+            print(f"{str(images)}")
+            print(f"{str(inference_pram_json_list)}")
 
-        f = open(json_file)
+            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
-        log_file = json.load(f)
+            f = open(json_file)
 
-        info_text = log_file["info"]
+            log_file = json.load(f)
 
-        infotexts = json.loads(info_text)["infotexts"][0]
+            info_text = log_file["info"]
+
+            infotexts = json.loads(info_text)["infotexts"][0]
+        elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
+            
+            
     else:
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
