@@ -12,7 +12,7 @@ load_dotenv()
 
 start_time = time.time()
 
-url = "http://127.0.0.1:8080"
+url = "http://127.0.0.1:8082"
 
 #with open("0013.jpg", "rb") as img:
 #   init_img = base64.b64encode(img.read())
