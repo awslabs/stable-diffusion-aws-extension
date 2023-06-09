@@ -164,12 +164,12 @@ def sagemaker_api(_, app: FastAPI):
             checkspace_and_update_models(selected_models, checkpoint_info)
 
         try:
-            if req.task == 'text-to-image':
+            if req.task == 'txt2img':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
                 #response_info = response.json()
                 #print(response_info.keys())
                 return response.json()
-            elif req.task == 'image-to-image':
+            elif req.task == 'img2img':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=json.loads(req.img2img_payload.json()))
                 # response = self.img2imgapi(req.img2img_payload)
                 # shared.opts.data = default_options

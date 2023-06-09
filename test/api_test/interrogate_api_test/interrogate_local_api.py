@@ -37,7 +37,7 @@ print(f"prompt message : {prompt_message}")
 print("docker api test for deepbooru:")
 
 payload = {
-    "task": "interrogate_clip",
+    "task": "interrogate_deepbooru",
     "interrogate_payload": {
         "image":test_img,
         "model":"deepdanbooru"
