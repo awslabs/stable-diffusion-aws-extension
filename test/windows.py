@@ -1,7 +1,6 @@
 import os
 import tarfile
 import shutil
-import tempfile
 from pathlib import Path
 import psutil
 
@@ -22,17 +21,14 @@ def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
         # Extract files from an archive
         tar(mode='x', archive='archive.tar')
 
-        # Create a new archive with verbose mode and change directory
-        tar(mode='c', archive='archive.tar', sfiles=['file1.txt', 'file2.txt'], verbose=True, change_dir='./some_directory')
+        # Create a new archive with verbose mode and input directory
+        tar(mode='c', archive='archive.tar', sfiles='./some_directory', verbose=True)
 
         # Extract files from an archive with verbose mode and change directory
         tar(mode='x', archive='archive.tar', verbose=True, change_dir='./some_directory')
     """
-    if change_dir:
-        original_dir = os.getcwd()
-        os.chdir(change_dir)
-
     if mode == 'c':
+        # os.chdir(change_dir)
         with tarfile.open(archive, mode='w') as tar:
             # check if input option file is a list or string
             if isinstance(sfiles, list):
@@ -56,10 +52,11 @@ def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
             for file in sfiles:
                 if verbose:
                     print(f"Extracting {file} from {archive}")
-                tar.extract(file)
-
-    if change_dir:
-        os.chdir(original_dir)
+                # extra to specified directory
+                if change_dir:
+                    tar.extract(file, path=change_dir)
+                else:
+                    tar.extract(file)
 
 def rm(path, force=False, recursive=False):
     """
