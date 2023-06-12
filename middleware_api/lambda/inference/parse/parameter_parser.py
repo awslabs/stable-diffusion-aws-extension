@@ -232,8 +232,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         
 
     if param_name == 'img2img':
-        img2img_mode = 1
-
+        img2img_mode = get_param_value(params_dict, 'img2img_selected_tab_name', defaultValue='img2img')
+        img2img_selected_resize_tab = get_param_value(params_dict, 'img2img_selected_resize_tab', defaultValue='ResizeTo')
         img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img_with_mask', defaultValue=None)
         img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_inpaint_color_sketch', defaultValue=None)
         inpaint_color_sketch_orig = get_param_value(params_dict, 'inpaint_color_sketch_orig', defaultValue=None)
@@ -246,35 +246,44 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         
         image = None
         mask = None
-        if img2img_mode == 0:  # img2img
+        if img2img_mode == 'img2img':  # img2img
             image = img2img_init_img #.convert("RGB")
             mask = None
-        elif img2img_mode == 1:  # img2img sketch
+        elif img2img_mode == 'Sketch':  # img2img sketch
             image = sketch #.convert("RGB")
             mask = None
-        elif img2img_mode == 4:  # inpaint upload mask
+        elif img2img_mode == 'Inpaint_uplad':  # inpaint upload mask
             image = img2img_init_img_inpaint
             mask = img2img_init_mask_inpaint
-        elif img2img_mode == 2:  # inpaint
+        elif img2img_mode == 'Inpaint':  # inpaint
             image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["image"].split(',')[1])))
             mask = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["mask"].split(',')[1])))
             alpha_mask = ImageOps.invert(image.split()[-1]).convert('L').point(lambda x: 255 if x > 0 else 0, mode='1')
             mask = ImageChops.lighter(alpha_mask, mask.convert('L')).convert('L')
-            image = image.convert("RGB")
-        elif img2img_mode == 3:  # inpaint sketch
-            image = img2img_inpaint_color_sketch
-            orig = inpaint_color_sketch_orig or img2img_inpaint_color_sketch
-            pred = np.any(np.array(image) != np.array(orig), axis=-1)
+            image = img2img_init_img_with_mask["image"] #image.convert("RGB")
+            mask = encode_pil_to_base64(mask)
+        elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
+            image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch)))
+            orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig))) or image_pil
+            pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
-            image = Image.composite(image.filter(blur), orig, mask.filter(blur))
-            image = image.convert("RGB")
+            image_pil = Image.composite(image_pil.filter(blur), orig, mask.filter(blur))
+            image_pil = image_pil.convert("RGB")
+            mask = encode_pil_to_base64(mask)
+            image = encode_pil_to_base64(image_pil)
 
-        initial_noise_multiplier = None
         inpainting_fill = get_param_value(params_dict, 'img2img_inpainting_fill_fill')
         image_cfg_scale = 1.5
-        img2img_scale = float(get_param_value(params_dict, 'img2img_scale', defaultValue=1.0))
+        if img2img_selected_resize_tab == 'ResizeBy':
+            img2img_scale = float(get_param_value(params_dict, 'img2img_scale', defaultValue=1.0))
+            assert image, "Can't scale by because no image is selected"
+            image_pil = Image.open(io.BytesIO(base64.b64decode(image)))
+            width = int(image_pil.width * img2img_scale)
+            height = int(image_pil.height * img2img_scale)
+
+
         img2img_resize_mode = 0
         if get_param_value(params_dict, 'img2img_resize_mode_Crop_and_Resize'):
             img2img_resize_mode = 1
@@ -368,7 +377,6 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         if task_type == 'img2img':
             payload[payload_name]["init_images"] = [image]
             payload[payload_name]["mask"] = mask
-            payload[payload_name]["initial_noise_multiplier"] = initial_noise_multiplier
             payload[payload_name]["inpainting_fill"] = inpainting_fill
             payload[payload_name]["image_cfg_scale"] = image_cfg_scale
             payload[payload_name]["resize_mode"] = img2img_resize_mode
