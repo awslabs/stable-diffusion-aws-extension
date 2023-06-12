@@ -119,15 +119,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     # get all parameters from ui-config.json
     prompt = get_param_value(params_dict, f'{param_name}_prompt', defaultValue="") 
     negative_prompt = get_param_value(params_dict, f'{param_name}_neg_prompt', defaultValue="") 
-    enable_hr = get_param_value(params_dict, f'{param_name}_enable_hr')
     denoising_strength = float(get_param_value(params_dict, f'{param_name}_denoising_strength', defaultValue=0.7))
-    hr_scale = float(get_param_value(params_dict, f'{param_name}_hr_scale', defaultValue=2.0))
-    hr_upscaler = get_param_value(params_dict, f'{param_name}_hr_upscaler', defaultValue="Latent")
-    hr_second_pass_steps = int(get_param_value(params_dict, f'{param_name}_hires_steps', defaultValue=0))
-    firstphase_width = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
-    firstphase_height = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
-    hr_resize_x = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
-    hr_resize_y = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
     styles = get_param_value(params_dict, f'{param_name}_styles', defaultValue=["None", "None"])
     if styles == "":
         styles = []
@@ -223,8 +215,53 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         allow_preview = get_param_value(params_dict, 'controlnet_allow_preview')
         loopback = get_param_value(params_dict, 'controlnet_loopback_automatically')
     
+    if param_name == 'txt2img':
+        enable_hr = get_param_value(params_dict, f'{param_name}_enable_hr')
+        hr_scale = float(get_param_value(params_dict, f'{param_name}_hr_scale', defaultValue=2.0))
+        hr_upscaler = get_param_value(params_dict, f'{param_name}_hr_upscaler', defaultValue="Latent")
+        hr_second_pass_steps = int(get_param_value(params_dict, f'{param_name}_hires_steps', defaultValue=0))
+        firstphase_width = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
+        firstphase_height = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
+        hr_resize_x = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
+        hr_resize_y = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
+        
+
     if param_name == 'img2img':
-        img2img_init_img = get_param_value(params_dict, 'img2img_init_img')
+        img2img_mode = 1
+
+        img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
+        img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
+        img2img_init_img_inpaint = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
+        img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
+        
+        img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
+        mask_blur = int(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4))
+        initial_noise_multiplier = None
+        inpainting_fill = get_param_value(params_dict, 'img2img_inpainting_fill_fill')
+        image_cfg_scale = 1.5
+        img2img_scale = float(get_param_value(params_dict, 'img2img_scale', defaultValue=1.0))
+        img2img_resize_mode = 0
+        if get_param_value(params_dict, 'img2img_resize_mode_Crop_and_Resize'):
+            img2img_resize_mode = 1
+        if get_param_value(params_dict, 'img2img_resize_mode_Resize_and_Fill'):
+            img2img_resize_mode = 2
+        if get_param_value(params_dict, 'img2img_resize_mode_just_resize_latent_upscale'):
+            img2img_resize_mode = 3
+        inpainting_mask_invert = 0
+        if get_param_value(params_dict, 'img2img_mask_mode_inpaint_not_masked'):
+            inpainting_mask_invert = 1
+        inpainting_full_res = 0
+        if get_param_value(params_dict, 'img2img_inpaint_full_res_only_masked'):
+            inpainting_full_res = 1
+        inpaint_full_res_padding = 32
+        inpainting_fill = 0
+        if get_param_value(params_dict, 'img2img_inpainting_fill_original'):
+            inpainting_fill = 1
+        if get_param_value(params_dict, 'img2img_inpainting_fill_latent_noise'):
+            inpainting_fill = 2
+        if get_param_value(params_dict, 'img2img_inpainting_fill_latent_nothing'):
+            inpainting_fill = 3
+        include_init_images = False
 
 
     endpoint_name = checkpoint_info['sagemaker_endpoint'] #"infer-endpoint-ca0e"
@@ -256,15 +293,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         # upload origin params for txt2img/img2img
         payload_name = f"{param_name}_payload"
         payload[payload_name] = {}
-        payload[payload_name]["enable_hr"]= enable_hr
         payload[payload_name]["denoising_strength"]=denoising_strength
-        payload[payload_name]["firstphase_width"]=firstphase_width
-        payload[payload_name]["firstphase_height"]=firstphase_height
-        payload[payload_name]["hr_scale"]=hr_scale
-        payload[payload_name]["hr_upscaler"]=hr_upscaler
-        payload[payload_name]["hr_second_pass_steps"]=hr_second_pass_steps
-        payload[payload_name]["hr_resize_x"]=hr_resize_x
-        payload[payload_name]["hr_resize_y"]=hr_resize_y
         payload[payload_name]["prompt"]=prompt
         payload[payload_name]["styles"]=styles
         payload[payload_name]["seed"]=seed
@@ -291,9 +320,30 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         payload[payload_name]["script_name"]=script_name
         payload[payload_name]["script_args"]=script_args
 
-        if task_type == 'img2img':
-            
+        if task_type == 'txt2img':
+            #payload[payload_name]["enable_hr"]= enable_hr
+            #payload[payload_name]["firstphase_width"]=firstphase_width
+            #payload[payload_name]["firstphase_height"]=firstphase_height
+            #payload[payload_name]["hr_scale"]=hr_scale
+            #payload[payload_name]["hr_upscaler"]=hr_upscaler
+            #payload[payload_name]["hr_second_pass_steps"]=hr_second_pass_steps
+            #payload[payload_name]["hr_resize_x"]=hr_resize_x
+            #payload[payload_name]["hr_resize_y"]=hr_resize_y
 
+        if task_type == 'img2img':
+            payload[payload_name]["init_images"]: init_images
+            payload[payload_name]["mask"]: mask
+            payload[payload_name]["mask_blur"]: mask_blur
+            payload[payload_name]["initial_noise_multiplier"]:initial_noise_multiplier
+            payload[payload_name]["inpainting_fill"]: inpainting_fill
+            payload[payload_name]["image_cfg_scale"]: image_cfg_scale
+            payload[payload_name]["resize_mode"]: img2img_resize_mode
+            payload[payload_name]["inpaint_full_res"]: inpainting_full_res
+            payload[payload_name]["inpaint_full_res_padding"]: inpaint_full_res_padding 
+            payload[payload_name]["inpainting_mask_invert"]: inpainting_mask_invert
+            payload[payload_name]["include_init_images"]: include_init_images
+            
+            
         if contronet_enable:
             print(f'{task_type} with controlnet!!!!!!!!!!')
             payload["alwayson_scripts"] = {}
