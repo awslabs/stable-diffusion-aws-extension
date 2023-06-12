@@ -161,6 +161,8 @@ def lambda_handler(event, context):
         obj = s3_resource.Object(bucket, key)
         body = obj.get()['Body'].read().decode('utf-8') 
         json_body = json.loads(body)
+        if json_body is None:
+            raise ValueError("body contains invalid JSON")
 
          # Get the task type
         job = getInferenceJob(inference_id)
@@ -169,18 +171,16 @@ def lambda_handler(event, context):
         if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             caption = json_body['caption']
             method = taskType
-            # TODO: update caption DDB 
-            # # Update the DynamoDB table
-            # inference_table.update_item(
-            #     Key={
-            #         'InferenceJobId': inference_id
-            #         },
-            #     UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
-            #     ExpressionAttributeValues={
-            #         ':new_image': [f"image_{count}.jpg"],
-            #         ':empty_list': []
-            #     }
-            # )
+            # Update the DynamoDB table for the caption
+            inference_table.update_item(
+                Key={
+                    'InferenceJobId': inference_id
+                    },
+                UpdateExpression='SET caption=:f)',
+                ExpressionAttributeValues={
+                    ':f': caption,
+                }
+            )
         elif taskType in ["txt2img", "img2img"]:
             # save images
             for count, b64image in enumerate(json_body["images"]):

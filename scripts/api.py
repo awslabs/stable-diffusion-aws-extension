@@ -158,7 +158,7 @@ def sagemaker_api(_, app: FastAPI):
         print(req)
         # print(f"json is {json.loads(req.json())}")
 
-        if req.task == 'text-to-image' or req.task == 'controlnet_txt2img':
+        if req.task == 'txt2img' or req.task == 'img2img':
             selected_models = req.models
             checkpoint_info = req.checkpoint_info
             checkspace_and_update_models(selected_models, checkpoint_info)
