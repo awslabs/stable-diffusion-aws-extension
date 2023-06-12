@@ -60,7 +60,7 @@ async function txt2img_config_save(endpoint_value) {
     scrap_ui_component_value_with_default(config);
 
     // store config in local storage for debugging
-    localStorage.setItem("txt2imgConfig", JSON.stringify(config));
+    // localStorage.setItem("txt2imgConfig", JSON.stringify(config));
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
