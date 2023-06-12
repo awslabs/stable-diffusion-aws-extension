@@ -6,6 +6,7 @@ import sys
 import logging
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
+from uitls import tar, cp
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -113,7 +114,8 @@ def async_prepare_for_training_on_sagemaker(
     url += "train"
     upload_files = []
     db_config_tar = f"db_config.tar"
-    os.system(f"tar cvf {db_config_tar} {db_config_path}")
+    # os.system(f"tar cvf {db_config_tar} {db_config_path}")
+    tar(mode='c', archive=db_config_tar, sfiles=db_config_path, verbose=True)
     upload_files.append(db_config_tar)
     new_data_list = []
     for data_path in data_path_list:
@@ -124,7 +126,8 @@ def async_prepare_for_training_on_sagemaker(
             data_tar = f'data-{data_path.replace("/", "-").strip("-")}.tar'
             new_data_list.append(data_tar)
             print("Pack the data file.")
-            os.system(f"tar cf {data_tar} {data_path}")
+            # os.system(f"tar cf {data_tar} {data_path}")
+            tar(mode='c', archive=data_tar, sfiles=data_path, verbose=False)
             upload_files.append(data_tar)
         else:
             new_data_list.append(data_path)
@@ -138,7 +141,8 @@ def async_prepare_for_training_on_sagemaker(
             new_class_data_list.append(class_data_tar)
             upload_files.append(class_data_tar)
             print("Pack the class data file.")
-            os.system(f"tar cf {class_data_tar} {class_data_path}")
+            # os.system(f"tar cf {class_data_tar} {class_data_path}")
+            tar(mode='c', archive=class_data_tar, sfiles=class_data_path, verbose=False)
         else:
             new_class_data_list.append(class_data_path)
     payload = {

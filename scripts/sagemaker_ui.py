@@ -22,6 +22,8 @@ from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
 
+from utils import cp, tar, rm
+
 inference_job_dropdown = None
 sagemaker_endpoint = None
 
@@ -381,18 +383,23 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                 local_model_path_in_repo = f'{rp}/{model_name}'
             #local_tar_path = f'{model_name}.tar'
             print("Pack the model file.")
-            os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            # os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
                 model_yaml_name = model_name.split('.')[0] + ".yaml"
                 local_model_yaml_path = "/".join(lp.split("/")[:-1]) + f"/{model_yaml_name}"
                 local_model_yaml_path_in_repo = f"models/{rp}/{model_yaml_name}"
                 if os.path.isfile(local_model_yaml_path):
-                    os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    cp(local_model_yaml_path, local_model_yaml_path_in_repo, recursive=True)
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
                 else:
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    tar(mode='c', archive=local_tar_path, sfiles=local_model_path_in_repo, verbose=True)
             else:
-                os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                tar(mode='c', archive=local_tar_path, sfiles=local_model_path_in_repo, verbose=True)
             #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
             multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                 local_tar_path,
@@ -412,7 +419,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
             log = f"\n finish upload {local_tar_path} to {s3_base}"
 
-            os.system(f"rm {local_tar_path}")
+            # os.system(f"rm {local_tar_path}")
+            rm(local_tar_path, recursive=True)
         except Exception as e:
             print(f"fail to upload model {lp}, error: {e}")
 

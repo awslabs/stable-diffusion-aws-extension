@@ -22,6 +22,8 @@ sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
+from utls import tar, mv
+
 def sync_status_from_s3_json(bucket_name, webui_status_file_path, sagemaker_status_file_path):
     while True:
         time.sleep(1)
@@ -95,7 +97,8 @@ def upload_model_to_s3_v2(model_name, s3_output_path):
                 output_tar = file
                 tar_command = f"tar cvf {output_tar} {safetensors} {yaml}"
                 print(tar_command)
-                os.system(tar_command)
+                # os.system(tar_command)
+                tar(mode='c', archive=output_tar, sfiles=[safetensors, yaml], verbose=True)
                 logger.info(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
                 print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
                 upload_file_to_s3(output_tar, output_bucket_name, os.path.join(s3_output_path, model_name))
@@ -133,7 +136,8 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
-    os.system(f"mv {download_db_config_path} {target_db_config_path}")
+    # os.system(f"mv {download_db_config_path} {target_db_config_path}")
+    mv(download_db_config_path, target_db_config_path)
     with open(target_db_config_path) as db_config_file:
         db_config = json.load(db_config_file)
     data_list = []
@@ -159,7 +163,8 @@ def prepare_for_training_v2(s3_model_path, model_name, s3_input_path, s3_data_pa
     download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
-    os.system(f"mv {download_db_config_path} {target_db_config_path}")
+    # os.system(f"mv {download_db_config_path} {target_db_config_path}")
+    mv(download_db_config_path, target_db_config_path)
     with open(target_db_config_path) as db_config_file:
         db_config = json.load(db_config_file)
     data_list = []

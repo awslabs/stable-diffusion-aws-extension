@@ -206,5 +206,3 @@ def df(show_all=False, human_readable=False):
         result.append(partition_info)
 
     return result
-
-    
