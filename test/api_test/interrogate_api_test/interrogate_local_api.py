@@ -1,13 +1,25 @@
 import json
 import requests
-import io
 import base64
-from PIL import Image, PngImagePlugin
 import time
+import os
+import sys
+sys.path.append("../../../middleware_api/lambda/inference")
+from parse.parameter_parser import json_convert_to_payload
 
 start_time = time.time()
 
-# url = "http://127.0.0.1:8082"
+# preapre payload
+task_type = ''
+payload_checkpoint_info = json.loads(os.environ['checkpoint_info'])
+
+f = open("../json_files/img2img_test.json")
+
+params_dict = json.load(f)
+
+payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
+
+# call local api
 url = "http://localhost:8082"
 
 print("docker api test for clip:")
