@@ -775,6 +775,13 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     )
+    // document.querySelector("#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
+    config["img2img_styles"] = getElementValue(
+        "#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+        "value",
+        ""
+    )
+
     
     // Resize mode
     // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
@@ -888,6 +895,33 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
+
+    // document.querySelector("#img2img_subseed > label > input")
+    config["img2img_subseed"] = getElementValue(
+        "#img2img_subseed > label > input",
+        "value",
+        ""
+    ); 
+    // document.querySelector("#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_subseed_strength"] = getElementValue(
+        "#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_w"] = getElementValue(
+        "#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_h"] = getElementValue(
+        "#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
 
 
     // Resize by
