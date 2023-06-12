@@ -1,66 +1,19 @@
 import json
-import requests
-import io
-import base64
-from PIL import Image, PngImagePlugin
-import time
+import boto3
 
-start_time = time.time()
+s3_resource = boto3.resource('s3')
 
-url = "http://127.0.0.1:7860"
+def get_bucket_and_key(s3uri):
+    pos = s3uri.find('/', 5)
+    bucket = s3uri[5 : pos]
+    key = s3uri[pos + 1 : ]
+    return bucket, key
 
-payload = {
-    "task": "text-to-image", 
-    "txt2img_payload": {
-        "enable_hr": "False", 
-        "denoising_strength": 0.7, 
-        "firstphase_width": 0, 
-        "firstphase_height": 0, 
-        "prompt": "girl", 
-        "styles": ["None", "None"], 
-        "seed": -1.0, 
-        "subseed": -1.0, 
-        "subseed_strength": 0, 
-        "seed_resize_from_h": 0, 
-        "seed_resize_from_w": 0, 
-        "sampler_index": "Euler a", 
-        "batch_size": 1, 
-        "n_iter": 1, 
-        "steps": 20, 
-        "cfg_scale": 7, 
-        "width": 768, 
-        "height": 768, 
-        "restore_faces": "False", 
-        "tiling": "False", 
-        "negative_prompt": "", 
-        "eta": 1, 
-        "s_churn": 0, 
-        "s_tmax": 1, 
-        "s_tmin": 0, 
-        "s_noise": 1, 
-        "override_settings": {}, 
-        "script_args": [0, "False", "False", "False" "", 1, "", 0, "", "True", "True", "True"]}, 
-        "username": ""
-}
+output_location = "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1r9svjhqjplic/sagemaker_output/ef218ab7-098c-4231-b14e-3edafad67ebb.out"
 
-# response = requests.post(url=f'{url}/origin-invocations', json=payload)
-response = requests.post(url=f'{url}/invocations', json=payload)
-# response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+bucket, key = get_bucket_and_key(output_location)
+obj = s3_resource.Object(bucket, key)
+body = obj.get()['Body'].read().decode('utf-8') 
+json_body = json.loads(body)
 
-print(f"run time is {time.time()-start_time}")
-
-print(f"response is {response}")
-
-r = response.json()
-
-for i in r['images']:
-    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
-
-    png_payload = {
-        "image": "data:image/png;base64," + i
-    }
-    response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-
-    pnginfo = PngImagePlugin.PngInfo()
-    pnginfo.add_text("parameters", response2.json().get("info"))
-    image.save('output.png', pnginfo=pnginfo)
+print(f"caption is {type(json_body['caption'])}")
