@@ -22,7 +22,6 @@ params_dict = json.load(f)
 payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
 
 # call local api
-
 url = "http://127.0.0.1:8082"
 
 response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload['img2img_payload'])
