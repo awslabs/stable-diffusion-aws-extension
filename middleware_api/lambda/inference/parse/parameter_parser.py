@@ -1,4 +1,9 @@
 import os
+from PIL import Image, ImageOps, ImageFilter, ImageEnhance, ImageChops
+import numpy as np
+from gradio.processing_utils import encode_pil_to_base64
+import io
+import base64
 
 def get_param_value(params_dict, key, defaultValue="false"):
     try:
@@ -229,13 +234,43 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     if param_name == 'img2img':
         img2img_mode = 1
 
-        img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        img2img_init_img_inpaint = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        
+        img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img_with_mask', defaultValue=None)
+        img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_inpaint_color_sketch', defaultValue=None)
+        inpaint_color_sketch_orig = get_param_value(params_dict, 'inpaint_color_sketch_orig', defaultValue=None)
+        img2img_init_img_inpaint = get_param_value(params_dict, 'img2img_init_img_inpaint', defaultValue=None)
+        img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_mask_inpaint', defaultValue=None)
+        sketch = get_param_value(params_dict, 'img2img_sketch', defaultValue=None)
         img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
         mask_blur = int(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4))
+        mask_alpha = 0
+        
+        image = None
+        mask = None
+        if img2img_mode == 0:  # img2img
+            image = img2img_init_img #.convert("RGB")
+            mask = None
+        elif img2img_mode == 1:  # img2img sketch
+            image = sketch #.convert("RGB")
+            mask = None
+        elif img2img_mode == 4:  # inpaint upload mask
+            image = img2img_init_img_inpaint
+            mask = img2img_init_mask_inpaint
+        elif img2img_mode == 2:  # inpaint
+            image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["image"].split(',')[1])))
+            mask = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["mask"].split(',')[1])))
+            alpha_mask = ImageOps.invert(image.split()[-1]).convert('L').point(lambda x: 255 if x > 0 else 0, mode='1')
+            mask = ImageChops.lighter(alpha_mask, mask.convert('L')).convert('L')
+            image = image.convert("RGB")
+        elif img2img_mode == 3:  # inpaint sketch
+            image = img2img_inpaint_color_sketch
+            orig = inpaint_color_sketch_orig or img2img_inpaint_color_sketch
+            pred = np.any(np.array(image) != np.array(orig), axis=-1)
+            mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
+            mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
+            blur = ImageFilter.GaussianBlur(mask_blur)
+            image = Image.composite(image.filter(blur), orig, mask.filter(blur))
+            image = image.convert("RGB")
+
         initial_noise_multiplier = None
         inpainting_fill = get_param_value(params_dict, 'img2img_inpainting_fill_fill')
         image_cfg_scale = 1.5
@@ -321,27 +356,26 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         payload[payload_name]["script_args"]=script_args
 
         if task_type == 'txt2img':
-            #payload[payload_name]["enable_hr"]= enable_hr
-            #payload[payload_name]["firstphase_width"]=firstphase_width
-            #payload[payload_name]["firstphase_height"]=firstphase_height
-            #payload[payload_name]["hr_scale"]=hr_scale
-            #payload[payload_name]["hr_upscaler"]=hr_upscaler
-            #payload[payload_name]["hr_second_pass_steps"]=hr_second_pass_steps
-            #payload[payload_name]["hr_resize_x"]=hr_resize_x
-            #payload[payload_name]["hr_resize_y"]=hr_resize_y
+            payload[payload_name]["enable_hr"]= enable_hr
+            payload[payload_name]["firstphase_width"]=firstphase_width
+            payload[payload_name]["firstphase_height"]=firstphase_height
+            payload[payload_name]["hr_scale"]=hr_scale
+            payload[payload_name]["hr_upscaler"]=hr_upscaler
+            payload[payload_name]["hr_second_pass_steps"]=hr_second_pass_steps
+            payload[payload_name]["hr_resize_x"]=hr_resize_x
+            payload[payload_name]["hr_resize_y"]=hr_resize_y
 
         if task_type == 'img2img':
-            payload[payload_name]["init_images"]: init_images
-            payload[payload_name]["mask"]: mask
-            payload[payload_name]["mask_blur"]: mask_blur
-            payload[payload_name]["initial_noise_multiplier"]:initial_noise_multiplier
-            payload[payload_name]["inpainting_fill"]: inpainting_fill
-            payload[payload_name]["image_cfg_scale"]: image_cfg_scale
-            payload[payload_name]["resize_mode"]: img2img_resize_mode
-            payload[payload_name]["inpaint_full_res"]: inpainting_full_res
-            payload[payload_name]["inpaint_full_res_padding"]: inpaint_full_res_padding 
-            payload[payload_name]["inpainting_mask_invert"]: inpainting_mask_invert
-            payload[payload_name]["include_init_images"]: include_init_images
+            payload[payload_name]["init_images"] = [image]
+            payload[payload_name]["mask"] = mask
+            payload[payload_name]["initial_noise_multiplier"] = initial_noise_multiplier
+            payload[payload_name]["inpainting_fill"] = inpainting_fill
+            payload[payload_name]["image_cfg_scale"] = image_cfg_scale
+            payload[payload_name]["resize_mode"] = img2img_resize_mode
+            payload[payload_name]["inpaint_full_res"] = inpainting_full_res
+            payload[payload_name]["inpaint_full_res_padding"] = inpaint_full_res_padding 
+            payload[payload_name]["inpainting_mask_invert"] = inpainting_mask_invert
+            payload[payload_name]["include_init_images"] = include_init_images
             
             
         if contronet_enable:
