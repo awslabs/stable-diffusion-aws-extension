@@ -50,6 +50,50 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
+// Function to get the selected tab inside the img2img
+function getSelectedButton() {
+    console.log("entering getSelectedButton")
+    // Get the parent element
+    let parentDiv = document.querySelector("#mode_img2img > div.tab-nav.scroll-hide.svelte-1g805jl");
+
+    // Get all the button children
+    let buttons = parentDiv.querySelectorAll("button");
+
+    // Initialize a variable to store the selected button
+    let selectedButtonIndex = -1;
+
+    // Loop through each button
+    for (let i = 0; i < buttons.length; i++) {
+        // Check if the button has the 'selected' class
+        if (buttons[i].classList.contains("selected")) {
+            // Store the index of the selected button (add 1 because nth-child is 1-indexed)
+            selectedButtonIndex = i + 1;
+            break;
+        }
+    }
+
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "img2img",
+        2: "Sketch",
+        3: "Inpaint",
+        4: "Inpaint_sketch",
+        5: "Inpaint_upload",
+        6: "Batch"
+    };
+
+    // Check if a button was selected
+    if (selectedButtonIndex != -1) {
+        // If yes, return the corresponding value from the mapping
+        return mapping[selectedButtonIndex];
+    } else {
+        // If no button was selected, return a suitable message
+        return "No button is selected.";
+    }
+}
+
+
+
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
@@ -58,6 +102,8 @@ async function txt2img_config_save(endpoint_value) {
 
 
     scrap_ui_component_value_with_default(config);
+
+
 
     // store config in local storage for debugging
     // localStorage.setItem("txt2imgConfig", JSON.stringify(config));
@@ -106,6 +152,11 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
     config['img2img_init_mask_inpaint']=init_mask_inpaint;
 
     scrap_ui_component_value_with_default(config);
+
+    config['img2img_selected_tab_name'] = getSelectedButton()
+
+    console.log("guming debug>>")
+    console.log(config['img2img_selected_tab_name'])
 
     // store config in local storage for debugging
     localStorage.setItem("txt2imgConfig", JSON.stringify(config));
