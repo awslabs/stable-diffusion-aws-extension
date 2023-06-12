@@ -1,7 +1,6 @@
 import os
 from PIL import Image, ImageOps, ImageFilter, ImageEnhance, ImageChops
 import numpy as np
-from gradio.processing_utils import encode_pil_to_base64
 import io
 import base64
 

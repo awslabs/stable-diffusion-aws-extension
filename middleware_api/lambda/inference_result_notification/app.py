@@ -142,9 +142,6 @@ def send_message_to_sns(message_json):
             'error': str(e)
         }
 
-def handling_clip_deepbooru(job):
-    pass
-
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
     message = event['Records'][0]['Sns']['Message']
@@ -170,7 +167,20 @@ def lambda_handler(event, context):
         taskType = job.get('taskType','txt2img')
 
         if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
-            handling_clip_deepbooru(job)
+            caption = json_body['caption']
+            method = taskType
+            # TODO: update caption DDB 
+            # # Update the DynamoDB table
+            # inference_table.update_item(
+            #     Key={
+            #         'InferenceJobId': inference_id
+            #         },
+            #     UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
+            #     ExpressionAttributeValues={
+            #         ':new_image': [f"image_{count}.jpg"],
+            #         ':empty_list': []
+            #     }
+            # )
         elif taskType in ["txt2img", "img2img"]:
             # save images
             for count, b64image in enumerate(json_body["images"]):
