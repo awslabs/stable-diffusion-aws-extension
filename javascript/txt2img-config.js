@@ -128,12 +128,24 @@ function getSelectedTabResize() {
     }
 }
 
+function set_textbox_value(textboxId, newValue) {
+    let textbox = document.querySelector(textboxId);
+    console.log("Trying to set the value of textBox")
+    if (textbox) {
+        textbox.textContent = newValue;
+    } else {
+        console.log("Textbox with id " + textboxId + " not found.");
+    }
+}
+
 
 
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
+
+    set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
 
     scrap_ui_component_value_with_default(config);
 
@@ -158,6 +170,8 @@ async function txt2img_config_save(endpoint_value) {
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+
+        set_textbox_value('#html_info_txt2img', "Completed uploaded configuration to S3")
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value, "", ""];
 
@@ -170,6 +184,7 @@ async function txt2img_config_save(endpoint_value) {
 
 async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
     var config = {};
+    set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
 
     console.log(JSON.stringify(endpoint_value))
 
@@ -212,6 +227,7 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+        set_textbox_value('#html_info_img2img', "Completed uploaded configuration to S3")
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
 
