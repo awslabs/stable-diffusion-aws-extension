@@ -138,6 +138,16 @@ function set_textbox_value(textboxId, newValue) {
     }
 }
 
+function set_textbox_value_gradio(elementId, newValue) {
+    let textbox = gradioApp().getElementById(elementId).querySelector('p');
+    console.log("Trying to set the value of textBox")
+    if (textbox) {
+        textbox.textContent = newValue;
+    } else {
+        console.log("Textbox with id " + elementId + " not found.");
+    }
+}
+
 
 async function txt2img_config_save(endpoint_value) {
     var config = {};
@@ -145,6 +155,7 @@ async function txt2img_config_save(endpoint_value) {
     console.log(JSON.stringify(endpoint_value))
 
     // set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
+    set_textbox_value_gradio('html_info_txt2img', "Start uploading configuration to S3, please wait ......")
 
     scrap_ui_component_value_with_default(config);
 
@@ -169,6 +180,7 @@ async function txt2img_config_save(endpoint_value) {
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+        set_textbox_value_gradio('html_info_txt2img', "The configuration has been successfully uploaded.")
 
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value, "", ""];
@@ -183,6 +195,7 @@ async function txt2img_config_save(endpoint_value) {
 async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
     var config = {};
     // set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
+    set_textbox_value_gradio('html_info_img2img', "Start uploading configuration to S3, please wait ......")
 
     console.log(JSON.stringify(endpoint_value))
 
@@ -225,6 +238,7 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+        set_textbox_value_gradio('html_info_img2img', "The configuration has been successfully uploaded.")
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
 
@@ -1017,6 +1031,21 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     ); 
+
+    // grab the img2img inpaint sketch original image
+    //document.querySelector("#inpaint_sketch")
+    const inpaintImgElement = document.querySelector(
+        "#inpaint_sketch > div.image-container.svelte-p3y7hu > div > img"
+    );
+    if (inpaintImgElement) {
+        const srcValue = inpaintImgElement.getAttribute("src");
+        // Use the srcValue variable as needed
+        config["img2img_inpaint_sketch_image"] = srcValue;
+    } else {
+        // Handle the case when imgElement is null or undefined
+        console.log("inpaintImgElement is null or undefined");
+        config["img2img_inpaint_sketch_image"] = "";
+    }
 
 
 
