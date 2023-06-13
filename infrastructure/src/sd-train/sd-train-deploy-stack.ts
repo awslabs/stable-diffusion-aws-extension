@@ -303,7 +303,7 @@ export class SdTrainDeployStack extends NestedStack {
     //The code that defines your stack goes here
     return new s3.Bucket(this, 'aigc-bucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.RETAIN,
       autoDeleteObjects: true,
       cors: corsRules,
     });
