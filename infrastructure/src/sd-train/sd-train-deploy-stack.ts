@@ -304,7 +304,6 @@ export class SdTrainDeployStack extends NestedStack {
     return new s3.Bucket(this, 'aigc-bucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ACLS,
       removalPolicy: RemovalPolicy.RETAIN,
-      autoDeleteObjects: true,
       cors: corsRules,
     });
   }
