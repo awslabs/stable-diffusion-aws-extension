@@ -23,10 +23,6 @@ dreambooth_available = True
 def dummy_function(*args, **kwargs):
     return None
 
-dreambooth_available = True
-def dummy_function(*args, **kwargs):
-    return None
-
 try:
     sys.path.append("extensions/sd_dreambooth_extension")
     from dreambooth.ui_functions import create_model
