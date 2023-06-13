@@ -12,6 +12,9 @@ COPY common/exception_handler.py ${LAMBDA_TASK_ROOT}/common/
 COPY common/request_wrapper.py ${LAMBDA_TASK_ROOT}/common/
 COPY common/response_wrapper.py ${LAMBDA_TASK_ROOT}/common/
 
+RUN mkdir -p ${LAMBDA_TASK_ROOT}/parse
+COPY parse/parameter_parser.py ${LAMBDA_TASK_ROOT}/parse/
+
 # Install dependencies 
 RUN pip install --no-cache-dir -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 

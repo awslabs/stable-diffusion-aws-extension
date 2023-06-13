@@ -154,8 +154,9 @@ def get_inference_job_list():
                 else:
                     complete_time = obj.get('completeTime')
                 status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
                 inference_job_id = obj.get('InferenceJobId')
-                combined_string = f"{complete_time}-->{status}-->{inference_job_id}"
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
             # Sort the list based on completeTime in descending order
@@ -427,8 +428,22 @@ def generate_on_cloud(sagemaker_endpoint):
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
-def generate_on_cloud_no_input(sagemaker_endpoint):
+def call_txt2img_inference(sagemaker_endpoint):
+    return call_remote_inference(sagemaker_endpoint, 'txt2img')
+
+def call_img2img_inference(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return call_remote_inference(endpoint_value, 'img2img')
+
+def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
+
+def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
+
+
+def call_remote_inference(sagemaker_endpoint, type):
     print(f"chosen ep {sagemaker_endpoint}")
+    print(f"inference type is {type}")
 
     if sagemaker_endpoint == '':
         image_list = []  # Return an empty list if selected_value is None
@@ -462,6 +477,7 @@ def generate_on_cloud_no_input(sagemaker_endpoint):
     }
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
+    payload['task_type'] = type
     print(f"checkpointinfo is {payload}")
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
@@ -654,36 +670,49 @@ def fake_gan(selected_value: str ):
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
-        inference_job_id = parts[2].strip()
-        inference_job_status = parts[1].strip()
+        inference_job_id = parts[3].strip()
+        inference_job_status = parts[2].strip()
+        inference_job_taskType = parts[1].strip()
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
+        if inference_job_taskType in ["txt2img", "img2img"]:    
+            prompt_txt = ''
+            images = get_inference_job_image_output(inference_job_id)
+            image_list = []
+            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
+            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
+            json_list = []
+            json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
+            print(f"{str(images)}")
+            print(f"{str(inference_pram_json_list)}")
 
-        f = open(json_file)
+            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
-        log_file = json.load(f)
-
-        info_text = log_file["info"]
-
-        infotexts = json.loads(info_text)["infotexts"][0]
+            if os.path.isfile(json_file):
+                with open(json_file) as f:
+                    log_file = json.load(f)
+                    info_text = log_file["info"]
+                    infotexts = json.loads(info_text)["infotexts"][0]
+            else:
+                print(f"File {json_file} does not exist.")
+                info_text = 'something wrong when trying to download the inference parameters'
+                infotexts = 'something wrong when trying to download the inference parameters'
+        elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
+            prompt_txt = ''
+            image_list = []  # Return an empty list if selected_value is None
+            json_list = []
+            info_text = '' 
+            infotexts = ''
     else:
+        prompt_txt = ''
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''
 
-    return image_list, info_text, plaintext_to_html(infotexts)
+    return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 def display_inference_result(inference_id: str ):
     print(f"selected value is {inference_id}")
@@ -730,7 +759,7 @@ def init_refresh_resource_list_from_cloud():
     else:
         print(f"there is no api-gateway url and token in local file,")
 
-def create_ui():
+def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
 
@@ -753,7 +782,19 @@ def create_ui():
                     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
                 global generate_on_cloud_button_with_js
-                generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=False)
+                if not is_img2img:
+                    generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
+                global generate_on_cloud_button_with_js_img2img
+                global interrogate_clip_on_cloud_button
+                global interrogate_deep_booru_on_cloud_button
+                if is_img2img:
+                    with gr.Row():
+                        with gr.Column():
+                            interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP", elem_id="interrogate_clip_on_cloud_button")
+                        with gr.Column():
+                            interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru", elem_id="interrogate_deep_booru_on_cloud_button")
+                        with gr.Column():
+                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud img2img", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
@@ -816,4 +857,4 @@ def create_ui():
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
-    return  sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud

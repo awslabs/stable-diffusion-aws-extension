@@ -50,14 +50,92 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
+// Function to get the selected tab inside the img2img
+function getSelectedButton() {
+    // Get the parent element
+    let parentDiv = document.querySelector("#mode_img2img > div.tab-nav.scroll-hide.svelte-1g805jl");
+
+    // Get all the button children
+    let buttons = parentDiv.querySelectorAll("button");
+
+    // Initialize a variable to store the selected button
+    let selectedButtonIndex = -1;
+
+    // Loop through each button
+    for (let i = 0; i < buttons.length; i++) {
+        // Check if the button has the 'selected' class
+        if (buttons[i].classList.contains("selected")) {
+            // Store the index of the selected button (add 1 because nth-child is 1-indexed)
+            selectedButtonIndex = i + 1;
+            break;
+        }
+    }
+
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "img2img",
+        2: "Sketch",
+        3: "Inpaint",
+        4: "Inpaint_sketch",
+        5: "Inpaint_upload",
+        6: "Batch"
+    };
+
+    // Check if a button was selected
+    if (selectedButtonIndex != -1) {
+        // If yes, return the corresponding value from the mapping
+        return mapping[selectedButtonIndex];
+    } else {
+        // If no button was selected, return a suitable message
+        return "No button is selected.";
+    }
+}
+
+// function to get tab "Restore to" or "Resize by"
+function getSelectedTabResize() {
+    // Get the parent element
+    let parentDiv = document.querySelector("#component-459 > div.tab-nav.scroll-hide.svelte-1g805jl");
+
+    // Get all the button children
+    let buttons = parentDiv.querySelectorAll("button");
+
+    // Initialize a variable to store the selected button
+    let selectedButtonIndex = -1;
+
+    // Loop through each button
+    for (let i = 0; i < buttons.length; i++) {
+        // Check if the button has the 'selected' class
+        if (buttons[i].classList.contains("selected")) {
+            // Store the index of the selected button (add 1 because nth-child is 1-indexed)
+            selectedButtonIndex = i + 1;
+            break;
+        }
+    }
+
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "ResizeTo",
+        2: "ResizeBy"
+    };
+
+    // Check if a button was selected
+    if (selectedButtonIndex != -1) {
+        // If yes, return the corresponding value from the mapping
+        return mapping[selectedButtonIndex];
+    } else {
+        // If no button was selected, return a suitable message
+        return "No tab is selected.";
+    }
+}
+
+
+
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
-    scrap_ui_component_value_with_default(config);
 
-    // store config in local storage for debugging
-    localStorage.setItem("txt2imgConfig", JSON.stringify(config));
+    scrap_ui_component_value_with_default(config);
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
@@ -81,12 +159,66 @@ async function txt2img_config_save(endpoint_value) {
 
         console.log('The configuration has been successfully uploaded to s3');
         // alert("The configuration has been successfully uploaded.");
-        return endpoint_value;
+        return [endpoint_value, "", ""];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
         alert("An error occurred while uploading the configuration.");
-        return "FAILURE";
+        return ["FAILURE", "", ""];
+    }
+}
+
+async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
+    var config = {};
+
+    console.log(JSON.stringify(endpoint_value))
+
+    config["img2img_init_img"] =init_img
+    config["img2img_sketch"] = sketch
+    config["img2img_init_img_with_mask"] = init_img_with_mask
+    config["img2img_inpaint_color_sketch"] = inpaint_color_sketch
+    config["img2img_init_img_inpaint"]=init_img_inpaint;
+    config['img2img_init_mask_inpaint']=init_mask_inpaint;
+
+    scrap_ui_component_value_with_default(config);
+
+    config['img2img_selected_tab_name'] = getSelectedButton()
+
+    console.log(config['img2img_selected_tab_name'])
+
+    config['img2img_selected_resize_tab'] = getSelectedTabResize()
+
+    console.log(config['img2img_selected_resize_tab'])
+
+
+    //following code is to get s3 presigned url from middleware and upload the ui parameters
+    const key = "config/aigc.json";
+    let remote_url = config["aws_api_gateway_url"];
+    if (!remote_url.endsWith("/")) {
+        remote_url += "/";
+    }
+    let get_presigned_s3_url = remote_url;
+    get_presigned_s3_url += "inference/generate-s3-presigned-url-for-uploading";
+    const api_key = config["aws_api_token"];
+
+    try {
+        const config_presigned_url = await getPresignedUrl(
+            get_presigned_s3_url,
+            api_key,
+            key
+        );
+        const url = config_presigned_url.replace(/"/g, "");
+        const config_data = JSON.stringify(config);
+        await put_with_xmlhttprequest(url, config_data);
+
+        console.log('The configuration has been successfully uploaded to s3');
+        // alert("The configuration has been successfully uploaded.");
+        return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
+
+    } catch (error) {
+        console.error("Error in txt2img_config_save:", error);
+        alert("An error occurred while uploading the configuration.");
+        return ["FAILURE", init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
     }
 }
 
@@ -276,13 +408,13 @@ function scrap_ui_component_value_with_default(config) {
     );
     
     config["script_list"] = getElementValue(
-        "#script_list > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_list > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
     
     config["script_txt2txt_xyz_plot_x_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -292,7 +424,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["script_txt2txt_xyz_plot_y_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_y_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_y_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -302,7 +434,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["script_txt2txt_xyz_plot_z_type"] = getElementValue(
-        "#script_txt2txt_xyz_plot_z_type > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#script_txt2txt_xyz_plot_z_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -318,7 +450,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     );
     config["txt2img_sampling_method"] = getElementValue(
-        "#txt2img_sampling > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -331,50 +463,50 @@ function scrap_ui_component_value_with_default(config) {
     
     //sagemaker endpoint
     // config["sagemaker_endpoint"] = getElementValue(
-    //     "#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+    //     "#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
     //     "value",
     //     ""
     // );
-    // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value.split("+")[0];
-    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input").value;
+    // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value.split("+")[0];
+    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;
     const sagemaker_ep_info_array = sagemaker_ep_info.split("+");
     config["sagemaker_endpoint"] = sagemaker_ep_info_array[0];
 
     //stable diffusion checkpoint
     const sd_checkpoint = document.querySelector(
-        "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const sd_tokens = sd_checkpoint.querySelectorAll(".token.svelte-1g4zxts");
+    const sd_tokens = sd_checkpoint.querySelectorAll(".token.svelte-aqlk7e");
     const sd_values = [];
     
     sd_tokens.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         sd_values.push(spanValue);
     });
     config["sagemaker_stable_diffusion_checkpoint"] = sd_values.join(":");
     
     //Textual Inversion
     const wrapInner = document.querySelector(
-        "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens = wrapInner.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens = wrapInner.querySelectorAll(".token.svelte-aqlk7e");
     const values = [];
     
     tokens.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values.push(spanValue);
     });
     config["sagemaker_texual_inversion_model"] = values.join(":");
     
     //LoRa
     const wrapInner1 = document.querySelector(
-        "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens1 = wrapInner1.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens1 = wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
     const values1 = [];
     
     tokens1.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values1.push(spanValue);
     });
     config["sagemaker_lora_model"] = values1.join(":");
@@ -382,13 +514,13 @@ function scrap_ui_component_value_with_default(config) {
     
     //HyperNetwork
     const wrapInner2 = document.querySelector(
-        "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens2 = wrapInner2.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens2 = wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
     const values2 = [];
     
     tokens2.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values2.push(spanValue);
     });
     config["sagemaker_hypernetwork_model"] = values2.join(":");
@@ -396,13 +528,13 @@ function scrap_ui_component_value_with_default(config) {
     
     //ControlNet model
     const wrapInner3 = document.querySelector(
-        "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts"
+        "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens3 = wrapInner3.querySelectorAll(".token.svelte-1g4zxts");
+    const tokens3 = wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
     const values3 = [];
     
     tokens3.forEach((token) => {
-        const spanValue = token.querySelector("span.svelte-1g4zxts").textContent;
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         values3.push(spanValue);
     });
     config["sagemaker_controlnet_model"] = values3.join(":");
@@ -449,13 +581,13 @@ function scrap_ui_component_value_with_default(config) {
 
     
     config["controlnet_preprocessor"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
 
     config["controlnet_model"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-1g4zxts > div > input",
+        "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
@@ -479,19 +611,19 @@ function scrap_ui_component_value_with_default(config) {
     );
 
     config["controlnet_control_mode_balanced"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
     config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
-        "#txt2img_controlnet_ControlNet_controlnet_control_mod_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
@@ -627,6 +759,255 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
+
+    // get the img2img component
+
+    //document.querySelector("#img2img_prompt > label > textarea")
+    config["img2img_prompt"] = getElementValue(
+        "#img2img_prompt > label > textarea",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_neg_prompt > label > textarea")
+    config["img2img_neg_prompt"] = getElementValue(
+        "#img2img_neg_prompt > label > textarea",
+        "value",
+        ""
+    )
+    // document.querySelector("#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
+    config["img2img_styles"] = getElementValue(
+        "#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+        "value",
+        ""
+    )
+
+    
+    // Resize mode
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
+    config["img2img_resize_mode_just_resize"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input",
+        "checked",
+        false
+    );
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_resize_mode_crop_and_resize"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input")
+    config["img2img_resize_mode_resize_and_fill"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "checked",
+        false
+    );
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input")
+    config["img2img_resize_mode_just_resize_latent_upscale"] = getElementValue(
+        "#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input",
+        "checked",
+        false
+    );
+    
+    // img2img sampling method
+    // document.querySelector("#img2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
+    config["img2img_sampling_method"] = getElementValue(
+        "#img2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+        "value",
+        ""
+    );
+    
+    // document.querySelector("#img2img_steps > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_sampling_steps"] = getElementValue(
+        "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_restore_faces > label > input")
+    config["img2img_restore_faces"] = getElementValue(
+        "#img2img_restore_faces > label > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_tiling > label > input")
+    config["img2img_tiling"] = getElementValue(
+        "#img2img_tiling > label > input",
+        "checked",
+        false
+    );
+
+    // Resize to
+    // document.querySelector("#img2img_width > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_width"] = getElementValue(
+        "#img2img_width > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_height > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_height"] = getElementValue(
+        "#img2img_height > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    );
+
+    // document.querySelector("#img2img_batch_count > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_batch_count"] = getElementValue(
+        "#img2img_batch_count > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_batch_size > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_batch_size"] = getElementValue(
+        "#img2img_batch_size > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_cfg_scale"] = getElementValue(
+        "#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_denoising_strength"] = getElementValue(
+        "#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed > label > input")
+    config["img2img_seed"] = getElementValue(
+        "#img2img_seed > label > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_subseed_show > label > input")
+    config["img2img_subseed_show"] = getElementValue(
+        "#img2img_subseed_show > label > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_subseed > label > input")
+    config["img2img_subseed"] = getElementValue(
+        "#img2img_subseed > label > input",
+        "value",
+        ""
+    ); 
+    // document.querySelector("#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_subseed_strength"] = getElementValue(
+        "#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_w"] = getElementValue(
+        "#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_h"] = getElementValue(
+        "#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+
+    // Resize by
+    // document.querySelector("#img2img_scale > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_scale"] = getElementValue(
+        "#img2img_scale > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // inpaint component
+   
+    // document.querySelector("#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_mask_blur"] = getElementValue(
+        "#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_mask_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
+    config["img2img_mask_mode_inpaint_masked"] = getElementValue(
+        "#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_mask_mode_inpaint_not_masked"] = getElementValue(
+        "#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(1) > input")
+    config["img2img_inpainting_fill_fill"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+
+    // document.querySelector("#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_inpainting_fill_original"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input")
+    config["img2img_inpainting_fill_latent_noise"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input")
+    config["img2img_inpainting_fill_latent_nothing"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.sverte-1p9xokt > label:nth-child(4) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(1) > input")
+    config["img2img_inpaint_full_res_whole_picture"] = getElementValue(
+        "#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_inpaint_full_res_only_masked"] = getElementValue(
+        "#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_steps > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_steps"] = getElementValue(
+        "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+
+
+    // end of img2img component
     
 
     
