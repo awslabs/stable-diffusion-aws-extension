@@ -19,6 +19,10 @@ dreambooth_available = True
 def dummy_function(*args, **kwargs):
     return []
 
+dreambooth_available = True
+def dummy_function(*args, **kwargs):
+    return []
+
 try:
     from dreambooth_on_cloud.train import (
         async_cloud_train,

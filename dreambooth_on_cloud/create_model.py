@@ -12,7 +12,7 @@ from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
 import gradio as gr
 
-logging.basicConfig(filename='sd-aws-ext.log', level=logging.debug, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 job_link_list = []

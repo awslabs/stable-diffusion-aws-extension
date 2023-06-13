@@ -293,7 +293,6 @@ def get_train_job_list():
 
     return table
 
-
 def get_sorted_cloud_dataset():
     url = get_variable_from_json('api_gateway_url') + 'datasets?dataset_status=Enabled'
     api_key = get_variable_from_json('api_token')
