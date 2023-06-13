@@ -144,7 +144,7 @@ async function txt2img_config_save(endpoint_value) {
 
     console.log(JSON.stringify(endpoint_value))
 
-    set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
+    // set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
 
     scrap_ui_component_value_with_default(config);
 
@@ -182,7 +182,7 @@ async function txt2img_config_save(endpoint_value) {
 
 async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
     var config = {};
-    set_textbox_value('#generation_info_img2img', "Start uploading configuration to S3, please wait ......")
+    // set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
 
     console.log(JSON.stringify(endpoint_value))
 
