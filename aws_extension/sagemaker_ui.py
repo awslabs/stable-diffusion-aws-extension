@@ -701,7 +701,9 @@ def fake_gan(selected_value: str ):
                 info_text = 'something wrong when trying to download the inference parameters'
                 infotexts = 'something wrong when trying to download the inference parameters'
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
-            prompt_txt = ''
+            job_status = get_inference_job(inference_job_id)
+            caption = job_status['caption']
+            prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
             json_list = []
             info_text = '' 
