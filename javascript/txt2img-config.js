@@ -139,7 +139,6 @@ function set_textbox_value(textboxId, newValue) {
 }
 
 
-
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
@@ -177,7 +176,7 @@ async function txt2img_config_save(endpoint_value) {
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
-        alert("An error occurred while uploading the configuration.");
+        set_textbox_value('#html_info_txt2img', "An error occurred while uploading the configuration. error:" + error)
         return ["FAILURE", "", ""];
     }
 }
@@ -232,8 +231,8 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
         return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
 
     } catch (error) {
-        console.error("Error in txt2img_config_save:", error);
-        alert("An error occurred while uploading the configuration.");
+        console.error("Error in img2img_config_save:", error);
+        set_textbox_value('#html_info_img2img', "An error occurred while uploading the configuration. error:" + error)
         return ["FAILURE", init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
     }
 }
