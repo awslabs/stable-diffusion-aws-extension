@@ -174,6 +174,24 @@ def sagemaker_api(_, app: FastAPI):
                 # response = self.img2imgapi(req.img2img_payload)
                 # shared.opts.data = default_options
                 return response.json()
+            elif req.task == 'piying':
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
+                r = response.json()
+                generate_piying_base64 = r['images'][0]
+                #do background remove 
+                payload_bkrm = {
+                    "input_image": generate_piying_base64,
+                    "model": "u2net", 
+                    "return_mask": True, 
+                    "alpha_matting": True, 
+                    "alpha_matting_foreground_threshold": 240, 
+                    "alpha_matting_background_threshold": 10, 
+                    "alpha_matting_erode_size": 10
+                }
+                response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload_bkrm)
+                response = response.json()
+                response['piying_img'] = generate_piying_base64
+                return response
             elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.interrogate_payload.json()))
                 return response.json()
