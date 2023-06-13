@@ -33,7 +33,7 @@ function check_create_model_params() {
     else if (re.exec(arguments[0]) == null) {
         do_save = alert("Please change another model name, only letter and number are allowed");
     }
-    let filtered_args = filterArgs(8, arguments);
+    let filtered_args = filterArgs(9, arguments);
     console.log(arguments)
     return filtered_args
     // return arguments
