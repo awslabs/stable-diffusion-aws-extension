@@ -905,7 +905,13 @@
 <ol>
 <li>打开<strong>Dreambooth</strong>标签页，模块<strong>Model</strong>的标签页<strong>Select From Cloud</strong>。</li>
 <li>刷新<strong>Model</strong>列表，选择需要训练的模型。</li>
-<li>在<strong>Input</strong>模块设置相应的参数。</li>
+<li>在<strong>Input</strong>模块设置相应的参数。<ul>
+<li>需要选择将模型保存到子目录
+   <img alt="Save path" src="../../images/save-path.png" /></li>
+<li>目前不支持单独保存lora模型，所以请不要勾选下面这个选项
+   <img alt="Save lora" src="../../images/save-lora.png" /></li>
+</ul>
+</li>
 <li>点击<strong>SageMaker Train</strong>，启动模型训练任务。<strong>Training Job Details</strong>区域会即时增加本次模型训练的工作状态。当状态变成<strong>Complete</strong>，同时您部署解决方案时预留的邮箱将会收到邮件通知，即完成模型训练。</li>
 <li>后续工作。可以进入<strong>txt2img</strong>标签页的<strong>Amazon SageMaker Inference</strong>面板，刷新<strong>Stable Diffusion Checkpoint</strong>，即可看到已训练好的模型。</li>
 </ol>
