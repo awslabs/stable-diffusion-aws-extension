@@ -124,10 +124,13 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[training_job_dashboard]
         )
     # Hook image display logic
-    global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook
+    global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook, txt2img_prompt
     is_txt2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'txt2img_gallery'
     is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img'
     is_txt2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img'
+    is_txt2img_prompt = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'txt2img_prompt'
+    if is_txt2img_prompt:
+        txt2img_prompt = component
     if is_txt2img_gallery:
         txt2img_gallery = component
     if is_txt2img_generation_info:
@@ -135,12 +138,17 @@ def on_after_component_callback(component, **_kwargs):
     if is_txt2img_html_info:
         txt2img_html_info = component
         # return test
-    if sagemaker_ui.inference_job_dropdown is not None and txt2img_gallery is not None and txt2img_generation_info is not None and txt2img_html_info is not None and txt2img_show_hook is None:
+    if sagemaker_ui.inference_job_dropdown is not None and \
+        txt2img_gallery is not None and \
+        txt2img_generation_info is not None and \
+        txt2img_html_info is not None and \
+        txt2img_show_hook is None and \
+        txt2img_prompt is not None: 
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
             inputs=[sagemaker_ui.inference_job_dropdown],
-            outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
+            outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
 
         sagemaker_ui.sagemaker_endpoint.change(
