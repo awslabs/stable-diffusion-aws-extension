@@ -3,6 +3,7 @@ from PIL import Image, ImageOps, ImageFilter, ImageEnhance, ImageChops
 import numpy as np
 import io
 import base64
+from gradio import encode_pil_to_base64
 
 def get_param_value(params_dict, key, defaultValue="false"):
     try:
@@ -251,7 +252,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         elif img2img_mode == 'Sketch':  # img2img sketch
             image = sketch #.convert("RGB")
             mask = None
-        elif img2img_mode == 'Inpaint_uplad':  # inpaint upload mask
+        elif img2img_mode == 'Inpaint_upload':  # inpaint upload mask
             image = img2img_init_img_inpaint
             mask = img2img_init_mask_inpaint
         elif img2img_mode == 'Inpaint':  # inpaint
