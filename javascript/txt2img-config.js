@@ -1,12 +1,8 @@
 //This function is created to mitigate refresh get old value issue
 window.onload = function() {
-    let counter = 0; // Add a counter
-    let limit = 2; // Set the limit to the desired number of iterations
-    let intervalId = setInterval(function() {
-      
-      console.log("click refresh when page reloaded"); 
-
-      let selectors = [
+    let counter = 0;
+    let limit = 10;
+    let selectors = [
         "#refresh_api_gateway_url",
         "#refresh_api_token",
         "#refresh_sagemaker_endpoints",
@@ -14,26 +10,30 @@ window.onload = function() {
         "#refresh_txt2img_inference_job_ids",
         "#refresh_textual_inversion",
         "#refresh_sagemaker_endpoints_delete"
-      ];
+    ];
 
-      for (let selector of selectors) {
-        let element = document.querySelector(selector);
+    let intervalId = setInterval(function() {
+        console.log("click refresh when page reloaded"); 
 
-        if (element != null) {
-          element.click();
-        } else {
-          console.warn(`Could not find element with selector: ${selector}`);
+        let allElementsFound = true;
+        for (let selector of selectors) {
+            let element = document.querySelector(selector);
+            if (element != null) {
+                element.click();
+            } else {
+                allElementsFound = false;
+                console.warn(`Could not find element with selector: ${selector}`);
+            }
         }
-      }
 
-      counter++; // Increment the counter
-
-      if (counter === limit) {
-        console.log("refresh time:" + counter); 
-        clearInterval(intervalId); // Stop the interval once the limit is reached
-      }
-    }, 1000); // 1 second
+        counter++;
+        if (counter === limit || allElementsFound) {
+            console.log("refresh time:" + counter); 
+            clearInterval(intervalId);
+        }
+    }, 2000);
 };
+
 
 
 // Save configuration in txt2img panel
