@@ -3,7 +3,7 @@ from PIL import Image, ImageOps, ImageFilter, ImageEnhance, ImageChops
 import numpy as np
 import io
 import base64
-from gradio import encode_pil_to_base64
+from gradio.processing_utils import encode_pil_to_base64
 
 def get_param_value(params_dict, key, defaultValue="false"):
     try:
