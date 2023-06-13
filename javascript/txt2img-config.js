@@ -1018,6 +1018,21 @@ function scrap_ui_component_value_with_default(config) {
         ""
     ); 
 
+    // grab the img2img inpaint sketch original image
+    //document.querySelector("#inpaint_sketch")
+    const inpaintImgElement = document.querySelector(
+        "#inpaint_sketch > div.image-container.svelte-p3y7hu > div > img"
+    );
+    if (inpaintImgElement) {
+        const srcValue = inpaintImgElement.getAttribute("src");
+        // Use the srcValue variable as needed
+        config["img2img_inpaint_sketch_image"] = srcValue;
+    } else {
+        // Handle the case when imgElement is null or undefined
+        console.log("inpaintImgElement is null or undefined");
+        config["img2img_inpaint_sketch_image"] = "";
+    }
+
 
 
     // end of img2img component
