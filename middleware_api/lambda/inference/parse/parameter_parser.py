@@ -243,6 +243,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
         mask_blur = int(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4))
         mask_alpha = 0
+
+        print("img2img mode is", img2img_mode)
         
         image = None
         mask = None
@@ -285,9 +287,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
 
 
         img2img_resize_mode = 0
-        if get_param_value(params_dict, 'img2img_resize_mode_Crop_and_Resize'):
+        if get_param_value(params_dict, 'img2img_resize_mode_crop_and_resize'):
             img2img_resize_mode = 1
-        if get_param_value(params_dict, 'img2img_resize_mode_Resize_and_Fill'):
+        if get_param_value(params_dict, 'img2img_resize_mode_resize_and_fill'):
             img2img_resize_mode = 2
         if get_param_value(params_dict, 'img2img_resize_mode_just_resize_latent_upscale'):
             img2img_resize_mode = 3
