@@ -154,8 +154,9 @@ def get_inference_job_list():
                 else:
                     complete_time = obj.get('completeTime')
                 status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
                 inference_job_id = obj.get('InferenceJobId')
-                combined_string = f"{complete_time}-->{status}-->{inference_job_id}"
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
             # Sort the list based on completeTime in descending order
@@ -430,13 +431,13 @@ def generate_on_cloud(sagemaker_endpoint):
 def call_txt2img_inference(sagemaker_endpoint):
     return call_remote_inference(sagemaker_endpoint, 'txt2img')
 
-def call_img2img_inference(sagemaker_endpoint):
-    return call_remote_inference(sagemaker_endpoint, 'img2img')
+def call_img2img_inference(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return call_remote_inference(endpoint_value, 'img2img')
 
-def call_interrogate_clip(sagemaker_endpoint):
+def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
 
-def call_interrogate_deepbooru(sagemaker_endpoint):
+def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
     return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
 
 
@@ -669,36 +670,51 @@ def fake_gan(selected_value: str ):
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
-        inference_job_id = parts[2].strip()
-        inference_job_status = parts[1].strip()
+        inference_job_id = parts[3].strip()
+        inference_job_status = parts[2].strip()
+        inference_job_taskType = parts[1].strip()
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
+        if inference_job_taskType in ["txt2img", "img2img"]:    
+            prompt_txt = ''
+            images = get_inference_job_image_output(inference_job_id)
+            image_list = []
+            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
+            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
+            json_list = []
+            json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
+            print(f"{str(images)}")
+            print(f"{str(inference_pram_json_list)}")
 
-        f = open(json_file)
+            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
-        log_file = json.load(f)
-
-        info_text = log_file["info"]
-
-        infotexts = json.loads(info_text)["infotexts"][0]
+            if os.path.isfile(json_file):
+                with open(json_file) as f:
+                    log_file = json.load(f)
+                    info_text = log_file["info"]
+                    infotexts = json.loads(info_text)["infotexts"][0]
+            else:
+                print(f"File {json_file} does not exist.")
+                info_text = 'something wrong when trying to download the inference parameters'
+                infotexts = 'something wrong when trying to download the inference parameters'
+        elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
+            job_status = get_inference_job(inference_job_id)
+            caption = job_status['caption']
+            prompt_txt = caption
+            image_list = []  # Return an empty list if selected_value is None
+            json_list = []
+            info_text = '' 
+            infotexts = ''
     else:
+        prompt_txt = ''
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''
 
-    return image_list, info_text, plaintext_to_html(infotexts)
+    return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 def display_inference_result(inference_id: str ):
     print(f"selected value is {inference_id}")

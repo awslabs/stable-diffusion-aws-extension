@@ -9,6 +9,9 @@ import logging
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
 
+logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
     return None
@@ -107,7 +110,7 @@ def async_prepare_for_training_on_sagemaker(
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return
     url += "train"
     upload_files = []
@@ -201,7 +204,7 @@ def cloud_train(
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     if url is None or api_key is None:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return
     url += "train"
     try:
@@ -275,7 +278,7 @@ def get_train_job_list():
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
     if not url or not api_key:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return []
 
     table = []
@@ -295,7 +298,7 @@ def get_sorted_cloud_dataset():
     url = get_variable_from_json('api_gateway_url') + 'datasets?dataset_status=Enabled'
     api_key = get_variable_from_json('api_token')
     if not url or not api_key:
-        logging.error("Url or API-Key is not setting.")
+        logger.debug("Url or API-Key is not setting.")
         return []
 
     try:

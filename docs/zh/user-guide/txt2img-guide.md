@@ -20,6 +20,13 @@
 
 ![generate results](../images/generate-results.png)
 
+## 连续使用txt2img的推理功能
+
+在点击**Generate on Cloud**之后，需要等待右侧输出区域出现了新的**inference id**之后，
+才能再次点击**Generate on Cloud**进行连续推理。
+
+![generate results](../images/continue-inference.png)
+
 
 
 ## Controlnet的使用方法

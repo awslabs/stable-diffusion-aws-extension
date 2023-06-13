@@ -6,6 +6,7 @@ import os
 import modules.scripts as scripts
 from modules import script_callbacks
 from modules.ui import create_refresh_button
+from modules.ui_components import FormRow
 from utils import get_variable_from_json
 from utils import save_variable_to_json
 from PIL import Image
@@ -168,42 +169,89 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[
             ])
         # Hook image display logic
-    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook
+    global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
+            img2img_prompt, \
+            init_img, \
+            sketch, \
+            init_img_with_mask, \
+            inpaint_color_sketch, \
+            init_img_inpaint, \
+            init_mask_inpaint
     is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
     is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
     is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
+
+    is_img2img_prompt = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'img2img_prompt'
+    is_init_img = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_image'
+    is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
+    is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+    is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
+     
+    
+    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+    is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
+
     if is_img2img_gallery:
         img2img_gallery = component
     if is_img2img_generation_info:
         img2img_generation_info = component
     if is_img2img_html_info:
         img2img_html_info = component
-        # return test
-    if sagemaker_ui.inference_job_dropdown is not None and img2img_gallery is not None and img2img_generation_info is not None and img2img_html_info is not None and img2img_show_hook is None and sagemaker_ui.interrogate_clip_on_cloud_button is not None and sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None:
-        img2img_show_hook = "finish"
-        sagemaker_ui.inference_job_dropdown.change(
-            fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-            inputs=[sagemaker_ui.inference_job_dropdown],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-        )
 
-        sagemaker_ui.interrogate_clip_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_clip,
-            _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
-        )
+    if is_img2img_prompt:
+        img2img_prompt = component
+    if is_init_img:
+        init_img = component
+    if is_sketch:
+        sketch = component
+    if is_init_img_with_mask:
+        init_img_with_mask = component
+    if is_inpaint_color_sketch:
+        inpaint_color_sketch = component
+    if is_init_img_inpaint:
+        init_img_inpaint = component
+    if is_init_mask_inpaint:
+        init_mask_inpaint = component
 
-        sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_deepbooru,
-            _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
-        )
-        sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+    if sagemaker_ui.inference_job_dropdown is not None and \
+            img2img_gallery is not None and \
+            img2img_generation_info is not None and \
+            img2img_html_info is not None and \
+            img2img_show_hook is None and \
+            sagemaker_ui.interrogate_clip_on_cloud_button is not None and \
+            sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None and\
+            img2img_prompt is not None and \
+            init_img is not None and \
+            sketch is not None and \
+            init_img_with_mask is not None and \
+            inpaint_color_sketch is not None and \
+            init_img_inpaint is not None and \
+            init_mask_inpaint is not None:
+            img2img_show_hook = "finish"
+            sagemaker_ui.inference_job_dropdown.change(
+                fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
+                inputs=[sagemaker_ui.inference_job_dropdown],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+                # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+            )
+
+            sagemaker_ui.interrogate_clip_on_cloud_button.click(
+                fn=sagemaker_ui.call_interrogate_clip,
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
+            )
+
+            sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
+                fn=sagemaker_ui.call_interrogate_deepbooru,
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
+            )
+            sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
-                _js="txt2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint],
+                _js="img2img_config_save",
+                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
 
@@ -289,19 +337,63 @@ def on_ui_tabs():
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-                with gr.Blocks(title="Upload Model to S3", variant="panel"):
-                    gr.HTML(value="Upload Model to S3")
-                    with gr.Row():
-                        with gr.Column(variant="panel"):
-                            sd_checkpoints_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Stable Diffusion Checkpoints",elem_id="sd_checkpoints_path_textbox")
-                        with gr.Column(variant="panel"):
-                            textual_inversion_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="Textual Inversion",elem_id="sd_textual_inversion_path_textbox")
-                    with gr.Row():
-                        with gr.Column(variant="panel"):
-                            lora_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="LoRA",elem_id="sd_lora_path_textbox")
-                            controlnet_model_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="ControlNet-Model",elem_id="sd_controlnet_model_path_textbox")
-                        with gr.Column(variant="panel"):
-                            hypernetwork_path = gr.Textbox(value="", lines=1, placeholder="Please input absolute path", label="HyperNetwork",elem_id="sd_hypernetwork_path_textbox")
+                with gr.Accordion("Upload Model to S3", open=False):
+                    gr.HTML(value="Refresh to select the model to upload to S3")
+                    exts = (".bin", ".pt", ".safetensors", ".ckpt")
+                    root_path = os.getcwd()
+                    model_folders = {
+                        "ckpt": os.path.join(root_path, "models", "Stable-diffusion"),
+                        "text": os.path.join(root_path, "embeddings"),
+                        "lora": os.path.join(root_path, "models", "Lora"),
+                        "control": os.path.join(root_path, "models", "ControlNet"),
+                        "hyper": os.path.join(root_path, "models", "hypernetworks"),
+                    }
+                    def scan_sd_ckpt():
+                        model_files = os.listdir(model_folders["ckpt"])
+                        # filter non-model files not in exts
+                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
+                        model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
+                        return model_files
+                    def scan_textural_inversion_model():
+                        model_files = os.listdir(model_folders["text"])
+                        # filter non-model files not in exts
+                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
+                        model_files = [os.path.join(model_folders["text"], f) for f in model_files]
+                        return model_files
+                    def scan_lora_model():
+                        model_files = os.listdir(model_folders["lora"])
+                        # filter non-model files not in exts
+                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
+                        model_files = [os.path.join(model_folders["lora"], f) for f in model_files]
+                        return model_files
+                    def scan_control_model():
+                        model_files = os.listdir(model_folders["control"])
+                        # filter non-model files not in exts
+                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
+                        model_files = [os.path.join(model_folders["control"], f) for f in model_files]
+                        return model_files
+                    def scan_hypernetwork_model():
+                        model_files = os.listdir(model_folders["hyper"])
+                        # filter non-model files not in exts
+                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
+                        model_files = [os.path.join(model_folders["hyper"], f) for f in model_files]
+                        return model_files
+
+                    with FormRow(elem_id="model_upload_form_row_01"):
+                        sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()), elem_id="sd_ckpt_dropdown")
+                        create_refresh_button(sd_checkpoints_path, scan_sd_ckpt, lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
+
+                        textual_inversion_path = gr.Dropdown(label="Textual Inversion", choices=sorted(scan_textural_inversion_model()),elem_id="textual_inversion_model_dropdown")
+                        create_refresh_button(textual_inversion_path, scan_textural_inversion_model, lambda: {"choices": sorted(scan_textural_inversion_model())},  "refresh_textual_inversion_model")
+                    with FormRow(elem_id="model_upload_form_row_02"):
+                        lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()), elem_id="lora_model_dropdown")
+                        create_refresh_button(lora_path, scan_lora_model, lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model",)
+
+                        controlnet_model_path = gr.Dropdown(label="ControlNet model", choices=sorted(scan_control_model()), elem_id="controlnet_model_dropdown")
+                        create_refresh_button(controlnet_model_path, scan_control_model, lambda: {"choices": sorted(scan_control_model())}, "refresh_controlnet_models")
+                    with FormRow(elem_id="model_upload_form_row_03"):
+                        hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),elem_id="hyper_model_dropdown")
+                        create_refresh_button(hypernetwork_path, scan_hypernetwork_model, lambda: {"choices": sorted(scan_hypernetwork_model())}, "refresh_hyper_models")
 
                     with gr.Row():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))

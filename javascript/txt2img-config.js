@@ -50,14 +50,103 @@ function getDomValue(selector, defaultValue, isTextContent = false) {
     }
 }
 
-async function txt2img_config_save(endpoint_value, type) {
+// Function to get the selected tab inside the img2img
+function getSelectedButton() {
+    // Get the parent element
+    let parentDiv = document.querySelector("#mode_img2img > div.tab-nav.scroll-hide.svelte-1g805jl");
+
+    // Get all the button children
+    let buttons = parentDiv.querySelectorAll("button");
+
+    // Initialize a variable to store the selected button
+    let selectedButtonIndex = -1;
+
+    // Loop through each button
+    for (let i = 0; i < buttons.length; i++) {
+        // Check if the button has the 'selected' class
+        if (buttons[i].classList.contains("selected")) {
+            // Store the index of the selected button (add 1 because nth-child is 1-indexed)
+            selectedButtonIndex = i + 1;
+            break;
+        }
+    }
+
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "img2img",
+        2: "Sketch",
+        3: "Inpaint",
+        4: "Inpaint_sketch",
+        5: "Inpaint_upload",
+        6: "Batch"
+    };
+
+    // Check if a button was selected
+    if (selectedButtonIndex != -1) {
+        // If yes, return the corresponding value from the mapping
+        return mapping[selectedButtonIndex];
+    } else {
+        // If no button was selected, return a suitable message
+        return "No button is selected.";
+    }
+}
+
+// function to get tab "Restore to" or "Resize by"
+function getSelectedTabResize() {
+    // Get the parent element
+    let parentDiv = document.querySelector("#component-459 > div.tab-nav.scroll-hide.svelte-1g805jl");
+
+    // Get all the button children
+    let buttons = parentDiv.querySelectorAll("button");
+
+    // Initialize a variable to store the selected button
+    let selectedButtonIndex = -1;
+
+    // Loop through each button
+    for (let i = 0; i < buttons.length; i++) {
+        // Check if the button has the 'selected' class
+        if (buttons[i].classList.contains("selected")) {
+            // Store the index of the selected button (add 1 because nth-child is 1-indexed)
+            selectedButtonIndex = i + 1;
+            break;
+        }
+    }
+
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "ResizeTo",
+        2: "ResizeBy"
+    };
+
+    // Check if a button was selected
+    if (selectedButtonIndex != -1) {
+        // If yes, return the corresponding value from the mapping
+        return mapping[selectedButtonIndex];
+    } else {
+        // If no button was selected, return a suitable message
+        return "No tab is selected.";
+    }
+}
+
+function set_textbox_value(textboxId, newValue) {
+    let textbox = document.querySelector(textboxId);
+    console.log("Trying to set the value of textBox")
+    if (textbox) {
+        textbox.textContent = newValue;
+    } else {
+        console.log("Textbox with id " + textboxId + " not found.");
+    }
+}
+
+
+async function txt2img_config_save(endpoint_value) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
-    scrap_ui_component_value_with_default(config);
 
-    // store config in local storage for debugging
-    localStorage.setItem("txt2imgConfig", JSON.stringify(config));
+    set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
+
+    scrap_ui_component_value_with_default(config);
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
@@ -80,13 +169,71 @@ async function txt2img_config_save(endpoint_value, type) {
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+
+        set_textbox_value('#html_info_txt2img', "Completed uploaded configuration to S3")
         // alert("The configuration has been successfully uploaded.");
-        return [endpoint_value, type];
+        return [endpoint_value, "", ""];
 
     } catch (error) {
         console.error("Error in txt2img_config_save:", error);
-        alert("An error occurred while uploading the configuration.");
-        return ["FAILURE", type];
+        set_textbox_value('#html_info_txt2img', "An error occurred while uploading the configuration. error:" + error)
+        return ["FAILURE", "", ""];
+    }
+}
+
+async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
+    var config = {};
+    set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
+
+    console.log(JSON.stringify(endpoint_value))
+
+    config["img2img_init_img"] =init_img
+    config["img2img_sketch"] = sketch
+    config["img2img_init_img_with_mask"] = init_img_with_mask
+    config["img2img_inpaint_color_sketch"] = inpaint_color_sketch
+    config["img2img_init_img_inpaint"]=init_img_inpaint;
+    config['img2img_init_mask_inpaint']=init_mask_inpaint;
+
+    scrap_ui_component_value_with_default(config);
+
+    config['img2img_selected_tab_name'] = getSelectedButton()
+
+    console.log(config['img2img_selected_tab_name'])
+
+    config['img2img_selected_resize_tab'] = getSelectedTabResize()
+
+    console.log(config['img2img_selected_resize_tab'])
+
+
+    //following code is to get s3 presigned url from middleware and upload the ui parameters
+    const key = "config/aigc.json";
+    let remote_url = config["aws_api_gateway_url"];
+    if (!remote_url.endsWith("/")) {
+        remote_url += "/";
+    }
+    let get_presigned_s3_url = remote_url;
+    get_presigned_s3_url += "inference/generate-s3-presigned-url-for-uploading";
+    const api_key = config["aws_api_token"];
+
+    try {
+        const config_presigned_url = await getPresignedUrl(
+            get_presigned_s3_url,
+            api_key,
+            key
+        );
+        const url = config_presigned_url.replace(/"/g, "");
+        const config_data = JSON.stringify(config);
+        await put_with_xmlhttprequest(url, config_data);
+
+        console.log('The configuration has been successfully uploaded to s3');
+        set_textbox_value('#html_info_img2img', "Completed uploaded configuration to S3")
+        // alert("The configuration has been successfully uploaded.");
+        return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
+
+    } catch (error) {
+        console.error("Error in img2img_config_save:", error);
+        set_textbox_value('#html_info_img2img', "An error occurred while uploading the configuration. error:" + error)
+        return ["FAILURE", init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
     }
 }
 
@@ -643,6 +790,13 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     )
+    // document.querySelector("#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
+    config["img2img_styles"] = getElementValue(
+        "#img2img_styles > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+        "value",
+        ""
+    )
+
     
     // Resize mode
     // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
@@ -757,6 +911,33 @@ function scrap_ui_component_value_with_default(config) {
         false
     );
 
+    // document.querySelector("#img2img_subseed > label > input")
+    config["img2img_subseed"] = getElementValue(
+        "#img2img_subseed > label > input",
+        "value",
+        ""
+    ); 
+    // document.querySelector("#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_subseed_strength"] = getElementValue(
+        "#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_w"] = getElementValue(
+        "#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_seed_resize_from_h"] = getElementValue(
+        "#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
 
     // Resize by
     // document.querySelector("#img2img_scale > div.wrap.svelte-1cl284s > div > input")
@@ -765,6 +946,81 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     ); 
+
+    // inpaint component
+   
+    // document.querySelector("#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_mask_blur"] = getElementValue(
+        "#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    // document.querySelector("#img2img_mask_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
+    config["img2img_mask_mode_inpaint_masked"] = getElementValue(
+        "#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_mask_mode_inpaint_not_masked"] = getElementValue(
+        "#img2img_mask_mode > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(1) > input")
+    config["img2img_inpainting_fill_fill"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+
+    // document.querySelector("#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_inpainting_fill_original"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(3) > input")
+    config["img2img_inpainting_fill_latent_noise"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label:nth-child(4) > input")
+    config["img2img_inpainting_fill_latent_nothing"] = getElementValue(
+        "#img2img_inpainting_fill > div.wrap.sverte-1p9xokt > label:nth-child(4) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(1) > input")
+    config["img2img_inpaint_full_res_whole_picture"] = getElementValue(
+        "#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(2) > input")
+    config["img2img_inpaint_full_res_only_masked"] = getElementValue(
+        "#img2img_inpaint_full_res > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+        "checked",
+        false
+    );
+
+    // document.querySelector("#img2img_steps > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_steps"] = getElementValue(
+        "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+
 
     // end of img2img component
     
