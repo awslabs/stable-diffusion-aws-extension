@@ -46,3 +46,4 @@ local-tests/
 test/aigc_webui_inference_images/*.sh
 test/aigc_webui_inference_images/nohup.out
 test/aigc_webui_inference_images/.env
+test/**/.env
