@@ -191,6 +191,7 @@ local_job_cache = {
 def cloud_create_model(
         new_model_name: str,
         ckpt_path: str,
+        cloud_db_new_model_shared_src: str,
         from_hub=False,
         new_model_url="",
         new_model_token="",

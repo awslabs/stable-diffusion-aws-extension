@@ -714,6 +714,13 @@ def ui_tabs_callback():
                                                 lambda: {"choices": sorted(get_sd_cloud_models())},
                                                 "refresh_sd_models",
                                             )
+                                    with gr.Column(visible=False) as shared_row:
+                                        with gr.Row():
+                                            cloud_db_new_model_shared_src = gr.Dropdown(
+                                                label="EXPERIMENTAL: LoRA Shared Diffusers Source",
+                                                choices=[],
+                                                value=""
+                                            )
                                     cloud_db_new_model_extract_ema = gr.Checkbox(
                                         label="Extract EMA Weights", value=False
                                     )
@@ -763,6 +770,7 @@ def ui_tabs_callback():
                                     inputs=[
                                         cloud_db_new_model_name,
                                         cloud_db_new_model_src,
+                                        cloud_db_new_model_shared_src,
                                         cloud_db_create_from_hub,
                                         cloud_db_new_model_url,
                                         cloud_db_new_model_token,
