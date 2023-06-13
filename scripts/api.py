@@ -188,6 +188,7 @@ def sagemaker_api(_, app: FastAPI):
                     :param
                         :new_model_name: generated model name.
                         :ckpt_path: S3 path for download src model.
+                        :db_new_model_shared_src="",
                         :from_hub=False,
                         :new_model_url="",
                         :new_model_token="",
