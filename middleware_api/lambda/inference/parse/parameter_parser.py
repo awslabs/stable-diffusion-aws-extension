@@ -236,7 +236,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         img2img_selected_resize_tab = get_param_value(params_dict, 'img2img_selected_resize_tab', defaultValue='ResizeTo')
         img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img_with_mask', defaultValue=None)
         img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_inpaint_color_sketch', defaultValue=None)
-        inpaint_color_sketch_orig = get_param_value(params_dict, 'inpaint_color_sketch_orig', defaultValue=None)
+        inpaint_color_sketch_orig = get_param_value(params_dict, 'img2img_inpaint_sketch_image', defaultValue=None)
         img2img_init_img_inpaint = get_param_value(params_dict, 'img2img_init_img_inpaint', defaultValue=None)
         img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_mask_inpaint', defaultValue=None)
         sketch = get_param_value(params_dict, 'img2img_sketch', defaultValue=None)
@@ -265,14 +265,16 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             image = img2img_init_img_with_mask["image"] #image.convert("RGB")
             mask = encode_pil_to_base64(mask)
         elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
-            image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch)))
-            orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig))) or image_pil
+            image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch.split(',')[1])))
+            image_pil = image_pil.convert("RGB")
+            orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig.split(',')[1])))
+            orig = orig.resize(image_pil.size)
+            orig = orig or image_pil
             pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
             image_pil = Image.composite(image_pil.filter(blur), orig, mask.filter(blur))
-            image_pil = image_pil.convert("RGB")
             mask = encode_pil_to_base64(mask)
             image = encode_pil_to_base64(image_pil)
 
