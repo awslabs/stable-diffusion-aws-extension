@@ -249,10 +249,10 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         image = None
         mask = None
         if img2img_mode == 'img2img':  # img2img
-            image = img2img_init_img #.convert("RGB")
+            image = img2img_init_img.convert("RGB")
             mask = None
         elif img2img_mode == 'Sketch':  # img2img sketch
-            image = sketch #.convert("RGB")
+            image = sketch.convert("RGB")
             mask = None
         elif img2img_mode == 'Inpaint_upload':  # inpaint upload mask
             image = img2img_init_img_inpaint
@@ -262,7 +262,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["mask"].split(',')[1])))
             alpha_mask = ImageOps.invert(image.split()[-1]).convert('L').point(lambda x: 255 if x > 0 else 0, mode='1')
             mask = ImageChops.lighter(alpha_mask, mask.convert('L')).convert('L')
-            image = img2img_init_img_with_mask["image"] #image.convert("RGB")
+            image = image.convert("RGB")
+            image = encode_pil_to_base64(image)
             mask = encode_pil_to_base64(mask)
         elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
             image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch.split(',')[1])))
