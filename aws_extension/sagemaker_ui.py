@@ -797,7 +797,7 @@ def create_ui(is_img2img):
                         with gr.Column():
                             interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru", elem_id="interrogate_deep_booru_on_cloud_button")
                         with gr.Column():
-                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud img2img", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
+                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
