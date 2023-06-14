@@ -196,7 +196,7 @@ def on_after_component_callback(component, **_kwargs):
     is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
      
     
-    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_base'
     is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
 
     if is_img2img_gallery:
