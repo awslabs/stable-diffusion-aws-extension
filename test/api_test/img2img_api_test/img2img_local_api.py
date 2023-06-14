@@ -6,7 +6,7 @@ from PIL import Image, PngImagePlugin
 import time
 import os
 import sys
-sys.path.append("../../../middleware_api/lambda/inference")
+sys.path.append("extensions/stable-diffusion-aws-extension/middleware_api/lambda/inference")
 from parse.parameter_parser import json_convert_to_payload
 from dotenv import load_dotenv
 
@@ -15,10 +15,10 @@ load_dotenv()
 start_time = time.time()
 
 # preapre payload
-task_type = ''
+task_type = 'img2img'
 payload_checkpoint_info = json.loads(os.environ['checkpoint_info'])
 
-f = open("../json_files/img2img_inpaint.json")
+f = open("extensions/stable-diffusion-aws-extension/test/api_test/json_files/aigc.json")
 
 params_dict = json.load(f)
 

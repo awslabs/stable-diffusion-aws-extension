@@ -2,6 +2,7 @@ import time
 import logging
 import logging.config
 import os
+import traceback
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -253,6 +254,7 @@ async def run_sagemaker_inference(request: Request):
         return response
 
     except Exception as e:
+        traceback.print_exc()
         logger.error(f"Error occurred: {str(e)}")
 
         # raise HTTPException(status_code=500, detail=f"An error occurred during processing.{str(e)}")

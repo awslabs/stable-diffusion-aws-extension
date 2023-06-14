@@ -33,13 +33,11 @@
 
 3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
 
-    !!! Important "提示" 
-        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击**Generate on Cloud**开启云上推理功能时会报错。
-
 4. 点击**Interrogate CLIP on cloud**或和**Interrogate DeepBooru on cloud**。
-6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。img2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to extras**等，进行后续工作流。
+6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。
+img2img标签的提示词区域就能看到结果。
 
-![interrogate generate results](../images/interrogate-result.png)
+![interrogate generate results](../images/clip.png)
 
 ### 连续使用场景
 
