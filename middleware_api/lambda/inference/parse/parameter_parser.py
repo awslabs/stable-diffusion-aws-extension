@@ -261,6 +261,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = img2img_init_mask_inpaint
         elif img2img_mode == 'Inpaint':  # inpaint
             image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["image"].split(',')[1])))
+            if image.mode == "RGB":
+                image.putalpha(255)
             mask = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["mask"].split(',')[1])))
             alpha_mask = ImageOps.invert(image.split()[-1]).convert('L').point(lambda x: 255 if x > 0 else 0, mode='1')
             mask = ImageChops.lighter(alpha_mask, mask.convert('L')).convert('L')
@@ -269,11 +271,13 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = encode_pil_to_base64(mask)
         elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
             image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch.split(',')[1])))
-            image_pil = image_pil.convert("RGB")
             orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig.split(',')[1])))
+            if orig.mode == "RGB":
+                orig.putalpha(255)
             orig = orig.resize(image_pil.size)
             orig = orig or image_pil
-            pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
+            #pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
+            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>80, axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
