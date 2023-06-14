@@ -250,7 +250,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         mask = None
         if img2img_mode == 'img2img':  # img2img
             image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img.split(',')[1])))
-            image = encode_pil_to_base64(sketch.convert("RGB"))
+            image = encode_pil_to_base64(image.convert("RGB"))
             mask = None
         elif img2img_mode == 'Sketch':  # img2img sketch
             sketch = Image.open(io.BytesIO(base64.b64decode(sketch.split(',')[1])))
