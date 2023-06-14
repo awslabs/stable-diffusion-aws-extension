@@ -199,23 +199,36 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
 
     console.log(JSON.stringify(endpoint_value))
 
-    config["img2img_init_img"] =init_img
-    config["img2img_sketch"] = sketch
-    config["img2img_init_img_with_mask"] = init_img_with_mask
-    config["img2img_inpaint_color_sketch"] = inpaint_color_sketch
-    config["img2img_init_img_inpaint"]=init_img_inpaint;
-    config['img2img_init_mask_inpaint']=init_mask_inpaint;
-
-    scrap_ui_component_value_with_default(config);
-
-    config['img2img_selected_tab_name'] = getSelectedButton()
+    config['img2img_selected_tab_name'] = getSelectedButton();
 
     console.log(config['img2img_selected_tab_name'])
+    
+    // Setting all configs to empty string
+    config["img2img_init_img"] = "";
+    config["img2img_sketch"] = "";
+    config["img2img_init_img_with_mask"] = "";
+    config["img2img_inpaint_color_sketch"] = "";
+    config["img2img_init_img_inpaint"] = "";
+    config['img2img_init_mask_inpaint'] = "";
+    
+    if (config['img2img_selected_tab_name'] === 'img2img') {
+        config["img2img_init_img"] = init_img;
+    } else if (config['img2img_selected_tab_name'] === 'Sketch') {
+        config["img2img_sketch"] = sketch;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint') {
+        config["img2img_init_img_with_mask"] = init_img_with_mask;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint_sketch') {
+        config["img2img_inpaint_color_sketch"] = inpaint_color_sketch;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint_upload') {
+        config["img2img_init_img_inpaint"] = init_img_inpaint;
+        config['img2img_init_mask_inpaint'] = init_mask_inpaint;
+    }
 
     config['img2img_selected_resize_tab'] = getSelectedTabResize()
 
     console.log(config['img2img_selected_resize_tab'])
 
+    scrap_ui_component_value_with_default(config);
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
