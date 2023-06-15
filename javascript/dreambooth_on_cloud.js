@@ -4,7 +4,7 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function db_start_sagemaker_train() {
+async function db_start_sagemaker_train() {
     console.log("Sagemaker training");
     console.log(arguments);
 
@@ -14,6 +14,7 @@ function db_start_sagemaker_train() {
         return;
     }
     save_config();
+    await sleep(5000);
     // let sagemaker_train = gradioApp().getElementById("db_sagemaker_train");
     // sagemaker_train.style.display = "block";
     return filterArgs(3, arguments)
@@ -32,7 +33,7 @@ function check_create_model_params() {
     else if (re.exec(arguments[0]) == null) {
         do_save = alert("Please change another model name, only letter and number are allowed");
     }
-    let filtered_args = filterArgs(8, arguments);
+    let filtered_args = filterArgs(9, arguments);
     console.log(arguments)
     return filtered_args
     // return arguments

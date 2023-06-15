@@ -26,10 +26,15 @@ cp ../install.sh .
 sh install.sh
 rm install.sh
 
-if [ "$mode" = "dev" ]
+if [ "$mode" = "" ]
 then
     cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
-    git checkout dev
+    git checkout master
+    git pull
+    cd -
+else
+    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+    git checkout $mode
     git pull
     cd -
 fi

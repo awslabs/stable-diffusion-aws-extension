@@ -4,6 +4,7 @@
 
 
 ## txt2img的使用方法
+### 通用场景
 
 1. 进入**txt2img**标签页，展开**Amazon SageMaker Inference**面板。
 ![Sagemaker Inference面板](../images/txt2img-sagemaker-inference.png)
@@ -19,6 +20,14 @@
 > **补充：** 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为**推理时间->推理状态（succeed/in progress/fail)->inference id**。
 
 ![generate results](../images/generate-results.png)
+
+### 连续使用场景
+
+1. 按**通用场景**使用流程，完成参数录入，并点击**Generate on Cloud**提交第一次推理任务。
+2. 等待右侧**Output**部分出现了新的**inference id**。
+3. 在新的**Inference Job ID**出现后，便可再次点击**Generate on Cloud**进行下一次推理。
+
+![generate results](../images/continue-inference.png)
 
 
 

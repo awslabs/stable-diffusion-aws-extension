@@ -55,8 +55,7 @@ export class UpdateTrainJobApi {
   private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
   private readonly sfnLambdaRole: aws_iam.Role;
-  // private readonly srcImg: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-dreambooth-training:latest';
-  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:stable';
+  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:dev';
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
