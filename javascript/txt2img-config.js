@@ -537,60 +537,115 @@ function scrap_ui_component_value_with_default(config) {
     });
     config["img2img_sagemaker_stable_diffusion_checkpoint"] = sd_values_img2img.join(":");
     
-    //Textual Inversion
-    const wrapInner = document.querySelector(
-        "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    //Textual Inversion for txt2img
+    const txt2img_wrapInner = document.querySelector(
+        "#txt2img_sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens = wrapInner.querySelectorAll(".token.svelte-aqlk7e");
-    const values = [];
+    const txt2img_tokens = txt2img_wrapInner.querySelectorAll(".token.svelte-aqlk7e");
+    const txt2img_values = [];
     
-    tokens.forEach((token) => {
+    txt2img_tokens.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
-        values.push(spanValue);
+        txt2img_values.push(spanValue);
     });
-    config["sagemaker_texual_inversion_model"] = values.join(":");
+    config["txt2img_sagemaker_texual_inversion_model"] = txt2img_values.join(":");
     
     //LoRa
-    const wrapInner1 = document.querySelector(
-        "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    const txt2img_wrapInner1 = document.querySelector(
+        "#txt2img_sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens1 = wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
-    const values1 = [];
+    const txt2img_tokens1 = txt2img_wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
+    const txt2img_values1 = [];
     
-    tokens1.forEach((token) => {
+    txt2img_tokens1.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
-        values1.push(spanValue);
+        txt2img_values1.push(spanValue);
     });
-    config["sagemaker_lora_model"] = values1.join(":");
-    console.log(values1);
+    config["txt2img_sagemaker_lora_model"] = txt2img_values1.join(":");
+    console.log(txt2img_values1);
     
     //HyperNetwork
-    const wrapInner2 = document.querySelector(
-        "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    const txt2img_wrapInner2 = document.querySelector(
+        "#txt2img_sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens2 = wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
-    const values2 = [];
+    const txt2img_tokens2 = txt2img_wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
+    const txt2img_values2 = [];
     
-    tokens2.forEach((token) => {
+    txt2img_tokens2.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
-        values2.push(spanValue);
+        txt2img_values2.push(spanValue);
     });
-    config["sagemaker_hypernetwork_model"] = values2.join(":");
-    console.log(values2);
+    config["txt2img_sagemaker_hypernetwork_model"] = txt2img_values2.join(":");
+    console.log(txt2img_values2);
     
     //ControlNet model
-    const wrapInner3 = document.querySelector(
-        "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    const txt2img_wrapInner3 = document.querySelector(
+        "#txt2img_sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const tokens3 = wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
-    const values3 = [];
+    const txt2img_tokens3 = txt2img_wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
+    const txt2img_values3 = [];
     
-    tokens3.forEach((token) => {
+    txt2img_tokens3.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
-        values3.push(spanValue);
+        txt2img_values3.push(spanValue);
     });
-    config["sagemaker_controlnet_model"] = values3.join(":");
-    console.log(values3);
+    config["txt2img_sagemaker_controlnet_model"] = txt2img_values3.join(":");
+    console.log(txt2img_values3);
+
+    //Textual Inversion for img2img
+    const img2img_wrapInner = document.querySelector(
+        "#img2img_sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    );
+    const img2img_tokens = img2img_wrapInner.querySelectorAll(".token.svelte-aqlk7e");
+    const img2img_values = [];
+    
+    img2img_tokens.forEach((token) => {
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
+        img2img_values.push(spanValue);
+    });
+    config["img2img_sagemaker_texual_inversion_model"] = img2img_values.join(":");
+    
+    //LoRa
+    const img2img_wrapInner1 = document.querySelector(
+        "#img2img_sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    );
+    const img2img_tokens1 = img2img_wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
+    const img2img_values1 = [];
+    
+    img2img_tokens1.forEach((token) => {
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
+        img2img_values1.push(spanValue);
+    });
+    config["img2img_sagemaker_lora_model"] = img2img_values1.join(":");
+    console.log(img2img_values1);
+    
+    //HyperNetwork
+    const img2img_wrapInner2 = document.querySelector(
+        "#img2img_sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    );
+    const img2img_tokens2 = img2img_wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
+    const img2img_values2 = [];
+    
+    img2img_tokens2.forEach((token) => {
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
+        img2img_values2.push(spanValue);
+    });
+    config["img2img_sagemaker_hypernetwork_model"] = img2img_values2.join(":");
+    console.log(img2img_values2);
+    
+    //ControlNet model
+    const img2img_wrapInner3 = document.querySelector(
+        "#img2img_sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    );
+    const img2img_tokens3 = img2img_wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
+    const img2img_values3 = [];
+    
+    img2img_tokens3.forEach((token) => {
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
+        img2img_values3.push(spanValue);
+    });
+    config["img2img_sagemaker_controlnet_model"] = img2img_values3.join(":");
+    console.log(img2img_values3);
     
    //control net part parameter for txt2img
     const imgElement = document.querySelector(
