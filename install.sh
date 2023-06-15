@@ -31,5 +31,5 @@ git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
 
 # Go to sd_dreambooth_extension directory and reset to specific commit
 cd sd_dreambooth_extension
-git reset --hard b396af26b7906aa82a29d8847e756396cb2c28fb
+git reset --hard dc413a14379b165355502d9f65856c40a4bb5b6f
 cd ..
