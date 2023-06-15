@@ -282,6 +282,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
             image_pil = Image.composite(image_pil.filter(blur), orig, mask.filter(blur))
+            image_pil = image_pil.convert("RGB")
             mask = encode_pil_to_base64(mask)
             image = encode_pil_to_base64(image_pil)
 
