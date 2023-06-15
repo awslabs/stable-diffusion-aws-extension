@@ -819,35 +819,67 @@ def create_ui(is_img2img):
                 gr.HTML(value="Extra Networks for Cloud Inference")
 
             with gr.Row():
-                textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
-                create_refresh_button(
-                    textual_inversion_dropdown,
-                    get_texual_inversion_list,
-                    lambda: {"choices": sorted(get_texual_inversion_list())},
-                    "refresh_textual_inversion",
-                )
-                lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="sagemaker_lora_list_dropdown")
-                create_refresh_button(
-                    lora_dropdown,
-                    get_lora_list,
-                    lambda: {"choices": sorted(get_lora_list())},
-                    "refresh_lora",
-                )
+                if not is_img2img:
+                    txt2img_textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="txt2img_sagemaker_texual_inversion_dropdown")
+                    create_refresh_button(
+                        txt2img_textual_inversion_dropdown,
+                        get_texual_inversion_list,
+                        lambda: {"choices": sorted(get_texual_inversion_list())},
+                        "refresh_textual_inversion",
+                    )
+                    txt2img_lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="txt2img_sagemaker_lora_list_dropdown")
+                    create_refresh_button(
+                        txt2img_lora_dropdown,
+                        get_lora_list,
+                        lambda: {"choices": sorted(get_lora_list())},
+                        "refresh_lora",
+                    )
+                else:
+                    img2img_textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="img2img_sagemaker_texual_inversion_dropdown")
+                    create_refresh_button(
+                        img2img_textual_inversion_dropdown,
+                        get_texual_inversion_list,
+                        lambda: {"choices": sorted(get_texual_inversion_list())},
+                        "refresh_textual_inversion",
+                    )
+                    img2img_lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="img2img_sagemaker_lora_list_dropdown")
+                    create_refresh_button(
+                        img2img_lora_dropdown,
+                        get_lora_list,
+                        lambda: {"choices": sorted(get_lora_list())},
+                        "refresh_lora",
+                    ) 
             with gr.Row():
-                hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
-                create_refresh_button(
-                    hyperNetwork_dropdown,
-                    get_hypernetwork_list,
-                    lambda: {"choices": sorted(get_hypernetwork_list())},
-                    "refresh_hypernetworks",
-                )
-                controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="sagemaker_controlnet_model_dropdown")
-                create_refresh_button(
-                    controlnet_dropdown,
-                    get_controlnet_model_list,
-                    lambda: {"choices": sorted(get_controlnet_model_list())},
-                    "refresh_controlnet",
-                )
+                if not is_img2img:
+                    txt2img_hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="txt2img_sagemaker_hypernetwork_dropdown")
+                    create_refresh_button(
+                        txt2img_hyperNetwork_dropdown,
+                        get_hypernetwork_list,
+                        lambda: {"choices": sorted(get_hypernetwork_list())},
+                        "refresh_hypernetworks",
+                    )
+                    txt2img_controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="txt2img_sagemaker_controlnet_model_dropdown")
+                    create_refresh_button(
+                        txt2img_controlnet_dropdown,
+                        get_controlnet_model_list,
+                        lambda: {"choices": sorted(get_controlnet_model_list())},
+                        "refresh_controlnet",
+                    )
+                else:
+                    img2img_hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="img2img_sagemaker_hypernetwork_dropdown")
+                    create_refresh_button(
+                        img2img_hyperNetwork_dropdown,
+                        get_hypernetwork_list,
+                        lambda: {"choices": sorted(get_hypernetwork_list())},
+                        "refresh_hypernetworks",
+                    )
+                    img2img_controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="img2img_sagemaker_controlnet_model_dropdown")
+                    create_refresh_button(
+                        img2img_controlnet_dropdown,
+                        get_controlnet_model_list,
+                        lambda: {"choices": sorted(get_controlnet_model_list())},
+                        "refresh_controlnet",
+                    ) 
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
@@ -869,6 +901,6 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
     if not is_img2img:
-        return sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+        return sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
     else:
-        return sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud 
+        return sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud 
