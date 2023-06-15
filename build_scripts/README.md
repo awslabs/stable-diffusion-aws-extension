@@ -5,7 +5,7 @@ Update time: 20230615
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
 | stable-diffusion-webui|1.3.2|20230605|baf6946e06249c5af9851c60171692c44ef633e0 |
-| sd-webui-controlnet | v1.1.217 20230605| f36493878b299c367bc51f2935fd7e6d19188569 |
+| sd-webui-controlnet | v1.1.217|20230605| f36493878b299c367bc51f2935fd7e6d19188569 |
 | sd_dreambooth_extension | 1.0.14| 20230606| dc413a14379b165355502d9f65856c40a4bb5b6f|
 
 # How to play with /stable-diffusion-webui
