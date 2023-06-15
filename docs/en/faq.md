@@ -2,9 +2,9 @@
 
 ## General
 
-**Q: What is AWS Extension for Stable Diffusion?**
+**Q: What is Extension for Stable Diffusion on AWS?**
 
-AWS Extension for Stable Diffusion is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. 
+*Extension for Stable Diffusion on AWS* is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. 
 
 
 **Q: What are the native features/third-party extensions of Stable Diffusion WebUI supported by this solution?**

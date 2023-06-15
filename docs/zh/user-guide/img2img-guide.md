@@ -4,13 +4,10 @@
 
 
 ## img2img的使用方法
-### img2img不同标签功能的使用
+### img2img不同标签功能的标准流程
 
 1. 进入**img2img**标签页，展开**Amazon SageMaker Inference**面板。
 2. 输入推理所需参数。同于本地推理，您可以按需编辑**img2img**原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。对于**img2img**，**sketch**，**inpaint**，**inpaint sketch**和**inpaint upload**，都可以按照原生方式进行图片上传和修饰。
-下面以**inpaint sketch**为例:
-
-![inpaint sketch](../images/inpaint_sketch.png)
 
 3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
 
@@ -22,14 +19,80 @@
 6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。img2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to extras**等，进行后续工作流。
 > **补充：** 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为**推理时间->任务类型（txt2img/img2img/interrogate_clip/interrogate_deepbooru）->推理状态（succeed/in progress/fail） ->inference id**。
 
-![generate results](../images/generate-results.png)
+### img2img标签操作示例
+
+1. 上传原始图片到**img2img**标签并输入提示词**black flower**
+
+![img2img raw](../images/img2img_tab.png)
+
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
+
+![img2img result](../images/img2img_result.png)
+
+### Sketch标签操作示例
+
+1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’
+上传白板底图到**Sketch标签**
+
+![sketch](../images/sketch_raw.png)
+
+2. 然后通过画笔，绘制下面的草图并准备提示词**flower**
+
+![sketch paint](../images/sketch_paint.png)
+
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
+
+![sketch result](../images/sketch_result.png)
+
+### Inpaint标签操作示例
+
+1. 上传原始图片到**Inpaint**标签并准备提示词**watermelon**
+
+![inpaint](../images/inpaint_tab.png)
+
+2. 然后通过画笔建立掩膜并准备提示词**watermelon**
+
+![inpaint_inpaint](../images/inpaint_inpaint.png)
+
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
+
+![inpaint result](../images/inpaint_result.png)
+
+
+### Inpatnt Sketch标签操作示例
+
+1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到**Inpaint Sketch**标签并准备提示词**candy**
+
+![inpaint_sketch](../images/inpaint_sketch_tab.png)
+
+2. 然后通过画笔建立掩膜
+
+![inpaint_sketch_inpaint](../images/inpaint_sketch_inpaint.png)
+
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
+
+![inpaint_sketch result](../images/inpaint_sketch_result.png)
+
+
+### Inpatnt Upload标签操作示例
+
+1. 上传原始图片和mask图片到**Inpaint Upload**标签并准备提示词**large eyes**
+
+![inpaint_upload](../images/inpaint_upload_tab.png)
+
+
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
+
+![inpaint_upload result](../images/inpaint_upload_result.png)
+
+
 
 ### Interrogate clip/deepbooru功能的使用
 
 1. 进入**img2img**标签页，展开**Amazon SageMaker Inference**面板。
 2. Interrogate只需要在**img2img**标签页把图片上传即可。
 
-![img2img tab](../images/img2img_tab.png)
+![img2img tab](../images/clip_tab.png)
 
 3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
 
@@ -46,19 +109,3 @@ img2img标签的提示词区域就能看到结果。
 3. 在新的**Inference Job ID**出现后，便可再次点击**Generate on Cloud**进行下一次推理。
 
 ![continuous generate results](../images/continue-inference.png)
-
-
-## Controlnet的使用方法
-
-### openpose的使用方法
-1. 打开ControlNet面板，勾选**Enabel**，选择**Preprocessor**为**openpose**，同时上传图片。
- ![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
-    
-2. 在**Amazon SageMaker Inference**面板的里面选择**Stable Diffusion Checkpoint**和**ControlNet-Model**。如下方示例图中选择**v1-5-pruned-emaonly.safetensors**和**control_openpose-fp16.safetensors**。提示词**a cute dog**。
-![Choose-controlnet-model](../images/choose-controlnet-model.png)
-3. 点击**Generate on Cloud**。
-
-4. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。
-
-5. 后续操作。如需对推理图片保存或作进一步处理，可以点击**Save**或者**Send to img2img**等。
-![generate results controlnet](../images/cute-dog-controlnet.png)

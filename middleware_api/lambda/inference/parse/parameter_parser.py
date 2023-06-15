@@ -241,8 +241,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_mask_inpaint', defaultValue=None)
         sketch = get_param_value(params_dict, 'img2img_sketch', defaultValue=None)
         img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        mask_blur = int(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4))
-        mask_alpha = 0
+        mask_blur = float(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4.0))
+        mask_alpha = float(get_param_value(params_dict, 'img2img_mask_alpha', defaultValue=0))
 
         print("img2img mode is", img2img_mode)
         
@@ -282,6 +282,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
             image_pil = Image.composite(image_pil.filter(blur), orig, mask.filter(blur))
+            image_pil = image_pil.convert("RGB")
             mask = encode_pil_to_base64(mask)
             image = encode_pil_to_base64(image_pil)
 
