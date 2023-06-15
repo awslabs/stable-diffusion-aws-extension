@@ -592,7 +592,7 @@ function scrap_ui_component_value_with_default(config) {
     config["sagemaker_controlnet_model"] = values3.join(":");
     console.log(values3);
     
-    //control net part parameter
+   //control net part parameter for txt2img
     const imgElement = document.querySelector(
         "#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > img"
     );
@@ -606,100 +606,100 @@ function scrap_ui_component_value_with_default(config) {
         config["txt2img_controlnet_ControlNet_input_image"] = "";
     }
 
-    // Start grapping controlnet related ui values
-    config["controlnet_enable"] = getElementValue(
+    // Start grapping controlnet related ui values of txt2img
+    config["txt2img_controlnet_enable"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_enable_checkbox > label > input",
         "checked",
         false
     );
     
-    config["controlnet_lowVRAM_enable"] = getElementValue(
+    config["txt2img_controlnet_lowVRAM_enable"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
         "checked",
         false
     );
 
-    config["controlnet_pixel_perfect"] = getElementValue(
+    config["txt2img_controlnet_pixel_perfect"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_pixel_perfect_checkbox > label > input",
         "checked",
         false
     );
     
-    config["controlnet_allow_preview"] = getElementValue(
+    config["txt2img_controlnet_allow_preview"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
         "checked",
         false
     );
 
     
-    config["controlnet_preprocessor"] = getElementValue(
+    config["txt2img_controlnet_preprocessor"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
 
-    config["controlnet_model"] = getElementValue(
+    config["txt2img_controlnet_model"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
 
-    config["controlnet_weight"] = getElementValue(
+    config["txt2img_controlnet_weight"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_weight_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
-    config["controlnet_starting_control_step"] = getElementValue(
+    config["txt2img_controlnet_starting_control_step"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_start_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
-    config["controlnet_ending_control_step"] = getElementValue(
+    config["txt2img_controlnet_ending_control_step"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_ending_control_step_slider > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
 
-    config["controlnet_control_mode_balanced"] = getElementValue(
+    config["txt2img_controlnet_control_mode_balanced"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
-    config["controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
+    config["txt2img_controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
-    config["controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
+    config["txt2img_controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
-    config["controlnet_resize_mode_just_resize"] = getElementValue(
+    config["txt2img_controlnet_resize_mode_just_resize"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
         false 
     );
 
-    config["controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
+    config["txt2img_controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
         false 
     );
 
-    config["controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
+    config["txt2img_controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
         false 
     );
 
     config[
-        "controlnet_loopback_automatically"
+        "txt2img_controlnet_loopback_automatically"
     ] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox > label > input",
         "checked", 
@@ -710,23 +710,159 @@ function scrap_ui_component_value_with_default(config) {
     // Completed when Preprocessor is null
 
     // Start when Preprocessor is canny
-    config["controlnet_preprocessor_resolution"] = getElementValue(
+    config["txt2img_controlnet_preprocessor_resolution"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_preprocessor_resolution_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
 
-    config["controlnet_canny_low_threshold"] = getElementValue(
+    config["txt2img_controlnet_canny_low_threshold"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_threshold_A_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     )
 
-    config["controlnet_canny_high_threshold"] = getElementValue(
+    config["txt2img_controlnet_canny_high_threshold"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ) 
+    )  
+
+        //control net part parameter for img2img
+        const img2img_imgElement = document.querySelector(
+            "#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > img"
+        );
+        if (img2img_imgElement) {
+            const srcValue = imgElement.getAttribute("src");
+            // Use the srcValue variable as needed
+            config["img2img_controlnet_ControlNet_input_image"] = srcValue;
+        } else {
+            // Handle the case when imgElement is null or undefined
+            console.log("img2img_imgElement is null or undefined");
+            config["img2img_controlnet_ControlNet_input_image"] = "";
+        }
+    
+        // Start grapping controlnet related ui values of txt2img
+        config["img2img_controlnet_enable"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_enable_checkbox > label > input",
+            "checked",
+            false
+        );
+        
+        config["img2img_controlnet_lowVRAM_enable"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
+            "checked",
+            false
+        );
+    
+        config["img2img_controlnet_pixel_perfect"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_pixel_perfect_checkbox > label > input",
+            "checked",
+            false
+        );
+        
+        config["img2img_controlnet_allow_preview"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
+            "checked",
+            false
+        );
+    
+        
+        config["img2img_controlnet_preprocessor"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+            "value",
+            ""
+        );
+    
+        config["img2img_controlnet_model"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
+            "value",
+            ""
+        );
+    
+        config["img2img_controlnet_weight"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_control_weight_slider > div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        );
+    
+        config["img2img_controlnet_starting_control_step"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_start_control_step_slider > div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        );
+    
+        config["img2img_controlnet_ending_control_step"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_ending_control_step_slider > div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        );
+    
+        config["img2img_controlnet_control_mode_balanced"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+            "checked",
+            false 
+        );
+    
+        config["img2img_controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+            "checked",
+            false 
+        );
+    
+        config["img2img_controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+            "checked",
+            false 
+        );
+    
+        config["img2img_controlnet_resize_mode_just_resize"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
+            "checked",
+            false 
+        );
+    
+        config["img2img_controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
+            "checked",
+            false 
+        );
+    
+        config["img2img_controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
+            "checked",
+            false 
+        );
+    
+        config[
+            "img2img_controlnet_loopback_automatically"
+        ] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox > label > input",
+            "checked", 
+            false
+        );
+        
+    
+        // Completed when Preprocessor is null
+    
+        // Start when Preprocessor is canny
+        config["img2img_controlnet_preprocessor_resolution"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_preprocessor_resolution_slider> div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        )
+    
+        config["img2img_controlnet_canny_low_threshold"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_threshold_A_slider> div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        )
+    
+        config["img2img_controlnet_canny_high_threshold"] = getElementValue(
+            "#img2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
+            "value",
+            ""
+        ) 
 
     // end of controlnet section
     
