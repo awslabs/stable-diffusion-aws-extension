@@ -155,7 +155,49 @@ def sagemaker_api(_, app: FastAPI):
         @return:
         """
         print('-------invocation------')
-        print(req)
+
+        def show_slim_dict(payload):
+            pay_type = type(payload)
+            if pay_type is dict:
+                for k, v in payload.items():
+                    print(f"{k}")
+                    show_slim_dict(v)
+            elif pay_type is list:
+                for v in payload:
+                    print(f"list")
+                    show_slim_dict(v)
+            elif pay_type is str:
+                if len(payload) > 50:
+                    print(f" : {len(payload)} contents")
+                else:
+                    print(f" : {payload}")
+            else:
+                print(f" : {payload}")
+
+        print(f"task is {req.task}")
+        print(f"checkpoint_info is {req.checkpoint_info}")
+        print(f"models is {req.models}")
+        print(f"txt2img_payload is: ")
+        txt2img_payload = json.loads(req.txt2img_paylod.json())
+        show_slim_dict(txt2img_payload)
+        print(f"img2img_payload is: ")
+        img2img_payload = json.loads(req.img2img_paylod.json())
+        show_slim_dict(img2img_payload)
+        print(f"extra_single_payload is: ")
+        extra_single_payload = json.loads(req.extras_single_payload.json())
+        show_slim_dict(extra_single_payload)
+        print(f"extra_batch_payload is: ")
+        extra_batch_payload = json.loads(req.extras_batch_payload.json())
+        show_slim_dict(extra_batch_payload)
+        print(f"interrogate_payload is: ")
+        interrogate_payload = json.loads(req.interrogate_payload.json())
+        show_slim_dict(interrogate_payload)
+        print(f"db_create_model_payload is: ")
+        db_create_model_payload = json.loads(req.db_create_model_payload.json())
+        show_slim_dict(db_create_model_payload)
+        print(f"merge_checkpoint_payload is: ")
+        merge_checkpoint_payload = json.loads(req.merge_checkpoint_payload.json())
+        show_slim_dict(merge_checkpoint_payload)
         # print(f"json is {json.loads(req.json())}")
 
         if req.task == 'txt2img' or req.task == 'img2img':

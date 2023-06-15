@@ -215,9 +215,29 @@ async def run_sagemaker_inference(request: Request):
 
         params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
 
-        logger.info(json.dumps(params_dict))
+        # logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
-        print(f"input in json format {payload}")
+        print(f"input in json format:")
+        
+        def show_slim_dict(payload):
+            pay_type = type(payload)
+            if pay_type is dict:
+                for k, v in payload.items():
+                    print(f"{k}")
+                    show_slim_dict(v)
+            elif pay_type is list:
+                for v in payload:
+                    print(f"list")
+                    show_slim_dict(v)
+            elif pay_type is str:
+                if len(payload) > 100:
+                    print(f" : {len(payload)} contents")
+                else:
+                    print(f" : {payload}")
+            else:
+                print(f" : {payload}")
+        
+        show_slim_dict(payload)
         
         endpoint_name = payload["endpoint_name"]
 
