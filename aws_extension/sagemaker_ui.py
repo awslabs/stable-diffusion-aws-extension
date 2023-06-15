@@ -781,8 +781,16 @@ def create_ui(is_img2img):
 
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():
-                    sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
-                    sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+                    global sd_checkpoint_txt2img
+                    global sd_checkpoint_refresh_button_txt2img
+                    global sd_checkpoint_img2img
+                    global sd_checkpoint_refresh_button_img2img
+                    if not is_img2img:
+                        sd_checkpoint_txt2img = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown_txt2img")
+                        sd_checkpoint_refresh_button_txt2img = modules.ui.create_refresh_button(sd_checkpoint_txt2img, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+                    else:
+                        sd_checkpoint_img2img = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown_img2img")
+                        sd_checkpoint_refresh_button_img2img = modules.ui.create_refresh_button(sd_checkpoint_img2img, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints") 
             with gr.Column():
                 global generate_on_cloud_button_with_js
                 if not is_img2img:
@@ -860,4 +868,7 @@ def create_ui(is_img2img):
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
-    return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    if not is_img2img:
+        return sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    else:
+        return sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud 

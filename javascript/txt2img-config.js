@@ -513,17 +513,29 @@ function scrap_ui_component_value_with_default(config) {
     config["sagemaker_endpoint"] = sagemaker_ep_info_array[0];
 
     //stable diffusion checkpoint
-    const sd_checkpoint = document.querySelector(
-        "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
+    const sd_checkpoint_txt2img = document.querySelector(
+        "#stable_diffusion_checkpoint_dropdown_txt2img > label > div > div.wrap-inner.svelte-aqlk7e"
     );
-    const sd_tokens = sd_checkpoint.querySelectorAll(".token.svelte-aqlk7e");
-    const sd_values = [];
+    const sd_tokens_txt2img = sd_checkpoint_txt2img.querySelectorAll(".token.svelte-aqlk7e");
+    const sd_values_txt2img = [];
     
-    sd_tokens.forEach((token) => {
+    sd_tokens_txt2img.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
-        sd_values.push(spanValue);
+        sd_values_txt2img.push(spanValue);
     });
-    config["sagemaker_stable_diffusion_checkpoint"] = sd_values.join(":");
+    config["txt2img_sagemaker_stable_diffusion_checkpoint"] = sd_values_txt2img.join(":");
+
+    const sd_checkpoint_img2img = document.querySelector(
+        "#stable_diffusion_checkpoint_dropdown_img2img > label > div > div.wrap-inner.svelte-aqlk7e"
+    );
+    const sd_tokens_img2img = sd_checkpoint_img2img.querySelectorAll(".token.svelte-aqlk7e");
+    const sd_values_img2img = [];
+    
+    sd_tokens_img2img.forEach((token) => {
+        const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
+        sd_values_img2img.push(spanValue);
+    });
+    config["img2img_sagemaker_stable_diffusion_checkpoint"] = sd_values_img2img.join(":");
     
     //Textual Inversion
     const wrapInner = document.querySelector(
