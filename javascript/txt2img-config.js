@@ -788,7 +788,7 @@ function scrap_ui_component_value_with_default(config) {
             "#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > img"
         );
         if (img2img_imgElement) {
-            const srcValue = imgElement.getAttribute("src");
+            const srcValue = img2img_imgElement.getAttribute("src");
             // Use the srcValue variable as needed
             config["img2img_controlnet_ControlNet_input_image"] = srcValue;
         } else {
