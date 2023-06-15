@@ -702,6 +702,7 @@ def fake_gan(selected_value: str ):
                 infotexts = 'something wrong when trying to download the inference parameters'
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             job_status = get_inference_job(inference_job_id)
+            print(job_status)
             caption = job_status['caption']
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
@@ -796,7 +797,7 @@ def create_ui(is_img2img):
                         with gr.Column():
                             interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru", elem_id="interrogate_deep_booru_on_cloud_button")
                         with gr.Column():
-                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud img2img", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
+                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids

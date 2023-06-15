@@ -29,7 +29,7 @@ nav:
     - 卸载解决方案: uninstall.md
     - 用户指南: 
         - 准备工作: user-guide/preparation.md
-        - 主标签页: user-guide/CloudAssetsManage.md
+        - 云上资源管理: user-guide/CloudAssetsManage.md
         - txt2img指南: user-guide/txt2img-guide.md
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
         - Dreambooth指南: user-guide/dreambooth-guide.md

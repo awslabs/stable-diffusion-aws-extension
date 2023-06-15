@@ -15,6 +15,13 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 你可以通过GitHub问题提交[功能请求](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29)和[错误报告](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29)。
 
 
+## 安装和配置
+
+**问：我安装第三方插件和本解决方案插件的顺序有要求吗？**
+
+目前推荐用户先安装本解决方案支持的第三方插件后，再安装本解决方案插件。而该安装顺序打乱也可以，但是需要您重启WebUI，即可保证功能成功运行。
+
+
 
 
 ## 成本

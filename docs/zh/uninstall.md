@@ -1,5 +1,5 @@
 !!! Warning "警告"
-    卸载该解决方案将同时删除由此堆栈创建的Amazon SageMaker资源（例如端点），指示模型训练、微调和推理日志和映射关系的DynamoDB表，AWS Lambda相关函数和AWS Step Functions等。
+    卸载该解决方案前，请手动删除由此堆栈创建的Amazon SageMaker Endpoint资源，具体步骤参考**用户指南--主标签页**中的[删除已部署推理节点](./user-guide/CloudAssetsManage.md)。卸载此堆栈，将同时删除由此堆栈创建的AWS Lambda相关函数，指示模型训练、微调和推理日志和映射关系的DynamoDB表，和AWS Step Functions等。
 
 
 要卸载Stable Diffusion亚马逊云科技插件解决方案，请删除CloudFormation堆栈。

@@ -1,12 +1,8 @@
 //This function is created to mitigate refresh get old value issue
 window.onload = function() {
-    let counter = 0; // Add a counter
-    let limit = 2; // Set the limit to the desired number of iterations
-    let intervalId = setInterval(function() {
-      
-      console.log("click refresh when page reloaded"); 
-
-      let selectors = [
+    let counter = 0;
+    let limit = 10;
+    let selectors = [
         "#refresh_api_gateway_url",
         "#refresh_api_token",
         "#refresh_sagemaker_endpoints",
@@ -14,26 +10,30 @@ window.onload = function() {
         "#refresh_txt2img_inference_job_ids",
         "#refresh_textual_inversion",
         "#refresh_sagemaker_endpoints_delete"
-      ];
+    ];
 
-      for (let selector of selectors) {
-        let element = document.querySelector(selector);
+    let intervalId = setInterval(function() {
+        console.log("click refresh when page reloaded"); 
 
-        if (element != null) {
-          element.click();
-        } else {
-          console.warn(`Could not find element with selector: ${selector}`);
+        let allElementsFound = true;
+        for (let selector of selectors) {
+            let element = document.querySelector(selector);
+            if (element != null) {
+                element.click();
+            } else {
+                allElementsFound = false;
+                console.warn(`Could not find element with selector: ${selector}`);
+            }
         }
-      }
 
-      counter++; // Increment the counter
-
-      if (counter === limit) {
-        console.log("refresh time:" + counter); 
-        clearInterval(intervalId); // Stop the interval once the limit is reached
-      }
-    }, 1000); // 1 second
+        counter++;
+        if (counter === limit || allElementsFound) {
+            console.log("refresh time:" + counter); 
+            clearInterval(intervalId);
+        }
+    }, 2000);
 };
+
 
 
 // Save configuration in txt2img panel
@@ -138,13 +138,24 @@ function set_textbox_value(textboxId, newValue) {
     }
 }
 
+function set_textbox_value_gradio(elementId, newValue) {
+    let textbox = gradioApp().getElementById(elementId).querySelector('p');
+    console.log("Trying to set the value of textBox")
+    if (textbox) {
+        textbox.textContent = newValue;
+    } else {
+        console.log("Textbox with id " + elementId + " not found.");
+    }
+}
+
 
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
     console.log(JSON.stringify(endpoint_value))
 
-    set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
+    // set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
+    set_textbox_value_gradio('html_info_txt2img', "Start uploading configuration to S3, please wait ......")
 
     scrap_ui_component_value_with_default(config);
 
@@ -169,8 +180,8 @@ async function txt2img_config_save(endpoint_value) {
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
+        set_textbox_value_gradio('html_info_txt2img', "The configuration has been successfully uploaded.")
 
-        set_textbox_value('#html_info_txt2img', "Completed uploaded configuration to S3")
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value, "", ""];
 
@@ -183,27 +194,41 @@ async function txt2img_config_save(endpoint_value) {
 
 async function img2img_config_save(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint) {
     var config = {};
-    set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
+    // set_textbox_value('#html_info_img2img', "Start uploading configuration to S3, please wait ......")
+    set_textbox_value_gradio('html_info_img2img', "Start uploading configuration to S3, please wait ......")
 
     console.log(JSON.stringify(endpoint_value))
 
-    config["img2img_init_img"] =init_img
-    config["img2img_sketch"] = sketch
-    config["img2img_init_img_with_mask"] = init_img_with_mask
-    config["img2img_inpaint_color_sketch"] = inpaint_color_sketch
-    config["img2img_init_img_inpaint"]=init_img_inpaint;
-    config['img2img_init_mask_inpaint']=init_mask_inpaint;
-
-    scrap_ui_component_value_with_default(config);
-
-    config['img2img_selected_tab_name'] = getSelectedButton()
+    config['img2img_selected_tab_name'] = getSelectedButton();
 
     console.log(config['img2img_selected_tab_name'])
+    
+    // Setting all configs to empty string
+    config["img2img_init_img"] = "";
+    config["img2img_sketch"] = "";
+    config["img2img_init_img_with_mask"] = "";
+    config["img2img_inpaint_color_sketch"] = "";
+    config["img2img_init_img_inpaint"] = "";
+    config['img2img_init_mask_inpaint'] = "";
+    
+    if (config['img2img_selected_tab_name'] === 'img2img') {
+        config["img2img_init_img"] = init_img;
+    } else if (config['img2img_selected_tab_name'] === 'Sketch') {
+        config["img2img_sketch"] = sketch;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint') {
+        config["img2img_init_img_with_mask"] = init_img_with_mask;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint_sketch') {
+        config["img2img_inpaint_color_sketch"] = inpaint_color_sketch;
+    } else if (config['img2img_selected_tab_name'] === 'Inpaint_upload') {
+        config["img2img_init_img_inpaint"] = init_img_inpaint;
+        config['img2img_init_mask_inpaint'] = init_mask_inpaint;
+    }
 
     config['img2img_selected_resize_tab'] = getSelectedTabResize()
 
     console.log(config['img2img_selected_resize_tab'])
 
+    scrap_ui_component_value_with_default(config);
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
@@ -226,13 +251,13 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
         await put_with_xmlhttprequest(url, config_data);
 
         console.log('The configuration has been successfully uploaded to s3');
-        set_textbox_value('#html_info_img2img', "Completed uploaded configuration to S3")
+        set_textbox_value_gradio('html_info_img2img', "The configuration has been successfully uploaded.")
         // alert("The configuration has been successfully uploaded.");
         return [endpoint_value,init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
 
     } catch (error) {
         console.error("Error in img2img_config_save:", error);
-        set_textbox_value('#html_info_img2img', "An error occurred while uploading the configuration. error:" + error)
+        set_textbox_value('#generation_info_img2img', "An error occurred while uploading the configuration. error:" + error)
         return ["FAILURE", init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint];
     }
 }
@@ -1019,6 +1044,21 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     ); 
+
+    // grab the img2img inpaint sketch original image
+    //document.querySelector("#inpaint_sketch")
+    const inpaintImgElement = document.querySelector(
+        "#inpaint_sketch > div.image-container.svelte-p3y7hu > div > img"
+    );
+    if (inpaintImgElement) {
+        const srcValue = inpaintImgElement.getAttribute("src");
+        // Use the srcValue variable as needed
+        config["img2img_inpaint_sketch_image"] = srcValue;
+    } else {
+        // Handle the case when imgElement is null or undefined
+        console.log("inpaintImgElement is null or undefined");
+        config["img2img_inpaint_sketch_image"] = "";
+    }
 
 
 

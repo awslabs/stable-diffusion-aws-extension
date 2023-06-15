@@ -176,7 +176,7 @@ def lambda_handler(event, context):
                 Key={
                     'InferenceJobId': inference_id
                     },
-                UpdateExpression='SET caption=:f)',
+                UpdateExpression='SET caption=:f',
                 ExpressionAttributeValues={
                     ':f': caption,
                 }
