@@ -11,7 +11,7 @@ Users need to prepare a computer running linux system in advance.
 Use the following steps to deploy this solution on AWS. 
 
 - Step 1: Launch the AWS CloudFormation template into your AWS account.
-- Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI. 
+- Step 2: Install 'Extension for Stable Diffusion on AWS' extension in your Stable Diffusion WebUI. 
 
 
 ## Deployment steps
@@ -33,7 +33,7 @@ You can view the status of the stack in the AWS CloudFormation Console in the **
 !!! Important "Notice" 
     Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription, and the message of 'Subscription confirmed!' appears.
 
-### Step 2: Install the plugin Stable Diffusion AWS Extension through the installation script.
+### Step 2: Install the Extension for Stable Diffusion on AWS through the installation script.
 1. In the working directory of the computer running linux prepared in advance, run the following command to download the latest installation script
 ```
 wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
