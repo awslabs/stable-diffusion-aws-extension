@@ -508,7 +508,7 @@ function scrap_ui_component_value_with_default(config) {
     //     ""
     // );
     // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value.split("+")[0];
-    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;
+    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;                   
     const sagemaker_ep_info_array = sagemaker_ep_info.split("+");
     config["sagemaker_endpoint"] = sagemaker_ep_info_array[0];
 
@@ -977,6 +977,13 @@ function scrap_ui_component_value_with_default(config) {
     // document.querySelector("#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input")
     config["img2img_mask_blur"] = getElementValue(
         "#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input",
+        "value",
+        ""
+    ); 
+
+    //document.querySelector("#img2img_mask_alpha > div.wrap.svelte-1cl284s > div > input")
+    config["img2img_mask_alpha"] = getElementValue(
+        "#img2img_mask_alpha > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     ); 
