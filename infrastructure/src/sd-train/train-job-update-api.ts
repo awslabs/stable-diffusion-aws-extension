@@ -100,6 +100,14 @@ export class UpdateTrainJobApi {
       ],
     }));
 
+    sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'kms:Decrypt',
+      ],
+      resources: ['*'],
+    })); 
+
     return sagemakerRole;
   }
 
@@ -172,6 +180,7 @@ export class UpdateTrainJobApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));
@@ -206,7 +215,6 @@ export class UpdateTrainJobApi {
         'sns:SetTopicAttributes',
         'sns:Subscribe',
         'sns:ListSubscriptionsByTopic',
-        'sns:Publish',
         'sns:Receive',
       ],
       // resources: ['arn:aws:s3:::*'],
@@ -245,6 +253,7 @@ export class UpdateTrainJobApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));
@@ -457,6 +466,7 @@ export class UpdateTrainJobApi {
           'sagemaker:ListModels',
           'sagemaker:ListProcessingJobs',
           'sagemaker:ListProcessingJobsForHyperParameterTuningJob',
+          'kms:Decrypt',
         ],
         resources: ['*'],
       }),
@@ -479,7 +489,7 @@ export class UpdateTrainJobApi {
     sagemakerRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['sns:Publish'],
+        actions: ['sns:Publish', 'sns:Encrypt'],
         resources: [snsTopicArn],
       }),
     );

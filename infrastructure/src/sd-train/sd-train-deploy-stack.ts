@@ -5,6 +5,8 @@ import {
   aws_dynamodb as dynamodb,
   aws_s3,
   aws_sns,
+  aws_iam as iam,
+  aws_kms as kms,
   aws_sns_subscriptions as sns_subscriptions,
   CfnParameter,
   NestedStack,
@@ -279,7 +281,52 @@ export class SdTrainDeployStack extends NestedStack {
   private createSns(emailParam: CfnParameter): aws_sns.Topic {
     // CDK parameters for SNS email address
     // Create SNS topic for notifications
-    const snsTopic = new aws_sns.Topic(this, 'StableDiffusionSnsTopic');
+    // const snsKmsKey = new kms.Key(this, 'SNSTrainEncryptionKey');
+    const snsKey = new kms.Key(this, "KmsMasterKey", {
+      enableKeyRotation: true,
+      policy: new iam.PolicyDocument({
+        assignSids: true,
+        statements: [
+          new iam.PolicyStatement({
+            actions: ["kms:GenerateDataKey*", "kms:Decrypt", "kms:Encrypt"],
+            resources: ["*"],
+            effect: iam.Effect.ALLOW,
+            principals: [
+              new iam.ServicePrincipal("sns.amazonaws.com"),
+              new iam.ServicePrincipal("cloudwatch.amazonaws.com"),
+              new iam.ServicePrincipal("events.amazonaws.com"),
+              new iam.ServicePrincipal('sagemaker.amazonaws.com'),
+            ],
+          }),
+          new iam.PolicyStatement({
+            actions: [
+              "kms:Create*",
+              "kms:Describe*",
+              "kms:Enable*",
+              "kms:List*",
+              "kms:Put*",
+              "kms:Update*",
+              "kms:Revoke*",
+              "kms:Disable*",
+              "kms:Get*",
+              "kms:Delete*",
+              "kms:ScheduleKeyDeletion",
+              "kms:CancelKeyDeletion",
+              "kms:GenerateDataKey",
+              "kms:TagResource",
+              "kms:UntagResource",
+            ],
+            resources: ["*"],
+            effect: iam.Effect.ALLOW,
+            principals: [new iam.AccountRootPrincipal()],
+          }),
+        ],
+      }),
+    });
+    
+    const snsTopic = new aws_sns.Topic(this, 'StableDiffusionSnsTopic', {
+      masterKey: snsKey,
+    });
 
     // Subscribe user to SNS notifications
     snsTopic.addSubscription(
