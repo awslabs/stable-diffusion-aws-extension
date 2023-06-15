@@ -347,7 +347,7 @@ def on_ui_tabs():
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
                 with gr.Accordion("Upload Model to S3", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
-                    exts = (".bin", ".pt", ".safetensors", ".ckpt")
+                    exts = (".bin", ".pt", "pth", ".safetensors", ".ckpt")
                     root_path = os.getcwd()
                     model_folders = {
                         "ckpt": os.path.join(root_path, "models", "Stable-diffusion"),
