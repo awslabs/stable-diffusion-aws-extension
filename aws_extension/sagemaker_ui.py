@@ -714,6 +714,7 @@ def fake_gan(selected_value: str ):
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''
+        infotexts = ''
 
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
