@@ -745,7 +745,8 @@ def display_inference_result(inference_id: str ):
     else:
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
-        info_text = ''
+        info_text = 'inference_id is Null'
+        infotexts = 'inference_id is Null'
 
     return image_list, info_text, plaintext_to_html(infotexts)
 
