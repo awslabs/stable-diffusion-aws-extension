@@ -269,9 +269,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = encode_pil_to_base64(mask)
         elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
             image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch.split(',')[1])))
-            image_pil = image_pil.convert("RGB")
+            # image_pil = image_pil.convert("RGB")
             orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig.split(',')[1])))
-            orig = orig.resize(image_pil.size)
+            # orig = orig.resize(image_pil.size)
             orig = orig or image_pil
             pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
