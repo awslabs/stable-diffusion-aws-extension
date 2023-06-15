@@ -143,7 +143,7 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_generation_info is not None and \
         txt2img_html_info is not None and \
         txt2img_show_hook is None and \
-        txt2img_prompt is not None: 
+        txt2img_prompt is not None:
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
@@ -194,8 +194,8 @@ def on_after_component_callback(component, **_kwargs):
     is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
     is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
     is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
-     
-    
+
+
     is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_base'
     is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
 
@@ -247,14 +247,14 @@ def on_after_component_callback(component, **_kwargs):
                 fn=sagemaker_ui.call_interrogate_clip,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
 
             sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_deepbooru,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
             sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
@@ -636,10 +636,10 @@ def ui_tabs_callback():
 
                                     with gr.Row():
                                         cloud_train_instance_type = gr.Dropdown(
-                                            label="Sagemaker Train Instance Type",
+                                            label="SageMaker Train Instance Type",
                                             choices=['ml.g4dn.2xlarge'],
                                             elem_id="cloud_train_instance_type",
-                                            info='select sagemaker Train Instance Type'
+                                            info='select SageMaker Train Instance Type'
                                         )
                                     with gr.Row(visible=False) as lora_model_row:
                                         cloud_db_lora_model_name = gr.Dropdown(
@@ -680,7 +680,7 @@ def ui_tabs_callback():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
                                     with gr.Row():
                                         training_job_dashboard = gr.Dataframe(
-                                            headers=["id", "model name", "status", "sagemaker train name"],
+                                            headers=["id", "model name", "status", "SageMaker train name"],
                                             datatype=["str", "str", "str", "str"],
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
