@@ -57,6 +57,7 @@ def get_sd_cloud_models():
 def async_create_model_on_sagemaker(
         new_model_name: str,
         ckpt_path: str,
+        shared_src: str,
         from_hub=False,
         new_model_url="",
         new_model_token="",
@@ -191,7 +192,7 @@ local_job_cache = {
 def cloud_create_model(
         new_model_name: str,
         ckpt_path: str,
-        cloud_db_new_model_shared_src: str,
+        shared_src: str,
         from_hub=False,
         new_model_url="",
         new_model_token="",
@@ -200,7 +201,7 @@ def cloud_create_model(
         is_512=True,
 ):
     upload_thread = threading.Thread(target=async_create_model_on_sagemaker,
-                                     args=(new_model_name, ckpt_path, from_hub, new_model_url, new_model_token, extract_ema, train_unfrozen, is_512))
+                                     args=(new_model_name, ckpt_path, shared_src, from_hub, new_model_url, new_model_token, extract_ema, train_unfrozen, is_512))
     upload_thread.start()
 
     dashboard_list = get_create_model_job_list()
