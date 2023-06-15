@@ -6,6 +6,7 @@ import gradio as gr
 import os
 import sys
 import logging
+import shutil
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
 
@@ -80,20 +81,18 @@ def get_cloud_db_model_name_list():
         model_name_list = [model['model_name'] for model in model_list]
     return model_name_list
 
-def hack_db_config(db_config, db_config_file_path, model_name, data_list, class_data_list):
+def hack_db_config(db_config, db_config_file_path, model_name, data_list, class_data_list, local_model_name):
     for k in db_config:
         if k == "model_dir":
             db_config[k] = re.sub(".+/(models/dreambooth/).+$", f"\\1{model_name}", db_config[k])
         elif k == "pretrained_model_name_or_path":
             db_config[k] = re.sub(".+/(models/dreambooth/).+(working)$", f"\\1{model_name}/\\2", db_config[k])
         elif k == "model_name":
-            db_config[k] = db_config[k].replace("dummy_local_model", model_name)
+            db_config[k] = db_config[k].replace(local_model_name, model_name)
         elif k == "concepts_list":
             for concept, data, class_data in zip(db_config[k], data_list, class_data_list):
                 concept["instance_data_dir"] = data
                 concept["class_data_dir"] = class_data
-        # else:
-        #     db_config[k] = db_config[k].replace("dummy_local_model", model_name)
     with open(db_config_file_path, "w") as db_config_file_w:
         json.dump(db_config, db_config_file_w)
 
@@ -194,8 +193,9 @@ def wrap_save_config(model_name):
     setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
 
 def cloud_train(
+        local_model_name: str,
         train_model_name: str,
-        local_model_name=False,
+        db_use_txt2img=False,
         training_instance_type: str= ""
 ):
     integral_check = False
@@ -210,7 +210,7 @@ def cloud_train(
     try:
         # Get data path and class data path.
         print(f"Start cloud training {train_model_name}")
-        db_config_path = os.path.join("models/dreambooth/dummy_local_model/db_config.json")
+        db_config_path = os.path.join(f"models/dreambooth/{local_model_name}/db_config.json")
         with open(db_config_path) as db_config_file:
             config = json.load(db_config_file)
         local_data_path_list = []
@@ -224,7 +224,8 @@ def cloud_train(
             class_data_path_list.append(concept["class_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
         model_list = get_cloud_db_models()
         new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
-        hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list)
+        print(f"hack config from local_model_name to new_db_config_path")
+        hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list, local_model_name)
         if config["save_lora_for_extra_net"] == True:
             model_type = "Lora"
         else:

@@ -117,6 +117,7 @@ def on_after_component_callback(component, **_kwargs):
             fn=async_cloud_train,
             _js="db_start_sagemaker_train",
             inputs=[
+                db_model_name,
                 cloud_db_model_name,
                 db_use_txt2img,
                 cloud_train_instance_type
@@ -637,7 +638,7 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         cloud_train_instance_type = gr.Dropdown(
                                             label="SageMaker Train Instance Type",
-                                            choices=['ml.g4dn.2xlarge'],
+                                            choices=['ml.g4dn.2xlarge', 'ml.g5.2xlarge'],
                                             elem_id="cloud_train_instance_type",
                                             info='select SageMaker Train Instance Type'
                                         )
@@ -697,7 +698,7 @@ def ui_tabs_callback():
                                     cloud_db_new_model_name = gr.Textbox(label="Name", placeholder="Model names can only contain alphanumeric and -")
                                     with gr.Row():
                                         cloud_db_create_from_hub = gr.Checkbox(
-                                            label="Create From Hub", value=False
+                                            label="Create From Hub", value=False, visible=False
                                         )
                                         cloud_db_512_model = gr.Checkbox(label="512x Model", value=True)
                                     with gr.Column(visible=False) as hub_row:
