@@ -400,8 +400,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             
         if contronet_enable:
             print(f'{task_type} with controlnet!!!!!!!!!!')
-            payload["alwayson_scripts"] = {}
-            payload["alwayson_scripts"]["controlnet"]["args"] = [
+            payload[payload_name]["alwayson_scripts"] = {}
+            payload[payload_name]["alwayson_scripts"]["controlnet"] = {}
+            payload[payload_name]["alwayson_scripts"]["controlnet"]["args"] = [
                 {
                     "input_image": controlnet_image,
                     "mask": "",
