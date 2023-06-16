@@ -17,7 +17,7 @@
         <link rel="next" href="../revisions/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -631,7 +631,7 @@
   
     <li class="md-nav__item">
       <a href="../user-guide/CloudAssetsManage/" class="md-nav__link">
-        Main tab
+        Cloud Assets Management
       </a>
     </li>
   
@@ -782,6 +782,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#installation-and-configuration" class="md-nav__link">
+    Installation and Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pricing" class="md-nav__link">
     Pricing
   </a>
@@ -865,6 +872,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#installation-and-configuration" class="md-nav__link">
+    Installation and Configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pricing" class="md-nav__link">
     Pricing
   </a>
@@ -891,14 +905,17 @@
 
 <h1 id="frequently-asked-questions">Frequently Asked Questions</h1>
 <h2 id="general">General</h2>
-<p><strong>Q: What is AWS Extension for Stable Diffusion?</strong></p>
-<p>AWS Extension for Stable Diffusion is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. </p>
+<p><strong>Q: What is Extension for Stable Diffusion on AWS?</strong></p>
+<p><em>Extension for Stable Diffusion on AWS</em> is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. </p>
 <p><strong>Q: What are the native features/third-party extensions of Stable Diffusion WebUI supported by this solution?</strong></p>
 <p>This solution supports multiply native features/third-party extensions of Stable Diffusion WebUI. More details can be found at <a href="../solution-overview/features-and-benefits/">Features and Benefits</a>.</p>
 <p><strong>Q: What is the licence of this solution?</strong></p>
 <p>This solution is provided under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a> license. It is a permissive free software license written by the Apache Software Foundation. It allows users to use the software for any purpose, to distribute it, to modify it, and to distribute modified versions of the software under the terms of the license, without concern for royalties.</p>
 <p><strong>Q: How can I submit a feature request or bug report?</strong></p>
 <p>You can submit feature requests and bug report through the GitHub issues. Here are the templates for <a href="https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&amp;labels=feature-request%2Cneeds-triage&amp;projects=&amp;template=feature_request.yml&amp;title=%28module+name%29%3A+%28short+issue+description%29">feature request</a>, <a href="https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&amp;labels=bug%2Cneeds-triage&amp;projects=&amp;template=bug_report.yml&amp;title=%28module+name%29%3A+%28short+issue+description%29">bug report</a>.</p>
+<h2 id="installation-and-configuration">Installation and Configuration</h2>
+<p><strong>Q: Is there a specific order for installing third-party plugins and the plugins for this solution?</strong></p>
+<p>Currently, it is recommended that users install the third-party extensions supported by this solution before installing the solution's own extension. However, the installation order can be changed as well. In that case, a restart of the WebUI is required to ensure the successful functioning of the features.</p>
 <h2 id="pricing">Pricing</h2>
 <p><strong>Q: How will I be charged and billed for the use of this solution?</strong></p>
 <p>The solution is free to use, and you are responsible for the cost of AWS services used while running this solution. You pay only for what you use, and there are no minimum or setup fees. Refer to the Centralized Logging with OpenSearch Cost section for detailed <a href="../cost/">cost estimation</a>.</p>
@@ -937,7 +954,7 @@
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>

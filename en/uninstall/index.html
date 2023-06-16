@@ -17,7 +17,7 @@
         <link rel="next" href="../user-guide/preparation/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -63,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#uninstall-aws-extension-for-stable-diffusion" class="md-skip">
+        <a href="#uninstall-extension-for-stable-diffusion-on-aws" class="md-skip">
           Skip to content
         </a>
       
@@ -679,7 +679,7 @@
   
     <li class="md-nav__item">
       <a href="../user-guide/CloudAssetsManage/" class="md-nav__link">
-        Main tab
+        Cloud Assets Management
       </a>
     </li>
   
@@ -889,12 +889,12 @@
   
 
 
-<h1 id="uninstall-aws-extension-for-stable-diffusion">Uninstall AWS Extension for Stable Diffusion</h1>
+<h1 id="uninstall-extension-for-stable-diffusion-on-aws">Uninstall Extension for Stable Diffusion on AWS</h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>By uninstalling the solution, the Amazon SageMaker resources created by this stack (for example endpoints), DynamoDB tables that indicates the model training, finetuning and inference logs and mapping relationship, AWS Lambda related functions, AWS Step Functions and so on will be deleted simultaneously.</p>
+<p>Before uninstalling the solution, please manually delete all the Amazon SageMaker Endpoints deployed by this solution, referring to <strong>Delete deployed endpoint</strong> in <a href="../user-guide/CloudAssetsManage/">Main tab</a>. By uninstalling the solution, the DynamoDB tables that indicates the model training, finetuning and inference logs and mapping relationship, AWS Lambda related functions, AWS Step Functions and so on will be deleted simultaneously.</p>
 </div>
-<p>To uninstall the AWS Extension for Stable Diffusion solution, you must delete the AWS CloudFormation stack. </p>
+<p>To uninstall the Extension for Stable Diffusion on AWS solution, you must delete the AWS CloudFormation stack. </p>
 <p>You can use either the AWS Management Console or the AWS Command Line Interface (AWS CLI) to delete the CloudFormation stack.</p>
 <h2 id="uninstall-the-stack-using-the-aws-management-console">Uninstall the stack using the AWS Management Console</h2>
 <ol>
@@ -941,7 +941,7 @@
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>

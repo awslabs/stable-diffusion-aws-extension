@@ -17,7 +17,7 @@
         <link rel="next" href="../dreambooth-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -633,7 +633,7 @@
   
     <li class="md-nav__item">
       <a href="../CloudAssetsManage/" class="md-nav__link">
-        Main tab
+        Cloud Assets Management
       </a>
     </li>
   
@@ -680,9 +680,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#general-inference" class="md-nav__link">
-    General Inference
+  <a href="#instructino-for-using-txt2img" class="md-nav__link">
+    Instructino for using txt2img
   </a>
+  
+    <nav class="md-nav" aria-label="Instructino for using txt2img">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-inference-scenario" class="md-nav__link">
+    General Inference Scenario
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-inference-scenarios" class="md-nav__link">
+    Continuous Inference Scenarios
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -873,9 +893,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#general-inference" class="md-nav__link">
-    General Inference
+  <a href="#instructino-for-using-txt2img" class="md-nav__link">
+    Instructino for using txt2img
   </a>
+  
+    <nav class="md-nav" aria-label="Instructino for using txt2img">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-inference-scenario" class="md-nav__link">
+    General Inference Scenario
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#continuous-inference-scenarios" class="md-nav__link">
+    Continuous Inference Scenarios
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -919,7 +959,8 @@
 
 <h1 id="txt2img-guide">txt2img Guide</h1>
 <p>You can open the <strong>txt2img</strong> tab to perform text-to-image inference using the combined functionality of the native region of txt2img and the newly added "Amazon SageMaker Inference" panel in the solution. This allows you to invoke cloud resources for txt2img inference tasks.</p>
-<h2 id="general-inference">General Inference</h2>
+<h2 id="instructino-for-using-txt2img">Instructino for using txt2img</h2>
+<h3 id="general-inference-scenario">General Inference Scenario</h3>
 <ol>
 <li>Navigate to <strong>txt2img</strong> tab, open <strong>Amazon SageMaker Inference</strong> panel. 
 <img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
@@ -941,6 +982,13 @@
 </li>
 </ol>
 <p><img alt="generate results" src="../../images/generate-results.png" /></p>
+<h3 id="continuous-inference-scenarios">Continuous Inference Scenarios</h3>
+<ol>
+<li>Following the <strong>General Inference Scenario</strong>, complete the parameter inputs and click <strong>Generate on Cloud</strong> to submit the initial inference task.</li>
+<li>Wait for the appearance of a new <strong>Inference ID</strong>in the right-side "Output" section.</li>
+<li>Once the new <strong>Inference ID</strong> appears, you can proceed to click <strong>Generate on Cloud</strong> again for the next inference task.</li>
+</ol>
+<p><img alt="generate results" src="../zh/images/continue-inference.png" /></p>
 <h2 id="controlnet-guide">Controlnet Guide</h2>
 <ul>
 <li>
@@ -987,7 +1035,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>

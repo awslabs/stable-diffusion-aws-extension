@@ -19,7 +19,7 @@
         <link rel="next" href="../dreambooth-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -635,7 +635,7 @@
   
     <li class="md-nav__item">
       <a href="../CloudAssetsManage/" class="md-nav__link">
-        主标签页
+        云上资源管理
       </a>
     </li>
   
@@ -686,12 +686,25 @@
     txt2img的使用方法
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#txt2img_2" class="md-nav__link">
-    连续使用txt2img的推理功能
+    <nav class="md-nav" aria-label="txt2img的使用方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    通用场景
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    连续使用场景
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -872,12 +885,25 @@
     txt2img的使用方法
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#txt2img_2" class="md-nav__link">
-    连续使用txt2img的推理功能
+    <nav class="md-nav" aria-label="txt2img的使用方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    通用场景
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    连续使用场景
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -922,6 +948,7 @@
 <h1 id="txt2img">使用txt2img进行云上推理</h1>
 <p>您可以打开<strong>txt2img</strong>标签页，通过结合使用<strong>txt2img</strong>原生区域及解决方案新增面板<strong>Amazon SageMaker Inference</strong>，实现调用云上资源的<strong>txt2img</strong>推理工作。 </p>
 <h2 id="txt2img_1">txt2img的使用方法</h2>
+<h3 id="_1">通用场景</h3>
 <ol>
 <li>进入<strong>txt2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。
 <img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
@@ -943,9 +970,12 @@
 </li>
 </ol>
 <p><img alt="generate results" src="../../images/generate-results.png" /></p>
-<h2 id="txt2img_2">连续使用txt2img的推理功能</h2>
-<p>在点击<strong>Generate on Cloud</strong>之后，需要等待右侧输出区域出现了新的<strong>inference id</strong>之后，
-才能再次点击<strong>Generate on Cloud</strong>进行连续推理。</p>
+<h3 id="_2">连续使用场景</h3>
+<ol>
+<li>按<strong>通用场景</strong>使用流程，完成参数录入，并点击<strong>Generate on Cloud</strong>提交第一次推理任务。</li>
+<li>等待右侧<strong>Output</strong>部分出现了新的<strong>inference id</strong>。</li>
+<li>在新的<strong>Inference Job ID</strong>出现后，便可再次点击<strong>Generate on Cloud</strong>进行下一次推理。</li>
+</ol>
 <p><img alt="generate results" src="../../images/continue-inference.png" /></p>
 <h2 id="controlnet">Controlnet的使用方法</h2>
 <h3 id="openpose">openpose的使用方法</h3>
@@ -1004,7 +1034,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>

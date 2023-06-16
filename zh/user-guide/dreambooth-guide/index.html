@@ -19,7 +19,7 @@
         <link rel="next" href="../../developer-guide/source/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.15">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
     
     
       
@@ -635,7 +635,7 @@
   
     <li class="md-nav__item">
       <a href="../CloudAssetsManage/" class="md-nav__link">
-        主标签页
+        云上资源管理
       </a>
     </li>
   
@@ -905,11 +905,25 @@
 <ol>
 <li>打开<strong>Dreambooth</strong>标签页，模块<strong>Model</strong>的标签页<strong>Select From Cloud</strong>。</li>
 <li>刷新<strong>Model</strong>列表，选择需要训练的模型。</li>
-<li>在<strong>Input</strong>模块设置相应的参数。<ul>
+<li>在<strong>Input</strong>模块设置相应的参数。  <ul>
+<li>设置训练参数  <ul>
+<li>勾选Lora可以加速训练过程。</li>
+<li>Training Steps Per Image (Epochs) 代表了单张图片训练的迭代次数，可以使用默认值。
+   <img alt="Input setting" src="../../images/dreambooth-input-settings.png" /> </li>
+</ul>
+</li>
+<li>设置需要训练的概念。<br />
+总共可以设置四个概念，我们以第一个概念为例。</li>
+<li>Dataset Directory 处填写训练所需的图片路径，可以是web server上的路径也可以是s3路径，s3路径可以从AWS Dataset Management中上传数据后获取或者自行上传s3后获取，需以s3://开头。</li>
+<li>Training Prompts 下的 Instance Prompt 处填写概念的关键词，关键词用于后续txt2img中生成本次训练所产生的概念，因此不要是常见的英文单词（会和基础模型中的其他概念混淆）。
+   <img alt="Input concepts" src="../../images/dreambooth-input-concepts.png" /> </li>
+<li>注意：<ul>
 <li>需要选择将模型保存到子目录
    <img alt="Save path" src="../../images/save-path.png" /></li>
 <li>目前不支持单独保存lora模型，所以请不要勾选下面这个选项
    <img alt="Save lora" src="../../images/save-lora.png" /></li>
+</ul>
+</li>
 </ul>
 </li>
 <li>点击<strong>SageMaker Train</strong>，启动模型训练任务。<strong>Training Job Details</strong>区域会即时增加本次模型训练的工作状态。当状态变成<strong>Complete</strong>，同时您部署解决方案时预留的邮箱将会收到邮件通知，即完成模型训练。</li>
@@ -950,7 +964,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
       
     
   </body>
