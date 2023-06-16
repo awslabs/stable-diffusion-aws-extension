@@ -1,4 +1,4 @@
-site_name: stable-diffusion-aws-extension
+site_name: Extension for Stable Diffusion on AWS
 site_url: https://awslabs.github.io/stable-diffusion-aws-extension/
 repo_url: https://github.com/awslabs/stable-diffusion-aws-extension
 repo_name: awslabs/stable-diffusion-aws-extension
