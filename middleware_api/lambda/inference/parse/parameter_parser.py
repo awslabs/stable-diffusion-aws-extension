@@ -5,7 +5,7 @@ import io
 import base64
 from gradio.processing_utils import encode_pil_to_base64
 
-def get_param_value(params_dict, key, defaultValue="false"):
+def get_param_value(params_dict, key, defaultValue=False):
     try:
         param_value = params_dict[key]
     except Exception as e:
@@ -149,11 +149,11 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     s_tmin = 0
     s_noise = 1 
 
-    selected_sd_model = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="") 
-    selected_cn_model = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="")
-    selected_hypernets = get_param_value(params_dict, 'sagemaker_hypernetwork_model', defaultValue="")
-    selected_loras = get_param_value(params_dict, 'sagemaker_lora_model', defaultValue="")
-    selected_embeddings = get_param_value(params_dict, 'sagemaker_texual_inversion_model', defaultValue="")
+    selected_sd_model = get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue="") 
+    selected_cn_model = get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue="")
+    selected_hypernets = get_param_value(params_dict, f'{param_name}_sagemaker_hypernetwork_model', defaultValue="")
+    selected_loras = get_param_value(params_dict, f'{param_name}_sagemaker_lora_model', defaultValue="")
+    selected_embeddings = get_param_value(params_dict, f'{param_name}_sagemaker_texual_inversion_model', defaultValue="")
     
     if selected_sd_model == "":
         selected_sd_model = ['v1-5-pruned-emaonly.safetensors']
@@ -188,37 +188,37 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         if lora_name not in prompt:
             prompt = prompt + f"<lora:{lora_name}:1>"
     
-    contronet_enable = get_param_value(params_dict, 'controlnet_enable')
-    if contronet_enable:
-        controlnet_module = get_param_value(params_dict, 'controlnet_preprocessor', defaultValue=None)
+    controlnet_enable = get_param_value(params_dict, f'{param_name}_controlnet_enable')
+    if controlnet_enable:
+        controlnet_module = get_param_value(params_dict, f'{param_name}_controlnet_preprocessor', defaultValue=None)
         if len(selected_cn_model) < 1:
             controlnet_model = "None"
         else:
             controlnet_model = os.path.splitext(selected_cn_model[0])[0]
         controlnet_image = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
         controlnet_image = controlnet_image.split(',')[1]
-        weight = float(get_param_value(params_dict, 'controlnet_weight', defaultValue=1)) #1,
-        if get_param_value(params_dict, 'controlnet_resize_mode_just_resize'):
+        weight = float(get_param_value(params_dict, f'{param_name}_controlnet_weight', defaultValue=1)) #1,
+        if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_just_resize'):
             resize_mode = "Just Resize" # "Crop and Resize",
-        if get_param_value(params_dict, 'controlnet_resize_mode_Crop_and_Resize'):
+        if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_Crop_and_Resize'):
             resize_mode = "Crop and Resize"
-        if get_param_value(params_dict, 'controlnet_resize_mode_Resize_and_Fill'):
+        if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_Resize_and_Fill'):
             resize_mode = "Resize and Fill"
-        lowvram = get_param_value(params_dict, 'controlnet_lowVRAM_enable') #: "False",
-        processor_res = int(get_param_value(params_dict, 'controlnet_preprocessor_resolution', defaultValue=512))
-        threshold_a = float(get_param_value(params_dict, 'controlnet_canny_low_threshold', defaultValue=0))
-        threshold_b = float(get_param_value(params_dict, 'controlnet_canny_high_threshold', defaultValue=1))
-        guidance_start = float(get_param_value(params_dict, 'controlnet_starting_control_step', defaultValue=0)) #: 0,
-        guidance_end = float(get_param_value(params_dict, 'controlnet_ending_control_step', defaultValue=1)) #: 1,
-        if get_param_value(params_dict, 'controlnet_control_mode_balanced'):
+        lowvram = get_param_value(params_dict, f'{param_name}_controlnet_lowVRAM_enable') #: "False",
+        processor_res = int(get_param_value(params_dict, f'{param_name}_controlnet_preprocessor_resolution', defaultValue=512))
+        threshold_a = float(get_param_value(params_dict, f'{param_name}_controlnet_canny_low_threshold', defaultValue=0))
+        threshold_b = float(get_param_value(params_dict, f'{param_name}_controlnet_canny_high_threshold', defaultValue=1))
+        guidance_start = float(get_param_value(params_dict, f'{param_name}_controlnet_starting_control_step', defaultValue=0)) #: 0,
+        guidance_end = float(get_param_value(params_dict, f'{param_name}_controlnet_ending_control_step', defaultValue=1)) #: 1,
+        if get_param_value(params_dict, f'{param_name}_controlnet_control_mode_balanced'):
             guessmode = "Balanced"
-        if get_param_value(params_dict, 'controlnet_control_mode_my_prompt_is_more_important'):
+        if get_param_value(params_dict, f'{param_name}_controlnet_control_mode_my_prompt_is_more_important'):
             guessmode = "My prompt is more important"
-        if get_param_value(params_dict, 'controlnet_control_mode_controlnet_is_more_important'):
+        if get_param_value(params_dict, f'{param_name}_controlnet_control_mode_controlnet_is_more_important'):
             guessmode = "Controlnet is more important"
-        pixel_perfect = get_param_value(params_dict, 'controlnet_pixel_perfect')
-        allow_preview = get_param_value(params_dict, 'controlnet_allow_preview')
-        loopback = get_param_value(params_dict, 'controlnet_loopback_automatically')
+        pixel_perfect = get_param_value(params_dict, f'{param_name}_controlnet_pixel_perfect')
+        allow_preview = get_param_value(params_dict, f'{param_name}_controlnet_allow_preview')
+        loopback = get_param_value(params_dict, f'{param_name}_controlnet_loopback_automatically')
     
     if param_name == 'txt2img':
         enable_hr = get_param_value(params_dict, f'{param_name}_enable_hr')
@@ -236,36 +236,48 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         img2img_selected_resize_tab = get_param_value(params_dict, 'img2img_selected_resize_tab', defaultValue='ResizeTo')
         img2img_init_img_with_mask = get_param_value(params_dict, 'img2img_init_img_with_mask', defaultValue=None)
         img2img_inpaint_color_sketch = get_param_value(params_dict, 'img2img_inpaint_color_sketch', defaultValue=None)
-        inpaint_color_sketch_orig = get_param_value(params_dict, 'inpaint_color_sketch_orig', defaultValue=None)
+        inpaint_color_sketch_orig = get_param_value(params_dict, 'img2img_inpaint_sketch_image', defaultValue=None)
         img2img_init_img_inpaint = get_param_value(params_dict, 'img2img_init_img_inpaint', defaultValue=None)
         img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_mask_inpaint', defaultValue=None)
         sketch = get_param_value(params_dict, 'img2img_sketch', defaultValue=None)
         img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        mask_blur = int(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4))
-        mask_alpha = 0
+        mask_blur = float(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4.0))
+        mask_alpha = float(get_param_value(params_dict, 'img2img_mask_alpha', defaultValue=0))
+
+        print("img2img mode is", img2img_mode)
         
         image = None
         mask = None
         if img2img_mode == 'img2img':  # img2img
-            image = img2img_init_img #.convert("RGB")
+            image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img.split(',')[1])))
+            image = encode_pil_to_base64(image.convert("RGB"))
             mask = None
         elif img2img_mode == 'Sketch':  # img2img sketch
-            image = sketch #.convert("RGB")
+            sketch = Image.open(io.BytesIO(base64.b64decode(sketch.split(',')[1])))
+            image = encode_pil_to_base64(sketch.convert("RGB"))
             mask = None
         elif img2img_mode == 'Inpaint_upload':  # inpaint upload mask
             image = img2img_init_img_inpaint
             mask = img2img_init_mask_inpaint
         elif img2img_mode == 'Inpaint':  # inpaint
             image = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["image"].split(',')[1])))
+            if image.mode == "RGB":
+                image.putalpha(255)
             mask = Image.open(io.BytesIO(base64.b64decode(img2img_init_img_with_mask["mask"].split(',')[1])))
             alpha_mask = ImageOps.invert(image.split()[-1]).convert('L').point(lambda x: 255 if x > 0 else 0, mode='1')
             mask = ImageChops.lighter(alpha_mask, mask.convert('L')).convert('L')
-            image = img2img_init_img_with_mask["image"] #image.convert("RGB")
+            image = image.convert("RGB")
+            image = encode_pil_to_base64(image)
             mask = encode_pil_to_base64(mask)
         elif img2img_mode == 'Inpaint_sketch':  # inpaint sketch
-            image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch)))
-            orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig))) or image_pil
-            pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
+            image_pil = Image.open(io.BytesIO(base64.b64decode(img2img_inpaint_color_sketch.split(',')[1])))
+            orig = Image.open(io.BytesIO(base64.b64decode(inpaint_color_sketch_orig.split(',')[1])))
+            if orig.mode == "RGB":
+                orig.putalpha(255)
+            orig = orig.resize(image_pil.size)
+            orig = orig or image_pil
+            #pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
+            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>80, axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
@@ -285,9 +297,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
 
 
         img2img_resize_mode = 0
-        if get_param_value(params_dict, 'img2img_resize_mode_Crop_and_Resize'):
+        if get_param_value(params_dict, 'img2img_resize_mode_crop_and_resize'):
             img2img_resize_mode = 1
-        if get_param_value(params_dict, 'img2img_resize_mode_Resize_and_Fill'):
+        if get_param_value(params_dict, 'img2img_resize_mode_resize_and_fill'):
             img2img_resize_mode = 2
         if get_param_value(params_dict, 'img2img_resize_mode_just_resize_latent_upscale'):
             img2img_resize_mode = 3
@@ -386,10 +398,11 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             payload[payload_name]["include_init_images"] = include_init_images
             
             
-        if contronet_enable:
+        if controlnet_enable:
             print(f'{task_type} with controlnet!!!!!!!!!!')
-            payload["alwayson_scripts"] = {}
-            payload["alwayson_scripts"]["controlnet"]["args"] = [
+            payload[payload_name]["alwayson_scripts"] = {}
+            payload[payload_name]["alwayson_scripts"]["controlnet"] = {}
+            payload[payload_name]["alwayson_scripts"]["controlnet"]["args"] = [
                 {
                     "input_image": controlnet_image,
                     "mask": "",

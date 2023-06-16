@@ -67,6 +67,7 @@ export class ListAllTrainJobsApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));

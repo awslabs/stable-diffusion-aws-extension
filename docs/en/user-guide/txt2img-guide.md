@@ -2,7 +2,9 @@
 
 You can open the **txt2img** tab to perform text-to-image inference using the combined functionality of the native region of txt2img and the newly added "Amazon SageMaker Inference" panel in the solution. This allows you to invoke cloud resources for txt2img inference tasks.
 
-## General Inference
+## Instructino for using txt2img
+
+### General Inference Scenario
 
 1. Navigate to **txt2img** tab, open **Amazon SageMaker Inference** panel. 
 ![Sagemaker Inference面板](../images/txt2img-sagemaker-inference.png)
@@ -20,7 +22,12 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 ![generate results](../images/generate-results.png)
 
 
+### Continuous Inference Scenarios
+1. Following the **General Inference Scenario**, complete the parameter inputs and click **Generate on Cloud** to submit the initial inference task.
+2. Wait for the appearance of a new **Inference ID**in the right-side "Output" section.
+3. Once the new **Inference ID** appears, you can proceed to click **Generate on Cloud** again for the next inference task.
 
+![generate results](../zh/images/continue-inference.png)
 
 
 ## Controlnet Guide

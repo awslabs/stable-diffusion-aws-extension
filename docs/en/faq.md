@@ -2,9 +2,9 @@
 
 ## General
 
-**Q: What is AWS Extension for Stable Diffusion?**
+**Q: What is Extension for Stable Diffusion on AWS?**
 
-AWS Extension for Stable Diffusion is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. 
+*Extension for Stable Diffusion on AWS* is an AWS solution that aims to assists customers migrate their Stable Diffusion model training, inference, and finetuning workloads on Stable Diffusion WebUI from local servers to Amazon SageMaker by providing extension and AWS CloudFormation template. By leveraging elastic cloud resources, this solution accelerates model iteration and mitigates performance bottlenecks associated with single-server deployments. 
 
 
 **Q: What are the native features/third-party extensions of Stable Diffusion WebUI supported by this solution?**
@@ -21,8 +21,11 @@ This solution is provided under the [Apache-2.0](https://www.apache.org/licenses
 You can submit feature requests and bug report through the GitHub issues. Here are the templates for [feature request](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29), [bug report](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29).
 
 
+## Installation and Configuration
 
+**Q: Is there a specific order for installing third-party plugins and the plugins for this solution?**
 
+Currently, it is recommended that users install the third-party extensions supported by this solution before installing the solution's own extension. However, the installation order can be changed as well. In that case, a restart of the WebUI is required to ensure the successful functioning of the features.
 
 
 ## Pricing

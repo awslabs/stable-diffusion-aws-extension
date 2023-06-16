@@ -10,7 +10,7 @@ To use extra models for inference, you will need to upload model through steps b
 > **Note**: You can upload multiple kinds of models by entering multiple local model paths in text box.
 
 3. Click **Upload Models to Cloud** to start uploading process.
-4. Message ** will appear once uploading completes.
+4. Message will appear on left right once uploading completes.
 
 
 

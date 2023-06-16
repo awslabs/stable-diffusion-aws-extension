@@ -44,7 +44,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     props: SDAsyncInferenceStackProps,
   ) {
     super(scope, id, props);
-    const srcImg = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:dev';
+    const srcImg = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:v1.0.0';
 
     if (!props?.api_gate_way) {
       throw new Error('api_gate_way is required');

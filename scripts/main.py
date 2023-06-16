@@ -19,10 +19,6 @@ dreambooth_available = True
 def dummy_function(*args, **kwargs):
     return []
 
-dreambooth_available = True
-def dummy_function(*args, **kwargs):
-    return []
-
 try:
     from dreambooth_on_cloud.train import (
         async_cloud_train,
@@ -79,9 +75,14 @@ class SageMakerUI(scripts.Script):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
-        sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-        return [sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
-    def process(self, p, sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
+        if not is_img2img:
+            sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
+            return [sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img,txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+        else:
+            sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
+            return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+
+    def process(self, p, sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, sd_checkpoint_img2img,  sd_checkpoint_refresh_button_img2img,  textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name):
         pass
 
 def on_after_component_callback(component, **_kwargs):
@@ -121,6 +122,7 @@ def on_after_component_callback(component, **_kwargs):
             fn=async_cloud_train,
             _js="db_start_sagemaker_train",
             inputs=[
+                db_model_name,
                 cloud_db_model_name,
                 db_use_txt2img,
                 cloud_train_instance_type
@@ -147,7 +149,7 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_generation_info is not None and \
         txt2img_html_info is not None and \
         txt2img_show_hook is None and \
-        txt2img_prompt is not None: 
+        txt2img_prompt is not None:
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
@@ -198,9 +200,9 @@ def on_after_component_callback(component, **_kwargs):
     is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
     is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
     is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
-     
-    
-    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
+
+
+    is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_base'
     is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
 
     if is_img2img_gallery:
@@ -251,14 +253,14 @@ def on_after_component_callback(component, **_kwargs):
                 fn=sagemaker_ui.call_interrogate_clip,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info] 
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
 
             sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_deepbooru,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]  
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
             sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
@@ -351,7 +353,7 @@ def on_ui_tabs():
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
                 with gr.Accordion("Upload Model to S3", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
-                    exts = (".bin", ".pt", ".safetensors", ".ckpt")
+                    exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
                     root_path = os.getcwd()
                     model_folders = {
                         "ckpt": os.path.join(root_path, "models", "Stable-diffusion"),
@@ -640,10 +642,10 @@ def ui_tabs_callback():
 
                                     with gr.Row():
                                         cloud_train_instance_type = gr.Dropdown(
-                                            label="Sagemaker Train Instance Type",
-                                            choices=['ml.g4dn.2xlarge'],
+                                            label="SageMaker Train Instance Type",
+                                            choices=['ml.g4dn.2xlarge', 'ml.g5.2xlarge'],
                                             elem_id="cloud_train_instance_type",
-                                            info='select sagemaker Train Instance Type'
+                                            info='select SageMaker Train Instance Type'
                                         )
                                     with gr.Row(visible=False) as lora_model_row:
                                         cloud_db_lora_model_name = gr.Dropdown(
@@ -684,7 +686,7 @@ def ui_tabs_callback():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
                                     with gr.Row():
                                         training_job_dashboard = gr.Dataframe(
-                                            headers=["id", "model name", "status", "sagemaker train name"],
+                                            headers=["id", "model name", "status", "SageMaker train name"],
                                             datatype=["str", "str", "str", "str"],
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
@@ -701,7 +703,7 @@ def ui_tabs_callback():
                                     cloud_db_new_model_name = gr.Textbox(label="Name", placeholder="Model names can only contain alphanumeric and -")
                                     with gr.Row():
                                         cloud_db_create_from_hub = gr.Checkbox(
-                                            label="Create From Hub", value=False
+                                            label="Create From Hub", value=False, visible=False
                                         )
                                         cloud_db_512_model = gr.Checkbox(label="512x Model", value=True)
                                     with gr.Column(visible=False) as hub_row:
