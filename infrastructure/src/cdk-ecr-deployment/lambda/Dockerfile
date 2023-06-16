@@ -5,8 +5,6 @@
 #FROM lambci/lambda:build-go1.x
 FROM public.ecr.aws/sam/build-go1.x
 
-USER root
-
 RUN yum -y install \
     gpgme-devel \
     btrfs-progs-devel \
