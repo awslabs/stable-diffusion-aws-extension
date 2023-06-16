@@ -193,11 +193,9 @@ def sagemaker_api(_, app: FastAPI):
         interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
         show_slim_dict(interrogate_payload)
         print(f"db_create_model_payload is: ")
-        db_create_model_payload = {} if req.db_create_model_payload is None else json.loads(req.db_create_model_payload.json())
-        show_slim_dict(db_create_model_payload)
+        print(f"{req.db_create_model_payload}")
         print(f"merge_checkpoint_payload is: ")
-        merge_checkpoint_payload = {} if req.merge_checkpoint_payload is None else json.loads(req.merge_checkpoint_payload.json())
-        show_slim_dict(merge_checkpoint_payload)
+        print(f"{req.merge_checkpoint_payload}")
         # print(f"json is {json.loads(req.json())}")
 
         if req.task == 'txt2img' or req.task == 'img2img':
