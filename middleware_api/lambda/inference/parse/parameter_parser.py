@@ -5,7 +5,7 @@ import io
 import base64
 from gradio.processing_utils import encode_pil_to_base64
 
-def get_param_value(params_dict, key, defaultValue="false"):
+def get_param_value(params_dict, key, defaultValue=False):
     try:
         param_value = params_dict[key]
     except Exception as e:
@@ -188,8 +188,8 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         if lora_name not in prompt:
             prompt = prompt + f"<lora:{lora_name}:1>"
     
-    contronet_enable = get_param_value(params_dict, f'{param_name}_controlnet_enable')
-    if contronet_enable:
+    controlnet_enable = get_param_value(params_dict, f'{param_name}_controlnet_enable')
+    if controlnet_enable:
         controlnet_module = get_param_value(params_dict, f'{param_name}_controlnet_preprocessor', defaultValue=None)
         if len(selected_cn_model) < 1:
             controlnet_model = "None"
@@ -398,7 +398,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             payload[payload_name]["include_init_images"] = include_init_images
             
             
-        if contronet_enable:
+        if controlnet_enable:
             print(f'{task_type} with controlnet!!!!!!!!!!')
             payload[payload_name]["alwayson_scripts"] = {}
             payload[payload_name]["alwayson_scripts"]["controlnet"] = {}

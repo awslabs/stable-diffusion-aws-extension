@@ -26,26 +26,27 @@ payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_typ
 
 print(payload.keys())
 
-# # call local api
-# url = "http://127.0.0.1:8082"
+# call local api
+url = "http://127.0.0.1:8082"
 
-# response = requests.post(url=f'{url}/sdapi/v1/img2img', json=payload['img2img_payload'])
+response = requests.post(url=f'{url}/invocations', json=payload)
 
-# print(f"run time is {time.time()-start_time}")
+print(f"run time is {time.time()-start_time}")
 
-# print(f"response is {response}")
+print(f"response is {response}")
 
-# r = response.json()
-# id = 0
-# for i in r['images']:
-#     image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
+r = response.json()
 
-#     png_payload = {
-#         "image": "data:image/png;base64," + i
-#     }
-#     response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+id = 0
+for i in r['images']:
+    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
 
-#     pnginfo = PngImagePlugin.PngInfo()
-#     pnginfo.add_text("parameters", response2.json().get("info"))
-#     image.save('output_%d.png'%id, pnginfo=pnginfo)
-#     id += 1
+    png_payload = {
+        "image": "data:image/png;base64," + i
+    }
+    response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
+
+    pnginfo = PngImagePlugin.PngInfo()
+    pnginfo.add_text("parameters", response2.json().get("info"))
+    image.save('output_%d.png'%id, pnginfo=pnginfo)
+    id += 1
