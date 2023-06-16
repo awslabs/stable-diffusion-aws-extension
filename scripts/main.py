@@ -82,7 +82,7 @@ class SageMakerUI(scripts.Script):
             sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
             return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
-    def process(self, p, sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, sd_checkpoint_img2img,  sd_checkpoint_refresh_button_img2img,  textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_on_cloud):
+    def process(self, p, sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, sd_checkpoint_img2img,  sd_checkpoint_refresh_button_img2img,  textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name):
         pass
 
 def on_after_component_callback(component, **_kwargs):

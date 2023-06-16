@@ -27,7 +27,7 @@ payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_typ
 print(payload.keys())
 
 # call local api
-url = "http://127.0.0.1:8082"
+url = "http://127.0.0.1:8080"
 
 response = requests.post(url=f'{url}/invocations', json=payload)
 
