@@ -361,7 +361,7 @@ export class UpdateTrainJobApi {
 
     const ecrDeployment = new ECRDeployment(this.scope, `${this.id}-ecr-deploy`, {
       src: new DockerImageName(srcImage),
-      dest: new DockerImageName(`${dockerRepo.repositoryUri}:v1.0.0`),
+      dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
     });
 
     // trigger the custom resource lambda
