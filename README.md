@@ -1,4 +1,4 @@
-# AWS Extension for Stable Diffusion
+# Extension for Stable Diffusion on AWS
 This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.
 
 ## How to get started:
