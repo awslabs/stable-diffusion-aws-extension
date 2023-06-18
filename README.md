@@ -140,14 +140,4 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ```
 
 ## Version
-Beta
-
-## Changelog
-Alpha
-- txt2img (ckpt merge, training, inference)
-- dreambooth, controlnet plugin support
-- compatible version (commit id), webui - "89f9faa6", controlnet - "7c674f83", dreambooth - "926ae204"
-
-
-
-
+[v1.0.0](https://github.com/awslabs/stable-diffusion-aws-extension/wiki#release-versions)

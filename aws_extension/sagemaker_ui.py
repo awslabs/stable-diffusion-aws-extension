@@ -159,8 +159,8 @@ def get_inference_job_list():
                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
-            # Sort the list based on completeTime in descending order
-            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=True)
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
 
             # Append the sorted combined strings to the txt2img_inference_job_ids list
             for item in sorted_list:
@@ -498,34 +498,6 @@ def call_remote_inference(sagemaker_endpoint, type):
         infotexts = f"Inference id is {inference_id}, please go to inference job Id dropdown to check the status"
         return image_list, info_text, plaintext_to_html(infotexts)
 
-        # TODO: temp comment the while loop since it will block user to click inference
-        # # Loop until the get_inference_job status is 'succeed' or 'failed'
-        # max_attempts = 10
-        # attempt_count = 0
-        # while attempt_count < max_attempts:
-        #     job_status = get_inference_job(inference_id)
-        #     status = job_status['status']
-        #     if status == 'succeed':
-        #         break
-        #     elif status == 'failure':
-        #         print(f"Inference job failed: {job_status.get('error', 'No error message provided')}")
-        #         break
-        #     time.sleep(3)  # You can adjust the sleep time as needed
-        #     attempt_count += 1
-
-        # if status == 'succeed':
-        #     return display_inference_result(inference_id)
-        # elif status == 'failure':
-        #     image_list = []  # Return an empty list if selected_value is None
-        #     info_text = ''
-        #     infotexts = f"Inference Failed! The error info: {job_status.get('error', 'No error message provided')}"
-        #     return image_list, info_text, plaintext_to_html(infotexts)
-        # else:
-        #     image_list = []  # Return an empty list if selected_value is None
-        #     info_text = ''
-        #     infotexts = f"Inference time is longer than 30 seconds, please go to inference job Id dropdown to check the status"
-        #     return image_list, info_text, plaintext_to_html(infotexts)
-
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
     print(f"delete endpoint list: {delete_endpoint_list}")
@@ -680,17 +652,19 @@ def fake_gan(selected_value: str ):
             prompt_txt = ''
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
-            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
             json_list = []
-            json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
+            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
+            # output directory mapping to task type
+            if inference_job_taskType == "txt2img":
+                image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
+                json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
+                json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
+            elif inference_job_taskType == "img2img":
+                image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
+                json_list = download_images(inference_pram_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
+                json_file = f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
             print(f"{str(images)}")
             print(f"{str(inference_pram_json_list)}")
-
-            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-
             if os.path.isfile(json_file):
                 with open(json_file) as f:
                     log_file = json.load(f)
@@ -717,39 +691,6 @@ def fake_gan(selected_value: str ):
         infotexts = ''
 
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
-
-def display_inference_result(inference_id: str ):
-    print(f"selected value is {inference_id}")
-    if inference_id is not None:
-        # Extract the InferenceJobId value
-        inference_job_id = inference_id
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
-
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-
-        f = open(json_file)
-
-        log_file = json.load(f)
-
-        info_text = log_file["info"]
-
-        infotexts = json.loads(info_text)["infotexts"][0]
-    else:
-        image_list = []  # Return an empty list if selected_value is None
-        json_list = []
-        info_text = 'inference_id is Null'
-        infotexts = 'inference_id is Null'
-
-    return image_list, info_text, plaintext_to_html(infotexts)
 
 def init_refresh_resource_list_from_cloud():
     print(f"start refreshing resource list from cloud")
