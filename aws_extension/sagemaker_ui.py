@@ -142,7 +142,6 @@ def origin_update_txt2img_inference_job_ids():
 
 def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
     global txt2img_inference_job_ids
-    global inference_job_dropdown
     print(f"get_inference_job_list: {txt2img_inference_job_ids}")
     try:
         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -188,11 +187,15 @@ def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=Fa
             for item in sorted_list:
                 txt2img_inference_job_ids.append(item[1])
             print(f"txt2img_inference_job_ids: {txt2img_inference_job_ids}")
-            return inference_job_dropdown.update(choices=txt2img_inference_job_ids)
+            inference_job_dropdown.update(choices=txt2img_inference_job_ids)
+            return txt2img_inference_job_ids
         else:
             print("The API response is empty.")
+            return []
+
     except Exception as e:
         print("Exception occurred when fetching inference_job_ids")
+        return []
 
 
 
@@ -803,16 +806,21 @@ def create_ui(is_img2img):
                                                      label="Inference Job IDs",
                                                      elem_id="txt2img_inference_job_ids_dropdown"
                                                      )
-                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
+                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
                 # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
 
             with gr.Row():
-                txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=False, elem_id="txt2img_type_checkbox")
-                img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=False, elem_id="img2img_type_checkbox")
-                interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=False, elem_id="interrogate_type_checkbox")
-                txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+                with gr.Column(scale=1):
+                    gr.HTML(value="Inference Job type filters")
+                with gr.Column(scale=4):
+                    with gr.Row():
+                        txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
+                        img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
+                        interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
+
+                txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox])
+                img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox])
+                interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox])
 
             with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")
