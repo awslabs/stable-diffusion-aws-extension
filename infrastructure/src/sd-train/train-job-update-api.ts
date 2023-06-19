@@ -55,7 +55,7 @@ export class UpdateTrainJobApi {
   private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
   private readonly sfnLambdaRole: aws_iam.Role;
-  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:v1.0.0';
+  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:dev';
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
@@ -361,7 +361,7 @@ export class UpdateTrainJobApi {
 
     const ecrDeployment = new ECRDeployment(this.scope, `${this.id}-ecr-deploy`, {
       src: new DockerImageName(srcImage),
-      dest: new DockerImageName(`${dockerRepo.repositoryUri}:v1.0.0`),
+      dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
     });
 
     // trigger the custom resource lambda

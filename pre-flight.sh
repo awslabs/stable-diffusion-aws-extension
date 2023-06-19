@@ -3,7 +3,7 @@
 # Usage: ./pre-flight_check.sh -p to do the pre-flight check for WebUI -s to auto sync the repo and plugin to compatible commit id
 
 INITIAL_SUPPORT_COMMIT_ROOT="baf6946e06249c5af9851c60171692c44ef633e0"
-INITIAL_SUPPORT_COMMIT_CONTROLNET="f36493878b299c367bc51f2935fd7e6d19188569"
+INITIAL_SUPPORT_COMMIT_CONTROLNET="5fc952793aa97bdd0078574b3be8bc98e1fcf2cd"
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH="dc413a14379b165355502d9f65856c40a4bb5b6f"
 
 # built the initial support commit list from option or default value if not provided

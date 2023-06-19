@@ -23,7 +23,7 @@ git clone https://github.com/Mikubill/sd-webui-controlnet.git
 
 # Go to sd-webui-controlnet directory and reset to specific commit
 cd sd-webui-controlnet
-git reset --hard f36493878b299c367bc51f2935fd7e6d19188569
+git reset --hard 5fc952793aa97bdd0078574b3be8bc98e1fcf2cd
 cd ..
 
 # Clone sd_dreambooth_extension
