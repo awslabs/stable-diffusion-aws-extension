@@ -21,6 +21,8 @@ RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/t
 
 RUN pip install --upgrade pip
 
+RUN pip install numba==0.57.0
+
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 WORKDIR /opt/ml/code

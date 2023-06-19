@@ -155,7 +155,7 @@ def sagemaker_api(_, app: FastAPI):
         @return:
         """
         print('-------invocation------')
-        print(req)
+        # print(req)
         # print(f"json is {json.loads(req.json())}")
 
         if req.task == 'text-to-image' or req.task == 'image-to-image' or req.task == 'piying':
@@ -175,23 +175,33 @@ def sagemaker_api(_, app: FastAPI):
                 # shared.opts.data = default_options
                 return response.json()
             elif req.task == 'piying':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
-                r = response.json()
-                generate_piying_base64 = r['images'][0]
-                #do background remove 
-                payload_bkrm = {
-                    "input_image": generate_piying_base64,
-                    "model": "u2net", 
-                    "return_mask": True, 
-                    "alpha_matting": True, 
-                    "alpha_matting_foreground_threshold": 240, 
-                    "alpha_matting_background_threshold": 10, 
-                    "alpha_matting_erode_size": 10
-                }
-                response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload_bkrm)
-                response = response.json()
-                response['piying_img'] = generate_piying_base64
-                return response
+                frame_list = req.checkpoint_info['frame_list']
+                piying_list = []
+                alpha_list = []
+                final_result = {}
+                for frame in frame_list:
+                    txt2img_payload = json.loads(req.txt2img_payload.json())
+                    txt2img_payload["alwayson_scripts"]["controlnet"]["args"][0]["input_image"] = frame
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=txt2img_payload)
+                    r = response.json()
+                    generate_piying_base64 = r['images'][0]
+                    piying_list.append(generate_piying_base64)
+                    #do background remove 
+                    payload_bkrm = {
+                        "input_image": generate_piying_base64,
+                        "model": "u2net", 
+                        "return_mask": True, 
+                        "alpha_matting": True, 
+                        "alpha_matting_foreground_threshold": 240, 
+                        "alpha_matting_background_threshold": 10, 
+                        "alpha_matting_erode_size": 10
+                    }
+                    response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload_bkrm)
+                    response = response.json()
+                    alpha_list.append(response['image'])
+                final_result['piying_list'] = piying_list
+                final_result['alpha_list'] = alpha_list
+                return final_result
             elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.interrogate_payload.json()))
                 return response.json()
