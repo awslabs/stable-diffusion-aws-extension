@@ -26,7 +26,7 @@
 
 请参考AWS如下文档去获取更多关于配额信息:
 
-* [Amazon SageMaker Service配额](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
-* [请求增加配额](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)
+* [Amazon SageMaker Service配额](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html){:target="_blank"}
+* [请求增加配额](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html){:target="_blank"}
 
 

@@ -1,1 +1,1 @@
-访问我们的GitHub存储库，下载此解决方案的源文件。XXXX解决方案的模板是使用[云开发工具包（CDK）](http://aws.amazon.com/cdk/)生成的。有关更多信息，请参阅[README.md](https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/README.md)文件。
+访问我们的GitHub存储库，下载此解决方案的源文件。XXXX解决方案的模板是使用[云开发工具包（CDK）](http://aws.amazon.com/cdk/){:target="_blank"}生成的。有关更多信息，请参阅[README.md](https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/README.md){:target="_blank"}文件。

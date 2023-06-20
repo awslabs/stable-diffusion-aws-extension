@@ -1,7 +1,7 @@
 本章节将详细介绍本解决方案提供的便捷云上资源管理方式。
 
 ## 上传训练模型
-如需在txt2img使用非云端推理模型，您只需按下列步骤完成推理模型上传，即可按[这里]()步骤完成模型调用及推理。
+如需在txt2img或img2img使用非云端推理模型，您只需按下列步骤完成推理模型上传，即可按[txt2img](./txt2img-guide.md)或[img2img](./img2img-guide.md)相应步骤完成模型调用及推理。
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块。
 ![Upload Models to S3](../images/Upload-models.png)
