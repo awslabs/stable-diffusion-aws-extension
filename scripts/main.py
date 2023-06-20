@@ -280,7 +280,6 @@ def update_connect_config(api_url, api_token):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
     api_key = get_variable_from_json('api_token')
-    print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
     sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "config updated to local config!"
 
@@ -290,7 +289,6 @@ def test_aws_connect_config(api_url, api_token):
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
-    print(f"get the api_url:{api_url} and token: {api_token}............")
     target_url = f'{api_url}inference/test-connection'
     headers = {
         "x-api-key": api_token,
