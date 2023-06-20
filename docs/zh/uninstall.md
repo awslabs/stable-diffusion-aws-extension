@@ -16,7 +16,7 @@
 
 ## 使用CLI删除堆栈
 
-1. 确定命令行在您的环境中是否可用。有关安装说明，请参阅CLI用户指南中的[CLI是什么](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-welcome.html)。
+1. 确定命令行在您的环境中是否可用。有关安装说明，请参阅CLI用户指南中的[CLI是什么](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-welcome.html){:target="_blank"}。
 2. 确认CLI可用后，请运行以下命令:
 ```
 bash aws cloudformation delete-stack --stack-name <installation-stack-name>

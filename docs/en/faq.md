@@ -13,12 +13,12 @@ This solution supports multiply native features/third-party extensions of Stable
 
 **Q: What is the licence of this solution?**
 
-This solution is provided under the [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0) license. It is a permissive free software license written by the Apache Software Foundation. It allows users to use the software for any purpose, to distribute it, to modify it, and to distribute modified versions of the software under the terms of the license, without concern for royalties.
+This solution is provided under the [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0){:target="_blank"} license. It is a permissive free software license written by the Apache Software Foundation. It allows users to use the software for any purpose, to distribute it, to modify it, and to distribute modified versions of the software under the terms of the license, without concern for royalties.
 
 
 **Q: How can I submit a feature request or bug report?**
 
-You can submit feature requests and bug report through the GitHub issues. Here are the templates for [feature request](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29), [bug report](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29).
+You can submit feature requests and bug report through the GitHub issues. Here are the templates for [feature request](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29){:target="_blank"}, [bug report](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29){:target="_blank"}.
 
 
 ## Installation and Configuration

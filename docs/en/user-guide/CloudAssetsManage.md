@@ -2,7 +2,7 @@
 This chapter will provide a detailed overview of the convenient cloud-based resource management approach offered by this solution.
 
 ## Upload Model
-To use extra models for inference, you will need to upload model through steps below, and follow steps [here](txt2img-guide.md) to inference with extra models.
+To use extra models for inference, you will need to upload model through steps below, and follow steps in [txt2img](txt2img-guide.md) or [img2img](img2img-guide.md)to inference with extra models as need.
 
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**.
 ![Upload Models to S3](../images/Upload-models.png)

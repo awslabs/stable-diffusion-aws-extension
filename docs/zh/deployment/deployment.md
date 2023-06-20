@@ -10,9 +10,10 @@
 在亚马逊云科技上部署本解决方案主要包括以下过程：
 
 - 步骤1：在您的亚马逊云科技账户中启动Amazon CloudFormation模板。
-<!-- - 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。 -->
 - 步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。
 - 步骤3: 配置API Url和API Token
+
+<!-- - 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。 -->
 
 
 ## 部署步骤
@@ -23,7 +24,7 @@
 
 此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
 
-1. 登录到AWS管理控制台，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json)。
+1. 登录到AWS管理控制台，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"}。
 2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
 3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
 4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，在**email**处输入一个正确的电子邮件地址，以便接收将来的通知。在**sdextensionapikey**字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在**utilscpuinsttype**选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击**下一步**。
@@ -57,7 +58,7 @@ cd stable-diffusion-webui
 ```
 ### 步骤3: 配置API Url和API Token
 
-1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
+1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/){:target="_blank"}。
 
 2. 从堆栈列表中选择方案的根堆栈，而不是嵌套堆栈。列表中嵌套堆栈的名称旁边会显示嵌套（NESTED）。
 
