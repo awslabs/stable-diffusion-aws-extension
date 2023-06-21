@@ -34,4 +34,8 @@ ENV ON_DOCKER true
 RUN apt-get install -y google-perftools
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
+RUN mkdir -p /opt/ml/code/models/Lora
+COPY models /opt/ml/code/modeles/Lora/
+
+
 ENTRYPOINT ["python", "/opt/ml/code/serve"]
