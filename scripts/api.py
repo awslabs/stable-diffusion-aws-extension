@@ -5,6 +5,12 @@ import os
 import traceback
 import time
 import copy
+import base64
+import io
+import cv2
+from PIL import Image
+import rembg
+from modules.api import api
 
 import requests
 from fastapi import FastAPI
@@ -145,6 +151,38 @@ def merge_model_on_cloud(req):
 
     return output_model_position
 
+def crop_combined_pose_image_v3(image, pose_image_size_list):
+    start_x = 0
+    cropped_image_list = []
+    for pose_image_size in pose_image_size_list:
+        x, y = pose_image_size
+        end_x = start_x + x
+        cropped_image = image.crop((start_x, 0, end_x, y))
+        cropped_image_list.append(cropped_image)
+        start_x = end_x
+    return cropped_image_list
+
+def crop_combined_pose_image_v2(image, pose_image_size_list):
+    start_x = 0
+    cropped_image_list = []
+    for pose_image_size in pose_image_size_list:
+        x, y = pose_image_size
+        end_x = start_x + x
+        bounding_box = [[start_x, 0], [end_x, y]]
+        cropped_image = image[bounding_box[0][1]:bounding_box[1][1],
+                                  bounding_box[0][0]:bounding_box[1][0]]
+        cropped_image_list.append(cropped_image)
+        start_x = end_x
+    return cropped_image_list
+
+def decode_base64_to_image(encoding):
+    if encoding.startswith("data:image/"):
+        encoding = encoding.split(";")[1].split(",")[1]
+    return Image.open(io.BytesIO(base64.b64decode(encoding)))
+
+def decode_base64_to_opencv_image(encoding):
+    return cv2.imdecode(io.BytesIO(base64.b64decode(encoding)), cv2.IMREAD_COLOR)
+
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
 
@@ -185,20 +223,30 @@ def sagemaker_api(_, app: FastAPI):
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=txt2img_payload)
                     r = response.json()
                     generate_piying_base64 = r['images'][0]
-                    piying_list.append(generate_piying_base64)
-                    #do background remove 
-                    payload_bkrm = {
-                        "input_image": generate_piying_base64,
-                        "model": "u2net", 
-                        "return_mask": True, 
-                        "alpha_matting": True, 
-                        "alpha_matting_foreground_threshold": 240, 
-                        "alpha_matting_background_threshold": 10, 
-                        "alpha_matting_erode_size": 10
-                    }
-                    response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload_bkrm)
-                    response = response.json()
-                    alpha_list.append(response['image'])
+                    combined_image = decode_base64_to_image(generate_piying_base64)
+                    cropped_image_list = crop_combined_pose_image_v3(combined_image, req.checkpoint_info['pose_image_size_list'])
+                    for image in cropped_image_list:
+                        image_base64 = api.encode_pil_to_base64(image).decode("utf-8")
+                        piying_list.append(image_base64)
+                        #do background remove 
+                        model = "isnet-anime", 
+                        return_mask = True,
+                        alpha_matting = True,
+                        alpha_matting_foreground_threshold = 240,
+                        alpha_matting_background_threshold = 10,
+                        alpha_matting_erode_size = 10
+                        alpha_image = rembg.remove(
+                            image,
+                            session=rembg.new_session(model),
+                            only_mask=return_mask,
+                            alpha_matting=alpha_matting,
+                            alpha_matting_foreground_threshold=alpha_matting_foreground_threshold,
+                            alpha_matting_background_threshold=alpha_matting_background_threshold,
+                            alpha_matting_erode_size=alpha_matting_erode_size,
+                        )
+                        # response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload_bkrm)
+                        # response = response.json()
+                        alpha_list.append(api.encode_pil_to_base64(alpha_image).decode("utf-8"))
                 final_result['piying_list'] = piying_list
                 final_result['alpha_list'] = alpha_list
                 return final_result
