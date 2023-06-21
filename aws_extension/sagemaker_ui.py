@@ -134,7 +134,6 @@ def update_sagemaker_endpoints():
 
 def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
     # global txt2img_inference_job_ids
-    print(f"update_txt2img_inference_job_ids: {inference_job_dropdown}")
     return get_inference_job_list(txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox)
 
 def origin_update_txt2img_inference_job_ids():
@@ -142,7 +141,6 @@ def origin_update_txt2img_inference_job_ids():
 
 def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
     global txt2img_inference_job_ids
-    print(f"get_inference_job_list: {txt2img_inference_job_ids}")
     try:
         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
         response = server_request('inference/list-inference-jobs')
@@ -150,9 +148,6 @@ def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=Fa
         # print(f"response: {response.json()}")
         filter_checkbox = False
         selected_types = []
-        print(f"txt2img_type_checkbox: {txt2img_type_checkbox}")
-        print(f"img2img_type_checkbox: {img2img_type_checkbox}")
-        print(f"interrogate_type_checkbox: {interrogate_type_checkbox}")
         if txt2img_type_checkbox:
             selected_types.append('txt2img')
             filter_checkbox = True
@@ -180,13 +175,12 @@ def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=Fa
                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
 
-            # Sort the list based on completeTime in descending order
-            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=True)
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
 
             # Append the sorted combined strings to the txt2img_inference_job_ids list
             for item in sorted_list:
                 txt2img_inference_job_ids.append(item[1])
-            print(f"txt2img_inference_job_ids: {txt2img_inference_job_ids}")
             # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
             return gr.Dropdown.update(choices=txt2img_inference_job_ids)
         else:
@@ -202,7 +196,6 @@ def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=Fa
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
-    print(f"response of get_inference_job is {str(response)}")
     return response.json()
 
 def get_inference_job_image_output(inference_job_id):
@@ -516,14 +509,54 @@ def call_remote_inference(sagemaker_endpoint, type):
         print(f"Failed to decode JSON response: {e}")
         print(f"Raw server response: {response.text}")
     else:
-        print(f"response for rest api {r}")
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
-        print(f"inference_id is {inference_id}")
-
         image_list = []  # Return an empty list if selected_value is None
         info_text = ''
-        infotexts = f"Inference id is {inference_id}, please go to inference job Id dropdown to check the status"
-        return image_list, info_text, plaintext_to_html(infotexts)
+        infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
+        json_list = []
+        prompt_txt = ''
+
+        try:
+            resp = get_inference_job(inference_id)
+            if resp is None:
+                return image_list, info_text, plaintext_to_html(infotexts)
+            else:
+                if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
+                    while resp['status'] == "inprogress":
+                        time.sleep(3)
+                        resp = get_inference_job(inference_id)
+                    if resp['status'] == "failed":
+                        infotexts = f"Inference job {inference_id} is failed"
+                        return image_list, info_text, plaintext_to_html(infotexts)
+                    elif resp['status'] == "succeed":
+                        if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
+                            prompt_txt = resp['caption']
+                            # return with default value, including image_list, info_text, infotexts
+                            return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
+                        images = get_inference_job_image_output(inference_id.strip())
+                        inference_param_json_list = get_inference_job_param_output(inference_id)
+                        if resp['taskType'] == "txt2img":
+                            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
+                            json_list = download_images(inference_param_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
+                            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
+                        elif resp['taskType'] == "img2img":
+                            image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
+                            json_list = download_images(inference_param_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
+                            json_file = f"outputs/img2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
+                        if os.path.isfile(json_file):
+                            with open(json_file) as f:
+                                log_file = json.load(f)
+                                info_text = log_file["info"]
+                                infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                        else:
+                            print(f"File {json_file} does not exist.")
+                            info_text = 'something wrong when trying to download the inference parameters'
+                            infotexts = info_text
+                        return image_list, info_text, plaintext_to_html(infotexts)
+                else:
+                    return image_list, info_text, plaintext_to_html(infotexts)
+        except Exception as e:
+            print(f"Failed to get inference job {inference_id}, error: {e}")
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
@@ -804,7 +837,7 @@ def create_ui(is_img2img):
                 global txt2img_inference_job_ids
 
                 inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
-                                                     label="Inference Job IDs",
+                                                     label="Inference Job: Time-Type-Status-Uuid",
                                                      elem_id="txt2img_inference_job_ids_dropdown"
                                                      )
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
