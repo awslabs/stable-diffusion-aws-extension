@@ -281,7 +281,7 @@ def update_connect_config(api_url, api_token):
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
-    return "config updated to local config!"
+    return "Setting updated"
 
 def test_aws_connect_config(api_url, api_token):
     update_connect_config(api_url, api_token)
@@ -346,6 +346,11 @@ def on_ui_tabs():
                                          outputs= [test_connection_result])
                 aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
                 aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
+
+                with gr.Row():
+                    with gr.Accordion("Disclaimer", open=False):
+                        gr.Label(title="Disclaimer", value="You should perform your own independent assessment, and take measures to ensure that you comply with your own specific quality control practices and standards, and the local rules, laws, regulations, licenses and terms of use that apply to you, your content, and the third-party generative AI service in this web UI. Amazon Web Services has no control or authority over the third-party generative AI service in this web UI, and does not make any representations or warranties that the third-party generative AI service is secure, virus-free, operational, or compatible with your production environment and standards.");
+
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
