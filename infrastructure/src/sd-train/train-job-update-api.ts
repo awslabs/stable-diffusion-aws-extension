@@ -24,6 +24,7 @@ import { StateMachineProps } from 'aws-cdk-lib/aws-stepfunctions/lib/state-machi
 import { LambdaInvokeProps } from 'aws-cdk-lib/aws-stepfunctions-tasks/lib/lambda/invoke';
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
+import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../common/dockerImages';
 
 export interface UpdateTrainJobApiProps{
   router: aws_apigateway.Resource;
@@ -55,7 +56,7 @@ export class UpdateTrainJobApi {
   private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
   private readonly sfnLambdaRole: aws_iam.Role;
-  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:dev';
+  private readonly srcImg: string = AIGC_WEBUI_DREAMBOOTH_TRAINING;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {

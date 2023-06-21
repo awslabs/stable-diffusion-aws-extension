@@ -19,6 +19,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { CreateModelSageMakerEndpoint } from './create-model-endpoint';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
+import { AIGC_WEBUI_UTILS } from '../common/dockerImages';
 
 
 export interface UpdateModelStatusRestApiProps {
@@ -36,7 +37,7 @@ export interface UpdateModelStatusRestApiProps {
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:dev';
+  private readonly imageUrl: string = AIGC_WEBUI_UTILS;
   private readonly machineType: string;
 
   private readonly src;
