@@ -195,6 +195,46 @@ def sagemaker_api(_, app: FastAPI):
         print('-------invocation------')
         # print(req)
         # print(f"json is {json.loads(req.json())}")
+        def show_slim_dict(payload):
+            pay_type = type(payload)
+            if pay_type is dict:
+                for k, v in payload.items():
+                    print(f"{k}")
+                    show_slim_dict(v)
+            elif pay_type is list:
+                for v in payload:
+                    print(f"list")
+                    show_slim_dict(v)
+            elif pay_type is str:
+                if len(payload) > 50:
+                    print(f" : {len(payload)} contents")
+                else:
+                    print(f" : {payload}")
+            else:
+                print(f" : {payload}")
+
+        print(f"task is {req.task}")
+        print(f"checkpoint_info is {req.checkpoint_info}")
+        print(f"models is {req.models}")
+        print(f"txt2img_payload is: ")
+        txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
+        show_slim_dict(txt2img_payload)
+        print(f"img2img_payload is: ")
+        img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
+        show_slim_dict(img2img_payload)
+        print(f"extra_single_payload is: ")
+        extra_single_payload = {} if req.extras_single_payload is None else json.loads(req.extras_single_payload.json())
+        show_slim_dict(extra_single_payload)
+        print(f"extra_batch_payload is: ")
+        extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(req.extras_batch_payload.json())
+        show_slim_dict(extra_batch_payload)
+        print(f"interrogate_payload is: ")
+        interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
+        show_slim_dict(interrogate_payload)
+        print(f"db_create_model_payload is: ")
+        print(f"{req.db_create_model_payload}")
+        print(f"merge_checkpoint_payload is: ")
+        print(f"{req.merge_checkpoint_payload}")
 
         if req.task == 'text-to-image' or req.task == 'image-to-image' or req.task == 'piying':
             selected_models = req.models
