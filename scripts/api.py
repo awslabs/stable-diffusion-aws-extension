@@ -214,7 +214,9 @@ def sagemaker_api(_, app: FastAPI):
                 print(f" : {payload}")
 
         print(f"task is {req.task}")
-        print(f"checkpoint_info is {req.checkpoint_info}")
+        print(f"checkpoint_info is ")
+        debug_checkpoint_info = {} if req.checkpoint_info is None else req.checkpoint_info
+        show_slim_dict(debug_checkpoint_info)
         print(f"models is {req.models}")
         print(f"txt2img_payload is: ")
         txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
