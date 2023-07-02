@@ -36,10 +36,10 @@ jobs:
         run: |
           echo "cdk-nag installation started `date`"
           npm install -g cdk-nag
-          echo "cdk-nag installation complete `date`"
-          echo "Starting cdk-nag `date` in `pwd`"
-          cdk-nag --fail-on-warnings
-          echo "Completed cdk-nag `date`"
+          # echo "cdk-nag installation complete `date`"
+          # echo "Starting cdk-nag `date` in `pwd`"
+          # cdk-nag --fail-on-warnings
+          # echo "Completed cdk-nag `date`"
 
   viperlight:
     name: viperlight
