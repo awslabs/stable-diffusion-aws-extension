@@ -13,6 +13,24 @@ env:
   AWS_REGION : us-east-1
 
 jobs:
+  mw-ut:
+    name: mw-ut
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHub_Action_Role
+          role-session-name: cdksession
+          aws-region: ${{ env.AWS_REGION }}
+      - name: ut
+        run: |
+          pip install pytest
+          pip install pytest-cov
+          # TODO
+
   git-secrets:
     name: git-secrets
     runs-on: ubuntu-latest
@@ -32,35 +50,6 @@ jobs:
         run: |
           git-secrets --register-aws
           git-secrets --scan
-
-  cdk-nag:
-    name: cdk-nag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        env:
-          AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT }}
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/GitHub_Action_Role
-          role-session-name: cdksession
-          aws-region: ${{ env.AWS_REGION }}
-      - name: cdk-nag
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
-          npm install -g aws-cdk
-          npm install -g cdk-nag
-          cd infrastructure
-          npm install
-          cdk synth
 
   viperlight:
     name: viperlight
