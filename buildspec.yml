@@ -48,8 +48,6 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - set -e
-      - set -o pipefail
       - ./build_all.sh dev ${BUILD_VERSION}
       - export NEW_AIGC_WEBUI_INFERENCE="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_UTILS="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:${BUILD_VERSION}"
