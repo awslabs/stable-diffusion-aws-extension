@@ -48,7 +48,17 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - ./source_image_update.sh dev ${BUILD_VERSION}
+      - set -e
+      - set -o pipefail
+      - ./build_all.sh dev ${BUILD_VERSION}
+      - export NEW_AIGC_WEBUI_INFERENCE="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:${BUILD_VERSION}"
+      - export NEW_AIGC_WEBUI_UTILS="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:${BUILD_VERSION}"
+      - export NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:${BUILD_VERSION}"
+      - sed -i -E -e "s|(AIGC_WEBUI_INFERENCE: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_INFERENCE'|g" ../infrastructure/src/common/dockerImages.ts
+      - sed -i -E -e "s|(AIGC_WEBUI_UTILS: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_UTILS'|g" ../infrastructure/src/common/dockerImages.ts
+      - sed -i -E -e "s|(AIGC_WEBUI_DREAMBOOTH_TRAINING: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING'|g" ../infrastructure/src/common/dockerImages.ts
+      - echo "checking the updated image name"
+      - cat ../infrastructure/src/common/dockerImages.ts
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"
