@@ -9,6 +9,9 @@ permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
 
+env:
+  AWS_REGION : us-east-1
+
 jobs:
   git-secrets:
     name: git-secrets
@@ -40,8 +43,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHub_Action_Role
-          role-session-name: samplerolesession
-          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: cdksession
+          aws-region: ${{ env.AWS_REGION }}
       - name: cdk-nag
         run: |
           sudo apt-get update
