@@ -54,10 +54,10 @@ phases:
       - export NEW_AIGC_WEBUI_INFERENCE="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_UTILS="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:${BUILD_VERSION}"
-      - 'awk -v value="${NEW_AIGC_WEBUI_INFERENCE}" -F"'"'"'BEGIN{OFS=FS} /AIGC_WEBUI_INFERENCE/ {$2=value}1' ../infrastructure/src/common/dockerImages.ts > temp && mv temp ../infrastructure/src/common/dockerImages.ts'
-      - 'awk -v value="${NEW_AIGC_WEBUI_UTILS}" -F"'"'"'BEGIN{OFS=FS} /AIGC_WEBUI_UTILS/ {$2=value}1' ../infrastructure/src/common/dockerImages.ts > temp && mv temp ../infrastructure/src/common/dockerImages.ts'
-      - 'awk -v value="${NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING}" -F"'"'"'BEGIN{OFS=FS} /AIGC_WEBUI_DREAMBOOTH_TRAINING/ {$2=value}1' ../infrastructure/src/common/dockerImages.ts > temp && mv temp ../infrastructure/src/common/dockerImages.ts'
- 
+      - echo -n "" > ../infrastructure/src/common/dockerImages.ts
+      - echo "export const AIGC_WEBUI_INFERENCE: string = ${NEW_AIGC_WEBUI_INFERENCE} ;" >> ../infrastructure/src/common/dockerImages.ts 
+      - echo "export const AIGC_WEBUI_UTILS: string = ${NEW_AIGC_WEBUI_UTILS} ;" >> ../infrastructure/src/common/dockerImages.ts 
+      - echo "export const AIGC_WEBUI_DREAMBOOTH_TRAINING: string = ${NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING} ;" >> ../infrastructure/src/common/dockerImages.ts 
       - echo "checking the updated image name"
       - cat ../infrastructure/src/common/dockerImages.ts
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
