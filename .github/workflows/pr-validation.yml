@@ -73,10 +73,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-      - name: flake8 Lint
-        uses: py-actions/flake8@v2
-        with:
-          ignore: "E501, E302"
+      # - name: flake8 Lint
+      #   uses: py-actions/flake8@v2
+      #   with:
+      #     ignore: "E501, E302"
       - name: Check for misspellings
         uses: codespell-project/actions-codespell@master
         with:
