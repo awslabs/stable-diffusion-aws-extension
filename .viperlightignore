@@ -1,0 +1,5 @@
+# This file is used by Viperlight utility to override findings (false alarm)
+workshop/ami-gen.sh
+README.md
+infrastructure/.github/workflows/build.yml
+infrastructure/.github/workflows/upgrade.yml
