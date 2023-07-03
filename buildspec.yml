@@ -48,7 +48,7 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - ./build_all dev ${BUILD_VERSION}
+      - ./build_all.sh dev ${BUILD_VERSION}
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"
