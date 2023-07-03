@@ -54,9 +54,9 @@ phases:
       - export NEW_AIGC_WEBUI_INFERENCE="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_UTILS="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:${BUILD_VERSION}"
-      - sed -i -E -e "s|(AIGC_WEBUI_INFERENCE: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_INFERENCE'|g" ../infrastructure/src/common/dockerImages.ts
-      - sed -i -E -e "s|(AIGC_WEBUI_UTILS: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_UTILS'|g" ../infrastructure/src/common/dockerImages.ts
-      - sed -i -E -e "s|(AIGC_WEBUI_DREAMBOOTH_TRAINING: string = ')[^']*'|\\1$NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING'|g" ../infrastructure/src/common/dockerImages.ts
+      - 'sed -i -E "s|(AIGC_WEBUI_INFERENCE: string = '\'').*('\'';)|\\1${NEW_AIGC_WEBUI_INFERENCE}\\2|g" ../infrastructure/src/common/dockerImages.ts'
+      - 'sed -i -E "s|(AIGC_WEBUI_UTILS: string = '\'').*('\'';)|\\1${NEW_AIGC_WEBUI_UTILS}\\2|g" ../infrastructure/src/common/dockerImages.ts'
+      - 'sed -i -E "s|(AIGC_WEBUI_DREAMBOOTH_TRAINING: string = '\'').*('\'';)|\\1${NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING}\\2|g" ../infrastructure/src/common/dockerImages.ts'
       - echo "checking the updated image name"
       - cat ../infrastructure/src/common/dockerImages.ts
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
