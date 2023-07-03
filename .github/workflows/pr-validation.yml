@@ -41,8 +41,10 @@ jobs:
         uses: actions/checkout@v3
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1
+        env:
+          AWS_ACCOUNT: ${{ secrets.AWS_ACCOUNT }}
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHub_Action_Role
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT }}:role/GitHub_Action_Role
           role-session-name: cdksession
           aws-region: ${{ env.AWS_REGION }}
       - name: cdk-nag
