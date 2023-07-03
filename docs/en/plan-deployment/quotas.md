@@ -23,5 +23,5 @@ After you submit a quota increase request, you can track its status:
 
 Please refer to the following AWS documents for more information about quotas:
 
-* [Amazon SageMaker Service Quotas](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
-* [Requesting a Quota Increase](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html)
+* [Amazon SageMaker Service Quotas](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html){:target="_blank"}
+* [Requesting a Quota Increase](https://docs.aws.amazon.com/servicequotas/latest/userguide/request-quota-increase.html){:target="_blank"}

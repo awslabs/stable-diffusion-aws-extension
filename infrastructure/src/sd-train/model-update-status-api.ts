@@ -36,8 +36,7 @@ export interface UpdateModelStatusRestApiProps {
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  // private readonly imageUrl: string = 'public.ecr.aws/b7f6c3o1/aigc-webui-utils:latest';
-  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:stable';
+  private readonly imageUrl: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:v1.0.0';
   private readonly machineType: string;
 
   private readonly src;
@@ -136,6 +135,7 @@ export class UpdateModelStatusRestApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));

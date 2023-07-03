@@ -131,16 +131,25 @@ export class CreateModelSageMakerEndpoint {
     sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        'kms:Decrypt',
+      ],
+      resources: ['*'],
+    }));
+
+    sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         'sns:Publish',
         'sns:GetTopicAttributes',
         'sns:SetTopicAttributes',
         'sns:Subscribe',
         'sns:ListSubscriptionsByTopic',
-        'sns:Publish',
         'sns:Receive',
+        'sns:Encrypt',
       ],
       resources: [this.successTopic.topicArn, this.failureTopic.topicArn],
     }));
+
     return sagemakerRole;
   }
 
@@ -211,6 +220,7 @@ export class CreateModelSageMakerEndpoint {
         'sns:SetTopicAttributes',
         'sns:ListSubscriptionsByTopic',
         'sns:Receive',
+        'sns:Encrypt',
       ],
       resources: [this.userSnsTopic.topicArn],
     }));
@@ -221,6 +231,7 @@ export class CreateModelSageMakerEndpoint {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));

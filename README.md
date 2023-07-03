@@ -1,4 +1,4 @@
-# Stable Diffusion AWS Extension
+# Extension for Stable Diffusion on AWS
 This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.
 
 ## How to get started:
@@ -6,37 +6,7 @@ This is a WebUI extension to help user migrate existing workload (inference, tra
 >**Notice** : This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
 
 ### **Part1**: Install the stable-diffusion-webui and extension
-#### **Option 1 (Recommended)**: Use one click AWS Cloudformation Template to install the EC2 instance with WebUI and extension
-1. Install the EC2 by using [CloudFormation Template](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml) to install CloudFormation template directly
-2. Select the EC2 instance key pair, and keep click with default operation to create the stack
-3. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the WebUIURL value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
-
-#### **Option 2**: Use script if you already had a EC2 instance (Ubuntu 20.04 LTS recommended) without WebUI installed
-1. In the working directory of a Linux computer prepared in advance, run the following command to download the latest installation script:
-```bash
-wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
-```
-2. Run the installation script, this script will try to git clone following repos and put the extensions on stable-diffusion-webui extension directory:
-   * stable-diffusion-webui
-   * stable-diffusion-aws-extension
-   * sd-webui-controlnet
-   * sd_dreambooth_extension
-```bash
-sh install.sh
-```
->**Notice** :The version of the downloaded repos has been set in the install.sh script, please do not manually change the version, we have tested on the version set in the script.
-3. Move to the stable-diffusion-webui folder downloaded by install.sh:
-```bash
-cd stable-diffusion-webui
-```
-4. For machines without a GPU, you can start the web UI using the following command:
-```bash
-./webui.sh --skip-torch-cuda-test
-```
-5. For machines with a GPU, you can start the web UI using the following command:
-```bash
-./webui.sh
-```
+If you have not install the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
 
 ### **Part2**: Install Middleware On AWS Cloud
 #### **Option 1**: Use AWS Cloudformation Template
@@ -113,7 +83,7 @@ To set up the development environment, you will need have AWS account and tools 
 Please refer to [**user guide**](https://awslabs.github.io/stable-diffusion-aws-extension/zh/user-guide/preparation/) for following detailed operations.
 
 ## Why we build such extension
-Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2txt/img2img model, e.g. Dreambooth. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
+Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2img/img2img model, e.g. Dreambooth. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
 Some user existing workflow is shown below that the data scientists had to jump from customized WebUI, EC2 and manual scripts to accomplished a single model finetune process, which are:
 * time consuming: the model training is executed on a standalone server that leading long training time (30-40 minutes per model) and no scalable workaround;
 * error prone: data training, model (CKPT) packaging, endpoint deployment, UI update, result validation are not in a single panel;
@@ -170,14 +140,4 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ```
 
 ## Version
-Beta
-
-## Changelog
-Alpha
-- txt2img (ckpt merge, training, inference)
-- dreambooth, controlnet plugin support
-- compatible version (commit id), webui - "89f9faa6", controlnet - "7c674f83", dreambooth - "926ae204"
-
-
-
-
+[v1.0.0](https://github.com/awslabs/stable-diffusion-aws-extension/wiki#release-versions)

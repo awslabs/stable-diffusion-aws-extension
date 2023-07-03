@@ -64,6 +64,7 @@ export class ListAllModelJobApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));

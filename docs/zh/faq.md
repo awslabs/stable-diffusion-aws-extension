@@ -9,10 +9,17 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 本解决方案支持多种Stable Diffusion WebUI原生功能及第三方插件。请参考[支持的具体功能列表及版本](./solution-overview/features-and-benefits.md)等，了解更多细节。
 
 **问：这个解决方案的许可证是什么？**
-本解决方案是根据[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)许可证提供的。 它是一个由 Apache 软件基金会编写的自由软件许可证。 它允许用户为任何目的使用该软件，分发、修改该软件，并根据许可证的条款分发该软件的修改版本，而不必担心版权费。
+本解决方案是根据[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0){:target="_blank"}许可证提供的。 它是一个由 Apache 软件基金会编写的自由软件许可证。 它允许用户为任何目的使用该软件，分发、修改该软件，并根据许可证的条款分发该软件的修改版本，而不必担心版权费。
 
 **问：我如何提交功能请求或错误报告？**
-你可以通过GitHub问题提交[功能请求](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29)和[错误报告](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29)。
+你可以通过GitHub问题提交[功能请求](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=feature-request%2Cneeds-triage&projects=&template=feature_request.yml&title=%28module+name%29%3A+%28short+issue+description%29){:target="_blank"}和[错误报告](https://github.com/awslabs/stable-diffusion-aws-extension/issues/new?assignees=&labels=bug%2Cneeds-triage&projects=&template=bug_report.yml&title=%28module+name%29%3A+%28short+issue+description%29){:target="_blank"}。
+
+
+## 安装和配置
+
+**问：我安装第三方插件和本解决方案插件的顺序有要求吗？**
+
+目前推荐用户先安装本解决方案支持的第三方插件后，再安装本解决方案插件。而该安装顺序打乱也可以，但是需要您重启WebUI，即可保证功能成功运行。
 
 
 

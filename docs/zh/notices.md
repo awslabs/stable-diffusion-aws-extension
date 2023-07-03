@@ -1,5 +1,6 @@
-Customers are responsible for making their own independent assessment of the information in this document. This document: (a) is for informational purposes only, (b) represents Amazon Web Services current product offerings and practices, which are subject to change without notice, and (c) does not create any commitments or assurances from Amazon Web Services and its affiliates, suppliers or licensors. Amazon Web Services products or services are provided “as is” without warranties, representations, or conditions of any kind, whether express or implied. Amazon Web Services responsibilities and liabilities to its customers are controlled by Amazon Web Services agreements, and this document is not part of, nor does it modify, any agreement between Amazon Web Services and its customers.
+客户有责任对本文档中的信息进行独立评估。本文档：(a) 仅用于信息目的，(b) 代表亚马逊云科技当前的产品提供和做法，如有变动，恕不另行通知，(c) 不会为亚马逊云科技及其关联公司、供应商或许可方创建任何承诺或保证。亚马逊云科技的产品或服务按原样提供，不提供任何明示或暗示的保证、陈述或条件。亚马逊云科技对其客户的责任和责任由亚马逊云科技协议控制，本文档不是亚马逊云科技与其客户之间的任何协议的一部分，也不修改任何协议。
 
-The AI Video Super Resolution solution is licensed under the terms of the Apache License Version 2.0 available at [The Apache Software Foundation][foundation].
+Stable Diffusion 亚马逊云科技插件解决方案的许可证使用Apache许可证2.0版的条款，该许可证可在以下网址找到:[The Apache Software Foundation](https://www.apache.org/licenses/LICENSE-2.0){:target="_blank"}
 
-[foundation]: https://www.apache.org/licenses/LICENSE-2.0
+本指南仅供参考。您仍应自行进行独立评估，并采取措施确保您遵守您的相关质量控制实践和标准，以及适用于您、您的内容和本指南中提及的第三方生成式人工智能服务的规则、法律、法规、许可和使用条款。亚马逊云科技对本指南中提及的第三方生成式人工智能服务没有控制权或权限，也不对第三方生成式人工智能服务的安全性、无病毒性、可运行性或与您的生产环境和标准的兼容性作出任何陈述或保证。亚马逊云科技不对本指南中的任何信息将产生特定的成果或结果作出任何陈述、保证或担保。
+

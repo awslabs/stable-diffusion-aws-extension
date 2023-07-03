@@ -90,6 +90,7 @@ export class CreateCheckPointApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
+        'kms:Decrypt',
       ],
       resources: ['*'],
     }));
