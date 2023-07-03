@@ -26,7 +26,7 @@ phases:
       - echo "Installing dependencies and executing unit tests completed `date`"
       - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
       - export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
-      - export BUILD_VERSION={TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - export BUILD_VERSION=${TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
       - export CN_ASSETS='cn/'
       - |-
         set -euxo pipefail
