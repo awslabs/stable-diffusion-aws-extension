@@ -5,10 +5,14 @@ on:
 # trigger manually for debugging
   workflow_dispatch:
 
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
 jobs:
   git-secrets:
     name: git-secrets
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -32,6 +36,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHub_Action_Role
+          role-session-name: samplerolesession
+          aws-region: ${{ secrets.AWS_REGION }}
       - name: cdk-nag
         run: |
           sudo apt-get update
