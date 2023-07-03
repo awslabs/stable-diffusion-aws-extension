@@ -25,7 +25,8 @@ phases:
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
       - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
-      - export BUILD_VERSION=0.10.0-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
+      - export BUILD_VERSION={TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
       - export CN_ASSETS='cn/'
       - |-
         set -euxo pipefail
@@ -35,6 +36,28 @@ phases:
       - export GLOBAL_ASSETS='custom-domain/,default/'
   build:
     commands:
+      - echo "Starting build the public ECR"
+      - cd ../build_scripts
+      - chmod +x ./build_all.sh
+      - chmod +x ./build_and_push.sh
+      - chmod +x ./source_image_update.sh
+      - chmod +x ./update_private_ecr.sh
+      -  |-
+          if [ ! -z "$AWS_ASSET_PUBLISH_ROLE" ]; then
+            json_output=$(aws sts assume-role \
+                  --role-arn "$AWS_ASSET_ECR_PUBLISH_ROLE" \
+                  --role-session-name "asset-publishing-role" \
+                  --duration-seconds "3600" \
+                  2>&1)
+            set +x
+            export AWS_ACCESS_KEY_ID=$(echo "${json_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]")
+            export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
+            export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
+            echo "BUILD VERSION is ${BUILD_VERSION}"
+            ./build_all dev ${BUILD_VERSION}
+            unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+            set -x
+          fi
       - echo "Starting build `date` in `pwd`"
       - cd ../deployment
       - chmod +x ./build-s3-dist.sh && ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $BUILD_VERSION
