@@ -6,7 +6,7 @@ git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 # Go to stable-diffusion-webui directory
 cd stable-diffusion-webui
 # Reset to specific commit
-git reset --hard baf6946e06249c5af9851c60171692c44ef633e0
+git reset --hard 394ffa7b0a7fff3ec484bcd084e673a8b301ccc8
 
 # Go to "extensions" directory
 cd extensions
@@ -23,7 +23,7 @@ git clone https://github.com/Mikubill/sd-webui-controlnet.git
 
 # Go to sd-webui-controlnet directory and reset to specific commit
 cd sd-webui-controlnet
-git reset --hard 5fc952793aa97bdd0078574b3be8bc98e1fcf2cd
+git reset --hard 2785cbe61a61c137d4e980752771f6329b03612a
 cd ..
 
 # Clone sd_dreambooth_extension

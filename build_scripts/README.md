@@ -1,11 +1,11 @@
 # Vesion control for stable-diffusion-aws-extension
 
-Update time: 20230619
+Update time: 20230703
 
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
-| stable-diffusion-webui|1.3.2|20230605|baf6946e06249c5af9851c60171692c44ef633e0 |
-| sd-webui-controlnet | v1.1.224|20230619| 5fc952793aa97bdd0078574b3be8bc98e1fcf2cd |
+| stable-diffusion-webui|1.4.0|20230627|394ffa7b0a7fff3ec484bcd084e673a8b301ccc8|
+| sd-webui-controlnet | v1.1.227|20230703| dc413a14379b165355502d9f65856c40a4bb5b6f |
 | sd_dreambooth_extension | 1.0.14| 20230606| dc413a14379b165355502d9f65856c40a4bb5b6f|
 
 # How to play with /stable-diffusion-webui
