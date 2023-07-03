@@ -1,0 +1,4 @@
+workshop/ami-gen.sh
+README.md
+infrastructure/.github/workflows/build.yml
+infrastructure/.github/workflows/upgrade.yml
