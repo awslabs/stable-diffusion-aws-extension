@@ -34,12 +34,17 @@ jobs:
         uses: actions/checkout@v3
       - name: cdk-nag
         run: |
+          echo "aws cdk installation started `date`"
+          npm install -g aws-cdk
+          echo "aws cdk installation complete `date`"
+          # enter into infrastrucutre directory
+          cd infrastructure
           echo "cdk-nag installation started `date`"
           npm install -g cdk-nag
-          # echo "cdk-nag installation complete `date`"
-          # echo "Starting cdk-nag `date` in `pwd`"
-          # cdk-nag --fail-on-warnings
-          # echo "Completed cdk-nag `date`"
+          echo "cdk-nag installation complete `date`"
+          echo "Starting cdk-nag `date` in `pwd`"
+          cdk synth
+          echo "Completed cdk-nag `date`"
 
   viperlight:
     name: viperlight
