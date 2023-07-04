@@ -203,11 +203,11 @@ paths:
                   s3_location: s3://S3_Location
                   status: Initialed
                   params: {}
-                s3PresignUrl: [{
-                  upload_id: id,
-                  bucket: bucket name,
-                  key: object key,
-                }]
+                s3PresignUrl:
+                  - upload_id: id,
+                    bucket: bucket name,
+                    key: key,
+
         '500':
           description: Error response
           content:
