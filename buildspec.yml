@@ -48,7 +48,7 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - ./build_all.sh dev ${BUILD_VERSION}
+      - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - export NEW_AIGC_WEBUI_INFERENCE="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_UTILS="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:${BUILD_VERSION}"
       - export NEW_AIGC_WEBUI_DREAMBOOTH_TRAINING="public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:${BUILD_VERSION}"
