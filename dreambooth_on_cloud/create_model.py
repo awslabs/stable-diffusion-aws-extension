@@ -147,7 +147,7 @@ def async_create_model_on_sagemaker(
             if not from_hub:
                 print("Pack the model file.")
                 # os.system(f"tar cvf {local_tar_path} {local_model_path}")
-                tar(mode='c', archive=local_tar_path, sfiles=local_model_path, verbose=True)
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path], verbose=True)
                 s3_base = json_response["job"]["s3_base"]
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")

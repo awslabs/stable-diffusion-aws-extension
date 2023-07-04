@@ -9,7 +9,7 @@ import logging
 import shutil
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
-from uitls import tar, cp
+from utils import tar, cp
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -143,7 +143,7 @@ def async_prepare_for_training_on_sagemaker(
             upload_files.append(class_data_tar)
             print("Pack the class data file.")
             # os.system(f"tar cf {class_data_tar} {class_data_path}")
-            tar(mode='c', archive=class_data_tar, sfiles=class_data_path, verbose=False)
+            tar(mode='c', archive=class_data_tar, sfiles=[class_data_path], verbose=False)
         else:
             new_class_data_list.append(class_data_path)
     payload = {
