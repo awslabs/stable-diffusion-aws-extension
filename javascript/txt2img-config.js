@@ -94,7 +94,7 @@ function getSelectedButton() {
 // function to get tab "Restore to" or "Resize by"
 function getSelectedTabResize() {
     // Get the parent element
-    let parentDiv = document.querySelector("#component-468 > div.tab-nav.scroll-hide.svelte-1g805jl");
+    let parentDiv = document.querySelector("#component-477 > div.tab-nav.scroll-hide.svelte-1g805jl");
 
     // Get all the button children
     let buttons = parentDiv.querySelectorAll("button");
