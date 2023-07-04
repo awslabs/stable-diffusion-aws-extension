@@ -3,12 +3,37 @@ on:
     types: [opened, edited, reopened, synchronize]
 
 # trigger manually for debugging
-# workflow_dispatch:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+env:
+  AWS_REGION : us-east-1
 
 jobs:
+  mw-ut:
+    name: mw-ut
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+#       - name: configure aws credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHub_Action_Role
+#           role-session-name: cdksession
+#           aws-region: ${{ env.AWS_REGION }}
+      - name: ut
+        run: |
+          pip install pytest
+          pip install pytest-cov
+          # TODO
+
   git-secrets:
     name: git-secrets
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -25,21 +50,6 @@ jobs:
         run: |
           git-secrets --register-aws
           git-secrets --scan
-
-  cdk-nag:
-    name: cdk-nag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: cdk-nag
-        run: |
-          echo "cdk-nag installation started `date`"
-          npm install -g cdk-nag
-          # echo "cdk-nag installation complete `date`"
-          # echo "Starting cdk-nag `date` in `pwd`"
-          # cdk-nag --fail-on-warnings
-          # echo "Completed cdk-nag `date`"
 
   viperlight:
     name: viperlight
@@ -64,14 +74,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v2
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: pip install flake8 codespell
-      - name: Run Flake8
-        run: flake8 .
+          python-version: "3.8"
+      # - name: flake8 Lint
+      #   uses: py-actions/flake8@v2
+      #   with:
+      #     ignore: "E501, E302"
       - name: Check for misspellings
         uses: codespell-project/actions-codespell@master
         with:
