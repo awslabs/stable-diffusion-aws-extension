@@ -9,7 +9,7 @@ mode=$1
 tag=$2
 commit_id=$3
 
-if [ "$mode" = "" ] || [ "$tag" = "" ] || [ "$commit_id" = ""]
+if [ "$mode" = "" ] || [ "$tag" = "" ] || [ "$commit_id" = "" ]
 then
     echo "Usage: $0 <extension-branch> <image-tag> <commit_id>"
     exit 1
