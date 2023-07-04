@@ -4,110 +4,669 @@ info:
   description: "This service is used to train and deploy Stable Diffusion models."
   version: "2023-05-28T12:29:27Z"
 servers:
-- url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
-  variables:
-    basePath:
-      default: "prod"
+  - url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
+    variables:
+      basePath:
+        default: "prod"
 paths:
+  /model:
+    post:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Create Model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                model_type: Stable-diffusion
+                name: testmodelcreation01
+                filenames:
+                  - filename: v1-5-pruned-emaonly.safetensors.tar
+                    parts_number: 5
+                params:
+                  create_model_params:
+                    new_model_name: testmodelcreation01
+                    ckpt_path: v1-5-pruned-emaonly.safetensors
+                    from_hub: false
+                    new_model_url: ''
+                    new_model_token: ''
+                    extract_ema: false
+                    train_unfrozen: false
+                    is_512: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                job:
+                  id: id
+                  status: Initialed
+                  s3_base: s3://S3_Location
+                  model_type: Stable-diffusion
+                  params: {}
+                  s3PresignUrl:
+                    - upload_id: id
+                      bucket: bucket name
+                      key: object key
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+
+    put:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Update Model
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                model_id: c9f59ee7-0672-4fd1-8a45-8a494de8a48d
+                status: Creating
+                multi_parts_tags:
+                  v1-5-pruned-emaonly.safetensors.tar:
+                    - ETag: cc95c41fa28463c8e9b88d67805f24e0
+                      PartNumber: 1
+                    - ETag: e4378bd84b0497559c55be8373cb79d0
+                      PartNumber: 2
+                    - ETag: 815b68042f6ac5e60b9cff5c697ffea6
+                      PartNumber: 3
+                    - ETag: 2c6cfbd9bfbafd5664cdc8b3ba07df6d
+                      PartNumber: 4
+                    - ETag: e613d37e5065b0cd63f1cad216423141
+                      PartNumber: 5
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                job:
+                  output_path: s3://S3_Location
+                  id: job.id
+                  endpointName: endpoint_name
+                  jobStatus: Created
+                  jobType: Stable-diffusion
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /models:
+    get:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: List Models
+      parameters:
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+            example:
+              - Stable-diffusion
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                models:
+                  id: id
+                  model_name: name
+                  created: 12341234.0
+                  params: {}
+                  status: Initialed
+                  output_s3_location: s3://S3_LOCATION/
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+
+
+
+  /checkpoint:
+    post:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Create Checkpoint
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                checkpoint_type: Stable-diffusion
+                filenames:
+                  - filename: v1-5-pruned-emaonly.safetensors
+                    parts_number: 5
+                params:
+                  new_model_name: test_api
+                  number: 1
+                  string: abc
+
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                checkpoint:
+                  id: id
+                  type: Stable-diffusion
+                  s3_location: s3://S3_Location
+                  status: Initialed
+                  params: {}
+                s3PresignUrl:
+                  - upload_id: id,
+                    bucket: bucket name,
+                    key: key,
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+    put:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Update Checkpoints
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                checkpoint_id: 906a5a1f-6833-45aa-8a10-fb0e983e0eae
+                status: Active
+                multi_parts_tags:
+                  v1-5-pruned-emaonly.safetensors.tar:
+                    - ETag: cc95c41fa28463c8e9b88d67805f24e0
+                      PartNumber: 1
+                    - ETag: e4378bd84b0497559c55be8373cb79d0
+                      PartNumber: 2
+                    - ETag: 815b68042f6ac5e60b9cff5c697ffea6
+                      PartNumber: 3
+                    - ETag: 2c6cfbd9bfbafd5664cdc8b3ba07df6d
+                      PartNumber: 4
+                    - ETag: e613d37e5065b0cd63f1cad216423141
+                      PartNumber: 5
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                checkpoint:
+                  id: id
+                  type: Stable-diffusion
+                  s3_location: s3://S3_Location
+                  status: Active
+                  params: {}
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /checkpoints:
+    get:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: List Checkpoints
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Active
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Stable-diffusion
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                checkpoints:
+                  - id: id
+                    s3Location: s3://S3_Location
+                    type: Stable-diffusion
+                    status: Active
+                    name:
+                      - object_1
+                      - object_2
+                    created: 12341234.0
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /train:
+    post:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Create Train Job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                train_type: dreambooth
+                model_id: 36c9d05e-3445-42a6-8be1-d7d054df7b9d
+                params:
+                  train_params:
+                    training_instance_type: ml.g4dn.2xlarge
+                  test1: 2
+                filenames:
+                  - training_config.json
+                  - images.tar
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                job:
+                  id: id
+                  status: Initialed
+                  trainType: Stable-diffusion
+                  params: {}
+                  input_location: s3://S3_Location
+                s3PresignUrl:
+                  - filename: s3://S3_Location
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+    put:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Update Train job
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                train_job_id: b5183dd3-0279-46ff-b64e-6cd687c0fe71
+                status: Training
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                job:
+                  id: id
+                  status: Training
+                  created: 12341234.0
+                  trainType: Stable-diffusion
+                  params: {}
+                  input_location: s3://S3_Location
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /trains:
+    get:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: List Train Jobs
+      parameters:
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          example: Stable-diffusion
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200,
+                trainJobs:
+                  - id: id
+                    modelName: model_name
+                    status: Complete
+                    trainType: Stable-diffusion
+                    created: 1234124.0
+                    sagemakerTrainName: sagemaker_train_name
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /dataset:
+    post:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Create Dataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                dataset_name: test_dataset
+                content:
+                  - filename: /path/to/a/file.png
+                    name: another_name
+                    type: png
+                params: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                datasetName: dataset_name
+                s3PresignUrl:
+                  - filename: s3://S3_Location
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+    put:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: Update Dataset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                dataset_name: test_dataset
+                status: Enabled
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                datasetName: dataset_name
+                status: Enabled
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /prod/datasets:
+    get:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: List Datasets by dataset status
+      parameters:
+        - name: dataset_status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - Enabled
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                datasets:
+                  - datasetName: dataset_name
+                    s3: s3://S3_Location
+                    status: Enabled
+                    timestamp: 1234124.0
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  /{dataset_name}/data:
+    get:
+      security:
+        - api_key: []
+      tags:
+        - default
+      summary: List Dataset Items by Dataset Name
+      parameters:
+        - name: dataset_name
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 200
+                dataset_name: dataset_name
+                data:
+                  - key: key
+                    name: file name
+                    type: image
+                    preview_url: https://presigned_s3_url
+                    dataStatus: Enabled
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                statusCode: 500
+                error: error_message
+
+  # Inference Start
   /inference/get-texual-inversion-list:
     get:
       security:
-      - api_key: []
-  /checkpoints:
-    get:
-      parameters:
-      - name: "types"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
-      - name: "status"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "500":
-          description: "500 response"
-          content: {}
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /models:
-    get:
-      parameters:
-      - name: "types"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
-      - name: "status"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
+        - api_key: []
       responses:
         "200":
           description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
           content: {}
   /inference/get-inference-job-image-output:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/get-hypernetwork-list:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/get-controlnet-model-list:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/get-lora-list:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/get-inference-job-param-output:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/generate-s3-presigned-url-for-uploading:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
     options:
       responses:
         "204":
@@ -126,7 +685,11 @@ paths:
   /inference/run-sagemaker-inference:
     post:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /:
     options:
       responses:
@@ -146,157 +709,59 @@ paths:
   /inference/list-inference-jobs:
     get:
       security:
-      - api_key: []
-  /trains:
-    get:
-      parameters:
-      - name: "types"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
-      - name: "status"
-        in: "query"
-        required: true
-        schema:
-          type: "string"
-      responses:
-        "500":
-          description: "500 response"
-          content: {}
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /train:
-    put:
+        - api_key: []
       responses:
         "200":
           description: "200 response"
           content: {}
-      security:
-      - api_key: []
-    post:
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /checkpoint:
-    put:
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    post:
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
+
   /inference:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
     post:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/list-endpoint-deployment-jobs:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/deploy-sagemaker-endpoint:
     post:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/delete-sagemaker-endpoint:
     post:
       security:
-      - api_key: []
-  /model:
-    put:
+        - api_key: []
       responses:
         "200":
           description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    post:
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-      security:
-      - api_key: []
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
           content: {}
   /inference/get-inference-job:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
   /inference/test-connection:
     get:
       responses:
@@ -307,11 +772,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/Empty"
       security:
-      - api_key: []
+        - api_key: []
   /inference/get-endpoint-deployment-job:
     get:
       security:
-      - api_key: []
+        - api_key: []
+      responses:
+        "200":
+          description: "200 response"
+          content: {}
 components:
   schemas:
     Empty:
