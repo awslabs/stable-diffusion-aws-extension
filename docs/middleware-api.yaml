@@ -1,8 +1,8 @@
-openapi: "3.0.1"
+openapi: "3.0.2"
 info:
   title: "Stable Diffusion Train and Deploy API"
   description: "This service is used to train and deploy Stable Diffusion models."
-  version: "2023-05-28T12:29:27Z"
+  version: "2023-07-05"
 servers:
   - url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
     variables:
@@ -611,181 +611,284 @@ paths:
                 error: error_message
 
   # Inference Start
-  /inference/get-texual-inversion-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job-image-output:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-hypernetwork-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-controlnet-model-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-lora-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job-param-output:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/generate-s3-presigned-url-for-uploading:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /inference/run-sagemaker-inference:
-    post:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /:
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /inference/list-inference-jobs:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-
   /inference:
     get:
-      security:
-        - api_key: []
+      summary: Root
+      operationId: root_inference_get
       responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/run-sagemaker-inference:
     post:
-      security:
-        - api_key: []
+      summary: Run Sagemaker Inference
+      operationId: run_sagemaker_inference_inference_run_sagemaker_inference_post
       responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/list-endpoint-deployment-jobs:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /inference/deploy-sagemaker-endpoint:
     post:
-      security:
-        - api_key: []
+      summary: Deploy Sagemaker Endpoint
+      operationId: deploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post
       responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /inference/delete-sagemaker-endpoint:
     post:
-      security:
-        - api_key: []
+      summary: Delete Sagemaker Endpoint
+      operationId: delete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post
       responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/list-endpoint-deployment-jobs:
     get:
-      security:
-        - api_key: []
+      summary: List Endpoint Deployment Jobs
+      operationId: list_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get
       responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/test-connection:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/list-inference-jobs:
     get:
+      summary: List Inference Jobs
+      operationId: list_inference_jobs_inference_list_inference_jobs_get
       responses:
-        "200":
-          description: "200 response"
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-endpoint-deployment-job:
+    get:
+      summary: Get Endpoint Deployment Job
+      operationId: get_endpoint_deployment_job_inference_get_endpoint_deployment_job_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Empty"
-      security:
-        - api_key: []
-  /inference/get-endpoint-deployment-job:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job:
     get:
-      security:
-        - api_key: []
+      summary: Get Inference Job
+      operationId: get_inference_job_inference_get_inference_job_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
       responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job-image-output:
+    get:
+      summary: Get Inference Job Image Output
+      operationId: get_inference_job_image_output_inference_get_inference_job_image_output_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Get Inference Job Image Output Inference Get Inference
+                  Job Image Output Get
+                type: array
+                items:
+                  type: string
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job-param-output:
+    get:
+      summary: Get Inference Job Param Output
+      operationId: get_inference_job_param_output_inference_get_inference_job_param_output_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Get Inference Job Param Output Inference Get Inference
+                  Job Param Output Get
+                type: array
+                items:
+                  type: string
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/generate-s3-presigned-url-for-uploading:
+    get:
+      summary: Generate S3 Presigned Url For Uploading
+      operationId: generate_s3_presigned_url_for_uploading_inference_generate_s3_presigned_url_for_uploading_get
+      parameters:
+      - required: false
+        schema:
+          title: S3 Bucket Name
+          type: string
+        name: s3_bucket_name
+        in: query
+      - required: false
+        schema:
+          title: Key
+          type: string
+        name: key
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-texual-inversion-list:
+    get:
+      summary: Get Texual Inversion List
+      operationId: get_texual_inversion_list_inference_get_texual_inversion_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-lora-list:
+    get:
+      summary: Get Lora List
+      operationId: get_lora_list_inference_get_lora_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-hypernetwork-list:
+    get:
+      summary: Get Hypernetwork List
+      operationId: get_hypernetwork_list_inference_get_hypernetwork_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-controlnet-model-list:
+    get:
+      summary: Get Controlnet Model List
+      operationId: get_controlnet_model_list_inference_get_controlnet_model_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/run-model-merge:
+    post:
+      summary: Run Model Merge
+      operationId: run_model_merge_inference_run_model_merge_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+
 components:
   schemas:
     Empty:
       title: "Empty Schema"
       type: "object"
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+
   securitySchemes:
     api_key:
       type: "apiKey"
