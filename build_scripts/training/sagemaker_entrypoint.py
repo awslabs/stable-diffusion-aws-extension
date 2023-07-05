@@ -110,7 +110,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
                     os.system(tar_command)
                     logger.info(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
                     print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
-                    upload_file_to_s3(output_tar, output_bucket_name, model_name)
+                    upload_file_to_s3(output_tar, output_bucket_name, s3_output_path)
 
 def download_data(data_list, s3_data_path_list, s3_input_path):
     for data, data_tar in zip(data_list, s3_data_path_list):
