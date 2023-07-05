@@ -23,6 +23,7 @@ from datetime import datetime
 import math
 
 inference_job_dropdown = None
+textual_inversion_dropdown = None
 sagemaker_endpoint = None
 
 primary_model_name = None
@@ -696,6 +697,11 @@ def displayEndpointInfo(input_string: str):
     else:
         return plaintext_to_html("")
 
+def update_txt2imgPrompt(selected_items, txt2img_prompt):
+    print(selected_items)
+    print(txt2img_prompt)
+    return txt2img_prompt + ' '.join(selected_items) 
+    
 def fake_gan(selected_value: str ):
     print(f"selected value is {selected_value}")
     if selected_value is not None:
@@ -860,6 +866,7 @@ def create_ui(is_img2img):
                 gr.HTML(value="Extra Networks for Cloud Inference")
 
             with gr.Row():
+                global textual_inversion_dropdown
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
                 create_refresh_button(
                     textual_inversion_dropdown,

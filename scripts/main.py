@@ -145,6 +145,7 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_html_info = component
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and \
+        sagemaker_ui.textual_inversion_dropdown is not None and \
         txt2img_gallery is not None and \
         txt2img_generation_info is not None and \
         txt2img_html_info is not None and \
@@ -156,6 +157,11 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
+        sagemaker_ui.textual_inversion_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt,
+            inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        ) 
 
         sagemaker_ui.sagemaker_endpoint.change(
             fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
