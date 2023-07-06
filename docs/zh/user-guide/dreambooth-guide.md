@@ -25,19 +25,21 @@
 2. 刷新**Model**列表，选择需要训练的模型。
 3. 在**Input**模块设置相应的参数。  
     - 设置训练参数  
-        - 勾选Lora可以加速训练过程。
-        - Training Steps Per Image (Epochs) 代表了单张图片训练的迭代次数，可以使用默认值。
+        - 勾选*Lora*可以加速训练过程。
+        - *Training Steps Per Image (Epochs)* 代表了单张图片训练的迭代次数，可以使用默认值。
    ![Input setting](../images/dreambooth-input-settings.png) 
-    - 设置需要训练的概念。  
-    总共可以设置四个概念，我们以第一个概念为例。
-      - Dataset Directory 处填写训练所需的图片路径，可以是web server上的路径也可以是s3路径，s3路径可以从AWS Dataset Management中上传数据后获取或者自行上传s3后获取，需以s3://开头。
-      - Training Prompts 下的 Instance Prompt 处填写概念的关键词，关键词用于后续txt2img中生成本次训练所产生的概念，因此不要是常见的英文单词（会和基础模型中的其他概念混淆）。
+    - 设置需要训练的概念。总共可以设置四个概念，我们以第一个概念为例。
+        - *Dataset Directory* 处填写训练所需的图片路径，可以是web server上的路径也可以是s3路径，s3路径可以从**AWS Dataset Management**中上传数据后获取或者自行上传s3后获取，需以s3://开头。
+        - *Training Prompts* 下的 *Instance Prompt* 处填写概念的关键词，关键词用于后续txt2img中生成本次训练所产生的概念，因此不要是常见的英文单词（会和基础模型中的其他概念混淆）。
    ![Input concepts](../images/dreambooth-input-concepts.png) 
-    - 注意：
-        - 需要选择将模型保存到子目录
+    !!! Important "提示"
+        需要选择将模型保存到子目录
    ![Save path](../images/save-path.png)
-        - 目前不支持单独保存lora模型，所以请不要勾选下面这个选项
+
+    !!! Important "提示"
+        目前不支持单独保存lora模型，所以请不要勾选下面这个选项
    ![Save lora](../images/save-lora.png)
+
 4. 点击**SageMaker Train**，启动模型训练任务。**Training Job Details**区域会即时增加本次模型训练的工作状态。当状态变成**Complete**，同时您部署解决方案时预留的邮箱将会收到邮件通知，即完成模型训练。
 5. 后续工作。可以进入**txt2img**标签页的**Amazon SageMaker Inference**面板，刷新**Stable Diffusion Checkpoint**，即可看到已训练好的模型。
 

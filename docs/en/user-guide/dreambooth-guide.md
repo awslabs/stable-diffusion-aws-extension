@@ -19,7 +19,29 @@ You can open **Dreambooth** tab, by combining the use with native Dreambooth, th
 1. Open **Dreambooth** tab, **Model** subtab, **Select From Cloud**.
 2. Fresh and select the model from **Model** dropd down list that need to train.
 3. Set corresponding parameters in **Input** session.
+    - Set training parameters
+        - Checking *Lora* can accelerate the training process.
+        - The *Training Steps Per Image (Epochs)* represents the number of iterations for training a single image and can be left at the default value.
+    ![Input setting](../images/dreambooth-input-settings.png) 
+    - Set the concepts that need to be trained. A total of four concepts can be set, and we will use the first concept as an example.
+        - In the *Dataset Directory* field, enter the path to the images required for training. It can be a path on a web server or an S3 path. For S3 paths, you can obtain them by uploading the data through AWS Dataset Management or by uploading them to S3 on your own. The path should start with “s3://".
+        - In the *Instance Prompt* section under *Training Prompts*, enter the keywords for the concept. These keywords will be used to generate the concept during the training process in txt2img. Therefore, avoid using common English words (as they might get confused with other concepts in the base model).
+    
+    ![Input concepts](../images/dreambooth-input-concepts.png) 
+    
+    !!! Important "Notice" 
+        You need to select the option to save the model to a subdirectory.
+    ![Save path](../images/save-path.png)
+
+    !!! Important "Notice"
+        Currently, it is not supported to save the Lora model separately. Please don't select the following option.
+    ![Save lora](../images/save-lora.png)
+
+
 4. Click **SageMaker Train** to start model training task. The **Training Job Details** section will be updated in real-time with the status of the model training job. When the status changes to *Complete*, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.
 5. Future steps. For example: Navigate to **txt2img** tab **Amazon SageMaker Inference** panel, check trained model by refreshing **Stable Diffusion Checkpoint** dropdown list.  
+
+
+
 
 

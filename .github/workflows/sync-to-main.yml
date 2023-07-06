@@ -18,8 +18,8 @@ jobs:
 
     - name: Configure Git
       run: |
-        git config --global user.email "yike5460@github.com"
-        git config --global user.name "yike5460"
+        git config --global user.email "${{ secrets.GITHUBEMAILADDRESS }}"
+        git config --global user.name "${{ secrets.GITHUBUSER }}"
 
     - name: Merge dev into main
       run: |

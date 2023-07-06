@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
-Parameters:
-  KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
-    Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+# Parameters:
+#   KeyName:
+#     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+#     Type: AWS::EC2::KeyPair::KeyName
+#     ConstraintDescription: must be the name of an existing EC2 KeyPair.
 
 Mappings:
   RegionToAmiId:
@@ -65,34 +65,61 @@ Resources:
     Properties:
       InstanceType: c5.2xlarge
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
-      KeyName: !Ref KeyName
+      # KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 300
             VolumeType: gp2
       "Tags" : [
-            {"Key" : "Name", "Value" : "sd-on-aws"},
-        ]
+        {"Key" : "Name", "Value" : "sd-on-aws"},
+      ]
       SecurityGroups:
         - Ref: SecurityGroup
       UserData:
         'Fn::Base64': |
-            #!/bin/bash
-            sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
-            sudo apt-get update
-            sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
-            cd /home/ubuntu
-            git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-            cd stable-diffusion-webui/extensions
-            git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-            cd stable-diffusion-aws-extension/
-            ./pre-flight.sh -s
-            cd ..
-            sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
-            cd ..
-            sudo -u ubuntu python3 -m venv venv
-            sudo -u ubuntu nohup bash webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen > webui-log.txt
+          #!/bin/bash
+          sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+          sudo apt-get update
+          sudo apt install wget git python3 python3.8-venv build-essential net-tools libgl1 -y
+          cd /home/ubuntu
+          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+          cd stable-diffusion-webui/extensions
+          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+          cd stable-diffusion-aws-extension/
+          ./pre-flight.sh -s            
+          cd ..
+          sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
+          cd ..
+          cd models/Stable-diffusion/            
+          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/yangk-style_2160_lora.safetensors
+          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/yangk-style_2160_lora.yaml
+          cd ../..
+          # sudo -u ubuntu python3 -m venv venv
+          cat > sd-webui.service <<EOF
+          [Unit]
+          Description=Stable Diffusion UI server
+          After=network.target
+          StartLimitIntervalSec=0
+          
+          [Service]
+          WorkingDirectory=/home/ubuntu/stable-diffusion-webui
+          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=ubuntu
+          StartLimitAction=reboot
+          
+          [Install]
+          WantedBy=default.target
+          
+          EOF
+          sudo mv sd-webui.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/sd-webui.service
+          
+          sudo systemctl start sd-webui.service
+          sudo systemctl enable sd-webui.service
 
   MyEIP:
     Type: AWS::EC2::EIP

@@ -20,6 +20,8 @@ ckpt_dict = {}
 base_model_folder = "models/sagemaker_dreambooth/"
 
 def get_cloud_ckpts():
+    global ckpt_dict
+    ckpt_dict = {}
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
         if api_gateway_url is None:
@@ -30,7 +32,6 @@ def get_cloud_ckpts():
         response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
         if "checkpoints" not in response:
             return []
-        global ckpt_dict
         for ckpt in response["checkpoints"]:
             # Only get ckpts whose name is not empty.
             if len(ckpt['name']) > 0:
