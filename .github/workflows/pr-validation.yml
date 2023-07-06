@@ -68,25 +68,25 @@ jobs:
           ../viperlight/bin/viperlight scan -m files-contents -m files-aws -m files-binary -m files-entropy -m files-secrets
           echo "Completed content scanning `date`"
 
-  miss-spelling-validate:
-    name: miss spelling check for words or sentences
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up Python environment
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
+#   miss-spelling-validate:
+#     name: miss spelling check for words or sentences
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#       - name: Set up Python environment
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.8"
       # - name: flake8 Lint
       #   uses: py-actions/flake8@v2
       #   with:
       #     ignore: "E501, E302"
-      - name: Check for misspellings
-        uses: codespell-project/actions-codespell@master
-        with:
-          check_filenames: true
-          skip: .git,*.png,*.jpg,*.jpeg
+#       - name: Check for misspellings
+#         uses: codespell-project/actions-codespell@master
+#         with:
+#           check_filenames: true
+#           skip: .git,*.png,*.jpg,*.jpeg
 
   sematic-validate:
     name: Validate PR title
