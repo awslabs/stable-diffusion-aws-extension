@@ -39,8 +39,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
   apiKey: string;
   modelInfInstancetype: string;
-  default_aigc_webui_utils_ecr_image: string;
-  default_aigc_webui_dreambooth_training: string;
+  ecr_image_tag: string;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -169,7 +168,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: this.trainingTable,
       userTopic: this.snsTopic,
-      default_aigc_webui_dreambooth_training: props.default_aigc_webui_dreambooth_training,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     // POST /model
@@ -203,7 +202,7 @@ export class SdTrainDeployStack extends NestedStack {
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
       trainMachineType: props.modelInfInstancetype,
-      default_aigc_webui_utils_ecr_image: props.default_aigc_webui_utils_ecr_image,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
