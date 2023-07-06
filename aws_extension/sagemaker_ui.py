@@ -314,7 +314,7 @@ def refresh_all_models():
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
-                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split(os.sep)[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
         print(f"Error refresh all models: {e}")
@@ -331,7 +331,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         if lp == "" or not lp:
             continue
         print(f"lp is {lp}")
-        model_name = lp.split("/")[-1]
+        model_name = lp.split(os.sep)[-1]
 
         exist_model_list = list(checkpoint_info[rp].keys())
 
@@ -379,17 +379,17 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
             # Upload src model to S3.
             if rp != "embeddings" :
-                local_model_path_in_repo = f'models/{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join(['models', rp, model_name])
             else:
-                local_model_path_in_repo = f'{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join([rp, model_name])
             #local_tar_path = f'{model_name}.tar'
             print("Pack the model file.")
             # os.system(f"cp -f {lp} {local_model_path_in_repo}")
             cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
                 model_yaml_name = model_name.split('.')[0] + ".yaml"
-                local_model_yaml_path = "/".join(lp.split("/")[:-1]) + f"/{model_yaml_name}"
-                local_model_yaml_path_in_repo = f"models/{rp}/{model_yaml_name}"
+                local_model_yaml_path = os.sep.join([*lp.split(os.sep)[:-1], model_yaml_name])
+                local_model_yaml_path_in_repo = os.sep.join(["models", rp, model_yaml_name])
                 if os.path.isfile(local_model_yaml_path):
                     # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
                     # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
@@ -397,10 +397,10 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                     tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
                 else:
                     # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
-                    tar(mode='c', archive=local_tar_path, sfiles=local_model_path_in_repo, verbose=True)
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             else:
                 # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
-                tar(mode='c', archive=local_tar_path, sfiles=local_model_path_in_repo, verbose=True)
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
             multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                 local_tar_path,
@@ -656,7 +656,7 @@ def fake_gan(selected_value: str ):
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
 
-        if inference_job_taskType in ["txt2img", "img2img"]:    
+        if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = ''
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
@@ -689,7 +689,7 @@ def fake_gan(selected_value: str ):
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
             json_list = []
-            info_text = '' 
+            info_text = ''
             infotexts = ''
     else:
         prompt_txt = ''
@@ -726,9 +726,9 @@ def create_ui(is_img2img):
                 with gr.Row():
                     global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                             label="Select Cloud SageMaker Endpoint",
-                                             elem_id="sagemaker_endpoint_dropdown"
-                                             )
+                                                     label="Select Cloud SageMaker Endpoint",
+                                                     elem_id="sagemaker_endpoint_dropdown"
+                                                     )
 
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():
@@ -741,7 +741,7 @@ def create_ui(is_img2img):
                         sd_checkpoint_refresh_button_txt2img = modules.ui.create_refresh_button(sd_checkpoint_txt2img, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
                     else:
                         sd_checkpoint_img2img = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown_img2img")
-                        sd_checkpoint_refresh_button_img2img = modules.ui.create_refresh_button(sd_checkpoint_img2img, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints") 
+                        sd_checkpoint_refresh_button_img2img = modules.ui.create_refresh_button(sd_checkpoint_img2img, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
             with gr.Column():
                 global generate_on_cloud_button_with_js
                 if not is_img2img:
@@ -799,7 +799,7 @@ def create_ui(is_img2img):
                         get_lora_list,
                         lambda: {"choices": sorted(get_lora_list())},
                         "refresh_lora",
-                    ) 
+                    )
             with gr.Row():
                 if not is_img2img:
                     txt2img_hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="txt2img_sagemaker_hypernetwork_dropdown")
@@ -830,7 +830,7 @@ def create_ui(is_img2img):
                         get_controlnet_model_list,
                         lambda: {"choices": sorted(get_controlnet_model_list())},
                         "refresh_controlnet",
-                    ) 
+                    )
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
@@ -854,4 +854,4 @@ def create_ui(is_img2img):
     if not is_img2img:
         return sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
     else:
-        return sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud 
+        return sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud

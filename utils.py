@@ -156,7 +156,7 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
     s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket(bucket_name)
     for obj in bucket.objects.filter(Prefix=s3_folder_path):
-        obj_dirname = "/".join(os.path.dirname(obj.key).split("/")[1:])
+        obj_dirname = os.sep.join(os.path.dirname(obj.key).split("/")[1:])
         obj_basename = os.path.basename(obj.key)
         local_sub_folder_path = os.path.join(local_folder_path, obj_dirname)
         if not os.path.exists(local_sub_folder_path):
@@ -352,22 +352,25 @@ def cp(src, dst, recursive=False, dereference=False, preserve=True):
     """
     src_path = Path(src)
     dst_path = Path(dst)
+    try:
+        if dereference:
+            src_path = src_path.resolve()
 
-    if dereference:
-        src_path = src_path.resolve()
+        if src_path.is_dir() and recursive:
+            if preserve:
+                shutil.copytree(src_path, dst_path, copy_function=shutil.copy2, symlinks=not dereference)
+            else:
+                shutil.copytree(src_path, dst_path, symlinks=not dereference)
+        elif src_path.is_file():
+            if preserve:
+                shutil.copy2(src_path, dst_path)
+            else:
+                shutil.copy(src_path, dst_path)
+        else:
+            raise ValueError("Source must be a file or a directory with recursive=True")
+    except shutil.SameFileError:
+        print("Source and destination represents the same file.")
 
-    if src_path.is_dir() and recursive:
-        if preserve:
-            shutil.copytree(src_path, dst_path, copy_function=shutil.copy2, symlinks=not dereference)
-        else:
-            shutil.copytree(src_path, dst_path, symlinks=not dereference)
-    elif src_path.is_file():
-        if preserve:
-            shutil.copy2(src_path, dst_path)
-        else:
-            shutil.copy(src_path, dst_path)
-    else:
-        raise ValueError("Source must be a file or a directory with recursive=True")
 
 def mv(src, dest, force=False):
     """
