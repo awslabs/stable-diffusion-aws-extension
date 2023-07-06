@@ -849,7 +849,7 @@ paths:
                 items:
                   type: string
                 example:
-                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=w2MxBWl32nRYHnH2QMG0BQHS%2BAo%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688546960
+                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg
         '422':
           description: Validation Error
           content:
@@ -879,7 +879,7 @@ paths:
                 items:
                   type: string
                 example:
-                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=wTrwhJwTPSjAVmxBixdcUZsw2%2Bw%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688547068
+                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json
         '422':
           description: Validation Error
           content:
@@ -911,7 +911,7 @@ paths:
               schema:
                type: string
                example:
-                "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/config/aigc.json?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=25E0grDvf60520YLEGnioaqiEuo%3D&content-type=text%2Fplain%3Bcharset%3DUTF-8&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688547288"
+                "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/config/aigc.json?XXX"
 
         '422':
           description: Validation Error
