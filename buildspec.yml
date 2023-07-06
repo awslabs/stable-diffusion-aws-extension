@@ -49,6 +49,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
       - echo "BUILD VERSION is ${BUILD_VERSION}"
       - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
+      - echo "" > ../infrastructure/src/common/dockerImageTag.ts
       - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts 
       - echo "checking the updated image name"
       - cat ../infrastructure/src/common/dockerImageTag.ts
