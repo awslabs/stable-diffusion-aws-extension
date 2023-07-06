@@ -19,7 +19,6 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { CreateModelSageMakerEndpoint } from './create-model-endpoint';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
-import { AIGC_WEBUI_UTILS } from '../common/dockerImages';
 
 
 export interface UpdateModelStatusRestApiProps {
@@ -32,12 +31,13 @@ export interface UpdateModelStatusRestApiProps {
   snsTopic: aws_sns.Topic;
   checkpointTable: aws_dynamodb.Table;
   trainMachineType: string;
+  default_aigc_webui_utils_ecr_image: string;
 }
 
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  private readonly imageUrl: string = AIGC_WEBUI_UTILS;
+  private readonly imageUrl: string; 
   private readonly machineType: string;
 
   private readonly src;
@@ -63,6 +63,7 @@ export class UpdateModelStatusRestApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.checkpointTable = props.checkpointTable;
+    this.imageUrl = props.default_aigc_webui_utils_ecr_image;
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);

@@ -6,6 +6,7 @@ import {
 import { Construct } from 'constructs';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import {AIGC_WEBUI_INFERENCE, AIGC_WEBUI_UTILS, AIGC_WEBUI_DREAMBOOTH_TRAINING} from './common/dockerImages';
 
 const app = new App();
 
@@ -47,6 +48,23 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
+    const inference_ecr_image = new CfnParameter(this, 'inference_ecr_image', {
+      type: 'String',
+      description: 'Public ECR Image address for inference ',
+      default: AIGC_WEBUI_INFERENCE,
+    });
+
+    const webui_utils_ecr_image = new CfnParameter(this, 'webui_utils_ecr_image', {
+      type: 'String',
+      description: 'Public ECR Image address for webui utils ',
+      default: AIGC_WEBUI_UTILS,
+    });
+
+    const dreambooth_training_ecr_image = new CfnParameter(this, 'dreambooth_training_ecr_image', {
+      type: 'String',
+      description: 'Public ECR Image address for dreambooth training ',
+      default: AIGC_WEBUI_DREAMBOOTH_TRAINING,
+    });
 
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
@@ -54,6 +72,8 @@ export class Middleware extends Stack {
       emailParam: emailParam,
       apiKey: apiKeyParam.valueAsString,
       modelInfInstancetype: utilInstanceType.valueAsString,
+      default_aigc_webui_utils_ecr_image: webui_utils_ecr_image.valueAsString,
+      default_aigc_webui_dreambooth_training: dreambooth_training_ecr_image.valueAsString,
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
@@ -67,6 +87,7 @@ export class Middleware extends Stack {
               snsTopic: trainStack.snsTopic,
               synthesizer: props.synthesizer,
               default_endpoint_name: trainStack.default_endpoint_name,
+              default_inference_ecr_image: inference_ecr_image.valueAsString, 
             },
     );
 
