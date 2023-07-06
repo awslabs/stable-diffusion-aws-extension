@@ -1,8 +1,8 @@
-openapi: "3.0.1"
+openapi: "3.0.2"
 info:
   title: "Stable Diffusion Train and Deploy API"
   description: "This service is used to train and deploy Stable Diffusion models."
-  version: "2023-05-28T12:29:27Z"
+  version: "2023-07-05"
 servers:
   - url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
     variables:
@@ -611,181 +611,407 @@ paths:
                 error: error_message
 
   # Inference Start
-  /inference/get-texual-inversion-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job-image-output:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-hypernetwork-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-controlnet-model-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-lora-list:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job-param-output:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/generate-s3-presigned-url-for-uploading:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /inference/run-sagemaker-inference:
-    post:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /:
-    options:
-      responses:
-        "204":
-          description: "204 response"
-          headers:
-            Access-Control-Allow-Origin:
-              schema:
-                type: "string"
-            Access-Control-Allow-Methods:
-              schema:
-                type: "string"
-            Access-Control-Allow-Headers:
-              schema:
-                type: "string"
-          content: {}
-  /inference/list-inference-jobs:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-
   /inference:
     get:
-      security:
-        - api_key: []
+      summary: Root
+      operationId: root_inference_get
       responses:
-        "200":
-          description: "200 response"
-          content: {}
-    post:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/list-endpoint-deployment-jobs:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/deploy-sagemaker-endpoint:
-    post:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/delete-sagemaker-endpoint:
-    post:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
-  /inference/get-inference-job:
-    get:
-      security:
-        - api_key: []
-      responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /inference/test-connection:
     get:
+      summary: used to let client test connection
+      operationId: test_connection_get
       responses:
-        "200":
-          description: "200 response"
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/run-sagemaker-inference:
+    post:
+      summary: Run Sagemaker Inference
+      operationId: run_sagemaker_inference_inference_run_sagemaker_inference_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                Stable-diffusion: {}
+                embeddings:
+                    FastNegativeV2.pt: s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/embeddings/checkpoint/custom/c65307dd-c0ee-4649-a900-596f144cd330/FastNegativeV2.pt
+                    okuryl3nko.pt: s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/embeddings/checkpoint/custom/219dff2e-a1f0-4a70-9b2b-2bbc21295db7/okuryl3nko.pt
+                Lora:
+                    3DMM_V12.safetensors: s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/Lora/checkpoint/custom/ccbd651b-f239-4776-875a-034377849cb3/3DMM_V12.safetensors
+                hypernetworks:
+                    streetArt_v10.pt: s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/hypernetworks/checkpoint/custom/b89cb29f-eba5-4f37-939a-61099f8e13a5/streetArt_v10.pt
+                ControlNet: {}
+                sagemaker_endpoint: infer-endpoint-cb821ea
+                task_type: txt2img
+      responses:
+        '200':
+          description: Successful Response
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Empty"
-      security:
-        - api_key: []
+                type: object
+                example:
+# {"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}
+                    inference_id: XXXXXXX
+                    status: inprogress | failed
+                    endpoint_name: NAME_OF_ENDPOINT
+                    output_path: path_of_prediction_output
+
+
+  /inference/deploy-sagemaker-endpoint:
+    post:
+      summary: Deploy Sagemaker Endpoint
+      operationId: deploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                 instance_type: ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge
+                 initial_instance_count: 1|2|3|4
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/delete-sagemaker-endpoint:
+    post:
+      summary: Delete Sagemaker Endpoint
+      operationId: delete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                delete_endpoint_list: ['infer-endpoint-XXXXXX','infer-endpoint-YYYYYY']
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/list-endpoint-deployment-jobs:
+    get:
+      summary: List Endpoint Deployment Jobs
+      operationId: list_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: 
+                type: object
+                example:
+                  - EndpointDeploymentJobId: e0f9ccfd-8d14-4e77-9e75-b340e1ef23c8
+                    startTime: '2023-07-04 08:00:35.171309'
+                    endTime: '2023-07-04 08:00:37.158519'
+                    error: '' 
+                    status: failed
+                  - EndpointDeploymentJobId: 1bd447d2-e561-4cb3-965d-2707b30aea81
+                    startTime: '2023-07-04 08:00:22.435828'
+                    endTime: '2023-07-04 08:00:25.421777'
+                    error: ''
+                    status: failed
+                  - EndpointDeploymentJobId: cb821ea9-e9d1-4bae-98f8-c20ecadf11e0
+                    startTime: '2023-07-04 08:00:47.736033'
+                    endTime: '2023-07-04 08:12:55.148070'
+                    endpoint_name: infer-endpoint-cb821ea
+                    endpoint_status: InService
+                    status: success
+  /inference/list-inference-jobs:
+    get:
+      summary: List Inference Jobs
+      operationId: list_inference_jobs_inference_list_inference_jobs_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                   - inference_info_name: "/tmp/417d8bc5-f6d0-49c6-9669-c981beeb602a_param.json"
+                     startTime: '2023-07-04 09:14:21.170303'
+                     taskType: txt2img
+                     completeTime: 2023-07-04-09-14-26
+                     InferenceJobId: '417d8bc5-f6d0-49c6-9669-c981beeb602a'
+                     status: succeed
+                     sagemakerRaw: ""
+                     image_names:
+                     - image_0.jpg
+                   - inference_info_name: "/tmp/1f9679f3-25b8-4c44-8345-0a845da30094_param.json"
+                     startTime: '2023-07-05 06:38:45.752740'
+                     taskType: txt2img
+                     completeTime: 2023-07-05-06-38-49
+                     InferenceJobId: 1f9679f3-25b8-4c44-8345-0a845da30094
+                     status: succeed
+                     sagemakerRaw: "{'awsRegion': 'us-west-2', 'eventTime': '2023-07-05T06:38:47.73Z', 'receivedTime': '2023-07-05T06:38:45.725Z', 'invocationStatus': 'Completed', 'requestParameters': {'accept': '*/*', 'endpointName': 'infer-endpoint-cb821ea', 'inputLocation': 's3://sagemaker-us-west-2-489670441870/async-endpoint-inputs/infer-endpoint-cb821ea-230705-0638/2023-07-05-06-38-45-445-81a1ec03-f000-4a20-9a60-032ab1558a9d'}, 'responseParameters': {'contentType': 'application/json', 'outputLocation': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/sagemaker_output/211d2095-68bc-4404-a9e1-8a18a41f4dc7.out'}, 'inferenceId': '1f9679f3-25b8-4c44-8345-0a845da30094', 'eventVersion': '1.0', 'eventSource': 'aws:sagemaker', 'eventName': 'InferenceResult'}"
+                     image_names:
+                     - image_0.jpg
   /inference/get-endpoint-deployment-job:
     get:
-      security:
-        - api_key: []
+      summary: Get Endpoint Deployment Job
+      operationId: get_endpoint_deployment_job_inference_get_endpoint_deployment_job_get
+      parameters:
+      - required: true
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
       responses:
-        "200":
-          description: "200 response"
-          content: {}
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: 
+                type: object
+                example:
+                 EndpointDeploymentJobId: cb821ea9-e9d1-4bae-98f8-c20ecadf11e0
+                 startTime: '2023-07-04 08:00:47.736033'
+                 endTime: '2023-07-04 08:12:55.148070'
+                 endpoint_name: infer-endpoint-cb821ea
+                 endpoint_status: InService
+                 status: success
+
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job:
+    get:
+      summary: Get Inference Job
+      operationId: get_inference_job_inference_get_inference_job_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                 inference_info_name: "/tmp/1f9679f3-25b8-4c44-8345-0a845da30094_param.json"
+                 startTime: '2023-07-05 06:38:45.752740'
+                 taskType: txt2img
+                 completeTime: 2023-07-05-06-38-49
+                 InferenceJobId: 1f9679f3-25b8-4c44-8345-0a845da30094
+                 status: succeed
+                 sagemakerRaw: "{'awsRegion': 'us-west-2', 'eventTime': '2023-07-05T06:38:47.73Z', 'receivedTime': '2023-07-05T06:38:45.725Z', 'invocationStatus': 'Completed', 'requestParameters': {'accept': '*/*', 'endpointName': 'infer-endpoint-cb821ea', 'inputLocation': 's3://sagemaker-us-west-2-489670441870/async-endpoint-inputs/infer-endpoint-cb821ea-230705-0638/2023-07-05-06-38-45-445-81a1ec03-f000-4a20-9a60-032ab1558a9d'}, 'responseParameters': {'contentType': 'application/json', 'outputLocation': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3/sagemaker_output/211d2095-68bc-4404-a9e1-8a18a41f4dc7.out'}, 'inferenceId': '1f9679f3-25b8-4c44-8345-0a845da30094', 'eventVersion': '1.0', 'eventSource': 'aws:sagemaker', 'eventName': 'InferenceResult'}"
+                 image_names:
+                 - image_0.jpg
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job-image-output:
+    get:
+      summary: Get Inference Job Image Output
+      operationId: get_inference_job_image_output_inference_get_inference_job_image_output_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Get Inference Job Image Output Inference Get Inference
+                  Job Image Output Get
+                type: array
+                items:
+                  type: string
+                example:
+                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=w2MxBWl32nRYHnH2QMG0BQHS%2BAo%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688546960
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-inference-job-param-output:
+    get:
+      summary: Get Inference Job Param Output
+      operationId: get_inference_job_param_output_inference_get_inference_job_param_output_get
+      parameters:
+      - required: false
+        schema:
+          title: Jobid
+          type: string
+        name: jobID
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Get Inference Job Param Output Inference Get Inference
+                  Job Param Output Get
+                type: array
+                items:
+                  type: string
+                example:
+                 - https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=wTrwhJwTPSjAVmxBixdcUZsw2%2Bw%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688547068
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/generate-s3-presigned-url-for-uploading:
+    get:
+      summary: Generate S3 Presigned Url For Uploading
+      operationId: generate_s3_presigned_url_for_uploading_inference_generate_s3_presigned_url_for_uploading_get
+      parameters:
+      - required: false
+        schema:
+          title: S3 Bucket Name
+          type: string
+        name: s3_bucket_name
+        in: query
+      - required: false
+        schema:
+          title: Key
+          type: string
+        name: key
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+               type: string
+               example:
+                "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/config/aigc.json?AWSAccessKeyId=ASIAXEAVB7OHOKXKTVFY&Signature=25E0grDvf60520YLEGnioaqiEuo%3D&content-type=text%2Fplain%3Bcharset%3DUTF-8&x-amz-security-token=IQoJb3JpZ2luX2VjELD%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJHMEUCIQDgCGDx%2FGzJJeVeeTrKo3sTm7ovovKMCHxqK%2BcGcLaxpAIgcWfWjvuP%2F1Wxcerny%2Fyi9mbtwfvDfErSFmrajON4TrIq0wMIKRABGgw0ODk2NzA0NDE4NzAiDFzb4bKTmkxBXvGTdCqwA0S42NoBSjBhqxxf8YeVcb%2BaDXduis8aWctcgabfXB9lny10VIg1%2BJa41h2E4NjnFB2C7HFRR0QJ8xJ9XvKBgJMXxj14RyT0XjLY1aOdzO11YCwZncB4Jcw8P0ecG8Je8vJtaLRCBpfjJXMgAn4k8TI83mh6ywGP9MZN31UAcIerEF2O1I7z8YmzR6ugZCfQI3d9LE6J9dlH3LbQ3kOEJEDC4XeVp0yKXD7b2Onmm%2FVK6RlPR6oWmUPlvZdTo6yiT6n3WLFPBzwN9gr%2FEpCLR1i7Ayao8%2BYrSK5%2FZCzlgLXNbCZdn988gDg1qkEVwKHvpN9GWFx6A2%2BUgMUGrPWCf8ICr7%2BqULs2pQ6%2FppQazCPTVeCgDZp7uwb%2FpqUu%2BiZn4fb78pZJHbYTnXSwh4tOfY9%2BS00XNwm%2BjvZicfKc4686ibvr8muv121X3ebysIJhAZCZMbfdkVeEbhmqYXY7oBFDjr6r6QXOFNQsLENByJDrkHuEPz%2BGDX6bfZw%2Bsabx2NtfwaP1mGxdxuhCMKkOvKanm8X5dthT4cBoLDQwzaqw0J450s7JBi1vUZtly5egqzCJwJSlBjqeAbOKgrtiGWL9yor1ms6m%2FL6zrF3rLzHE3t3hHbBV1B8shh7ebQobcghMGJSpciAEUI1%2BxiQSdVBHGD378KBpb%2BU1%2FzUb7Nm96lNJ3T15lSe80gWODZUaji9bZ5HUngltAMxobZjSF2%2BxFp6yyX2D1omeb0Jv4PZi2cRmqCMjQfmenk%2B19YOIg5%2FbhCO7vehM0otjFNU0aspM40PVdFfS&Expires=1688547288"
+
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  /inference/get-texual-inversion-list:
+    get:
+      summary: Get Texual Inversion List
+      operationId: get_texual_inversion_list_inference_get_texual_inversion_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-lora-list:
+    get:
+      summary: Get Lora List
+      operationId: get_lora_list_inference_get_lora_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-hypernetwork-list:
+    get:
+      summary: Get Hypernetwork List
+      operationId: get_hypernetwork_list_inference_get_hypernetwork_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/get-controlnet-model-list:
+    get:
+      summary: Get Controlnet Model List
+      operationId: get_controlnet_model_list_inference_get_controlnet_model_list_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /inference/run-model-merge:
+    post:
+      summary: Run Model Merge
+      operationId: run_model_merge_inference_run_model_merge_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+               type: object
+               example:
+                primary_model_name : primary_model_name,
+                secondary_model_name : secondary_model_name,
+                tertiary_model_name : teritary_model_name 
+  # Inference End
+
 components:
   schemas:
     Empty:
       title: "Empty Schema"
       type: "object"
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+
   securitySchemes:
     api_key:
       type: "apiKey"
