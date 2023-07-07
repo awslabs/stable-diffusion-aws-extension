@@ -228,7 +228,7 @@ def cloud_train(
             class_data_path_list.append(concept["class_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
         model_list = get_cloud_db_models()
         new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
-        print(f"hack config from local_model_name to new_db_config_path")
+        print(f"hack config from {local_model_name} to {new_db_config_path}")
         hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list, local_model_name)
         if config["save_lora_for_extra_net"] == True:
             model_type = "Lora"

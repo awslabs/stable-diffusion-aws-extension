@@ -19,70 +19,57 @@
 6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。img2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to extras**等，进行后续工作流。
 > **补充：** 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为**推理时间->任务类型（txt2img/img2img/interrogate_clip/interrogate_deepbooru）->推理状态（succeed/in progress/fail） ->inference id**。
 
+
 ### img2img标签操作示例
 
 1. 上传原始图片到**img2img**标签并输入提示词**black flower**
-
 ![img2img raw](../images/img2img_tab.png)
 
 2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-
 ![img2img result](../images/img2img_result.png)
 
 ### Sketch标签操作示例
 
-1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’
-上传白板底图到**Sketch标签**
-
+1. 启动**webui**时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到**Sketch标签**。
 ![sketch](../images/sketch_raw.png)
 
-2. 然后通过画笔，绘制下面的草图并准备提示词**flower**
-
+2. 通过画笔，绘制下面的草图并准备提示词**flower**。
 ![sketch paint](../images/sketch_paint.png)
 
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-
+3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果.
 ![sketch result](../images/sketch_result.png)
+
 
 ### Inpaint标签操作示例
 
-1. 上传原始图片到**Inpaint**标签并准备提示词**watermelon**
-
+1. 上传原始图片到**Inpaint**标签并准备提示词**watermelon**。
 ![inpaint](../images/inpaint_tab.png)
 
-2. 然后通过画笔建立掩膜并准备提示词**watermelon**
-
+2. 通过画笔建立掩膜并准备提示词**watermelon**。
 ![inpaint_inpaint](../images/inpaint_inpaint.png)
 
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-
+3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
 ![inpaint result](../images/inpaint_result.png)
 
 
 ### Inpatnt Sketch标签操作示例
 
-1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到**Inpaint Sketch**标签并准备提示词**candy**
-
+1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到**Inpaint Sketch**标签并准备提示词**candy**。
 ![inpaint_sketch](../images/inpaint_sketch_tab.png)
 
-2. 然后通过画笔建立掩膜
-
+2. 通过画笔建立掩膜。
 ![inpaint_sketch_inpaint](../images/inpaint_sketch_inpaint.png)
 
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-
+3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
 ![inpaint_sketch result](../images/inpaint_sketch_result.png)
 
 
 ### Inpatnt Upload标签操作示例
 
-1. 上传原始图片和mask图片到**Inpaint Upload**标签并准备提示词**large eyes**
-
+1. 上传原始图片和mask图片到**Inpaint Upload**标签并准备提示词**large eyes**。
 ![inpaint_upload](../images/inpaint_upload_tab.png)
 
-
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-
+2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
 ![inpaint_upload result](../images/inpaint_upload_result.png)
 
 
@@ -91,15 +78,13 @@
 
 1. 进入**img2img**标签页，展开**Amazon SageMaker Inference**面板。
 2. Interrogate只需要在**img2img**标签页把图片上传即可。
-
 ![img2img tab](../images/clip_tab.png)
 
 3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点。
 
-4. 点击**Interrogate CLIP on cloud**或和**Interrogate DeepBooru on cloud**。
-6. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。
+4. 点击**Interrogate CLIP on cloud**或**Interrogate DeepBooru on cloud**。
+5. 查看推理结果。通过点击**Inference Job JDs**右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的**Inference Job ID**。
 img2img标签的提示词区域就能看到结果。
-
 ![interrogate generate results](../images/clip.png)
 
 ### 连续使用场景

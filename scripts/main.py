@@ -253,14 +253,14 @@ def on_after_component_callback(component, **_kwargs):
                 fn=sagemaker_ui.call_interrogate_clip,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
             )
 
             sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_deepbooru,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
             )
             sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
@@ -280,7 +280,6 @@ def update_connect_config(api_url, api_token):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
     api_key = get_variable_from_json('api_token')
-    print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
     sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "Setting updated"
 
@@ -290,7 +289,6 @@ def test_aws_connect_config(api_url, api_token):
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
-    print(f"get the api_url:{api_url} and token: {api_token}............")
     target_url = f'{api_url}inference/test-connection'
     headers = {
         "x-api-key": api_token,

@@ -22,7 +22,7 @@ For users who need explicit IAM permissions for strict account control, we provi
 **Specify such role in Cloudformation creation.**
 ![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/3121c876-79d4-48a2-8260-be80c480b893)
 
->**Notice** : We prefer use deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for arround 2 hours. That mean user need to wait arround 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
+>**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
 #### **Option 2**: Use AWS CDK(Cloud Development Kit)
 **Prerequisite**
