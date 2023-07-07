@@ -197,6 +197,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             controlnet_model = os.path.splitext(selected_cn_model[0])[0]
         controlnet_image = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
         controlnet_image = controlnet_image.split(',')[1]
+        controlnet_image_original = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image_original', defaultValue=None)
+        controlnet_image_original = controlnet_image_original.split(',')[1]
+        
         weight = float(get_param_value(params_dict, f'{param_name}_controlnet_weight', defaultValue=1)) #1,
         if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_just_resize'):
             resize_mode = "Just Resize" # "Crop and Resize",
