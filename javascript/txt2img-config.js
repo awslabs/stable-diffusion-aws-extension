@@ -1263,7 +1263,13 @@ function scrap_ui_component_value_with_default(config) {
     if (inpaintImgElement) {
         const srcValue = inpaintImgElement.getAttribute("src");
         // Use the srcValue variable as needed
-        config["img2img_inpaint_sketch_image"] = srcValue;
+        const baseImage = new Image();
+        baseImage.src = srcValue;
+        const canvas = document.querySelector('canvas[key="temp"]');
+        const context = canvas.getContext('2d');
+        context.drawImage(baseImage, 0, 0);
+        const srcValueByCanvas = canvas.toDataURL();
+        config["img2img_inpaint_sketch_image"] = srcValueByCanvas;
     } else {
         // Handle the case when imgElement is null or undefined
         console.log("inpaintImgElement is null or undefined");
