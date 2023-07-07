@@ -665,7 +665,7 @@ function scrap_ui_component_value_with_default(config) {
         // 设置 Canvas 元素的样式，使其在页面中不可见
         canvas.style.display = 'none';
         const context = canvas.getContext('2d');
-        context.drawImage(baseImage, 0, 0);
+        context.drawImage(baseImage, 0, 0, canvasOrg.width, canvasOrg.height);
         const srcValueByCanvas = canvas.toDataURL();
         config["txt2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
 
@@ -822,7 +822,7 @@ function scrap_ui_component_value_with_default(config) {
             // 设置 Canvas 元素的样式，使其在页面中不可见
             canvas.style.display = 'none';
             const context = canvas.getContext('2d');
-            context.drawImage(baseImage, 0, 0);
+            context.drawImage(baseImage, 0, 0, canvasOrg.width, canvasOrg.height);
             const srcValueByCanvas = canvas.toDataURL();
             config["img2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
 
@@ -1316,7 +1316,7 @@ function scrap_ui_component_value_with_default(config) {
         // 设置 Canvas 元素的样式，使其在页面中不可见
         canvas.style.display = 'none';
         const context = canvas.getContext('2d');
-        context.drawImage(baseImage, 0, 0);
+        context.drawImage(baseImage, 0, 0, canvasOrg.width, canvasOrg.height);
         const srcValueByCanvas = canvas.toDataURL();
         config["img2img_inpaint_sketch_image"] = srcValueByCanvas;
     } else {
