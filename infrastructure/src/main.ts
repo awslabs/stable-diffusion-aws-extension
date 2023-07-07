@@ -6,6 +6,7 @@ import {
 import { Construct } from 'constructs';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 
 const app = new App();
 
@@ -47,6 +48,11 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
+    const ecrImageTagParam = new CfnParameter(this, 'ecr_image_tag', {
+      type: 'String',
+      description: 'Public ECR Image tag, example: stable|dev',
+      default: ECR_IMAGE_TAG,
+    });
 
     const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
@@ -54,6 +60,7 @@ export class Middleware extends Stack {
       emailParam: emailParam,
       apiKey: apiKeyParam.valueAsString,
       modelInfInstancetype: utilInstanceType.valueAsString,
+      ecr_image_tag: ecrImageTagParam.valueAsString, 
     });
 
     const inferenceStack = new SDAsyncInferenceStack(
@@ -67,6 +74,7 @@ export class Middleware extends Stack {
               snsTopic: trainStack.snsTopic,
               synthesizer: props.synthesizer,
               default_endpoint_name: trainStack.default_endpoint_name,
+              ecr_image_tag: ecrImageTagParam.valueAsString, 
             },
     );
 

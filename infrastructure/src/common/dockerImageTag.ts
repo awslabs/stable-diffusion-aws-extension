@@ -1,0 +1,1 @@
+export const ECR_IMAGE_TAG: string = 'dev';
