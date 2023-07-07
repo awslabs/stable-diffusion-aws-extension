@@ -24,6 +24,7 @@ import { StateMachineProps } from 'aws-cdk-lib/aws-stepfunctions/lib/state-machi
 import { LambdaInvokeProps } from 'aws-cdk-lib/aws-stepfunctions-tasks/lib/lambda/invoke';
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
+import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../common/dockerImages';
 
 export interface UpdateTrainJobApiProps{
   router: aws_apigateway.Resource;
@@ -35,6 +36,7 @@ export interface UpdateTrainJobApiProps{
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
+  ecr_image_tag: string;
 }
 
 export class UpdateTrainJobApi {
@@ -55,7 +57,7 @@ export class UpdateTrainJobApi {
   private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
   private readonly sfnLambdaRole: aws_iam.Role;
-  private readonly srcImg: string = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:dev';
+  private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
@@ -72,6 +74,7 @@ export class UpdateTrainJobApi {
     this.trainTable = props.trainTable;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
     this.sfnLambdaRole = this.getStepFunctionLambdaRole();
+    this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + props.ecr_image_tag;
     [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
 
     this.trainingStateMachine = this.sagemakerStepFunction(this.userSnsTopic);

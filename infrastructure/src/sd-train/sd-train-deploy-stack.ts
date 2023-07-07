@@ -39,6 +39,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
   apiKey: string;
   modelInfInstancetype: string;
+  ecr_image_tag: string;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -167,6 +168,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: this.trainingTable,
       userTopic: this.snsTopic,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     // POST /model
@@ -200,6 +202,7 @@ export class SdTrainDeployStack extends NestedStack {
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
       trainMachineType: props.modelInfInstancetype,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
