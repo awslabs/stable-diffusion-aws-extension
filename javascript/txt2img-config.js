@@ -654,7 +654,29 @@ function scrap_ui_component_value_with_default(config) {
     if (imgElement) {
         const srcValue = imgElement.getAttribute("src");
         // Use the srcValue variable as needed
-        config["txt2img_controlnet_ControlNet_input_image"] = srcValue;
+        const baseImage = new Image();
+        baseImage.src = srcValue;
+        // 创建一个 canvas 元素
+        const canvasOrg = document.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+        const canvas = document.createElement('canvas');
+        // 设置 canvas 的宽度和高度
+        canvas.width = canvasOrg.width;
+        canvas.height = canvasOrg.height;
+        // 设置 Canvas 元素的样式，使其在页面中不可见
+        canvas.style.display = 'none';
+        const context = canvas.getContext('2d');
+        context.drawImage(baseImage, 0, 0);
+        const srcValueByCanvas = canvas.toDataURL();
+        config["txt2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
+
+        const drawingCanvas = document.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+        if (drawingCanvas) {
+            const imageDataURL = drawingCanvas.toDataURL();
+            config["txt2img_controlnet_ControlNet_input_image"] = imageDataURL;
+        } else {
+            console.log("txt2img_controlnet_ControlNet_input_image is null")
+            config["txt2img_controlnet_ControlNet_input_image"] = "";
+        }
     } else {
         // Handle the case when imgElement is null or undefined
         console.log("imgElement is null or undefined");
@@ -790,7 +812,28 @@ function scrap_ui_component_value_with_default(config) {
         if (img2img_imgElement) {
             const srcValue = img2img_imgElement.getAttribute("src");
             // Use the srcValue variable as needed
-            config["img2img_controlnet_ControlNet_input_image"] = srcValue;
+            const baseImage = new Image();
+            baseImage.src = srcValue;
+            const canvasOrg = document.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+            const canvas = document.createElement('canvas');
+            // 设置 canvas 的宽度和高度
+            canvas.width = canvasOrg.width;
+            canvas.height = canvasOrg.height;
+            // 设置 Canvas 元素的样式，使其在页面中不可见
+            canvas.style.display = 'none';
+            const context = canvas.getContext('2d');
+            context.drawImage(baseImage, 0, 0);
+            const srcValueByCanvas = canvas.toDataURL();
+            config["img2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
+
+            const drawingCanvas = document.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+            if (drawingCanvas) {
+                const imageDataURL = drawingCanvas.toDataURL();
+                config["img2img_controlnet_ControlNet_input_image"] = imageDataURL;
+            } else {
+                console.log("img2img_controlnet_ControlNet_input_image is null")
+                config["img2img_controlnet_ControlNet_input_image"] = ""
+            }
         } else {
             // Handle the case when imgElement is null or undefined
             console.log("img2img_imgElement is null or undefined");
@@ -1265,7 +1308,13 @@ function scrap_ui_component_value_with_default(config) {
         // Use the srcValue variable as needed
         const baseImage = new Image();
         baseImage.src = srcValue;
-        const canvas = document.querySelector('canvas[key="temp"]');
+        const canvasOrg = document.querySelector('#inpaint_sketch > div.image-container.svelte-p3y7hu > div.svelte-116rqfv > div > canvas[key="drawing"]');
+        const canvas = document.createElement('canvas');
+        // 设置 canvas 的宽度和高度
+        canvas.width = canvasOrg.width;
+        canvas.height = canvasOrg.height;
+        // 设置 Canvas 元素的样式，使其在页面中不可见
+        canvas.style.display = 'none';
         const context = canvas.getContext('2d');
         context.drawImage(baseImage, 0, 0);
         const srcValueByCanvas = canvas.toDataURL();
