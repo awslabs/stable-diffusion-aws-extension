@@ -13,7 +13,7 @@ load_dotenv()
 
 start_time = time.time()
 
-# preapre payload
+# prepare payload
 task_type = ''
 payload_checkpoint_info = json.loads(os.environ['checkpoint_info'])
 

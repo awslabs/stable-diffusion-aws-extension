@@ -34,7 +34,7 @@
 ## Controlnet的使用方法
 
 ### openpose的使用方法
-1. 打开ControlNet面板，勾选**Enabel**，选择**Preprocessor**为**openpose**，同时上传图片。
+1. 打开ControlNet面板，勾选**Enable**，选择**Preprocessor**为**openpose**，同时上传图片。
  ![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
     
 2. 在**Amazon SageMaker Inference**面板的里面选择**Stable Diffusion Checkpoint**和**ControlNet-Model**。如下方示例图中选择**v1-5-pruned-emaonly.safetensors**和**control_openpose-fp16.safetensors**。提示词**a cute dog**。

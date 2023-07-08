@@ -6,7 +6,7 @@ To use extra models for inference, you will need to upload model through steps b
 
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**.
 ![Upload Models to S3](../images/Upload-models.png)
-2. Enter the local model path under correspoding model text box. 
+2. Enter the local model path under corresponding model text box. 
 > **Note**: You can upload multiple kinds of models by entering multiple local model paths in text box.
 
 3. Click **Upload Models to Cloud** to start uploading process.

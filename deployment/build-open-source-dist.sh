@@ -14,7 +14,7 @@
 #      found in the /.github folder).
 #   3. Package the /source folder along with the necessary root-level
 #      open-source artifacts (i.e. CHANGELOG, etc.).
-#   4. Remove any unecessary artifacts from the /open-source folder (i.e. 
+#   4. Remove any unnecessary artifacts from the /open-source folder (i.e. 
 #      node_modules, package-lock.json, etc.).
 #   5. Zip up the /open-source folder and create the distributable.
 #   6. Remove any temporary files used for staging.

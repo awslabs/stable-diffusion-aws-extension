@@ -18,7 +18,7 @@ def dummy_function(*args, **kwargs):
     return None
 
 try:
-    # TODO: Automaticly append the dependent module path.
+    # TODO: Automatically append the dependent module path.
     sys.path.append("extensions/sd_dreambooth_extension")
     # TODO: Do not use the dreambooth status module.
     from dreambooth import shared as dreambooth_shared
