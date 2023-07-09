@@ -1,3 +1,3 @@
 | Date          | Change            |
 |---------------|-------------------|
-| June 2023 | Intitial release  |
+| June 2023 | Initial release  |

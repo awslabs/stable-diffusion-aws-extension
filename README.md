@@ -16,7 +16,7 @@ If you have not install the Stable Diffusion WebUI, or the proper version of the
 
 For users who need explicit IAM permissions for strict account control, we provide [CloudFormation template](https://github.com/awslabs/stable-diffusion-aws-extension/blob/dev/workshop/middleware-min-role.yaml) to help system administrators create IAM roles with minimal permissions, user can create & delete middleware CloudFormation templates through newly such created roles.
 
-**Create new mininum role first, e.g. sd-min-role.**
+**Create new minimum role first, e.g. sd-min-role.**
 ![image](https://github.com/awslabs/stable-diffusion-aws-extension/assets/23544182/148841f6-8fad-4166-8f02-8a306b177459)
 
 **Specify such role in Cloudformation creation.**
@@ -91,7 +91,7 @@ Some user existing workflow is shown below that the data scientists had to jump 
 
 ![Screen Shot 2023-05-20 at 21 44 58](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/08109af4-84b0-4055-bf19-b9e8344dba75)
 
-Thus we plan to contribute a solution aiming to mitigate above issue and provide a lite, decouple and user friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We intergrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
+Thus we plan to contribute a solution aiming to mitigate above issue and provide a lite, decouple and user friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
 
 ## What is the user tuturial
 We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
