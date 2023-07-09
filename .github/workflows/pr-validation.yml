@@ -2,7 +2,7 @@ on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
-# trigger manually for debugging
+  # trigger manually for debugging
   workflow_dispatch:
 
 permissions:
