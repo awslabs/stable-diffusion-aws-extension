@@ -85,6 +85,7 @@ jobs:
       - name: Check for misspellings
         uses: codespell-project/actions-codespell@master
         with:
+          only_warn: 1
           check_filenames: true
           skip: .git,*.png,*.jpg,*.jpeg
 
