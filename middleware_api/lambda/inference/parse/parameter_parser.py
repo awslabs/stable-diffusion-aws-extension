@@ -195,10 +195,18 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             controlnet_model = "None"
         else:
             controlnet_model = os.path.splitext(selected_cn_model[0])[0]
-        controlnet_image = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
-        controlnet_image = controlnet_image.split(',')[1]
         controlnet_image_original = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image_original', defaultValue=None)
         controlnet_image_original = controlnet_image_original.split(',')[1]
+        controlnet_image_mask = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
+        controlnet_image_mask = controlnet_image_mask.split(',')[1]
+
+        image = Image.open(io.BytesIO(base64.b64decode(controlnet_image_original)))
+        image_mask = Image.open(io.BytesIO(base64.b64decode(controlnet_image_mask)))
+        pred = np.any(np.abs((np.array(image).astype(float)- np.array(image_mask).astype(float)))>0, axis=-1)
+        mask = Image.fromarray(pred.astype(np.uint8) * 255)
+        controlnet_image = encode_pil_to_base64(image.convert("RGB"))
+        controlnet_mask = encode_pil_to_base64(mask)
+
         
         weight = float(get_param_value(params_dict, f'{param_name}_controlnet_weight', defaultValue=1)) #1,
         if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_just_resize'):
@@ -280,7 +288,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             orig = orig.resize(image_pil.size)
             orig = orig or image_pil
             #pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
-            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>80, axis=-1)
+            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>0, axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
@@ -408,7 +416,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             payload[payload_name]["alwayson_scripts"]["controlnet"]["args"] = [
                 {
                     "input_image": controlnet_image,
-                    "mask": "",
+                    "mask": controlnet_mask,
                     "module": controlnet_module,
                     "model": controlnet_model,
                     "loopback": loopback,
