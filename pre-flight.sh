@@ -47,7 +47,7 @@ get_latest_commit_id() {
 
 pre_flight_check() {
     echo -e "Start pre-flight check for WebUI..."
-    # check if root folder suppport
+    # check if root folder support
     LATEST_ROOT_COMMIT=$(get_latest_commit_id "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git")
     # echo -e "Latest commit id for WebUI: \n$LATEST_ROOT_COMMIT"
     SUPPORTED_ROOT_COMMITS=$(cd ../../ && get_supported_commit_list "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git" "$INITIAL_SUPPORT_COMMIT_ROOT" "$LATEST_ROOT_COMMIT")

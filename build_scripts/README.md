@@ -1,4 +1,4 @@
-# Vesion control for stable-diffusion-aws-extension
+# Version control for stable-diffusion-aws-extension
 
 Update time: 20230703
 

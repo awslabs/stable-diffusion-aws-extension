@@ -5,7 +5,7 @@ You can open the **img2img tab** and use the original region along with the **Am
 ## img2img use guide
 ### Standard process for different functional labels in img2img
 
-1. Navigate to tab **img2img**, open pannel **Amazon SageMaker Inference**.
+1. Navigate to tab **img2img**, open panel **Amazon SageMaker Inference**.
 2. Input parameters for inference. The same as local inferance, you could edit parameters in native fields for prompts, negative prompts, sampling parameters, inference parameters and etc. For functions **img2img**, **sketch**, **inpaint**, **inpaint sketch** and **inpaint upload**, you could upload and modify images in the native way.
 3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state.
 
@@ -76,7 +76,7 @@ You can open the **img2img tab** and use the original region along with the **Am
 
 ### Interrogate clip/deepbooru
 
-1. Navigate to **img2img** tab，open **Amazon SageMaker Inference** pannel.
+1. Navigate to **img2img** tab，open **Amazon SageMaker Inference** panel.
 2. Interrogate only need to upload image to **img2img** tab.
 ![img2img tab](../images/clip_tab.png)
 
@@ -85,7 +85,7 @@ You can open the **img2img tab** and use the original region along with the **Am
 5. Check inference result. Refresh the dropdown list of **Inference Job JDs**, check the topmost **Inference Job ID** that match the inference submission timestamp to review the inference result.
 ![interrogate generate results](../images/clip.png)
 
-### Continous Inference Scenario
+### Continuous Inference Scenario
 
 1. Following the **General Inference Scenario**, complete the parameter inputs and click **Generate on Cloud** to submit the initial inference task.
 2. Wait for the appearance of a new **Inference ID** in the right-side **Output** section.
