@@ -145,6 +145,9 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_html_info = component
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and \
+        sagemaker_ui.textual_inversion_dropdown is not None and \
+        sagemaker_ui.hyperNetwork_dropdown is not None and \
+        sagemaker_ui.lora_dropdown is not None and \
         txt2img_gallery is not None and \
         txt2img_generation_info is not None and \
         txt2img_html_info is not None and \
@@ -156,6 +159,23 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
+        sagemaker_ui.textual_inversion_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+            inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        ) 
+
+        sagemaker_ui.hyperNetwork_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+            inputs=[sagemaker_ui.hyperNetwork_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        ) 
+
+        sagemaker_ui.lora_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+            inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        ) 
 
         sagemaker_ui.sagemaker_endpoint.change(
             fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
@@ -228,6 +248,9 @@ def on_after_component_callback(component, **_kwargs):
         init_mask_inpaint = component
 
     if sagemaker_ui.inference_job_dropdown is not None and \
+            sagemaker_ui.textual_inversion_dropdown is not None and \
+            sagemaker_ui.hyperNetwork_dropdown is not None and \
+            sagemaker_ui.lora_dropdown is not None and \
             img2img_gallery is not None and \
             img2img_generation_info is not None and \
             img2img_html_info is not None and \
@@ -248,6 +271,24 @@ def on_after_component_callback(component, **_kwargs):
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
                 # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
+
+            sagemaker_ui.textual_inversion_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+                inputs=[sagemaker_ui.textual_inversion_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
+            ) 
+
+            sagemaker_ui.hyperNetwork_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+                inputs=[sagemaker_ui.hyperNetwork_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
+            ) 
+
+            sagemaker_ui.lora_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+                inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
+            ) 
 
             sagemaker_ui.interrogate_clip_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_clip,
