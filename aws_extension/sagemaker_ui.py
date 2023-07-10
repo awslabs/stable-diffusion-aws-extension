@@ -132,14 +132,16 @@ def update_sagemaker_endpoints():
         print(f"An error occurred while updating SageMaker endpoints: {e}")
 
 
-def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
+def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
     # global txt2img_inference_job_ids
     return get_inference_job_list(txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox)
 
 def origin_update_txt2img_inference_job_ids():
-    global origin_txt2img_inference_job_ids
+    # global origin_txt2img_inference_job_ids
+    return get_inference_job_list(True, True, True)
 
-def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
+
+def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
     global txt2img_inference_job_ids
     try:
         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
