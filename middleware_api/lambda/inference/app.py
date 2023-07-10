@@ -365,6 +365,7 @@ async def delete_sagemaker_endpoint(request: Request):
                     else:
                         # Handle other potential errors
                         print(error)
+                    return 0
                 
                 # update DynamoDB status
                 resp = getEndpointDeployJob(endpoint)
