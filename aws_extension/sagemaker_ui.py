@@ -21,9 +21,12 @@ from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3
 from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
+import re
 
 inference_job_dropdown = None
 textual_inversion_dropdown = None
+hyperNetwork_dropdown = None
+lora_dropdown = None
 sagemaker_endpoint = None
 
 primary_model_name = None
@@ -133,14 +136,16 @@ def update_sagemaker_endpoints():
         print(f"An error occurred while updating SageMaker endpoints: {e}")
 
 
-def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
+def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
     # global txt2img_inference_job_ids
     return get_inference_job_list(txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox)
 
 def origin_update_txt2img_inference_job_ids():
-    global origin_txt2img_inference_job_ids
+    # global origin_txt2img_inference_job_ids
+    return get_inference_job_list(True, True, True)
 
-def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=False, interrogate_type_checkbox=False):
+
+def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
     global txt2img_inference_job_ids
     try:
         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -697,10 +702,44 @@ def displayEndpointInfo(input_string: str):
     else:
         return plaintext_to_html("")
 
-def update_txt2imgPrompt(selected_items, txt2img_prompt):
-    print(selected_items)
+def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
+    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'embeddings', False)
+
+def update_txt2imgPrompt_from_Hypernetworks(selected_items, txt2img_prompt):
+    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'hypernetworks', True)
+
+def update_txt2imgPrompt_from_Lora(selected_items, txt2img_prompt):
+    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'Lora', True)
+
+def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings', with_angle_brackets=False):
+    print(selected_items) #example ['FastNegativeV2.pt']
     print(txt2img_prompt)
-    return txt2img_prompt + ' '.join(selected_items) 
+    print(get_model_list_by_type('embeddings'))
+    full_dropdown_items = get_model_list_by_type(model_name) #example ['FastNegativeV2.pt', 'okuryl3nko.pt']
+
+    # Remove extensions from selected_items and full_dropdown_items
+    selected_items = [item.split('.')[0] for item in selected_items]
+    full_dropdown_items = [item.split('.')[0] for item in full_dropdown_items]
+    
+    # Loop over each item in full_dropdown_items and remove it from txt2img_prompt
+    for item in full_dropdown_items:
+        if with_angle_brackets:
+            txt2img_prompt = re.sub(f'<{item}:\d+>', "", txt2img_prompt).strip() 
+        else:
+            txt2img_prompt = txt2img_prompt.replace(item, "").strip()
+
+    # Loop over each item in selected_items and append it to txt2img_prompt
+    for item in selected_items:
+        if with_angle_brackets:
+            txt2img_prompt +=  ' ' + '<' + item + ':1>'
+        else:
+            txt2img_prompt += ' ' + item
+    
+    # Remove any leading or trailing whitespace
+    txt2img_prompt = txt2img_prompt.strip()
+    
+    return txt2img_prompt
+
     
 def fake_gan(selected_value: str ):
     print(f"selected value is {selected_value}")
@@ -874,6 +913,7 @@ def create_ui(is_img2img):
                     lambda: {"choices": sorted(get_texual_inversion_list())},
                     "refresh_textual_inversion",
                 )
+                global lora_dropdown
                 lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="sagemaker_lora_list_dropdown")
                 create_refresh_button(
                     lora_dropdown,
@@ -882,6 +922,7 @@ def create_ui(is_img2img):
                     "refresh_lora",
                 )
             with gr.Row():
+                global hyperNetwork_dropdown
                 hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
                 create_refresh_button(
                     hyperNetwork_dropdown,
