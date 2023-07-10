@@ -23,7 +23,7 @@ RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/t
 RUN pip install --upgrade pip
 RUN pip install accelerate==0.19.0
 RUN pip install deepspeed==0.9.5
-RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@main#egg=xformers
+RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
