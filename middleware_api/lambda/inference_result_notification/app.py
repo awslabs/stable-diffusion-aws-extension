@@ -153,9 +153,7 @@ def lambda_handler(event, context):
         try:
             print(f"Complete invocation!")
             endpoint_name = message["requestParameters"]["endpointName"]
-            update_inference_job_table(inference_id, 'status', 'succeed')
-            update_inference_job_table(inference_id, 'completeTime', get_curent_time())
-            update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
+
             
             output_location = message["responseParameters"]["outputLocation"]
             bucket, key = get_bucket_and_key(output_location)
@@ -230,6 +228,10 @@ def lambda_handler(event, context):
                 update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
                 
                 print(f"Complete inference parameters {inference_parameters}")
+            
+            update_inference_job_table(inference_id, 'status', 'succeed')
+            update_inference_job_table(inference_id, 'completeTime', get_curent_time())
+            update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         except Exception as e:
             print(f"Error occurred: {str(e)}")
             update_inference_job_table(inference_id, 'status', 'failed')
