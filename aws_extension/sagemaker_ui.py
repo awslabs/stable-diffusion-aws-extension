@@ -23,6 +23,8 @@ from datetime import datetime
 import math
 import re
 
+from utils import cp, tar, rm
+
 inference_job_dropdown = None
 textual_inversion_dropdown = None
 hyperNetwork_dropdown = None
@@ -196,7 +198,7 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
     except Exception as e:
         print("Exception occurred when fetching inference_job_ids")
         return gr.Dropdown.update(choices=[])
-        
+
 
 
 
@@ -338,7 +340,7 @@ def refresh_all_models():
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
-                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split(os.sep)[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
         print(f"Error refresh all models: {e}")
@@ -355,7 +357,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         if lp == "" or not lp:
             continue
         print(f"lp is {lp}")
-        model_name = lp.split("/")[-1]
+        model_name = lp.split(os.sep)[-1]
 
         exist_model_list = list(checkpoint_info[rp].keys())
 
@@ -403,23 +405,28 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
             # Upload src model to S3.
             if rp != "embeddings" :
-                local_model_path_in_repo = f'models/{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join(['models', rp, model_name])
             else:
-                local_model_path_in_repo = f'{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join([rp, model_name])
             #local_tar_path = f'{model_name}.tar'
             print("Pack the model file.")
-            os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            # os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
                 model_yaml_name = model_name.split('.')[0] + ".yaml"
-                local_model_yaml_path = "/".join(lp.split("/")[:-1]) + f"/{model_yaml_name}"
-                local_model_yaml_path_in_repo = f"models/{rp}/{model_yaml_name}"
+                local_model_yaml_path = os.sep.join([*lp.split(os.sep)[:-1], model_yaml_name])
+                local_model_yaml_path_in_repo = os.sep.join(["models", rp, model_yaml_name])
                 if os.path.isfile(local_model_yaml_path):
-                    os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    cp(local_model_yaml_path, local_model_yaml_path_in_repo, recursive=True)
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
                 else:
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             else:
-                os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
             multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                 local_tar_path,
@@ -439,7 +446,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
             log = f"\n finish upload {local_tar_path} to {s3_base}"
 
-            os.system(f"rm {local_tar_path}")
+            # os.system(f"rm {local_tar_path}")
+            rm(local_tar_path, recursive=True)
         except Exception as e:
             print(f"fail to upload model {lp}, error: {e}")
 
@@ -753,7 +761,7 @@ def fake_gan(selected_value: str ):
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
 
-        if inference_job_taskType in ["txt2img", "img2img"]:    
+        if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = ''
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
@@ -786,7 +794,7 @@ def fake_gan(selected_value: str ):
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
             json_list = []
-            info_text = '' 
+            info_text = ''
             infotexts = ''
     else:
         prompt_txt = ''
@@ -854,9 +862,9 @@ def create_ui(is_img2img):
                 with gr.Row():
                     global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                             label="Select Cloud SageMaker Endpoint",
-                                             elem_id="sagemaker_endpoint_dropdown"
-                                             )
+                                                     label="Select Cloud SageMaker Endpoint",
+                                                     elem_id="sagemaker_endpoint_dropdown"
+                                                     )
 
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():
