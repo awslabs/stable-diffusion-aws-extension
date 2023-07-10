@@ -176,18 +176,6 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     else:
         selected_embeddings = selected_embeddings.split(":")
     
-    for embedding in selected_embeddings:
-        if embedding not in prompt:
-            prompt = prompt + embedding
-    for hypernet in selected_hypernets:
-        hypernet_name = os.path.splitext(hypernet)[0]
-        if hypernet_name not in prompt:
-            prompt = prompt + f"<hypernet:{hypernet_name}:1>"
-    for lora in selected_loras:
-        lora_name = os.path.splitext(lora)[0]
-        if lora_name not in prompt:
-            prompt = prompt + f"<lora:{lora_name}:1>"
-    
     controlnet_enable = get_param_value(params_dict, f'{param_name}_controlnet_enable')
     if controlnet_enable:
         controlnet_module = get_param_value(params_dict, f'{param_name}_controlnet_preprocessor', defaultValue=None)
