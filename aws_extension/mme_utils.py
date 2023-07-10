@@ -24,7 +24,7 @@ disk_path = '/tmp'
 def checkspace_and_update_models(selected_models, checkpoint_info):
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
-    os.system("df -h")
+    # os.system("df -h")
     for type_id in range(models_num):
         model_type = models_type_list[type_id]
         selected_models_name = selected_models[model_type]
@@ -77,6 +77,7 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
                 download_and_update(model_type, selected_model_name, selected_model_s3_pos)
     
     shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]
+    import psutil
     sd_models.reload_model_weights()
     sd_vae.reload_vae_weights()
 
