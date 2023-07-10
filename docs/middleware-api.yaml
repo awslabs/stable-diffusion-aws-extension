@@ -921,7 +921,7 @@ paths:
                 "$ref": "#/components/schemas/HTTPValidationError"
   /inference/get-texual-inversion-list:
     get:
-      summary: Get Texual Inversion List
+      summary: Get Textual Inversion List
       operationId: get_texual_inversion_list_inference_get_texual_inversion_list_get
       responses:
         '200':

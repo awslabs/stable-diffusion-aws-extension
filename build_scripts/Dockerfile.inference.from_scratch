@@ -1,5 +1,6 @@
-FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-gpu-py310-cu118-ubuntu20.04-sagemaker
-
+#FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-gpu-py310-cu118-ubuntu20.04-sagemaker
+#change image to pytorch 2.0.1
+FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 # update environment
 RUN apt-get update -y
 
@@ -20,6 +21,9 @@ RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linu
 RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
 
 RUN pip install --upgrade pip
+RUN pip install accelerate==0.19.0
+RUN pip install deepspeed==0.9.5
+RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@main#egg=xformers
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
