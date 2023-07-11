@@ -775,8 +775,9 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     return txt2img_prompt
 
     
-def fake_gan(selected_value: str ):
+def fake_gan(selected_value, original_prompt):
     print(f"selected value is {selected_value}")
+    print(f"original prompt is {original_prompt}")
     if selected_value is not None:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
@@ -788,7 +789,7 @@ def fake_gan(selected_value: str ):
             return [], [], plaintext_to_html('inference still in progress')
 
         if inference_job_taskType in ["txt2img", "img2img"]:
-            prompt_txt = ''
+            prompt_txt = original_prompt 
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
             json_list = []
@@ -823,7 +824,7 @@ def fake_gan(selected_value: str ):
             info_text = ''
             infotexts = ''
     else:
-        prompt_txt = ''
+        prompt_txt = original_prompt
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''

@@ -155,8 +155,9 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_prompt is not None:
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
-            fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-            inputs=[sagemaker_ui.inference_job_dropdown],
+            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
+            fn=sagemaker_ui.fake_gan,
+            inputs=[sagemaker_ui.inference_job_dropdown, txt2img_prompt],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
         sagemaker_ui.textual_inversion_dropdown.change(
@@ -266,8 +267,8 @@ def on_after_component_callback(component, **_kwargs):
             init_mask_inpaint is not None:
             img2img_show_hook = "finish"
             sagemaker_ui.inference_job_dropdown.change(
-                fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-                inputs=[sagemaker_ui.inference_job_dropdown],
+                fn=sagemaker_ui.fake_gan,
+                inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
                 # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
             )
