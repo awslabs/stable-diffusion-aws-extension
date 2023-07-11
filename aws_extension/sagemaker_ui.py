@@ -605,7 +605,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
         print(f"response for rest api {r}")
-        return "Endpoint delete completed"
+        return r
     except Exception as e:
         return f"Failed to delete sagemaker endpoint with exception: {e}"
 
