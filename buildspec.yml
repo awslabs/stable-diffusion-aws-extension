@@ -19,6 +19,8 @@ phases:
   pre_build:
     commands:
       - echo "Installing dependencies and executing unit tests - `pwd`"
+      - apt-get update -y
+      - apt-get install nodejs npm
       - echo Update npm to latest
       - npm install -g npm@latest
       - cd infrastructure

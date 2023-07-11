@@ -353,6 +353,9 @@ async def delete_sagemaker_endpoint(request: Request):
                 # check if endpoint exists
                 try:
                     response = sagemaker.describe_endpoint(EndpointName=endpoint)
+                    if response['EndpointStatus'] == 'Creating':
+                        print('endpoint in Creating status can not be deleted')
+                        return "Sagemaker Endpoint in Creating status can not be deleted" 
                     print(response)
     
                     logger.info(f"Deleting endpoint: {endpoint}")
@@ -365,7 +368,6 @@ async def delete_sagemaker_endpoint(request: Request):
                     else:
                         # Handle other potential errors
                         print(error)
-                    return 0
                 
                 # update DynamoDB status
                 resp = getEndpointDeployJob(endpoint)
@@ -411,10 +413,10 @@ async def delete_sagemaker_endpoint(request: Request):
                     raise
 
         logger.info("Successfully processed endpoint deletions and status updates")
-        return 0
+        return "Endpoint delete completed"
     except Exception as e:
         logger.error(f"error deleting sagemaker endpoint with exception: {e}")
-        return 0
+        return f"error deleting sagemaker endpoint with exception: {e}"
 
 
 @app.get("/inference/list-endpoint-deployment-jobs")
