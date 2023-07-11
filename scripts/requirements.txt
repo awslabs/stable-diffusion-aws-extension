@@ -2,3 +2,4 @@ boto3>=1.26.28
 requests
 urllib
 psutil==5.9.5
+nest_asyncio==1.5.6
