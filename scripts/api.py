@@ -9,6 +9,9 @@ import copy
 import requests
 from fastapi import FastAPI
 
+import asyncio
+import aiohttp
+
 # from modules import sd_hijack, sd_models, sd_vae, script_loading, paths
 from modules import sd_models
 # import modules.shared as shared
@@ -149,7 +152,7 @@ def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
 
     @app.post("/invocations")
-    def invocations(req: InvocationsRequest):
+    async def invocations(req: InvocationsRequest):
         """
         Check the current state of Dreambooth processes.
         @return:
@@ -205,10 +208,22 @@ def sagemaker_api(_, app: FastAPI):
 
         try:
             if req.task == 'txt2img':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
+                async def txt2img(req):
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post('http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json())) as response:
+
+                            print("Status:", response.status)
+                            print("Content-type:", response.headers['content-type'])
+
+                            json_body = await response.json()
+                            
+                            return json_body
+                json_body = asyncio.run(txt2img(req))
+                return json_body
+                # response = await requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
                 #response_info = response.json()
                 #print(response_info.keys())
-                return response.json()
+                # return response.json()
             elif req.task == 'img2img':
                 response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=json.loads(req.img2img_payload.json()))
                 # response = self.img2imgapi(req.img2img_payload)
