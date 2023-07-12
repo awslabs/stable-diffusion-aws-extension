@@ -27,6 +27,10 @@ You can submit feature requests and bug report through the GitHub issues. Here a
 
 Currently, it is recommended that users install the third-party extensions supported by this solution before installing the solution's own extension. However, the installation order can be changed as well. In that case, a restart of the WebUI is required to ensure the successful functioning of the features.
 
+**Q: After successfully installing the web UI, I am unable to access it in my browser. How can I resolve this?**
+
+Before attempting to access the webUI link in your browser, please ensure that the necessary ports are open and not being blocked by a firewall.
+
 
 ## Pricing
 
