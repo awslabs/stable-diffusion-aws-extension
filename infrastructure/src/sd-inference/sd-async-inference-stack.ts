@@ -240,6 +240,13 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
+    const query_inference_jobs = inference.addResource(
+      'query-inference-jobs',
+    );
+    query_inference_jobs.addMethod('GET', txt2imgIntegration, {
+      apiKeyRequired: true,
+    });
+
     const get_endpoint_deployment_job = inference.addResource(
       'get-endpoint-deployment-job',
     );

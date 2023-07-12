@@ -192,6 +192,41 @@ def get_inference_job_list(txt2img_type_checkbox=False, img2img_type_checkbox=Fa
         return gr.Dropdown.update(choices=[])
         
 
+def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime, endpoint: str, checkpoint: list):
+    print(
+        f"query_inference_job_list start！！{status},{task_type},{start_time},{end_time},{endpoint},{checkpoint}")
+    try:
+        response = server_request(f'inference/query-inference-jobs?status={status}&task_type={task_type}'
+                                  f'&start_time={start_time}&end_time={end_time}'
+                                  f'&endpoint={endpoint}&checkpoint={checkpoint}')
+        r = response.json()
+        print(r)
+        if r:
+            txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
+            temp_list = []
+            for obj in r:
+                if obj.get('completeTime') is None:
+                    complete_time = obj.get('startTime')
+                else:
+                    complete_time = obj.get('completeTime')
+                status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
+                inference_job_id = obj.get('InferenceJobId')
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
+                temp_list.append((complete_time, combined_string))
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+            # Append the sorted combined strings to the txt2img_inference_job_ids list
+            for item in sorted_list:
+                txt2img_inference_job_ids.append(item[1])
+            # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
+            return gr.Dropdown.update(choices=txt2img_inference_job_ids)
+        else:
+            print("The API response is empty.")
+            return gr.Dropdown.update(choices=[])
+    except Exception as e:
+        print("Exception occurred when fetching inference_job_ids")
+        return gr.Dropdown.update(choices=[])
 
 
 def get_inference_job(inference_job_id):
@@ -846,15 +881,25 @@ def create_ui(is_img2img):
             with gr.Row():
                 with gr.Column(scale=1):
                     gr.HTML(value="Inference Job type filters")
-                with gr.Column(scale=4):
+                with gr.Column(scale=2):
                     with gr.Row():
-                        txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
-                        img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
-                        interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
-
-                txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+                        task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
+                        task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
+                        status_choices = ["succeed", "failure"]
+                        status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
+                    with gr.Row():
+                        sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
+                        modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
+                    with gr.Row():
+                        sd_checkpoint_filter = gr.Dropdown(multiselect=True, label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
+                        modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+                    with gr.Row():
+                        start_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
+                        end_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
+                task_type_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                status_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                sagemaker_endpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                sd_checkpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
 
             with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")

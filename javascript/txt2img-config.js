@@ -149,6 +149,53 @@ function set_textbox_value_gradio(elementId, newValue) {
 }
 
 
+function inference_job_reset_time(a,b,c,d,e,f){
+    // 获取日期选择器元素
+    const dateStartInput = document.querySelector("#start_timepicker");
+    d = dateStartInput.value;
+    // dateStartInput.addEventListener("change", function() {
+    //     const selectedStartDate = dateStartInput.value;
+    //     // 在这里可以将 value 传递给 API 接口进行处理
+    //     alert("aaaa")
+    //     console.log("点击事件触发了，值为：" + value);
+    // });
+    alert(d)
+
+    const dateEndInput = document.querySelector("#end_timepicker");
+    e = dateEndInput.value;
+    alert(e)
+    return ""
+    // dateEndInput.addEventListener("change", function() {
+    //     const selectedEndDate = dateEndInput.value;
+    //     // 在这里可以将 value 传递给 API 接口进行处理
+    //     alert("bbbb")
+    //     console.log("点击事件触发了，值为：" + value);
+    // });
+}
+
+function inference_job_timepicker_change(){
+    // 获取日期选择器元素
+    const dateStartInput = document.querySelector("#start_timepicker");
+    const selectedStartDate = dateStartInput.value;
+    // dateStartInput.addEventListener("change", function() {
+    //     const selectedStartDate = dateStartInput.value;
+    //     // 在这里可以将 value 传递给 API 接口进行处理
+    //     alert("aaaa")
+    //     console.log("点击事件触发了，值为：" + value);
+    // });
+    alert(selectedStartDate)
+
+    const dateEndInput = document.querySelector("#end_timepicker");
+    const selectedEndDate = dateEndInput.value;
+    alert(selectedEndDate)
+    // dateEndInput.addEventListener("change", function() {
+    //     const selectedEndDate = dateEndInput.value;
+    //     // 在这里可以将 value 传递给 API 接口进行处理
+    //     alert("bbbb")
+    //     console.log("点击事件触发了，值为：" + value);
+    // });
+}
+
 async function txt2img_config_save(endpoint_value) {
     var config = {};
 
