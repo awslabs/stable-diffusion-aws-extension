@@ -148,6 +148,10 @@ def merge_model_on_cloud(req):
 
     return output_model_position
 
+import nest_asyncio
+
+nest_asyncio.apply()
+
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
 

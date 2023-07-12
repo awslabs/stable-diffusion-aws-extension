@@ -12,7 +12,7 @@ sys.path.append("../../../middleware_api/lambda/inference")
 from parse.parameter_parser import json_convert_to_payload
 start_time = time.time()
 
-url = "http://127.0.0.1:8082"
+url = "http://127.0.0.1:8080"
 
 aigc_json_file = "../json_files/txt2img_test.json"
 f = open(aigc_json_file)
