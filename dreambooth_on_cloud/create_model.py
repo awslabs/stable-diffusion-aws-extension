@@ -10,8 +10,8 @@ import logging
 from modules import sd_models
 from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
+from utils import tar
 import gradio as gr
-
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,8 @@ def async_create_model_on_sagemaker(
             multiparts_tags=[]
             if not from_hub:
                 print("Pack the model file.")
-                os.system(f"tar cvf {local_tar_path} {local_model_path}")
+                # os.system(f"tar cvf {local_tar_path} {local_model_path}")
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path], verbose=True)
                 s3_base = json_response["job"]["s3_base"]
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")

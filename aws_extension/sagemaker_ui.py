@@ -23,6 +23,11 @@ from datetime import datetime
 import math
 import re
 
+import asyncio
+import nest_asyncio
+
+from utils import cp, tar, rm
+
 inference_job_dropdown = None
 textual_inversion_dropdown = None
 hyperNetwork_dropdown = None
@@ -176,7 +181,6 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
                 task_type = obj.get('taskType', 'txt2img')
                 inference_job_id = obj.get('InferenceJobId')
                 if filter_checkbox and task_type not in selected_types:
-                    print(f"Skipping {task_type} as it is not selected")
                     continue
                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
@@ -196,7 +200,7 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
     except Exception as e:
         print("Exception occurred when fetching inference_job_ids")
         return gr.Dropdown.update(choices=[])
-        
+
 
 
 
@@ -338,7 +342,7 @@ def refresh_all_models():
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
-                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split('/')[-1]}"
+                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split(os.sep)[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
         print(f"Error refresh all models: {e}")
@@ -355,7 +359,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         if lp == "" or not lp:
             continue
         print(f"lp is {lp}")
-        model_name = lp.split("/")[-1]
+        model_name = lp.split(os.sep)[-1]
 
         exist_model_list = list(checkpoint_info[rp].keys())
 
@@ -403,23 +407,28 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
             # Upload src model to S3.
             if rp != "embeddings" :
-                local_model_path_in_repo = f'models/{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join(['models', rp, model_name])
             else:
-                local_model_path_in_repo = f'{rp}/{model_name}'
+                local_model_path_in_repo = os.sep.join([rp, model_name])
             #local_tar_path = f'{model_name}.tar'
             print("Pack the model file.")
-            os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            # os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
                 model_yaml_name = model_name.split('.')[0] + ".yaml"
-                local_model_yaml_path = "/".join(lp.split("/")[:-1]) + f"/{model_yaml_name}"
-                local_model_yaml_path_in_repo = f"models/{rp}/{model_yaml_name}"
+                local_model_yaml_path = os.sep.join([*lp.split(os.sep)[:-1], model_yaml_name])
+                local_model_yaml_path_in_repo = os.sep.join(["models", rp, model_yaml_name])
                 if os.path.isfile(local_model_yaml_path):
-                    os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    cp(local_model_yaml_path, local_model_yaml_path_in_repo, recursive=True)
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
                 else:
-                    os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             else:
-                os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
             multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                 local_tar_path,
@@ -439,7 +448,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
             log = f"\n finish upload {local_tar_path} to {s3_base}"
 
-            os.system(f"rm {local_tar_path}")
+            # os.system(f"rm {local_tar_path}")
+            rm(local_tar_path, recursive=True)
         except Exception as e:
             print(f"fail to upload model {lp}, error: {e}")
 
@@ -454,20 +464,45 @@ def generate_on_cloud(sagemaker_endpoint):
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
-def call_txt2img_inference(sagemaker_endpoint):
-    return call_remote_inference(sagemaker_endpoint, 'txt2img')
+# create a global event loop and apply the patch to allow nested event loops in single thread
+loop = asyncio.get_event_loop()
+nest_asyncio.apply()
 
-def call_img2img_inference(endpoint_value, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
-    return call_remote_inference(endpoint_value, 'img2img')
+MAX_RUNNING_LIMIT = 10
+
+def async_loop_wrapper_with_input(sagemaker_endpoint, type):
+    global loop
+    # check if there are any running or queued tasks inside the event loop
+    if loop.is_running():
+        # Calculate the number of running tasks
+        while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
+            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            time.sleep(1)
+    else:
+        # check if loop is closed and create a new one
+        if loop.is_closed():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            # log this event since it should never happen
+            print('Event loop was closed, created a new one')
+
+    # Add new task to the event loop
+    result = loop.run_until_complete(call_remote_inference(sagemaker_endpoint, type))
+    return result
+
+def call_txt2img_inference(sagemaker_endpoint):
+    return async_loop_wrapper_with_input(sagemaker_endpoint, 'txt2img')
+
+def call_img2img_inference(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
+    return async_loop_wrapper_with_input(sagemaker_endpoint, 'img2img')
 
 def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
-    return call_remote_inference(sagemaker_endpoint, 'interrogate_clip')
+    return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_clip')
 
 def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint):
-    return call_remote_inference(sagemaker_endpoint, 'interrogate_deepbooru')
+    return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_deepbooru')
 
-
-def call_remote_inference(sagemaker_endpoint, type):
+async def call_remote_inference(sagemaker_endpoint, type):
     print(f"chosen ep {sagemaker_endpoint}")
     print(f"inference type is {type}")
 
@@ -597,7 +632,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
         print(f"response for rest api {r}")
-        return "Endpoint delete completed"
+        return r
     except Exception as e:
         return f"Failed to delete sagemaker endpoint with exception: {e}"
 
@@ -741,8 +776,9 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     return txt2img_prompt
 
     
-def fake_gan(selected_value: str ):
+def fake_gan(selected_value, original_prompt):
     print(f"selected value is {selected_value}")
+    print(f"original prompt is {original_prompt}")
     if selected_value is not None:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
@@ -753,8 +789,8 @@ def fake_gan(selected_value: str ):
         if inference_job_status == 'inprogress':
             return [], [], plaintext_to_html('inference still in progress')
 
-        if inference_job_taskType in ["txt2img", "img2img"]:    
-            prompt_txt = ''
+        if inference_job_taskType in ["txt2img", "img2img"]:
+            prompt_txt = original_prompt 
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
             json_list = []
@@ -786,10 +822,10 @@ def fake_gan(selected_value: str ):
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
             json_list = []
-            info_text = '' 
+            info_text = ''
             infotexts = ''
     else:
-        prompt_txt = ''
+        prompt_txt = original_prompt
         image_list = []  # Return an empty list if selected_value is None
         json_list = []
         info_text = ''
@@ -854,9 +890,9 @@ def create_ui(is_img2img):
                 with gr.Row():
                     global sagemaker_endpoint
                     sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                             label="Select Cloud SageMaker Endpoint",
-                                             elem_id="sagemaker_endpoint_dropdown"
-                                             )
+                                                     label="Select Cloud SageMaker Endpoint",
+                                                     elem_id="sagemaker_endpoint_dropdown"
+                                                     )
 
                     modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                 with gr.Row():

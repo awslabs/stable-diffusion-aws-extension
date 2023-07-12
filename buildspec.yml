@@ -18,9 +18,6 @@ phases:
       - echo "nothing to do in install"
   pre_build:
     commands:
-      - echo "Installing dependencies and executing unit tests - `pwd`"
-      - echo Update npm to latest
-      - npm install -g npm@latest
       - cd infrastructure
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
