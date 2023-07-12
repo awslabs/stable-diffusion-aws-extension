@@ -471,6 +471,7 @@ nest_asyncio.apply()
 MAX_RUNNING_LIMIT = 10
 
 def async_loop_wrapper_with_input(sagemaker_endpoint, type):
+    global loop
     # check if there are any running or queued tasks inside the event loop
     if loop.is_running():
         # Caculate the number of running tasks
