@@ -12,7 +12,7 @@ Use the following steps to deploy this solution on AWS.
 
 - Step 1: Deploy Stable Diffusion WebUI. 
 - Step 2: Deploy the solution as a middleware.
-- Step3: Configure API url and API token.
+- Step 3: Configure API url and API token.
 
 
 
