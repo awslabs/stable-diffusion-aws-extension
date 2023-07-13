@@ -169,10 +169,50 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 <h3 id="run-sagemaker-inference-parameters">Parameters</h3>
 
-|Name|In|Type|Required|Description|
-|---|---|---|---|---|
-|body|body|object|false|none|
+> Parameter example
 
+```json
+{
+  "sagemaker_endpoint": "infer-endpoint-ef3abcd", --- mandatory, endpoint name
+  "task_type": "txt2img", --- mandatory, txt2img: text-to-image
+  "prompt": "", --- mandatory, the prompt to generate an image
+  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"], --- optional
+  "embeddings": [], --- optional
+  "lora_model": [], --- optional
+  "hypernetwork_model": [], --- optional
+  "controlnet_model": [], --- optional
+  "denoising_strength": 0.75, --- optional
+  "styles": [ 
+    "string" --- optional
+  ],
+  "seed": -1, --- optional,
+  "subseed": -1, --- optional
+  "subseed_strength": 0, --- optional
+  "seed_resize_from_h": -1, --- optional
+  "seed_resize_from_w": -1, --- optional
+  "batch_size": 1, --- optional, default is 1
+  "n_iter": 1, --- optional, image number, default is 1
+  "steps": 50, --- optional, default is 20
+  "cfg_scale": 7, --- optional, default is 7 
+  "width": 512, --- optional, default is 512
+  "height": 512, --- optional, default is 512
+  "restore_faces": false, --- optional
+  "tiling": false, --- optional
+  "negative_prompt": "string", --- optinal, default is ""
+  "override_settings": {}, --- hardcoded, parameter not work, it will be override in code, value is {}
+  "script_args": [], --- optional
+  "sampler_index": "Euler", --- optional, default is "Euler a"
+  "script_name": "string", --- optional, default is ""
+  "enable_hr": false, --- optional, enable hi-res
+  "firstphase_width": 0, --- optional, default is 0
+  "firstphase_height": 0,  --- optional, default is 0
+  "hr_scale": 2, --- optional, default is 2
+  "hr_upscaler": "string", --- optional, default is Latent
+  "hr_second_pass_steps": 0, --- optional, default is 0
+  "hr_resize_x": 0, --- optional
+  "hr_resize_y": 0, --- optional
+}
+```
 > Example responses
 
 > 200 Response
@@ -192,11 +232,6 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="run-sagemaker-inference-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 # /inference/deploy-sagemaker-endpoint
 
