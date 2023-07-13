@@ -288,7 +288,7 @@ def get_train_job_list():
 
     table = []
     try:
-        url += "trains?types=Stable-diffusion"
+        url += "trains?types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
         response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for trainJob in response['trainJobs']:
