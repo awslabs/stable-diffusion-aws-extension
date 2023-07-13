@@ -187,6 +187,15 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
+    
+    // The api can be invoked directly from the user's client code, the path starts with /api
+    const inferenceApi = restful_api?.root.addResource('api').addResource('inference');
+    const run_sagemaker_inference_api = inferenceApi.addResource(
+      'run-sagemaker-inference',
+    );
+    run_sagemaker_inference_api.addMethod('POST', txt2imgIntegration, {
+      apiKeyRequired: true,
+    });
 
     // Add a POST method with prefix inference
     const inference = restful_api?.root.addResource('inference');
