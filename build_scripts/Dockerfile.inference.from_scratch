@@ -24,7 +24,12 @@ RUN pip install --upgrade pip
 RUN pip install accelerate==0.19.0
 RUN pip install deepspeed==0.9.5
 # RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
-RUN pip install xformers
+RUN git clone https://github.com/facebookresearch/xformers.git
+RUN cd xformers
+RUN git checkout v0.0.20
+RUN git submodule update --init --recursive
+RUN pip install -r requirements.txt
+RUN pip install -e .
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
