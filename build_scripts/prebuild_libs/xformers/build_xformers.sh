@@ -5,6 +5,8 @@ git clone https://github.com/facebookresearch/xformers.git
 
 cd xformers
 
+git checkout v0.0.20
+
 git submodule update --init --recursive
 
 pip install -r requirements.txt
