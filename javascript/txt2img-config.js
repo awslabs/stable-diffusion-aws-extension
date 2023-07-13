@@ -149,51 +149,28 @@ function set_textbox_value_gradio(elementId, newValue) {
 }
 
 
-function inference_job_reset_time(a,b,c,d,e,f){
+function inference_job_timepicker_text_change(){
     // 获取日期选择器元素
-    const dateStartInput = document.querySelector("#start_timepicker");
-    d = dateStartInput.value;
-    // dateStartInput.addEventListener("change", function() {
-    //     const selectedStartDate = dateStartInput.value;
-    //     // 在这里可以将 value 传递给 API 接口进行处理
-    //     alert("aaaa")
-    //     console.log("点击事件触发了，值为：" + value);
-    // });
-    alert(d)
-
-    const dateEndInput = document.querySelector("#end_timepicker");
-    e = dateEndInput.value;
-    alert(e)
-    return ""
-    // dateEndInput.addEventListener("change", function() {
-    //     const selectedEndDate = dateEndInput.value;
-    //     // 在这里可以将 value 传递给 API 接口进行处理
-    //     alert("bbbb")
-    //     console.log("点击事件触发了，值为：" + value);
-    // });
+    const dateStartInput = document.querySelector("#start_timepicker_text");
+    const selectedStartDate = dateStartInput.value;
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_text");
+    const selectedEndDate = dateEndInput.value;
+    dateEndInput.setAttribute("value",selectedEndDate)
+    gradioApp().getElementById("start_timepicker_text_e").setAttribute("value",selectedStartDate)
+    gradioApp().getElementById("end_timepicker_text_e").setAttribute("value",selectedEndDate)
 }
 
-function inference_job_timepicker_change(){
+function inference_job_timepicker_img_change(){
     // 获取日期选择器元素
-    const dateStartInput = document.querySelector("#start_timepicker");
+    const dateStartInput = document.querySelector("#start_timepicker_img");
     const selectedStartDate = dateStartInput.value;
-    // dateStartInput.addEventListener("change", function() {
-    //     const selectedStartDate = dateStartInput.value;
-    //     // 在这里可以将 value 传递给 API 接口进行处理
-    //     alert("aaaa")
-    //     console.log("点击事件触发了，值为：" + value);
-    // });
-    alert(selectedStartDate)
-
-    const dateEndInput = document.querySelector("#end_timepicker");
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_img");
     const selectedEndDate = dateEndInput.value;
-    alert(selectedEndDate)
-    // dateEndInput.addEventListener("change", function() {
-    //     const selectedEndDate = dateEndInput.value;
-    //     // 在这里可以将 value 传递给 API 接口进行处理
-    //     alert("bbbb")
-    //     console.log("点击事件触发了，值为：" + value);
-    // });
+    dateEndInput.setAttribute("value",selectedEndDate)
+    gradioApp().getElementById("start_timepicker_img_e").setAttribute("value",selectedStartDate)
+    gradioApp().getElementById("end_timepicker_img_e").setAttribute("value",selectedEndDate)
 }
 
 async function txt2img_config_save(endpoint_value) {

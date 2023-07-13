@@ -893,13 +893,58 @@ def create_ui(is_img2img):
                     with gr.Row():
                         sd_checkpoint_filter = gr.Dropdown(multiselect=True, label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
                         modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
-                    with gr.Row():
-                        start_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
-                        end_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
-                task_type_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
-                status_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
-                sagemaker_endpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
-                sd_checkpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                    if is_img2img:
+                        with gr.Row():
+                            stat_time_picker_img = gr.HTML(elem_id="start_timepicker_img_e",
+                                                           value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                            end_time_picker_img = gr.HTML(elem_id="end_timepicker_img_e",
+                                                          value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                        task_type_dropdown.change(fn=query_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown, stat_time_picker_img,
+                                                          end_time_picker_img, sagemaker_endpoint_filter,
+                                                          sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown, stat_time_picker_img,
+                                                       end_time_picker_img, sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown, stat_time_picker_img,
+                                                                 end_time_picker_img, sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown, stat_time_picker_img,
+                                                            end_time_picker_img, sagemaker_endpoint_filter,
+                                                            sd_checkpoint_filter], outputs=inference_job_dropdown)
+                    else:
+                        with gr.Row():
+                            stat_time_picker_text = gr.HTML(elem_id="start_timepicker_text_e",
+                                                       value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                            end_time_picker_text = gr.HTML(elem_id="end_timepicker_text_e",
+                                                      value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                        task_type_dropdown.change(fn=query_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown, stat_time_picker_text,
+                                                          end_time_picker_text, sagemaker_endpoint_filter,
+                                                          sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown, stat_time_picker_text,
+                                                       end_time_picker_text, sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown, stat_time_picker_text,
+                                                                 end_time_picker_text, sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown, stat_time_picker_text,
+                                                            end_time_picker_text, sagemaker_endpoint_filter,
+                                                            sd_checkpoint_filter], outputs=inference_job_dropdown)
+                #     with gr.Row():
+                #         start_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
+                #         end_timepicker = gr.HTML(value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_change()"></span>')
+                # task_type_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                # status_dropdown.change(fn=query_inference_job_list, inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                # sagemaker_endpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+                # sd_checkpoint_filter.change(fn=query_inference_job_list, _js="inference_job_reset_time", inputs=[task_type_dropdown, status_dropdown, start_timepicker, end_timepicker, sagemaker_endpoint_filter, sd_checkpoint_filter], outputs=inference_job_dropdown)
+
 
             with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")
