@@ -22,3 +22,5 @@ const.LOGGER_API = "api"
 
 const.RESPONSE_SUCCESS = "success"
 const.RESPONSE_FAIL = "fail"
+const.TASK_TYPE_TXT2IMG = "txt2img"
+const.TASK_TYPE_IMG2IMG = "img2img"
