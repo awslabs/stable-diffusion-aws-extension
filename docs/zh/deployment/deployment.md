@@ -9,8 +9,8 @@
 ## 部署概述
 在亚马逊云科技上部署本解决方案主要包括以下过程：
 
-- 步骤1：通过CloudFormation安装Stable Diffusion AWS Extension。
-- 步骤2：在您的亚马逊云科技账户中启动Amazon CloudFormation模板。
+- 步骤1：部署Stable Diffusion WebUI。
+- 步骤2：部署本解决方案中间件。
 - 步骤3: 配置API Url和API Token
 
 <!-- - 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。 -->
@@ -18,7 +18,7 @@
 
 ## 部署步骤
 
-### 步骤1：通过CloudFormation安装Stable Diffusion AWS Extension。
+### 步骤1：部署Stable Diffusion WebUI。
 
 1. 从[链接]((https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml))下载CloudFormation模板。
 
@@ -38,7 +38,7 @@
 
 9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
 
-### 步骤2：在您的亚马逊云科技账户中启动Amazon CloudFormation模板。
+### 步骤2：部署本解决方案中间件。
 
 此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。
 

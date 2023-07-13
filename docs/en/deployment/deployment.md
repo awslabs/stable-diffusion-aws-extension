@@ -10,15 +10,15 @@ Users need to prepare a computer running linux system in advance.
 
 Use the following steps to deploy this solution on AWS. 
 
-- Step 1: Install 'Extension for Stable Diffusion on AWS' extension in your Stable Diffusion WebUI. 
-- Step 2: Launch the AWS CloudFormation template into your AWS account.
+- Step 1: Deploy Stable Diffusion WebUI. 
+- Step 2: Deploy the solution as a middleware.
 - Step3: Configure API url and API token.
 
 
 
 ## Deployment steps
 
-### Step 1: Install WebUI and extension on an EC2 instance.
+### Step 1: Deploy Stable Diffusion WebUI.
 
 1. Download the CloudFormation Template from [link](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)
 
@@ -39,7 +39,7 @@ Use the following steps to deploy this solution on AWS.
 9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
 
 
-### Step 2: Launch the AWS CloudFormation template into your AWS account.
+### Step 2: Deploy the solution as a middleware.
 This automated AWS CloudFormation template deploys the solution in the AWS Cloud.
 
 1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"} to launch the AWS CloudFormation template.   
