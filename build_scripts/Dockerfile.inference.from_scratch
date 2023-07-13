@@ -33,9 +33,9 @@ WORKDIR /opt/ml/code
 
 ENV ON_DOCKER true
 
-# install libtcmalloc to solve memory leak for multi model switch 
-# https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-RUN apt-get install -y google-perftools
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+# # install libtcmalloc to solve memory leak for multi model switch 
+# # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
+# RUN apt-get install -y google-perftools
+# ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
 ENTRYPOINT ["python", "/opt/ml/code/serve"]
