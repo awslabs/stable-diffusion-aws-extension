@@ -116,7 +116,7 @@ def async_prepare_for_training_on_sagemaker(
     upload_files = []
     db_config_tar = f"db_config.tar"
     # os.system(f"tar cvf {db_config_tar} {db_config_path}")
-    tar(mode='c', archive=db_config_tar, sfiles=db_config_path, verbose=True)
+    tar(mode='c', archive=db_config_tar, sfiles=[db_config_path], verbose=True)
     upload_files.append(db_config_tar)
     new_data_list = []
     for data_path in data_path_list:
