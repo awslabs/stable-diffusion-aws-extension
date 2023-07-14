@@ -1,4 +1,5 @@
-FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:1.13.1-gpu-py39-cu117-ubuntu20.04-sagemaker
+# FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:1.13.1-gpu-py39-cu117-ubuntu20.04-sagemaker
+FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-gpu-py310-cu118-ubuntu20.04-sagemaker
 
 # update environment
 RUN apt-get update -y
@@ -13,8 +14,11 @@ COPY stable-diffusion-webui /opt/ml/code/
 RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
     && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
 
-# RUN pip install torch==2.0.1
-RUN pip install xformers==0.0.16
+RUN pip install torch==2.0.1
+RUN pip uninstall -y torchvision
+RUN pip install torchvision
+# RUN pip install xformers==0.0.16
+RUN pip install xformers
 RUN pip install tensorflow==2.10
 RUN pip install pydantic
 RUN pip install safetensors

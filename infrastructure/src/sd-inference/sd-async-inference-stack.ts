@@ -22,6 +22,7 @@ import { Construct } from 'constructs';
 import { SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
+import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -35,6 +36,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   training_table: dynamodb.Table;
   snsTopic: sns.Topic;
   default_endpoint_name: string;
+  ecr_image_tag: string;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -44,7 +46,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     props: SDAsyncInferenceStackProps,
   ) {
     super(scope, id, props);
-    const srcImg = 'public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:v1.0.0';
+
+    if (!props?.ecr_image_tag){
+      throw new Error('default_inference_ecr_image is required');
+    }
+    const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
     if (!props?.api_gate_way) {
       throw new Error('api_gate_way is required');
@@ -181,6 +187,15 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
+    
+    // The api can be invoked directly from the user's client code, the path starts with /api
+    const inferenceApi = restful_api?.root.addResource('api').addResource('inference');
+    const run_sagemaker_inference_api = inferenceApi.addResource(
+      'run-sagemaker-inference',
+    );
+    run_sagemaker_inference_api.addMethod('POST', txt2imgIntegration, {
+      apiKeyRequired: true,
+    });
 
     // Add a POST method with prefix inference
     const inference = restful_api?.root.addResource('inference');

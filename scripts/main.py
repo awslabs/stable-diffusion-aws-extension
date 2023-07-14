@@ -64,8 +64,7 @@ img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices=["ml.g4dn.xlarge","ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
-                         "ml.g5.xlarge","ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
+async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     def title(self):
@@ -145,6 +144,9 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_html_info = component
         # return test
     if sagemaker_ui.inference_job_dropdown is not None and \
+        sagemaker_ui.textual_inversion_dropdown is not None and \
+        sagemaker_ui.hyperNetwork_dropdown is not None and \
+        sagemaker_ui.lora_dropdown is not None and \
         txt2img_gallery is not None and \
         txt2img_generation_info is not None and \
         txt2img_html_info is not None and \
@@ -152,9 +154,27 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_prompt is not None:
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
-            fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-            inputs=[sagemaker_ui.inference_job_dropdown],
+            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
+            fn=sagemaker_ui.fake_gan,
+            inputs=[sagemaker_ui.inference_job_dropdown, txt2img_prompt],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
+        )
+        sagemaker_ui.textual_inversion_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+            inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        )
+
+        sagemaker_ui.hyperNetwork_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+            inputs=[sagemaker_ui.hyperNetwork_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        )
+
+        sagemaker_ui.lora_dropdown.change(
+            fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+            inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
         )
 
         sagemaker_ui.sagemaker_endpoint.change(
@@ -228,6 +248,9 @@ def on_after_component_callback(component, **_kwargs):
         init_mask_inpaint = component
 
     if sagemaker_ui.inference_job_dropdown is not None and \
+            sagemaker_ui.textual_inversion_dropdown is not None and \
+            sagemaker_ui.hyperNetwork_dropdown is not None and \
+            sagemaker_ui.lora_dropdown is not None and \
             img2img_gallery is not None and \
             img2img_generation_info is not None and \
             img2img_html_info is not None and \
@@ -243,24 +266,42 @@ def on_after_component_callback(component, **_kwargs):
             init_mask_inpaint is not None:
             img2img_show_hook = "finish"
             sagemaker_ui.inference_job_dropdown.change(
-                fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value),
-                inputs=[sagemaker_ui.inference_job_dropdown],
+                fn=sagemaker_ui.fake_gan,
+                inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
                 outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
                 # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+            )
+
+            sagemaker_ui.textual_inversion_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+                inputs=[sagemaker_ui.textual_inversion_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
+            )
+
+            sagemaker_ui.hyperNetwork_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+                inputs=[sagemaker_ui.hyperNetwork_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
+            )
+
+            sagemaker_ui.lora_dropdown.change(
+                fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+                inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
+                outputs=[img2img_prompt]
             )
 
             sagemaker_ui.interrogate_clip_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_clip,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
             )
 
             sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_deepbooru,
                 _js="img2img_config_save",
                 inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
             )
             sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
                 fn=sagemaker_ui.call_img2img_inference,
@@ -280,7 +321,6 @@ def update_connect_config(api_url, api_token):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
     api_key = get_variable_from_json('api_token')
-    print(f"update the api_url:{api_gateway_url} and token: {api_key}............")
     sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "Setting updated"
 
@@ -290,7 +330,6 @@ def test_aws_connect_config(api_url, api_token):
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
-    print(f"get the api_url:{api_url} and token: {api_token}............")
     target_url = f'{api_url}inference/test-connection'
     headers = {
         "x-api-key": api_token,

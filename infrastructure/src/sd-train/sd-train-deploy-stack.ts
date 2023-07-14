@@ -16,6 +16,7 @@ import {
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { CreateCheckPointApi } from './chekpoint-create-api';
@@ -39,6 +40,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   emailParam: CfnParameter;
   apiKey: string;
   modelInfInstancetype: string;
+  ecr_image_tag: string;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -67,6 +69,13 @@ export class SdTrainDeployStack extends NestedStack {
     // Use the parameters passed from Middleware
     this.snsTopic = this.createSns(props.emailParam);
     this.s3Bucket = this.createS3Bucket();
+    // Upload api template file to the S3 bucket
+    new s3deploy.BucketDeployment(this, 'DeployApiTemplate', {
+      sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
+      destinationBucket: this.s3Bucket,
+      destinationKeyPrefix: 'template',
+    });
+
     const commonLayer = this.commonLayer();
     this.default_endpoint_name = '';
 
@@ -167,6 +176,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: this.trainingTable,
       userTopic: this.snsTopic,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     // POST /model
@@ -200,6 +210,7 @@ export class SdTrainDeployStack extends NestedStack {
       snsTopic: this.snsTopic,
       checkpointTable: this.checkPointTable,
       trainMachineType: props.modelInfInstancetype,
+      ecr_image_tag: props.ecr_image_tag,
     });
 
     this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;

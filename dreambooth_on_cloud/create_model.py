@@ -10,8 +10,8 @@ import logging
 from modules import sd_models
 from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
+from utils import tar
 import gradio as gr
-
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -20,17 +20,18 @@ ckpt_dict = {}
 base_model_folder = "models/sagemaker_dreambooth/"
 
 def get_cloud_ckpts():
+    global ckpt_dict
+    ckpt_dict = {}
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
         if api_gateway_url is None:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
 
-        url = api_gateway_url + "checkpoints?status=Active&types=Stable-diffusion"
+        url = api_gateway_url + "checkpoints?status=Active&types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
         if "checkpoints" not in response:
             return []
-        global ckpt_dict
         for ckpt in response["checkpoints"]:
             # Only get ckpts whose name is not empty.
             if len(ckpt['name']) > 0:
@@ -143,7 +144,8 @@ def async_create_model_on_sagemaker(
             multiparts_tags=[]
             if not from_hub:
                 print("Pack the model file.")
-                os.system(f"tar cvf {local_tar_path} {local_model_path}")
+                # os.system(f"tar cvf {local_tar_path} {local_model_path}")
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path], verbose=True)
                 s3_base = json_response["job"]["s3_base"]
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")
@@ -222,7 +224,7 @@ def get_create_model_job_list():
     global local_job_cache
     dashboard_list = []
     try:
-        url += "models?types=Stable-diffusion"
+        url += "models?types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
         response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for model in response['models']:

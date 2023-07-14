@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script shows how to build the Docker image and push it to ECR to be ready for use
-# by Braket.
+# by Bracket.
 
 # The argument to this script is the image name. This will be used as the image on the local
 # machine and combined with the account and region to form the repository name for ECR.
@@ -9,6 +9,7 @@ dockerfile=$1
 image=$2
 mode=$3
 tag=$4
+commit_id=$5
 
 if [ "$image" = "" ] || [ "$dockerfile" = "" ]
 then
@@ -36,6 +37,11 @@ else
     cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
     git checkout $mode
     git pull
+    if [ -n "$commit_id" ]
+    then
+        git reset --hard $commit_id
+        echo `git rev-parse HEAD`
+    fi
     cd -
 fi
 

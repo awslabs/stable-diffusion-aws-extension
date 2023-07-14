@@ -2,8 +2,8 @@
 
 # Usage: ./pre-flight_check.sh -p to do the pre-flight check for WebUI -s to auto sync the repo and plugin to compatible commit id
 
-INITIAL_SUPPORT_COMMIT_ROOT="baf6946e06249c5af9851c60171692c44ef633e0"
-INITIAL_SUPPORT_COMMIT_CONTROLNET="f36493878b299c367bc51f2935fd7e6d19188569"
+INITIAL_SUPPORT_COMMIT_ROOT="394ffa7b0a7fff3ec484bcd084e673a8b301ccc8"
+INITIAL_SUPPORT_COMMIT_CONTROLNET="2785cbe61a61c137d4e980752771f6329b03612a"
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH="dc413a14379b165355502d9f65856c40a4bb5b6f"
 
 # built the initial support commit list from option or default value if not provided
@@ -47,7 +47,7 @@ get_latest_commit_id() {
 
 pre_flight_check() {
     echo -e "Start pre-flight check for WebUI..."
-    # check if root folder suppport
+    # check if root folder support
     LATEST_ROOT_COMMIT=$(get_latest_commit_id "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git")
     # echo -e "Latest commit id for WebUI: \n$LATEST_ROOT_COMMIT"
     SUPPORTED_ROOT_COMMITS=$(cd ../../ && get_supported_commit_list "https://github.com/AUTOMATIC1111/stable-diffusion-webui.git" "$INITIAL_SUPPORT_COMMIT_ROOT" "$LATEST_ROOT_COMMIT")

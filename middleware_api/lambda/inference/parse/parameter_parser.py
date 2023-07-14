@@ -16,7 +16,7 @@ def get_param_value(params_dict, key, defaultValue=False):
 
 def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     # Need to generate the payload from data_dict here:
-    script_name = get_param_value(params_dict, 'script_list', defaultValue="None")
+    script_name = checkpoint_info.get('script_name', get_param_value(params_dict, 'script_list', defaultValue="None"))
     if script_name == "None":
         script_name = ""
     script_args = []
@@ -27,121 +27,126 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     elif task_type == 'img2img' or task_type == 'interrogate_clip' or task_type == 'interrogate_deepbooru':
         param_name = 'img2img'
 
-    if script_name == 'Prompt matrix':
-        put_at_start = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_put_at_start')
-        different_seeds = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_different_seeds')
-        if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_prompt_type_positive', defaultValue="positive"):
-            prompt_type = "positive"
-        else:
-            prompt_type = "negative"
-        if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_variations_delimiter_comma', defaultValue="comma"): 
-            variations_delimiter = "comma"
-        else:
-            variations_delimiter = "space"
-        margin_size = int(get_param_value(params_dict, 'script_txt2txt_prompt_matrix_margin_size', defaultValue=0))
-        script_args = [put_at_start, different_seeds, prompt_type, variations_delimiter, margin_size]
+    if 'script_args' not in checkpoint_info:
+        if script_name == 'Prompt matrix':
+            put_at_start = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_put_at_start')
+            different_seeds = get_param_value(params_dict, 'script_txt2txt_prompt_matrix_different_seeds')
+            if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_prompt_type_positive', defaultValue="positive"):
+                prompt_type = "positive"
+            else:
+                prompt_type = "negative"
+            if get_param_value(params_dict, 'script_txt2txt_prompt_matrix_variations_delimiter_comma', defaultValue="comma"): 
+                variations_delimiter = "comma"
+            else:
+                variations_delimiter = "space"
+            margin_size = int(get_param_value(params_dict, 'script_txt2txt_prompt_matrix_margin_size', defaultValue=0))
+            script_args = [put_at_start, different_seeds, prompt_type, variations_delimiter, margin_size]
 
-    if script_name == 'Prompts from file or textbox':
-        checkbox_iterate = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_every_line')
-        checkbox_iterate_batch = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_all_lines')
-        list_prompt_inputs = get_param_value(params_dict, 'script_txt2txt_prompts_from_file_or_textbox_prompt_txt', defaultValue="")
-        lines = [x.strip() for x in list_prompt_inputs.split("\n")]
-        script_args = [checkbox_iterate, checkbox_iterate_batch, "\n".join(lines)]
+        if script_name == 'Prompts from file or textbox':
+            checkbox_iterate = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_every_line')
+            checkbox_iterate_batch = get_param_value(params_dict, 'script_txt2txt_checkbox_iterate_all_lines')
+            list_prompt_inputs = get_param_value(params_dict, 'script_txt2txt_prompts_from_file_or_textbox_prompt_txt', defaultValue="")
+            lines = [x.strip() for x in list_prompt_inputs.split("\n")]
+            script_args = [checkbox_iterate, checkbox_iterate_batch, "\n".join(lines)]
 
-    if script_name == 'X/Y/Z plot':
-        type_dict = {'Nothing': 0,
-                       'Seed': 1,
-                       'Var. seed': 2,
-                       'Var. strength': 3,
-                       'Steps': 4,
-                       'Hires stteps': 5,
-                       'CFG Scale': 6,
-                       'Prompt S/R': 7,
-                       'Prompt order': 8,
-                       'Sampler': 9,
-                       'Checkpoint name': 10,
-                       'Negative Guidance minimum sigma': 11,
-                       'Sigma Churn': 12,
-                       'Sigma min': 13,
-                       'Sigma max': 14,
-                       'Sigma noise': 15,
-                       'Eta': 16,
-                       'Clip skip': 17,
-                       'Denoising': 18,
-                       'Hires upscaler': 19,
-                       'VAE': 20,
-                       'Styles': 21,
-                       'UniPC Order': 22,
-                       'Face restore': 23,
-                       '[ControlNet] Enabled': 24,
-                       '[ControlNet] Model': 25,
-                       '[ControlNet] Weight': 26,
-                       '[ControlNet] Guidance Start': 27,
-                       '[ControlNet] Guidance End': 28,
-                       '[ControlNet] Resize Mode': 29,
-                       '[ControlNet] Preprocessor': 30,
-                       '[ControlNet] Pre Resolution': 31,
-                       '[ControlNet] Pre Threshold A': 32,
-                       '[ControlNet] Pre Threshold B': 33}
-        dropdown_index = [9, 10, 19, 20, 21, 24, 25, 29, 30]
-        x_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_type', defaultValue="Nothing")]
-        x_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
-        x_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
-        if x_type in dropdown_index:
-            if x_type == 10:
-                x_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
-            elif x_type == 25:
-                x_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
-            x_values_dropdown = x_values_dropdown.split(":")
-        
-        y_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_type', defaultValue="Nothing")]
-        y_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
-        y_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
-        if y_type in dropdown_index:
-            if y_type == 10:
-                y_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
-            elif y_type == 25:
-                y_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
-            y_values_dropdown = y_values_dropdown.split(":")
-        
-        z_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_type', defaultValue="Nothing")]
-        z_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
-        z_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
-        if z_type in dropdown_index:
-            if z_type == 10:
-                z_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
-            elif z_type == 25:
-                z_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
-            z_values_dropdown = z_values_dropdown.split(":")
-        
-        draw_legend = get_param_value(params_dict, 'script_txt2txt_xyz_plot_draw_legend')
-        include_lone_images = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_lone_images')
-        include_sub_grids = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_sub_grids')
-        no_fixed_seeds = get_param_value(params_dict, 'script_txt2txt_xyz_plot_no_fixed_seeds')
-        margin_size = int(get_param_value(params_dict, 'script_txt2txt_xyz_plot_margin_size', defaultValue=0))
-        script_args = [x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown, z_type, z_values, z_values_dropdown, draw_legend, include_lone_images, include_sub_grids, no_fixed_seeds, margin_size]
+        if script_name == 'X/Y/Z plot':
+            type_dict = {'Nothing': 0,
+                        'Seed': 1,
+                        'Var. seed': 2,
+                        'Var. strength': 3,
+                        'Steps': 4,
+                        'Hires stteps': 5,
+                        'CFG Scale': 6,
+                        'Prompt S/R': 7,
+                        'Prompt order': 8,
+                        'Sampler': 9,
+                        'Checkpoint name': 10,
+                        'Negative Guidance minimum sigma': 11,
+                        'Sigma Churn': 12,
+                        'Sigma min': 13,
+                        'Sigma max': 14,
+                        'Sigma noise': 15,
+                        'Eta': 16,
+                        'Clip skip': 17,
+                        'Denoising': 18,
+                        'Hires upscaler': 19,
+                        'VAE': 20,
+                        'Styles': 21,
+                        'UniPC Order': 22,
+                        'Face restore': 23,
+                        '[ControlNet] Enabled': 24,
+                        '[ControlNet] Model': 25,
+                        '[ControlNet] Weight': 26,
+                        '[ControlNet] Guidance Start': 27,
+                        '[ControlNet] Guidance End': 28,
+                        '[ControlNet] Resize Mode': 29,
+                        '[ControlNet] Preprocessor': 30,
+                        '[ControlNet] Pre Resolution': 31,
+                        '[ControlNet] Pre Threshold A': 32,
+                        '[ControlNet] Pre Threshold B': 33}
+            dropdown_index = [9, 10, 19, 20, 21, 24, 25, 29, 30]
+            x_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_type', defaultValue="Nothing")]
+            x_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
+            x_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
+            if x_type in dropdown_index:
+                if x_type == 10:
+                    x_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                elif x_type == 25:
+                    x_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                x_values_dropdown = x_values_dropdown.split(":")
+            
+            y_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_type', defaultValue="Nothing")]
+            y_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
+            y_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
+            if y_type in dropdown_index:
+                if y_type == 10:
+                    y_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                elif y_type == 25:
+                    y_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                y_values_dropdown = y_values_dropdown.split(":")
+            
+            z_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_type', defaultValue="Nothing")]
+            z_values = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
+            z_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
+            if z_type in dropdown_index:
+                if z_type == 10:
+                    z_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                elif z_type == 25:
+                    z_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                z_values_dropdown = z_values_dropdown.split(":")
+            
+            draw_legend = get_param_value(params_dict, 'script_txt2txt_xyz_plot_draw_legend')
+            include_lone_images = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_lone_images')
+            include_sub_grids = get_param_value(params_dict, 'script_txt2txt_xyz_plot_include_sub_grids')
+            no_fixed_seeds = get_param_value(params_dict, 'script_txt2txt_xyz_plot_no_fixed_seeds')
+            margin_size = int(get_param_value(params_dict, 'script_txt2txt_xyz_plot_margin_size', defaultValue=0))
+            script_args = [x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown, z_type, z_values, z_values_dropdown, draw_legend, include_lone_images, include_sub_grids, no_fixed_seeds, margin_size]
+    else:
+        script_args = checkpoint_info['script_args']
 
-    # get all parameters from ui-config.json
-    prompt = get_param_value(params_dict, f'{param_name}_prompt', defaultValue="") 
-    negative_prompt = get_param_value(params_dict, f'{param_name}_neg_prompt', defaultValue="") 
-    denoising_strength = float(get_param_value(params_dict, f'{param_name}_denoising_strength', defaultValue=0.7))
-    styles = get_param_value(params_dict, f'{param_name}_styles', defaultValue=["None", "None"])
+    # Get all parameters from ui-config.json
+    # For API call, checkpoint_info contains inference parameters
+    # If it is invoked from UI, checkpoint_info doesn't contain inference parameters
+    prompt = checkpoint_info.get('prompt', get_param_value(params_dict, f'{param_name}_prompt', defaultValue=""))
+    negative_prompt = checkpoint_info.get('negative_prompt', get_param_value(params_dict, f'{param_name}_neg_prompt', defaultValue=""))
+    denoising_strength = float(checkpoint_info.get('denoising_strength', get_param_value(params_dict, f'{param_name}_denoising_strength', defaultValue=0.7)))
+    styles = checkpoint_info.get('styles', get_param_value(params_dict, f'{param_name}_styles', defaultValue=["None", "None"]))
     if styles == "":
         styles = []
-    seed = float(get_param_value(params_dict, f'{param_name}_seed', defaultValue=-1.0)) 
-    subseed = float(get_param_value(params_dict, f'{param_name}_subseed', defaultValue=-1.0))
-    subseed_strength = float(get_param_value(params_dict, f'{param_name}_subseed_strength', defaultValue=0))
-    seed_resize_from_h = int(get_param_value(params_dict, f'{param_name}_seed_resize_from_h', defaultValue=0))
-    seed_resize_from_w = int(get_param_value(params_dict, f'{param_name}_seed_resize_from_w', defaultValue=0)) 
-    sampler_index = get_param_value(params_dict, f'{param_name}_sampling_method', defaultValue="Euler a")
-    batch_size = int(get_param_value(params_dict, f'{param_name}_batch_size', defaultValue=1)) 
-    n_iter = int(get_param_value(params_dict, f'{param_name}_batch_count', defaultValue=1))
-    steps = int(get_param_value(params_dict, f'{param_name}_steps', defaultValue=20))
-    cfg_scale = float(get_param_value(params_dict, f'{param_name}_cfg_scale', defaultValue=7))
-    width = int(get_param_value(params_dict, f'{param_name}_width', defaultValue=512))
-    height = int(get_param_value(params_dict, f'{param_name}_height', defaultValue=512))
-    restore_faces = get_param_value(params_dict, f'{param_name}_restore_faces')
-    tiling = get_param_value(params_dict, f'{param_name}_tiling')
+    seed = float(checkpoint_info.get('seed', get_param_value(params_dict, f'{param_name}_seed', defaultValue=-1.0)))
+    subseed = float(checkpoint_info.get('subseed', get_param_value(params_dict, f'{param_name}_subseed', defaultValue=-1.0)))
+    subseed_strength = float(checkpoint_info.get('subseed_strength', get_param_value(params_dict, f'{param_name}_subseed_strength', defaultValue=0)))
+    seed_resize_from_h = int(checkpoint_info.get('seed_resize_from_h', get_param_value(params_dict, f'{param_name}_seed_resize_from_h', defaultValue=0)))
+    seed_resize_from_w = int(checkpoint_info.get('seed_resize_from_w', get_param_value(params_dict, f'{param_name}_seed_resize_from_w', defaultValue=0)))
+    sampler_index = checkpoint_info.get('sampler_index', get_param_value(params_dict, f'{param_name}_sampling_method', defaultValue="Euler a"))
+    batch_size = int(checkpoint_info.get('batch_size', get_param_value(params_dict, f'{param_name}_batch_size', defaultValue=1)))
+    n_iter = int(checkpoint_info.get('n_iter', get_param_value(params_dict, f'{param_name}_batch_count', defaultValue=1)))
+    steps = int(checkpoint_info.get('steps', get_param_value(params_dict, f'{param_name}_steps', defaultValue=20)))
+    cfg_scale = float(checkpoint_info.get('cfg_scale', get_param_value(params_dict, f'{param_name}_cfg_scale', defaultValue=7)))
+    width = int(checkpoint_info.get('width', get_param_value(params_dict, f'{param_name}_width', defaultValue=512)))
+    height = int(checkpoint_info.get('height', get_param_value(params_dict, f'{param_name}_height', defaultValue=512)))
+    restore_faces = checkpoint_info.get('restore_faces', get_param_value(params_dict, f'{param_name}_restore_faces'))
+    tiling = checkpoint_info.get('tiling', get_param_value(params_dict, f'{param_name}_tiling'))
     override_settings = {}
     eta = 1
     s_churn = 0
@@ -149,11 +154,11 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     s_tmin = 0
     s_noise = 1 
 
-    selected_sd_model = get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue="") 
-    selected_cn_model = get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue="")
-    selected_hypernets = get_param_value(params_dict, f'{param_name}_sagemaker_hypernetwork_model', defaultValue="")
-    selected_loras = get_param_value(params_dict, f'{param_name}_sagemaker_lora_model', defaultValue="")
-    selected_embeddings = get_param_value(params_dict, f'{param_name}_sagemaker_texual_inversion_model', defaultValue="")
+    selected_sd_model = checkpoint_info.get('stable_diffusion_model', get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue=""))
+    selected_cn_model = checkpoint_info.get('controlnet_model', get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue=""))
+    selected_hypernets = checkpoint_info.get('hypernetwork_model', get_param_value(params_dict, f'{param_name}_sagemaker_hypernetwork_model', defaultValue=""))
+    selected_loras = checkpoint_info.get('lora_model', get_param_value(params_dict, f'{param_name}_sagemaker_lora_model', defaultValue=""))
+    selected_embeddings = checkpoint_info.get('embeddings_model', get_param_value(params_dict, f'{param_name}_sagemaker_texual_inversion_model', defaultValue=""))
     
     if selected_sd_model == "":
         selected_sd_model = ['v1-5-pruned-emaonly.safetensors']
@@ -176,18 +181,6 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     else:
         selected_embeddings = selected_embeddings.split(":")
     
-    for embedding in selected_embeddings:
-        if embedding not in prompt:
-            prompt = prompt + embedding
-    for hypernet in selected_hypernets:
-        hypernet_name = os.path.splitext(hypernet)[0]
-        if hypernet_name not in prompt:
-            prompt = prompt + f"<hypernet:{hypernet_name}:1>"
-    for lora in selected_loras:
-        lora_name = os.path.splitext(lora)[0]
-        if lora_name not in prompt:
-            prompt = prompt + f"<lora:{lora_name}:1>"
-    
     controlnet_enable = get_param_value(params_dict, f'{param_name}_controlnet_enable')
     if controlnet_enable:
         controlnet_module = get_param_value(params_dict, f'{param_name}_controlnet_preprocessor', defaultValue=None)
@@ -195,8 +188,19 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             controlnet_model = "None"
         else:
             controlnet_model = os.path.splitext(selected_cn_model[0])[0]
-        controlnet_image = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
-        controlnet_image = controlnet_image.split(',')[1]
+        controlnet_image_original = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image_original', defaultValue=None)
+        controlnet_image_original = controlnet_image_original.split(',')[1]
+        controlnet_image_mask = get_param_value(params_dict, f'{param_name}_controlnet_ControlNet_input_image', defaultValue=None)
+        controlnet_image_mask = controlnet_image_mask.split(',')[1]
+
+        image = Image.open(io.BytesIO(base64.b64decode(controlnet_image_original)))
+        image_mask = Image.open(io.BytesIO(base64.b64decode(controlnet_image_mask)))
+        pred = np.any(np.abs((np.array(image).astype(float)- np.array(image_mask).astype(float)))>0, axis=-1)
+        mask = Image.fromarray(pred.astype(np.uint8) * 255)
+        controlnet_image = encode_pil_to_base64(image.convert("RGB"))
+        controlnet_mask = encode_pil_to_base64(mask)
+
+        
         weight = float(get_param_value(params_dict, f'{param_name}_controlnet_weight', defaultValue=1)) #1,
         if get_param_value(params_dict, f'{param_name}_controlnet_resize_mode_just_resize'):
             resize_mode = "Just Resize" # "Crop and Resize",
@@ -221,14 +225,14 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         loopback = get_param_value(params_dict, f'{param_name}_controlnet_loopback_automatically')
     
     if param_name == 'txt2img':
-        enable_hr = get_param_value(params_dict, f'{param_name}_enable_hr')
-        hr_scale = float(get_param_value(params_dict, f'{param_name}_hr_scale', defaultValue=2.0))
-        hr_upscaler = get_param_value(params_dict, f'{param_name}_hr_upscaler', defaultValue="Latent")
-        hr_second_pass_steps = int(get_param_value(params_dict, f'{param_name}_hires_steps', defaultValue=0))
-        firstphase_width = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
-        firstphase_height = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
-        hr_resize_x = int(get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0))
-        hr_resize_y = int(get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0))
+        enable_hr = checkpoint_info.get('enable_hr', get_param_value(params_dict, f'{param_name}_enable_hr'))
+        hr_scale = float(checkpoint_info.get('hr_scale', get_param_value(params_dict, f'{param_name}_hr_scale', defaultValue=2.0)))
+        hr_upscaler = checkpoint_info.get('hr_upscaler', get_param_value(params_dict, f'{param_name}_hr_upscaler', defaultValue="Latent"))
+        hr_second_pass_steps = int(checkpoint_info.get('hr_second_pass_steps', get_param_value(params_dict, f'{param_name}_hires_steps', defaultValue=0)))
+        firstphase_width = int(checkpoint_info.get('firstphase_width', get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0)))
+        firstphase_height = int(checkpoint_info.get('firstphase_height', get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0)))
+        hr_resize_x = int(checkpoint_info.get('hr_resize_x', get_param_value(params_dict, f'{param_name}_hr_resize_x', defaultValue=0)))
+        hr_resize_y = int(checkpoint_info.get('hr_resize_y', get_param_value(params_dict, f'{param_name}_hr_resize_y', defaultValue=0)))
         
 
     if param_name == 'img2img':
@@ -241,7 +245,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
         img2img_init_mask_inpaint = get_param_value(params_dict, 'img2img_init_mask_inpaint', defaultValue=None)
         sketch = get_param_value(params_dict, 'img2img_sketch', defaultValue=None)
         img2img_init_img = get_param_value(params_dict, 'img2img_init_img', defaultValue=None)
-        mask_blur = float(get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4.0))
+        mask_blur = float(checkpoint_info.get('mask_blur', get_param_value(params_dict, 'img2img_mask_blur', defaultValue=4.0)))
         mask_alpha = float(get_param_value(params_dict, 'img2img_mask_alpha', defaultValue=0))
 
         print("img2img mode is", img2img_mode)
@@ -277,7 +281,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             orig = orig.resize(image_pil.size)
             orig = orig or image_pil
             #pred = np.any(np.array(image_pil) != np.array(orig), axis=-1)
-            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>80, axis=-1)
+            pred = np.any(np.abs((np.array(image_pil).astype(float)- np.array(orig).astype(float)))>0, axis=-1)
             mask = Image.fromarray(pred.astype(np.uint8) * 255, "L")
             mask = ImageEnhance.Brightness(mask).enhance(1 - mask_alpha / 100)
             blur = ImageFilter.GaussianBlur(mask_blur)
@@ -286,7 +290,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             mask = encode_pil_to_base64(mask)
             image = encode_pil_to_base64(image_pil)
 
-        inpainting_fill = get_param_value(params_dict, 'img2img_inpainting_fill_fill')
+        inpainting_fill = checkpoint_info.get('inpainting_fill', get_param_value(params_dict, 'img2img_inpainting_fill_fill'))
         image_cfg_scale = 1.5
         if img2img_selected_resize_tab == 'ResizeBy':
             img2img_scale = float(get_param_value(params_dict, 'img2img_scale', defaultValue=1.0))
@@ -405,7 +409,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             payload[payload_name]["alwayson_scripts"]["controlnet"]["args"] = [
                 {
                     "input_image": controlnet_image,
-                    "mask": "",
+                    "mask": controlnet_mask,
                     "module": controlnet_module,
                     "model": controlnet_model,
                     "loopback": loopback,

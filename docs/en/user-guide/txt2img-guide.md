@@ -19,7 +19,7 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 6. Check inference result. Fresh and select the top option among **Inference Job ID** dropdown list. The **Output** section in the top-right area of the **txt2img** tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking **Save** or **Send to img2img**.
 > **Note：** The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of *inference time -> inference id*.
 
-![generate results](../images/generate-results.png)
+![generate results](../../images/generate-results.png)
 
 
 ### Continuous Inference Scenarios
@@ -27,7 +27,7 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 2. Wait for the appearance of a new **Inference ID**in the right-side "Output" section.
 3. Once the new **Inference ID** appears, you can proceed to click **Generate on Cloud** again for the next inference task.
 
-![generate results](../zh/images/continue-inference.png)
+![generate results](../../images/continue-inference.png)
 
 
 ## Controlnet Guide
@@ -37,4 +37,4 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 ![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
 2. Open **Amazon SageMaker Inference**panel, select one checkpoint from **Stable Diffusion Checkpoint** and one model from **ControlNet-Model**. For example: below is the ineference based on **v1-5-pruned-emaonly.safetensors** and **control_openpose-fp16.safetensors**, prompts **a cute dog**, click **Generate on Cloud**.
 ![Choose-controlnet-model](../images/choose-controlnet-model.png)
-3. Refresh and select the top Inference Job from **Inference Job IDs**, inference result will be dispaly in **Output** section.
+3. Refresh and select the top Inference Job from **Inference Job IDs**, inference result will be displayed in **Output** section.

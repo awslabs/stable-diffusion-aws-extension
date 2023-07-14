@@ -202,6 +202,7 @@ def get_curent_time():
     return formatted_time
 
 @app.post("/inference/run-sagemaker-inference")
+@app.post("/api/inference/run-sagemaker-inference")
 async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
@@ -212,9 +213,15 @@ async def run_sagemaker_inference(request: Request):
         print(f"!!!!!!!!!!input in json format {payload_checkpoint_info}")
         task_type = payload_checkpoint_info.get('task_type')
         print(f"Task Type: {task_type}")
-
-        params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
-
+        path = request.url.path
+        logger.info(f'Path: {path}')
+        if path == '/api/inference/run-sagemaker-inference':
+            # Invoke by API
+            logger.info('invoked by api')
+            params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
+        else:
+            # Invoke by UI
+            params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
         # logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
@@ -353,6 +360,9 @@ async def delete_sagemaker_endpoint(request: Request):
                 # check if endpoint exists
                 try:
                     response = sagemaker.describe_endpoint(EndpointName=endpoint)
+                    if response['EndpointStatus'] == 'Creating':
+                        print('endpoint in Creating status can not be deleted')
+                        return "Sagemaker Endpoint in Creating status can not be deleted" 
                     print(response)
     
                     logger.info(f"Deleting endpoint: {endpoint}")
@@ -410,10 +420,10 @@ async def delete_sagemaker_endpoint(request: Request):
                     raise
 
         logger.info("Successfully processed endpoint deletions and status updates")
-        return 0
+        return "Endpoint delete completed"
     except Exception as e:
         logger.error(f"error deleting sagemaker endpoint with exception: {e}")
-        return 0
+        return f"error deleting sagemaker endpoint with exception: {e}"
 
 
 @app.get("/inference/list-endpoint-deployment-jobs")

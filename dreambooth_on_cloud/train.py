@@ -9,6 +9,7 @@ import logging
 import shutil
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
+from utils import tar, cp
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ def dummy_function(*args, **kwargs):
     return None
 
 try:
-    # TODO: Automaticly append the dependent module path.
+    # TODO: Automatically append the dependent module path.
     sys.path.append("extensions/sd_dreambooth_extension")
     # TODO: Do not use the dreambooth status module.
     from dreambooth import shared as dreambooth_shared
@@ -114,7 +115,8 @@ def async_prepare_for_training_on_sagemaker(
     url += "train"
     upload_files = []
     db_config_tar = f"db_config.tar"
-    os.system(f"tar cvf {db_config_tar} {db_config_path}")
+    # os.system(f"tar cvf {db_config_tar} {db_config_path}")
+    tar(mode='c', archive=db_config_tar, sfiles=[db_config_path], verbose=True)
     upload_files.append(db_config_tar)
     new_data_list = []
     for data_path in data_path_list:
@@ -125,7 +127,8 @@ def async_prepare_for_training_on_sagemaker(
             data_tar = f'data-{data_path.replace("/", "-").strip("-")}.tar'
             new_data_list.append(data_tar)
             print("Pack the data file.")
-            os.system(f"tar cf {data_tar} {data_path}")
+            # os.system(f"tar cf {data_tar} {data_path}")
+            tar(mode='c', archive=data_tar, sfiles=data_path, verbose=False)
             upload_files.append(data_tar)
         else:
             new_data_list.append(data_path)
@@ -139,7 +142,8 @@ def async_prepare_for_training_on_sagemaker(
             new_class_data_list.append(class_data_tar)
             upload_files.append(class_data_tar)
             print("Pack the class data file.")
-            os.system(f"tar cf {class_data_tar} {class_data_path}")
+            # os.system(f"tar cf {class_data_tar} {class_data_path}")
+            tar(mode='c', archive=class_data_tar, sfiles=[class_data_path], verbose=False)
         else:
             new_class_data_list.append(class_data_path)
     payload = {
@@ -224,7 +228,7 @@ def cloud_train(
             class_data_path_list.append(concept["class_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
         model_list = get_cloud_db_models()
         new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
-        print(f"hack config from local_model_name to new_db_config_path")
+        print(f"hack config from {local_model_name} to {new_db_config_path}")
         hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list, local_model_name)
         if config["save_lora_for_extra_net"] == True:
             model_type = "Lora"
@@ -284,7 +288,7 @@ def get_train_job_list():
 
     table = []
     try:
-        url += "trains?types=Stable-diffusion"
+        url += "trains?types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
         response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for trainJob in response['trainJobs']:
