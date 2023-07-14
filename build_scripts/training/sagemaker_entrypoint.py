@@ -22,7 +22,7 @@ os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
-from utls import tar, mv
+from utils import tar, mv
 
 def sync_status_from_s3_json(bucket_name, webui_status_file_path, sagemaker_status_file_path):
     while True:
@@ -145,7 +145,7 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
     # os.system(f"mv {download_db_config_path} {target_db_config_path}")
-    mv(download_db_config_path, target_db_config_path)
+    mv(download_db_config_path, target_db_config_path, force=True)
     with open(target_db_config_path) as db_config_file:
         db_config = json.load(db_config_file)
     data_list = []
