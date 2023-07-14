@@ -60,6 +60,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#1" class="md-skip">
+          跳转至
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -717,6 +722,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer-guide/api/" class="md-nav__link">
+        API调用指南
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -804,6 +823,28 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    升级场景1
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    升级场景2
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -822,7 +863,18 @@
 
   <h1>Update</h1>
 
-
+<h2 id="1">升级场景1</h2>
+<p>如果您已经部署并正在使用版本1.0.0的一部分API功能时，可以继续使用已经部署在您AWS账户里面原有的API，同时还可以部署版本1.2.0或更新的版本中新API提供的功能。</p>
+<p>目前版本1.0.0中包含的四项API（ 通用文字识别、图像超分辨率、智能人像分割、色情内容检测）中的接口定义参数与1.2.0版本或更新的版本中这四项API的功能完全一致，您仅需要在调用代码中替换原有调用URL（Invoke URL)地址即可使用。</p>
+<h2 id="2">升级场景2</h2>
+<p>如果您想将原有API调用URL切换到新版本上，可以在部署新版本后，进行以下操作：</p>
+<ol>
+<li>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>。</li>
+<li>从堆栈列表中选择方案的根堆栈。注意不要选择嵌套堆栈。</li>
+<li>打开<strong>输出（Outputs）</strong>标签页，找到要调用的URL。</li>
+<li>调用代码中替换原有调用URL地址。</li>
+<li>切换完成后，您可以在AWS CloudFormation控制台中彻底删除原有堆栈，从而避免产生额外的费用。整个删除过程大约需要10分钟。</li>
+</ol>
 
 
 

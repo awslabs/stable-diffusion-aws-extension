@@ -732,15 +732,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-sketch" class="md-nav__link">
-    Inpatnt Sketch标签操作示例
+  <a href="#inpaint-sketch" class="md-nav__link">
+    Inpaint Sketch标签操作示例
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-upload" class="md-nav__link">
-    Inpatnt Upload标签操作示例
+  <a href="#inpaint-upload" class="md-nav__link">
+    Inpaint Upload标签操作示例
   </a>
   
 </li>
@@ -829,6 +829,20 @@
     <li class="md-nav__item">
       <a href="../../developer-guide/source/" class="md-nav__link">
         源代码
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/" class="md-nav__link">
+        API调用指南
       </a>
     </li>
   
@@ -967,15 +981,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-sketch" class="md-nav__link">
-    Inpatnt Sketch标签操作示例
+  <a href="#inpaint-sketch" class="md-nav__link">
+    Inpaint Sketch标签操作示例
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-upload" class="md-nav__link">
-    Inpatnt Upload标签操作示例
+  <a href="#inpaint-upload" class="md-nav__link">
+    Inpaint Upload标签操作示例
   </a>
   
 </li>
@@ -1044,68 +1058,53 @@
 </ol>
 <h3 id="img2img_3">img2img标签操作示例</h3>
 <ol>
-<li>
-<p>上传原始图片到<strong>img2img</strong>标签并输入提示词<strong>black flower</strong>
-<img alt="img2img raw" src="../../images/img2img_tab.png" /></p>
-</li>
-<li>
-<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果
-<img alt="img2img result" src="../../images/img2img_result.png" /></p>
-</li>
+<li>上传原始图片到<strong>img2img</strong>标签并输入提示词，点击<strong>Generate on Cloud</strong>。</li>
+<li>选择对应的<strong>Inference Job ID</strong>，推理结果会展示在 <strong>Output</strong> 区域。</li>
 </ol>
 <h3 id="sketch">Sketch标签操作示例</h3>
 <ol>
+<li>启动<strong>Stable Diffusion WebUI</strong>时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到<strong>Sketch标签</strong>。</li>
 <li>
-<p>启动<strong>webui</strong>时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到<strong>Sketch标签</strong>。
-<img alt="sketch" src="../../images/sketch_raw.png" /></p>
-</li>
-<li>
-<p>通过画笔，绘制下面的草图并准备提示词<strong>flower</strong>。
+<p>通过画笔，绘制下面的草图并输入提示词，点击<strong>Generate on Cloud</strong>。
 <img alt="sketch paint" src="../../images/sketch_paint.png" /></p>
 </li>
 <li>
-<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果.
+<p>选择对应的<strong>Inference Job ID</strong>，推理图片会展示在<strong>Output</strong>区域。
 <img alt="sketch result" src="../../images/sketch_result.png" /></p>
 </li>
 </ol>
 <h3 id="inpaint">Inpaint标签操作示例</h3>
 <ol>
+<li>上传原始图片到<strong>Inpaint</strong>标签。</li>
 <li>
-<p>上传原始图片到<strong>Inpaint</strong>标签并准备提示词<strong>watermelon</strong>。
-<img alt="inpaint" src="../../images/inpaint_tab.png" /></p>
-</li>
-<li>
-<p>通过画笔建立掩膜并准备提示词<strong>watermelon</strong>。
+<p>通过画笔建立掩膜并输入提示词，点击<strong>Generate on Cloud</strong>。
 <img alt="inpaint_inpaint" src="../../images/inpaint_inpaint.png" /></p>
 </li>
 <li>
-<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<p>选择对应的<strong>Inference Job ID</strong>，推理图片会展示在<strong>Output</strong>区域。
 <img alt="inpaint result" src="../../images/inpaint_result.png" /></p>
 </li>
 </ol>
-<h3 id="inpatnt-sketch">Inpatnt Sketch标签操作示例</h3>
+<h3 id="inpaint-sketch">Inpaint Sketch标签操作示例</h3>
 <ol>
+<li>启动<strong>Stable Diffusion WebUI</strong>的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到<strong>Inpaint Sketch</strong>标签，并输入提示词。</li>
 <li>
-<p>启动<strong>webui</strong>的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到<strong>Inpaint Sketch</strong>标签并准备提示词<strong>candy</strong>。
-<img alt="inpaint_sketch" src="../../images/inpaint_sketch_tab.png" /></p>
-</li>
-<li>
-<p>通过画笔建立掩膜。
+<p>通过画笔建立掩膜，并点击<strong>Generate on Cloud</strong>。
 <img alt="inpaint_sketch_inpaint" src="../../images/inpaint_sketch_inpaint.png" /></p>
 </li>
 <li>
-<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<p>选择对应的<strong>Inference Job ID</strong>，推理图片会展示在<strong>Output</strong>区域。
 <img alt="inpaint_sketch result" src="../../images/inpaint_sketch_result.png" /></p>
 </li>
 </ol>
-<h3 id="inpatnt-upload">Inpatnt Upload标签操作示例</h3>
+<h3 id="inpaint-upload">Inpaint Upload标签操作示例</h3>
 <ol>
 <li>
-<p>上传原始图片和mask图片到<strong>Inpaint Upload</strong>标签并准备提示词<strong>large eyes</strong>。
+<p>上传原始图片和mask图片到<strong>Inpaint Upload</strong>标签并输入提示词，点击<strong>Generate on Cloud</strong>。
 <img alt="inpaint_upload" src="../../images/inpaint_upload_tab.png" /></p>
 </li>
 <li>
-<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<p>选择对应的<strong>Inference Job ID</strong>，推理图片会展示在<strong>Output</strong>区域。
 <img alt="inpaint_upload result" src="../../images/inpaint_upload_result.png" /></p>
 </li>
 </ol>

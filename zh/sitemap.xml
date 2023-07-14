@@ -76,6 +76,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api/</loc>
+         <lastmod>2023-07-14</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/source/</loc>
          <lastmod>2023-07-14</lastmod>
          <changefreq>daily</changefreq>

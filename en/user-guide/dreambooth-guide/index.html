@@ -778,6 +778,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/" class="md-nav__link">
+        API Direct Call
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -921,11 +935,12 @@
 <li>
 <p>Select one checkpoint under <strong>Source Checkpoint</strong> dropdown list.</p>
 <blockquote>
-<p><strong>Note：</strong> The checkpoint files here include two sources: files starting with "local" are locally stored checkpoint files, while those starting with "cloud" are checkpoint files stored on Amazon S3. For first-time use, it is recommended to select a local checkpoint file.
-<img alt="Select checkpoint" src="../../images/select-checkpoint.png" /></p>
+<p><strong>Note：</strong> The checkpoint files here include two sources: files starting with "local" are locally stored checkpoint files, while those starting with "cloud" are checkpoint files stored on Amazon S3. For first-time use, it is recommended to select a local checkpoint file.</p>
 </blockquote>
 </li>
-<li>Click <strong>Create Model From Cloud</strong> to start model creation on cloud. <strong>Model Creation Jobs Details</strong> field will instantly update with the progress of the model creation job. When the status changes to <em>Complete</em>, it indicates that the model creation is finished.</li>
+<li>
+<p>Click <strong>Create Model From Cloud</strong> to start model creation on cloud. <strong>Model Creation Jobs Details</strong> field will instantly update with the progress of the model creation job. When the status changes to <em>Complete</em>, it indicates that the model creation is finished.</p>
+</li>
 </ol>
 <h2 id="train-model">Train Model</h2>
 <ol>
@@ -947,16 +962,9 @@
 </li>
 </ul>
 <p><img alt="Input concepts" src="../../images/dreambooth-input-concepts.png" /> </p>
-<div class="admonition important">
-<p class="admonition-title">Notice</p>
-<p>You need to select the option to save the model to a subdirectory.</p>
-</div>
-<p><img alt="Save path" src="../../images/save-path.png" /></p>
-<div class="admonition important">
-<p class="admonition-title">Notice</p>
-<p>Currently, it is not supported to save the Lora model separately. Please don't select the following option.</p>
-</div>
-<p><img alt="Save lora" src="../../images/save-lora.png" /></p>
+<ul>
+<li>You need to check <strong>Save Checkpoint to Subdirectory</strong> to save the model to a subdirectory. In addition, it is not supported to save the Lora model separately. Please don't check <strong>Generate lora weights for extra networks</strong>.</li>
+</ul>
 </li>
 <li>
 <p>Click <strong>SageMaker Train</strong> to start model training task. The <strong>Training Job Details</strong> section will be updated in real-time with the status of the model training job. When the status changes to <em>Complete</em>, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.</p>

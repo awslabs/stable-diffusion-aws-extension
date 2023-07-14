@@ -798,6 +798,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/" class="md-nav__link">
+        API Direct Call
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -966,15 +980,43 @@
 <h2 id="amazon-sagemaker-endpoint-management">Amazon SageMaker Endpoint Management</h2>
 <h3 id="deploy-new-endpoint">Deploy new endpoint</h3>
 <ol>
-<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>, <strong>Deploy New SageMaker Endpoint</strong>, select Amazon SageMaker instance type for inference under <strong>SageMaker Instance Type</strong>, and count in <strong>Please select Instance count</strong>, click <strong>Deploy</strong>, message <em>Endpoint deployment started</em> will appear on the left side.</li>
-<li>You can navigate to tab <strong>txt2img</strong>, session <strong>Amazon SageMaker Inference</strong>, refresh and select drop down list <strong>Select Cloud SageMaker Endpoint</strong> to check all the deployment status of endpoints.
-    &gt; <strong>Note:</strong> The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time。</li>
-<li>It will take around 10 mins for endpoint deployment status changing to <em>InService</em>, which indicates that the endpoint has been successfully deployed.</li>
+<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>, <strong>Deploy New SageMaker Endpoint</strong>, select Amazon SageMaker instance type for inference under <strong>SageMaker Instance Type</strong>, and count in <strong>Please select Instance count</strong>, click <strong>Deploy</strong>, message <em>Endpoint deployment started</em> will appear on the left side.
+<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
+<li>
+<p>You can navigate to tab <strong>txt2img</strong>, session <strong>Amazon SageMaker Inference</strong>, refresh and select drop down list <strong>Select Cloud SageMaker Endpoint</strong> to check all the deployment status of endpoints.</p>
+<blockquote>
+<p><strong>Note:</strong> The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time.</p>
+</blockquote>
+</li>
+<li>
+<p>It will take around 10 mins for endpoint deployment status changing to <em>InService</em>, which indicates that the endpoint has been successfully deployed.</p>
+</li>
 </ol>
 <h3 id="delete-deployed-endpoints">Delete deployed endpoints</h3>
 <ol>
 <li>Refresh and select endpoint(s) under dropdown list of <strong>Select Cloud SageMaker Endpoint</strong>.</li>
 <li>Click <strong>Delete</strong>, message <em>Endpoint delete completed</em> will appear on left side, which indicates that the selected endpoint(s) havs been successfully deleted.</li>
+</ol>
+<h1 id="aws-dataset-management">AWS Dataset Management</h1>
+<h2 id="create-dataset">Create Dataset</h2>
+<p>In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.</p>
+<ol>
+<li>
+<p>Navigate to main tab <strong>Amazon SageMaker</strong>, section <strong>AWS Dataset Management</strong>，sub-tab <strong>Create</strong>.
+<img alt="Create Dataset to S3" src="../../images/Dataset-management.png" /></p>
+</li>
+<li>
+<p>Click <strong>Click to Upload a File</strong>, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.</p>
+</li>
+<li>Enter file name in <strong>Dataset Name</strong>, enter file description in <strong>Dataset Description</strong>, click <strong>Create Dataset</strong>.</li>
+<li>Once the message <strong>Complete Dataset XXXX creation</strong>，即表示该数据集已经成功上传到云上。</li>
+</ol>
+<h2 id="_1">数据集浏览</h2>
+<p>数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。</p>
+<ol>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，<strong>AWS Dataset Management</strong>区块，<strong>Browse</strong>标签页。</li>
+<li>刷新<strong>Dataset From Cloud</strong>列表，选择需要浏览的图片集名称。</li>
+<li>等待几秒，<strong>dataset s3 location</strong>区域即会显示该数据集的云上S3地址，复制粘贴即可取用，做后续步骤。</li>
 </ol>
 
 

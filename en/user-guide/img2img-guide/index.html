@@ -730,8 +730,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-sketch-label" class="md-nav__link">
-    Inpatnt Sketch label
+  <a href="#inpaint-sketch-label" class="md-nav__link">
+    Inpaint Sketch label
   </a>
   
 </li>
@@ -827,6 +827,20 @@
     <li class="md-nav__item">
       <a href="../../developer-guide/source/" class="md-nav__link">
         Source code
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/" class="md-nav__link">
+        API Direct Call
       </a>
     </li>
   
@@ -965,8 +979,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#inpatnt-sketch-label" class="md-nav__link">
-    Inpatnt Sketch label
+  <a href="#inpaint-sketch-label" class="md-nav__link">
+    Inpaint Sketch label
   </a>
   
 </li>
@@ -1040,57 +1054,42 @@
 </ol>
 <h3 id="img2img-label">img2img label</h3>
 <ol>
-<li>
-<p>Upload the original image to <strong>img2img</strong> and enter prompts, for example <em>black flower</em>.
-<img alt="img2img raw" src="../../images/img2img_tab.png" /></p>
-</li>
-<li>
-<p>Click <strong>Generate on Cloud</strong>, and select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session. 
-<img alt="img2img result" src="../../images/img2img_result.png" /></p>
-</li>
+<li>Upload the original image to <strong>img2img</strong> and enter prompts, and click <strong>Generate on Cloud</strong>.</li>
+<li>Select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session. </li>
 </ol>
 <h3 id="sketch-label">Sketch label</h3>
 <ol>
+<li>Start <strong>Stable Diffusion WebUI</strong> with ‘--gradio-img2img-tool color-sketch’ on the command line，upload the whiteboard background image to the <strong>Sketch tab</strong>.</li>
 <li>
-<p>Start <strong>webui</strong> with ‘--gradio-img2img-tool color-sketch’ on the command line，upload the whiteboard background image to the <strong>Sketch tab</strong>.
-<img alt="sketch" src="../../images/sketch_raw.png" /></p>
-</li>
-<li>
-<p>Use a brush to draw the corresponding sketch and prepare prompt words, for example <strong>flower</strong>.
+<p>Use a brush to draw the corresponding sketch and prepare prompts, and click <strong>Generate on Cloud</strong>.
 <img alt="sketch paint" src="../../images/sketch_paint.png" /></p>
 </li>
 <li>
-<p>Click <strong>Generate on Cloud</strong>, and select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
+<p>Select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
 <img alt="sketch result" src="../../images/sketch_result.png" /></p>
 </li>
 </ol>
 <h3 id="inpaint-label">Inpaint label</h3>
 <ol>
+<li>Upload original image to <strong>Inpaint</strong> label.</li>
 <li>
-<p>Upload original image to <strong>Inpaint</strong> label and prepare prompts, for example <em>watermelon</em>。
-<img alt="inpaint" src="../../images/inpaint_tab.png" /></p>
-</li>
-<li>
-<p>Establish masks with brushes and prepare prompts, for example <em>watermelon</em>。
+<p>Establish masks with brushes and prepare prompts, and click <strong>Generate on Cloud</strong>.
 <img alt="inpaint_inpaint" src="../../images/inpaint_inpaint.png" /></p>
 </li>
 <li>
-<p>Click <strong>Generate on Cloud</strong>, and select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
+<p>Select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
 <img alt="inpaint result" src="../../images/inpaint_result.png" /></p>
 </li>
 </ol>
-<h3 id="inpatnt-sketch-label">Inpatnt Sketch label</h3>
+<h3 id="inpaint-sketch-label">Inpaint Sketch label</h3>
 <ol>
+<li>Start <strong>Stable Diffusion WebUI</strong> with ‘--gradio-img2img-tool color-sketch’，and upload original image into <strong>Inpaint Sketch</strong>label with prompts.</li>
 <li>
-<p>Start <strong>webui</strong> with ‘--gradio-img2img-tool color-sketch’，and upload original image into <strong>Inpaint Sketch</strong>label with prompts, for example <em>candy</em>。
-<img alt="inpaint_sketch" src="../../images/inpaint_sketch_tab.png" /></p>
-</li>
-<li>
-<p>Establish masks with brushes.
+<p>Establish masks with brushes, and click <strong>Generate on Cloud</strong>.
 <img alt="inpaint_sketch_inpaint" src="../../images/inpaint_sketch_inpaint.png" /></p>
 </li>
 <li>
-<p>Click <strong>Generate on Cloud</strong>, and select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
+<p>Select corresponding <strong>Inference Job ID</strong>, the generated image will present on the right <strong>Output</strong> session.
 <img alt="inpaint_sketch result" src="../../images/inpaint_sketch_result.png" /></p>
 </li>
 </ol>
