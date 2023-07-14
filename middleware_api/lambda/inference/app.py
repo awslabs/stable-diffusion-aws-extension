@@ -16,6 +16,8 @@ from parse.parameter_parser import json_convert_to_payload
 from fastapi_pagination import add_pagination
 from datetime import datetime
 from typing import List
+import base64
+import requests
 
 import boto3
 from botocore.client import Config
@@ -201,6 +203,20 @@ def get_curent_time():
     formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
     return formatted_time
 
+
+def convert_image(params_dict: dict, payload_checkpoint_info: dict, invoked_from_api: bool, task_type: str):
+    if invoked_from_api and 
+    "image_url" in payload_checkpoint_info and task_type.lower() == "img2img":
+        img_url = payload_checkpoint_info["image_url"]
+        if img_url.startswith("http"):
+            img_content = base64.b64encode(requests.get(img_url).content)
+            logger.info(img_content)
+        # Support more image url format such as s3 url
+        else:
+            raise ValueError(f"image_url({img_url}) should starts with http or https")
+        
+
+
 @app.post("/inference/run-sagemaker-inference")
 @app.post("/api/inference/run-sagemaker-inference")
 async def run_sagemaker_inference(request: Request):
@@ -214,15 +230,18 @@ async def run_sagemaker_inference(request: Request):
         task_type = payload_checkpoint_info.get('task_type')
         print(f"Task Type: {task_type}")
         path = request.url.path
+        invoked_from_api = False
         logger.info(f'Path: {path}')
         if path == '/api/inference/run-sagemaker-inference':
             # Invoke by API
             logger.info('invoked by api')
+            invoked_from_api = True
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
         else:
             # Invoke by UI
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
         # logger.info(json.dumps(params_dict))
+        params_dict = convert_image(params_dict, payload_checkpoint_info, invoked_from_api, task_type)
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
         
