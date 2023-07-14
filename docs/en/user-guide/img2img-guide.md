@@ -20,47 +20,38 @@ You can open the **img2img tab** and use the original region along with the **Am
 
 ### img2img label
 
-1. Upload the original image to **img2img** and enter prompts, for example *black flower*.
-![img2img raw](../images/img2img_tab.png)
-
-2. Click **Generate on Cloud**, and select corresponding **Inference Job ID**, the generated image will present on the right **Output** session. 
-![img2img result](../images/img2img_result.png)
-
+1. Upload the original image to **img2img** and enter prompts, and click **Generate on Cloud**.
+2. Select corresponding **Inference Job ID**, the generated image will present on the right **Output** session. 
 
 
 ### Sketch label
 
-1. Start **webui** with ‘--gradio-img2img-tool color-sketch’ on the command line，upload the whiteboard background image to the **Sketch tab**.
-![sketch](../images/sketch_raw.png)
-
-2. Use a brush to draw the corresponding sketch and prepare prompt words, for example **flower**.
+1. Start **Stable Diffusion WebUI** with ‘--gradio-img2img-tool color-sketch’ on the command line，upload the whiteboard background image to the **Sketch tab**.
+2. Use a brush to draw the corresponding sketch and prepare prompts, and click **Generate on Cloud**.
 ![sketch paint](../images/sketch_paint.png)
 
-3. Click **Generate on Cloud**, and select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
+3. Select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
 ![sketch result](../images/sketch_result.png)
+
 
 
 ### Inpaint label
 
-1. Upload original image to **Inpaint** label and prepare prompts, for example *watermelon*。
-![inpaint](../images/inpaint_tab.png)
-
-2. Establish masks with brushes and prepare prompts, for example *watermelon*。
+1. Upload original image to **Inpaint** label.
+2. Establish masks with brushes and prepare prompts, and click **Generate on Cloud**.
 ![inpaint_inpaint](../images/inpaint_inpaint.png)
 
-3. Click **Generate on Cloud**, and select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
+3. Select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
 ![inpaint result](../images/inpaint_result.png)
 
 
-### Inpatnt Sketch label
+### Inpaint Sketch label
 
-1. Start **webui** with ‘--gradio-img2img-tool color-sketch’，and upload original image into **Inpaint Sketch**label with prompts, for example *candy*。
-![inpaint_sketch](../images/inpaint_sketch_tab.png)
-
-2. Establish masks with brushes.
+1. Start **Stable Diffusion WebUI** with ‘--gradio-img2img-tool color-sketch’，and upload original image into **Inpaint Sketch**label with prompts.
+2. Establish masks with brushes, and click **Generate on Cloud**.
 ![inpaint_sketch_inpaint](../images/inpaint_sketch_inpaint.png)
 
-3. Click **Generate on Cloud**, and select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
+3. Select corresponding **Inference Job ID**, the generated image will present on the right **Output** session.
 ![inpaint_sketch result](../images/inpaint_sketch_result.png)
 
 

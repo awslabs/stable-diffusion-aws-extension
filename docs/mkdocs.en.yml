@@ -34,6 +34,7 @@ nav:
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md
+        - API Direct Call: developer-guide/api.md
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md 
     - Revisions: revisions.md
