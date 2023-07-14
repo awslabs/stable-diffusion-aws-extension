@@ -64,8 +64,7 @@ img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
-                         "ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
+async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     def title(self):
@@ -164,19 +163,19 @@ def on_after_component_callback(component, **_kwargs):
             fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
             inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
             outputs=[txt2img_prompt]
-        ) 
+        )
 
         sagemaker_ui.hyperNetwork_dropdown.change(
             fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
             inputs=[sagemaker_ui.hyperNetwork_dropdown, txt2img_prompt],
             outputs=[txt2img_prompt]
-        ) 
+        )
 
         sagemaker_ui.lora_dropdown.change(
             fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
             inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
             outputs=[txt2img_prompt]
-        ) 
+        )
 
         sagemaker_ui.sagemaker_endpoint.change(
             fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
@@ -277,19 +276,19 @@ def on_after_component_callback(component, **_kwargs):
                 fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
                 inputs=[sagemaker_ui.textual_inversion_dropdown, img2img_prompt],
                 outputs=[img2img_prompt]
-            ) 
+            )
 
             sagemaker_ui.hyperNetwork_dropdown.change(
                 fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
                 inputs=[sagemaker_ui.hyperNetwork_dropdown, img2img_prompt],
                 outputs=[img2img_prompt]
-            ) 
+            )
 
             sagemaker_ui.lora_dropdown.change(
                 fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
                 inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
                 outputs=[img2img_prompt]
-            ) 
+            )
 
             sagemaker_ui.interrogate_clip_on_cloud_button.click(
                 fn=sagemaker_ui.call_interrogate_clip,
