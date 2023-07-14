@@ -148,15 +148,18 @@ def merge_model_on_cloud(req):
 
     return output_model_position
 
-import nest_asyncio
-
-nest_asyncio.apply()
 
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
+    import threading
+    from collections import deque
+    global condition
+    condition = threading.Condition()
+    global thread_deque
+    thread_deque = deque()
 
     @app.post("/invocations")
-    async def invocations(req: InvocationsRequest):
+    def invocations(req: InvocationsRequest):
         """
         Check the current state of Dreambooth processes.
         @return:
@@ -204,149 +207,156 @@ def sagemaker_api(_, app: FastAPI):
         print(f"merge_checkpoint_payload is: ")
         print(f"{req.merge_checkpoint_payload}")
         # print(f"json is {json.loads(req.json())}")
-
-        if req.task == 'txt2img' or req.task == 'img2img':
-            selected_models = req.models
-            checkpoint_info = req.checkpoint_info
-            checkspace_and_update_models(selected_models, checkpoint_info)
-
-        try:
-            if req.task == 'txt2img':
-                async def txt2img(req):
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post('http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json())) as response:
-
-                            print("Status:", response.status)
-                            print("Content-type:", response.headers['content-type'])
-
-                            json_body = await response.json()
-                            
-                            return json_body
-                json_body = asyncio.run(txt2img(req))
-                return json_body
-                # response = await requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
-                #response_info = response.json()
-                #print(response_info.keys())
-                # return response.json()
-            elif req.task == 'img2img':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=json.loads(req.img2img_payload.json()))
-                # response = self.img2imgapi(req.img2img_payload)
-                # shared.opts.data = default_options
-                return response.json()
-            elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate', json=json.loads(req.interrogate_payload.json()))
-                return response.json()
-            elif req.task == 'db-create-model':
-                r"""
-                task: db-create-model
-                db_create_model_payload:
-                    :s3_input_path: S3 path for download src model.
-                    :s3_output_path: S3 path for upload generated model.
-                    :ckpt_from_cloud: Whether to get ckpt from cloud or local.
-                    :job_id: job id.
-                    :param
-                        :new_model_name: generated model name.
-                        :ckpt_path: S3 path for download src model.
-                        :db_new_model_shared_src="",
-                        :from_hub=False,
-                        :new_model_url="",
-                        :new_model_token="",
-                        :extract_ema=False,
-                        :train_unfrozen=False,
-                        :is_512=True,
-                """
-                try:
-                    db_create_model_payload = json.loads(req.db_create_model_payload)
-                    job_id = db_create_model_payload["job_id"]
-                    s3_output_path = db_create_model_payload["s3_output_path"]
-                    output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
-                    output_path = get_path_from_s3_path(s3_output_path)
-                    db_create_model_params = db_create_model_payload["param"]["create_model_params"]
-                    if "ckpt_from_cloud" in db_create_model_payload["param"]:
-                        ckpt_from_s3 = db_create_model_payload["param"]["ckpt_from_cloud"]
-                    else:
-                        ckpt_from_s3 = False
-                    if not db_create_model_params['from_hub']:
-                        if ckpt_from_s3:
-                            s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
-                            local_model_path = db_create_model_params["ckpt_path"]
-                            input_path = get_path_from_s3_path(s3_input_path)
-                            logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+        with condition:
+            thread_deque.append(req)
+            print(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+            if len(thread_deque) > 1:
+                print(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                condition.wait(timeout=100000)
+            try:
+                if req.task == 'txt2img':
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
+                    selected_models = req.models
+                    checkpoint_info = req.checkpoint_info
+                    checkspace_and_update_models(selected_models, checkpoint_info)
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    print(json.loads(req.txt2img_payload.json()))
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
+                                             json=json.loads(req.txt2img_payload.json()))
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
+                    thread_deque.popleft()
+                    condition.notify()
+                    return response.json()
+                elif req.task == 'img2img':
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
+                    selected_models = req.models
+                    checkpoint_info = req.checkpoint_info
+                    checkspace_and_update_models(selected_models, checkpoint_info)
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
+                                             json=json.loads(req.img2img_payload.json()))
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
+                    thread_deque.popleft()
+                    condition.notify()
+                    return response.json()
+                elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
+                                             json=json.loads(req.interrogate_payload.json()))
+                    thread_deque.popleft()
+                    condition.notify()
+                    return response.json()
+                elif req.task == 'db-create-model':
+                    r"""
+                    task: db-create-model
+                    db_create_model_payload:
+                        :s3_input_path: S3 path for download src model.
+                        :s3_output_path: S3 path for upload generated model.
+                        :ckpt_from_cloud: Whether to get ckpt from cloud or local.
+                        :job_id: job id.
+                        :param
+                            :new_model_name: generated model name.
+                            :ckpt_path: S3 path for download src model.
+                            :db_new_model_shared_src="",
+                            :from_hub=False,
+                            :new_model_url="",
+                            :new_model_token="",
+                            :extract_ema=False,
+                            :train_unfrozen=False,
+                            :is_512=True,
+                    """
+                    try:
+                        db_create_model_payload = json.loads(req.db_create_model_payload)
+                        job_id = db_create_model_payload["job_id"]
+                        s3_output_path = db_create_model_payload["s3_output_path"]
+                        output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
+                        output_path = get_path_from_s3_path(s3_output_path)
+                        db_create_model_params = db_create_model_payload["param"]["create_model_params"]
+                        if "ckpt_from_cloud" in db_create_model_payload["param"]:
+                            ckpt_from_s3 = db_create_model_payload["param"]["ckpt_from_cloud"]
                         else:
-                            s3_input_path = db_create_model_payload["s3_input_path"]
-                            local_model_path = db_create_model_params["ckpt_path"]
-                            input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
-                            logger.info(f"ckpt from local {input_path} {local_model_path}")
-                        input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-                        logging.info("Check disk usage before download.")
+                            ckpt_from_s3 = False
+                        if not db_create_model_params['from_hub']:
+                            if ckpt_from_s3:
+                                s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
+                                local_model_path = db_create_model_params["ckpt_path"]
+                                input_path = get_path_from_s3_path(s3_input_path)
+                                logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                            else:
+                                s3_input_path = db_create_model_payload["s3_input_path"]
+                                local_model_path = db_create_model_params["ckpt_path"]
+                                input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
+                                logger.info(f"ckpt from local {input_path} {local_model_path}")
+                            input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
+                            logging.info("Check disk usage before download.")
+                            os.system("df -h")
+                            logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
+                            download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
+                            # Refresh the ckpt list.
+                            sd_models.list_models()
+                            logger.info("Check disk usage after download.")
+                            os.system("df -h")
+                        logger.info("Start creating model.")
+                        # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
+                        #                         params=db_create_model_params)
+                        create_model_func_args = copy.deepcopy(db_create_model_params)
+                        # ckpt_path = create_model_func_args.pop("new_model_src")
+                        # create_model_func_args["ckpt_path"] = ckpt_path
+                        local_response = create_model(**create_model_func_args)
+                        target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
+                        logging.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
+                        upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
+                        config_file = os.path.join(target_local_model_dir, "db_config.json")
+                        with open(config_file, 'r') as openfile:
+                            config_dict = json.load(openfile)
+                        message = {
+                            "response": local_response,
+                            "config_dict": config_dict
+                        }
+                        response = {
+                            "id": job_id,
+                            "statusCode": 200,
+                            "message": message,
+                            "outputLocation": [f'{s3_output_path}/db_create_model_params["new_model_name"]']
+                        }
+                        return response
+                    except Exception as e:
+                        response = {
+                            "id": job_id,
+                            "statusCode": 500,
+                            "message": traceback.format_exc(),
+                        }
+                        logger.error(traceback.format_exc())
+                        return response
+                    finally:
+                        # Clean up
+                        logger.info("Delete src model.")
+                        delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
+                        logger.info(delete_src_command)
+                        os.system(delete_src_command)
+                        logging.info("Delete tgt model.")
+                        delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
+                        logger.info(delete_tgt_command)
+                        os.system(delete_tgt_command)
+                        logging.info("Check disk usage after request.")
                         os.system("df -h")
-                        logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
-                        download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
-                        # Refresh the ckpt list.
-                        sd_models.list_models()
-                        logger.info("Check disk usage after download.")
-                        os.system("df -h")
-                    logger.info("Start creating model.")
-                    # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
-                    #                         params=db_create_model_params)
-                    create_model_func_args = copy.deepcopy(db_create_model_params)
-                    # ckpt_path = create_model_func_args.pop("new_model_src")
-                    # create_model_func_args["ckpt_path"] = ckpt_path
-                    local_response = create_model(**create_model_func_args)
-                    target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
-                    logging.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
-                    upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
-                    config_file = os.path.join(target_local_model_dir, "db_config.json")
-                    with open(config_file, 'r') as openfile:
-                        config_dict = json.load(openfile)
-                    message = {
-                        "response": local_response,
-                        "config_dict": config_dict
-                    }
-                    response = {
-                        "id": job_id,
-                        "statusCode": 200,
-                        "message": message,
-                        "outputLocation": [f'{s3_output_path}/db_create_model_params["new_model_name"]']
-                    }
-                    return response
-                except Exception as e:
-                    response = {
-                        "id": job_id,
-                        "statusCode": 500,
-                        "message": traceback.format_exc(),
-                    }
-                    logger.error(traceback.format_exc())
-                    return response
-                finally:
-                    # Clean up
-                    logger.info("Delete src model.")
-                    delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
-                    logger.info(delete_src_command)
-                    os.system(delete_src_command)
-                    logging.info("Delete tgt model.")
-                    delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
-                    logger.info(delete_tgt_command)
-                    os.system(delete_tgt_command)
-                    logging.info("Check disk usage after request.")
-                    os.system("df -h")
-            elif req.task == 'merge-checkpoint':
-                try:
-
-                    output_model_position = merge_model_on_cloud(req)
-
-                    response = {
-                        "statusCode": 200,
-                        "message": output_model_position,
-                    }
-                    return response
-
-                except Exception as e:
-                    traceback.print_exc()
-            else:
-                raise NotImplementedError
-        except Exception as e:
-            traceback.print_exc()
+                        thread_deque.popleft()
+                        condition.notify()
+                elif req.task == 'merge-checkpoint':
+                    try:
+                        output_model_position = merge_model_on_cloud(req)
+                        response = {
+                            "statusCode": 200,
+                            "message": output_model_position,
+                        }
+                        return response
+                    except Exception as e:
+                        traceback.print_exc()
+                    thread_deque.popleft()
+                    condition.notify()
+                else:
+                    raise NotImplementedError
+            except Exception as e:
+                traceback.print_exc()
 
     @app.get("/ping")
     def ping():
