@@ -9,12 +9,7 @@ import copy
 import requests
 from fastapi import FastAPI
 
-import asyncio
-import aiohttp
-
-# from modules import sd_hijack, sd_models, sd_vae, script_loading, paths
 from modules import sd_models
-# import modules.shared as shared
 import modules.extras
 import sys
 from aws_extension.models import InvocationsRequest
