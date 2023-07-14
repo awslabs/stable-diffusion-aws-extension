@@ -13,13 +13,17 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/img2img-guide/">
       
       
+        <link rel="prev" href="../txt2img-guide/">
+      
+      
+        <link rel="next" href="../dreambooth-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
     
     
       
-        <title>使用img2img进行云上推理 - Stable Diffusion 亚马逊云科技插件解决方案</title>
+        <title>img2img指南 - Stable Diffusion 亚马逊云科技插件解决方案</title>
       
     
     
@@ -97,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              使用img2img进行云上推理
+              img2img指南
             
           </span>
         </div>
@@ -195,6 +199,8 @@
         
   
   
+    
+  
 
 
   
@@ -206,7 +212,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         实施指南
       </a>
     </li>
@@ -264,14 +270,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
@@ -280,7 +288,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           实施指南
@@ -581,14 +589,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
       
       
       
@@ -597,7 +607,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1_7">
           <span class="md-nav__icon md-icon"></span>
           用户指南
@@ -641,6 +651,123 @@
       <a href="../txt2img-guide/" class="md-nav__link">
         txt2img指南
       </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          img2img指南
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        img2img指南
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#img2img_1" class="md-nav__link">
+    img2img的使用方法
+  </a>
+  
+    <nav class="md-nav" aria-label="img2img的使用方法">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#img2img_2" class="md-nav__link">
+    img2img不同标签功能的标准流程
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#img2img_3" class="md-nav__link">
+    img2img标签操作示例
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sketch" class="md-nav__link">
+    Sketch标签操作示例
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inpaint" class="md-nav__link">
+    Inpaint标签操作示例
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inpatnt-sketch" class="md-nav__link">
+    Inpatnt Sketch标签操作示例
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inpatnt-upload" class="md-nav__link">
+    Inpatnt Upload标签操作示例
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interrogate-clipdeepbooru" class="md-nav__link">
+    Interrogate clip/deepbooru功能的使用
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    连续使用场景
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -917,79 +1044,88 @@
 </ol>
 <h3 id="img2img_3">img2img标签操作示例</h3>
 <ol>
-<li>上传原始图片到<strong>img2img</strong>标签并输入提示词<strong>black flower</strong></li>
+<li>
+<p>上传原始图片到<strong>img2img</strong>标签并输入提示词<strong>black flower</strong>
+<img alt="img2img raw" src="../../images/img2img_tab.png" /></p>
+</li>
+<li>
+<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果
+<img alt="img2img result" src="../../images/img2img_result.png" /></p>
+</li>
 </ol>
-<p><img alt="img2img raw" src="../../images/img2img_tab.png" /></p>
-<ol>
-<li>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果</li>
-</ol>
-<p><img alt="img2img result" src="../../images/img2img_result.png" /></p>
 <h3 id="sketch">Sketch标签操作示例</h3>
 <ol>
-<li>启动<strong>webui</strong>的时候带上‘--gradio-img2img-tool color-sketch’
-上传白板底图到<strong>Sketch标签</strong></li>
+<li>
+<p>启动<strong>webui</strong>时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到<strong>Sketch标签</strong>。
+<img alt="sketch" src="../../images/sketch_raw.png" /></p>
+</li>
+<li>
+<p>通过画笔，绘制下面的草图并准备提示词<strong>flower</strong>。
+<img alt="sketch paint" src="../../images/sketch_paint.png" /></p>
+</li>
+<li>
+<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果.
+<img alt="sketch result" src="../../images/sketch_result.png" /></p>
+</li>
 </ol>
-<p><img alt="sketch" src="../../images/sketch_raw.png" /></p>
-<ol>
-<li>然后通过画笔，绘制下面的草图并准备提示词<strong>flower</strong></li>
-</ol>
-<p><img alt="sketch paint" src="../../images/sketch_paint.png" /></p>
-<ol>
-<li>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果</li>
-</ol>
-<p><img alt="sketch result" src="../../images/sketch_result.png" /></p>
 <h3 id="inpaint">Inpaint标签操作示例</h3>
 <ol>
-<li>上传原始图片到<strong>Inpaint</strong>标签并准备提示词<strong>watermelon</strong></li>
+<li>
+<p>上传原始图片到<strong>Inpaint</strong>标签并准备提示词<strong>watermelon</strong>。
+<img alt="inpaint" src="../../images/inpaint_tab.png" /></p>
+</li>
+<li>
+<p>通过画笔建立掩膜并准备提示词<strong>watermelon</strong>。
+<img alt="inpaint_inpaint" src="../../images/inpaint_inpaint.png" /></p>
+</li>
+<li>
+<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<img alt="inpaint result" src="../../images/inpaint_result.png" /></p>
+</li>
 </ol>
-<p><img alt="inpaint" src="../../images/inpaint_tab.png" /></p>
-<ol>
-<li>然后通过画笔建立掩膜并准备提示词<strong>watermelon</strong></li>
-</ol>
-<p><img alt="inpaint_inpaint" src="../../images/inpaint_inpaint.png" /></p>
-<ol>
-<li>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果</li>
-</ol>
-<p><img alt="inpaint result" src="../../images/inpaint_result.png" /></p>
 <h3 id="inpatnt-sketch">Inpatnt Sketch标签操作示例</h3>
 <ol>
-<li>启动<strong>webui</strong>的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到<strong>Inpaint Sketch</strong>标签并准备提示词<strong>candy</strong></li>
+<li>
+<p>启动<strong>webui</strong>的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到<strong>Inpaint Sketch</strong>标签并准备提示词<strong>candy</strong>。
+<img alt="inpaint_sketch" src="../../images/inpaint_sketch_tab.png" /></p>
+</li>
+<li>
+<p>通过画笔建立掩膜。
+<img alt="inpaint_sketch_inpaint" src="../../images/inpaint_sketch_inpaint.png" /></p>
+</li>
+<li>
+<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<img alt="inpaint_sketch result" src="../../images/inpaint_sketch_result.png" /></p>
+</li>
 </ol>
-<p><img alt="inpaint_sketch" src="../../images/inpaint_sketch_tab.png" /></p>
-<ol>
-<li>然后通过画笔建立掩膜</li>
-</ol>
-<p><img alt="inpaint_sketch_inpaint" src="../../images/inpaint_sketch_inpaint.png" /></p>
-<ol>
-<li>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果</li>
-</ol>
-<p><img alt="inpaint_sketch result" src="../../images/inpaint_sketch_result.png" /></p>
 <h3 id="inpatnt-upload">Inpatnt Upload标签操作示例</h3>
 <ol>
-<li>上传原始图片和mask图片到<strong>Inpaint Upload</strong>标签并准备提示词<strong>large eyes</strong></li>
+<li>
+<p>上传原始图片和mask图片到<strong>Inpaint Upload</strong>标签并准备提示词<strong>large eyes</strong>。
+<img alt="inpaint_upload" src="../../images/inpaint_upload_tab.png" /></p>
+</li>
+<li>
+<p>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果。
+<img alt="inpaint_upload result" src="../../images/inpaint_upload_result.png" /></p>
+</li>
 </ol>
-<p><img alt="inpaint_upload" src="../../images/inpaint_upload_tab.png" /></p>
-<ol>
-<li>通过<strong>Generate on Cloud</strong>并选择对应的<strong>Inference Job ID</strong>之后可以得到如下结果</li>
-</ol>
-<p><img alt="inpaint_upload result" src="../../images/inpaint_upload_result.png" /></p>
 <h3 id="interrogate-clipdeepbooru">Interrogate clip/deepbooru功能的使用</h3>
 <ol>
 <li>进入<strong>img2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。</li>
-<li>Interrogate只需要在<strong>img2img</strong>标签页把图片上传即可。</li>
-</ol>
-<p><img alt="img2img tab" src="../../images/clip_tab.png" /></p>
-<ol>
+<li>
+<p>Interrogate只需要在<strong>img2img</strong>标签页把图片上传即可。
+<img alt="img2img tab" src="../../images/clip_tab.png" /></p>
+</li>
 <li>
 <p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。</p>
 </li>
 <li>
-<p>点击<strong>Interrogate CLIP on cloud</strong>或和<strong>Interrogate DeepBooru on cloud</strong>。</p>
+<p>点击<strong>Interrogate CLIP on cloud</strong>或<strong>Interrogate DeepBooru on cloud</strong>。</p>
 </li>
 <li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。
-img2img标签的提示词区域就能看到结果。</li>
+img2img标签的提示词区域就能看到结果。
+<img alt="interrogate generate results" src="../../images/clip.png" /></li>
 </ol>
-<p><img alt="interrogate generate results" src="../../images/clip.png" /></p>
 <h3 id="_1">连续使用场景</h3>
 <ol>
 <li>按<strong>通用场景</strong>使用流程，完成参数录入，并点击<strong>Generate on Cloud</strong>提交第一次推理任务。</li>
@@ -1029,10 +1165,10 @@ img2img标签的提示词区域就能看到结果。</li>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

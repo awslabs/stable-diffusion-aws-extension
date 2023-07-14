@@ -11,13 +11,13 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/dreambooth-guide/">
       
       
-        <link rel="prev" href="../txt2img-guide/">
+        <link rel="prev" href="../img2img-guide/">
       
       
         <link rel="next" href="../../developer-guide/source/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.16">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
     
     
       
@@ -658,6 +658,20 @@
               
   
   
+  
+    <li class="md-nav__item">
+      <a href="../img2img-guide/" class="md-nav__link">
+        img2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -917,8 +931,36 @@
 <ol>
 <li>Open <strong>Dreambooth</strong> tab, <strong>Model</strong> subtab, <strong>Select From Cloud</strong>.</li>
 <li>Fresh and select the model from <strong>Model</strong> dropd down list that need to train.</li>
-<li>Set corresponding parameters in <strong>Input</strong> session.</li>
-<li>Click <strong>SageMaker Train</strong> to start model training task. The <strong>Training Job Details</strong> section will be updated in real-time with the status of the model training job. When the status changes to <em>Complete</em>, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.</li>
+<li>
+<p>Set corresponding parameters in <strong>Input</strong> session.</p>
+<ul>
+<li>Set training parameters<ul>
+<li>Checking <em>Lora</em> can accelerate the training process.</li>
+<li>The <em>Training Steps Per Image (Epochs)</em> represents the number of iterations for training a single image and can be left at the default value.
+<img alt="Input setting" src="../../images/dreambooth-input-settings.png" /> </li>
+</ul>
+</li>
+<li>Set the concepts that need to be trained. A total of four concepts can be set, and we will use the first concept as an example.<ul>
+<li>In the <em>Dataset Directory</em> field, enter the path to the images required for training. It can be a path on a web server or an S3 path. For S3 paths, you can obtain them by uploading the data through AWS Dataset Management or by uploading them to S3 on your own. The path should start with “s3://".</li>
+<li>In the <em>Instance Prompt</em> section under <em>Training Prompts</em>, enter the keywords for the concept. These keywords will be used to generate the concept during the training process in txt2img. Therefore, avoid using common English words (as they might get confused with other concepts in the base model).</li>
+</ul>
+</li>
+</ul>
+<p><img alt="Input concepts" src="../../images/dreambooth-input-concepts.png" /> </p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>You need to select the option to save the model to a subdirectory.</p>
+</div>
+<p><img alt="Save path" src="../../images/save-path.png" /></p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>Currently, it is not supported to save the Lora model separately. Please don't select the following option.</p>
+</div>
+<p><img alt="Save lora" src="../../images/save-lora.png" /></p>
+</li>
+<li>
+<p>Click <strong>SageMaker Train</strong> to start model training task. The <strong>Training Job Details</strong> section will be updated in real-time with the status of the model training job. When the status changes to <em>Complete</em>, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.</p>
+</li>
 <li>Future steps. For example: Navigate to <strong>txt2img</strong> tab <strong>Amazon SageMaker Inference</strong> panel, check trained model by refreshing <strong>Stable Diffusion Checkpoint</strong> dropdown list.  </li>
 </ol>
 
@@ -953,10 +995,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.a51614de.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>
