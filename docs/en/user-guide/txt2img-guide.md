@@ -32,7 +32,7 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 
 ## Controlnet Guide
 
-* ### openpose use guide
+* ### Openpose use guide
 1. Open ControlNet panel, check **Enable**, select **openpose** from **Preprocessor**, and then upload am image.
 ![Controlnet-openpose-prepare](../images/controlnet-openpose-prepare.png)
 2. Open **Amazon SageMaker Inference**panel, select one checkpoint from **Stable Diffusion Checkpoint** and one model from **ControlNet-Model**. For example: below is the ineference based on **v1-5-pruned-emaonly.safetensors** and **control_openpose-fp16.safetensors**, prompts **a cute dog**, click **Generate on Cloud**.
