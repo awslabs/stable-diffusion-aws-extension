@@ -8,8 +8,6 @@ language_clients:
   - javascript: ""
 toc_footers: []
 includes: []
-search: true
-highlight_theme: darkula
 headingLevel: 2
 
 ---

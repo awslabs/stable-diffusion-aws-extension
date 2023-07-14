@@ -93,8 +93,17 @@ function getSelectedButton() {
 
 // function to get tab "Restore to" or "Resize by"
 function getSelectedTabResize() {
+    // Create a mapping from child index to a certain value
+    let mapping = {
+        1: "ResizeTo",
+        2: "ResizeBy"
+    };
+
     // Get the parent element
     let parentDiv = document.querySelector("#component-477 > div.tab-nav.scroll-hide.svelte-1g805jl");
+    if(parentDiv == null){
+        return mapping[1]
+    }
 
     // Get all the button children
     let buttons = parentDiv.querySelectorAll("button");
@@ -112,11 +121,7 @@ function getSelectedTabResize() {
         }
     }
 
-    // Create a mapping from child index to a certain value
-    let mapping = {
-        1: "ResizeTo",
-        2: "ResizeBy"
-    };
+
 
     // Check if a button was selected
     if (selectedButtonIndex != -1) {
