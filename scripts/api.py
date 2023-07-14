@@ -214,7 +214,7 @@ def sagemaker_api(_, app: FastAPI):
             print(f"{req.db_create_model_payload}")
             print(f"merge_checkpoint_payload is: ")
             print(f"{req.merge_checkpoint_payload}")
-            # print(f"json is {json.loads(req.json())}")
+            print(f"json is {json.loads(req.json())}")
             try:
                 if req.task == 'txt2img':
                     print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
