@@ -1,3 +1,4 @@
-| Date          | Change            |
-|---------------|-------------------|
-| June 2023 | Initial release  |
+| Date          | Version            |Changes            |
+|---------------|-------------------|-------------------|
+| 2023/6/16 | V1.0.0  | Initial release
+| 2023/7/14 | V1.0.1| - Upgrade the version support of **webUI** to V1.4.0  <br> - Upgrade the version support of **ControlNet** to V1.1.227  <br> - Upgrade the version support of **Dreambooth** to V1.0.14  <br> - Support **Windows client** <br> - Support txt2img API Direct call <br> - Support full features in **img2img** except batch <br> - Support full features in **ControlNet** except multi-ControlNet <br> - Auto-refresh inference results in **Output** section <br> - Support filter in **Inference Job ID** <br> - Support rollback or update the middleware <br> - Bugs fix
