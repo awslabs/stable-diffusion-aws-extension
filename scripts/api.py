@@ -191,29 +191,29 @@ def sagemaker_api(_, app: FastAPI):
                 print(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
                 condition.wait(timeout=100000)
             print(f"task is {req.task}")
-            # print(f"checkpoint_info is {req.checkpoint_info}")
-            # print(f"models is {req.models}")
-            # print(f"txt2img_payload is: ")
-            # txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
-            # show_slim_dict(txt2img_payload)
-            # print(f"img2img_payload is: ")
-            # img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
-            # show_slim_dict(img2img_payload)
-            # print(f"extra_single_payload is: ")
-            # extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-            #     req.extras_single_payload.json())
-            # show_slim_dict(extra_single_payload)
-            # print(f"extra_batch_payload is: ")
-            # extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-            #     req.extras_batch_payload.json())
-            # show_slim_dict(extra_batch_payload)
-            # print(f"interrogate_payload is: ")
-            # interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
-            # show_slim_dict(interrogate_payload)
-            # print(f"db_create_model_payload is: ")
-            # print(f"{req.db_create_model_payload}")
-            # print(f"merge_checkpoint_payload is: ")
-            # print(f"{req.merge_checkpoint_payload}")
+            print(f"checkpoint_info is {req.checkpoint_info}")
+            print(f"models is {req.models}")
+            print(f"txt2img_payload is: ")
+            txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
+            show_slim_dict(txt2img_payload)
+            print(f"img2img_payload is: ")
+            img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
+            show_slim_dict(img2img_payload)
+            print(f"extra_single_payload is: ")
+            extra_single_payload = {} if req.extras_single_payload is None else json.loads(
+                req.extras_single_payload.json())
+            show_slim_dict(extra_single_payload)
+            print(f"extra_batch_payload is: ")
+            extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
+                req.extras_batch_payload.json())
+            show_slim_dict(extra_batch_payload)
+            print(f"interrogate_payload is: ")
+            interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
+            show_slim_dict(interrogate_payload)
+            print(f"db_create_model_payload is: ")
+            print(f"{req.db_create_model_payload}")
+            print(f"merge_checkpoint_payload is: ")
+            print(f"{req.merge_checkpoint_payload}")
             # print(f"json is {json.loads(req.json())}")
             try:
                 if req.task == 'txt2img':
@@ -226,8 +226,6 @@ def sagemaker_api(_, app: FastAPI):
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                                              json=json.loads(req.txt2img_payload.json()))
                     print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
-                    thread_deque.popleft()
-                    condition.notify()
                     return response.json()
                 elif req.task == 'img2img':
                     print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
@@ -238,14 +236,10 @@ def sagemaker_api(_, app: FastAPI):
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
                                              json=json.loads(req.img2img_payload.json()))
                     print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
-                    thread_deque.popleft()
-                    condition.notify()
                     return response.json()
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
-                    thread_deque.popleft()
-                    condition.notify()
                     return response.json()
                 elif req.task == 'db-create-model':
                     r"""
@@ -341,8 +335,6 @@ def sagemaker_api(_, app: FastAPI):
                         os.system(delete_tgt_command)
                         logging.info("Check disk usage after request.")
                         os.system("df -h")
-                        thread_deque.popleft()
-                        condition.notify()
                 elif req.task == 'merge-checkpoint':
                     try:
                         output_model_position = merge_model_on_cloud(req)
@@ -353,12 +345,13 @@ def sagemaker_api(_, app: FastAPI):
                         return response
                     except Exception as e:
                         traceback.print_exc()
-                    thread_deque.popleft()
-                    condition.notify()
                 else:
                     raise NotImplementedError
             except Exception as e:
                 traceback.print_exc()
+            finally:
+                thread_deque.popleft()
+                condition.notify()
 
     @app.get("/ping")
     def ping():
