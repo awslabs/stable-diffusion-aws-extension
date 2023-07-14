@@ -29,7 +29,7 @@ model_list.append("piying-base-15-model/piying-base-15-model_900_lora.safetensor
 model_list.append("PyAstronaut3/PyAstronaut3_900_lora.safetensors")
 model_list.append("stable-diffusion-inpainting/sd-v1-5-inpainting.ckpt")
 model_list.append("yangke-monkey/yangke-monkey_800_lora.safetensors")
-model_list.append("piying_xuanran_2073_lora.safetensors")
+model_list.append("piying_xuanran_2703_lora.safetensors")
 model_list.append("yinke-style_1380_lora.safetensors")
 model_list.append("yangk-style_2160_lora.safetensors")
 model_list.append("v2-1_768-ema-pruned.safetensors")
