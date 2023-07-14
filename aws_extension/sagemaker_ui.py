@@ -766,7 +766,12 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     # Loop over each item in selected_items and append it to txt2img_prompt
     for item in selected_items:
         if with_angle_brackets:
-            txt2img_prompt +=  ' ' + '<' + item + ':1>'
+            type_str = ''
+            if model_name == 'Lora':
+                type_str = 'lora:'
+            elif model_name == 'hypernetworks':
+                type_str = 'hypernet:'
+            txt2img_prompt += ' ' + '<' + type_str + item + ':1>'
         else:
             txt2img_prompt += ' ' + item
     

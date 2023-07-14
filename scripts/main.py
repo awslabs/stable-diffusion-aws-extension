@@ -64,8 +64,9 @@ img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
-                         "ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
+# async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", \
+#                          "ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge"]
+async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     def title(self):
@@ -688,7 +689,8 @@ def ui_tabs_callback():
                                     with gr.Row():
                                         cloud_train_instance_type = gr.Dropdown(
                                             label="SageMaker Train Instance Type",
-                                            choices=['ml.g4dn.2xlarge', 'ml.g5.2xlarge'],
+                                            # choices=['ml.g4dn.2xlarge', 'ml.g5.2xlarge'],
+                                            choices=['ml.g4dn.2xlarge'],
                                             elem_id="cloud_train_instance_type",
                                             info='select SageMaker Train Instance Type'
                                         )
