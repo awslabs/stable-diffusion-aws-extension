@@ -28,3 +28,22 @@ To use extra models for inference, you will need to upload model through steps b
 
 
 
+# AWS Dataset Management
+
+## Create Dataset
+In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.
+
+1. Navigate to main tab **Amazon SageMaker**, section **AWS Dataset Management**，sub-tab **Create**.
+![Create Dataset to S3](../images/Dataset-management.png)
+
+2. Click **Click to Upload a File**, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.
+3. Enter file name in **Dataset Name**, enter file description in **Dataset Description**, click **Create Dataset**.
+4. Once the message **Complete Dataset XXXX creation**，即表示该数据集已经成功上传到云上。
+
+## 数据集浏览
+数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。
+
+1. 进入解决方案主标签页**Amazon SageMaker**，**AWS Dataset Management**区块，**Browse**标签页。
+2. 刷新**Dataset From Cloud**列表，选择需要浏览的图片集名称。
+3. 等待几秒，**dataset s3 location**区域即会显示该数据集的云上S3地址，复制粘贴即可取用，做后续步骤。
+
