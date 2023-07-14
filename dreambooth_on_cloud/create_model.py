@@ -28,7 +28,7 @@ def get_cloud_ckpts():
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
 
-        url = api_gateway_url + "checkpoints?status=Active&types=Stable-diffusion"
+        url = api_gateway_url + "checkpoints?status=Active&types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
         if "checkpoints" not in response:
             return []
@@ -224,7 +224,7 @@ def get_create_model_job_list():
     global local_job_cache
     dashboard_list = []
     try:
-        url += "models?types=Stable-diffusion"
+        url += "models?types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
         response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for model in response['models']:

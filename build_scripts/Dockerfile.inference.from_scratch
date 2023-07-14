@@ -24,8 +24,11 @@ RUN pip install --upgrade pip
 RUN pip install accelerate==0.19.0
 RUN pip install deepspeed==0.9.5
 # RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
-RUN git clone https://github.com/facebookresearch/xformers.git && cd xformers && git checkout v0.0.20 && \
-git submodule update --init --recursive && pip install -r requirements.txt && pip install -e .
+# RUN git clone https://github.com/facebookresearch/xformers.git && cd xformers && git checkout v0.0.20 && \
+# git submodule update --init --recursive && pip install -r requirements.txt && pip install -e .
+
+RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformers-0.0.20%2B1dc3d7a.d20230713-cp310-cp310-linux_x86_64.whl
+RUN pip install xformers-0.0.20+1dc3d7a.d20230713-cp310-cp310-linux_x86_64.whl
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
@@ -33,9 +36,9 @@ WORKDIR /opt/ml/code
 
 ENV ON_DOCKER true
 
-# # install libtcmalloc to solve memory leak for multi model switch 
-# # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-# RUN apt-get install -y google-perftools
-# ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+# install libtcmalloc to solve memory leak for multi model switch 
+# https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
+RUN apt-get install -y libtcmalloc-minimal4
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 ENTRYPOINT ["python", "/opt/ml/code/serve"]

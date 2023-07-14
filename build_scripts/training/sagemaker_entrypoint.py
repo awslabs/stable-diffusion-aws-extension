@@ -22,7 +22,7 @@ os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
-from utls import tar, mv
+from utils import tar, mv
 
 def sync_status_from_s3_json(bucket_name, webui_status_file_path, sagemaker_status_file_path):
     while True:
