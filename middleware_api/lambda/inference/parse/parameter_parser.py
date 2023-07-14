@@ -158,7 +158,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
     selected_cn_model = checkpoint_info.get('controlnet_model', get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue=""))
     selected_hypernets = checkpoint_info.get('hypernetwork_model', get_param_value(params_dict, f'{param_name}_sagemaker_hypernetwork_model', defaultValue=""))
     selected_loras = checkpoint_info.get('lora_model', get_param_value(params_dict, f'{param_name}_sagemaker_lora_model', defaultValue=""))
-    selected_embeddings = checkpoint_info.get('embeddings', get_param_value(params_dict, f'{param_name}_sagemaker_texual_inversion_model', defaultValue=""))
+    selected_embeddings = checkpoint_info.get('embeddings_model', get_param_value(params_dict, f'{param_name}_sagemaker_texual_inversion_model', defaultValue=""))
     
     if selected_sd_model == "":
         selected_sd_model = ['v1-5-pruned-emaonly.safetensors']
