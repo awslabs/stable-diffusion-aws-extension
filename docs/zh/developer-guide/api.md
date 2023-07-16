@@ -29,6 +29,42 @@ Base URLs:
 * API Key (api_key)
     - Parameter Name: **x-api-key**, in: header. 
 
+| No. | API Name | Description |
+| --- | --- | --- |
+| 1 | [/inference/test-connection](#inferencetest-connection) | Test connection |
+| 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs) | Lists all inference jobs. |
+| 3 | [/inference/create-inference-job](#inferencecreate-inference-job) | Creates a new inference job. |
+| 4 | [/inference/get-inference-job](#inferenceget-inference-job) | Retrieves details of a specific inference job. |
+| 5 | [/inference/delete-inference-job](#inferencedelete-inference-job) | Deletes a specific inference job. |
+| 6 | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) | Gets image output of a specific inference job. |
+| 7 | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) | Gets parameter output of a specific inference job. |
+| 8 | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) | Run sagemaker inference using default parameters|
+| 9 | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) | Deploys a SageMaker endpoint. |
+| 10 | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint) | Deletes a SageMaker endpoint. |
+| 11 | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)| Lists all endpoint deployment jobs. |
+| 12 | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) | Gets a specific endpoint deployment job. |
+| 13 | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading. |
+| 14 | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list) | Gets the list of textual inversions. |
+| 15 | [/inference/get-lora-list](#inferenceget-lora-list) | Gets the list of LoRa. |
+| 16 | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list) | Gets the list of hypernetworks. |
+| 17 | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list) | Gets the list of ControlNet models. |
+| 18 | [/inference/run-model-merge](#inferencerun-model-merge) | Runs a model merge. |
+| 19 | [/model](#modelpost) | Creates a new model. |
+| 20 | [/model](#modelput) | Upload the model file|
+| 21 | [/models](#modelsget) |Lists all models.|
+| 22 | [/checkpoint(GET)](#checkpoint) | Gets a checkpoint. |
+| 23 | [/checkpoint(PUT)](#checkpointput) | Updates a checkpoint. |
+| 24 | [/checkpoints](#checkpoints) | Lists all checkpoints. |
+| 25 | [/train(POST)](#trainpost) | Starts a training job. |
+| 26 | [/train(PUT)](#trainput) | Updates a training job. |
+| 27 | [/trains(GET)](#trainsget) | Lists all training jobs. |
+| 28 | [/dataset(POST)](#datasetpost) | Creates a new dataset. |
+| 29 | [/dataset(PUT)](#datasetput) | Updates a dataset. |
+| 30 | [/datasets(GET)](#datasetsget) | Lists all datasets. |
+| 31 | [/{dataset_name}/data](#dataset_namedata) | Gets data of a specific dataset. |
+
+<br/>
+
 # /inference/test-connection
 ## test middleware connection
 
@@ -37,7 +73,8 @@ Base URLs:
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -50,7 +87,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -103,7 +141,8 @@ Generate a new image from a text prompt.
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   "Content-Type": "application/json",
@@ -124,7 +163,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
@@ -230,6 +270,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
+<br/>
 
 # /inference/deploy-sagemaker-endpoint
 
@@ -238,7 +279,8 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -252,7 +294,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "instance_type": "ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge",
   "initial_instance_count": "1|2|3|4"
@@ -313,6 +356,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/delete-sagemaker-endpoint
 
 <a id="opIddelete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post"></a>
@@ -320,7 +365,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -334,7 +380,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "delete_endpoint_list": [
     "infer-endpoint-XXXXXX",
@@ -399,6 +446,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/list-endpoint-deployment-jobs
 
 <a id="opIdlist_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get"></a>
@@ -406,7 +455,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -419,7 +469,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -484,6 +535,8 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/list-inference-jobs
 
 <a id="opIdlist_inference_jobs_inference_list_inference_jobs_get"></a>
@@ -491,7 +544,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -504,7 +558,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -571,6 +626,8 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-endpoint-deployment-job
 
 <a id="opIdget_endpoint_deployment_job_inference_get_endpoint_deployment_job_get"></a>
@@ -578,7 +635,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -593,7 +651,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -649,6 +708,8 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-inference-job
 
 <a id="opIdget_inference_job_inference_get_inference_job_get"></a>
@@ -656,7 +717,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -669,7 +731,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -729,6 +792,8 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-inference-job-image-output
 
 <a id="opIdget_inference_job_image_output_inference_get_inference_job_image_output_get"></a>
@@ -736,7 +801,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -749,7 +815,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -808,6 +875,8 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-inference-job-param-output
 
 <a id="opIdget_inference_job_param_output_inference_get_inference_job_param_output_get"></a>
@@ -815,7 +884,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -828,7 +898,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -887,6 +958,8 @@ Status Code **200**
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/generate-s3-presigned-url-for-uploading
 
 <a id="opIdgenerate_s3_presigned_url_for_uploading_inference_generate_s3_presigned_url_for_uploading_get"></a>
@@ -894,7 +967,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -907,7 +981,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -955,6 +1030,8 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-texual-inversion-list
 
 <a id="opIdget_texual_inversion_list_inference_get_texual_inversion_list_get"></a>
@@ -962,7 +1039,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -975,7 +1053,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -1017,6 +1096,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-lora-list
 
 <a id="opIdget_lora_list_inference_get_lora_list_get"></a>
@@ -1024,7 +1105,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -1037,7 +1119,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -1079,6 +1162,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-hypernetwork-list
 
 <a id="opIdget_hypernetwork_list_inference_get_hypernetwork_list_get"></a>
@@ -1086,7 +1171,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -1099,7 +1185,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -1141,6 +1228,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/get-controlnet-model-list
 
 <a id="opIdget_controlnet_model_list_inference_get_controlnet_model_list_get"></a>
@@ -1148,7 +1237,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -1161,7 +1251,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -1203,6 +1294,8 @@ null
 This operation does not require authentication
 </aside>
 
+<br/>
+
 # /inference/run-model-merge
 
 <a id="opIdrun_model_merge_inference_run_model_merge_post"></a>
@@ -1210,7 +1303,8 @@ This operation does not require authentication
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json'
@@ -1223,7 +1317,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json'
@@ -1271,12 +1366,15 @@ This operation does not require authentication
 
 <h1 id="stable-diffusion-train-and-deploy-api-default">default</h1>
 
-# /model
+<br/>
+
+# /model(POST)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -1291,7 +1389,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "model_type": "Stable-diffusion",
   "name": "testmodelcreation01",
@@ -1416,12 +1515,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
-# /model
+<br/>
+
+# /model(PUT)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -1436,7 +1538,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "model_id": "c9f59ee7-0672-4fd1-8a45-8a494de8a48d",
   "status": "Creating",
@@ -1566,12 +1669,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
-# /models
+<br/>
+
+# /models(GET)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json',
@@ -1585,7 +1691,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json',
@@ -1655,12 +1762,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /checkpoint
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -1675,7 +1785,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "checkpoint_type": "Stable-diffusion",
   "filenames": [
@@ -1784,12 +1895,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /checkpoint(put)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -1804,7 +1918,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "checkpoint_id": "906a5a1f-6833-45aa-8a10-fb0e983e0eae",
   "status": "Active",
@@ -1934,12 +2049,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /checkpoints
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json',
@@ -1953,7 +2071,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json',
@@ -2029,12 +2148,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /train(POST)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -2049,7 +2171,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "train_type": "dreambooth",
   "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
@@ -2156,12 +2279,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /train(PUT)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -2176,7 +2302,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "train_job_id": "b5183dd3-0279-46ff-b64e-6cd687c0fe71",
   "status": "Training"
@@ -2259,12 +2386,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /trains(GET)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json',
@@ -2278,7 +2408,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json',
@@ -2350,12 +2481,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /dataset(POST)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -2370,7 +2504,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "dataset_name": "test_dataset",
   "content": [
@@ -2465,12 +2600,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /dataset(PUT)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Content-Type': 'application/json',
@@ -2485,7 +2623,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 const inputBody = '{
   "dataset_name": "test_dataset",
   "status": "Enabled"
@@ -2562,12 +2701,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /datasets(GET)
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json',
@@ -2581,7 +2723,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json',
@@ -2651,12 +2794,15 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+<br/>
+
 # /{dataset_name}/data
 
 ### **Code samples :**
 
 Python example code:
- ```python
+
+```Python
 import requests
 headers = {
   'Accept': 'application/json',
@@ -2670,7 +2816,8 @@ print(r.json())
 ```
 
 Javascript example code:
- ```javascript
+
+```javascript
 
 const headers = {
   'Accept':'application/json',
