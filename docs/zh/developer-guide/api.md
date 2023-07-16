@@ -16,52 +16,50 @@ headingLevel: 2
 
 <h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
 
-This service is used to train and deploy Stable Diffusion models.
+This document describe all the api for Stable Diffusion AWS extension solution.
 
-Base URLs:
+**Base URLs:**
 
-* <a href="https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}">https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}</a>
+* <a href="https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod">https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod</a>
 
-    * **basePath** -  Default: prod
-
-# Authentication
+**Authentication**
 
 * API Key (api_key)
     - Parameter Name: **x-api-key**, in: header. 
 
+# API List table
+
 | No. | API Name | Description |
 | --- | --- | --- |
-| 1 | [/inference/test-connection](#inferencetest-connection) | Test connection |
+| 1 | [/inference/test-connection](#inferencetest-connection) | Test whether client can connect to api and check the API_TOKEN is correct |
 | 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs) | Lists all inference jobs. |
-| 3 | [/inference/create-inference-job](#inferencecreate-inference-job) | Creates a new inference job. |
-| 4 | [/inference/get-inference-job](#inferenceget-inference-job) | Retrieves details of a specific inference job. |
-| 5 | [/inference/delete-inference-job](#inferencedelete-inference-job) | Deletes a specific inference job. |
-| 6 | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) | Gets image output of a specific inference job. |
-| 7 | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) | Gets parameter output of a specific inference job. |
-| 8 | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) | Run sagemaker inference using default parameters|
-| 9 | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) | Deploys a SageMaker endpoint. |
-| 10 | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint) | Deletes a SageMaker endpoint. |
-| 11 | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)| Lists all endpoint deployment jobs. |
-| 12 | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) | Gets a specific endpoint deployment job. |
-| 13 | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading. |
-| 14 | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list) | Gets the list of textual inversions. |
-| 15 | [/inference/get-lora-list](#inferenceget-lora-list) | Gets the list of LoRa. |
-| 16 | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list) | Gets the list of hypernetworks. |
-| 17 | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list) | Gets the list of ControlNet models. |
-| 18 | [/inference/run-model-merge](#inferencerun-model-merge) | Runs a model merge. |
-| 19 | [/model](#modelpost) | Creates a new model. |
-| 20 | [/model](#modelput) | Upload the model file|
-| 21 | [/models](#modelsget) |Lists all models.|
-| 22 | [/checkpoint(GET)](#checkpoint) | Gets a checkpoint. |
-| 23 | [/checkpoint(PUT)](#checkpointput) | Updates a checkpoint. |
-| 24 | [/checkpoints](#checkpoints) | Lists all checkpoints. |
-| 25 | [/train(POST)](#trainpost) | Starts a training job. |
-| 26 | [/train(PUT)](#trainput) | Updates a training job. |
-| 27 | [/trains(GET)](#trainsget) | Lists all training jobs. |
-| 28 | [/dataset(POST)](#datasetpost) | Creates a new dataset. |
-| 29 | [/dataset(PUT)](#datasetput) | Updates a dataset. |
-| 30 | [/datasets(GET)](#datasetsget) | Lists all datasets. |
-| 31 | [/{dataset_name}/data](#dataset_namedata) | Gets data of a specific dataset. |
+| 3 | [/inference/get-inference-job](#inferenceget-inference-job) | Retrieves details of a specific inference job. |
+| 4 | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) | Gets image output of a specific inference job. |
+| 5 | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) | Gets parameter output of a specific inference job. |
+| 6 | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) | Run sagemaker inference using default parameters|
+| 7 | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) | Deploys a SageMaker endpoint. |
+| 8 | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint) | Deletes a SageMaker endpoint. |
+| 9 | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)| Lists all endpoint deployment jobs. |
+| 10 | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) | Gets a specific endpoint deployment job. |
+| 11 | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading. |
+| 12 | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list) | Gets the list of textual inversions. |
+| 13 | [/inference/get-lora-list](#inferenceget-lora-list) | Gets the list of LoRa. |
+| 14 | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list) | Gets the list of hypernetworks. |
+| 15 | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list) | Gets the list of ControlNet models. |
+| 16 | [/inference/run-model-merge](#inferencerun-model-merge) | Runs a model merge. |
+| 17 | [/model(POST)](#modelpost) | Creates a new model. |
+| 18 | [/model(PUT)](#modelput) | Upload the model file|
+| 19 | [/models](#modelsget) |Lists all models.|
+| 20 | [/checkpoint(GET)](#checkpoint) | Gets a checkpoint. |
+| 21 | [/checkpoint(PUT)](#checkpointput) | Updates a checkpoint. |
+| 22 | [/checkpoints](#checkpoints) | Lists all checkpoints. |
+| 23 | [/train(POST)](#trainpost) | Starts a training job. |
+| 24 | [/train(PUT)](#trainput) | Updates a training job. |
+| 25 | [/trains(GET)](#trainsget) | Lists all training jobs. |
+| 26 | [/dataset(POST)](#datasetpost) | Creates a new dataset. |
+| 27 | [/dataset(PUT)](#datasetput) | Updates a dataset. |
+| 28 | [/datasets(GET)](#datasetsget) | Lists all datasets. |
+| 29 | [/{dataset_name}/data](#dataset_namedata) | Gets data of a specific dataset. |
 
 <br/>
 
@@ -77,7 +75,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/test-connection', headers = headers)
@@ -91,7 +90,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/test-connection',
@@ -146,7 +146,8 @@ Python example code:
 import requests
 headers = {
   "Content-Type": "application/json",
-  "Accept": "application/json"
+  "Accept": "application/json",
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 body = {
   "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
@@ -174,7 +175,8 @@ const inputBody = '{
 }';
 const headers = {
   "Content-Type":"application/json",
-  "Accept":"application/json"
+  "Accept":"application/json",
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference",
@@ -284,7 +286,8 @@ Python example code:
 import requests
 headers = {
   'Content-Type': 'application/json',
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/deploy-sagemaker-endpoint', headers = headers)
@@ -302,7 +305,8 @@ const inputBody = '{
 }';
 const headers = {
   'Content-Type':'application/json',
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/deploy-sagemaker-endpoint',
@@ -370,7 +374,8 @@ Python example code:
 import requests
 headers = {
   'Content-Type': 'application/json',
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/delete-sagemaker-endpoint', headers = headers)
@@ -459,7 +464,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-endpoint-deployment-jobs', headers = headers)
@@ -473,7 +479,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-endpoint-deployment-jobs',
@@ -548,7 +555,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-inference-jobs', headers = headers)
@@ -562,7 +570,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-inference-jobs',
@@ -639,7 +648,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job', params={
@@ -655,7 +665,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string',
@@ -721,7 +732,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job', headers = headers)
@@ -735,7 +747,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job',
@@ -805,7 +818,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-image-output', headers = headers)
@@ -888,7 +902,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-param-output', headers = headers)
@@ -902,7 +917,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-param-output',
@@ -971,7 +987,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading', headers = headers)
@@ -985,7 +1002,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading',
@@ -1043,7 +1061,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-texual-inversion-list', headers = headers)
@@ -1057,7 +1076,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-texual-inversion-list',
@@ -1109,7 +1129,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-lora-list', headers = headers)
@@ -1123,7 +1144,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-lora-list',
@@ -1175,7 +1197,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-hypernetwork-list', headers = headers)
@@ -1189,7 +1212,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-hypernetwork-list',
@@ -1241,7 +1265,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-controlnet-model-list', headers = headers)
@@ -1255,7 +1280,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-controlnet-model-list',
@@ -1307,7 +1333,8 @@ Python example code:
 ```Python
 import requests
 headers = {
-  'Accept': 'application/json'
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 }
 
 r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-model-merge', headers = headers)
