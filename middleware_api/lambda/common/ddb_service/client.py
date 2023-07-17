@@ -148,13 +148,18 @@ class DynamoDbUtilsService:
 
     def scan(self, table: str, filters: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
         # expression_values = self._serialize(filters, prefix)
-        filter_expressions, expression_values = self._get_ddb_filter(filters)
+        if filters is None or len(filters) == 0:
+            resp = self.client.scan(
+                TableName=table
+            )
+        else:
+            filter_expressions, expression_values = self._get_ddb_filter(filters)
 
-        resp = self.client.scan(
-            TableName=table,
-            FilterExpression=filter_expressions,
-            ExpressionAttributeValues=expression_values,
-        )
+            resp = self.client.scan(
+                TableName=table,
+                FilterExpression=filter_expressions,
+                ExpressionAttributeValues=expression_values,
+            )
         self.logger.info('scan response: %s', json.dumps(resp))
         named_ = ScanOutput(**resp)
         # FIXME: handle failures
