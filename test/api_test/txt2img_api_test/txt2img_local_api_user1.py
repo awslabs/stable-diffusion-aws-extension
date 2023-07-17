@@ -25,15 +25,27 @@ payload = json_convert_to_payload(aigc_params, checkpoint_info, task_type)
 
 model_list = []
 model_list.append("v1-5-pruned-emaonly.safetensors")
+model_list.append("v2-1_768-ema-pruned.safetensors")
+model_list.append("yangk-style_2160_lora.safetensors")
+model_list.append("yinke-style_1380_lora.safetensors")
+model_list.append("piying_xuanran_2703_lora.safetensors")
+model_list.append("yangke-monkey/yangke-monkey_800_lora.safetensors")
+model_list.append("stable-diffusion-inpainting/sd-v1-5-inpainting.ckpt")
+model_list.append("PyAstronaut3/PyAstronaut3_900_lora.safetensors")
+model_list.append("piying-base-15-model/piying-base-15-model_900_lora.safetensors")
+model_list.append("yk-mk-exp-1/yk-mk-exp-1_1200_lora.safetensors")
 
 import psutil
 # import gc
+import time
 
 for model in model_list:
+    start_time = time.time()
+
     payload["models"]["Stable-diffusion"]= [model]
     response = requests.post(url=f'{url}/invocations', json=payload)
 
-    print(f'Model {model} RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
+    print(f'Model {model} Running Time {time.time()-start_time} s RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
 
     # gc.collect()
 
