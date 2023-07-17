@@ -110,10 +110,10 @@ export class SDAsyncInferenceStack extends NestedStack {
     const stepFunctionStack = new SagemakerInferenceStateMachine(this, {
       snsTopic: inference_result_topic,
       snsErrorTopic: inference_result_error_topic,
-      inferenceJobName: sd_inference_job_table.tableName,
-      s3_bucket_name: props?.s3_bucket.bucketName ?? '',
-      endpointDeploymentJobName:
-                sd_endpoint_deployment_job_table.tableName,
+      s3_bucket: props.s3_bucket,
+      inferenceJobTable: sd_inference_job_table,
+      endpointDeploymentJobTable:
+                sd_endpoint_deployment_job_table,
       userNotifySNS:
                 props?.snsTopic ??
                 new sns.Topic(this, 'MyTopic', {
@@ -171,19 +171,59 @@ export class SDAsyncInferenceStack extends NestedStack {
     inferenceLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: [
-          'sagemaker:*',
-          's3:Get*',
-          's3:List*',
-          's3:PutObject',
-          's3:GetObject',
+          'sagemaker:DescribeEndpoint',
+          'sagemaker:ListEndpoints',
+          'sagemaker:DeleteEndpoint',
+          'sagemaker:InvokeEndpoint',
+          'sagemaker:InvokeEndpointAsync',
           's3:CreateBucket',
-          'sns:*',
-          'states:*',
-          'dynamodb:*'
+          's3:PutObject',
+          's3:ListBucket',
+          's3:GetObject',
+          'sts:AssumeRole',
         ],
         resources: ['*'],
       }),
     );
+    const stateMachineStatement = new iam.PolicyStatement({
+      actions: [
+        'states:StartExecution',
+      ],
+      resources: [stepFunctionStack.stateMachineArn],
+    });
+    const ddbStatement = new iam.PolicyStatement({
+      actions: [
+        'dynamodb:Query',
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:UpdateItem',
+        "dynamodb:Describe*",
+        "dynamodb:List*",
+        "dynamodb:Scan",
+      ],
+      resources: [sd_endpoint_deployment_job_table.tableArn, sd_inference_job_table.tableArn],
+    });
+    const s3Statement = new iam.PolicyStatement({
+      actions: [
+        's3:Get*',
+        's3:List*',
+        's3:PutObject',
+        's3:GetObject',
+      ],
+      resources: [props.s3_bucket.bucketArn],
+    });
+    const snsStatement = new iam.PolicyStatement({
+      actions: [
+        'sns:Publish',
+        'sns:ListTopics',
+      ],
+      resources: [props?.snsTopic.topicArn, inference_result_error_topic.topicArn, inference_result_topic.topicArn],
+    });
+    inferenceLambda.addToRolePolicy(ddbStatement);
+    inferenceLambda.addToRolePolicy(s3Statement);
+    inferenceLambda.addToRolePolicy(stateMachineStatement);
+    inferenceLambda.addToRolePolicy(snsStatement); 
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
@@ -391,24 +431,11 @@ export class SDAsyncInferenceStack extends NestedStack {
           },
           logRetention: RetentionDays.ONE_WEEK,
       }
-  );
+    );
   
-  // Grant Lambda permission to invoke SageMaker endpoint
-  handler.addToRolePolicy(
-      new iam.PolicyStatement({
-          actions: [
-              'sagemaker:*',
-              's3:Get*',
-              's3:List*',
-              's3:PutObject',
-              's3:GetObject',
-              'sns:*',
-              'states:*',
-              'dynamodb:*',
-          ],
-          resources: ['*'],
-      }),
-  );
+    handler.addToRolePolicy(s3Statement);
+    handler.addToRolePolicy(ddbStatement);
+    handler.addToRolePolicy(snsStatement);
 
     //adding model to data directory of s3 bucket
     if (props?.s3_bucket != undefined) {
