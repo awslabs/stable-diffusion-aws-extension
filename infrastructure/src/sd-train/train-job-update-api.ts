@@ -485,7 +485,7 @@ export class UpdateTrainJobApi {
           's3:PutObject',
           's3:DeleteObject',
         ],
-        resources: ['*'],
+        resources: [this.s3Bucket.bucketArn],
       }),
     );
     // Add SNS permissions to the role
