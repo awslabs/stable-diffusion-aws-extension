@@ -24,7 +24,10 @@ REPO_FOLDER_LIST=(
 )
 
 show_help() {
-    echo "Usage: $(basename "$0") -p/--pre-flight -s/--version-sync"
+    echo "Usage: $(basename "$0") [options]
+        -h/--help: to show this help;\n
+        -p/--pre-flight: to check version compatibility;\n
+        -s/--version-sync: to sync the repo and plugin to compatible commit id";
 }
 
 # Function to get supported commit list
@@ -117,43 +120,52 @@ version_sync() {
 
     # check if the extension folder is empty otherwise return directly
     if [ "$(ls -A ../../extensions)" ]; then
-        echo "The extension folder is not empty, please make sure it is empty before running this script."
+        echo "The extension folder is not empty, continue to sync the version will overwrite the existing files."
         # confirm to proceed
-        # read -p "Do you want to proceed? (y/n) " -n 1 -r
-        # echo
-        # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        #     echo "Exiting..."
-        #     exit 1
-        # fi
+        read -p "Do you want to proceed? (y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Exiting..."
+            exit 1
+        fi
     fi
 
     cd ../../
     # Reset to specific commit
+    git checkout master
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 
     # Go to "extensions" directory
     cd extensions
 
-    # Clone stable-diffusion-aws-extension
-    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-
+    # Clone stable-diffusion-aws-extension if not exist
+    if [ ! -d "stable-diffusion-aws-extension" ]; then
+        git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+    fi
     # Checkout aigc branch
     cd stable-diffusion-aws-extension
     cd ..
 
-    # Clone sd-webui-controlnet
-    git clone https://github.com/Mikubill/sd-webui-controlnet.git
-
+    # Clone sd-webui-controlnet if not exist
+    if [ ! -d "sd-webui-controlnet" ]; then
+        git clone https://github.com/Mikubill/sd-webui-controlnet.git
+    fi
     # Go to sd-webui-controlnet directory and reset to specific commit
     cd sd-webui-controlnet
+    git checkout main
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_CONTROLNET}
     cd ..
 
-    # Clone sd_dreambooth_extension
-    git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
-
+    # Clone sd_dreambooth_extension if not exist
+    if [ ! -d "sd_dreambooth_extension" ]; then
+        git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
+    fi
     # Go to sd_dreambooth_extension directory and reset to specific commit
     cd sd_dreambooth_extension
+    git checkout main
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
     cd ..
 }
