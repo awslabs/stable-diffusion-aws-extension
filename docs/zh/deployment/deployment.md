@@ -20,9 +20,9 @@
 
 ### 步骤1：部署Stable Diffusion WebUI。
 
-1. 从[链接]((https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml))下载CloudFormation模板。
+1. 从[链接](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)下载CloudFormation模板。
 
-2. 登录到[AWS管理控制台]((https://console.aws.amazon.com/))，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
+2. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
 
 3. 在**堆栈**页面上，选择**创建堆栈**，然后选择**使用新资源（标准）**。
 
