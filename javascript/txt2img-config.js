@@ -665,7 +665,7 @@ function scrap_ui_component_value_with_default(config, ctx) {
         baseImage.src = srcValue;
         // 创建一个 canvas 元素
         const canvasOrg = ctx.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
-        const canvas = ctx.createElement('canvas');
+        const canvas = document.createElement('canvas');
         // 设置 canvas 的宽度和高度
         canvas.width = canvasOrg.width;
         canvas.height = canvasOrg.height;
@@ -822,7 +822,7 @@ function scrap_ui_component_value_with_default(config, ctx) {
             const baseImage = new Image();
             baseImage.src = srcValue;
             const canvasOrg = ctx.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
-            const canvas = ctx.createElement('canvas');
+            const canvas = document.createElement('canvas');
             // 设置 canvas 的宽度和高度
             canvas.width = canvasOrg.width;
             canvas.height = canvasOrg.height;
@@ -1311,7 +1311,7 @@ function scrap_ui_component_value_with_default(config, ctx) {
         const baseImage = new Image();
         baseImage.src = srcValue;
         const canvasOrg = ctx.querySelector('#inpaint_sketch > div.image-container.svelte-p3y7hu > div.svelte-116rqfv > div > canvas[key="drawing"]');
-        const canvas = ctx.createElement('canvas');
+        const canvas = document.createElement('canvas');
         // 设置 canvas 的宽度和高度
         canvas.width = canvasOrg.width;
         canvas.height = canvasOrg.height;
