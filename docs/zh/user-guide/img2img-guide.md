@@ -22,54 +22,45 @@
 
 ### img2img标签操作示例
 
-1. 上传原始图片到**img2img**标签并输入提示词**black flower**
-![img2img raw](../images/img2img_tab.png)
-
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果
-![img2img result](../images/img2img_result.png)
+1. 上传原始图片到**img2img**标签并输入提示词，点击**Generate on Cloud**。
+2. 选择对应的**Inference Job ID**，推理结果会展示在 **Output** 区域。
 
 ### Sketch标签操作示例
 
-1. 启动**webui**时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到**Sketch标签**。
-![sketch](../images/sketch_raw.png)
-
-2. 通过画笔，绘制下面的草图并准备提示词**flower**。
+1. 启动**Stable Diffusion WebUI**时在命令行带上‘--gradio-img2img-tool color-sketch’，上传白板底图到**Sketch标签**。
+2. 通过画笔，绘制下面的草图并输入提示词，点击**Generate on Cloud**。
 ![sketch paint](../images/sketch_paint.png)
 
-3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果.
+3. 选择对应的**Inference Job ID**，推理图片会展示在**Output**区域。
 ![sketch result](../images/sketch_result.png)
 
 
 ### Inpaint标签操作示例
 
-1. 上传原始图片到**Inpaint**标签并准备提示词**watermelon**。
-![inpaint](../images/inpaint_tab.png)
-
-2. 通过画笔建立掩膜并准备提示词**watermelon**。
+1. 上传原始图片到**Inpaint**标签。
+2. 通过画笔建立掩膜并输入提示词，点击**Generate on Cloud**。
 ![inpaint_inpaint](../images/inpaint_inpaint.png)
 
-3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
+3. 选择对应的**Inference Job ID**，推理图片会展示在**Output**区域。
 ![inpaint result](../images/inpaint_result.png)
 
 
-### Inpatnt Sketch标签操作示例
+### Inpaint Sketch标签操作示例
 
-1. 启动**webui**的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到**Inpaint Sketch**标签并准备提示词**candy**。
-![inpaint_sketch](../images/inpaint_sketch_tab.png)
-
-2. 通过画笔建立掩膜。
+1. 启动**Stable Diffusion WebUI**的时候带上‘--gradio-img2img-tool color-sketch’，然后上传原始图片到**Inpaint Sketch**标签，并输入提示词。
+2. 通过画笔建立掩膜，并点击**Generate on Cloud**。
 ![inpaint_sketch_inpaint](../images/inpaint_sketch_inpaint.png)
 
-3. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
+3. 选择对应的**Inference Job ID**，推理图片会展示在**Output**区域。
 ![inpaint_sketch result](../images/inpaint_sketch_result.png)
 
 
-### Inpatnt Upload标签操作示例
+### Inpaint Upload标签操作示例
 
-1. 上传原始图片和mask图片到**Inpaint Upload**标签并准备提示词**large eyes**。
+1. 上传原始图片和mask图片到**Inpaint Upload**标签并输入提示词，点击**Generate on Cloud**。
 ![inpaint_upload](../images/inpaint_upload_tab.png)
 
-2. 通过**Generate on Cloud**并选择对应的**Inference Job ID**之后可以得到如下结果。
+2. 选择对应的**Inference Job ID**，推理图片会展示在**Output**区域。
 ![inpaint_upload result](../images/inpaint_upload_result.png)
 
 

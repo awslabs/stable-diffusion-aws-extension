@@ -98,10 +98,13 @@ export class ListAllModelJobApi {
         requestTemplates: {
           'application/json': '{\n' +
               '    "queryStringParameters": {\n' +
-              '        #foreach($queryParam in $input.params().querystring.keySet())\n' +
-              '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
-              '        #if($foreach.hasNext),#end\n' +
+              '      #foreach($key in $method.request.multivaluequerystring.keySet())\n' +
+              '      "$key" : [\n' +
+              '        #foreach($val in $method.request.multivaluequerystring.get($key))\n' +
+              '       "$val"#if($foreach.hasNext),#end\n' +
               '        #end\n' +
+              '        ]#if($foreach.hasNext),#end\n' +
+              '      #end\n' +
               '    }\n' +
               '}',
         },
