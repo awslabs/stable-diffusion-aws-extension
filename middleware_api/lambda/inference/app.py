@@ -78,42 +78,46 @@ def getInferenceJobList():
 
 def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime,
                              endpoint: str, checkpoint: list):
-    filter_expression = None
-    expression_attribute_values = {}
-    if status:
-        filter_expression = Attr('status').eq(status)
-    if task_type:
-        if filter_expression:
-            filter_expression &= Attr('taskType').eq(task_type)
-        else:
-            filter_expression = Attr('taskType').eq(task_type)
-    if start_time:
-        if filter_expression:
-            filter_expression &= Attr('startTime').ge(start_time)
-        else:
-            filter_expression = Attr('startTime').ge(start_time)
-    if end_time:
-        if filter_expression:
-            filter_expression &= Attr('startTime').le(end_time)
-        else:
-            filter_expression = Attr('startTime').le(end_time)
-    if endpoint:
-        if filter_expression:
-            filter_expression &= Attr('endpoint').eq(endpoint)
-        else:
-            filter_expression = Attr('endpoint').eq(endpoint)
-    # if checkpoint:
-    #     if filter_expression:
-    #         filter_expression &= Attr('checkpoint').is_in(checkpoint)
-    #     else:
-    #         filter_expression = Attr('checkpoint').is_in(checkpoint)
+    try:
+        filter_expression = None
+        if status:
+            filter_expression = Attr('status').eq(status)
+        if task_type:
+            if filter_expression:
+                filter_expression &= Attr('taskType').eq(task_type)
+            else:
+                filter_expression = Attr('taskType').eq(task_type)
+        if start_time:
+            if filter_expression:
+                filter_expression &= Attr('startTime').ge(start_time)
+            else:
+                filter_expression = Attr('startTime').ge(start_time)
+        if end_time:
+            if filter_expression:
+                filter_expression &= Attr('startTime').le(end_time)
+            else:
+                filter_expression = Attr('startTime').le(end_time)
+        if endpoint:
+            if filter_expression:
+                filter_expression &= Attr('endpoint').eq(endpoint)
+            else:
+                filter_expression = Attr('endpoint').eq(endpoint)
+        # if checkpoint:
+        #     if filter_expression:
+        #         filter_expression &= Attr('checkpoint').is_in(checkpoint)
+        #     else:
+        #         filter_expression = Attr('checkpoint').is_in(checkpoint)
 
-    response = inference_table.scan(
-        FilterExpression=filter_expression,
-        ExpressionAttributeValues=expression_attribute_values
-    )
-    logger.info(f"query inference job list response is {str(response)}")
-    return response['Items']
+        response = inference_table.scan(
+            FilterExpression=filter_expression
+        )
+        logger.info(f"query inference job list response is {str(response)}")
+        return response['Items']
+    except Exception as e:
+        logger.info(f"query inference job list error ")
+        logger.info(e)
+        return ""
+
 
 
 def getInferenceJob(inference_job_id):
