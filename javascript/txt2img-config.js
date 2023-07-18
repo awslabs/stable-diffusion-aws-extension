@@ -13,7 +13,7 @@ window.onload = function() {
     ];
 
     let intervalId = setInterval(function() {
-        console.log("click refresh when page reloaded"); 
+        console.log("click refresh when page reloaded");
 
         let allElementsFound = true;
         for (let selector of selectors) {
@@ -28,7 +28,7 @@ window.onload = function() {
 
         counter++;
         if (counter === limit || allElementsFound) {
-            console.log("refresh time:" + counter); 
+            console.log("refresh time:" + counter);
             clearInterval(intervalId);
         }
     }, 2000);
@@ -162,7 +162,7 @@ async function txt2img_config_save(endpoint_value) {
     // set_textbox_value('#html_info_txt2img', "Start uploading configuration to S3, please wait ......")
     set_textbox_value_gradio('html_info_txt2img', "Start uploading configuration to S3, please wait ......")
 
-    scrap_ui_component_value_with_default(config);
+    scrap_ui_component_value_with_default(config, document.querySelector('#tab_txt2img'));
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
@@ -207,7 +207,7 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
     config['img2img_selected_tab_name'] = getSelectedButton();
 
     console.log(config['img2img_selected_tab_name'])
-    
+
     // Setting all configs to empty string
     config["img2img_init_img"] = "";
     config["img2img_sketch"] = "";
@@ -215,7 +215,7 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
     config["img2img_inpaint_color_sketch"] = "";
     config["img2img_init_img_inpaint"] = "";
     config['img2img_init_mask_inpaint'] = "";
-    
+
     if (config['img2img_selected_tab_name'] === 'img2img') {
         config["img2img_init_img"] = init_img;
     } else if (config['img2img_selected_tab_name'] === 'Sketch') {
@@ -233,7 +233,7 @@ async function img2img_config_save(endpoint_value, init_img, sketch, init_img_wi
 
     console.log(config['img2img_selected_resize_tab'])
 
-    scrap_ui_component_value_with_default(config);
+    scrap_ui_component_value_with_default(config, document.querySelector('#tab_img2img'));
 
     //following code is to get s3 presigned url from middleware and upload the ui parameters
     const key = "config/aigc.json";
@@ -277,9 +277,11 @@ async function txt2img_config_save_test(endpoint_value) {
   console.log("After sleep");
 }
 
-function scrap_ui_component_value_with_default(config) {
+function scrap_ui_component_value_with_default(config, ctx) {
+
+
     const getElementValue = (selector, property, defaultValue) => {
-        const element = document.querySelector(selector);
+        const element = ctx.querySelector(selector);
         return element ? element[property] : defaultValue;
     };
 
@@ -420,7 +422,7 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     config["txt2img_steps"] = getElementValue(
         "#txt2img_steps > div > div > input",
         "value",
@@ -451,13 +453,13 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     config["script_list"] = getElementValue(
         "#script_list > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
         ""
     );
-    
+
     config["script_txt2txt_xyz_plot_x_type"] = getElementValue(
         "#script_txt2txt_xyz_plot_x_type > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
@@ -488,7 +490,7 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     config["txt2img_hr_upscaler"] = getElementValue(
         "#txt2img_hr_upscaler > label > div > div > div > input",
         "value",
@@ -499,13 +501,13 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     config["txt2img_sampling_steps"] = getElementValue(
         "#txt2img_steps > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
     );
-    
+
     //sagemaker endpoint
     // config["sagemaker_endpoint"] = getElementValue(
     //     "#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
@@ -513,83 +515,83 @@ function scrap_ui_component_value_with_default(config) {
     //     ""
     // );
     // config["sagemaker_endpoint"] = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value.split("+")[0];
-    const sagemaker_ep_info = document.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;                   
+    const sagemaker_ep_info = ctx.querySelector("#sagemaker_endpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input").value;
     const sagemaker_ep_info_array = sagemaker_ep_info.split("+");
     config["sagemaker_endpoint"] = sagemaker_ep_info_array[0];
 
     //stable diffusion checkpoint
-    const sd_checkpoint_txt2img = document.querySelector(
+    const sd_checkpoint_txt2img = ctx.querySelector(
         "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const sd_tokens_txt2img = sd_checkpoint_txt2img.querySelectorAll(".token.svelte-aqlk7e");
     const sd_values_txt2img = [];
-    
+
     sd_tokens_txt2img.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         sd_values_txt2img.push(spanValue);
     });
     config["txt2img_sagemaker_stable_diffusion_checkpoint"] = sd_values_txt2img.join(":");
 
-    const sd_checkpoint_img2img = document.querySelector(
+    const sd_checkpoint_img2img = ctx.querySelector(
         "#stable_diffusion_checkpoint_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const sd_tokens_img2img = sd_checkpoint_img2img.querySelectorAll(".token.svelte-aqlk7e");
     const sd_values_img2img = [];
-    
+
     sd_tokens_img2img.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         sd_values_img2img.push(spanValue);
     });
     config["img2img_sagemaker_stable_diffusion_checkpoint"] = sd_values_img2img.join(":");
-    
+
     //Textual Inversion for txt2img
-    const txt2img_wrapInner = document.querySelector(
+    const txt2img_wrapInner = ctx.querySelector(
         "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const txt2img_tokens = txt2img_wrapInner.querySelectorAll(".token.svelte-aqlk7e");
     const txt2img_values = [];
-    
+
     txt2img_tokens.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         txt2img_values.push(spanValue);
     });
     config["txt2img_sagemaker_texual_inversion_model"] = txt2img_values.join(":");
-    
+
     //LoRa
-    const txt2img_wrapInner1 = document.querySelector(
+    const txt2img_wrapInner1 = ctx.querySelector(
         "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const txt2img_tokens1 = txt2img_wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
     const txt2img_values1 = [];
-    
+
     txt2img_tokens1.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         txt2img_values1.push(spanValue);
     });
     config["txt2img_sagemaker_lora_model"] = txt2img_values1.join(":");
     console.log(txt2img_values1);
-    
+
     //HyperNetwork
-    const txt2img_wrapInner2 = document.querySelector(
+    const txt2img_wrapInner2 = ctx.querySelector(
         "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const txt2img_tokens2 = txt2img_wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
     const txt2img_values2 = [];
-    
+
     txt2img_tokens2.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         txt2img_values2.push(spanValue);
     });
     config["txt2img_sagemaker_hypernetwork_model"] = txt2img_values2.join(":");
     console.log(txt2img_values2);
-    
+
     //ControlNet model
-    const txt2img_wrapInner3 = document.querySelector(
+    const txt2img_wrapInner3 = ctx.querySelector(
         "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const txt2img_tokens3 = txt2img_wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
     const txt2img_values3 = [];
-    
+
     txt2img_tokens3.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         txt2img_values3.push(spanValue);
@@ -598,62 +600,62 @@ function scrap_ui_component_value_with_default(config) {
     console.log(txt2img_values3);
 
     //Textual Inversion for img2img
-    const img2img_wrapInner = document.querySelector(
+    const img2img_wrapInner = ctx.querySelector(
         "#sagemaker_texual_inversion_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const img2img_tokens = img2img_wrapInner.querySelectorAll(".token.svelte-aqlk7e");
     const img2img_values = [];
-    
+
     img2img_tokens.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         img2img_values.push(spanValue);
     });
     config["img2img_sagemaker_texual_inversion_model"] = img2img_values.join(":");
-    
+
     //LoRa
-    const img2img_wrapInner1 = document.querySelector(
+    const img2img_wrapInner1 = ctx.querySelector(
         "#sagemaker_lora_list_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const img2img_tokens1 = img2img_wrapInner1.querySelectorAll(".token.svelte-aqlk7e");
     const img2img_values1 = [];
-    
+
     img2img_tokens1.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         img2img_values1.push(spanValue);
     });
     config["img2img_sagemaker_lora_model"] = img2img_values1.join(":");
     console.log(img2img_values1);
-    
+
     //HyperNetwork
-    const img2img_wrapInner2 = document.querySelector(
+    const img2img_wrapInner2 = ctx.querySelector(
         "#sagemaker_hypernetwork_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const img2img_tokens2 = img2img_wrapInner2.querySelectorAll(".token.svelte-aqlk7e");
     const img2img_values2 = [];
-    
+
     img2img_tokens2.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         img2img_values2.push(spanValue);
     });
     config["img2img_sagemaker_hypernetwork_model"] = img2img_values2.join(":");
     console.log(img2img_values2);
-    
+
     //ControlNet model
-    const img2img_wrapInner3 = document.querySelector(
+    const img2img_wrapInner3 = ctx.querySelector(
         "#sagemaker_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e"
     );
     const img2img_tokens3 = img2img_wrapInner3.querySelectorAll(".token.svelte-aqlk7e");
     const img2img_values3 = [];
-    
+
     img2img_tokens3.forEach((token) => {
         const spanValue = token.querySelector("span.svelte-aqlk7e").textContent;
         img2img_values3.push(spanValue);
     });
     config["img2img_sagemaker_controlnet_model"] = img2img_values3.join(":");
     console.log(img2img_values3);
-    
+
    //control net part parameter for txt2img
-    const imgElement = document.querySelector(
+    const imgElement = ctx.querySelector(
         "#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > img"
     );
     if (imgElement) {
@@ -662,8 +664,8 @@ function scrap_ui_component_value_with_default(config) {
         const baseImage = new Image();
         baseImage.src = srcValue;
         // 创建一个 canvas 元素
-        const canvasOrg = document.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
-        const canvas = document.createElement('canvas');
+        const canvasOrg = ctx.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+        const canvas = ctx.createElement('canvas');
         // 设置 canvas 的宽度和高度
         canvas.width = canvasOrg.width;
         canvas.height = canvasOrg.height;
@@ -674,7 +676,7 @@ function scrap_ui_component_value_with_default(config) {
         const srcValueByCanvas = canvas.toDataURL();
         config["txt2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
 
-        const drawingCanvas = document.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+        const drawingCanvas = ctx.querySelector('#txt2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
         if (drawingCanvas) {
             const imageDataURL = drawingCanvas.toDataURL();
             config["txt2img_controlnet_ControlNet_input_image"] = imageDataURL;
@@ -694,7 +696,7 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
-    
+
     config["txt2img_controlnet_lowVRAM_enable"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
         "checked",
@@ -706,14 +708,14 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
-    
+
     config["txt2img_controlnet_allow_preview"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
         "checked",
         false
     );
 
-    
+
     config["txt2img_controlnet_preprocessor"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
         "value",
@@ -747,47 +749,47 @@ function scrap_ui_component_value_with_default(config) {
     config["txt2img_controlnet_control_mode_balanced"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
-        false 
+        false
     );
 
     config["txt2img_controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
-        false 
+        false
     );
 
     config["txt2img_controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
-        false 
+        false
     );
 
     config["txt2img_controlnet_resize_mode_just_resize"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
         "checked",
-        false 
+        false
     );
 
     config["txt2img_controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
         "checked",
-        false 
+        false
     );
 
     config["txt2img_controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
         "checked",
-        false 
+        false
     );
 
     config[
         "txt2img_controlnet_loopback_automatically"
     ] = getElementValue(
         "#txt2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox > label > input",
-        "checked", 
+        "checked",
         false
     );
-    
+
 
     // Completed when Preprocessor is null
 
@@ -808,10 +810,10 @@ function scrap_ui_component_value_with_default(config) {
         "#txt2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    )  
+    )
 
         //control net part parameter for img2img
-        const img2img_imgElement = document.querySelector(
+        const img2img_imgElement = ctx.querySelector(
             "#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > img"
         );
         if (img2img_imgElement) {
@@ -819,8 +821,8 @@ function scrap_ui_component_value_with_default(config) {
             // Use the srcValue variable as needed
             const baseImage = new Image();
             baseImage.src = srcValue;
-            const canvasOrg = document.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
-            const canvas = document.createElement('canvas');
+            const canvasOrg = ctx.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+            const canvas = ctx.createElement('canvas');
             // 设置 canvas 的宽度和高度
             canvas.width = canvasOrg.width;
             canvas.height = canvasOrg.height;
@@ -831,7 +833,7 @@ function scrap_ui_component_value_with_default(config) {
             const srcValueByCanvas = canvas.toDataURL();
             config["img2img_controlnet_ControlNet_input_image_original"] = srcValueByCanvas;
 
-            const drawingCanvas = document.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
+            const drawingCanvas = ctx.querySelector('#img2img_controlnet_ControlNet_input_image > div.image-container.svelte-p3y7hu > div > div.wrap.svelte-yigbas > canvas[key="drawing"]');
             if (drawingCanvas) {
                 const imageDataURL = drawingCanvas.toDataURL();
                 config["img2img_controlnet_ControlNet_input_image"] = imageDataURL;
@@ -844,131 +846,131 @@ function scrap_ui_component_value_with_default(config) {
             console.log("img2img_imgElement is null or undefined");
             config["img2img_controlnet_ControlNet_input_image"] = "";
         }
-    
+
         // Start grapping controlnet related ui values of txt2img
         config["img2img_controlnet_enable"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_enable_checkbox > label > input",
             "checked",
             false
         );
-        
+
         config["img2img_controlnet_lowVRAM_enable"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_low_vram_checkbox > label > input",
             "checked",
             false
         );
-    
+
         config["img2img_controlnet_pixel_perfect"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_pixel_perfect_checkbox > label > input",
             "checked",
             false
         );
-        
+
         config["img2img_controlnet_allow_preview"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_preprocessor_preview_checkbox > label > input",
             "checked",
             false
         );
-    
-        
+
+
         config["img2img_controlnet_preprocessor"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_preprocessor_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
             "value",
             ""
         );
-    
+
         config["img2img_controlnet_model"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_model_dropdown > label > div > div.wrap-inner.svelte-aqlk7e > div > input",
             "value",
             ""
         );
-    
+
         config["img2img_controlnet_weight"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_control_weight_slider > div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
         );
-    
+
         config["img2img_controlnet_starting_control_step"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_start_control_step_slider > div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
         );
-    
+
         config["img2img_controlnet_ending_control_step"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_ending_control_step_slider > div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
         );
-    
+
         config["img2img_controlnet_control_mode_balanced"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config["img2img_controlnet_control_mode_my_prompt_is_more_important"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config["img2img_controlnet_control_mode_controlnet_is_more_important"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_control_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config["img2img_controlnet_resize_mode_just_resize"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(1) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config["img2img_controlnet_resize_mode_Crop_and_Resize"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(2) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config["img2img_controlnet_resize_mode_Resize_and_Fill"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_resize_mode_radio > div.wrap.svelte-1p9xokt > label:nth-child(3) > input",
             "checked",
-            false 
+            false
         );
-    
+
         config[
             "img2img_controlnet_loopback_automatically"
         ] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_automatically_send_generated_images_checkbox > label > input",
-            "checked", 
+            "checked",
             false
         );
-        
-    
+
+
         // Completed when Preprocessor is null
-    
+
         // Start when Preprocessor is canny
         config["img2img_controlnet_preprocessor_resolution"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_preprocessor_resolution_slider> div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
         )
-    
+
         config["img2img_controlnet_canny_low_threshold"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_threshold_A_slider> div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
         )
-    
+
         config["img2img_controlnet_canny_high_threshold"] = getElementValue(
             "#img2img_controlnet_ControlNet_controlnet_threshold_B_slider> div.wrap.svelte-1cl284s > div > input",
             "value",
             ""
-        ) 
+        )
 
     // end of controlnet section
-    
+
     config["script_txt2txt_prompt_matrix_prompt_type_positive"] = getElementValue(
         "#script_txt2txt_prompt_matrix_prompt_type > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input",
         "checked",
@@ -996,7 +998,7 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     config["script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate"] =
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate > label > input",
@@ -1007,7 +1009,7 @@ function scrap_ui_component_value_with_default(config) {
         getElementValue(
             "#script_txt2txt_prompts_from_file_or_textbox_checkbox_iterate_batch > label > input",
             "enabled",
-            false 
+            false
         );
     config["script_txt2txt_prompts_from_file_or_textbox_prompt_txt"] =
         getElementValue(
@@ -1020,7 +1022,7 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     // config for prompt area
     config["txt2img_prompt"] = getElementValue(
         "#txt2img_prompt > label > textarea",
@@ -1037,19 +1039,14 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     // get the api-gateway url and token
-    config["aws_api_gateway_url"] = getElementValue(
-        "#aws_middleware_api > label > textarea",
-        "value",
-        ""
-    );
-    
-    config["aws_api_token"] = getElementValue(
-        "#aws_middleware_token > label > textarea",
-        "value",
-        ""
-    );
+    config["aws_api_gateway_url"] = document.querySelector("#aws_middleware_api > label > textarea")?
+        document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
+
+    config["aws_api_token"] = document.querySelector("#aws_middleware_token > label > textarea")?
+        document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
+
 
     // get the img2img component
 
@@ -1073,7 +1070,7 @@ function scrap_ui_component_value_with_default(config) {
         ""
     )
 
-    
+
     // Resize mode
     // document.querySelector("#resize_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
     config["img2img_resize_mode_just_resize"] = getElementValue(
@@ -1100,7 +1097,7 @@ function scrap_ui_component_value_with_default(config) {
         "checked",
         false
     );
-    
+
     // img2img sampling method
     // document.querySelector("#img2img_sampling > label > div > div.wrap-inner.svelte-aqlk7e > div > input")
     config["img2img_sampling_method"] = getElementValue(
@@ -1108,7 +1105,7 @@ function scrap_ui_component_value_with_default(config) {
         "value",
         ""
     );
-    
+
     // document.querySelector("#img2img_steps > div.wrap.svelte-1cl284s > div > input")
     config["img2img_sampling_steps"] = getElementValue(
         "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
@@ -1150,35 +1147,35 @@ function scrap_ui_component_value_with_default(config) {
         "#img2img_batch_count > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_batch_size > div.wrap.svelte-1cl284s > div > input")
     config["img2img_batch_size"] = getElementValue(
         "#img2img_batch_size > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input")
     config["img2img_cfg_scale"] = getElementValue(
         "#img2img_cfg_scale > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input")
     config["img2img_denoising_strength"] = getElementValue(
         "#img2img_denoising_strength > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_seed > label > input")
     config["img2img_seed"] = getElementValue(
         "#img2img_seed > label > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_subseed_show > label > input")
     config["img2img_subseed_show"] = getElementValue(
@@ -1192,27 +1189,27 @@ function scrap_ui_component_value_with_default(config) {
         "#img2img_subseed > label > input",
         "value",
         ""
-    ); 
+    );
     // document.querySelector("#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input")
     config["img2img_subseed_strength"] = getElementValue(
         "#img2img_subseed_strength > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input")
     config["img2img_seed_resize_from_w"] = getElementValue(
         "#img2img_seed_resize_from_w > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input")
     config["img2img_seed_resize_from_h"] = getElementValue(
         "#img2img_seed_resize_from_h > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
 
     // Resize by
@@ -1221,23 +1218,23 @@ function scrap_ui_component_value_with_default(config) {
         "#img2img_scale > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // inpaint component
-   
+
     // document.querySelector("#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input")
     config["img2img_mask_blur"] = getElementValue(
         "#img2img_mask_blur > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     //document.querySelector("#img2img_mask_alpha > div.wrap.svelte-1cl284s > div > input")
     config["img2img_mask_alpha"] = getElementValue(
         "#img2img_mask_alpha > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // document.querySelector("#img2img_mask_mode > div.wrap.svelte-1p9xokt > label.svelte-1p9xokt.selected > input")
     config["img2img_mask_mode_inpaint_masked"] = getElementValue(
@@ -1301,11 +1298,11 @@ function scrap_ui_component_value_with_default(config) {
         "#img2img_steps > div.wrap.svelte-1cl284s > div > input",
         "value",
         ""
-    ); 
+    );
 
     // grab the img2img inpaint sketch original image
     //document.querySelector("#inpaint_sketch")
-    const inpaintImgElement = document.querySelector(
+    const inpaintImgElement = ctx.querySelector(
         "#inpaint_sketch > div.image-container.svelte-p3y7hu > div > img"
     );
     if (inpaintImgElement) {
@@ -1313,8 +1310,8 @@ function scrap_ui_component_value_with_default(config) {
         // Use the srcValue variable as needed
         const baseImage = new Image();
         baseImage.src = srcValue;
-        const canvasOrg = document.querySelector('#inpaint_sketch > div.image-container.svelte-p3y7hu > div.svelte-116rqfv > div > canvas[key="drawing"]');
-        const canvas = document.createElement('canvas');
+        const canvasOrg = ctx.querySelector('#inpaint_sketch > div.image-container.svelte-p3y7hu > div.svelte-116rqfv > div > canvas[key="drawing"]');
+        const canvas = ctx.createElement('canvas');
         // 设置 canvas 的宽度和高度
         canvas.width = canvasOrg.width;
         canvas.height = canvasOrg.height;
@@ -1333,9 +1330,9 @@ function scrap_ui_component_value_with_default(config) {
 
 
     // end of img2img component
-    
 
-    
+
+
 
 
 
