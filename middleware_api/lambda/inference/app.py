@@ -316,6 +316,7 @@ async def run_sagemaker_inference(request: Request):
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
                 'status': 'inprogress',
+                'endpoint': endpoint_name,
                 'taskType': task_type
             })
         print(f"output_path is {output_path}")
@@ -347,6 +348,7 @@ async def run_sagemaker_inference(request: Request):
                 'startTime': current_time,
                 'completeTime': current_time,
                 'status': 'failure',
+                'endpoint': endpoint_name,
                 'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
             )
@@ -682,7 +684,8 @@ async def run_model_merge(request: Request):
             Item={
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
-                'status': 'inprogress'
+                'status': 'inprogress',
+                'endpoint': endpoint_name
             })
         print(f"output_path is {output_path}")
 
