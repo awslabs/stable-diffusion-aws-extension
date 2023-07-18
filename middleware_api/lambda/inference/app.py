@@ -89,14 +89,14 @@ def query_inference_job_list(status: str, task_type: str, start_time: datetime, 
             filter_expression = Attr('taskType').eq(task_type)
     if start_time:
         if filter_expression:
-            filter_expression &= Attr('startTime').gt(start_time)
+            filter_expression &= Attr('startTime').ge(start_time)
         else:
-            filter_expression = Attr('startTime').gt(start_time)
+            filter_expression = Attr('startTime').ge(start_time)
     if end_time:
         if filter_expression:
-            filter_expression &= Attr('startTime').lt(end_time)
+            filter_expression &= Attr('startTime').le(end_time)
         else:
-            filter_expression = Attr('startTime').lt(end_time)
+            filter_expression = Attr('startTime').le(end_time)
     if endpoint:
         if filter_expression:
             filter_expression &= Attr('endpoint').eq(endpoint)
@@ -478,8 +478,17 @@ async def list_inference_jobs():
 
 
 @app.get("/inference/query-inference-jobs")
-async def list_inference_jobs(status: str, task_type: str, start_time: datetime, end_time: datetime,
-                              endpoint: str, checkpoint: list):
+async def list_inference_jobs(request: Request):
+    payload_checkpoint_info = await request.json()
+    print(payload_checkpoint_info)
+    # status: str, task_type: str, start_time: datetime, end_time: datetime,
+    # endpoint: str, checkpoint: list
+    status = None
+    task_type = None
+    start_time = None
+    end_time = None
+    endpoint = None
+    checkpoint = None
     logger.info(f"entering query-inference-jobs")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
 
