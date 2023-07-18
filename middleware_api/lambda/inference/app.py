@@ -107,12 +107,17 @@ def query_inference_job_list(status: str, task_type: str, start_time: datetime, 
         #         filter_expression &= Attr('checkpoint').is_in(checkpoint)
         #     else:
         #         filter_expression = Attr('checkpoint').is_in(checkpoint)
-
-        response = inference_table.scan(
-            FilterExpression=filter_expression
-        )
+        response = None
+        if filter_expression:
+            response = inference_table.scan(
+                FilterExpression=filter_expression
+            )
+        else:
+            response = inference_table.scan()
         logger.info(f"query inference job list response is {str(response)}")
-        return response['Items']
+        if response:
+            return response['Items']
+        return ""
     except Exception as e:
         logger.info(f"query inference job list error ")
         logger.info(e)
@@ -488,8 +493,10 @@ async def query_inference_jobs(request: Request):
     logger.info(query_params)
     status = query_params.get('status')
     task_type = query_params.get('task_type')
-    start_time = query_params.get('start_time')
-    end_time = query_params.get('end_time')
+    # start_time = query_params.get('start_time')
+    # end_time = query_params.get('end_time')
+    start_time = None
+    end_time = None
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint', [])
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
