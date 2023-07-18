@@ -89,6 +89,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
         local_path = os.path.join(f"models/{model_type}", model_name)
     elif model_type == "Lora":
         local_path = f"models/{model_type}"
+    logger.info("Upload the model file to s3.")
     for root, dirs, files in os.walk(local_path):
         for file in files:
             if file.endswith('.safetensors'):
