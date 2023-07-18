@@ -484,18 +484,15 @@ async def list_inference_jobs():
 @app.post("/inference/query-inference-jobs")
 async def query_inference_jobs(request: Request):
     logger.info(f"entering query-inference-jobs")
-    payload_checkpoint_info = await request.json()
-    logger.info(payload_checkpoint_info)
-    print(payload_checkpoint_info)
-    # status: str, task_type: str, start_time: datetime, end_time: datetime,
-    # endpoint: str, checkpoint: list
-    status = None
-    task_type = None
-    start_time = None
-    end_time = None
-    endpoint = None
-    checkpoint = None
-    logger.info(f"entering query-inference-jobs")
+    query_params = await request.json()
+    logger.info(query_params)
+    status = query_params.get('status')
+    task_type = query_params.get('task_type')
+    start_time = query_params.get('start_time')
+    end_time = query_params.get('end_time')
+    endpoint = query_params.get('endpoint')
+    checkpoint = query_params.get('checkpoint', [])
+    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
 
 
