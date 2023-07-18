@@ -237,10 +237,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
 
     const delete_deployment_jobs = inference.addResource(
-      'delete-sagemaker-endpoint');
-      delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
-        apiKeyRequired: true,
-      }) 
+      'delete-sagemaker-endpoint'
+    );
+    delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
+      apiKeyRequired: true,
+    });
 
     const list_inference_jobs = inference.addResource(
       'list-inference-jobs',
@@ -252,7 +253,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const query_inference_jobs = inference.addResource(
       'query-inference-jobs',
     );
-    query_inference_jobs.addMethod('GET', txt2imgIntegration, {
+    query_inference_jobs.addMethod('POST', txt2imgIntegration, {
       apiKeyRequired: true,
     });
 
