@@ -94,7 +94,7 @@ This operation does not require authentication
 
 <br/>
 
-# /api/inference/run-sagemaker-inference
+# /inference/run-sagemaker-inference
 
 <a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a>
 
@@ -117,7 +117,7 @@ body = {
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, body = body)
+r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-sagemaker-inference", headers = headers, body = body)
 
 print(r.json())
 
@@ -137,7 +137,7 @@ const headers = {
   "Accept":"application/json"
 };
 
-fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference",
+fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-sagemaker-inference",
 {
   method: "POST",
   body: inputBody,
@@ -151,7 +151,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /api/inference/run-sagemaker-inference`
+`POST /inference/run-sagemaker-inference`
 
 > Body parameter
 
