@@ -482,7 +482,7 @@ async def list_inference_jobs():
 
 
 @app.post("/inference/query-inference-jobs")
-async def list_inference_jobs(request: Request):
+async def query_inference_jobs(request: Request):
     logger.info(f"entering query-inference-jobs")
     payload_checkpoint_info = await request.json()
     logger.info(payload_checkpoint_info)
