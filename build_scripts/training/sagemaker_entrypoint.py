@@ -87,6 +87,7 @@ def upload_model_to_s3(model_name, s3_output_path):
 def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
     s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
+    logger.info("Upload the model file to s3.")
     if model_type == "Stable-diffusion":
         local_path = os.path.join(f"models/{model_type}", model_name)
     elif model_type == "Lora":
@@ -153,6 +154,7 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     mv(download_db_config_path, target_db_config_path, force=True)
     with open(target_db_config_path) as db_config_file:
         db_config = json.load(db_config_file)
+        logger.info(db_config)
     data_list = []
     class_data_list = []
     for concept in db_config["concepts_list"]:
