@@ -92,9 +92,10 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
         local_path = os.path.join(f"models/{model_type}", model_name)
     elif model_type == "Lora":
         local_path = f"models/{model_type}"
+    logger.info(f"Search model file in {local_path}.")
     for root, dirs, files in os.walk(local_path):
+        logger.info(files)
         for file in files:
-            print(file)
             if file.endswith('.safetensors'):
                 ckpt_name = re.sub('\.safetensors$', '', file)
                 safetensors = os.path.join(root, file)
