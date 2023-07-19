@@ -95,6 +95,22 @@ def server_request(path):
     response = requests.get(list_endpoint_url, headers=headers)
     return response
 
+
+def server_request_post(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.post(list_endpoint_url, data=params, headers=headers)
+    return response
+
+
 def datetime_to_short_form(datetime_str):
     dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S.%f")
     short_form = dt.strftime("%Y-%m-%d-%H-%M-%S")
@@ -202,13 +218,24 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
         return gr.Dropdown.update(choices=[])
 
 
-def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime, endpoint: str, checkpoint: list):
+def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str, endpoint: str, checkpoint: list):
     print(
         f"query_inference_job_list start！！{status},{task_type},{start_time},{end_time},{endpoint},{checkpoint}")
     try:
-        response = server_request(f'inference/query-inference-jobs?status={status}&task_type={task_type}'
-                                  f'&start_time={start_time}&end_time={end_time}'
-                                  f'&endpoint={endpoint}&checkpoint={checkpoint}')
+        body_params = {}
+        if status:
+            body_params['status'] = status
+        if task_type:
+            body_params['task_type'] = task_type
+        if start_time:
+            body_params['start_time'] = start_time
+        if end_time:
+            body_params['end_time'] = end_time
+        if endpoint:
+            body_params['endpoint'] = endpoint
+        if checkpoint:
+            body_params['checkpoint'] = checkpoint
+        response = server_request_post(f'inference/query-inference-jobs', body_params)
         r = response.json()
         print(r)
         if r:
