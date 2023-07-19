@@ -218,6 +218,7 @@ def sync_status(job_id, bucket_name, model_dir):
     sync_status_thread.start()
 
 def main(s3_input_path, s3_output_path, params):
+    os.system("df -h")
     import launch
     launch.prepare_environment()
     params = params["training_params"]
@@ -229,9 +230,12 @@ def main(s3_input_path, s3_output_path, params):
     # s3_data_path_list = params["s3_data_path_list"]
     # s3_class_data_path_list = params["s3_class_data_path_list"]
     prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
+    os.system("df -h")
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
+    os.system("df -h")
     upload_model_to_s3_v2(model_name, s3_output_path, model_type)
+    os.system("df -h")
 
 def test():
     model_name = "qiaohu-1-1"
