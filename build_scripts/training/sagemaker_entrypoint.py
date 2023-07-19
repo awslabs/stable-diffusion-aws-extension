@@ -94,6 +94,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
         local_path = f"models/{model_type}"
     for root, dirs, files in os.walk(local_path):
         for file in files:
+            print(file)
             if file.endswith('.safetensors'):
                 ckpt_name = re.sub('\.safetensors$', '', file)
                 safetensors = os.path.join(root, file)
@@ -219,7 +220,7 @@ def sync_status(job_id, bucket_name, model_dir):
 
 def main(s3_input_path, s3_output_path, params):
     os.system("df -h")
-    import launch
+    /home/ubuntu/alpha/stable-diffusion-aws-extension/build_scripts/stable-diffusion-webui/data/piyingimport launch
     launch.prepare_environment()
     params = params["training_params"]
     model_name = params["model_name"]
@@ -234,6 +235,7 @@ def main(s3_input_path, s3_output_path, params):
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
     os.system("df -h")
+    os.system("ls -R models")
     upload_model_to_s3_v2(model_name, s3_output_path, model_type)
     os.system("df -h")
 
