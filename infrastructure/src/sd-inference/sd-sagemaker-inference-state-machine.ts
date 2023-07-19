@@ -94,7 +94,11 @@ export class SagemakerInferenceStateMachine {
                 "s3:PutObject",
                 "s3:GetObject",
             ],
-            resources: [s3Bucket.bucketArn],
+            resources: [
+                s3Bucket.bucketArn,
+                `${s3Bucket.bucketArn}/*`,
+                'arn:aws:s3:::*sagemaker*',
+            ],
         }); 
 
         const snsStatement = new iam.PolicyStatement({

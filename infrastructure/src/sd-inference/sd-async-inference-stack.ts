@@ -177,7 +177,6 @@ export class SDAsyncInferenceStack extends NestedStack {
           'sagemaker:InvokeEndpoint',
           'sagemaker:InvokeEndpointAsync',
           's3:CreateBucket',
-          's3:PutObject',
           's3:ListBucket',
           's3:GetObject',
           'sts:AssumeRole',
@@ -211,7 +210,11 @@ export class SDAsyncInferenceStack extends NestedStack {
         's3:PutObject',
         's3:GetObject',
       ],
-      resources: [props.s3_bucket.bucketArn],
+      resources: [
+        props.s3_bucket.bucketArn,
+        `${props.s3_bucket.bucketArn}/*`,
+        'arn:aws:s3:::*sagemaker*',
+      ],
     });
     const snsStatement = new iam.PolicyStatement({
       actions: [
