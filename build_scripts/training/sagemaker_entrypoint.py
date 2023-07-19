@@ -220,7 +220,7 @@ def sync_status(job_id, bucket_name, model_dir):
 
 def main(s3_input_path, s3_output_path, params):
     os.system("df -h")
-    /home/ubuntu/alpha/stable-diffusion-aws-extension/build_scripts/stable-diffusion-webui/data/piyingimport launch
+    import launch
     launch.prepare_environment()
     params = params["training_params"]
     model_name = params["model_name"]
