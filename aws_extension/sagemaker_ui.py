@@ -63,6 +63,15 @@ for ckpt_type, ckpt_name in zip(checkpoint_type, checkpoint_name):
 api_gateway_url = get_variable_from_json('api_gateway_url')
 api_key = get_variable_from_json('api_token')
 
+start_time_picker_img = None
+end_time_picker_img = None
+start_time_picker_text = None
+end_time_picker_text = None
+
+task_type_dropdown = None
+status_dropdown = None
+sagemaker_endpoint_filter= None
+sd_checkpoint_filter= None
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
@@ -107,7 +116,7 @@ def server_request_post(path, params):
         "Content-Type": "application/json"
     }
     list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, data=params, headers=headers)
+    response = requests.post(list_endpoint_url, json=params, headers=headers)
     return response
 
 
@@ -163,7 +172,8 @@ def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkb
 
 def origin_update_txt2img_inference_job_ids():
     # global origin_txt2img_inference_job_ids
-    return get_inference_job_list(True, True, True)
+    # return get_inference_job_list(True, True, True)
+    return query_inference_job_list('', '', '', '', '', '')
 
 
 def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
@@ -218,7 +228,7 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
         return gr.Dropdown.update(choices=[])
 
 
-def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str, endpoint: str, checkpoint: list):
+def query_inference_job_list(task_type: str, status: str, start_time: str, end_time: str, endpoint: str, checkpoint: list):
     print(
         f"query_inference_job_list start！！{status},{task_type},{start_time},{end_time},{endpoint},{checkpoint}")
     try:
