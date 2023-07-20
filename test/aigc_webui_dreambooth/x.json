@@ -1,0 +1,12 @@
+{
+    "s3_class_data_path_list": [""],
+    "class_data_tar_list": [""],
+    "model_name": "test-1",
+    "model_type": "Stable-diffusion",
+    "s3_model_path": "s3://stable-diffusion-aws-extension-aigcbucket-test/model/test-1",
+    "training_instance_type": "",
+    "data_tar_list": ["s3://stable-diffusion-aws-extension-aigcbucket-test/dataset/piying-test"],
+    "input_location": "s3://stable-diffusion-aws-extension-aigcbucket-test/Stable-diffusion/train/test-1/input",
+    "sagemaker_role_arn": "arn:aws:iam::683638520402:role/Stable-diffusion-aws-exte-aigcputtraintrainroleA5E-B27P7Q12JE4",
+    "s3_output_path": "s3://stable-diffusion-aws-extension-aigcbucket-test/Stable-diffusion/train/test-1/output/"
+}
