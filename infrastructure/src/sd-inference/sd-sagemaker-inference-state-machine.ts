@@ -54,13 +54,11 @@ export class SagemakerInferenceStateMachine {
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                     "lambda:GetFunctionConfiguration",
-                    "iam:PassRole",
                     "s3:ListBucket",
                     "s3:GetObject",
                 ],
                 resources: ["*"],
             });
-        
         
         const endpointStatement = new iam.PolicyStatement({
             actions: [
@@ -82,7 +80,6 @@ export class SagemakerInferenceStateMachine {
                 "ecr:UploadLayerPart",
                 "ecr:CompleteLayerUpload",
                 "ecr:PutImage",
-                "sts:AssumeRole",
             ],
             resources: ["*"],
         });
@@ -124,6 +121,24 @@ export class SagemakerInferenceStateMachine {
             resources: [inferenceJobTable.tableArn, endpointDeploymentJobTable.tableArn],
         });
 
+        const lambdaErrorHandlerRole = new iam.Role(this.scope, 'LambdaErrorHandlerRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaErrorHandlerRole.addToPolicy(lambdaPolicy);
+        lambdaErrorHandlerRole.addToPolicy(snsStatement);
+        lambdaErrorHandlerRole.addToPolicy(s3Statement);
+        lambdaErrorHandlerRole.addToPolicy(endpointStatement);
+        lambdaErrorHandlerRole.addToPolicy(ddbStatement);
+        lambdaErrorHandlerRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaErrorHandlerRole.roleArn],
+            })
+        );
+
         const lambdaErrorHandler = new lambda.Function(
             this.scope,
             "InferenceWorkflowErrorHandler",
@@ -146,7 +161,26 @@ export class SagemakerInferenceStateMachine {
                     S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaErrorHandlerRole,
             }
+        );
+
+        const lambdaStartDeployRole = new iam.Role(this.scope, 'LambdaStartDeployRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaStartDeployRole.addToPolicy(lambdaPolicy);
+        lambdaStartDeployRole.addToPolicy(snsStatement);
+        lambdaStartDeployRole.addToPolicy(s3Statement);
+        lambdaStartDeployRole.addToPolicy(endpointStatement);
+        lambdaStartDeployRole.addToPolicy(ddbStatement);
+        lambdaStartDeployRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaStartDeployRole.roleArn],
+            })
         );
             
         // Define the Lambda functions
@@ -171,7 +205,26 @@ export class SagemakerInferenceStateMachine {
                     S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaStartDeployRole,
             }
+        );
+
+        const lambdaCheckDeploymentStatusRole = new iam.Role(this.scope, 'LambdaCheckDeploymentStatusRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaCheckDeploymentStatusRole.addToPolicy(lambdaPolicy);
+        lambdaCheckDeploymentStatusRole.addToPolicy(snsStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(s3Statement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(endpointStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(ddbStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaCheckDeploymentStatusRole.roleArn],
+            })
         );
 
         const lambdaCheckDeploymentStatus = new lambda.Function(
@@ -195,26 +248,11 @@ export class SagemakerInferenceStateMachine {
                     S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaCheckDeploymentStatusRole,
             }
         );
 
         //TODO: still not working for assume sagemaker service, need to work it later
-        lambdaErrorHandler.addToRolePolicy(lambdaPolicy);
-        lambdaErrorHandler.addToRolePolicy(snsStatement);
-        lambdaErrorHandler.addToRolePolicy(s3Statement);
-        lambdaErrorHandler.addToRolePolicy(endpointStatement);
-        lambdaErrorHandler.addToRolePolicy(ddbStatement);
-        lambdaStartDeploy.addToRolePolicy(lambdaPolicy);
-        lambdaStartDeploy.addToRolePolicy(snsStatement);
-        lambdaStartDeploy.addToRolePolicy(s3Statement);
-        lambdaStartDeploy.addToRolePolicy(endpointStatement);
-        lambdaStartDeploy.addToRolePolicy(ddbStatement);
-        lambdaCheckDeploymentStatus.addToRolePolicy(lambdaPolicy);
-        lambdaCheckDeploymentStatus.addToRolePolicy(snsStatement);
-        lambdaCheckDeploymentStatus.addToRolePolicy(s3Statement);
-        lambdaCheckDeploymentStatus.addToRolePolicy(endpointStatement);
-        lambdaCheckDeploymentStatus.addToRolePolicy(ddbStatement);
-
         // Add the trust relationship for SageMaker service principal to both Lambda roles
         const sagemakerAssumeRolePolicy = new iam.PolicyStatement({
             actions: ['sts:AssumeRole'],

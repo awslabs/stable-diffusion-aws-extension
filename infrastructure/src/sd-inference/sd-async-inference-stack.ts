@@ -179,7 +179,6 @@ export class SDAsyncInferenceStack extends NestedStack {
           's3:CreateBucket',
           's3:ListBucket',
           's3:GetObject',
-          'sts:AssumeRole',
         ],
         resources: ['*'],
       }),
