@@ -236,7 +236,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
   "height": 512, --- optional, default is 512
   "restore_faces": false, --- optional
   "tiling": false, --- optional
-  "negative_prompt": "string", --- optinal, default is ""
+  "negative_prompt": "string", --- optional, default is ""
   "override_settings": {}, --- hardcoded, parameter not work, it will be override in code, value is {}
   "script_args": [], --- optional
   "sampler_index": "Euler", --- optional, default is "Euler a"
