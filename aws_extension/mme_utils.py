@@ -77,6 +77,7 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
                 download_and_update(model_type, selected_model_name, selected_model_s3_pos)
     
     shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]
+    #shared.opts.sd_vae = selected_models['sd_vae'][0]
     import psutil
     sd_models.reload_model_weights()
     sd_vae.reload_vae_weights()
