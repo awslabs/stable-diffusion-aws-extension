@@ -242,7 +242,9 @@ def query_inference_job_list(task_type: str, status: str, start_time: str, end_t
         if end_time:
             body_params['end_time'] = end_time
         if endpoint:
-            body_params['endpoint'] = endpoint
+            endpoint_name_array = endpoint.split("+")
+            if len(endpoint_name_array) > 0:
+                body_params['endpoint'] = endpoint_name_array[0]
         if checkpoint:
             body_params['checkpoint'] = checkpoint
         response = server_request_post(f'inference/query-inference-jobs', body_params)
