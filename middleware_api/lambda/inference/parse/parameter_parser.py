@@ -90,9 +90,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             x_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_x_values', defaultValue="")
             if x_type in dropdown_index:
                 if x_type == 10:
-                    x_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                    x_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue="None")
                 elif x_type == 25:
-                    x_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                    x_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue="None")
                 x_values_dropdown = x_values_dropdown.split(":")
             
             y_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_type', defaultValue="Nothing")]
@@ -100,9 +100,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             y_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_y_values', defaultValue="")
             if y_type in dropdown_index:
                 if y_type == 10:
-                    y_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                    y_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue="None")
                 elif y_type == 25:
-                    y_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                    y_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue="None")
                 y_values_dropdown = y_values_dropdown.split(":")
             
             z_type = type_dict[get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_type', defaultValue="Nothing")]
@@ -110,9 +110,9 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             z_values_dropdown = get_param_value(params_dict, 'script_txt2txt_xyz_plot_z_values', defaultValue="")
             if z_type in dropdown_index:
                 if z_type == 10:
-                    z_values_dropdown = get_param_value(params_dict, 'sagemaker_stable_diffusion_checkpoint', defaultValue="None")
+                    z_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_stable_diffusion_checkpoint', defaultValue="None")
                 elif z_type == 25:
-                    z_values_dropdown = get_param_value(params_dict, 'sagemaker_controlnet_model', defaultValue="None")
+                    z_values_dropdown = get_param_value(params_dict, f'{param_name}_sagemaker_controlnet_model', defaultValue="None")
                 z_values_dropdown = z_values_dropdown.split(":")
             
             draw_legend = get_param_value(params_dict, 'script_txt2txt_xyz_plot_draw_legend')

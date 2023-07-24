@@ -29,37 +29,37 @@ This document describe all the api for Stable Diffusion AWS extension solution.
 
 # API List table
 
-| No. | API Name | Description |
-| --- | --- | --- |
-| 1 | [/inference/test-connection](#inferencetest-connection) | Test whether client can connect to api and check the API_TOKEN is correct |
-| 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs) | Lists all inference jobs. |
-| 3 | [/inference/get-inference-job](#inferenceget-inference-job) | Retrieves details of a specific inference job. |
-| 4 | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) | Gets image output of a specific inference job. |
-| 5 | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) | Gets parameter output of a specific inference job. |
-| 6 | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) | Run sagemaker inference using default parameters|
-| 7 | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) | Deploys a SageMaker endpoint. |
-| 8 | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint) | Deletes a SageMaker endpoint. |
-| 9 | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)| Lists all endpoint deployment jobs. |
-| 10 | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) | Gets a specific endpoint deployment job. |
+| No. | API Name                                                                                                | Description |
+| --- |---------------------------------------------------------------------------------------------------------| --- |
+| 1 | [/inference/test-connection](#inferencetest-connection)                                                 | Test whether client can connect to api and check the API_TOKEN is correct |
+| 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
+| 3 | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
+| 4 | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job. |
+| 5 | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job. |
+| 6 | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference)                          | Run sagemaker inference using default parameters|
+| 7 | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | Deploys a SageMaker endpoint. |
+| 8 | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | Deletes a SageMaker endpoint. |
+| 9 | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | Lists all endpoint deployment jobs. |
+| 10 | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | Gets a specific endpoint deployment job. |
 | 11 | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading. |
-| 12 | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list) | Gets the list of textual inversions. |
-| 13 | [/inference/get-lora-list](#inferenceget-lora-list) | Gets the list of LoRa. |
-| 14 | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list) | Gets the list of hypernetworks. |
-| 15 | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list) | Gets the list of ControlNet models. |
-| 16 | [/inference/run-model-merge](#inferencerun-model-merge) | Runs a model merge. |
-| 17 | [/model(POST)](#modelpost) | Creates a new model. |
-| 18 | [/model(PUT)](#modelput) | Upload the model file|
-| 19 | [/models](#modelsget) |Lists all models.|
-| 20 | [/checkpoint(GET)](#checkpoint) | Gets a checkpoint. |
-| 21 | [/checkpoint(PUT)](#checkpointput) | Updates a checkpoint. |
-| 22 | [/checkpoints](#checkpoints) | Lists all checkpoints. |
-| 23 | [/train(POST)](#trainpost) | Starts a training job. |
-| 24 | [/train(PUT)](#trainput) | Updates a training job. |
-| 25 | [/trains(GET)](#trainsget) | Lists all training jobs. |
-| 26 | [/dataset(POST)](#datasetpost) | Creates a new dataset. |
-| 27 | [/dataset(PUT)](#datasetput) | Updates a dataset. |
-| 28 | [/datasets(GET)](#datasetsget) | Lists all datasets. |
-| 29 | [/{dataset_name}/data](#dataset_namedata) | Gets data of a specific dataset. |
+| 12 | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | Gets the list of textual inversions. |
+| 13 | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | Gets the list of LoRa. |
+| 14 | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | Gets the list of hypernetworks. |
+| 15 | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | Gets the list of ControlNet models. |
+| 16 | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | Runs a model merge. |
+| 17 | [/model(POST)](#modelpost)                                                                              | Creates a new model. |
+| 18 | [/model(PUT)](#modelput)                                                                                | Upload the model file|
+| 19 | [/models(GET)](#modelsget)                                                                              |Lists all models.|
+| 20 | [/checkpoint(GET)](#checkpoint)                                                                         | Gets a checkpoint. |
+| 21 | [/checkpoint(PUT)](#checkpointput)                                                                      | Updates a checkpoint. |
+| 22 | [/checkpoints(GET)](#checkpoints)                                                                         | Lists all checkpoints. |
+| 23 | [/train(POST)](#trainpost)                                                                              | Starts a training job. |
+| 24 | [/train(PUT)](#trainput)                                                                                | Updates a training job. |
+| 25 | [/trains(GET)](#trainsget)                                                                              | Lists all training jobs. |
+| 26 | [/dataset(POST)](#datasetpost)                                                                          | Creates a new dataset. |
+| 27 | [/dataset(PUT)](#datasetput)                                                                            | Updates a dataset. |
+| 28 | [/datasets(GET)](#datasetsget)                                                                          | Lists all datasets. |
+| 29 | [/{dataset_name}/data](#dataset_namedata)                                                               | Gets data of a specific dataset. |
 
 <br/>
 
@@ -238,7 +238,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
   "height": 512, --- optional, default is 512
   "restore_faces": false, --- optional
   "tiling": false, --- optional
-  "negative_prompt": "string", --- optinal, default is ""
+  "negative_prompt": "string", --- optional, default is ""
   "override_settings": {}, --- hardcoded, parameter not work, it will be override in code, value is {}
   "script_args": [], --- optional
   "sampler_index": "Euler", --- optional, default is "Euler a"
@@ -395,7 +395,8 @@ const inputBody = '{
 }';
 const headers = {
   'Content-Type':'application/json',
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/delete-sagemaker-endpoint',
@@ -833,7 +834,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-image-output',
@@ -1348,7 +1350,8 @@ Javascript example code:
 ```javascript
 
 const headers = {
-  'Accept':'application/json'
+  'Accept':'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
 };
 
 fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-model-merge',
