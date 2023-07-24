@@ -1002,15 +1002,18 @@ def create_ui(is_img2img):
                                                      )
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
                 # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
-
-            with gr.Row(variant='panel'):
+            with gr.Row():
+                inference_job_filter = gr.Checkbox(
+                    label="Advanced Inference Job filter", value=False, visible=False
+                )
+            with gr.Row(variant='panel', visible=False) as filter_row:
                 with gr.Column(scale=1):
                     gr.HTML(value="Inference Job type filters")
                 with gr.Column(scale=2):
                     with gr.Row():
                         task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
                         task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
-                        status_choices = ["succeed", "failure"]
+                        status_choices = ["succeed", "inprogress", "failure"]
                         status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
                     with gr.Row():
                         sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
@@ -1093,6 +1096,15 @@ def create_ui(is_img2img):
                                                     inputs=[task_type_dropdown, status_dropdown, start_time_picker_text_hidden,
                                                             end_time_picker_text_hidden, sagemaker_endpoint_filter,
                                                             sd_checkpoint_filter], outputs=inference_job_dropdown)
+
+            def toggle_new_rows(create_from):
+                return gr.update(visible=create_from)
+
+            inference_job_filter.change(
+                fn=toggle_new_rows,
+                inputs=[inference_job_filter],
+                outputs=[filter_row],
+            )
 
             with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")
