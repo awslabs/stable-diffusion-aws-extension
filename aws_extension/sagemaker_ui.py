@@ -228,7 +228,7 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
         return gr.Dropdown.update(choices=[])
 
 
-def query_inference_job_list(task_type: str, status: str, start_time: str, end_time: str, endpoint: str, checkpoint: list):
+def query_inference_job_list(task_type: str, status: str, start_time: str, end_time: str, endpoint: str, checkpoint: str):
     print(
         f"query_inference_job_list start！！{status},{task_type},{start_time},{end_time},{endpoint},{checkpoint}")
     try:
