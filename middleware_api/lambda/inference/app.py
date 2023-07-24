@@ -8,6 +8,8 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
 from mangum import Mangum
+import aiohttp
+import asyncio
 from common.response_wrapper import resp_err
 from common.enum import MessageEnum
 from common.constant import const
@@ -203,19 +205,17 @@ def get_curent_time():
     formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
     return formatted_time
 
+async def download_image(session, image_url):
+    async with session.get(image_url) as response:
+        return await response.read()
 
-def convert_image(params_dict: dict, payload_checkpoint_info: dict, invoked_from_api: bool, task_type: str):
-    if invoked_from_api and 
-    "image_url" in payload_checkpoint_info and task_type.lower() == "img2img":
-        img_url = payload_checkpoint_info["image_url"]
-        if img_url.startswith("http"):
-            img_content = base64.b64encode(requests.get(img_url).content)
-            logger.info(img_content)
-        # Support more image url format such as s3 url
-        else:
-            raise ValueError(f"image_url({img_url}) should starts with http or https")
-        
+async def convert_image_to_base64(image_content):
+    return base64.b64encode(image_content).decode('utf-8')
 
+async def process_image(session, image_url):
+    image_content = await download_image(session, image_url)
+    base64_image = await convert_image_to_base64(image_content)
+    return base64_image
 
 @app.post("/inference/run-sagemaker-inference")
 @app.post("/api/inference/run-sagemaker-inference")
@@ -237,11 +237,51 @@ async def run_sagemaker_inference(request: Request):
             logger.info('invoked by api')
             invoked_from_api = True
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
+            # Merge the user parameter with the ones in the template
+            params_dict = {**payload_checkpoint_info, **params_dict}
+            # Upload payload to S3 bucket
+            file_name = 'inference-' + str(uuid.uuid4()) + '.json'
+            json_data = json.dumps(params_dict)
+            try:
+                # Upload the JSON string to the S3 bucket
+                s3.put_object(Bucket=S3_BUCKET_NAME, Key='inference/' + file_name, Body=json_data)
+                logger.info(f"JSON file '{file_name}' uploaded to '{S3_BUCKET_NAME}' successfully.")
+            except Exception as e:
+                raise RuntimeError(f"Error uploading JSON file to S3: {e}")
+
+            # image_urls = ['https://example.com/image1.png', 'https://example.com/image2.jpg', 'https://example.com/image3.gif']
+            # async def api_test():
+            #     async with aiohttp.ClientSession() as session:
+            #         tasks = [process_image(session, image_url) for image_url in image_urls]
+            #         base64_images = await asyncio.gather(*tasks)
+
+            #         s3_bucket_name = 'your-s3-bucket-name'
+            #         s3_client = boto3.client('s3')
+            #         for base64_image, image_url in zip(base64_images, image_urls):
+            #             image_suffix = image_url.split('.')[-1].lower()
+            #             data_uri_suffix = get_data_uri_suffix(image_suffix)
+            #             base64_image_with_data_uri = f"{data_uri_suffix},{base64_image}"
+
+            #             # Generate a UUID as the filename
+            #             filename = str(uuid.uuid4()) + "." + image_suffix
+            #             s3_key = f"folder/{filename}"  # Replace 'folder/' with the desired S3 path
+
+            #             s3_client.put_object(
+            #                 Bucket=s3_bucket_name,
+            #                 Key=s3_key,
+            #                 Body=base64_image_with_data_uri.encode('utf-8'),
+            #                 ContentType=f"image/{image_suffix}"
+            #             )
+                        
+            # # Create and run the event loop
+            # loop = asyncio.get_event_loop()
+            # loop.run_until_complete(api_test())
         else:
             # Invoke by UI
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
         # logger.info(json.dumps(params_dict))
-        params_dict = convert_image(params_dict, payload_checkpoint_info, invoked_from_api, task_type)
+        # params_dict = convert_image(params_dict, payload_checkpoint_info, invoked_from_api, task_type)
+        # Below line should be removed
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
         
