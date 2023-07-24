@@ -98,46 +98,6 @@ def on_after_component_callback(component, **_kwargs):
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
     is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id', None) == 'training_job_dashboard'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
-    is_txt_start_time = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'start_timepicker_text_e'
-    if is_txt_start_time:
-        sagemaker_ui.start_time_picker_text.change(
-            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
-            fn=sagemaker_ui.query_inference_job_list,
-            inputs=[sagemaker_ui.task_type_dropdown, sagemaker_ui.status_dropdown,sagemaker_ui.start_time_picker_text,
-                    sagemaker_ui.end_time_picker_text,sagemaker_ui.sd_checkpoint_filter,sagemaker_ui.sagemaker_endpoint_filter],
-            outputs=[sagemaker_ui.inference_job_dropdown]
-        )
-    is_txt_end_time = type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                                   None) == 'end_timepicker_text_e'
-    if is_txt_start_time:
-        sagemaker_ui.end_time_picker_text.change(
-            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
-            fn=sagemaker_ui.query_inference_job_list,
-            inputs=[sagemaker_ui.task_type_dropdown, sagemaker_ui.status_dropdown, sagemaker_ui.start_time_picker_text,
-                    sagemaker_ui.end_time_picker_text, sagemaker_ui.sd_checkpoint_filter,
-                    sagemaker_ui.sagemaker_endpoint_filter],
-            outputs=[sagemaker_ui.inference_job_dropdown]
-        )
-    is_img_start_time = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'start_timepicker_img_e'
-    if is_img_start_time:
-        sagemaker_ui.start_time_picker_img.change(
-            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
-            fn=sagemaker_ui.query_inference_job_list,
-            inputs=[sagemaker_ui.task_type_dropdown, sagemaker_ui.status_dropdown, sagemaker_ui.start_time_picker_img,
-                    sagemaker_ui.end_time_picker_img, sagemaker_ui.sd_checkpoint_filter,
-                    sagemaker_ui.sagemaker_endpoint_filter],
-            outputs=[sagemaker_ui.inference_job_dropdown]
-        )
-    is_img_end_time = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'end_timepicker_img_e'
-    if is_img_end_time:
-        sagemaker_ui.end_time_picker_img.change(
-            # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
-            fn=sagemaker_ui.query_inference_job_list,
-            inputs=[sagemaker_ui.task_type_dropdown, sagemaker_ui.status_dropdown, sagemaker_ui.start_time_picker_img,
-                    sagemaker_ui.end_time_picker_img, sagemaker_ui.sd_checkpoint_filter,
-                    sagemaker_ui.sagemaker_endpoint_filter],
-            outputs=[sagemaker_ui.inference_job_dropdown]
-        )
     if is_dreambooth_train:
         db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
     if is_dreambooth_model_name:
