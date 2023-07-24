@@ -501,10 +501,15 @@ async def query_inference_jobs(request: Request):
     logger.info(query_params)
     status = query_params.get('status')
     task_type = query_params.get('task_type')
-    # start_time = query_params.get('start_time')
-    # end_time = query_params.get('end_time')
+    start_time_str = query_params.get('start_time')
+    end_time_str = query_params.get('end_time')
+    date_format = "%Y-%m-%d"
     start_time = None
     end_time = None
+    if start_time_str:
+        start_time = datetime.strptime(start_time_str, date_format)
+    if end_time_str:
+        end_time = datetime.strptime(end_time_str, date_format)
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
