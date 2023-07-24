@@ -673,7 +673,7 @@ async def run_model_merge(request: Request):
         logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info)
         print(f"input in json format {payload}")
-
+        task_type = payload_checkpoint_info.get('task_type')
         endpoint_name = payload["endpoint_name"]
         checkpoint_name = None
         if task_type == 'img2img':
