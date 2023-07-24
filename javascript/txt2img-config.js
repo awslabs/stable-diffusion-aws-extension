@@ -162,9 +162,24 @@ function inference_job_timepicker_text_change(){
     const dateEndInput = document.querySelector("#end_timepicker_text");
     const selectedEndDate = dateEndInput.value;
     dateEndInput.setAttribute("value",selectedEndDate)
-    gradioApp().getElementById("start_timepicker_text_e").setAttribute("value",selectedStartDate)
-    gradioApp().getElementById("end_timepicker_text_e").setAttribute("value",selectedEndDate)
+    gradioApp().getElementById("start_time_picker_text_hidden").setAttribute("value",selectedStartDate)
+    gradioApp().getElementById("end_time_picker_text_hidden").setAttribute("value",selectedEndDate)
+    // var event = new CustomEvent('change', { bubbles: true });
+    // gradioApp().getElementById("start_time_picker_text_hidden").dispatchEvent(event);
+    // gradioApp().getElementById("end_time_picker_text_hidden").dispatchEvent(event)
+    // gradioApp().querySelector("#start_time_picker_text_hidden > label > textarea").setAttribute("value",selectedStartDate)
+    // gradioApp().querySelector("end_time_picker_text_hidden > label > textarea").setAttribute("value",selectedEndDate)
+    // var event = new CustomEvent('change', { bubbles: true });
+    start_dom = gradioApp().querySelector("#start_time_picker_text_hidden > label > textarea")
+    if (start_dom != null){
+        start_dom.reset(1);
+    }
+    end_dom = gradioApp().querySelector("#end_time_picker_text_hidden > label > textarea")
+    if(end_dom != null){
+        end_dom.outerText = 1111;
+    }
 }
+
 
 function inference_job_timepicker_img_change(){
     // 获取日期选择器元素
@@ -174,8 +189,16 @@ function inference_job_timepicker_img_change(){
     const dateEndInput = document.querySelector("#end_timepicker_img");
     const selectedEndDate = dateEndInput.value;
     dateEndInput.setAttribute("value",selectedEndDate)
-    gradioApp().getElementById("start_timepicker_img_e").setAttribute("value",selectedStartDate)
-    gradioApp().getElementById("end_timepicker_img_e").setAttribute("value",selectedEndDate)
+    gradioApp().getElementById("start_time_picker_img_hidden").setAttribute("value",selectedStartDate)
+    gradioApp().getElementById("end_time_picker_img_hidden").setAttribute("value",selectedEndDate)
+    // var event = new CustomEvent('change', { bubbles: true });
+    // gradioApp().getElementById("start_time_picker_img_hidden").dispatchEvent(event);
+    // gradioApp().getElementById("end_time_picker_img_hidden").dispatchEvent(event)
+    // gradioApp().querySelector("start_time_picker_img_hidden > label > textarea").value(selectedStartDate)
+    // gradioApp().querySelector("end_time_picker_img_hidden > label > textarea").value(selectedEndDate)
+    var event = new CustomEvent('change', { bubbles: true });
+    gradioApp().querySelector("#start_time_picker_img_hidden > label > textarea").dispatchEvent(event);
+    gradioApp().querySelector("#end_time_picker_img_hidden > label > textarea").dispatchEvent(event)
 }
 
 async function txt2img_config_save(endpoint_value) {
