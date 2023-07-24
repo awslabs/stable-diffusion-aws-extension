@@ -77,7 +77,7 @@ def getInferenceJobList():
 
 
 def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime,
-                             endpoint: str, checkpoint: list):
+                             endpoint: str, checkpoint: str):
     try:
         filter_expression = None
         if status:
@@ -102,11 +102,11 @@ def query_inference_job_list(status: str, task_type: str, start_time: datetime, 
                 filter_expression &= Attr('endpoint').eq(endpoint)
             else:
                 filter_expression = Attr('endpoint').eq(endpoint)
-        # if checkpoint:
-        #     if filter_expression:
-        #         filter_expression &= Attr('checkpoint').is_in(checkpoint)
-        #     else:
-        #         filter_expression = Attr('checkpoint').is_in(checkpoint)
+        if checkpoint:
+            if filter_expression:
+                filter_expression &= Attr('checkpoint').eq(checkpoint)
+            else:
+                filter_expression = Attr('checkpoint').eq(checkpoint)
         response = None
         if filter_expression:
             response = inference_table.scan(
@@ -117,7 +117,7 @@ def query_inference_job_list(status: str, task_type: str, start_time: datetime, 
         logger.info(f"query inference job list response is {str(response)}")
         if response:
             return response['Items']
-        return ""
+        return response
     except Exception as e:
         logger.info(f"query inference job list error ")
         logger.info(e)
@@ -274,7 +274,11 @@ async def run_sagemaker_inference(request: Request):
         # logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
-
+        checkpoint_name = None
+        if task_type == 'img2img':
+            checkpoint_name = params_dict['img2img_sagemaker_stable_diffusion_checkpoint']
+        elif task_type == 'txt2img':
+            checkpoint_name = params_dict['txt2img_sagemaker_stable_diffusion_checkpoint']
         def show_slim_dict(payload):
             pay_type = type(payload)
             if pay_type is dict:
@@ -317,6 +321,7 @@ async def run_sagemaker_inference(request: Request):
                 'startTime': current_time,
                 'status': 'inprogress',
                 'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
                 'taskType': task_type
             })
         print(f"output_path is {output_path}")
@@ -349,6 +354,7 @@ async def run_sagemaker_inference(request: Request):
                 'completeTime': current_time,
                 'status': 'failure',
                 'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
                 'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
             )
@@ -500,7 +506,7 @@ async def query_inference_jobs(request: Request):
     start_time = None
     end_time = None
     endpoint = query_params.get('endpoint')
-    checkpoint = query_params.get('checkpoint', [])
+    checkpoint = query_params.get('checkpoint')
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
 
@@ -669,7 +675,11 @@ async def run_model_merge(request: Request):
         print(f"input in json format {payload}")
 
         endpoint_name = payload["endpoint_name"]
-
+        checkpoint_name = None
+        if task_type == 'img2img':
+            checkpoint_name = params_dict['img2img_sagemaker_stable_diffusion_checkpoint']
+        elif task_type == 'txt2img':
+            checkpoint_name = params_dict['txt2img_sagemaker_stable_diffusion_checkpoint']
         predictor = Predictor(endpoint_name)
 
         predictor = AsyncPredictor(predictor, name=endpoint_name)
@@ -685,7 +695,8 @@ async def run_model_merge(request: Request):
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
                 'status': 'inprogress',
-                'endpoint': endpoint_name
+                'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
             })
         print(f"output_path is {output_path}")
 
