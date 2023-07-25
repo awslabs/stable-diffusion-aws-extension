@@ -79,6 +79,11 @@ img_status = None
 img_endpoint = None
 img_checkpoint = None
 
+task_type_dropdown = None
+status_dropdown = None
+sagemaker_endpoint_filter = None
+sd_checkpoint_filter = None
+
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
@@ -177,8 +182,6 @@ def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkb
     return get_inference_job_list(txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox)
 
 def origin_update_txt2img_inference_job_ids():
-    # global origin_txt2img_inference_job_ids
-    # return get_inference_job_list(True, True, True)
     return query_inference_job_list('', '', '', '', '')
 
 
@@ -314,6 +317,7 @@ def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpo
             return gr.Dropdown.update(choices=[])
     except Exception as e:
         print("Exception occurred when fetching inference_job_ids")
+        print(e)
         return gr.Dropdown.update(choices=[])
 
 
@@ -994,7 +998,7 @@ def init_refresh_resource_list_from_cloud():
         get_lora_list()
         get_hypernetwork_list()
         get_controlnet_model_list()
-        get_inference_job_list()
+        # get_inference_job_list()
     else:
         print(f"there is no api-gateway url and token in local file,")
 
@@ -1073,13 +1077,17 @@ def create_ui(is_img2img):
                 with gr.Column(scale=2):
                     with gr.Row():
                         task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
+                        global task_type_dropdown
                         task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
                         status_choices = ["succeed", "inprogress", "failure"]
+                        global status_dropdown
                         status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
                     with gr.Row():
+                        global sagemaker_endpoint_filter
                         sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
                         modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                     with gr.Row():
+                        global sd_checkpoint_filter
                         sd_checkpoint_filter = gr.Dropdown(label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
                         modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
                     if is_img2img:
@@ -1094,10 +1102,13 @@ def create_ui(is_img2img):
                                                                    visible=True)
                         start_time_picker_img_hidden.click(fn=on_img_time_change,
                                                            _js='get_time_button_value',
-                                                           inputs=[start_time_picker_img, end_time_picker_img])
+                                                           inputs=[start_time_picker_img, end_time_picker_img],
+                                                           outputs=inference_job_dropdown)
                         end_time_picker_img_hidden.click(fn=on_img_time_change,
                                                          _js='get_time_button_value',
-                                                         inputs=[start_time_picker_img, end_time_picker_img])
+                                                         inputs=[start_time_picker_img, end_time_picker_img],
+                                                         outputs=inference_job_dropdown
+                                                         )
                         task_type_dropdown.change(fn=query_img_inference_job_list,
                                                   inputs=[task_type_dropdown, status_dropdown,
                                                           sagemaker_endpoint_filter,
@@ -1125,10 +1136,12 @@ def create_ui(is_img2img):
                                                                       visible=False)
                         start_time_picker_button_hidden.click(fn=on_txt_time_change,
                                                               _js='get_time_button_value',
-                                                              inputs=[start_time_picker_text, end_time_picker_text])
+                                                              inputs=[start_time_picker_text, end_time_picker_text],
+                                                              outputs=inference_job_dropdown)
                         end_time_picker_button_hidden.click(fn=on_txt_time_change,
                                                             _js='get_time_button_value',
-                                                            inputs=[start_time_picker_text, end_time_picker_text])
+                                                            inputs=[start_time_picker_text, end_time_picker_text],
+                                                            outputs=inference_job_dropdown)
                         task_type_dropdown.change(fn=query_txt_inference_job_list,
                                                   inputs=[task_type_dropdown, status_dropdown,
                                                           sagemaker_endpoint_filter, sd_checkpoint_filter],
@@ -1147,12 +1160,16 @@ def create_ui(is_img2img):
                                                     outputs=inference_job_dropdown)
 
             def toggle_new_rows(create_from):
-                return gr.update(visible=create_from)
+                global start_time_picker_txt_value
+                start_time_picker_txt_value = None
+                global end_time_picker_txt_value
+                end_time_picker_txt_value = None
+                return [gr.update(visible=create_from), None, None, None, None]
 
             inference_job_filter.change(
                 fn=toggle_new_rows,
                 inputs=[inference_job_filter],
-                outputs=[filter_row],
+                outputs=[filter_row, task_type_dropdown, status_dropdown, sagemaker_endpoint_filter, sd_checkpoint_filter],
             )
 
             with gr.Row():
