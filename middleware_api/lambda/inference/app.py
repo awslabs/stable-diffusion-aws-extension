@@ -218,7 +218,7 @@ async def process_image(session, image_url):
     return base64_image
 
 @app.post("/inference/run-sagemaker-inference")
-@app.post("/api/inference/run-sagemaker-inference")
+@app.post("/inference-api/inference")
 async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
