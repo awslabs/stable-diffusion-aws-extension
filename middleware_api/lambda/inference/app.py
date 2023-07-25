@@ -78,7 +78,7 @@ def getInferenceJobList():
 
 def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str,
                              endpoint: str, checkpoint: str):
-    print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time}")
+    print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
     try:
         filter_expression = None
         if status:
@@ -503,19 +503,12 @@ async def query_inference_jobs(request: Request):
     logger.info(query_params)
     status = query_params.get('status')
     task_type = query_params.get('task_type')
-    start_time_str = query_params.get('start_time')
-    end_time_str = query_params.get('end_time')
-    date_format = "%Y-%m-%d"
-    start_time = None
-    end_time = None
-    if start_time_str:
-        start_time = datetime.strptime(start_time_str, date_format)
-    if end_time_str:
-        end_time = datetime.strptime(end_time_str, date_format)
+    start_time = query_params.get('start_time')
+    end_time = query_params.get('end_time')
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
-    return query_inference_job_list(status, task_type, str(start_time), str(end_time), endpoint, checkpoint)
+    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
 
 
 @app.get("/inference/get-endpoint-deployment-job")
