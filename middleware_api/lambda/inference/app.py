@@ -76,7 +76,7 @@ def getInferenceJobList():
     return response['Items']
 
 
-def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime,
+def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str,
                              endpoint: str, checkpoint: str):
     print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time}")
     try:
@@ -515,7 +515,7 @@ async def query_inference_jobs(request: Request):
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
-    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
+    return query_inference_job_list(status, task_type, str(start_time), str(end_time), endpoint, checkpoint)
 
 
 @app.get("/inference/get-endpoint-deployment-job")
