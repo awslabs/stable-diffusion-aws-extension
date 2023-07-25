@@ -78,6 +78,7 @@ def getInferenceJobList():
 
 def query_inference_job_list(status: str, task_type: str, start_time: datetime, end_time: datetime,
                              endpoint: str, checkpoint: str):
+    print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time}")
     try:
         filter_expression = None
         if status:
