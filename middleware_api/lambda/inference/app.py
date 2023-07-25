@@ -90,14 +90,14 @@ def query_inference_job_list(status: str, task_type: str, start_time: datetime, 
                 filter_expression = Attr('taskType').eq(task_type)
         if start_time:
             if filter_expression:
-                filter_expression &= Attr('startTime').ge(start_time)
+                filter_expression &= Attr('startTime').gte(start_time)
             else:
-                filter_expression = Attr('startTime').ge(start_time)
+                filter_expression = Attr('startTime').gte(start_time)
         if end_time:
             if filter_expression:
-                filter_expression &= Attr('startTime').le(end_time)
+                filter_expression &= Attr('startTime').lte(end_time)
             else:
-                filter_expression = Attr('startTime').le(end_time)
+                filter_expression = Attr('startTime').lte(end_time)
         if endpoint:
             if filter_expression:
                 filter_expression &= Attr('endpoint').eq(endpoint)
