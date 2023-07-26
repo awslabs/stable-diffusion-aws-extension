@@ -119,11 +119,11 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
         else:
             if filter_expression:
                 response = inference_table.query(
-                    FilterExpression=filter_expression,
+                    KeyConditionExpression=filter_expression,
                     Limit=limit
                 )
             else:
-                response = inference_table.query(
+                response = inference_table.scan(
                     Limit=limit
                 )
         logger.info(f"query inference job list response is {str(response)}")
