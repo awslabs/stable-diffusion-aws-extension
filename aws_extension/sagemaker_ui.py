@@ -1212,8 +1212,7 @@ def create_ui(is_img2img):
                                       outputs=inference_job_dropdown)
 
         with gr.Row():
-                gr.HTML(value="Extra Networks for Cloud Inference")
-
+            gr.HTML(value="Extra Networks for Cloud Inference")
             with gr.Row():
                 global textual_inversion_dropdown
                 textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
