@@ -196,11 +196,17 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 body = {
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
+  "Stable-diffusion": {
+      "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors"
+  },
+  "embeddings": {},
+  "Lora": {},
+  "hypernetworks": {},
+  "ControlNet": {},
+  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
+  "sagemaker_endpoint": "infer-endpoint-040ee04",
   "task_type": "txt2img",
-  "prompt": "a cute panda",
-  "denoising_strength": 0.75
+  "prompt": "a cute panda"
 }
 
 r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, json = body)
@@ -213,7 +219,7 @@ Javascript example code:
 
 ```javascript
 const inputBody = '{
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
   "prompt": "a cute panda",
@@ -245,11 +251,17 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```json
 {
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
+  "Stable-diffusion": {
+      "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors"
+  },
+  "embeddings": {},
+  "Lora": {},
+  "hypernetworks": {},
+  "ControlNet": {},
+  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
+  "sagemaker_endpoint": "infer-endpoint-040ee04",
   "task_type": "txt2img",
-  "prompt": "a cute panda",
-  "denoising_strength": 0.75
+  "prompt": "a cute panda"
 }
 ```
 
@@ -262,11 +274,18 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
   "sagemaker_endpoint": "infer-endpoint-ef3abcd", --- mandatory, endpoint name
   "task_type": "txt2img", --- mandatory, txt2img: text-to-image
   "prompt": "", --- mandatory, the prompt to generate an image
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"], --- optional
-  "embeddings": [], --- optional
-  "lora_model": [], --- optional
-  "hypernetwork_model": [], --- optional
-  "controlnet_model": [], --- optional
+  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors", --- optional, default is v1-5-pruned-emaonly.safetensors
+  "embeddings": "", --- optional
+  "lora_model": "", --- optional
+  "hypernetwork_model": "", --- optional
+  "controlnet_model": "", --- optional
+  "Stable-diffusion": {
+    "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors" --- optional, the S3 path of your stable diffusion model
+  },
+  "embeddings": {},  --- optional, the S3 path of your embeddings
+  "Lora": {},  --- optional, the S3 path of your lora model
+  "hypernetworks": {},  --- optional, the S3 path of your hypernetworks
+  "ControlNet": {},  --- optional, the S3 path of your controlnet model
   "denoising_strength": 0.75, --- optional
   "styles": [ 
     "string" --- optional

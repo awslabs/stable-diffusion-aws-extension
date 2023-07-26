@@ -18,7 +18,7 @@
 
 ## 部署步骤
 
-### 步骤1：部署Stable Diffusion WebUI。
+### 步骤1：部署Stable Diffusion WebUI (Linux)。
 
 1. 从[链接](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)下载CloudFormation模板。
 
@@ -37,6 +37,16 @@
 8. 等待堆栈创建完成。
 
 9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
+
+### 步骤1：部署Stable Diffusion WebUI (Windows)。
+1. 启动一台Windows Server，通过RDP登陆。
+2. 参考[链接](https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html)安装NVIDIA驱动程序。
+3. 访问[Python网站](https://www.python.org/downloads/release/python-3106/)，下载Python并安装，记得要选上 Add Python to Path。
+4. 访问[Git网站](https://git-scm.com/download/win)，下载Git并安装。
+5. 打开PowerShell，下载本方案源码（git clone https://github.com/awslabs/stable-diffusion-aws-extension）。
+6. 在源码中，执行 install.bat。
+7. 在下载的stable-diffusion-webui文件夹中，执行webui-user.bat。
+
 
 ### 步骤2：部署本解决方案中间件。
 
