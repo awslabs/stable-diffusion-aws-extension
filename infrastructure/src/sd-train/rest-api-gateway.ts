@@ -22,7 +22,7 @@ export class RestApiGateway {
       let pathResource: Resource = this.apiGateway.root.addResource(pathList[0]);
       for (let i = 1; i < pathList.length; i++) {
         let pathPart: string = pathList[i];
-        pathResource.addResource(pathPart);
+        pathResource = pathResource.addResource(pathPart);
       }
       this.routers[route] = pathResource;
     }

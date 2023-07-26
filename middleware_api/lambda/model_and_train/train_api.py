@@ -45,6 +45,12 @@ def create_train_job_api(raw_event, context):
     event = Event(**raw_event)
     _type = event.train_type
 
+    # TODO:
+    # Get and extract db_config.tar
+    # Read config from db_config_cloud.json
+    # Merge user's json with the config in db_config_cloud.json
+    # Update metadata
+
     try:
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id

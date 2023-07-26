@@ -232,7 +232,7 @@ async def run_sagemaker_inference(request: Request):
         path = request.url.path
         invoked_from_api = False
         logger.info(f'Path: {path}')
-        if path == '/api/inference/run-sagemaker-inference':
+        if path == '/inference-api/inference':
             # Invoke by API
             logger.info('invoked by api')
             invoked_from_api = True
