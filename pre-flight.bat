@@ -4,11 +4,17 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 set INITIAL_SUPPORT_COMMIT_ROOT=a3ddf464a2ed24c999f67ddfef7969f8291567be
 set INITIAL_SUPPORT_COMMIT_CONTROLNET=e9679f8fc50880a92d6f1b6fc1aabad41079efd5
 set INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
+set INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
+set INITIAL_SUPPORT_COMMIT_SAM=ffe263155d7f3ac4ee23a96262ecb77b9899ed95
 
 set REPO_URL_LIST[0]="https://github.com/Mikubill/sd-webui-controlnet.git"
 set REPO_URL_LIST[1]="https://github.com/d8ahazard/sd_dreambooth_extension.git"
+set REPO_URL_LIST[2]="https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git"
+set REPO_URL_LIST[3]="https://github.com/continue-revolution/sd-webui-segment-anything.git"
 set REPO_FOLDER_LIST[0]="sd-webui-controlnet"
 set REPO_FOLDER_LIST[1]="sd_dreambooth_extension"
+set REPO_FOLDER_LIST[2]="stable-diffusion-webui-rembg"
+set REPO_FOLDER_LIST[3]="sd-webui-segment-anything"
 
 
 call :parse_options %*
