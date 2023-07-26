@@ -84,6 +84,8 @@ status_dropdown = None
 sagemaker_endpoint_filter = None
 sd_checkpoint_filter = None
 
+show_all_inference_job = False
+
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
@@ -237,6 +239,35 @@ def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=Tru
         return gr.Dropdown.update(choices=[])
 
 
+def query_page_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, is_img2img: bool, show_all: bool):
+    global show_all_inference_job
+    show_all_inference_job = show_all
+    if is_img2img:
+        global img_task_type
+        img_task_type = task_type
+        global img_status
+        img_status = status
+        global img_endpoint
+        img_endpoint = endpoint
+        global img_checkpoint
+        img_checkpoint = checkpoint
+        opt_type = 'img2img'
+        print(f"{opt_type} {img_task_type} {img_status} {img_endpoint} {img_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+    else:
+        global txt_task_type
+        txt_task_type = task_type
+        global txt_status
+        txt_status = txt_status
+        global txt_endpoint
+        txt_endpoint = endpoint
+        global txt_checkpoint
+        txt_checkpoint = checkpoint
+        opt_type = 'txt2img'
+        print(f"{opt_type} {txt_task_type} {txt_status} {txt_endpoint} {txt_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
 def query_img_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str):
     opt_type = 'img2img'
     global img_task_type
@@ -266,7 +297,7 @@ def query_txt_inference_job_list(task_type: str, status: str, endpoint: str, che
 
 def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, opt_type: str):
     print(
-        f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value}")
+        f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
     try:
         body_params = {}
         if status:
@@ -1071,6 +1102,8 @@ def create_ui(is_img2img):
                 inference_job_filter = gr.Checkbox(
                     label="Advanced Inference Job filter", value=False, visible=True
                 )
+                inference_job_page = gr.Checkbox(label="Show All(unchecked: max 10 items)",
+                                                 elem_id="inference_job_page_checkbox", value=False)
             with gr.Row(variant='panel', visible=False) as filter_row:
                 with gr.Column(scale=1):
                     gr.HTML(value="Inference Job type filters")
@@ -1171,8 +1204,14 @@ def create_ui(is_img2img):
                 inputs=[inference_job_filter],
                 outputs=[filter_row, task_type_dropdown, status_dropdown, sagemaker_endpoint_filter, sd_checkpoint_filter],
             )
+            hidden_check_type = gr.Textbox(elem_id="hidden_check_type", value=is_img2img, visible=False)
+            inference_job_page.change(fn=query_page_inference_job_list, inputs=[task_type_dropdown, status_dropdown,
+                                                                                sagemaker_endpoint_filter,
+                                                                                sd_checkpoint_filter, hidden_check_type,
+                                                                                inference_job_page],
+                                      outputs=inference_job_dropdown)
 
-            with gr.Row():
+        with gr.Row():
                 gr.HTML(value="Extra Networks for Cloud Inference")
 
             with gr.Row():
