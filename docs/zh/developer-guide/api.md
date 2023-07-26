@@ -35,6 +35,8 @@ After user [deployed](../deployment/deployment.md) solution middleware cloudform
 
 # User Scenarios
 ## 1. Deploy a new Endpoint
+![Deploy a new Endpoint](../images/deploy_sagemaker_endpoint.png)
+
 Call [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) to create a new sagemaker endpoint, you need to specify two parameters for creating, one is instance_type, candidate values are "ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", another is initial_instance_count, candidate values are 1|2|3|4.
 
 After calling [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint), you need to call [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs) to list all the endpoint status. Normally it took about more than 10 minutes to make a new Sagemaker endpoint change to inService status. The Sagemaker endpoint can only be used for inference when it is inService status.
@@ -42,11 +44,24 @@ After calling [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-
 If the endpoint is in failed status, you can call [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) with parameter jobID, the response will show the reason why endpoint deployment is failed, normally it is caused by AWS account quota limitation.
 
 
+<details>
+  <summary>sequence digram raw</summary>
+  
+  title Create a Sagemaker Endpoint
+
+Client->Middleware:Call /inference/deploy-sagemaker-endpoint
+Middleware->Middleware: Start a workflow to configure sagemaker endpoint \n based on uer request configuration
+Client->Middleware:Call /inference/list-endpoint-deployment-jobs \n to list all the endpoint creation job list
+Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'inService' state.
+  
+</details>
+
 ## 2. Upload a model
 
 ## 3. Train a model
 
 ## 4. Do Inference
+![Do Inference](../images/do-inference.png)
 After Sagemaker endpoint is in inService status, you can call [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference).
 
 [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) will return following json structure to client:
@@ -74,6 +89,27 @@ Also Client can call [/inference/get-inference-job-param-output](#inferenceget-i
 ]
 ```
 
+<details>
+  <summary>sequence digram raw</summary>
+  
+title Do Inference
+
+Client->Middleware:Call **/api/inference/run-sagemaker-inference**
+Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
+Middleware->Client: return inference_id 
+Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
+Middleware->Client: return inference_id and the job status(inprocess | succeed | failure)
+
+abox over Client: If the inference job is succeed, \n call **/inference/get-inference-job-image-output** and \n **/inference/get-inference-job-param-output** to get the \n inference result 
+Client->Middleware:Call **/inference/get-inference-job-image-output** \n to get all inference result images.
+
+Middleware->Client: return the inference result images in presigned url format
+
+Client->Middleware:Call **/inference/get-inference-job-param-output** \n to get inference parameters.
+
+Middleware->Client: return the inference parameter in presigned url format
+  
+</details>
 # API List 
 
 | Index | Http Method | API Name                                                                                                | Description |
@@ -196,17 +232,11 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 body = {
-  "Stable-diffusion": {
-      "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors"
-  },
-  "embeddings": {},
-  "Lora": {},
-  "hypernetworks": {},
-  "ControlNet": {},
-  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
-  "sagemaker_endpoint": "infer-endpoint-040ee04",
+  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
-  "prompt": "a cute panda"
+  "prompt": "a cute panda",
+  "denoising_strength": 0.75
 }
 
 r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, json = body)
@@ -219,7 +249,7 @@ Javascript example code:
 
 ```javascript
 const inputBody = '{
-  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
+  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
   "prompt": "a cute panda",
@@ -251,17 +281,11 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```json
 {
-  "Stable-diffusion": {
-      "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors"
-  },
-  "embeddings": {},
-  "Lora": {},
-  "hypernetworks": {},
-  "ControlNet": {},
-  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors",
-  "sagemaker_endpoint": "infer-endpoint-040ee04",
+  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
-  "prompt": "a cute panda"
+  "prompt": "a cute panda",
+  "denoising_strength": 0.75
 }
 ```
 
@@ -274,18 +298,11 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
   "sagemaker_endpoint": "infer-endpoint-ef3abcd", --- mandatory, endpoint name
   "task_type": "txt2img", --- mandatory, txt2img: text-to-image
   "prompt": "", --- mandatory, the prompt to generate an image
-  "stable_diffusion_model": "v1-5-pruned-emaonly.safetensors", --- optional, default is v1-5-pruned-emaonly.safetensors
-  "embeddings": "", --- optional
-  "lora_model": "", --- optional
-  "hypernetwork_model": "", --- optional
-  "controlnet_model": "", --- optional
-  "Stable-diffusion": {
-    "v1-5-pruned-emaonly.safetensors": "s3://stable-diffusion-aws-extension-aigcbucketa457cb49-1wm3vmuchzcg1/Stable-diffusion/checkpoint/custom/2d527b22-70b0-4a43-97b8-4d345955692b/v1-5-pruned-emaonly.safetensors" --- optional, the S3 path of your stable diffusion model
-  },
-  "embeddings": {},  --- optional, the S3 path of your embeddings
-  "Lora": {},  --- optional, the S3 path of your lora model
-  "hypernetworks": {},  --- optional, the S3 path of your hypernetworks
-  "ControlNet": {},  --- optional, the S3 path of your controlnet model
+  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"], --- optional
+  "embeddings": [], --- optional
+  "lora_model": [], --- optional
+  "hypernetwork_model": [], --- optional
+  "controlnet_model": [], --- optional
   "denoising_strength": 0.75, --- optional
   "styles": [ 
     "string" --- optional
