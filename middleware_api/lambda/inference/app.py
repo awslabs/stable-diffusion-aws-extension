@@ -111,49 +111,67 @@ def build_filter_expression(checkpoint, end_time, endpoint, start_time, status, 
 def build_key_condition_expression(checkpoint, end_time, endpoint, start_time, status, task_type):
     expression = ''
     if checkpoint:
-        expression += 'checkpoint = :cp'
+        expression += '#cp = :cp'
     if end_time:
         if len(expression) > 0:
-            expression += 'AND startTime <= :et'
+            expression += ' AND #et <= :et'
         else:
-            expression += 'startTime <= :et'
+            expression += '#et <= :et'
     if endpoint:
         if len(expression) > 0:
-            expression += 'AND endpoint = :ep'
+            expression += ' AND #ep = :ep'
         else:
-            expression += 'endpoint <= :ep'
+            expression += '#ep <= :ep'
     if start_time:
         if len(expression) > 0:
-            expression += 'AND startTime >= :st'
+            expression += ' AND #st >= :st'
         else:
-            expression += 'startTime >= :st'
+            expression += '#st >= :st'
     if status:
         if len(expression) > 0:
-            expression += 'AND status >= :s'
+            expression += ' AND #s >= :s'
         else:
-            expression += 'status = :s'
+            expression += '#s = :s'
     if task_type:
         if len(expression) > 0:
-            expression += 'AND taskType >= :tt'
+            expression += ' AND #tt >= :tt'
         else:
-            expression += 'taskType = :tt'
+            expression += '#tt = :tt'
+    return expression
+
+
+def build_expression_attribute_names(checkpoint, end_time, endpoint, start_time, status, task_type):
+    expression = {}
+    expression['#s'] = 'status'
+    if checkpoint:
+        expression['#cp'] = 'checkpoint'
+    if end_time:
+        expression['#et'] = 'end_time'
+    if endpoint:
+        expression['#ep'] = 'endpoint'
+    if start_time:
+        expression['#st'] = 'start_time'
+    if status:
+        expression['#s'] = 'status'
+    if task_type:
+        expression['#tt'] = 'task_type'
     return expression
 
 
 def build_expression_attribute_values(checkpoint, end_time, endpoint, start_time, status, task_type):
     expression_attribute_values = {}
     if checkpoint:
-        expression_attribute_values[':cp'] = {'S': checkpoint},
+        expression_attribute_values[':cp'] = {'S': checkpoint}
     if end_time:
-        expression_attribute_values[':et'] = {'S': end_time},
+        expression_attribute_values[':et'] = {'S': end_time}
     if endpoint:
-        expression_attribute_values[':ep'] = {'S': endpoint},
+        expression_attribute_values[':ep'] = {'S': endpoint}
     if start_time:
-        expression_attribute_values[':st'] = {'S': start_time},
+        expression_attribute_values[':st'] = {'S': start_time}
     if status:
-        expression_attribute_values[':s'] = {'S': status},
+        expression_attribute_values[':s'] = {'S': status}
     if task_type:
-        expression_attribute_values[':tt'] = {'S': task_type},
+        expression_attribute_values[':tt'] = {'S': task_type}
     return expression_attribute_values
 
 
@@ -173,9 +191,11 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
         else:
             key_condition_expression = build_key_condition_expression(checkpoint, end_time, endpoint, start_time, status, task_type)
             expression_attribute_values = build_expression_attribute_values(checkpoint, end_time, endpoint, start_time, status, task_type)
+            expression_attribute_names = build_expression_attribute_names(checkpoint, end_time, endpoint, start_time, status, task_type)
             if key_condition_expression:
                 response = inference_table.query(
                     KeyConditionExpression=key_condition_expression,
+                    ExpressionAttributeNames=expression_attribute_names,
                     ExpressionAttributeValues=expression_attribute_values,
                     Limit=limit
                 )
