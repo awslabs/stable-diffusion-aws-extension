@@ -320,7 +320,7 @@ def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpo
                 body_params['endpoint'] = endpoint_name_array[0]
         if checkpoint:
             body_params['checkpoint'] = checkpoint
-        body_params['show_all'] = show_all_inference_job
+        body_params['limit'] = -1 if show_all_inference_job else 10
         response = server_request_post(f'inference/query-inference-jobs', body_params)
         r = response.json()
         print(r)

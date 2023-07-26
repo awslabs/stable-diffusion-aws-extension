@@ -518,11 +518,8 @@ async def query_inference_jobs(request: Request):
     end_time = query_params.get('end_time')
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
-    show_all = query_params.get("show_all")
-    limit = const.PAGE_LIMIT_ALL
-    if not show_all:
-        limit = const.PAGE_LIMIT_DEFAULT
-    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{show_all}")
+    limit = query_params.get("limit") if query_params.get("limit") else const.PAGE_LIMIT_ALL
+    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
 
 
