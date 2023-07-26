@@ -25,6 +25,8 @@ REPO_URL_LIST=(
 REPO_FOLDER_LIST=(
     "sd-webui-controlnet"
     "sd_dreambooth_extension"
+    "stable-diffusion-webui-rembg"
+    "sd-webui-segment-anything"
 )
 
 show_help() {
@@ -171,6 +173,22 @@ version_sync() {
     git checkout main
     git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
+    cd ..
+
+    # Clone stable-diffusion-webui-rembg
+    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+    # Go to stable-diffusion-webui-rembg directory and reset to specific commit
+    cd stable-diffusion-webui-rembg
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
+    cd ..
+
+    # Clone sd-webui-segment-anything
+    git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
+
+    # Go to sd-webui-segment-anything directory and reset to specific commit
+    cd sd-webui-segment-anything
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
     cd ..
 }
 
