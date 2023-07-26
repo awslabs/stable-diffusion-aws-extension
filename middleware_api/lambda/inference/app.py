@@ -77,7 +77,7 @@ def getInferenceJobList():
 
 
 def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str,
-                             endpoint: str, checkpoint: str):
+                             endpoint: str, checkpoint: str, limit: int):
     print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
     try:
         filter_expression = None
@@ -109,12 +109,23 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
             else:
                 filter_expression = Attr('checkpoint').eq(checkpoint)
         response = None
-        if filter_expression:
-            response = inference_table.scan(
-                FilterExpression=filter_expression
-            )
+        if limit == const.PAGE_LIMIT_ALL:
+            if filter_expression:
+                response = inference_table.scan(
+                    FilterExpression=filter_expression
+                )
+            else:
+                response = inference_table.scan()
         else:
-            response = inference_table.scan()
+            if filter_expression:
+                response = inference_table.scan(
+                    FilterExpression=filter_expression,
+                    Limit=limit
+                )
+            else:
+                response = inference_table.scan(
+                    Limit=limit
+                )
         logger.info(f"query inference job list response is {str(response)}")
         if response:
             return response['Items']
@@ -507,8 +518,12 @@ async def query_inference_jobs(request: Request):
     end_time = query_params.get('end_time')
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
-    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
-    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint)
+    show_all = query_params.get("show_all")
+    limit = const.PAGE_LIMIT_ALL
+    if not show_all:
+        limit = const.PAGE_LIMIT_DEFAULT
+    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{show_all}")
+    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
 
 
 @app.get("/inference/get-endpoint-deployment-job")
