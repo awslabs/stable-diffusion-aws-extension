@@ -33,7 +33,8 @@ class InferenceApiTest(TestCase):
             'sagemaker_endpoint_id': 'aa98c410-acdd-40fb-b927-b26935e6a777',
             'task_type': 'txt2img',
             'models': {
-                'Stable-diffusion': ['v1-5-pruned-emaonly.safetensors']
+                'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'],
+                'ControlNet': ['control_v11p_sd15_canny.pth']
             },
             'filters': {
                 'creator': 'alvindaiyan'
@@ -65,14 +66,64 @@ class InferenceApiTest(TestCase):
 
         upload_with_put(resp['inference']['api_params_s3_upload_url'])
 
+    def test_prepare_inference_img2img(self):
+        from inference_api import prepare_inference
+        event = {
+            'sagemaker_endpoint_id': 'aa98c410-acdd-40fb-b927-b26935e6a777',
+            'task_type': 'img2img',
+            'models': {
+                'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'],
+                'ControlNet': ['control_v11p_sd15_canny.pth', 'control_v11f1p_sd15_depth.pth']
+            },
+            'filters': {
+                'creator': 'alvindaiyan'
+            }
+        }
+        _id = str(datetime.now().timestamp())
+        resp = prepare_inference(event, MockContext(aws_request_id=_id))
+        print(resp)
+        assert resp['status'] == 200
+        # get the inference job from ddb by job id
+
+        from inference_api import inference_table_name, ddb_service
+        from inference_v2._types import InferenceJob
+        inference_raw = ddb_service.get_item(inference_table_name, {
+            'InferenceJobId': _id
+        })
+        inference_job = InferenceJob(**inference_raw)
+        models = {
+            "space_free_size": 4e10,
+            **inference_job.params['used_models'],
+        }
+        print(models)
+
+        def upload_with_put(url):
+            with open('/Users/cyanda/Dev/python-projects/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/playground_NO_COMMIT/api_img2img_param.json', 'rb') as file:
+                import requests
+                response = requests.put(url, data=file)
+                response.raise_for_status()
+
+        upload_with_put(resp['inference']['api_params_s3_upload_url'])
+        from inference_api import run_inference
+        resp = run_inference({
+            'pathStringParameters': {
+                'inference_id': _id
+            }
+        }, {})
+        print(resp)
 
     def test_run_infer(self):
         from inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
-                'inference_id': '1690447060.705487'
+                'inference_id': '1690462100.582803'
             }
         }, {})
         print(resp)
 
-
+    def test_split(self):
+        arg = {
+            'model': 'control_v11p_sd15_canny [d14c016b]'
+        }
+        model_parts = arg['model'].split()
+        print(' '.join(model_parts[:-1]))

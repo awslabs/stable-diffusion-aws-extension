@@ -81,6 +81,10 @@ class SageMakerUI(scripts.Script):
             return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
+        on_docker = os.environ.get('ON_DOCKER', "false")
+        if on_docker == "true":
+            return
+
         import json
         from PIL import Image, PngImagePlugin
         from io import BytesIO
@@ -147,7 +151,7 @@ class SageMakerUI(scripts.Script):
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for arg in p.script_args[script.args_from:script.args_to]:
-                    api_param.alwayson_scripts[script.name]['args'].append(arg)
+                    api_param.alwayson_scripts[script.name]['args'].append(self._process_args_by_plugin(script.name, arg))
             elif selected_script_index == sid:
                 api_param.script_name = script.name
                 for arg in p.script_args[script.args_from:script.args_to]:
@@ -162,6 +166,25 @@ class SageMakerUI(scripts.Script):
 
     def process(self, p, *args):
         pass
+
+    def _process_args_by_plugin(self, script_name, arg):
+        processors = [self._controlnet_args]
+        for f in processors:
+            f(script_name, arg)
+
+        return arg
+
+
+    def _controlnet_args(self, script_name, arg):
+        if script_name != 'controlnet':
+            return
+
+        model_name_parts = arg['model'].split()
+        # make sure there is a hash, otherwise remain not changed
+        if len(model_name_parts) > 1:
+            arg['model'] = ' '.join(arg['model'].split()[:-1])
+
+
 
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, cloud_train_instance_type, training_job_dashboard
@@ -698,7 +721,7 @@ def on_ui_tabs():
                                 api_key = get_variable_from_json('api_token')
                                 raw_response = requests.get(url=url, headers={'x-api-key': api_key})
                                 raw_response.raise_for_status()
-                                dataset_items = [ (Image.open(requests.get(item['preview_url'], stream=True).raw), item['key']) for item in raw_response.json()['data']]
+                                dataset_items = [(item['preview_url'], item['key']) for item in raw_response.json()['data']]
                                 return ds['s3'], ds['description'], dataset_items
 
                             cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name], outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
