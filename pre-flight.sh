@@ -2,9 +2,11 @@
 
 # Usage: ./pre-flight_check.sh -p to do the pre-flight check for WebUI -s to auto sync the repo and plugin to compatible commit id
 
-INITIAL_SUPPORT_COMMIT_ROOT=f865d3e11647dfd6c7b2cdf90dde24680e58acd8
-INITIAL_SUPPORT_COMMIT_CONTROLNET=07bed6ccf8a468a45b2833cfdadc749927cbd575
+INITIAL_SUPPORT_COMMIT_ROOT=a3ddf464a2ed24c999f67ddfef7969f8291567be
+INITIAL_SUPPORT_COMMIT_CONTROLNET=e9679f8fc50880a92d6f1b6fc1aabad41079efd5
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
+INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
+INITIAL_SUPPORT_COMMIT_SAM=ffe263155d7f3ac4ee23a96262ecb77b9899ed95
 
 # built the initial support commit list from option or default value if not provided
 INITIAL_SUPPORT_COMMIT_LIST=(
@@ -16,11 +18,15 @@ INITIAL_SUPPORT_COMMIT_LIST=(
 REPO_URL_LIST=(
     "https://github.com/Mikubill/sd-webui-controlnet.git"
     "https://github.com/d8ahazard/sd_dreambooth_extension.git"
+    "https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git"
+    "https://github.com/continue-revolution/sd-webui-segment-anything.git"
 )
 
 REPO_FOLDER_LIST=(
     "sd-webui-controlnet"
     "sd_dreambooth_extension"
+    "stable-diffusion-webui-rembg"
+    "sd-webui-segment-anything"
 )
 
 show_help() {
@@ -167,6 +173,22 @@ version_sync() {
     git checkout main
     git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
+    cd ..
+
+    # Clone stable-diffusion-webui-rembg
+    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+    # Go to stable-diffusion-webui-rembg directory and reset to specific commit
+    cd stable-diffusion-webui-rembg
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
+    cd ..
+
+    # Clone sd-webui-segment-anything
+    git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
+
+    # Go to sd-webui-segment-anything directory and reset to specific commit
+    cd sd-webui-segment-anything
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
     cd ..
 }
 
