@@ -126,7 +126,7 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
                 return response['Items']
             return response
         else:
-            if limit - 1 <= 0:
+            if limit <= 0:
                 logger.info(f"query inference job list error because of limit <0 {limit}")
                 return ""
             if filter_expression:
@@ -138,7 +138,7 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
             logger.info(f"query inference job list response is {str(response)}")
             if response:
                 if len(response['Items']) >= limit:
-                    return response['Items'][0: limit-1]
+                    return response['Items'][0: limit]
                 else:
                     return response['Items']
             return response
