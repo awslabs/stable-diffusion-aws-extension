@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # Define the keyword array to find
-FIND_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=" "INITIAL_SUPPORT_COMMIT_CONTROLNET=" "INITIAL_SUPPORT_COMMIT_DREAMBOOTH=")
+FIND_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=" "INITIAL_SUPPORT_COMMIT_CONTROLNET=" "INITIAL_SUPPORT_COMMIT_DREAMBOOTH=" "INITIAL_SUPPORT_COMMIT_REMBG=" "INITIAL_SUPPORT_COMMIT_SAM=")
 
 # Define the text to replace from input
-REPLACE_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=$1" "INITIAL_SUPPORT_COMMIT_CONTROLNET=$2" "INITIAL_SUPPORT_COMMIT_DREAMBOOTH=$3")
+REPLACE_TEXT=("INITIAL_SUPPORT_COMMIT_ROOT=$1" "INITIAL_SUPPORT_COMMIT_CONTROLNET=$2" "INITIAL_SUPPORT_COMMIT_DREAMBOOTH=$3" "INITIAL_SUPPORT_COMMIT_REMBG=$4" "INITIAL_SUPPORT_COMMIT_SAM=$5")
 
 # Array of files
 FILES=("pre-flight.sh" "pre-flight.bat" "install.sh" "install.bat")
 
 # helper function to hint the script usage
 function usage {
-    echo "Usage: $0 <initial_support_commit_root> <initial_support_commit_controlnet> <initial_support_commit_dreambooth>"
-    echo "Example: $0 1234567890 1234567890 1234567890"
+    echo "Usage: $0 <initial_support_commit_root> <initial_support_commit_controlnet> <initial_support_commit_dreambooth> <initial_support_commit_rembg> <initial_support_commit_sam>"
+    echo "Example: $0 1234567890 1234567890 1234567890 1234567890 1234567890"
     exit 1
 }
 
