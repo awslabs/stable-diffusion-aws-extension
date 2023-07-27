@@ -18,7 +18,7 @@ Use the following steps to deploy this solution on AWS.
 
 ## Deployment steps
 
-### Step 1: Deploy Stable Diffusion WebUI.
+### Step 1: Deploy Stable Diffusion WebUI (Linux).
 
 1. Download the CloudFormation Template from [link](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)
 
@@ -37,6 +37,15 @@ Use the following steps to deploy this solution on AWS.
 8. Wait until the stack is created.
 
 9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+
+### Step 1: Deploy Stable Diffusion WebUI (Windows).
+1. Start a Windows Server and log in via RDP.
+2. Refer to [this link](https://docs.aws.amazon.com/en_us/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html) to install the NVIDIA driver.
+3. Visit the [Python website](https://www.python.org/downloads/release/python-3106/), download Python, and install it. Remember to check "Add Python to Path" during installation.
+4. Visit the [Git website](https://git-scm.com/download/win), download Git, and install it.
+5. Open PowerShell and download the source code of this project by executing: `git clone https://github.com/awslabs/stable-diffusion-aws-extension`.
+6. Inside the source code directory, run `install.bat`.
+7. In the downloaded `stable-diffusion-webui` folder, run `webui-user.bat`.
 
 
 ### Step 2: Deploy the solution as a middleware.
