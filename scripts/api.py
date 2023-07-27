@@ -18,6 +18,11 @@ import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
 
 dreambooth_available = True
+THREAD_CHECK_COUNT = 1
+CONDITION_POOL_MAX_COUNT = 10
+CONDITION_WAIT_TIME_OUT = 100000
+
+
 def dummy_function(*args, **kwargs):
     return None
 
@@ -182,9 +187,12 @@ def sagemaker_api(_, app: FastAPI):
         with condition:
             thread_deque.append(req)
             print(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
-            if len(thread_deque) > 1:
+            if len(thread_deque) > THREAD_CHECK_COUNT and len(thread_deque) <= CONDITION_POOL_MAX_COUNT:
                 print(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
-                condition.wait(timeout=100000)
+                condition.wait(timeout=CONDITION_WAIT_TIME_OUT)
+            elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
+                print(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
+                raise MemoryError
             print(f"task is {req.task}")
             print(f"checkpoint_info is {req.checkpoint_info}")
             print(f"models is {req.models}")
