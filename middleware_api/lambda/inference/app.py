@@ -222,7 +222,6 @@ async def process_image(session, image_url):
 async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
-
         inference_id = get_uuid()
 
         payload_checkpoint_info = await request.json()
