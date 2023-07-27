@@ -182,7 +182,16 @@ def sagemaker_api(_, app: FastAPI):
         # download param from s3 and read as payload
         payload = {}
         if req.param_s3:
-            payload = json.loads(read_from_s3(req.param_s3))
+            def parse_constant(c: str) -> float:
+                if c == "NaN":
+                    raise ValueError("NaN is not valid JSON")
+
+                if c == 'Infinity':
+                    return sys.float_info.max
+
+                return float(c)
+
+            payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
             show_slim_dict(payload)
 
         print(f"extra_single_payload is: ")

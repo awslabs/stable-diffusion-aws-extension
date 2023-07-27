@@ -8,7 +8,16 @@ class MmeUtilsTest(TestCase):
         from utils import read_from_s3
         content = read_from_s3('s3://sd-release-test-sddreamboothtr-aigcbucketa457cb49-dhvez2qft7lj/txt2img/infer_v2/1690443798.119154/api_param.json')
         import json
-        print(json.loads(content))
+        def parse_constant(c: str) -> float:
+            if c == "NaN":
+                raise ValueError("NaN is not valid JSON")
+
+            if c == 'Infinity':
+                return sys.float_info.max
+
+            return float(c)
+
+        print(json.loads(content, parse_constant=parse_constant))
 
     def test_checkspace_and_update_models(self):
         selected_models = {

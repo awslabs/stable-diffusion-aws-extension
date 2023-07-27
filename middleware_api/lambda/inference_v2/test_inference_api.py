@@ -42,7 +42,7 @@ class InferenceApiTest(TestCase):
         _id = str(datetime.now().timestamp())
         resp = prepare_inference(event, MockContext(aws_request_id=_id))
         print(resp)
-        assert resp['status'] is 200
+        assert resp['status'] == 200
         # get the inference job from ddb by job id
 
         from inference_api import inference_table_name, ddb_service
