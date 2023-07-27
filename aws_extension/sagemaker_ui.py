@@ -456,7 +456,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     print(f"Refresh checkpionts after upload...")
     refresh_all_models()
 
-    return plaintext_to_html(log), None, None, None, None, None
+    return log, None, None, None, None, None
 
 def generate_on_cloud(sagemaker_endpoint):
     print(f"checkpiont_info {checkpoint_info}")
