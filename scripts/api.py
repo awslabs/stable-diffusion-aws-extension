@@ -17,7 +17,8 @@ import sys
 from aws_extension.models import InvocationsRequest
 from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path
 import requests
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
+from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, \
+    upload_folder_to_s3_by_tar, read_from_s3
 
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
@@ -126,7 +127,7 @@ def merge_model_on_cloud(req):
 
     model_yaml = (merge_model_name[:-len(merge_model_name.split('.')[-1])]+'yaml').replace('(','\(').replace(')','\)')
     model_yaml_complete_path = base_path + '/' + model_yaml
-    
+
     print(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
 
     if yaml_states:
@@ -175,14 +176,15 @@ def sagemaker_api(_, app: FastAPI):
                 print(f" : {payload}")
 
         print(f"task is {req.task}")
-        print(f"checkpoint_info is {req.checkpoint_info}")
+
         print(f"models is {req.models}")
-        print(f"txt2img_payload is: ")
-        txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
-        show_slim_dict(txt2img_payload)
-        print(f"img2img_payload is: ")
-        img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
-        show_slim_dict(img2img_payload)
+
+        # download param from s3 and read as payload
+        payload = {}
+        if req.param_s3:
+            payload = json.loads(read_from_s3(req.param_s3))
+            show_slim_dict(payload)
+
         print(f"extra_single_payload is: ")
         extra_single_payload = {} if req.extras_single_payload is None else json.loads(req.extras_single_payload.json())
         show_slim_dict(extra_single_payload)
@@ -200,17 +202,16 @@ def sagemaker_api(_, app: FastAPI):
 
         if req.task == 'txt2img' or req.task == 'img2img':
             selected_models = req.models
-            checkpoint_info = req.checkpoint_info
-            checkspace_and_update_models(selected_models, checkpoint_info)
+            checkspace_and_update_models(selected_models)
 
         try:
             if req.task == 'txt2img':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=json.loads(req.txt2img_payload.json()))
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img', json=payload)
                 #response_info = response.json()
                 #print(response_info.keys())
                 return response.json()
             elif req.task == 'img2img':
-                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=json.loads(req.img2img_payload.json()))
+                response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img', json=payload)
                 # response = self.img2imgapi(req.img2img_payload)
                 # shared.opts.data = default_options
                 return response.json()

@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import requests
 
-os.environ.setdefault('AWS_PROFILE', 'playground')
+os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
 os.environ.setdefault('S3_BUCKET', 'alvindaiyan-aigc-testing-playground')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
 os.environ.setdefault('MODEL_TABLE', 'ModelTable')
@@ -86,6 +86,14 @@ class ModelsApiTest(TestCase):
     def test_list_checkpoints(self):
         from model_and_train.checkpoint_api import list_all_checkpoints_api
         resp = list_all_checkpoints_api({}, {})
+        print(resp)
+
+    def test_list_train_jobs(self):
+        from train_api import list_all_train_jobs_api
+        resp = list_all_train_jobs_api({
+            'queryStringParameters': {
+            }
+        }, {})
         print(resp)
 
     def test_create_update_checkpoint(self):

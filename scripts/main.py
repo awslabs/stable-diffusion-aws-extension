@@ -9,7 +9,6 @@ from modules.ui import create_refresh_button
 from modules.ui_components import FormRow
 from utils import get_variable_from_json
 from utils import save_variable_to_json
-from PIL import Image
 
 # sys.path.append("extensions/stable-diffusion-aws-extension/scripts")
 # import sagemaker_ui
@@ -81,7 +80,87 @@ class SageMakerUI(scripts.Script):
             sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
             return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
-    def process(self, p, sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, sd_checkpoint_img2img,  sd_checkpoint_refresh_button_img2img,  textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, choose_txt2img_inference_job_id, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name):
+    def before_process(self, p, *args):
+        import json
+        from PIL import Image, PngImagePlugin
+        from io import BytesIO
+        import base64
+        from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
+        import numpy
+        from modules import sd_models
+
+        current_model = sd_models.select_checkpoint()
+        print(current_model.name)
+        api_param_cls = None
+
+        if self.is_img2img:
+            api_param_cls = StableDiffusionImg2ImgProcessingAPI
+
+        if self.is_txt2img:
+            api_param_cls = StableDiffusionTxt2ImgProcessingAPI
+
+        if not api_param_cls:
+            raise NotImplementedError
+
+        api_param = api_param_cls(**p.__dict__)
+
+        def get_pil_metadata(pil_image):
+            # Copy any text-only metadata
+            metadata = PngImagePlugin.PngInfo()
+            for key, value in pil_image.info.items():
+                if isinstance(key, str) and isinstance(value, str):
+                    metadata.add_text(key, value)
+
+            return metadata
+
+        def encode_pil_to_base64(pil_image):
+            with BytesIO() as output_bytes:
+                pil_image.save(output_bytes, "PNG", pnginfo=get_pil_metadata(pil_image))
+                bytes_data = output_bytes.getvalue()
+
+            base64_str = str(base64.b64encode(bytes_data), "utf-8")
+            return "data:image/png;base64," + base64_str
+
+
+        def encode_no_jsonlised(obj):
+            import enum
+
+            if isinstance(obj, numpy.ndarray):
+                return encode_pil_to_base64(Image.fromarray(obj))
+                # return obj.tolist()
+                # return "base64 str"
+            elif isinstance(obj, Image.Image):
+                return encode_pil_to_base64(obj)
+            elif isinstance(obj, enum.Enum):
+                return obj.value
+            elif hasattr(obj, '__dict__'):
+                return obj.__dict__
+            else:
+                print(f'may not able to json dumps {type(obj)}: {str(obj)}')
+                return str(obj)
+
+        selected_script_index = p.script_args[0] - 1
+        api_param.script_args = []
+        for sid, script in enumerate(p.scripts.scripts):
+            if script.alwayson:
+                print(f'{script.name} {script.args_from} {script.args_to}')
+                api_param.alwayson_scripts[script.name] = {}
+                api_param.alwayson_scripts[script.name]['args'] = []
+                for arg in p.script_args[script.args_from:script.args_to]:
+                    api_param.alwayson_scripts[script.name]['args'].append(arg)
+            elif selected_script_index == sid:
+                api_param.script_name = script.name
+                for arg in p.script_args[script.args_from:script.args_to]:
+                    api_param.script_args.append(arg)
+
+        api_param.sampler_index = p.sampler_name
+        js = json.dumps(api_param, default=encode_no_jsonlised)
+        with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
+            f.write(js)
+
+        pass
+
+    def process(self, p, *args):
         pass
 
 def on_after_component_callback(component, **_kwargs):

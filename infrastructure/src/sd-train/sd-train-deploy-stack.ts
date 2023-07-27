@@ -14,8 +14,8 @@ import {
 import { AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
+// import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
@@ -68,11 +68,11 @@ export class SdTrainDeployStack extends NestedStack {
     this.snsTopic = this.createSns(props.emailParam);
     this.s3Bucket = this.createS3Bucket();
     // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(this, 'DeployApiTemplate', {
-      sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
-      destinationBucket: this.s3Bucket,
-      destinationKeyPrefix: 'template',
-    });
+    // new s3deploy.BucketDeployment(this, 'DeployApiTemplate', {
+    //   sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
+    //   destinationBucket: this.s3Bucket,
+    //   destinationKeyPrefix: 'template',
+    // });
 
     const commonLayer = this.commonLayer();
     this.default_endpoint_name = '';
@@ -291,48 +291,48 @@ export class SdTrainDeployStack extends NestedStack {
     // CDK parameters for SNS email address
     // Create SNS topic for notifications
     // const snsKmsKey = new kms.Key(this, 'SNSTrainEncryptionKey');
-    // const snsKey = new kms.Key(this, "KmsMasterKey", {
-    //   enableKeyRotation: true,
-    //   policy: new iam.PolicyDocument({
-    //     assignSids: true,
-    //     statements: [
-    //       new iam.PolicyStatement({
-    //         actions: ["kms:GenerateDataKey*", "kms:Decrypt", "kms:Encrypt"],
-    //         resources: ["*"],
-    //         effect: iam.Effect.ALLOW,
-    //         principals: [
-    //           new iam.ServicePrincipal("sns.amazonaws.com"),
-    //           new iam.ServicePrincipal("cloudwatch.amazonaws.com"),
-    //           new iam.ServicePrincipal("events.amazonaws.com"),
-    //           new iam.ServicePrincipal('sagemaker.amazonaws.com'),
-    //         ],
-    //       }),
-    //       new iam.PolicyStatement({
-    //         actions: [
-    //           "kms:Create*",
-    //           "kms:Describe*",
-    //           "kms:Enable*",
-    //           "kms:List*",
-    //           "kms:Put*",
-    //           "kms:Update*",
-    //           "kms:Revoke*",
-    //           "kms:Disable*",
-    //           "kms:Get*",
-    //           "kms:Delete*",
-    //           "kms:ScheduleKeyDeletion",
-    //           "kms:CancelKeyDeletion",
-    //           "kms:GenerateDataKey",
-    //           "kms:TagResource",
-    //           "kms:UntagResource",
-    //         ],
-    //         resources: ["*"],
-    //         effect: iam.Effect.ALLOW,
-    //         principals: [new iam.AccountRootPrincipal()],
-    //       }),
-    //     ],
-    //   }),
-    // });
-    
+    const snsKey = new kms.Key(this, 'KmsMasterKey', {
+      enableKeyRotation: true,
+      policy: new iam.PolicyDocument({
+        assignSids: true,
+        statements: [
+          new iam.PolicyStatement({
+            actions: ['kms:GenerateDataKey*', 'kms:Decrypt', 'kms:Encrypt'],
+            resources: ['*'],
+            effect: iam.Effect.ALLOW,
+            principals: [
+              new iam.ServicePrincipal('sns.amazonaws.com'),
+              new iam.ServicePrincipal('cloudwatch.amazonaws.com'),
+              new iam.ServicePrincipal('events.amazonaws.com'),
+              new iam.ServicePrincipal('sagemaker.amazonaws.com'),
+            ],
+          }),
+          new iam.PolicyStatement({
+            actions: [
+              'kms:Create*',
+              'kms:Describe*',
+              'kms:Enable*',
+              'kms:List*',
+              'kms:Put*',
+              'kms:Update*',
+              'kms:Revoke*',
+              'kms:Disable*',
+              'kms:Get*',
+              'kms:Delete*',
+              'kms:ScheduleKeyDeletion',
+              'kms:CancelKeyDeletion',
+              'kms:GenerateDataKey',
+              'kms:TagResource',
+              'kms:UntagResource',
+            ],
+            resources: ['*'],
+            effect: iam.Effect.ALLOW,
+            principals: [new iam.AccountRootPrincipal()],
+          }),
+        ],
+      }),
+    });
+
     const snsTopic = new aws_sns.Topic(this, 'StableDiffusionSnsTopic', {
       // masterKey: snsKey,
     });
