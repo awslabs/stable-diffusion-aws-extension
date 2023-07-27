@@ -47,7 +47,7 @@ export class SDAsyncInferenceStack extends NestedStack {
   ) {
     super(scope, id, props);
 
-    if (!props?.ecr_image_tag){
+    if (!props?.ecr_image_tag) {
       throw new Error('default_inference_ecr_image is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
@@ -125,8 +125,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal('sagemaker.amazonaws.com'),
-        new iam.ServicePrincipal('lambda.amazonaws.com')
-      )
+        new iam.ServicePrincipal('lambda.amazonaws.com')),
     });
 
     inferenceLambdaRole.addManagedPolicy(
@@ -159,7 +158,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           SAGEMAKER_ENDPOINT_NAME: props.default_endpoint_name,
         },
-        role:inferenceLambdaRole,
+        role: inferenceLambdaRole,
         logRetention: RetentionDays.ONE_WEEK,
       },
     );
@@ -196,9 +195,9 @@ export class SDAsyncInferenceStack extends NestedStack {
         'dynamodb:PutItem',
         'dynamodb:DeleteItem',
         'dynamodb:UpdateItem',
-        "dynamodb:Describe*",
-        "dynamodb:List*",
-        "dynamodb:Scan",
+        'dynamodb:Describe*',
+        'dynamodb:List*',
+        'dynamodb:Scan',
       ],
       resources: [sd_endpoint_deployment_job_table.tableArn, sd_inference_job_table.tableArn],
     });
@@ -225,11 +224,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     inferenceLambda.addToRolePolicy(ddbStatement);
     inferenceLambda.addToRolePolicy(s3Statement);
     inferenceLambda.addToRolePolicy(stateMachineStatement);
-    inferenceLambda.addToRolePolicy(snsStatement); 
+    inferenceLambda.addToRolePolicy(snsStatement);
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
-    
+
     // The api can be invoked directly from the user's client code, the path starts with /api
     const inferenceApi = restful_api?.root.addResource('api').addResource('inference');
     const run_sagemaker_inference_api = inferenceApi.addResource(
@@ -279,8 +278,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
 
     const delete_deployment_jobs = inference.addResource(
-      'delete-sagemaker-endpoint'
-    );
+      'delete-sagemaker-endpoint');
     delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
       apiKeyRequired: true,
     });
@@ -409,40 +407,39 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     const handler = new python.PythonFunction(
       this,
-      "InferenceResultNotification",
+      'InferenceResultNotification',
       {
-          entry: path.join(
-              __dirname,
-              "../../../middleware_api/lambda/inference_result_notification"
-          ),
-          runtime: lambda.Runtime.PYTHON_3_9,
-          handler: "lambda_handler",
-          index: 'app.py', // optional, defaults to 'index.py'
-          memorySize: 256,
-          timeout: Duration.seconds(900),
-          environment: {
-              DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
-              DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
-              DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: sd_endpoint_deployment_job_table.tableName,
-              S3_BUCKET: props?.s3_bucket.bucketName ?? '',
-              ACCOUNT_ID: Aws.ACCOUNT_ID,
-              REGION_NAME: Aws.REGION,
-              SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-              SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
-              STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
-              NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-              INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+        entry: path.join(
+          __dirname,
+          '../../../middleware_api/lambda/inference_result_notification',
+        ),
+        runtime: lambda.Runtime.PYTHON_3_9,
+        handler: 'lambda_handler',
+        index: 'app.py', // optional, defaults to 'index.py'
+        memorySize: 256,
+        timeout: Duration.seconds(900),
+        environment: {
+          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
+          DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
+          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: sd_endpoint_deployment_job_table.tableName,
+          S3_BUCKET: props?.s3_bucket.bucketName ?? '',
+          ACCOUNT_ID: Aws.ACCOUNT_ID,
+          REGION_NAME: Aws.REGION,
+          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
+          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+          STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
+          NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
+          INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+        },
+        bundling: {
+          buildArgs: {
+            PIP_INDEX_URL: 'https://pypi.org/simple/',
+            PIP_EXTRA_INDEX_URL: 'https://pypi.org/simple/',
           },
-          bundling: {
-              buildArgs: {
-                  PIP_INDEX_URL: "https://pypi.org/simple/",
-                  PIP_EXTRA_INDEX_URL: "https://pypi.org/simple/",
-              }
-          },
-          logRetention: RetentionDays.ONE_WEEK,
-      }
+        },
+        logRetention: RetentionDays.ONE_WEEK,
+      },
     );
-  
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
