@@ -456,7 +456,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     print(f"Refresh checkpionts after upload...")
     refresh_all_models()
 
-    return plaintext_to_html(log), None, None, None, None, None
+    return log, None, None, None, None, None
 
 def generate_on_cloud(sagemaker_endpoint):
     print(f"checkpiont_info {checkpoint_info}")
@@ -757,20 +757,20 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     full_dropdown_items = [item.split('.')[0] for item in full_dropdown_items]
     
     # Loop over each item in full_dropdown_items and remove it from txt2img_prompt
+    type_str = ''
+    if model_name == 'Lora':
+        type_str = 'lora:'
+    elif model_name == 'hypernetworks':
+        type_str = 'hypernet:'
     for item in full_dropdown_items:
         if with_angle_brackets:
-            txt2img_prompt = re.sub(f'<{item}:\d+>', "", txt2img_prompt).strip() 
+            txt2img_prompt = re.sub(f'<{type_str}{item}:\d+>', "", txt2img_prompt).strip()
         else:
             txt2img_prompt = txt2img_prompt.replace(item, "").strip()
 
     # Loop over each item in selected_items and append it to txt2img_prompt
     for item in selected_items:
         if with_angle_brackets:
-            type_str = ''
-            if model_name == 'Lora':
-                type_str = 'lora:'
-            elif model_name == 'hypernetworks':
-                type_str = 'hypernet:'
             txt2img_prompt += ' ' + '<' + type_str + item + ':1>'
         else:
             txt2img_prompt += ' ' + item
