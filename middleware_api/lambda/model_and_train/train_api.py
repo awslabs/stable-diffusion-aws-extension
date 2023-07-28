@@ -12,7 +12,7 @@ import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common.util import load_json_from_s3, publish_msg, save_json_to_file, tar
+from common.util import load_json_from_s3, publish_msg, save_json_to_file 
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
@@ -79,11 +79,12 @@ def create_train_job_api(raw_event, context):
             # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
             if "config_params" in event.params:
                 db_config_json.update(event.params["config_params"])
+            
             # Add model parameters into train params
             event.params["training_params"]["model_name"] = model.name
             event.params["training_params"]["model_type"] = model.model_type
             event.params["training_params"]["s3_model_path"] = model.output_s3_location
-            print(event.params)
+
             # Upload the merged JSON string to the S3 bucket as a tar file
             try:
                 if not os.path.exists(tar_file_content):

@@ -236,45 +236,6 @@ async def run_sagemaker_inference(request: Request):
             logger.info('invoked by api')
             invoked_from_api = True
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
-            # Merge the user parameter with the ones in the template
-            params_dict = {**payload_checkpoint_info, **params_dict}
-            # Upload payload to S3 bucket
-            file_name = 'inference-' + str(uuid.uuid4()) + '.json'
-            json_data = json.dumps(params_dict)
-            try:
-                # Upload the JSON string to the S3 bucket
-                s3.put_object(Bucket=S3_BUCKET_NAME, Key='inference/' + file_name, Body=json_data)
-                logger.info(f"JSON file '{file_name}' uploaded to '{S3_BUCKET_NAME}' successfully.")
-            except Exception as e:
-                raise RuntimeError(f"Error uploading JSON file to S3: {e}")
-
-            # image_urls = ['https://example.com/image1.png', 'https://example.com/image2.jpg', 'https://example.com/image3.gif']
-            # async def api_test():
-            #     async with aiohttp.ClientSession() as session:
-            #         tasks = [process_image(session, image_url) for image_url in image_urls]
-            #         base64_images = await asyncio.gather(*tasks)
-
-            #         s3_bucket_name = 'your-s3-bucket-name'
-            #         s3_client = boto3.client('s3')
-            #         for base64_image, image_url in zip(base64_images, image_urls):
-            #             image_suffix = image_url.split('.')[-1].lower()
-            #             data_uri_suffix = get_data_uri_suffix(image_suffix)
-            #             base64_image_with_data_uri = f"{data_uri_suffix},{base64_image}"
-
-            #             # Generate a UUID as the filename
-            #             filename = str(uuid.uuid4()) + "." + image_suffix
-            #             s3_key = f"folder/{filename}"  # Replace 'folder/' with the desired S3 path
-
-            #             s3_client.put_object(
-            #                 Bucket=s3_bucket_name,
-            #                 Key=s3_key,
-            #                 Body=base64_image_with_data_uri.encode('utf-8'),
-            #                 ContentType=f"image/{image_suffix}"
-            #             )
-                        
-            # # Create and run the event loop
-            # loop = asyncio.get_event_loop()
-            # loop.run_until_complete(api_test())
         else:
             # Invoke by UI
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
