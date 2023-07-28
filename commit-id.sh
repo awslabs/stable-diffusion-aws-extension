@@ -17,7 +17,7 @@ function usage {
 }
 
 # Check if the correct number of arguments are passed
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 5 ]; then
     echo "Error: Invalid number of arguments"
     usage
 fi
