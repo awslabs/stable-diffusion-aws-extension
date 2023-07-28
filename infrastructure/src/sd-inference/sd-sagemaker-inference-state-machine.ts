@@ -7,13 +7,16 @@ import * as stepfunctionsTasks from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { SnsPublishProps } from "aws-cdk-lib/aws-stepfunctions-tasks";
 import { Construct } from "constructs";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+
 
 export interface SagemakerInferenceProps {
     snsTopic: sns.Topic;
     snsErrorTopic: sns.Topic;
-    inferenceJobName: string;
-    s3_bucket_name: string;
-    endpointDeploymentJobName: string;
+    s3_bucket: s3.Bucket;
+    inferenceJobTable: dynamodb.Table;
+    endpointDeploymentJobTable: dynamodb.Table;
     userNotifySNS: sns.Topic; 
     inference_ecr_url: string;
 }
@@ -27,9 +30,9 @@ export class SagemakerInferenceStateMachine {
         this.stateMachineArn = this.sagemakerStepFunction(
             props.snsTopic,
             props.snsErrorTopic,
-            props.inferenceJobName,
-            props.s3_bucket_name,
-            props.endpointDeploymentJobName,
+            props.s3_bucket,
+            props.inferenceJobTable,
+            props.endpointDeploymentJobTable,
             props.userNotifySNS,
             props.inference_ecr_url
         ).stateMachineArn;
@@ -38,30 +41,103 @@ export class SagemakerInferenceStateMachine {
     private sagemakerStepFunction(
         snsTopic: sns.Topic,
         snsErrorTopic: sns.Topic,
-        inferenceJobName: string,
-        s3BucketName: string,
-        endpointDeploymentJobName: string,
+        s3Bucket: s3.Bucket,
+        inferenceJobTable: dynamodb.Table,
+        endpointDeploymentJobTable: dynamodb.Table,
         userNotifySNS: sns.Topic,
         inference_ecr_url: string,
     ): stepfunctions.StateMachine {
         const lambdaPolicy = // Grant Lambda permission to invoke SageMaker endpoint
             new iam.PolicyStatement({
                 actions: [
-                    "sagemaker:*",
-                    "s3:Get*",
-                    "s3:List*",
-                    "s3:PutObject",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "lambda:GetFunctionConfiguration",
+                    "s3:ListBucket",
                     "s3:GetObject",
-                    "sns:*",
-                    "states:*",
-                    "lambda:*",
-                    "iam:*",
-                    "sts:*",
-                    "ecr:*",
-                    "dynamodb:*"
                 ],
                 resources: ["*"],
             });
+        
+        const endpointStatement = new iam.PolicyStatement({
+            actions: [
+                "sagemaker:InvokeEndpoint",
+                "sagemaker:CreateModel",
+                "sagemaker:CreateEndpoint",
+                "sagemaker:CreateEndpointConfig",
+                "sagemaker:DescribeEndpoint",
+                "sagemaker:InvokeEndpointAsync",
+                "ecr:GetAuthorizationToken",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:GetRepositoryPolicy",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages",
+                "ecr:DescribeImages",
+                "ecr:BatchGetImage",
+                "ecr:InitiateLayerUpload",
+                "ecr:UploadLayerPart",
+                "ecr:CompleteLayerUpload",
+                "ecr:PutImage",
+            ],
+            resources: ["*"],
+        });
+
+        const s3Statement = new iam.PolicyStatement({
+            actions: [
+                "s3:Get*",
+                "s3:List*",
+                "s3:PutObject",
+                "s3:GetObject",
+            ],
+            resources: [
+                s3Bucket.bucketArn,
+                `${s3Bucket.bucketArn}/*`,
+                'arn:aws:s3:::*sagemaker*',
+            ],
+        }); 
+
+        const snsStatement = new iam.PolicyStatement({
+            actions: [
+                "sns:Publish",
+                "sns:ListSubscriptionsByTopic",
+                "sns:ListTopics",
+            ],
+            resources: [snsTopic.topicArn, snsErrorTopic.topicArn, userNotifySNS.topicArn],
+        });
+
+        const ddbStatement = new iam.PolicyStatement({
+            actions: [
+                "dynamodb:UpdateItem",
+                "dynamodb:PutItem",
+                "dynamodb:BatchGetItem",
+                "dynamodb:Describe*",
+                "dynamodb:List*",
+                "dynamodb:GetItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+            ],
+            resources: [inferenceJobTable.tableArn, endpointDeploymentJobTable.tableArn],
+        });
+
+        const lambdaErrorHandlerRole = new iam.Role(this.scope, 'LambdaErrorHandlerRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaErrorHandlerRole.addToPolicy(lambdaPolicy);
+        lambdaErrorHandlerRole.addToPolicy(snsStatement);
+        lambdaErrorHandlerRole.addToPolicy(s3Statement);
+        lambdaErrorHandlerRole.addToPolicy(endpointStatement);
+        lambdaErrorHandlerRole.addToPolicy(ddbStatement);
+        lambdaErrorHandlerRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaErrorHandlerRole.roleArn],
+            })
+        );
 
         const lambdaErrorHandler = new lambda.Function(
             this.scope,
@@ -79,16 +155,33 @@ export class SagemakerInferenceStateMachine {
                 environment: {
                     SNS_INFERENCE_SUCCESS: snsTopic.topicArn,
                     SNS_INFERENCE_ERROR: snsErrorTopic.topicArn,
-                    DDB_INFERENCE_TABLE_NAME: inferenceJobName,
-                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobName,
+                    DDB_INFERENCE_TABLE_NAME: inferenceJobTable.tableName,
+                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobTable.tableName,
                     SNS_NOTIFY_TOPIC_ARN: userNotifySNS.topicArn,
-                    S3_BUCKET_NAME: s3BucketName,
+                    S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaErrorHandlerRole,
             }
         );
-            
-        lambdaErrorHandler.addToRolePolicy(lambdaPolicy);
+
+        const lambdaStartDeployRole = new iam.Role(this.scope, 'LambdaStartDeployRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaStartDeployRole.addToPolicy(lambdaPolicy);
+        lambdaStartDeployRole.addToPolicy(snsStatement);
+        lambdaStartDeployRole.addToPolicy(s3Statement);
+        lambdaStartDeployRole.addToPolicy(endpointStatement);
+        lambdaStartDeployRole.addToPolicy(ddbStatement);
+        lambdaStartDeployRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaStartDeployRole.roleArn],
+            })
+        );
             
         // Define the Lambda functions
         const lambdaStartDeploy = new lambda.Function(
@@ -106,13 +199,32 @@ export class SagemakerInferenceStateMachine {
                 environment: {
                     SNS_INFERENCE_SUCCESS: snsTopic.topicArn,
                     SNS_INFERENCE_ERROR: snsErrorTopic.topicArn,
-                    DDB_INFERENCE_TABLE_NAME: inferenceJobName,
-                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobName,
+                    DDB_INFERENCE_TABLE_NAME: inferenceJobTable.tableName,
+                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobTable.tableName,
                     SNS_NOTIFY_TOPIC_ARN: userNotifySNS.topicArn,
-                    S3_BUCKET_NAME: s3BucketName,
+                    S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaStartDeployRole,
             }
+        );
+
+        const lambdaCheckDeploymentStatusRole = new iam.Role(this.scope, 'LambdaCheckDeploymentStatusRole', {
+            assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+        });
+
+        lambdaCheckDeploymentStatusRole.addToPolicy(lambdaPolicy);
+        lambdaCheckDeploymentStatusRole.addToPolicy(snsStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(s3Statement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(endpointStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(ddbStatement);
+        lambdaCheckDeploymentStatusRole.addToPolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "iam:PassRole",
+                ],
+                resources: [lambdaCheckDeploymentStatusRole.roleArn],
+            })
         );
 
         const lambdaCheckDeploymentStatus = new lambda.Function(
@@ -130,19 +242,17 @@ export class SagemakerInferenceStateMachine {
                 environment: {
                     SNS_INFERENCE_SUCCESS: snsTopic.topicName,
                     SNS_INFERENCE_ERROR: snsErrorTopic.topicName,
-                    DDB_INFERENCE_TABLE_NAME: inferenceJobName,
-                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobName,
+                    DDB_INFERENCE_TABLE_NAME: inferenceJobTable.tableName,
+                    DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: endpointDeploymentJobTable.tableName,
                     SNS_NOTIFY_TOPIC_ARN: userNotifySNS.topicArn,
-                    S3_BUCKET_NAME: s3BucketName,
+                    S3_BUCKET_NAME: s3Bucket.bucketName,
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
+                role: lambdaCheckDeploymentStatusRole,
             }
         );
 
         //TODO: still not working for assume sagemaker service, need to work it later
-        lambdaStartDeploy.addToRolePolicy(lambdaPolicy)
-        lambdaCheckDeploymentStatus.addToRolePolicy(lambdaPolicy);
-
         // Add the trust relationship for SageMaker service principal to both Lambda roles
         const sagemakerAssumeRolePolicy = new iam.PolicyStatement({
             actions: ['sts:AssumeRole'],
