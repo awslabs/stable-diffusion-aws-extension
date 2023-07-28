@@ -85,6 +85,7 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
+        # todo: check if endpoint is not none, if none, then not use
         import json
         from PIL import Image, PngImagePlugin
         from io import BytesIO
@@ -146,6 +147,7 @@ class SageMakerUI(scripts.Script):
         selected_script_index = p.script_args[0] - 1
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
+            # fixme: escape sagemaker plugin
             if script.alwayson:
                 print(f'{script.name} {script.args_from} {script.args_to}')
                 api_param.alwayson_scripts[script.name] = {}
@@ -159,12 +161,16 @@ class SageMakerUI(scripts.Script):
 
         api_param.sampler_index = p.sampler_name
         js = json.dumps(api_param, default=encode_no_jsonlised)
+        # todo: create an inference and upload to s3
+        # todo: start run infer
         with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
             f.write(js)
 
         pass
 
     def process(self, p, *args):
+        # todo: escape original infer
+        # todo: wait for result and parse it
         pass
 
     def _process_args_by_plugin(self, script_name, arg):
