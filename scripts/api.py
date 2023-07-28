@@ -393,11 +393,12 @@ def move_model_to_tmp(_, app: FastAPI):
 
 try:
     import modules.script_callbacks as script_callbacks
-    from modules import shared
-    shared.opts.data.update(control_net_max_models_num=10)
+
     script_callbacks.on_app_started(sagemaker_api)
     on_docker = os.environ.get('ON_DOCKER', "false")
     if on_docker == "true":
+        from modules import shared
+        shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)
     logger.debug("SD-Webui API layer loaded")
 except Exception as e:
