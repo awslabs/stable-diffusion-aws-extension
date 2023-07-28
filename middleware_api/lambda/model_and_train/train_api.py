@@ -78,7 +78,7 @@ def create_train_job_api(raw_event, context):
             # Invoked from api, no config file is defined in the parameters
             json_file_name = 'db_config_cloud.json'
             tar_file_name = 'db_config.tar'
-            tar_file_content = f'/tmp/sagemaker_dreambooth/{model.name}'
+            tar_file_content = f'/tmp/models/sagemaker_dreambooth/{model.name}'
             tar_file_path = f'/tmp/{tar_file_name}'
 
             db_config_json = load_json_from_s3(bucket_name, 'template/' + json_file_name)
@@ -99,8 +99,8 @@ def create_train_job_api(raw_event, context):
                 saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
                 print(f'file saved to {saved_path}')
                 with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
-                    # Add the contents of 'sagemaker_dreambooth' directory to the tar file without including the /tmp itself
-                    tar.add(tar_file_content, arcname='sagemaker_dreambooth')
+                    # Add the contents of 'models' directory to the tar file without including the /tmp itself
+                    tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
                 files = os.listdir("/tmp")
                 # Loop through the list and print the names of all files and directories
                 for file in files:
