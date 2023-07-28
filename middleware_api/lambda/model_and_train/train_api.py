@@ -48,12 +48,6 @@ def create_train_job_api(raw_event, context):
     event = Event(**raw_event)
     _type = event.train_type
 
-    # TODO:
-    # Get and extract db_config.tar
-    # Read config from db_config_cloud.json
-    # Merge user's json with the config in db_config_cloud.json
-    # Update metadata
-
     try:
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id
@@ -82,16 +76,14 @@ def create_train_job_api(raw_event, context):
             tar_file_path = f'/tmp/{tar_file_name}'
 
             db_config_json = load_json_from_s3(bucket_name, 'template/' + json_file_name)
-            # Merge user parameter with the one in S3 bucket, if no config_params is defined, use the default value in S3
-            print(event.params)
+            # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
             if "config_params" in event.params:
-                print("config from params")
-                print(event.params["config_params"])
-                print("json from s3 file")
-                print(db_config_json)
                 db_config_json.update(event.params["config_params"])
-                print("db config after merge")
-                print(db_config_json)
+            # Add model parameters into train params
+            event.params["training_params"]["model_name"] = model.name
+            event.params["training_params"]["model_type"] = model.model_type
+            event.params["training_params"]["s3_model_path"] = model.output_s3_location
+            print(event.params)
             # Upload the merged JSON string to the S3 bucket as a tar file
             try:
                 if not os.path.exists(tar_file_content):
@@ -101,17 +93,10 @@ def create_train_job_api(raw_event, context):
                 with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
                     # Add the contents of 'models' directory to the tar file without including the /tmp itself
                     tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
-                files = os.listdir("/tmp")
-                # Loop through the list and print the names of all files and directories
-                for file in files:
-                    print(file)
-                upload_resp = s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
-                print("upload to s3 bucket response")
-                print(upload_resp)
+                s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
                 logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
             except Exception as e:
                 raise RuntimeError(f"Error uploading JSON file to S3: {e}")
-
         else:    
             presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
 
