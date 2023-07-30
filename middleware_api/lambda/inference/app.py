@@ -8,8 +8,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
 from mangum import Mangum
-import aiohttp
-import asyncio
 from common.response_wrapper import resp_err
 from common.enum import MessageEnum
 from common.constant import const
@@ -18,8 +16,6 @@ from parse.parameter_parser import json_convert_to_payload
 from fastapi_pagination import add_pagination
 from datetime import datetime
 from typing import List
-import base64
-import requests
 
 import boto3
 from botocore.client import Config
@@ -205,23 +201,12 @@ def get_curent_time():
     formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
     return formatted_time
 
-async def download_image(session, image_url):
-    async with session.get(image_url) as response:
-        return await response.read()
-
-async def convert_image_to_base64(image_content):
-    return base64.b64encode(image_content).decode('utf-8')
-
-async def process_image(session, image_url):
-    image_content = await download_image(session, image_url)
-    base64_image = await convert_image_to_base64(image_content)
-    return base64_image
-
 @app.post("/inference/run-sagemaker-inference")
 @app.post("/inference-api/inference")
 async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
+
         inference_id = get_uuid()
 
         payload_checkpoint_info = await request.json()
@@ -229,19 +214,15 @@ async def run_sagemaker_inference(request: Request):
         task_type = payload_checkpoint_info.get('task_type')
         print(f"Task Type: {task_type}")
         path = request.url.path
-        invoked_from_api = False
         logger.info(f'Path: {path}')
         if path == '/inference-api/inference':
             # Invoke by API
             logger.info('invoked by api')
-            invoked_from_api = True
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
         else:
             # Invoke by UI
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'config/aigc.json')
         # logger.info(json.dumps(params_dict))
-        # params_dict = convert_image(params_dict, payload_checkpoint_info, invoked_from_api, task_type)
-        # Below line should be removed
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
         

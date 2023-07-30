@@ -6,4 +6,3 @@ Pillow==9.4.0
 numpy==1.23.5
 sagemaker==2.143.0
 gradio==3.34.0
-requests==2.31.0
