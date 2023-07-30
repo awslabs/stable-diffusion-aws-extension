@@ -128,6 +128,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // api gateway setup
+    const api_train_path = 'train-api/train';
     const restApi = new RestApiGateway(this, props.apiKey, [
       'model',
       'models',
@@ -137,6 +138,7 @@ export class SdTrainDeployStack extends NestedStack {
       'trains',
       'dataset',
       'datasets',
+      api_train_path,
     ]);
     this.apiGateway = restApi.apiGateway;
     const routers = restApi.routers;
@@ -157,7 +159,7 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       httpMethod: 'POST',
       modelTable: this.modelTable,
-      router: routers.train,
+      router: [routers.train, routers[api_train_path]],
       s3Bucket: this.s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: this.trainingTable,

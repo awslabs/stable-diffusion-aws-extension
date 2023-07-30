@@ -5,13 +5,14 @@ import os
 import base64
 import time
 from dataclasses import dataclass
-
-from typing import Any
+import boto3
+import tarfile
+from typing import Any, List, Optional
 import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common.util import publish_msg
+from common.util import load_json_from_s3, publish_msg, save_json_to_file 
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
@@ -26,9 +27,11 @@ sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
 image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
+region_name = os.environ['AWS_REGION']
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
+s3 = boto3.client('s3', region_name=region_name)
 
 
 @dataclass
@@ -36,7 +39,7 @@ class Event:
     train_type: str
     model_id: str
     params: dict[str, Any]
-    filenames: [str]
+    filenames: Optional[List[str]] = None
 
 
 # POST /train
@@ -64,7 +67,39 @@ def create_train_job_api(raw_event, context):
 
         base_key = f'{_type}/train/{model.name}/{request_id}'
         input_location = f'{base_key}/input'
-        presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
+        presign_url_map = None
+        if event.filenames is None:
+            # Invoked from api, no config file is defined in the parameters
+            json_file_name = 'db_config_cloud.json'
+            tar_file_name = 'db_config.tar'
+            tar_file_content = f'/tmp/models/sagemaker_dreambooth/{model.name}'
+            tar_file_path = f'/tmp/{tar_file_name}'
+
+            db_config_json = load_json_from_s3(bucket_name, 'template/' + json_file_name)
+            # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
+            if "config_params" in event.params:
+                db_config_json.update(event.params["config_params"])
+            
+            # Add model parameters into train params
+            event.params["training_params"]["model_name"] = model.name
+            event.params["training_params"]["model_type"] = model.model_type
+            event.params["training_params"]["s3_model_path"] = model.output_s3_location
+
+            # Upload the merged JSON string to the S3 bucket as a tar file
+            try:
+                if not os.path.exists(tar_file_content):
+                    os.makedirs(tar_file_content)
+                saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
+                print(f'file saved to {saved_path}')
+                with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
+                    # Add the contents of 'models' directory to the tar file without including the /tmp itself
+                    tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
+                s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
+                logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
+            except Exception as e:
+                raise RuntimeError(f"Error uploading JSON file to S3: {e}")
+        else:    
+            presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
 
         checkpoint = CheckPoint(
             id=request_id,
