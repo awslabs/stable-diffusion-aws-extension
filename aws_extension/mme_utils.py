@@ -2,8 +2,6 @@ import os
 import io
 import base64
 from PIL import Image
-import uuid
-import boto3
 from utils import ModelsRef
 
 try:
@@ -84,6 +82,7 @@ def checkspace_and_update_models(selected_models):
                 download_and_update(model_type, f'{model["s3"]}/{model["model_name"]}')
 
     shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]["model_name"]
+    #shared.opts.sd_vae = selected_models['vae'][0]
     import psutil
     sd_models.reload_model_weights()
     sd_vae.reload_vae_weights()

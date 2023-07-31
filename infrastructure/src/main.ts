@@ -62,7 +62,7 @@ export class Middleware extends Stack {
     const ddbTables = new Database(this, 'sd-ddb');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
-
+    const api_train_path = 'train-api/train';
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'model',
       'models',
@@ -72,6 +72,7 @@ export class Middleware extends Stack {
       'trains',
       'dataset',
       'datasets',
+      api_train_path,
     ]);
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3');

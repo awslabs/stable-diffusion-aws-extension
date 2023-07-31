@@ -124,6 +124,11 @@ class ModelsApiTest(TestCase):
             "status": "Training"
         }, {})
 
+    def test_check_train_job_status(self):
+        from model_and_train.train_api import check_train_job_status
+        event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0', 'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
+        check_train_job_status(event, {})
+
     def test_scan(self):
         import logging
         from common.ddb_service.client import DynamoDbUtilsService

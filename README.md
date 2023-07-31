@@ -140,4 +140,4 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ```
 
 ## Version
-[v1.0.0](https://github.com/awslabs/stable-diffusion-aws-extension/wiki#release-versions)
+Check our [wiki](https://github.com/awslabs/stable-diffusion-aws-extension/wiki) for latest & historical version

@@ -17,7 +17,14 @@ export class RestApiGateway {
     this.scope = scope;
     [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
     for (let route of routes) {
-      this.routers[route] = this.apiGateway.root.addResource(route);
+      const pathList: string[] = route.split('/');
+      // pathList has at least one item
+      let pathResource: Resource = this.apiGateway.root.addResource(pathList[0]);
+      for (let i = 1; i < pathList.length; i++) {
+        let pathPart: string = pathList[i];
+        pathResource = pathResource.addResource(pathPart);
+      }
+      this.routers[route] = pathResource;
     }
   }
 

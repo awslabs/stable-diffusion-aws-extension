@@ -70,7 +70,7 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       httpMethod: 'POST',
       modelTable: props.database.modelTable,
-      router: routers.train,
+      router: [routers.train, routers['train-api/train']],
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,

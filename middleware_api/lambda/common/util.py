@@ -1,6 +1,10 @@
+import json
 from typing import Dict
-
+import os
+import tarfile
 import boto3
+
+s3 = boto3.client('s3')
 
 
 def publish_msg(topic_arn, msg, subject):
@@ -42,3 +46,24 @@ def generate_presign_url(bucket_name, key, expires=3600, method='put_object') ->
                                              'Key': key,
                                              },
                                      ExpiresIn=expires)
+
+
+def load_json_from_s3(bucket_name: str, key: str):
+    '''
+    Get the JSON file from the specified bucket and key
+    '''
+    response = s3.get_object(Bucket=bucket_name, Key=key)
+    json_file = response['Body'].read().decode('utf-8')
+    data = json.loads(json_file)
+
+    return data
+
+
+def save_json_to_file(json_string: str, folder_path: str, file_name: str):
+    os.makedirs(folder_path, exist_ok=True)
+    file_path = os.path.join(folder_path, file_name)
+
+    with open(file_path, 'w') as file:
+        file.write(json.dumps(json_string))
+
+    return file_path

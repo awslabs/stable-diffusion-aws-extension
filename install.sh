@@ -1,9 +1,5 @@
 #!/bin/bash
 
-INITIAL_SUPPORT_COMMIT_ROOT=f865d3e11647dfd6c7b2cdf90dde24680e58acd8
-INITIAL_SUPPORT_COMMIT_CONTROLNET=07bed6ccf8a468a45b2833cfdadc749927cbd575
-INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
-
 # Clone stable-diffusion-webui
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 
@@ -36,4 +32,20 @@ git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
 # Go to sd_dreambooth_extension directory and reset to specific commit
 cd sd_dreambooth_extension
 git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
+cd ..
+
+# Clone stable-diffusion-webui-rembg
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+# Go to stable-diffusion-webui-rembg directory and reset to specific commit
+cd stable-diffusion-webui-rembg
+git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
+cd ..
+
+# Clone sd-webui-segment-anything
+git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
+
+# Go to sd-webui-segment-anything directory and reset to specific commit
+cd sd-webui-segment-anything
+git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
 cd ..
