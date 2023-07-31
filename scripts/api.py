@@ -194,8 +194,9 @@ def sagemaker_api(_, app: FastAPI):
             elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
                 logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
                 raise MemoryError
+
+            print(f'current version: dev')
             logger.info(f"task is {req.task}")
-            logger.info(f"checkpoint_info is {req.checkpoint_info}")
             logger.info(f"models is {req.models}")
             payload = {}
             if req.param_s3:
