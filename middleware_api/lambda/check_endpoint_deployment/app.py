@@ -24,7 +24,7 @@ def lambda_handler(event, context):
         if status == 'InService':
             current_time = str(datetime.now())
             event_payload['message'] = 'Deployment completed for endpoint "{}".'.format(name)
-            check_and_enable_autoscaling(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME, endpoint_deployment_job_id, 'autoscaling', endpoint_name, 'prod')
+            check_and_enable_autoscaling(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME, {'EndpointDeploymentJobId': endpoint_deployment_job_id}, 'autoscaling', endpoint_name, 'prod')
             update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
             update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status)
             update_endpoint_job_table(endpoint_deployment_job_id,'endTime', current_time)
@@ -72,7 +72,7 @@ def get_ddb_value(table_name, key, field_name):
     try:
         response = table.get_item(Key=key)
     except Exception as e:
-        print(e.response['Error']['Message'])
+        print(str(e))
         return None
     else:
         item = response['Item']
@@ -109,8 +109,8 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
     print(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, variant_name):
-    value = get_ddb_value(table_name, key, field_name)
-    if value == 'true':
+    autoscaling_enabled = get_ddb_value(table_name, key, field_name)
+    if autoscaling_enabled == 'true':
         max_number = get_ddb_value(table_name, key, 'max_instance_number')
         if max_number.isdigit():
             enable_autoscaling(endpoint_name, variant_name, 0, int(max_number))
@@ -118,7 +118,7 @@ def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, var
             print(f"the max_number field is not digit, just fallback to 1")
             enable_autoscaling(endpoint_name, variant_name, 0, 1)
     else:
-        print(f'value is {value}, no need to enable autoscaling')
+        print(f'autoscaling_enabled is {autoscaling_enabled}, no need to enable autoscaling')
 
 
 def describe_endpoint(name):
