@@ -92,7 +92,9 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
-        # todo: check if endpoint is not none, if none, then not use
+        if not args[0]:
+            return
+
         import json
         from PIL import Image, PngImagePlugin
         from io import BytesIO
@@ -233,6 +235,13 @@ class SageMakerUI(scripts.Script):
     def process(self, p, *args):
         # escape original infer
         # wait for result and parse it
+        on_docker = os.environ.get('ON_DOCKER', "false")
+        if on_docker == "true":
+            return
+
+        if not args[0]:
+            return
+
         all_prompts_before = p.all_prompts
         p.n_iter = 0
         p.disable_extra_networks = True
@@ -240,6 +249,13 @@ class SageMakerUI(scripts.Script):
         pass
 
     def postprocess(self, p, processed, *args):
+        on_docker = os.environ.get('ON_DOCKER', "false")
+        if on_docker == "true":
+            return
+
+        if not args[0]:
+            return
+
         # process result
         import time
         import json
@@ -288,6 +304,9 @@ class SageMakerUI(scripts.Script):
     def _process_args_by_plugin(self, script_name, arg):
         processors = {'controlnet': self._controlnet_args}
         models = {}
+        if script_name not in processors:
+            return arg, models
+
         f = processors[script_name]
         mdls = f(script_name, arg)
         for key, val in mdls.items():
