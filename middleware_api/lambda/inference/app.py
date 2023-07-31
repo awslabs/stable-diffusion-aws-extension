@@ -325,7 +325,9 @@ async def deploy_sagemaker_endpoint(request: Request):
         Item={
             'EndpointDeploymentJobId': endpoint_deployment_id,
             'startTime': current_time,
-            'status': 'inprogress'
+            'status': 'inprogress',
+            'max_instance_number': payload['initial_instance_count'],
+            'autoscaling': 'true'
         })
 
         logger.info("trigger step-function with following response")

@@ -24,6 +24,7 @@ def lambda_handler(event, context):
         if status == 'InService':
             current_time = str(datetime.now())
             event_payload['message'] = 'Deployment completed for endpoint "{}".'.format(name)
+            check_and_enable_autoscaling(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME, endpoint_deployment_job_id, 'autoscaling', endpoint_name, 'prod')
             update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
             update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status)
             update_endpoint_job_table(endpoint_deployment_job_id,'endTime', current_time)
@@ -63,6 +64,62 @@ def update_endpoint_job_table(endpoint_deployment_job_id, key, value):
         ExpressionAttributeValues={':r': value},
         ReturnValues="UPDATED_NEW"
     )
+
+def get_ddb_value(table_name, key, field_name):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name)
+
+    try:
+        response = table.get_item(Key=key)
+    except Exception as e:
+        print(e.response['Error']['Message'])
+        return None
+    else:
+        item = response['Item']
+        return item.get(field_name, None)
+
+def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
+    client = boto3.client('application-autoscaling')
+
+    # Register scalable target
+    response = client.register_scalable_target(
+        ServiceNamespace='sagemaker',
+        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ScalableDimension='sagemaker:variant:DesiredInstanceCount',
+        MinCapacity=low_value,
+        MaxCapacity=high_value,
+    )
+
+    # Define scaling policy
+    response = client.put_scaling_policy(
+        PolicyName='MyScalingPolicy',
+        ServiceNamespace='sagemaker',
+        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ScalableDimension='sagemaker:variant:DesiredInstanceCount',
+        PolicyType='TargetTrackingScaling',
+        TargetTrackingScalingPolicyConfiguration={
+            'TargetValue': 2.0,
+            'PredefinedMetricSpecification': {
+                'PredefinedMetricType': 'SageMakerVariantInvocationsPerInstance',
+            },
+            'ScaleInCooldown': 600,
+            'ScaleOutCooldown': 300
+        }
+    )
+    print(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
+
+def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, variant_name):
+    value = get_ddb_value(table_name, key, field_name)
+    if value == 'true':
+        max_number = get_ddb_value(table_name, key, 'max_instance_number')
+        if max_number.isdigit():
+            enable_autoscaling(endpoint_name, variant_name, 0, int(max_number))
+        else:
+            print(f"the max_number field is not digit, just fallback to 1")
+            enable_autoscaling(endpoint_name, variant_name, 0, 1)
+    else:
+        print(f'value is {value}, no need to enable autoscaling')
+
 
 def describe_endpoint(name):
     """ Describe SageMaker endpoint identified by input name.
