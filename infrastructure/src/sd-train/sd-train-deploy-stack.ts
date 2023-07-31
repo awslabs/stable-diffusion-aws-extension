@@ -6,7 +6,6 @@ import {
   StackProps,
 } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
@@ -33,6 +32,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   routers: {[key: string]: Resource};
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
+  commonLayer: PythonLayerVersion;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -51,7 +51,7 @@ export class SdTrainDeployStack extends NestedStack {
       destinationKeyPrefix: 'template',
     });
 
-    const commonLayer = this.commonLayer();
+    const commonLayer = props.commonLayer;
     const routers = props.routers;
 
     // GET /trains
@@ -200,13 +200,5 @@ export class SdTrainDeployStack extends NestedStack {
     });
   }
 
-  private commonLayer() {
-    return new PythonLayerVersion(this, 'aigc-common-layer', {
-      entry: `${this.srcRoot}`,
-      bundling: {
-        outputPathSuffix: '/python',
-      },
-      compatibleRuntimes: [Runtime.PYTHON_3_9],
-    });
-  }
+
 }

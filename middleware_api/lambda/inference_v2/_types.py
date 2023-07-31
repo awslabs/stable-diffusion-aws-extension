@@ -8,6 +8,8 @@ class InferenceJob:
     startTime: str
     status: str
     taskType: str
+    inference_info_name: Optional[Any] = None
+    image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
     params: Optional[dict[str, Any]] = None
 

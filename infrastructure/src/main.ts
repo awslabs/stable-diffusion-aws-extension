@@ -7,6 +7,7 @@ import { Construct } from 'constructs';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
@@ -60,6 +61,8 @@ export class Middleware extends Stack {
 
     const ddbTables = new Database(this, 'sd-ddb');
 
+    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'model',
       'models',
@@ -75,6 +78,7 @@ export class Middleware extends Stack {
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
     new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
+      commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
       modelInfInstancetype: utilInstanceType.valueAsString,
@@ -99,6 +103,8 @@ export class Middleware extends Stack {
               ecr_image_tag: ecrImageTagParam.valueAsString,
               sd_inference_job_table: ddbTables.inferenceJobTable,
               sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
+              commonLayer: commonLayers.commonLayer,
+              checkpointTable: ddbTables.checkPointTable,
             },
     );
 

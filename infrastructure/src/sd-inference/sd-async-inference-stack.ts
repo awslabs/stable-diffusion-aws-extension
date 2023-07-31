@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   StackProps,
   Duration,
@@ -21,6 +22,8 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
+import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
@@ -39,6 +42,8 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   ecr_image_tag: string;
   sd_inference_job_table: aws_dynamodb.Table;
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
+  checkpointTable: aws_dynamodb.Table;
+  commonLayer: PythonLayerVersion;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -68,6 +73,36 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
+    const inference = restful_api.root.addResource('inference');
+    const inferV2Router = inference.addResource('v2');
+    const srcRoot = '../middleware_api/lambda';
+    new CreateInferenceJobApi(
+      this, 'sd-infer-v2-create',
+      <CreateInferenceJobApiProps>{
+        checkpointTable: props.checkpointTable,
+        commonLayer: props.commonLayer,
+        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        httpMethod: 'POST',
+        inferenceJobTable: sd_inference_job_table,
+        router: inferV2Router,
+        s3Bucket: props.s3_bucket,
+        srcRoot: srcRoot,
+      },
+    );
+
+    new RunInferenceJobApi(
+      this, 'sd-infer-v2-run',
+      <RunInferenceJobApiProps>{
+        checkpointTable: props.checkpointTable,
+        commonLayer: props.commonLayer,
+        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        httpMethod: 'PUT',
+        inferenceJobTable: sd_inference_job_table,
+        router: inferV2Router,
+        s3Bucket: props.s3_bucket,
+        srcRoot: srcRoot,
+      },
+    );
 
     // Create an SNS topic to get async inference result
     const inference_result_topic = new sns.Topic(
@@ -204,7 +239,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
     // The api can be invoked directly from the user's client code, the path starts with /api
-    const inferenceApi = restful_api?.root.addResource('api').addResource('inference');
+    const inferenceApi = restful_api.root.addResource('api').addResource('inference');
     const run_sagemaker_inference_api = inferenceApi.addResource(
       'run-sagemaker-inference',
     );
@@ -213,7 +248,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
 
     // Add a POST method with prefix inference
-    const inference = restful_api?.root.addResource('inference');
+
 
     if (!restful_api) {
       throw new Error('restful_api is needed');

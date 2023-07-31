@@ -576,6 +576,7 @@ async def call_remote_inference(sagemaker_endpoint, type):
                             return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
                         images = get_inference_job_image_output(inference_id.strip())
                         inference_param_json_list = get_inference_job_param_output(inference_id)
+                        # todo: these not need anymore
                         if resp['taskType'] == "txt2img":
                             image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
                             json_list = download_images(inference_param_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
@@ -755,7 +756,7 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     # Remove extensions from selected_items and full_dropdown_items
     selected_items = [item.split('.')[0] for item in selected_items]
     full_dropdown_items = [item.split('.')[0] for item in full_dropdown_items]
-    
+
     # Loop over each item in full_dropdown_items and remove it from txt2img_prompt
     type_str = ''
     if model_name == 'Lora':
@@ -774,13 +775,13 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
             txt2img_prompt += ' ' + '<' + type_str + item + ':1>'
         else:
             txt2img_prompt += ' ' + item
-    
+
     # Remove any leading or trailing whitespace
     txt2img_prompt = txt2img_prompt.strip()
-    
+
     return txt2img_prompt
 
-    
+
 def fake_gan(selected_value, original_prompt):
     print(f"selected value is {selected_value}")
     print(f"original prompt is {original_prompt}")
@@ -795,7 +796,7 @@ def fake_gan(selected_value, original_prompt):
             return [], [], plaintext_to_html('inference still in progress')
 
         if inference_job_taskType in ["txt2img", "img2img"]:
-            prompt_txt = original_prompt 
+            prompt_txt = original_prompt
             images = get_inference_job_image_output(inference_job_id)
             image_list = []
             json_list = []
@@ -971,13 +972,13 @@ def create_ui(is_img2img):
                     lambda: {"choices": sorted(get_hypernetwork_list())},
                     "refresh_hypernetworks",
                 )
-                controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="sagemaker_controlnet_model_dropdown")
-                create_refresh_button(
-                    controlnet_dropdown,
-                    get_controlnet_model_list,
-                    lambda: {"choices": sorted(get_controlnet_model_list())},
-                    "refresh_controlnet",
-                )
+                # controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="sagemaker_controlnet_model_dropdown")
+                # create_refresh_button(
+                #     controlnet_dropdown,
+                #     get_controlnet_model_list,
+                #     lambda: {"choices": sorted(get_controlnet_model_list())},
+                #     "refresh_controlnet",
+                # )
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
@@ -998,4 +999,5 @@ def create_ui(is_img2img):
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
-    return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    # return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud

@@ -1,4 +1,7 @@
+import datetime
 import sys
+from typing import Dict, List
+
 import requests
 import logging
 import gradio as gr
@@ -65,7 +68,11 @@ modelmerger_merge_component = None
 
 async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"]
 
+
 class SageMakerUI(scripts.Script):
+
+    current_inference_id = None
+
     def title(self):
         return "SageMaker embeddings"
 
@@ -74,11 +81,11 @@ class SageMakerUI(scripts.Script):
 
     def ui(self, is_img2img):
         if not is_img2img:
-            sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-            return [sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img,txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, txt2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
+            return [sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img,txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
-            sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-            return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, img2img_controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
+            return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -96,6 +103,8 @@ class SageMakerUI(scripts.Script):
 
         current_model = sd_models.select_checkpoint()
         print(current_model.name)
+        models = {'Stable-diffusion': [current_model.name]}
+
         api_param_cls = None
 
         if self.is_img2img:
@@ -126,8 +135,7 @@ class SageMakerUI(scripts.Script):
             base64_str = str(base64.b64encode(bytes_data), "utf-8")
             return "data:image/png;base64," + base64_str
 
-
-        def encode_no_jsonlised(obj):
+        def encode_no_json(obj):
             import enum
 
             if isinstance(obj, numpy.ndarray):
@@ -147,49 +155,166 @@ class SageMakerUI(scripts.Script):
         selected_script_index = p.script_args[0] - 1
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
-            # fixme: escape sagemaker plugin
+            # escape sagemaker plugin
+            if script.title() == self.title():
+                continue
+
+            all_used_models = []
             if script.alwayson:
                 print(f'{script.name} {script.args_from} {script.args_to}')
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for arg in p.script_args[script.args_from:script.args_to]:
-                    api_param.alwayson_scripts[script.name]['args'].append(self._process_args_by_plugin(script.name, arg))
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                    all_used_models.append(used_models)
+                    api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_index == sid:
                 api_param.script_name = script.name
                 for arg in p.script_args[script.args_from:script.args_to]:
-                    api_param.script_args.append(arg)
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                    all_used_models.append(used_models)
+                    api_param.script_args.append(parsed_args)
+
+            if all_used_models:
+                for used_models in all_used_models:
+                    for key, vals in used_models.items():
+                        if key not in models:
+                            models[key] = []
+                        for val in vals:
+                            if val not in models[key]:
+                                models[key].append(val)
 
         api_param.sampler_index = p.sampler_name
-        js = json.dumps(api_param, default=encode_no_jsonlised)
+        js = json.dumps(api_param, default=encode_no_json)
+
         # todo: create an inference and upload to s3
-        # todo: start run infer
+        # Start creating model on cloud.
+        url = get_variable_from_json('api_gateway_url')
+        api_key = get_variable_from_json('api_token')
+        if not url or not api_key:
+            logging.debug("Url or API-Key is not setting.")
+            return
+
+        sagemaker_endpoint = ''
+        if args[0]:
+            sagemaker_endpoint = args[0].split('+')[0] if args[0].split('+')[1] == 'InService' else ''
+
+        if not sagemaker_endpoint:
+            return
+
+        payload = {
+            'sagemaker_endpoint_name': sagemaker_endpoint,
+            'task_type': "txt2img" if self.is_txt2img else "img2img",
+            'models': models,
+            'filters': {
+                'creator': datetime.datetime.now().timestamp()
+            }
+        }
+        print(payload)
+
+        response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
+        response.raise_for_status()
+        upload_param_response = response.json()
+        if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
+            upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
+            upload_s3_resp.raise_for_status()
+            inference_id = upload_param_response['inference']['id']
+            # start run infer
+            response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload, headers={'x-api-key': api_key})
+            response.raise_for_status()
+            self.current_inference_id = inference_id
+
+        # fixme: debug only, may delete
         with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
             f.write(js)
 
         pass
 
     def process(self, p, *args):
-        # todo: escape original infer
-        # todo: wait for result and parse it
+        # escape original infer
+        # wait for result and parse it
+        all_prompts_before = p.all_prompts
+        p.n_iter = 0
+        p.disable_extra_networks = True
+        p.all_prompts = all_prompts_before
+        pass
+
+    def postprocess(self, p, processed, *args):
+        # process result
+        import time
+        import json
+
+        image_list = []
+        info_text = ''
+
+        if not self.current_inference_id:
+            return
+
+        resp = sagemaker_ui.get_inference_job(self.current_inference_id)
+        while resp['status'] == "inprogress":
+            time.sleep(3)
+            resp = sagemaker_ui.get_inference_job(self.current_inference_id)
+        if resp['status'] == "failed":
+            infotexts = f"Inference job {self.current_inference_id} is failed"
+            processed.images = image_list
+            processed.info = infotexts
+        elif resp['status'] == "succeed":
+            inference_param_json_list = sagemaker_ui.get_inference_job_param_output(self.current_inference_id)
+            images = sagemaker_ui.get_inference_job_image_output(self.current_inference_id.strip())
+            task_type = "txt2img" if self.is_txt2img else "img2img"
+
+            image_list = sagemaker_ui.download_images(
+                images,
+                f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/"
+            )
+            json_list = sagemaker_ui.download_images(
+                inference_param_json_list,
+                f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/"
+            )
+            json_file = f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/{self.current_inference_id}_param.json"
+            if os.path.isfile(json_file):
+                with open(json_file) as f:
+                    log_file = json.load(f)
+                    info_text = log_file["info"]
+            else:
+                print(f"File {json_file} does not exist.")
+                info_text = 'something wrong when trying to download the inference parameters'
+
+        processed.images = image_list
+        processed.info = info_text
+        self.current_inference_id = None
         pass
 
     def _process_args_by_plugin(self, script_name, arg):
-        processors = [self._controlnet_args]
-        for f in processors:
-            f(script_name, arg)
+        processors = {'controlnet': self._controlnet_args}
+        models = {}
+        f = processors[script_name]
+        mdls = f(script_name, arg)
+        for key, val in mdls.items():
+            if not val:
+                continue
 
-        return arg
+            if key not in models:
+                models[key] = []
+
+            models[key].extend(val)
+
+        return arg, models
 
 
-    def _controlnet_args(self, script_name, arg):
-        if script_name != 'controlnet':
-            return
+    def _controlnet_args(self, script_name, arg) -> Dict[str, List[str]]:
+        if script_name != 'controlnet' or not arg.enabled:
+            return {}
 
-        model_name_parts = arg['model'].split()
+        model_name_parts = arg.model.split()
+        models = []
         # make sure there is a hash, otherwise remain not changed
         if len(model_name_parts) > 1:
-            arg['model'] = ' '.join(arg['model'].split()[:-1])
+            arg.model = ' '.join(model_name_parts[:-1])
 
+        models.append(f'{arg.model}.pth')
+
+        return {'ControlNet': models}
 
 
 def on_after_component_callback(component, **_kwargs):

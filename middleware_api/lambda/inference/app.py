@@ -198,7 +198,7 @@ def get_curent_time():
     formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
     return formatted_time
 
-@app.post("/inference/run-sagemaker-inference") # deprecated
+@app.post("/inference/run-sagemaker-inference")
 @app.post("/api/inference/run-sagemaker-inference")
 async def run_sagemaker_inference(request: Request):
     try:

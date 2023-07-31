@@ -25,7 +25,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 @dataclasses.dataclass
 class PrepareEvent:
-    sagemaker_endpoint_id: str
+    sagemaker_endpoint_name: str
     task_type: str
     models: dict[str, List[str]]  # [checkpoint_type: names] this is same as checkpoint if confused
     filters: dict[str, Any]
@@ -44,14 +44,16 @@ def prepare_inference(raw_event, context):
         }
 
     # check if endpoint table for endpoint status and existence
-    sagemaker_endpoint_raw = ddb_service.get_item(sagemaker_endpoint_table, key_values={
-        'EndpointDeploymentJobId': event.sagemaker_endpoint_id
-    })
-
+    # fixme: endpoint is not indexed by name, and this is very expensive query
+    # fixme: we can either add index for endpoint name or make endpoint as the partition key
+    sagemaker_endpoint_raw = ddb_service.scan(sagemaker_endpoint_table, filters={
+        'endpoint_name': event.sagemaker_endpoint_name
+    })[0]
+    sagemaker_endpoint_raw = ddb_service.deserialize(sagemaker_endpoint_raw)
     if sagemaker_endpoint_raw is None or len(sagemaker_endpoint_raw) == 0:
         return {
             'status': 500,
-            'error': f'sagemaker endpoint with id {event.sagemaker_endpoint_id} is not found'
+            'error': f'sagemaker endpoint with name {event.sagemaker_endpoint_name} is not found'
         }
 
     if sagemaker_endpoint_raw['endpoint_status'] != 'InService':
@@ -61,6 +63,7 @@ def prepare_inference(raw_event, context):
         }
 
     endpoint_name = sagemaker_endpoint_raw['endpoint_name']
+    endpoint_id = sagemaker_endpoint_raw['EndpointDeploymentJobId']
 
     # check if model(checkpoint) path(s) exists. return error if not
     ckpts = []
@@ -111,7 +114,7 @@ def prepare_inference(raw_event, context):
             'input_body_s3': s3_location,
             'input_body_presign_url': presign_url,
             'used_models': used_models,
-            'sagemaker_inference_endpoint_id': event.sagemaker_endpoint_id,
+            'sagemaker_inference_endpoint_id': endpoint_id,
             'sagemaker_inference_endpoint_name': endpoint_name,
         },
     )
@@ -123,7 +126,7 @@ def prepare_inference(raw_event, context):
             'type': _type,
             'api_params_s3_location': s3_location,
             'api_params_s3_upload_url': presign_url,
-            'models': [ckpt.id for ckpt in ckpts]
+            'models': [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts]
         }
     }
 
