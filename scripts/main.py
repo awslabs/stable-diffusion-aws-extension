@@ -72,6 +72,7 @@ async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","
 class SageMakerUI(scripts.Script):
 
     current_inference_id = None
+    hijacked_images_inner = None
 
     def title(self):
         return "SageMaker embeddings"
@@ -101,7 +102,26 @@ class SageMakerUI(scripts.Script):
         import base64
         from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
         import numpy
-        from modules import sd_models
+        from modules import sd_models, processing
+        from modules.processing import Processed
+
+        # fixme: lets happy hijack process image inner
+        def process_image_inner_hijack(processing_param):
+            processed = Processed(
+                p,
+                images_list=[],
+                seed=0,
+                info='',
+                subseed=0,
+                index_of_first_image=0,
+                infotexts=[],
+            )
+
+            self.postprocess(p, processed, args)
+            return processed
+
+        self.hijacked_images_inner = processing.process_images_inner
+        processing.process_images_inner = process_image_inner_hijack
 
         current_model = sd_models.select_checkpoint()
         print(current_model.name)
@@ -235,18 +255,18 @@ class SageMakerUI(scripts.Script):
     def process(self, p, *args):
         # escape original infer
         # wait for result and parse it
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
-            return
-
-        if not args[0]:
-            return
-
-        print('escape the process')
-        all_prompts_before = p.all_prompts
-        p.n_iter = 0
-        p.disable_extra_networks = True
-        p.all_prompts = all_prompts_before
+        # on_docker = os.environ.get('ON_DOCKER', "false")
+        # if on_docker == "true":
+        #     return
+        #
+        # if not args[0]:
+        #     return
+        #
+        # print('escape the process')
+        # all_prompts_before = p.all_prompts
+        # p.n_iter = 0
+        # p.disable_extra_networks = True
+        # p.all_prompts = all_prompts_before
         pass
 
     def postprocess(self, p, processed, *args):
@@ -299,7 +319,10 @@ class SageMakerUI(scripts.Script):
 
         processed.images = image_list
         processed.info = info_text
+
         self.current_inference_id = None
+        from modules import processing
+        processing.process_images_inner = self.hijacked_images_inner
         pass
 
     def _process_args_by_plugin(self, script_name, arg):
