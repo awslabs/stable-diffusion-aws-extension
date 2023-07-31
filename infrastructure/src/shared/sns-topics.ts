@@ -13,7 +13,7 @@ export class SnsTopics {
     // CDK parameters for SNS email address
     // Create SNS topic for notifications
     // const snsKmsKey = new kms.Key(this, 'SNSTrainEncryptionKey');
-    const snsKey = new aws_kms.Key(scope, 'KmsMasterKey', {
+    const snsKey = new aws_kms.Key(scope, `${id}-KmsMasterKey`, {
       enableKeyRotation: true,
       policy: new aws_iam.PolicyDocument({
         assignSids: true,

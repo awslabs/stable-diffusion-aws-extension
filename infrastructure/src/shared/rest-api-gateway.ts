@@ -28,7 +28,7 @@ export class RestApiGateway {
     );
 
     // Create an API Gateway, will merge with existing API Gateway
-    const api = new apigw.RestApi(this.scope, 'train-deploy-api', {
+    const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: 'Stable Diffusion Train and Deploy API',
       description:
                 'This service is used to train and deploy Stable Diffusion models.',

@@ -130,7 +130,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
           STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-          INFERENCE_ECR_IMAGE_URL: inferenceECR_url
+          INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
         },
         role: inferenceLambdaRole,
         logRetention: RetentionDays.ONE_WEEK,
@@ -216,7 +216,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const inference = restful_api?.root.addResource('inference');
 
     if (!restful_api) {
-      throw new Error('resful_api is needed');
+      throw new Error('restful_api is needed');
     }
 
     if (!inference) {
@@ -356,22 +356,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
-    const current_time = new Date().toISOString;
-
-    const deployment = new apigw.Deployment(
-      this,
-      'rest-api-deployment' + current_time,
-      {
-        api: restful_api,
-        retainDeployments: false,
-      },
-    );
-    restful_api._attachDeployment(deployment);
-    deployment.node.addDependency(test_output);
-
-    deployment.addToLogicalId(new Date().toISOString());
-    (deployment as any).resource.stageName = 'prod';
-
     const handler = new python.PythonFunction(
       this,
       'InferenceResultNotification',
@@ -414,7 +398,7 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     //adding model to data directory of s3 bucket
     if (props?.s3_bucket != undefined) {
-      this.uploadModelToS3(props?.s3_bucket);
+      this.uploadModelToS3(props.s3_bucket);
     }
 
     // Add the SNS topic as an event source for the Lambda function

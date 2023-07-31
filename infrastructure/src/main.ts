@@ -74,7 +74,7 @@ export class Middleware extends Stack {
     const s3BucketStore = new S3BucketStore(this, 'sd-s3');
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
+    new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
       // env: devEnv,
       synthesizer: props.synthesizer,
       modelInfInstancetype: utilInstanceType.valueAsString,
@@ -85,21 +85,22 @@ export class Middleware extends Stack {
       snsTopic: snsTopics.snsTopic,
     });
 
-    const inferenceStack = new SDAsyncInferenceStack(
+
+    new SDAsyncInferenceStack(
       this,
       'SdAsyncInferenceStack-dev',
             <SDAsyncInferenceStackProps>{
               // env: devEnv,
+              synthesizer: props.synthesizer,
               api_gate_way: restApi.apiGateway,
               s3_bucket: s3BucketStore.s3Bucket,
               training_table: ddbTables.trainingTable,
               snsTopic: snsTopics.snsTopic,
-              synthesizer: props.synthesizer,
               ecr_image_tag: ecrImageTagParam.valueAsString,
+              sd_inference_job_table: ddbTables.inferenceJobTable,
+              sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
             },
     );
-
-    inferenceStack.addDependency(trainStack);
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {

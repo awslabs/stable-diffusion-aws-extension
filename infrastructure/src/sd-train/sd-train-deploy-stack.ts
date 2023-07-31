@@ -111,7 +111,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /model
-    const modelStatusRestApi = new UpdateModelStatusRestApi(this, 'aigc-update-model', {
+    new UpdateModelStatusRestApi(this, 'aigc-update-model', {
       s3Bucket: s3Bucket,
       router: routers.model,
       httpMethod: 'PUT',
