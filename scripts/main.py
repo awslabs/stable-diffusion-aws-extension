@@ -242,6 +242,7 @@ class SageMakerUI(scripts.Script):
         if not args[0]:
             return
 
+        print('escape the process')
         all_prompts_before = p.all_prompts
         p.n_iter = 0
         p.disable_extra_networks = True
