@@ -1,3 +1,4 @@
+import logging
 import os
 import io
 import base64
@@ -73,11 +74,20 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
                         print('can not get enough space to download models!!!!!!')
                         return
                 ####down load models######
-                selected_model_s3_pos = checkpoint_info[model_type][selected_model_name] 
-                download_and_update(model_type, selected_model_name, selected_model_s3_pos)
+                if model_type in checkpoint_info and selected_model_name in checkpoint_info[model_type]:
+                    selected_model_s3_pos = checkpoint_info[model_type][selected_model_name]
+                    download_and_update(model_type, selected_model_name, selected_model_s3_pos)
+                else:
+                    print(f'can not get right key to download models!!!!!! {model_type} or'
+                          f' {selected_model_name} not in {checkpoint_info}')
+                    return
     
     shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]
+<<<<<<< HEAD
     #shared.opts.sd_vae = selected_models['sd_vae'][0]
+=======
+    #shared.opts.sd_vae = selected_models['vae'][0]
+>>>>>>> 018408d747bb381d7e271cc04af4122821922148
     import psutil
     sd_models.reload_model_weights()
     sd_vae.reload_vae_weights()

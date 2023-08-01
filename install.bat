@@ -1,13 +1,19 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
+set INITIAL_SUPPORT_COMMIT_ROOT=68f336bd994bed5442ad95bad6b6ad5564a5409a
+set INITIAL_SUPPORT_COMMIT_CONTROLNET=efda6ddfd82ebafc6e1150fbb7e1f27163482a82
+set INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
+set INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
+set INITIAL_SUPPORT_COMMIT_SAM=5df716be8445e0f358f6e8d4b65a87cc611bfe08
+
 # Clone stable-diffusion-webui
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 
 # Go to stable-diffusion-webui directory
 cd stable-diffusion-webui
 # Reset to specific commit
-git reset --hard f865d3e11647dfd6c7b2cdf90dde24680e58acd8
+git reset --hard %INITIAL_SUPPORT_COMMIT_ROOT%
 
 # Go to "extensions" directory
 cd extensions
@@ -24,7 +30,7 @@ git clone https://github.com/Mikubill/sd-webui-controlnet.git
 
 # Go to sd-webui-controlnet directory and reset to specific commit
 cd sd-webui-controlnet
-git reset --hard 07bed6ccf8a468a45b2833cfdadc749927cbd575
+git reset --hard %INITIAL_SUPPORT_COMMIT_CONTROLNET%
 cd ..
 
 # Clone sd_dreambooth_extension
@@ -32,5 +38,21 @@ git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
 
 # Go to sd_dreambooth_extension directory and reset to specific commit
 cd sd_dreambooth_extension
-gti reset --hard c2a5617c587b812b5a408143ddfb18fc49234edf
+git reset --hard %INITIAL_SUPPORT_COMMIT_DREAMBOOTH%
+cd ..
+
+# Clone stable-diffusion-webui-rembg
+git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+# Go to stable-diffusion-webui-rembg directory and reset to specific commit
+cd stable-diffusion-webui-rembg
+git reset --hard %INITIAL_SUPPORT_COMMIT_REMBG%
+cd ..
+
+# Clone sd-webui-segment-anything
+git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
+
+# Go to sd-webui-segment-anything directory and reset to specific commit
+cd sd-webui-segment-anything
+git reset --hard %INITIAL_SUPPORT_COMMIT_SAM%
 cd ..
