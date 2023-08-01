@@ -104,8 +104,8 @@ class SageMakerUI(scripts.Script):
         import numpy
         from modules import sd_models, processing
         from modules.processing import Processed
+        from modules import extra_networks
 
-        # fixme: lets happy hijack process image inner
         def process_image_inner_hijack(processing_param):
             processed = Processed(
                 p,
@@ -209,7 +209,59 @@ class SageMakerUI(scripts.Script):
         api_param.sampler_index = p.sampler_name
         js = json.dumps(api_param, default=encode_no_json)
 
-        # todo: create an inference and upload to s3
+        # fixme: not handle batches yet
+        p.setup_prompts()
+        p.prompts = p.all_prompts
+        p.negative_prompts = p.all_negative_prompts
+        p.seeds = p.all_seeds
+        p.subseeds = p.all_subseeds
+        _prompts, extra_network_data = extra_networks.parse_prompts(p.all_prompts)
+
+        import importlib
+        from modules.sd_hijack import model_hijack
+        from modules import shared
+        from modules.shared import cmd_opts
+
+        lora_extensions_builtin = importlib.import_module("extensions-builtin.Lora.networks")
+        lora_lookup = lora_extensions_builtin.available_network_aliases
+        # load lora
+        for key, vals in extra_network_data.items():
+            if key == 'lora':
+                for val in vals:
+                    if 'Lora' not in models:
+                        models['Lora'] = []
+
+                    lora_filename = lora_lookup[val.positional[0]].filename.split(os.path.sep)[-1]
+                    if lora_filename not in models['Lora']:
+                        models['Lora'].append(lora_filename)
+            if key == 'hypernet':
+                print(key, vals)
+                for val in vals:
+                    if 'hypernetworks' not in models:
+                        models['hypernetworks'] = []
+
+                    hypernet_filename = shared.hypernetworks[val.positional[0]].split(os.path.sep)[-1]
+                    if hypernet_filename not in models['hypernetworks']:
+                        models['hypernetworks'].append(hypernet_filename)
+
+        if os.path.exists(cmd_opts.embeddings_dir) and not p.do_not_reload_embeddings:
+            model_hijack.embedding_db.load_textual_inversion_embeddings()
+
+        p.setup_conds()
+
+        # load textual inversion
+        for key, val in model_hijack.extra_generation_params.items():
+            if val.split(': ')[0] not in model_hijack.embedding_db.word_embeddings:
+                continue
+
+            textual_inv_name = model_hijack.embedding_db.word_embeddings[val.split(': ')[0]].filename.split(os.path.sep)[-1]
+            if 'embeddings' not in models:
+                models['embeddings'] = []
+
+            if textual_inv_name not in models['embeddings']:
+                models['embeddings'].append(textual_inv_name)
+
+        # create an inference and upload to s3
         # Start creating model on cloud.
         url = get_variable_from_json('api_gateway_url')
         api_key = get_variable_from_json('api_token')
@@ -246,27 +298,13 @@ class SageMakerUI(scripts.Script):
             response.raise_for_status()
             self.current_inference_id = inference_id
 
-        # fixme: debug only, may delete
-        with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
-            f.write(js)
-
+        if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+            # debug only, may delete later
+            with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
+                f.write(js)
         pass
 
     def process(self, p, *args):
-        # escape original infer
-        # wait for result and parse it
-        # on_docker = os.environ.get('ON_DOCKER', "false")
-        # if on_docker == "true":
-        #     return
-        #
-        # if not args[0]:
-        #     return
-        #
-        # print('escape the process')
-        # all_prompts_before = p.all_prompts
-        # p.n_iter = 0
-        # p.disable_extra_networks = True
-        # p.all_prompts = all_prompts_before
         pass
 
     def postprocess(self, p, processed, *args):
