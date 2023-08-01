@@ -143,7 +143,7 @@ def check_versions():
     expected_torch_version = "2.0.0"
 
     if version.parse(torch.__version__) < version.parse(expected_torch_version):
-        errors.print_error_explanation(f"""
+        print(f"""
 You are running torch {torch.__version__}.
 The program is tested to work with torch {expected_torch_version}.
 To reinstall the desired version, run with commandline flag --reinstall-torch.
@@ -154,11 +154,12 @@ Use --skip-version-check commandline argument to disable this check.
         """.strip())
 
     expected_xformers_version = "0.0.20"
-    if shared.xformers_available:
+    check_xformers = True
+    if check_xformers:
         import xformers
 
         if version.parse(xformers.__version__) < version.parse(expected_xformers_version):
-            errors.print_error_explanation(f"""
+            print(f"""
 You are running xformers {xformers.__version__}.
 The program is tested to work with xformers {expected_xformers_version}.
 To reinstall the desired version, run with commandline flag --reinstall-xformers.
