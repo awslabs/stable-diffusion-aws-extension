@@ -274,7 +274,7 @@ def root():
 #     return formatted_time
 
 @app.post("/inference/run-sagemaker-inference")
-@app.post("/api/inference/run-sagemaker-inference")
+@app.post("/inference-api/inference")
 async def run_sagemaker_inference(request: Request):
     try:
         logger.info('entering the run_sage_maker_inference function!')
@@ -287,7 +287,7 @@ async def run_sagemaker_inference(request: Request):
         print(f"Task Type: {task_type}")
         path = request.url.path
         logger.info(f'Path: {path}')
-        if path == '/api/inference/run-sagemaker-inference':
+        if path == '/inference-api/inference':
             # Invoke by API
             logger.info('invoked by api')
             params_dict = load_json_from_s3(S3_BUCKET_NAME, 'template/inferenceTemplate.json')
