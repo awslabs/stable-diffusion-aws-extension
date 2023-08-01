@@ -110,7 +110,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
 
 def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, variant_name):
     autoscaling_enabled = get_ddb_value(table_name, key, field_name)
-    if autoscaling_enabled == 'true':
+    if autoscaling_enabled == 'True':
         max_number = get_ddb_value(table_name, key, 'max_instance_number')
         if max_number.isdigit():
             enable_autoscaling(endpoint_name, variant_name, 0, int(max_number))

@@ -10,9 +10,9 @@ function model_update(sd_checkpoints_path, textual_inversion_path, lora_path, hy
     return [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path];
 }
 
-function deploy_endpoint(instance_type_dropdown, instance_count_textbox){
-    console.log("Endpoint deployment started with input: " + instance_type_dropdown + ", " + instance_count_textbox);
-    return [instance_type_dropdown, instance_count_textbox];
+function deploy_endpoint(instance_type_dropdown, instance_count_textbox, autoscaling_enabled){
+    console.log("Endpoint deployment started with input: " + instance_type_dropdown + ", " + instance_count_textbox + ", " + autoscaling_enabled);
+    return [instance_type_dropdown, instance_count_textbox, autoscaling_enabled];
 }
 
 function delete_sagemaker_endpoint(endpoint_list){
