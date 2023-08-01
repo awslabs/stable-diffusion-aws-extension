@@ -6,7 +6,7 @@ class MmeUtilsTest(TestCase):
 
     def test_read_from_s3(self):
         from utils import read_from_s3
-        content = read_from_s3('s3://sd-release-test-sddreamboothtr-aigcbucketa457cb49-dhvez2qft7lj/txt2img/infer_v2/1690443798.119154/api_param.json')
+        content = read_from_s3('s3://s3-url')
         import json
         def parse_constant(c: str) -> float:
             if c == "NaN":
@@ -24,7 +24,7 @@ class MmeUtilsTest(TestCase):
             'space_free_size': 40000000000.0,  # sys.float_info.max
             'Stable-diffusion': [
                 {
-                    's3': 's3://sd-release-test-sddreamboothtr-aigcbucketa457cb49-dhvez2qft7lj/Stable-diffusion/checkpoint/release-test-01/67bfa613-4c53-471e-aeaf-ba7525884c88',
+                    's3': 's3://s3-url',
                     'id': '67bfa613-4c53-471e-aeaf-ba7525884c88',
                     'model_name': 'v1-5-pruned-emaonly.safetensors',
                     'type': 'Stable-diffusion'
