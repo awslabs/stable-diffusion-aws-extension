@@ -476,6 +476,11 @@ def on_ui_tabs():
     <td style="border: 1px solid black; padding: 15px; text-align: left;"><b>Instance Count</b></td>
     <td style="border: 1px solid black; padding: 15px; text-align: left;">1</td>
   </tr>
+  <tr>
+    <td style="border: 1px solid black; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+    <td style="border: 1px solid black; padding: 15px; text-align: left;">yes(range:0-1)</td>
+  </tr>
+
 </table>
                     """
                     gr.HTML(value=default_table)
@@ -494,7 +499,7 @@ def on_ui_tabs():
                             with gr.Row():
                                 instance_count_dropdown = gr.Dropdown(label="Please select Max Instance count", choices=["1","2","3","4","5","6"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
                         autoscaling_enabled = gr.Checkbox(
-                                    label="Enable Autoscaling", value=True, visible=True
+                                    label="Enable Autoscaling( 0 to Max Instance count)", value=True, visible=True
                             )
                     def toggle_new_rows(checkbox_state):
                         if checkbox_state:
