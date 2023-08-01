@@ -92,7 +92,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
 
     # Define scaling policy
     response = client.put_scaling_policy(
-        PolicyName='MyScalingPolicy',
+        PolicyName='StableDiffusionDefaultScalingPolicy',
         ServiceNamespace='sagemaker',
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
         ScalableDimension='sagemaker:variant:DesiredInstanceCount',
@@ -102,7 +102,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
             'PredefinedMetricSpecification': {
                 'PredefinedMetricType': 'SageMakerVariantInvocationsPerInstance',
             },
-            'ScaleInCooldown': 600,
+            'ScaleInCooldown': 300,
             'ScaleOutCooldown': 300
         }
     )

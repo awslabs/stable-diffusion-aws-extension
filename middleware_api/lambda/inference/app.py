@@ -85,7 +85,7 @@ def getInferenceJob(inference_job_id):
         resp = inference_table.query(
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
         )
-        logger.info(resp)
+        # logger.info(resp)
         record_list = resp['Items']
         if len(record_list) == 0:
             logger.error(f"No inference job info item for id: {inference_job_id}")
@@ -449,11 +449,11 @@ async def get_endpoint_deployment_job(jobID: str = None):
 @app.get("/inference/get-inference-job")
 async def get_inference_job(jobID: str = None):
     inference_jobId = jobID
-    logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
+    # logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
     try:
         return getInferenceJob(inference_jobId)
     except Exception as e:
-        logger.error(f"Error getting inference job: {str(e)}")
+        # logger.error(f"Error getting inference job: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/inference/get-inference-job-image-output")
