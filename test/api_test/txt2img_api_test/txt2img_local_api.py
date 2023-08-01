@@ -54,7 +54,8 @@ import psutil
 
 for model in model_list:
     payload["models"]["Stable-diffusion"]= [model]
-    response = requests.post(url=f'{url}/invocations', json=payload)
+    # response = requests.post(url=f'{url}/invocations', json=payload)
+    response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
 
     print(f'Model {model} RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
 

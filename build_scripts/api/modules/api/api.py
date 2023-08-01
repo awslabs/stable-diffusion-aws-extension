@@ -14,46 +14,55 @@ from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from secrets import compare_digest
 
-import modules.shared as shared
-from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
-from modules.api import models
-from modules.shared import opts
-from modules.processing import StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img, process_images
-from modules.textual_inversion.textual_inversion import create_embedding, train_embedding
-from modules.textual_inversion.preprocess import preprocess
-from modules.hypernetworks.hypernetwork import create_hypernetwork, train_hypernetwork
+# import modules.shared as shared
+# from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
+# from modules.api import models
+# from modules.shared import opts
+# from modules.processing import StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img, process_images
+# from modules.textual_inversion.textual_inversion import create_embedding, train_embedding
+# from modules.textual_inversion.preprocess import preprocess
+# from modules.hypernetworks.hypernetwork import create_hypernetwork, train_hypernetwork
 from PIL import PngImagePlugin,Image
-from modules.sd_models import checkpoints_list, unload_model_weights, reload_model_weights, checkpoint_aliases
-from modules.sd_vae import vae_dict
-from modules.sd_models_config import find_checkpoint_config_near_filename
-from modules.realesrgan_model import get_realesrgan_models
-from modules import devices
-from typing import Dict, List, Any
+# from modules.sd_models import checkpoints_list, unload_model_weights, reload_model_weights, checkpoint_aliases
+# from modules.sd_vae import vae_dict
+# from modules.sd_models_config import find_checkpoint_config_near_filename
+# from modules.realesrgan_model import get_realesrgan_models
+# from modules import devices
+# from typing import Dict, List, Any
 import piexif
 import piexif.helper
 from contextlib import closing
 
+from models import *
 
-def script_name_to_index(name, scripts):
-    try:
-        return [script.title().lower() for script in scripts].index(name.lower())
-    except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Script '{name}' not found") from e
+import logging
+
+if os.environ.get("DEBUG_API", False):
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+# def script_name_to_index(name, scripts):
+#     try:
+#         return [script.title().lower() for script in scripts].index(name.lower())
+#     except Exception as e:
+#         raise HTTPException(status_code=422, detail=f"Script '{name}' not found") from e
 
 
-def validate_sampler_name(name):
-    config = sd_samplers.all_samplers_map.get(name, None)
-    if config is None:
-        raise HTTPException(status_code=404, detail="Sampler not found")
+# def validate_sampler_name(name):
+#     config = sd_samplers.all_samplers_map.get(name, None)
+#     if config is None:
+#         raise HTTPException(status_code=404, detail="Sampler not found")
 
-    return name
+#     return name
 
 
-def setUpscalers(req: dict):
-    reqDict = vars(req)
-    reqDict['extras_upscaler_1'] = reqDict.pop('upscaler_1', None)
-    reqDict['extras_upscaler_2'] = reqDict.pop('upscaler_2', None)
-    return reqDict
+# def setUpscalers(req: dict):
+#     reqDict = vars(req)
+#     reqDict['extras_upscaler_1'] = reqDict.pop('upscaler_1', None)
+#     reqDict['extras_upscaler_2'] = reqDict.pop('upscaler_2', None)
+#     return reqDict
 
 
 def decode_base64_to_image(encoding):
@@ -164,69 +173,342 @@ def api_middleware(app: FastAPI):
 
 class Api:
     def __init__(self, app: FastAPI, queue_lock: Lock):
-        if shared.cmd_opts.api_auth:
-            self.credentials = {}
-            for auth in shared.cmd_opts.api_auth.split(","):
-                user, password = auth.split(":")
-                self.credentials[user] = password
 
         self.router = APIRouter()
         self.app = app
         self.queue_lock = queue_lock
-        api_middleware(self.app)
-        self.add_api_route("/sdapi/v1/txt2img", self.text2imgapi, methods=["POST"], response_model=models.TextToImageResponse)
-        self.add_api_route("/sdapi/v1/img2img", self.img2imgapi, methods=["POST"], response_model=models.ImageToImageResponse)
-        self.add_api_route("/sdapi/v1/extra-single-image", self.extras_single_image_api, methods=["POST"], response_model=models.ExtrasSingleImageResponse)
-        self.add_api_route("/sdapi/v1/extra-batch-images", self.extras_batch_images_api, methods=["POST"], response_model=models.ExtrasBatchImagesResponse)
-        self.add_api_route("/sdapi/v1/png-info", self.pnginfoapi, methods=["POST"], response_model=models.PNGInfoResponse)
-        self.add_api_route("/sdapi/v1/progress", self.progressapi, methods=["GET"], response_model=models.ProgressResponse)
-        self.add_api_route("/sdapi/v1/interrogate", self.interrogateapi, methods=["POST"])
-        self.add_api_route("/sdapi/v1/interrupt", self.interruptapi, methods=["POST"])
-        self.add_api_route("/sdapi/v1/skip", self.skip, methods=["POST"])
-        self.add_api_route("/sdapi/v1/options", self.get_config, methods=["GET"], response_model=models.OptionsModel)
-        self.add_api_route("/sdapi/v1/options", self.set_config, methods=["POST"])
-        self.add_api_route("/sdapi/v1/cmd-flags", self.get_cmd_flags, methods=["GET"], response_model=models.FlagsModel)
-        self.add_api_route("/sdapi/v1/samplers", self.get_samplers, methods=["GET"], response_model=List[models.SamplerItem])
-        self.add_api_route("/sdapi/v1/upscalers", self.get_upscalers, methods=["GET"], response_model=List[models.UpscalerItem])
-        self.add_api_route("/sdapi/v1/latent-upscale-modes", self.get_latent_upscale_modes, methods=["GET"], response_model=List[models.LatentUpscalerModeItem])
-        self.add_api_route("/sdapi/v1/sd-models", self.get_sd_models, methods=["GET"], response_model=List[models.SDModelItem])
-        self.add_api_route("/sdapi/v1/sd-vae", self.get_sd_vaes, methods=["GET"], response_model=List[models.SDVaeItem])
-        self.add_api_route("/sdapi/v1/hypernetworks", self.get_hypernetworks, methods=["GET"], response_model=List[models.HypernetworkItem])
-        self.add_api_route("/sdapi/v1/face-restorers", self.get_face_restorers, methods=["GET"], response_model=List[models.FaceRestorerItem])
-        self.add_api_route("/sdapi/v1/realesrgan-models", self.get_realesrgan_models, methods=["GET"], response_model=List[models.RealesrganItem])
-        self.add_api_route("/sdapi/v1/prompt-styles", self.get_prompt_styles, methods=["GET"], response_model=List[models.PromptStyleItem])
-        self.add_api_route("/sdapi/v1/embeddings", self.get_embeddings, methods=["GET"], response_model=models.EmbeddingsResponse)
-        self.add_api_route("/sdapi/v1/refresh-checkpoints", self.refresh_checkpoints, methods=["POST"])
-        self.add_api_route("/sdapi/v1/create/embedding", self.create_embedding, methods=["POST"], response_model=models.CreateResponse)
-        self.add_api_route("/sdapi/v1/create/hypernetwork", self.create_hypernetwork, methods=["POST"], response_model=models.CreateResponse)
-        self.add_api_route("/sdapi/v1/preprocess", self.preprocess, methods=["POST"], response_model=models.PreprocessResponse)
-        self.add_api_route("/sdapi/v1/train/embedding", self.train_embedding, methods=["POST"], response_model=models.TrainResponse)
-        self.add_api_route("/sdapi/v1/train/hypernetwork", self.train_hypernetwork, methods=["POST"], response_model=models.TrainResponse)
-        self.add_api_route("/sdapi/v1/memory", self.get_memory, methods=["GET"], response_model=models.MemoryResponse)
-        self.add_api_route("/sdapi/v1/unload-checkpoint", self.unloadapi, methods=["POST"])
-        self.add_api_route("/sdapi/v1/reload-checkpoint", self.reloadapi, methods=["POST"])
-        self.add_api_route("/sdapi/v1/scripts", self.get_scripts_list, methods=["GET"], response_model=models.ScriptsList)
-        self.add_api_route("/sdapi/v1/script-info", self.get_script_info, methods=["GET"], response_model=List[models.ScriptInfo])
+        # # TODO: do we need api_middleware? Xiujuan
+        # api_middleware(self.app)
+        # self.add_api_route("/sdapi/v1/txt2img", self.text2imgapi, methods=["POST"], response_model=models.TextToImageResponse)
+        # self.add_api_route("/sdapi/v1/img2img", self.img2imgapi, methods=["POST"], response_model=models.ImageToImageResponse)
+        # self.add_api_route("/sdapi/v1/extra-single-image", self.extras_single_image_api, methods=["POST"], response_model=models.ExtrasSingleImageResponse)
+        # self.add_api_route("/sdapi/v1/extra-batch-images", self.extras_batch_images_api, methods=["POST"], response_model=models.ExtrasBatchImagesResponse)
+        # self.add_api_route("/sdapi/v1/png-info", self.pnginfoapi, methods=["POST"], response_model=models.PNGInfoResponse)
+        # self.add_api_route("/sdapi/v1/progress", self.progressapi, methods=["GET"], response_model=models.ProgressResponse)
+        # self.add_api_route("/sdapi/v1/interrogate", self.interrogateapi, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/interrupt", self.interruptapi, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/skip", self.skip, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/options", self.get_config, methods=["GET"], response_model=models.OptionsModel)
+        # self.add_api_route("/sdapi/v1/options", self.set_config, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/cmd-flags", self.get_cmd_flags, methods=["GET"], response_model=models.FlagsModel)
+        # self.add_api_route("/sdapi/v1/samplers", self.get_samplers, methods=["GET"], response_model=List[models.SamplerItem])
+        # self.add_api_route("/sdapi/v1/upscalers", self.get_upscalers, methods=["GET"], response_model=List[models.UpscalerItem])
+        # self.add_api_route("/sdapi/v1/latent-upscale-modes", self.get_latent_upscale_modes, methods=["GET"], response_model=List[models.LatentUpscalerModeItem])
+        # self.add_api_route("/sdapi/v1/sd-models", self.get_sd_models, methods=["GET"], response_model=List[models.SDModelItem])
+        # self.add_api_route("/sdapi/v1/sd-vae", self.get_sd_vaes, methods=["GET"], response_model=List[models.SDVaeItem])
+        # self.add_api_route("/sdapi/v1/hypernetworks", self.get_hypernetworks, methods=["GET"], response_model=List[models.HypernetworkItem])
+        # self.add_api_route("/sdapi/v1/face-restorers", self.get_face_restorers, methods=["GET"], response_model=List[models.FaceRestorerItem])
+        # self.add_api_route("/sdapi/v1/realesrgan-models", self.get_realesrgan_models, methods=["GET"], response_model=List[models.RealesrganItem])
+        # self.add_api_route("/sdapi/v1/prompt-styles", self.get_prompt_styles, methods=["GET"], response_model=List[models.PromptStyleItem])
+        # self.add_api_route("/sdapi/v1/embeddings", self.get_embeddings, methods=["GET"], response_model=models.EmbeddingsResponse)
+        # self.add_api_route("/sdapi/v1/refresh-checkpoints", self.refresh_checkpoints, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/create/embedding", self.create_embedding, methods=["POST"], response_model=models.CreateResponse)
+        # self.add_api_route("/sdapi/v1/create/hypernetwork", self.create_hypernetwork, methods=["POST"], response_model=models.CreateResponse)
+        # self.add_api_route("/sdapi/v1/preprocess", self.preprocess, methods=["POST"], response_model=models.PreprocessResponse)
+        # self.add_api_route("/sdapi/v1/train/embedding", self.train_embedding, methods=["POST"], response_model=models.TrainResponse)
+        # self.add_api_route("/sdapi/v1/train/hypernetwork", self.train_hypernetwork, methods=["POST"], response_model=models.TrainResponse)
+        # self.add_api_route("/sdapi/v1/memory", self.get_memory, methods=["GET"], response_model=models.MemoryResponse)
+        # self.add_api_route("/sdapi/v1/unload-checkpoint", self.unloadapi, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/reload-checkpoint", self.reloadapi, methods=["POST"])
+        # self.add_api_route("/sdapi/v1/scripts", self.get_scripts_list, methods=["GET"], response_model=models.ScriptsList)
+        # self.add_api_route("/sdapi/v1/script-info", self.get_script_info, methods=["GET"], response_model=List[models.ScriptInfo])
 
-        if shared.cmd_opts.api_server_stop:
-            self.add_api_route("/sdapi/v1/server-kill", self.kill_webui, methods=["POST"])
-            self.add_api_route("/sdapi/v1/server-restart", self.restart_webui, methods=["POST"])
-            self.add_api_route("/sdapi/v1/server-stop", self.stop_webui, methods=["POST"])
+        self.add_api_route("/invocations", self.invocations, methods=["POST"], response_model=[])
+        self.add_api_route("/ping", self.ping, methods=["GET"], reponse_model=PingResponse)
+
+        # if shared.cmd_opts.api_server_stop:
+        #     self.add_api_route("/sdapi/v1/server-kill", self.kill_webui, methods=["POST"])
+        #     self.add_api_route("/sdapi/v1/server-restart", self.restart_webui, methods=["POST"])
+        #     self.add_api_route("/sdapi/v1/server-stop", self.stop_webui, methods=["POST"])
 
         self.default_script_arg_txt2img = []
         self.default_script_arg_img2img = []
 
     def add_api_route(self, path: str, endpoint, **kwargs):
-        if shared.cmd_opts.api_auth:
-            return self.app.add_api_route(path, endpoint, dependencies=[Depends(self.auth)], **kwargs)
+        # TODO: do we need api_auth? Xiujuan
+        # if shared.cmd_opts.api_auth:
+        #     return self.app.add_api_route(path, endpoint, dependencies=[Depends(self.auth)], **kwargs)
         return self.app.add_api_route(path, endpoint, **kwargs)
 
-    def auth(self, credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
-        if credentials.username in self.credentials:
-            if compare_digest(credentials.password, self.credentials[credentials.username]):
-                return True
+    # def auth(self, credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
+    #     if credentials.username in self.credentials:
+    #         if compare_digest(credentials.password, self.credentials[credentials.username]):
+    #             return True
 
-        raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
+    #     raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
+
+    def sagemaker_api(self, req: InvocationsRequest):
+        print('-------invocation------')
+        print(req)
+        logger.debug("Loading Sagemaker API Endpoints.")
+        import threading
+        from collections import deque
+        global condition
+        condition = threading.Condition()
+        global thread_deque
+        thread_deque = deque()
+
+        @app.post("/invocations")
+        def invocations(req: InvocationsRequest):
+            """
+            Check the current state of Dreambooth processes.
+            @return:
+            """
+            logger.info('-------invocation------')
+
+            def show_slim_dict(payload):
+                pay_type = type(payload)
+                if pay_type is dict:
+                    for k, v in payload.items():
+                        logger.info(f"{k}")
+                        show_slim_dict(v)
+                elif pay_type is list:
+                    for v in payload:
+                        logger.info(f"list")
+                        show_slim_dict(v)
+                elif pay_type is str:
+                    if len(payload) > 50:
+                        logger.info(f" : {len(payload)} contents")
+                    else:
+                        logger.info(f" : {payload}")
+                else:
+                    logger.info(f" : {payload}")
+
+            with condition:
+                thread_deque.append(req)
+                logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                if len(thread_deque) > THREAD_CHECK_COUNT and len(thread_deque) <= CONDITION_POOL_MAX_COUNT:
+                    logger.info(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                    condition.wait(timeout=CONDITION_WAIT_TIME_OUT)
+                elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
+                    logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
+                    raise MemoryError
+                logger.info(f"task is {req.task}")
+                logger.info(f"checkpoint_info is {req.checkpoint_info}")
+                logger.info(f"models is {req.models}")
+                logger.info(f"txt2img_payload is: ")
+                txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
+                show_slim_dict(txt2img_payload)
+                logger.info(f"img2img_payload is: ")
+                img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
+                show_slim_dict(img2img_payload)
+                logger.info(f"extra_single_payload is: ")
+                extra_single_payload = {} if req.extras_single_payload is None else json.loads(
+                    req.extras_single_payload.json())
+                show_slim_dict(extra_single_payload)
+                logger.info(f"extra_batch_payload is: ")
+                extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
+                    req.extras_batch_payload.json())
+                show_slim_dict(extra_batch_payload)
+                logger.info(f"interrogate_payload is: ")
+                interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
+                show_slim_dict(interrogate_payload)
+                # logger.info(f"db_create_model_payload is: ")
+                # logger.info(f"{req.db_create_model_payload}")
+                # logger.info(f"merge_checkpoint_payload is: ")
+                # logger.info(f"{req.merge_checkpoint_payload}")
+                # logger.info(f"json is {json.loads(req.json())}")
+                try:
+                    if req.task == 'txt2img':
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
+                        selected_models = req.models
+                        checkpoint_info = req.checkpoint_info
+                        checkspace_and_update_models(selected_models, checkpoint_info)
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                        logger.info(json.loads(req.txt2img_payload.json()))
+                        response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
+                                                json=json.loads(req.txt2img_payload.json()))
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
+                        return response.json()
+                    elif req.task == 'img2img':
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
+                        selected_models = req.models
+                        checkpoint_info = req.checkpoint_info
+                        checkspace_and_update_models(selected_models, checkpoint_info)
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                        response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
+                                                json=json.loads(req.img2img_payload.json()))
+                        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
+                        return response.json()
+                    elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
+                        response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
+                                                json=json.loads(req.interrogate_payload.json()))
+                        return response.json()
+                    elif req.task == 'db-create-model':
+                        r"""
+                        task: db-create-model
+                        db_create_model_payload:
+                            :s3_input_path: S3 path for download src model.
+                            :s3_output_path: S3 path for upload generated model.
+                            :ckpt_from_cloud: Whether to get ckpt from cloud or local.
+                            :job_id: job id.
+                            :param
+                                :new_model_name: generated model name.
+                                :ckpt_path: S3 path for download src model.
+                                :db_new_model_shared_src="",
+                                :from_hub=False,
+                                :new_model_url="",
+                                :new_model_token="",
+                                :extract_ema=False,
+                                :train_unfrozen=False,
+                                :is_512=True,
+                        """
+                        try:
+                            db_create_model_payload = json.loads(req.db_create_model_payload)
+                            job_id = db_create_model_payload["job_id"]
+                            s3_output_path = db_create_model_payload["s3_output_path"]
+                            output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
+                            output_path = get_path_from_s3_path(s3_output_path)
+                            db_create_model_params = db_create_model_payload["param"]["create_model_params"]
+                            if "ckpt_from_cloud" in db_create_model_payload["param"]:
+                                ckpt_from_s3 = db_create_model_payload["param"]["ckpt_from_cloud"]
+                            else:
+                                ckpt_from_s3 = False
+                            if not db_create_model_params['from_hub']:
+                                if ckpt_from_s3:
+                                    s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
+                                    local_model_path = db_create_model_params["ckpt_path"]
+                                    input_path = get_path_from_s3_path(s3_input_path)
+                                    logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                                else:
+                                    s3_input_path = db_create_model_payload["s3_input_path"]
+                                    local_model_path = db_create_model_params["ckpt_path"]
+                                    input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
+                                    logger.info(f"ckpt from local {input_path} {local_model_path}")
+                                input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
+                                logging.info("Check disk usage before download.")
+                                os.system("df -h")
+                                logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
+                                download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
+                                # Refresh the ckpt list.
+                                sd_models.list_models()
+                                logger.info("Check disk usage after download.")
+                                os.system("df -h")
+                            logger.info("Start creating model.")
+                            # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
+                            #                         params=db_create_model_params)
+                            create_model_func_args = copy.deepcopy(db_create_model_params)
+                            # ckpt_path = create_model_func_args.pop("new_model_src")
+                            # create_model_func_args["ckpt_path"] = ckpt_path
+                            local_response = create_model(**create_model_func_args)
+                            target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
+                            logging.info(f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
+                            upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
+                            config_file = os.path.join(target_local_model_dir, "db_config.json")
+                            with open(config_file, 'r') as openfile:
+                                config_dict = json.load(openfile)
+                            message = {
+                                "response": local_response,
+                                "config_dict": config_dict
+                            }
+                            response = {
+                                "id": job_id,
+                                "statusCode": 200,
+                                "message": message,
+                                "outputLocation": [f'{s3_output_path}/db_create_model_params["new_model_name"]']
+                            }
+                            return response
+                        except Exception as e:
+                            response = {
+                                "id": job_id,
+                                "statusCode": 500,
+                                "message": traceback.format_exc(),
+                            }
+                            logger.error(traceback.format_exc())
+                            return response
+                        finally:
+                            # Clean up
+                            logger.info("Delete src model.")
+                            delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
+                            logger.info(delete_src_command)
+                            os.system(delete_src_command)
+                            logging.info("Delete tgt model.")
+                            delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
+                            logger.info(delete_tgt_command)
+                            os.system(delete_tgt_command)
+                            logging.info("Check disk usage after request.")
+                            os.system("df -h")
+                    elif req.task == 'merge-checkpoint':
+                        try:
+                            output_model_position = merge_model_on_cloud(req)
+                            response = {
+                                "statusCode": 200,
+                                "message": output_model_position,
+                            }
+                            return response
+                        except Exception as e:
+                            traceback.print_exc()
+                    else:
+                        raise NotImplementedError
+                except Exception as e:
+                    traceback.print_exc()
+                finally:
+                    thread_deque.popleft()
+                    condition.notify()
+
+        def ping():
+            return {'status': 'Healthy'}
+
+import hashlib
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def get_file_md5_dict(path):
+    file_dict = {}
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            file_dict[file] = md5(os.path.join(root, file))
+    return file_dict
+
+def move_model_to_tmp(_, app: FastAPI):
+    # os.system("rm -rf models")
+    # Create model dir
+    # logger.info("Create model dir")
+    # os.system("mkdir models")
+    # Move model dir to /tmp
+    logging.info("Copy model dir to tmp")
+    model_tmp_dir = f"models_{time.time()}"
+    os.system(f"cp -rL models /tmp/{model_tmp_dir}")
+    src_file_dict = get_file_md5_dict("models")
+    tgt_file_dict = get_file_md5_dict(f"/tmp/{model_tmp_dir}")
+    is_complete = True
+    for file in src_file_dict:
+        logging.info(f"Src file {file} md5 {src_file_dict[file]}")
+        if file not in tgt_file_dict:
+            is_complete = False
+            break
+        if src_file_dict[file] != tgt_file_dict[file]:
+            is_complete = False
+            break
+    if is_complete:
+        os.system(f"rm -rf models")
+        # Delete tmp model dir
+        # logger.info("Delete tmp model dir")
+        # os.system("rm -rf /tmp/models")
+        # Link model dir
+        logging.info("Link model dir")
+        os.system(f"ln -s /tmp/{model_tmp_dir} models")
+    else:
+        logging.info("Failed to copy model dir, use the original dir")
+    logging.info("Check disk usage on app started")
+    os.system("df -h")
+
+try:
+    import modules.script_callbacks as script_callbacks
+
+    script_callbacks.on_app_started(sagemaker_api)
+    on_docker = os.environ.get('ON_DOCKER', "false")
+    if on_docker == "true":
+        script_callbacks.on_app_started(move_model_to_tmp)
+    logger.debug("SD-Webui API layer loaded")
+except Exception as e:
+    logger.error(e)
+    logger.debug("Unable to import script callbacks.")
+    pass
 
     def get_selectable_script(self, script_name, script_runner):
         if script_name is None or script_name == "":
@@ -428,311 +710,217 @@ class Api:
 
         return models.ExtrasBatchImagesResponse(images=list(map(encode_pil_to_base64, result[0])), html_info=result[1])
 
-    def pnginfoapi(self, req: models.PNGInfoRequest):
-        if(not req.image.strip()):
-            return models.PNGInfoResponse(info="")
+    # def pnginfoapi(self, req: models.PNGInfoRequest):
+    #     if(not req.image.strip()):
+    #         return models.PNGInfoResponse(info="")
 
-        image = decode_base64_to_image(req.image.strip())
-        if image is None:
-            return models.PNGInfoResponse(info="")
+    #     image = decode_base64_to_image(req.image.strip())
+    #     if image is None:
+    #         return models.PNGInfoResponse(info="")
 
-        geninfo, items = images.read_info_from_image(image)
-        if geninfo is None:
-            geninfo = ""
+    #     geninfo, items = images.read_info_from_image(image)
+    #     if geninfo is None:
+    #         geninfo = ""
 
-        items = {**{'parameters': geninfo}, **items}
+    #     items = {**{'parameters': geninfo}, **items}
 
-        return models.PNGInfoResponse(info=geninfo, items=items)
+    #     return models.PNGInfoResponse(info=geninfo, items=items)
 
-    def progressapi(self, req: models.ProgressRequest = Depends()):
-        # copy from check_progress_call of ui.py
+    # def progressapi(self, req: models.ProgressRequest = Depends()):
+    #     # copy from check_progress_call of ui.py
 
-        if shared.state.job_count == 0:
-            return models.ProgressResponse(progress=0, eta_relative=0, state=shared.state.dict(), textinfo=shared.state.textinfo)
+    #     if shared.state.job_count == 0:
+    #         return models.ProgressResponse(progress=0, eta_relative=0, state=shared.state.dict(), textinfo=shared.state.textinfo)
 
-        # avoid dividing zero
-        progress = 0.01
+    #     # avoid dividing zero
+    #     progress = 0.01
 
-        if shared.state.job_count > 0:
-            progress += shared.state.job_no / shared.state.job_count
-        if shared.state.sampling_steps > 0:
-            progress += 1 / shared.state.job_count * shared.state.sampling_step / shared.state.sampling_steps
+    #     if shared.state.job_count > 0:
+    #         progress += shared.state.job_no / shared.state.job_count
+    #     if shared.state.sampling_steps > 0:
+    #         progress += 1 / shared.state.job_count * shared.state.sampling_step / shared.state.sampling_steps
 
-        time_since_start = time.time() - shared.state.time_start
-        eta = (time_since_start/progress)
-        eta_relative = eta-time_since_start
+    #     time_since_start = time.time() - shared.state.time_start
+    #     eta = (time_since_start/progress)
+    #     eta_relative = eta-time_since_start
 
-        progress = min(progress, 1)
+    #     progress = min(progress, 1)
 
-        shared.state.set_current_image()
+    #     shared.state.set_current_image()
 
-        current_image = None
-        if shared.state.current_image and not req.skip_current_image:
-            current_image = encode_pil_to_base64(shared.state.current_image)
+    #     current_image = None
+    #     if shared.state.current_image and not req.skip_current_image:
+    #         current_image = encode_pil_to_base64(shared.state.current_image)
 
-        return models.ProgressResponse(progress=progress, eta_relative=eta_relative, state=shared.state.dict(), current_image=current_image, textinfo=shared.state.textinfo)
+    #     return models.ProgressResponse(progress=progress, eta_relative=eta_relative, state=shared.state.dict(), current_image=current_image, textinfo=shared.state.textinfo)
 
-    def interrogateapi(self, interrogatereq: models.InterrogateRequest):
-        image_b64 = interrogatereq.image
-        if image_b64 is None:
-            raise HTTPException(status_code=404, detail="Image not found")
+    # def interrogateapi(self, interrogatereq: models.InterrogateRequest):
+    #     image_b64 = interrogatereq.image
+    #     if image_b64 is None:
+    #         raise HTTPException(status_code=404, detail="Image not found")
 
-        img = decode_base64_to_image(image_b64)
-        img = img.convert('RGB')
+    #     img = decode_base64_to_image(image_b64)
+    #     img = img.convert('RGB')
 
-        # Override object param
-        with self.queue_lock:
-            if interrogatereq.model == "clip":
-                processed = shared.interrogator.interrogate(img)
-            elif interrogatereq.model == "deepdanbooru":
-                processed = deepbooru.model.tag(img)
-            else:
-                raise HTTPException(status_code=404, detail="Model not found")
+    #     # Override object param
+    #     with self.queue_lock:
+    #         if interrogatereq.model == "clip":
+    #             processed = shared.interrogator.interrogate(img)
+    #         elif interrogatereq.model == "deepdanbooru":
+    #             processed = deepbooru.model.tag(img)
+    #         else:
+    #             raise HTTPException(status_code=404, detail="Model not found")
 
-        return models.InterrogateResponse(caption=processed)
+    #     return models.InterrogateResponse(caption=processed)
 
-    def interruptapi(self):
-        shared.state.interrupt()
+    # def interruptapi(self):
+    #     shared.state.interrupt()
 
-        return {}
+    #     return {}
 
-    def unloadapi(self):
-        unload_model_weights()
+    # def unloadapi(self):
+    #     unload_model_weights()
 
-        return {}
+    #     return {}
 
-    def reloadapi(self):
-        reload_model_weights()
+    # def reloadapi(self):
+    #     reload_model_weights()
 
-        return {}
+    #     return {}
 
-    def skip(self):
-        shared.state.skip()
+    # def skip(self):
+    #     shared.state.skip()
 
-    def get_config(self):
-        options = {}
-        for key in shared.opts.data.keys():
-            metadata = shared.opts.data_labels.get(key)
-            if(metadata is not None):
-                options.update({key: shared.opts.data.get(key, shared.opts.data_labels.get(key).default)})
-            else:
-                options.update({key: shared.opts.data.get(key, None)})
+    # def get_config(self):
+    #     options = {}
+    #     for key in shared.opts.data.keys():
+    #         metadata = shared.opts.data_labels.get(key)
+    #         if(metadata is not None):
+    #             options.update({key: shared.opts.data.get(key, shared.opts.data_labels.get(key).default)})
+    #         else:
+    #             options.update({key: shared.opts.data.get(key, None)})
 
-        return options
+    #     return options
 
-    def set_config(self, req: Dict[str, Any]):
-        checkpoint_name = req.get("sd_model_checkpoint", None)
-        if checkpoint_name is not None and checkpoint_name not in checkpoint_aliases:
-            raise RuntimeError(f"model {checkpoint_name!r} not found")
+    # def set_config(self, req: Dict[str, Any]):
+    #     checkpoint_name = req.get("sd_model_checkpoint", None)
+    #     if checkpoint_name is not None and checkpoint_name not in checkpoint_aliases:
+    #         raise RuntimeError(f"model {checkpoint_name!r} not found")
 
-        for k, v in req.items():
-            shared.opts.set(k, v)
+    #     for k, v in req.items():
+    #         shared.opts.set(k, v)
 
-        shared.opts.save(shared.config_filename)
-        return
+    #     shared.opts.save(shared.config_filename)
+    #     return
 
-    def get_cmd_flags(self):
-        return vars(shared.cmd_opts)
+    # def get_cmd_flags(self):
+    #     return vars(shared.cmd_opts)
 
-    def get_samplers(self):
-        return [{"name": sampler[0], "aliases":sampler[2], "options":sampler[3]} for sampler in sd_samplers.all_samplers]
+    # def get_samplers(self):
+    #     return [{"name": sampler[0], "aliases":sampler[2], "options":sampler[3]} for sampler in sd_samplers.all_samplers]
 
-    def get_upscalers(self):
-        return [
-            {
-                "name": upscaler.name,
-                "model_name": upscaler.scaler.model_name,
-                "model_path": upscaler.data_path,
-                "model_url": None,
-                "scale": upscaler.scale,
-            }
-            for upscaler in shared.sd_upscalers
-        ]
+    # def get_upscalers(self):
+    #     return [
+    #         {
+    #             "name": upscaler.name,
+    #             "model_name": upscaler.scaler.model_name,
+    #             "model_path": upscaler.data_path,
+    #             "model_url": None,
+    #             "scale": upscaler.scale,
+    #         }
+    #         for upscaler in shared.sd_upscalers
+    #     ]
 
-    def get_latent_upscale_modes(self):
-        return [
-            {
-                "name": upscale_mode,
-            }
-            for upscale_mode in [*(shared.latent_upscale_modes or {})]
-        ]
+    # def get_latent_upscale_modes(self):
+    #     return [
+    #         {
+    #             "name": upscale_mode,
+    #         }
+    #         for upscale_mode in [*(shared.latent_upscale_modes or {})]
+    #     ]
 
-    def get_sd_models(self):
-        return [{"title": x.title, "model_name": x.model_name, "hash": x.shorthash, "sha256": x.sha256, "filename": x.filename, "config": find_checkpoint_config_near_filename(x)} for x in checkpoints_list.values()]
+    # def get_sd_models(self):
+    #     return [{"title": x.title, "model_name": x.model_name, "hash": x.shorthash, "sha256": x.sha256, "filename": x.filename, "config": find_checkpoint_config_near_filename(x)} for x in checkpoints_list.values()]
 
-    def get_sd_vaes(self):
-        return [{"model_name": x, "filename": vae_dict[x]} for x in vae_dict.keys()]
+    # def get_sd_vaes(self):
+    #     return [{"model_name": x, "filename": vae_dict[x]} for x in vae_dict.keys()]
 
-    def get_hypernetworks(self):
-        return [{"name": name, "path": shared.hypernetworks[name]} for name in shared.hypernetworks]
+    # def get_hypernetworks(self):
+    #     return [{"name": name, "path": shared.hypernetworks[name]} for name in shared.hypernetworks]
 
-    def get_face_restorers(self):
-        return [{"name":x.name(), "cmd_dir": getattr(x, "cmd_dir", None)} for x in shared.face_restorers]
+    # def get_face_restorers(self):
+    #     return [{"name":x.name(), "cmd_dir": getattr(x, "cmd_dir", None)} for x in shared.face_restorers]
 
-    def get_realesrgan_models(self):
-        return [{"name":x.name,"path":x.data_path, "scale":x.scale} for x in get_realesrgan_models(None)]
+    # def get_realesrgan_models(self):
+    #     return [{"name":x.name,"path":x.data_path, "scale":x.scale} for x in get_realesrgan_models(None)]
 
-    def get_prompt_styles(self):
-        styleList = []
-        for k in shared.prompt_styles.styles:
-            style = shared.prompt_styles.styles[k]
-            styleList.append({"name":style[0], "prompt": style[1], "negative_prompt": style[2]})
+    # def get_prompt_styles(self):
+    #     styleList = []
+    #     for k in shared.prompt_styles.styles:
+    #         style = shared.prompt_styles.styles[k]
+    #         styleList.append({"name":style[0], "prompt": style[1], "negative_prompt": style[2]})
 
-        return styleList
+    #     return styleList
 
-    def get_embeddings(self):
-        db = sd_hijack.model_hijack.embedding_db
+    # # TODO: do we need this functon to get all the embeddings? XY
+    # def get_embeddings(self):
+    #     db = sd_hijack.model_hijack.embedding_db
 
-        def convert_embedding(embedding):
-            return {
-                "step": embedding.step,
-                "sd_checkpoint": embedding.sd_checkpoint,
-                "sd_checkpoint_name": embedding.sd_checkpoint_name,
-                "shape": embedding.shape,
-                "vectors": embedding.vectors,
-            }
+    #     def convert_embedding(embedding):
+    #         return {
+    #             "step": embedding.step,
+    #             "sd_checkpoint": embedding.sd_checkpoint,
+    #             "sd_checkpoint_name": embedding.sd_checkpoint_name,
+    #             "shape": embedding.shape,
+    #             "vectors": embedding.vectors,
+    #         }
 
-        def convert_embeddings(embeddings):
-            return {embedding.name: convert_embedding(embedding) for embedding in embeddings.values()}
+    #     def convert_embeddings(embeddings):
+    #         return {embedding.name: convert_embedding(embedding) for embedding in embeddings.values()}
 
-        return {
-            "loaded": convert_embeddings(db.word_embeddings),
-            "skipped": convert_embeddings(db.skipped_embeddings),
-        }
+    #     return {
+    #         "loaded": convert_embeddings(db.word_embeddings),
+    #         "skipped": convert_embeddings(db.skipped_embeddings),
+    #     }
 
-    def refresh_checkpoints(self):
-        with self.queue_lock:
-            shared.refresh_checkpoints()
+    # # TODO: do we need get_memory for check the health of endpoint? XY
+    # def get_memory(self):
+    #     try:
+    #         import os
+    #         import psutil
+    #         process = psutil.Process(os.getpid())
+    #         res = process.memory_info() # only rss is cross-platform guaranteed so we dont rely on other values
+    #         ram_total = 100 * res.rss / process.memory_percent() # and total memory is calculated as actual value is not cross-platform safe
+    #         ram = { 'free': ram_total - res.rss, 'used': res.rss, 'total': ram_total }
+    #     except Exception as err:
+    #         ram = { 'error': f'{err}' }
+    #     try:
+    #         import torch
+    #         if torch.cuda.is_available():
+    #             s = torch.cuda.mem_get_info()
+    #             system = { 'free': s[0], 'used': s[1] - s[0], 'total': s[1] }
+    #             s = dict(torch.cuda.memory_stats(shared.device))
+    #             allocated = { 'current': s['allocated_bytes.all.current'], 'peak': s['allocated_bytes.all.peak'] }
+    #             reserved = { 'current': s['reserved_bytes.all.current'], 'peak': s['reserved_bytes.all.peak'] }
+    #             active = { 'current': s['active_bytes.all.current'], 'peak': s['active_bytes.all.peak'] }
+    #             inactive = { 'current': s['inactive_split_bytes.all.current'], 'peak': s['inactive_split_bytes.all.peak'] }
+    #             warnings = { 'retries': s['num_alloc_retries'], 'oom': s['num_ooms'] }
+    #             cuda = {
+    #                 'system': system,
+    #                 'active': active,
+    #                 'allocated': allocated,
+    #                 'reserved': reserved,
+    #                 'inactive': inactive,
+    #                 'events': warnings,
+    #             }
+    #         else:
+    #             cuda = {'error': 'unavailable'}
+    #     except Exception as err:
+    #         cuda = {'error': f'{err}'}
+    #     return models.MemoryResponse(ram=ram, cuda=cuda)
 
-    def create_embedding(self, args: dict):
-        try:
-            shared.state.begin(job="create_embedding")
-            filename = create_embedding(**args) # create empty embedding
-            sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings() # reload embeddings so new one can be immediately used
-            return models.CreateResponse(info=f"create embedding filename: {filename}")
-        except AssertionError as e:
-            return models.TrainResponse(info=f"create embedding error: {e}")
-        finally:
-            shared.state.end()
-
-
-    def create_hypernetwork(self, args: dict):
-        try:
-            shared.state.begin(job="create_hypernetwork")
-            filename = create_hypernetwork(**args) # create empty embedding
-            return models.CreateResponse(info=f"create hypernetwork filename: {filename}")
-        except AssertionError as e:
-            return models.TrainResponse(info=f"create hypernetwork error: {e}")
-        finally:
-            shared.state.end()
-
-    def preprocess(self, args: dict):
-        try:
-            shared.state.begin(job="preprocess")
-            preprocess(**args) # quick operation unless blip/booru interrogation is enabled
-            shared.state.end()
-            return models.PreprocessResponse(info='preprocess complete')
-        except KeyError as e:
-            return models.PreprocessResponse(info=f"preprocess error: invalid token: {e}")
-        except Exception as e:
-            return models.PreprocessResponse(info=f"preprocess error: {e}")
-        finally:
-            shared.state.end()
-
-    def train_embedding(self, args: dict):
-        try:
-            shared.state.begin(job="train_embedding")
-            apply_optimizations = shared.opts.training_xattention_optimizations
-            error = None
-            filename = ''
-            if not apply_optimizations:
-                sd_hijack.undo_optimizations()
-            try:
-                embedding, filename = train_embedding(**args) # can take a long time to complete
-            except Exception as e:
-                error = e
-            finally:
-                if not apply_optimizations:
-                    sd_hijack.apply_optimizations()
-            return models.TrainResponse(info=f"train embedding complete: filename: {filename} error: {error}")
-        except Exception as msg:
-            return models.TrainResponse(info=f"train embedding error: {msg}")
-        finally:
-            shared.state.end()
-
-    def train_hypernetwork(self, args: dict):
-        try:
-            shared.state.begin(job="train_hypernetwork")
-            shared.loaded_hypernetworks = []
-            apply_optimizations = shared.opts.training_xattention_optimizations
-            error = None
-            filename = ''
-            if not apply_optimizations:
-                sd_hijack.undo_optimizations()
-            try:
-                hypernetwork, filename = train_hypernetwork(**args)
-            except Exception as e:
-                error = e
-            finally:
-                shared.sd_model.cond_stage_model.to(devices.device)
-                shared.sd_model.first_stage_model.to(devices.device)
-                if not apply_optimizations:
-                    sd_hijack.apply_optimizations()
-                shared.state.end()
-            return models.TrainResponse(info=f"train embedding complete: filename: {filename} error: {error}")
-        except Exception as exc:
-            return models.TrainResponse(info=f"train embedding error: {exc}")
-        finally:
-            shared.state.end()
-
-    def get_memory(self):
-        try:
-            import os
-            import psutil
-            process = psutil.Process(os.getpid())
-            res = process.memory_info() # only rss is cross-platform guaranteed so we dont rely on other values
-            ram_total = 100 * res.rss / process.memory_percent() # and total memory is calculated as actual value is not cross-platform safe
-            ram = { 'free': ram_total - res.rss, 'used': res.rss, 'total': ram_total }
-        except Exception as err:
-            ram = { 'error': f'{err}' }
-        try:
-            import torch
-            if torch.cuda.is_available():
-                s = torch.cuda.mem_get_info()
-                system = { 'free': s[0], 'used': s[1] - s[0], 'total': s[1] }
-                s = dict(torch.cuda.memory_stats(shared.device))
-                allocated = { 'current': s['allocated_bytes.all.current'], 'peak': s['allocated_bytes.all.peak'] }
-                reserved = { 'current': s['reserved_bytes.all.current'], 'peak': s['reserved_bytes.all.peak'] }
-                active = { 'current': s['active_bytes.all.current'], 'peak': s['active_bytes.all.peak'] }
-                inactive = { 'current': s['inactive_split_bytes.all.current'], 'peak': s['inactive_split_bytes.all.peak'] }
-                warnings = { 'retries': s['num_alloc_retries'], 'oom': s['num_ooms'] }
-                cuda = {
-                    'system': system,
-                    'active': active,
-                    'allocated': allocated,
-                    'reserved': reserved,
-                    'inactive': inactive,
-                    'events': warnings,
-                }
-            else:
-                cuda = {'error': 'unavailable'}
-        except Exception as err:
-            cuda = {'error': f'{err}'}
-        return models.MemoryResponse(ram=ram, cuda=cuda)
-
-    def launch(self, server_name, port):
-        self.app.include_router(self.router)
-        uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=shared.cmd_opts.timeout_keep_alive)
-
-    def kill_webui(self):
-        restart.stop_program()
-
-    def restart_webui(self):
-        if restart.is_restartable():
-            restart.restart_program()
-        return Response(status_code=501)
-
-    def stop_webui(request):
-        shared.state.server_command = "stop"
-        return Response("Stopping.")
+    # # TODO: do we need this for API Xiujuan
+    # def launch(self, server_name, port):
+    #     self.app.include_router(self.router)
+    #     uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=shared.cmd_opts.timeout_keep_alive)
 
