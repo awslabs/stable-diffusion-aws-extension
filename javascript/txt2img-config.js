@@ -34,7 +34,57 @@ window.onload = function() {
     }, 2000);
 };
 
+let uploadedFiles = [];
 
+function showFileName(event) {
+    const fileListDiv = document.getElementById("hidden_bind_upload_files");
+    fileListDiv.innerHTML = "";
+    uploadedFiles = event.target.files;
+    const fileArray = Array.from(uploadedFiles);
+    for (let i = 0; i < uploadedFiles.length; i++) {
+        const fileName = uploadedFiles[i].name;
+        const fileSize = uploadedFiles[i].size;
+        const fileType = uploadedFiles[i].type;
+        const fileItemDiv = document.createElement("div");
+        fileItemDiv.textContent = `文件名: ${fileName} | 大小: ${fileSize} bytes | 类型: ${fileType}`;
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "删除";
+        deleteButton.addEventListener("click", () => {
+            // uploadedFiles = uploadedFiles.filter((file, index) => index !== i);
+            uploadedFiles.splice(i, 1);
+            fileListDiv.removeChild(fileItemDiv);
+        });
+        fileItemDiv.appendChild(deleteButton);
+        fileListDiv.appendChild(fileItemDiv);
+    }
+    uploadedFiles = Array.from(fileArray)
+}
+
+function uploadFiles() {
+    if (uploadedFiles.length > 0) {
+        const progressBarDiv = document.getElementById("progress-bar");
+        progressBarDiv.innerHTML = "";
+        const formData = new FormData();
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            formData.append("file", uploadedFiles[i]);
+        }
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener("progress", (event) => {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            progressBarDiv.textContent = `上传进度: ${progress}%`;
+        });
+        xhr.onload = () => {
+            progressBarDiv.textContent = "上传完成";
+        };
+        xhr.onerror = () => {
+            progressBarDiv.textContent = "上传失败";
+        };
+        xhr.open("POST", "http://test", true);
+        xhr.send(formData);
+    } else {
+        alert("未选择文件，无法上传。");
+    }
+}
 
 // Save configuration in txt2img panel
 function getDomValue(selector, defaultValue, isTextContent = false) {
