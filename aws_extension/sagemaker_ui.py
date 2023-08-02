@@ -637,7 +637,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
         return f"Failed to delete sagemaker endpoint with exception: {e}"
 
 
-def sagemaker_deploy(instance_type, initial_instance_count=1, autoscaling_enabled=True):
+def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_count=1, autoscaling_enabled=True):
     """ Create SageMaker endpoint for GPU inference.
     Args:
         instance_type (string): the ML compute instance type.
@@ -660,6 +660,7 @@ def sagemaker_deploy(instance_type, initial_instance_count=1, autoscaling_enable
         api_gateway_url += '/'
 
     payload = {
+        "endpoint_name": endpoint_name_textbox,
         "instance_type": instance_type,
         "initial_instance_count": initial_instance_count,
         "autoscaling_enabled": autoscaling_enabled
