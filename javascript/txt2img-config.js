@@ -34,7 +34,8 @@ window.onload = function() {
     }, 2000);
 };
 
-let uploadedFiles = [];
+// let uploadedFiles = [];
+let uploadedFilesMap = new Map();
 
 function getModelTypeValue(dropdowm_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
@@ -51,44 +52,53 @@ function showFileName(event) {
         alert("Please choose model type!")
         return;
     }
-    const fileItemSpan = document.createElement("span");
-    fileItemSpan.innerHTML = `${typeValue}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
-    fileListDiv.appendChild(fileItemSpan);
-
-    if (uploadedFiles.length == 0){
-        uploadedFiles = event.target.files;
+    if (uploadedFilesMap.size == 0){
+        // uploadedFiles = event.target.files;
+        uploadedFilesMap.set(typeValue,event.target.files);
     }else {
-        for (const file of event.target.files) {
-            for(const uploadFile of uploadedFiles) {
-                if (uploadFile.name == file.name && uploadFile.size == file.size) {
-                    alert("Duplicate model to upload！");
-                    return;
+        // uploadedFiles.push(...event.target.files);
+        if(!uploadedFilesMap.has(typeValue)){
+            uploadedFilesMap.set(typeValue,event.target.files);
+        }else {
+            for (const file of event.target.files) {
+                for(const uploadFile of uploadedFilesMap.get(typeValue)) {
+                    if (uploadFile.name == file.name && uploadFile.size == file.size) {
+                        alert("Duplicate model to upload！");
+                        return;
+                    }
                 }
             }
+            uploadedFilesMap.get(typeValue).push(...event.target.files);
         }
-        uploadedFiles.push(...event.target.files);
     }
     fileListDiv.innerHTML = "";
-    const fileArray = Array.from(uploadedFiles);
-    for (let i = 0; i < uploadedFiles.length; i++) {
-        const fileName = uploadedFiles[i].name;
-        const fileSize = uploadedFiles[i].size;
-        const fileType = uploadedFiles[i].type;
-        const fileItemDiv = document.createElement("div");
-        fileItemDiv.innerHTML = ` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;`;
-        const deleteButton = document.createElement("button");
-        deleteButton.style.backgroundColor = "#E5E5E5";
-        deleteButton.style.border = "1px solid black";
-        deleteButton.style.borderRadius = "2px";
-        deleteButton.textContent = "DELETE";
-        deleteButton.addEventListener("click", () => {
-            uploadedFiles.splice(i, 1);
-            fileListDiv.removeChild(fileItemDiv);
-        });
-        fileItemDiv.appendChild(deleteButton);
-        fileListDiv.appendChild(fileItemDiv);
+    for (let [key, uploadedFiles] of uploadedFilesMap) {
+        const fileItemSpan = document.createElement("span");
+        fileItemSpan.innerHTML = `${key}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+        fileListDiv.appendChild(fileItemSpan);
+        const fileArray = Array.from(uploadedFiles);
+        for (let i = 0; i < uploadedFiles.length; i++) {
+            const fileName = uploadedFiles[i].name;
+            const fileSize = uploadedFiles[i].size;
+            const fileType = uploadedFiles[i].type;
+            const fileItemDiv = document.createElement("div");
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;`;
+            const deleteButton = document.createElement("button");
+            deleteButton.style.backgroundColor = "#E5E5E5";
+            deleteButton.style.border = "1px solid black";
+            deleteButton.style.borderRadius = "2px";
+            deleteButton.textContent = "DELETE";
+            deleteButton.addEventListener("click", () => {
+                uploadedFiles.splice(i, 1);
+                // uploadedFilesMap.get(typeValue).splice(i, 1);
+                fileListDiv.removeChild(fileItemDiv);
+            });
+            fileItemDiv.appendChild(deleteButton);
+            fileListDiv.appendChild(fileItemDiv);
+        }
+        uploadedFiles = Array.from(fileArray)
     }
-    uploadedFiles = Array.from(fileArray)
+
 }
 
 function uploadFiles() {
