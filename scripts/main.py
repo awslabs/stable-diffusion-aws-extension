@@ -464,6 +464,13 @@ def on_ui_tabs():
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_form_row_01"):
                         model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork"], elem_id="model_type_ele_id")
+                        model_type_hiden_text = gr.Textbox(elem_id="model_type_value_ele_id", visible=False)
+                        def change_model_type_value(model_type: str):
+                            model_type_hiden_text.value = model_type
+                            print(f"change_model_type_value:{model_type}")
+                            return model_type
+                        model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
+                                                    inputs=[model_type_drop_down], outputs=model_type_hiden_text)
                         file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)"></div></div>')
                     with FormRow(elem_id="model_upload_form_row_02"):
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")

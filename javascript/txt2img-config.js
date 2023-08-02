@@ -36,21 +36,52 @@ window.onload = function() {
 
 let uploadedFiles = [];
 
+function getModelTypeValue(dropdowm_value){
+    const typeDom = document.getElementById("model_type_value_ele_id");
+    typeDom.value = dropdowm_value
+    return dropdowm_value
+}
+
 function showFileName(event) {
     const fileListDiv = document.getElementById("hidden_bind_upload_files");
+    // show file name key
+    const typeDom = document.getElementById("model_type_value_ele_id");
+    const typeValue = typeDom.value
+    if(typeValue == null){
+        alert("Please choose model type!")
+        return;
+    }
+    const fileItemSpan = document.createElement("span");
+    fileItemSpan.innerHTML = `${typeValue}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+    fileListDiv.appendChild(fileItemSpan);
+
+    if (uploadedFiles.length == 0){
+        uploadedFiles = event.target.files;
+    }else {
+        for (const file of event.target.files) {
+            for(const uploadFile of uploadedFiles) {
+                if (uploadFile.name == file.name && uploadFile.size == file.size) {
+                    alert("Duplicate model to upload！");
+                    return;
+                }
+            }
+        }
+        uploadedFiles.push(...event.target.files);
+    }
     fileListDiv.innerHTML = "";
-    uploadedFiles = event.target.files;
     const fileArray = Array.from(uploadedFiles);
     for (let i = 0; i < uploadedFiles.length; i++) {
         const fileName = uploadedFiles[i].name;
         const fileSize = uploadedFiles[i].size;
         const fileType = uploadedFiles[i].type;
         const fileItemDiv = document.createElement("div");
-        fileItemDiv.textContent = `文件名: ${fileName} | 大小: ${fileSize} bytes | 类型: ${fileType}`;
+        fileItemDiv.innerHTML = ` &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;`;
         const deleteButton = document.createElement("button");
-        deleteButton.textContent = "删除";
+        deleteButton.style.backgroundColor = "#E5E5E5";
+        deleteButton.style.border = "1px solid black";
+        deleteButton.style.borderRadius = "2px";
+        deleteButton.textContent = "DELETE";
         deleteButton.addEventListener("click", () => {
-            // uploadedFiles = uploadedFiles.filter((file, index) => index !== i);
             uploadedFiles.splice(i, 1);
             fileListDiv.removeChild(fileItemDiv);
         });
