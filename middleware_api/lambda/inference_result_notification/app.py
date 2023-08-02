@@ -87,7 +87,7 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # If S3 object_name was not specified, use file_name
     if object_name is None:
         object_name = file_name
-    
+
     # Add the directory to the object_name
     if directory:
         object_name = f"{directory}/{object_name}"
@@ -153,8 +153,6 @@ def lambda_handler(event, context):
         try:
             print(f"Complete invocation!")
             endpoint_name = message["requestParameters"]["endpointName"]
-
-            
             output_location = message["responseParameters"]["outputLocation"]
             bucket, key = get_bucket_and_key(output_location)
             obj = s3_resource.Object(bucket, key)
@@ -226,9 +224,9 @@ def lambda_handler(event, context):
 
                 upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",f"{inference_id}_param.json")
                 update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
-                
+
                 print(f"Complete inference parameters {inference_parameters}")
-            
+
             update_inference_job_table(inference_id, 'status', 'succeed')
             update_inference_job_table(inference_id, 'completeTime', get_curent_time())
             update_inference_job_table(inference_id, 'sagemakerRaw', str(message))

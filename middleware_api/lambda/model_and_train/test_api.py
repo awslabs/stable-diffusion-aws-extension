@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import requests
 
-os.environ.setdefault('AWS_PROFILE', 'playground')
+os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
 os.environ.setdefault('S3_BUCKET', 'alvindaiyan-aigc-testing-playground')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
 os.environ.setdefault('MODEL_TABLE', 'ModelTable')
@@ -88,6 +88,14 @@ class ModelsApiTest(TestCase):
         resp = list_all_checkpoints_api({}, {})
         print(resp)
 
+    def test_list_train_jobs(self):
+        from train_api import list_all_train_jobs_api
+        resp = list_all_train_jobs_api({
+            'queryStringParameters': {
+            }
+        }, {})
+        print(resp)
+
     def test_create_update_checkpoint(self):
         from checkpoint_api import create_checkpoint_api, update_checkpoint_api
         # resp = create_checkpoint_api({
@@ -115,6 +123,11 @@ class ModelsApiTest(TestCase):
             "train_job_id": "asdfasdf",
             "status": "Training"
         }, {})
+
+    def test_check_train_job_status(self):
+        from model_and_train.train_api import check_train_job_status
+        event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0', 'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
+        check_train_job_status(event, {})
 
     def test_scan(self):
         import logging
