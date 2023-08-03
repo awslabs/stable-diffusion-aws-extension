@@ -73,6 +73,8 @@ class SageMakerUI(scripts.Script):
 
     current_inference_id = None
     hijacked_images_inner = None
+    txt2img_generate_btn = None
+    img2img_generate_btn = None
 
     def title(self):
         return "SageMaker embeddings"
@@ -80,13 +82,23 @@ class SageMakerUI(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
+    def after_component(self, component, **kwargs):
+        if type(component) is gr.Button:
+            if self.is_txt2img and getattr(component, 'elem_id', None) == f'txt2img_generate':
+                self.txt2img_generate_btn = component
+            elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
+                self.img2img_generate_btn = component
+        pass
+
     def ui(self, is_img2img):
         if not is_img2img:
-            sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img, txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-            return [sagemaker_endpoint, sd_checkpoint_txt2img, sd_checkpoint_refresh_button_txt2img,txt2img_textual_inversion_dropdown, txt2img_lora_dropdown, txt2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint, outputs=[self.txt2img_generate_btn])
+            return [sagemaker_endpoint,  inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
-            sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-            return [sagemaker_endpoint, sd_checkpoint_img2img, sd_checkpoint_refresh_button_img2img, img2img_textual_inversion_dropdown, img2img_lora_dropdown, img2img_hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
+            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint, outputs=[self.img2img_generate_btn])
+            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -103,26 +115,9 @@ class SageMakerUI(scripts.Script):
         import base64
         from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
         import numpy
-        from modules import sd_models, processing
-        from modules.processing import Processed
+        from modules import sd_models
         from modules import extra_networks
 
-        def process_image_inner_hijack(processing_param):
-            processed = Processed(
-                p,
-                images_list=[],
-                seed=0,
-                info='',
-                subseed=0,
-                index_of_first_image=0,
-                infotexts=[],
-            )
-
-            self.postprocess(p, processed, args)
-            return processed
-
-        self.hijacked_images_inner = processing.process_images_inner
-        processing.process_images_inner = process_image_inner_hijack
 
         current_model = sd_models.select_checkpoint()
         print(current_model.name)
@@ -290,6 +285,7 @@ class SageMakerUI(scripts.Script):
         response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
         upload_param_response = response.json()
+        err = None
         if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
             upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
             upload_s3_resp.raise_for_status()
@@ -298,6 +294,41 @@ class SageMakerUI(scripts.Script):
             response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload, headers={'x-api-key': api_key})
             response.raise_for_status()
             self.current_inference_id = inference_id
+        elif upload_param_response['status'] != 200:
+            err = upload_param_response['error']
+
+        from modules import processing
+        from modules.processing import Processed
+
+        def process_image_inner_hijack(processing_param):
+            if err:
+
+                return Processed(
+                    p,
+                    images_list=[],
+                    seed=0,
+                    info=f"Inference job is failed: {', '.join(err)}",
+                    subseed=0,
+                    index_of_first_image=0,
+                    infotexts=[],
+                )
+
+            processed = Processed(
+                p,
+                images_list=[],
+                seed=0,
+                info='',
+                subseed=0,
+                index_of_first_image=0,
+                infotexts=[],
+            )
+
+            if p.scripts is not None:
+                p.scripts.postprocess(p, processed)
+            return processed
+
+        self.hijacked_images_inner = processing.process_images_inner
+        processing.process_images_inner = process_image_inner_hijack
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             # debug only, may delete later
@@ -393,6 +424,9 @@ class SageMakerUI(scripts.Script):
         # make sure there is a hash, otherwise remain not changed
         if len(model_name_parts) > 1:
             arg.model = ' '.join(model_name_parts[:-1])
+
+        if arg.model == 'None':
+            return {}
 
         models.append(f'{arg.model}.pth')
 
