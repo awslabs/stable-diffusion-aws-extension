@@ -15,7 +15,8 @@ import sys
 from aws_extension.models import InvocationsRequest
 from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path
 import requests
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
+from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, \
+    upload_folder_to_s3_by_tar, read_from_s3
 
 dreambooth_available = True
 THREAD_CHECK_COUNT = 1
@@ -129,7 +130,7 @@ def merge_model_on_cloud(req):
 
     model_yaml = (merge_model_name[:-len(merge_model_name.split('.')[-1])]+'yaml').replace('(','\(').replace(')','\)')
     model_yaml_complete_path = base_path + '/' + model_yaml
-    
+
     logger.info(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
 
     if yaml_states:
@@ -193,15 +194,24 @@ def sagemaker_api(_, app: FastAPI):
             elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
                 logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
                 raise MemoryError
+
+            print(f'current version: dev')
             logger.info(f"task is {req.task}")
-            logger.info(f"checkpoint_info is {req.checkpoint_info}")
             logger.info(f"models is {req.models}")
-            logger.info(f"txt2img_payload is: ")
-            txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
-            show_slim_dict(txt2img_payload)
-            logger.info(f"img2img_payload is: ")
-            img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
-            show_slim_dict(img2img_payload)
+            payload = {}
+            if req.param_s3:
+                def parse_constant(c: str) -> float:
+                    if c == "NaN":
+                        raise ValueError("NaN is not valid JSON")
+
+                    if c == 'Infinity':
+                        return sys.float_info.max
+
+                    return float(c)
+
+                payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
+                show_slim_dict(payload)
+
             logger.info(f"extra_single_payload is: ")
             extra_single_payload = {} if req.extras_single_payload is None else json.loads(
                 req.extras_single_payload.json())
@@ -221,23 +231,18 @@ def sagemaker_api(_, app: FastAPI):
             try:
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
-                    selected_models = req.models
-                    checkpoint_info = req.checkpoint_info
-                    checkspace_and_update_models(selected_models, checkpoint_info)
+                    checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
-                    logger.info(json.loads(req.txt2img_payload.json()))
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
-                                             json=json.loads(req.txt2img_payload.json()))
+                                             json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     return response.json()
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
-                    selected_models = req.models
-                    checkpoint_info = req.checkpoint_info
-                    checkspace_and_update_models(selected_models, checkpoint_info)
+                    checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
-                                             json=json.loads(req.img2img_payload.json()))
+                                             json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     return response.json()
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
@@ -414,6 +419,8 @@ try:
     script_callbacks.on_app_started(sagemaker_api)
     on_docker = os.environ.get('ON_DOCKER', "false")
     if on_docker == "true":
+        from modules import shared
+        shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)
     logger.debug("SD-Webui API layer loaded")
 except Exception as e:

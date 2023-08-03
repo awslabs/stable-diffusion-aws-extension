@@ -91,10 +91,6 @@ Resources:
           cd ..
           sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
           cd ..
-          cd models/Stable-diffusion/            
-          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/yangk-style_2160_lora.safetensors
-          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/yangk-style_2160_lora.yaml
-          cd ../..
           # sudo -u ubuntu python3 -m venv venv
           cat > sd-webui.service <<EOF
           [Unit]
