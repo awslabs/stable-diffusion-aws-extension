@@ -3,6 +3,7 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict
+from fastapi.responses import JSONResponse
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
@@ -114,7 +115,7 @@ def create_checkpoint_api(raw_event, context):
             timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
-        return {
+        content = {
             'statusCode': 200,
             'checkpoint': {
                 'id': request_id,
@@ -127,10 +128,16 @@ def create_checkpoint_api(raw_event, context):
         }
     except Exception as e:
         logger.error(e)
-        return {
+        content = {
             'statusCode': 500,
             'error': str(e)
         }
+    headers = {
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Origin": "*",
+    }
+    response = JSONResponse(content=content, headers=headers)
+    return response
 
 
 @dataclass
