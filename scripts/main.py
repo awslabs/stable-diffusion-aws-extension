@@ -18,8 +18,11 @@ from utils import save_variable_to_json
 from aws_extension import sagemaker_ui
 
 dreambooth_available = True
+
+
 def dummy_function(*args, **kwargs):
     return []
+
 
 try:
     from dreambooth_on_cloud.train import (
@@ -35,7 +38,8 @@ try:
         cloud_create_model,
     )
 except Exception as e:
-    logging.warning("[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
+    logging.warning(
+        "[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
     dreambooth_available = False
     cloud_train = dummy_function
     get_cloud_db_model_name_list = dummy_function
@@ -66,11 +70,10 @@ img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge"]
+async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge"]
 
 
 class SageMakerUI(scripts.Script):
-
     current_inference_id = None
     hijacked_images_inner = None
     txt2img_generate_btn = None
@@ -92,13 +95,19 @@ class SageMakerUI(scripts.Script):
 
     def ui(self, is_img2img):
         if not is_img2img:
-            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
-            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint, outputs=[self.txt2img_generate_btn])
-            return [sagemaker_endpoint,  inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
+                is_img2img)
+            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint,
+                                      outputs=[self.txt2img_generate_btn])
+            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
-            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud= sagemaker_ui.create_ui(is_img2img)
-            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint, outputs=[self.img2img_generate_btn])
-            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
+                is_img2img)
+            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint,
+                                      outputs=[self.img2img_generate_btn])
+            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -117,7 +126,6 @@ class SageMakerUI(scripts.Script):
         import numpy
         from modules import sd_models
         from modules import extra_networks
-
 
         current_model = sd_models.select_checkpoint()
         print(current_model.name)
@@ -250,7 +258,8 @@ class SageMakerUI(scripts.Script):
             if val.split(': ')[0] not in model_hijack.embedding_db.word_embeddings:
                 continue
 
-            textual_inv_name = model_hijack.embedding_db.word_embeddings[val.split(': ')[0]].filename.split(os.path.sep)[-1]
+            textual_inv_name = \
+            model_hijack.embedding_db.word_embeddings[val.split(': ')[0]].filename.split(os.path.sep)[-1]
             if 'embeddings' not in models:
                 models['embeddings'] = []
 
@@ -288,12 +297,14 @@ class SageMakerUI(scripts.Script):
             response.raise_for_status()
             upload_param_response = response.json()
 
-            if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
+            if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response[
+                'inference']:
                 upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
                 upload_s3_resp.raise_for_status()
                 inference_id = upload_param_response['inference']['id']
                 # start run infer
-                response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload, headers={'x-api-key': api_key})
+                response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload,
+                                        headers={'x-api-key': api_key})
                 response.raise_for_status()
                 self.current_inference_id = inference_id
             elif upload_param_response['status'] != 200:
@@ -306,7 +317,6 @@ class SageMakerUI(scripts.Script):
 
         def process_image_inner_hijack(processing_param):
             if err:
-
                 return Processed(
                     p,
                     images_list=[],
@@ -336,7 +346,7 @@ class SageMakerUI(scripts.Script):
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
             # debug only, may delete later
-            with open(f'api_{"txt2img" if self.is_txt2img else "img2img" }_param.json', 'w') as f:
+            with open(f'api_{"txt2img" if self.is_txt2img else "img2img"}_param.json', 'w') as f:
                 f.write(js)
         pass
 
@@ -419,7 +429,6 @@ class SageMakerUI(scripts.Script):
 
         return arg, models
 
-
     def _controlnet_args(self, script_name, arg) -> Dict[str, List[str]]:
         if script_name != 'controlnet' or not arg.enabled:
             return {}
@@ -443,16 +452,18 @@ def on_after_component_callback(component, **_kwargs):
     is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
     is_dreambooth_model_name = type(component) is gr.Dropdown and \
                                (getattr(component, 'elem_id', None) == 'model_name' or \
-                                (getattr(component, 'label', None) == 'Model' and getattr(component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
+                                (getattr(component, 'label', None) == 'Model' and getattr(
+                                    component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
     is_cloud_dreambooth_model_name = type(component) is gr.Dropdown and \
                                      getattr(component, 'elem_id', None) == 'cloud_db_model_name'
     is_machine_type_for_train = type(component) is gr.Dropdown and \
                                 getattr(component, 'elem_id', None) == 'cloud_train_instance_type'
     is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
-    is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id', None) == 'training_job_dashboard'
+    is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id',
+                                                                            None) == 'training_job_dashboard'
     is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
     if is_dreambooth_train:
-        db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id = "db_sagemaker_train", variant='primary')
+        db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id="db_sagemaker_train", variant='primary')
     if is_dreambooth_model_name:
         db_model_name = component
     if is_cloud_dreambooth_model_name:
@@ -469,7 +480,8 @@ def on_after_component_callback(component, **_kwargs):
     if training_job_dashboard is not None and cloud_train_instance_type is not None and \
             cloud_db_model_name is not None and db_model_name is not None and \
             db_use_txt2img is not None and db_sagemaker_train is not None and \
-            (is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train or is_training_job_dashboard):
+            (
+                    is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img or is_cloud_dreambooth_model_name or is_machine_type_for_train or is_training_job_dashboard):
         db_model_name.value = "dummy_local_model"
         db_sagemaker_train.click(
             fn=async_cloud_train,
@@ -485,7 +497,8 @@ def on_after_component_callback(component, **_kwargs):
     # Hook image display logic
     global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook, txt2img_prompt
     is_txt2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'txt2img_gallery'
-    is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img'
+    is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id',
+                                                                           None) == 'generation_info_txt2img'
     is_txt2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img'
     is_txt2img_prompt = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'txt2img_prompt'
     if is_txt2img_prompt:
@@ -497,15 +510,16 @@ def on_after_component_callback(component, **_kwargs):
     if is_txt2img_html_info:
         txt2img_html_info = component
         # return test
+
+        # sagemaker_ui.textual_inversion_dropdown is not None and \
+        # sagemaker_ui.hyperNetwork_dropdown is not None and \
+        # sagemaker_ui.lora_dropdown is not None and \
     if sagemaker_ui.inference_job_dropdown is not None and \
-        sagemaker_ui.textual_inversion_dropdown is not None and \
-        sagemaker_ui.hyperNetwork_dropdown is not None and \
-        sagemaker_ui.lora_dropdown is not None and \
-        txt2img_gallery is not None and \
-        txt2img_generation_info is not None and \
-        txt2img_html_info is not None and \
-        txt2img_show_hook is None and \
-        txt2img_prompt is not None:
+            txt2img_gallery is not None and \
+            txt2img_generation_info is not None and \
+            txt2img_html_info is not None and \
+            txt2img_show_hook is None and \
+            txt2img_prompt is not None:
         txt2img_show_hook = "finish"
         sagemaker_ui.inference_job_dropdown.change(
             # fn=lambda selected_value: sagemaker_ui.fake_gan(selected_value, txt2img_prompt['value']),
@@ -513,23 +527,23 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown, txt2img_prompt],
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
-        sagemaker_ui.textual_inversion_dropdown.change(
-            fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
-            inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
-            outputs=[txt2img_prompt]
-        )
-
-        sagemaker_ui.hyperNetwork_dropdown.change(
-            fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
-            inputs=[sagemaker_ui.hyperNetwork_dropdown, txt2img_prompt],
-            outputs=[txt2img_prompt]
-        )
-
-        sagemaker_ui.lora_dropdown.change(
-            fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
-            inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
-            outputs=[txt2img_prompt]
-        )
+        # sagemaker_ui.textual_inversion_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+        #     inputs=[sagemaker_ui.textual_inversion_dropdown, txt2img_prompt],
+        #     outputs=[txt2img_prompt]
+        # )
+        #
+        # sagemaker_ui.hyperNetwork_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+        #     inputs=[sagemaker_ui.hyperNetwork_dropdown, txt2img_prompt],
+        #     outputs=[txt2img_prompt]
+        # )
+        #
+        # sagemaker_ui.lora_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+        #     inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
+        #     outputs=[txt2img_prompt]
+        # )
 
         sagemaker_ui.sagemaker_endpoint.change(
             fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
@@ -538,12 +552,12 @@ def on_after_component_callback(component, **_kwargs):
         )
         # elem_id = getattr(component, "elem_id", None)
         # if elem_id == "generate_on_cloud_with_cloud_config_button":
-        sagemaker_ui.generate_on_cloud_button_with_js.click(
-                fn=sagemaker_ui.call_txt2img_inference,
-                _js="txt2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint],
-                outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
-            )
+        # sagemaker_ui.generate_on_cloud_button_with_js.click(
+        #         fn=sagemaker_ui.call_txt2img_inference,
+        #         _js="txt2img_config_save",
+        #         inputs=[sagemaker_ui.sagemaker_endpoint],
+        #         outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info]
+        #     )
         sagemaker_ui.modelmerger_merge_on_cloud.click(
             fn=sagemaker_ui.modelmerger_on_cloud_func,
             # fn=None,
@@ -558,15 +572,16 @@ def on_after_component_callback(component, **_kwargs):
             ])
         # Hook image display logic
     global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
-            img2img_prompt, \
-            init_img, \
-            sketch, \
-            init_img_with_mask, \
-            inpaint_color_sketch, \
-            init_img_inpaint, \
-            init_mask_inpaint
+        img2img_prompt, \
+        init_img, \
+        sketch, \
+        init_img_with_mask, \
+        inpaint_color_sketch, \
+        init_img_inpaint, \
+        init_mask_inpaint
     is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
-    is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img'
+    is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id',
+                                                                           None) == 'generation_info_img2img'
     is_img2img_html_info = type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img'
 
     is_img2img_prompt = type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'img2img_prompt'
@@ -574,7 +589,6 @@ def on_after_component_callback(component, **_kwargs):
     is_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2img_sketch'
     is_init_img_with_mask = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img2maskimg'
     is_inpaint_color_sketch = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'inpaint_sketch'
-
 
     is_init_img_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_base'
     is_init_mask_inpaint = type(component) is gr.Image and getattr(component, 'elem_id', None) == 'img_inpaint_mask'
@@ -601,16 +615,16 @@ def on_after_component_callback(component, **_kwargs):
     if is_init_mask_inpaint:
         init_mask_inpaint = component
 
+    # sagemaker_ui.textual_inversion_dropdown is not None and \
+    # sagemaker_ui.hyperNetwork_dropdown is not None and \
+    # sagemaker_ui.lora_dropdown is not None and \
     if sagemaker_ui.inference_job_dropdown is not None and \
-            sagemaker_ui.textual_inversion_dropdown is not None and \
-            sagemaker_ui.hyperNetwork_dropdown is not None and \
-            sagemaker_ui.lora_dropdown is not None and \
             img2img_gallery is not None and \
             img2img_generation_info is not None and \
             img2img_html_info is not None and \
             img2img_show_hook is None and \
             sagemaker_ui.interrogate_clip_on_cloud_button is not None and \
-            sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None and\
+            sagemaker_ui.interrogate_deep_booru_on_cloud_button is not None and \
             img2img_prompt is not None and \
             init_img is not None and \
             sketch is not None and \
@@ -618,51 +632,54 @@ def on_after_component_callback(component, **_kwargs):
             inpaint_color_sketch is not None and \
             init_img_inpaint is not None and \
             init_mask_inpaint is not None:
-            img2img_show_hook = "finish"
-            sagemaker_ui.inference_job_dropdown.change(
-                fn=sagemaker_ui.fake_gan,
-                inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
-                # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-            )
+        img2img_show_hook = "finish"
+        sagemaker_ui.inference_job_dropdown.change(
+            fn=sagemaker_ui.fake_gan,
+            inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+            # outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+        )
 
-            sagemaker_ui.textual_inversion_dropdown.change(
-                fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
-                inputs=[sagemaker_ui.textual_inversion_dropdown, img2img_prompt],
-                outputs=[img2img_prompt]
-            )
+        # sagemaker_ui.textual_inversion_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_TextualInversion,
+        #     inputs=[sagemaker_ui.textual_inversion_dropdown, img2img_prompt],
+        #     outputs=[img2img_prompt]
+        # )
+        #
+        # sagemaker_ui.hyperNetwork_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
+        #     inputs=[sagemaker_ui.hyperNetwork_dropdown, img2img_prompt],
+        #     outputs=[img2img_prompt]
+        # )
+        #
+        # sagemaker_ui.lora_dropdown.change(
+        #     fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
+        #     inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
+        #     outputs=[img2img_prompt]
+        # )
 
-            sagemaker_ui.hyperNetwork_dropdown.change(
-                fn=sagemaker_ui.update_txt2imgPrompt_from_Hypernetworks,
-                inputs=[sagemaker_ui.hyperNetwork_dropdown, img2img_prompt],
-                outputs=[img2img_prompt]
-            )
+        sagemaker_ui.interrogate_clip_on_cloud_button.click(
+            fn=sagemaker_ui.call_interrogate_clip,
+            _js="img2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
+                    init_img_inpaint, init_mask_inpaint],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+        )
 
-            sagemaker_ui.lora_dropdown.change(
-                fn=sagemaker_ui.update_txt2imgPrompt_from_Lora,
-                inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
-                outputs=[img2img_prompt]
-            )
+        sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
+            fn=sagemaker_ui.call_interrogate_deepbooru,
+            _js="img2img_config_save",
+            inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
+                    init_img_inpaint, init_mask_inpaint],
+            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+        )
+        # sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
+        #     fn=sagemaker_ui.call_img2img_inference,
+        #     _js="img2img_config_save",
+        #     inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
+        #     outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
+        # )
 
-            sagemaker_ui.interrogate_clip_on_cloud_button.click(
-                fn=sagemaker_ui.call_interrogate_clip,
-                _js="img2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
-            )
-
-            sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
-                fn=sagemaker_ui.call_interrogate_deepbooru,
-                _js="img2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
-            )
-            sagemaker_ui.generate_on_cloud_button_with_js_img2img.click(
-                fn=sagemaker_ui.call_img2img_inference,
-                _js="img2img_config_save",
-                inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch, init_img_inpaint, init_mask_inpaint],
-                outputs=[img2img_gallery, img2img_generation_info, img2img_html_info]
-            )
 
 def update_connect_config(api_url, api_token):
     # Check if api_url ends with '/', if not append it
@@ -678,6 +695,7 @@ def update_connect_config(api_url, api_token):
     sagemaker_ui.init_refresh_resource_list_from_cloud()
     return "Setting updated"
 
+
 def test_aws_connect_config(api_url, api_token):
     update_connect_config(api_url, api_token)
     api_url = get_variable_from_json('api_gateway_url')
@@ -690,7 +708,8 @@ def test_aws_connect_config(api_url, api_token):
         "Content-Type": "application/json"
     }
     try:
-        response = requests.get(target_url,headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
+        response = requests.get(target_url,
+                                headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
         r = response.json()
         return "Successfully Connected"
@@ -698,9 +717,10 @@ def test_aws_connect_config(api_url, api_token):
         print(f"Error: Failed to get server request. Details: {e}")
         return "failed to connect to backend server, please check the url and token"
 
+
 def on_ui_tabs():
     import modules.ui
-    buildin_model_list = ['AWS JumpStart Model','AWS BedRock Model','Hugging Face Model']
+    buildin_model_list = ['AWS JumpStart Model', 'AWS BedRock Model', 'Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
         with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
             sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
@@ -717,34 +737,44 @@ def on_ui_tabs():
                 global api_key
                 api_key = get_variable_from_json('api_token')
                 with gr.Row():
-                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1, placeholder="Please enter API Url of Middle", label="API Url",elem_id="aws_middleware_api")
+                    api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1,
+                                                 placeholder="Please enter API Url of Middle", label="API Url",
+                                                 elem_id="aws_middleware_api")
+
                     def update_api_gateway_url():
                         global api_gateway_url
                         api_gateway_url = get_variable_from_json('api_gateway_url')
                         return api_gateway_url
+
                     # modules.ui.create_refresh_button(api_url_textbox, get_variable_from_json('api_gateway_url'), lambda: {"value": get_variable_from_json('api_gateway_url')}, "refresh_api_gate_way")
-                    modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url, lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
+                    modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url,
+                                                     lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
                 with gr.Row():
                     def update_api_key():
                         global api_key
                         api_key = get_variable_from_json('api_token')
                         return api_key
-                    api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token", label="API Token", elem_id="aws_middleware_token")
-                    modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key}, "refresh_api_token")
+
+                    api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token",
+                                                   label="API Token", elem_id="aws_middleware_token")
+                    modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key},
+                                                     "refresh_api_token")
 
                 global test_connection_result
                 test_connection_result = gr.Label(title="Output");
-                aws_connect_button = gr.Button(value="Update Setting", variant='primary',elem_id="aws_config_save")
+                aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
                 aws_connect_button.click(_js="update_auth_settings",
                                          fn=update_connect_config,
-                                         inputs = [api_url_textbox, api_token_textbox],
-                                         outputs= [test_connection_result])
-                aws_test_button = gr.Button(value="Test Connection", variant='primary',elem_id="aws_config_test")
-                aws_test_button.click(test_aws_connect_config, inputs = [api_url_textbox, api_token_textbox], outputs=[test_connection_result])
+                                         inputs=[api_url_textbox, api_token_textbox],
+                                         outputs=[test_connection_result])
+                aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
+                aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
+                                      outputs=[test_connection_result])
 
                 with gr.Row():
                     with gr.Accordion("Disclaimer", open=False):
-                        gr.HTML(value="You should perform your own independent assessment, and take measures to ensure that you comply with your own specific quality control practices and standards, and the local rules, laws, regulations, licenses and terms of use that apply to you, your content, and the third-party generative AI service in this web UI. Amazon Web Services has no control or authority over the third-party generative AI service in this web UI, and does not make any representations or warranties that the third-party generative AI service is secure, virus-free, operational, or compatible with your production environment and standards.");
+                        gr.HTML(
+                            value="You should perform your own independent assessment, and take measures to ensure that you comply with your own specific quality control practices and standards, and the local rules, laws, regulations, licenses and terms of use that apply to you, your content, and the third-party generative AI service in this web UI. Amazon Web Services has no control or authority over the third-party generative AI service in this web UI, and does not make any representations or warranties that the third-party generative AI service is secure, virus-free, operational, or compatible with your production environment and standards.");
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
@@ -760,30 +790,35 @@ def on_ui_tabs():
                         "control": os.path.join(root_path, "models", "ControlNet"),
                         "hyper": os.path.join(root_path, "models", "hypernetworks"),
                     }
+
                     def scan_sd_ckpt():
                         model_files = os.listdir(model_folders["ckpt"])
                         # filter non-model files not in exts
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
                         model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
                         return model_files
+
                     def scan_textural_inversion_model():
                         model_files = os.listdir(model_folders["text"])
                         # filter non-model files not in exts
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
                         model_files = [os.path.join(model_folders["text"], f) for f in model_files]
                         return model_files
+
                     def scan_lora_model():
                         model_files = os.listdir(model_folders["lora"])
                         # filter non-model files not in exts
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
                         model_files = [os.path.join(model_folders["lora"], f) for f in model_files]
                         return model_files
+
                     def scan_control_model():
                         model_files = os.listdir(model_folders["control"])
                         # filter non-model files not in exts
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
                         model_files = [os.path.join(model_folders["control"], f) for f in model_files]
                         return model_files
+
                     def scan_hypernetwork_model():
                         model_files = os.listdir(model_folders["hyper"])
                         # filter non-model files not in exts
@@ -792,51 +827,82 @@ def on_ui_tabs():
                         return model_files
 
                     with FormRow(elem_id="model_upload_form_row_01"):
-                        sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()), elem_id="sd_ckpt_dropdown")
-                        create_refresh_button(sd_checkpoints_path, scan_sd_ckpt, lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
+                        sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()),
+                                                          elem_id="sd_ckpt_dropdown")
+                        create_refresh_button(sd_checkpoints_path, scan_sd_ckpt,
+                                              lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
 
-                        textual_inversion_path = gr.Dropdown(label="Textual Inversion", choices=sorted(scan_textural_inversion_model()),elem_id="textual_inversion_model_dropdown")
-                        create_refresh_button(textual_inversion_path, scan_textural_inversion_model, lambda: {"choices": sorted(scan_textural_inversion_model())},  "refresh_textual_inversion_model")
+                        textual_inversion_path = gr.Dropdown(label="Textual Inversion",
+                                                             choices=sorted(scan_textural_inversion_model()),
+                                                             elem_id="textual_inversion_model_dropdown")
+                        create_refresh_button(textual_inversion_path, scan_textural_inversion_model,
+                                              lambda: {"choices": sorted(scan_textural_inversion_model())},
+                                              "refresh_textual_inversion_model")
                     with FormRow(elem_id="model_upload_form_row_02"):
-                        lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()), elem_id="lora_model_dropdown")
-                        create_refresh_button(lora_path, scan_lora_model, lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model",)
+                        lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()),
+                                                elem_id="lora_model_dropdown")
+                        create_refresh_button(lora_path, scan_lora_model,
+                                              lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model", )
 
-                        controlnet_model_path = gr.Dropdown(label="ControlNet model", choices=sorted(scan_control_model()), elem_id="controlnet_model_dropdown")
-                        create_refresh_button(controlnet_model_path, scan_control_model, lambda: {"choices": sorted(scan_control_model())}, "refresh_controlnet_models")
+                        controlnet_model_path = gr.Dropdown(label="ControlNet model",
+                                                            choices=sorted(scan_control_model()),
+                                                            elem_id="controlnet_model_dropdown")
+                        create_refresh_button(controlnet_model_path, scan_control_model,
+                                              lambda: {"choices": sorted(scan_control_model())},
+                                              "refresh_controlnet_models")
                     with FormRow(elem_id="model_upload_form_row_03"):
-                        hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),elem_id="hyper_model_dropdown")
-                        create_refresh_button(hypernetwork_path, scan_hypernetwork_model, lambda: {"choices": sorted(scan_hypernetwork_model())}, "refresh_hyper_models")
+                        hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),
+                                                        elem_id="hyper_model_dropdown")
+                        create_refresh_button(hypernetwork_path, scan_hypernetwork_model,
+                                              lambda: {"choices": sorted(scan_hypernetwork_model())},
+                                              "refresh_hyper_models")
 
                     with gr.Row():
-                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
+                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
+                                                        elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="model_update",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
-                                                  inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                                                  outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
-
+                                                  inputs=[sd_checkpoints_path, textual_inversion_path, lora_path,
+                                                          hypernetwork_path, controlnet_model_path],
+                                                  outputs=[test_connection_result, sd_checkpoints_path,
+                                                           textual_inversion_path, lora_path, hypernetwork_path,
+                                                           controlnet_model_path])
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
                     with gr.Row():
-                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-                        instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
+                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type",
+                                                             choices=async_inference_choices,
+                                                             elem_id="sagemaker_inference_instance_type_textbox",
+                                                             value="ml.g4dn.xlarge")
+                        instance_count_dropdown = gr.Dropdown(label="Please select Instance count",
+                                                              choices=["1", "2", "3", "4"],
+                                                              elem_id="sagemaker_inference_instance_count_textbox",
+                                                              value="1")
 
                     with gr.Row():
-                        sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',elem_id="sagemaker_deploy_endpoint_buttion")
+                        sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
+                                                            elem_id="sagemaker_deploy_endpoint_buttion")
                         sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
                                                       _js="deploy_endpoint", \
-                                                      inputs = [instance_type_dropdown, instance_count_dropdown],
+                                                      inputs=[instance_type_dropdown, instance_count_dropdown],
                                                       outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
                     with gr.Row():
-                        sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints, multiselect=True, label="Select Cloud SageMaker Endpoint")
-                        modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown, sagemaker_ui.update_sagemaker_endpoints, lambda: {"choices": sagemaker_ui.sagemaker_endpoints}, "refresh_sagemaker_endpoints_delete")
-                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',elem_id="sagemaker_endpoint_delete_button")
+                        sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints,
+                                                                         multiselect=True,
+                                                                         label="Select Cloud SageMaker Endpoint")
+                        modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
+                                                         sagemaker_ui.update_sagemaker_endpoints,
+                                                         lambda: {"choices": sagemaker_ui.sagemaker_endpoints},
+                                                         "refresh_sagemaker_endpoints_delete")
+                    sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
+                                                                 elem_id="sagemaker_endpoint_delete_button")
                     sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
                                                            _js="delete_sagemaker_endpoint", \
-                                                           inputs = [sagemaker_endpoint_delete_dropdown],
+                                                           inputs=[sagemaker_endpoint_delete_dropdown],
                                                            outputs=[test_connection_result])
 
             with gr.Column(variant="panel", scale=1):
@@ -859,7 +925,8 @@ def on_ui_tabs():
                             return file_paths
 
                         file_output = gr.File()
-                        upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"], file_count="multiple")
+                        upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"],
+                                                        file_count="multiple")
                         upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
                         def create_dataset(files, dataset_name, dataset_desc):
@@ -911,9 +978,14 @@ def on_ui_tabs():
                             print(raw_response.json())
                             return f'Complete Dataset {dataset_name} creation', None, None, None, None
 
-                        dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name", label="Dataset Name",elem_id="sd_dataset_name_textbox")
-                        dataset_description_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset description", label="Dataset Description",elem_id="sd_dataset_description_textbox")
-                        create_dataset_button = gr.Button("Create Dataset", variant="primary", elem_id="sagemaker_dataset_create_button") # size=(200, 50)
+                        dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name",
+                                                         label="Dataset Name", elem_id="sd_dataset_name_textbox")
+                        dataset_description_upload = gr.Textbox(value="", lines=1,
+                                                                placeholder="Please input dataset description",
+                                                                label="Dataset Description",
+                                                                elem_id="sd_dataset_description_textbox")
+                        create_dataset_button = gr.Button("Create Dataset", variant="primary",
+                                                          elem_id="sagemaker_dataset_create_button")  # size=(200, 50)
                         dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
                         create_dataset_button.click(
                             fn=create_dataset,
@@ -958,7 +1030,8 @@ def on_ui_tabs():
                                 "refresh_cloud_dataset",
                             )
                         with gr.Row():
-                            dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text').style(show_copy_button=True)
+                            dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
+                                                           type='text').style(show_copy_button=True)
                         with gr.Row():
                             dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
                         with gr.Row():
@@ -973,12 +1046,12 @@ def on_ui_tabs():
                                 api_key = get_variable_from_json('api_token')
                                 raw_response = requests.get(url=url, headers={'x-api-key': api_key})
                                 raw_response.raise_for_status()
-                                dataset_items = [(item['preview_url'], item['key']) for item in raw_response.json()['data']]
+                                dataset_items = [(item['preview_url'], item['key']) for item in
+                                                 raw_response.json()['data']]
                                 return ds['s3'], ds['description'], dataset_items
 
-                            cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name], outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
-
-
+                            cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name],
+                                                      outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
@@ -987,6 +1060,7 @@ script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
 # create new tabs for create Model
 origin_callback = script_callbacks.ui_tabs_callback
+
 
 def avoid_duplicate_from_restart_ui(res):
     for extension_ui in res:
@@ -998,7 +1072,6 @@ def avoid_duplicate_from_restart_ui(res):
                         return True
 
     return False
-
 
 
 def ui_tabs_callback():
@@ -1098,7 +1171,8 @@ def ui_tabs_callback():
                                         cloud_db_create_model = gr.Button(
                                             value="Create Model From Cloud", variant="primary"
                                         )
-                                    cloud_db_new_model_name = gr.Textbox(label="Name", placeholder="Model names can only contain alphanumeric and -")
+                                    cloud_db_new_model_name = gr.Textbox(label="Name",
+                                                                         placeholder="Model names can only contain alphanumeric and -")
                                     with gr.Row():
                                         cloud_db_create_from_hub = gr.Checkbox(
                                             label="Create From Hub", value=False, visible=False
@@ -1136,7 +1210,8 @@ def ui_tabs_callback():
                                     cloud_db_new_model_extract_ema = gr.Checkbox(
                                         label="Extract EMA Weights", value=False
                                     )
-                                    cloud_db_train_unfrozen = gr.Checkbox(label="Unfreeze Model", value=False, elem_id="cloud_db_unfreeze_model_checkbox")
+                                    cloud_db_train_unfrozen = gr.Checkbox(label="Unfreeze Model", value=False,
+                                                                          elem_id="cloud_db_unfreeze_model_checkbox")
                                     with gr.Row():
                                         gr.HTML(value="<b>Model Creation Jobs Details:<b/>")
                                     with gr.Row():
@@ -1203,10 +1278,13 @@ def ui_tabs_callback():
                     break
     return res
 
+
 script_callbacks.ui_tabs_callback = ui_tabs_callback
+
 
 def get_sorted_lora_cloud_models():
     return []
+
 
 def get_cloud_model_snapshots():
     return []

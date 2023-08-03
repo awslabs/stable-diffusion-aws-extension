@@ -719,6 +719,8 @@ def txt2img_config_save():
 
 def displayEndpointInfo(input_string: str):
     print(f"selected value is {input_string}")
+    if not input_string:
+        return
     parts = input_string.split('+')
 
     if len(parts) < 2:
