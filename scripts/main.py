@@ -93,6 +93,7 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
+        # todo: check if endpoint is inService
         if not args[0]:
             return
 
