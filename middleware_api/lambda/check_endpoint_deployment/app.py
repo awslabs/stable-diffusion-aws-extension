@@ -106,6 +106,71 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
             'ScaleOutCooldown': 300
         }
     )
+
+    """
+    response = client.put_scaling_policy(
+        PolicyName='CPUUtil-ScalingPolicy',
+        ServiceNamespace='sagemaker',
+        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ScalableDimension='sagemaker:variant:DesiredInstanceCount',
+        PolicyType='TargetTrackingScaling',
+        TargetTrackingScalingPolicyConfiguration={
+            'TargetValue': 50.0,
+            'CustomizedMetricSpecification':
+            {
+                'MetricName': 'CPUUtilization',
+                'Namespace': '/aws/sagemaker/Endpoints',
+                'Dimensions': [
+                    {'Name': 'EndpointName', 'Value': endpoint_name },
+                    {'Name': 'VariantName','Value': 'AllTraffic'}
+                ],
+                'Statistic': 'Average', # Possible - 'Statistic': 'Average'|'Minimum'|'Maximum'|'SampleCount'|'Sum'
+                'Unit': 'Percent'
+            },
+            'ScaleInCooldown': 300,
+            'ScaleOutCooldown': 300
+        }
+    )
+    """
+    step_policy_response = client.put_scaling_policy(
+        PolicyName="HasBacklogWithoutCapacity-ScalingPolicy",
+        ServiceNamespace="sagemaker",  # The namespace of the service that provides the resource.
+        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
+        ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
+        PolicyType="StepScaling",  # 'StepScaling' or 'TargetTrackingScaling'
+        StepScalingPolicyConfiguration={
+            "AdjustmentType": "ChangeInCapacity", # Specifies whether the ScalingAdjustment value in the StepAdjustment property is an absolute number or a percentage of the current capacity. 
+            "MetricAggregationType": "Average", # The aggregation type for the CloudWatch metrics.
+            "Cooldown": 300, # The amount of time, in seconds, to wait for a previous scaling activity to take effect. 
+            "StepAdjustments": # A set of adjustments that enable you to scale based on the size of the alarm breach.
+            [
+                {
+                "MetricIntervalLowerBound": 0,
+                "ScalingAdjustment": 1
+                }
+            ]
+        },
+    )
+
+    cw_client = boto3.client('cloudwatch')
+
+    cw_client.put_metric_alarm(
+        AlarmName='stable-diffusion-hasbacklogwithoutcapacity-alarm',
+        MetricName='HasBacklogWithoutCapacity',
+        Namespace='AWS/SageMaker',
+        Statistic='Average',
+        EvaluationPeriods= 2,
+        DatapointsToAlarm= 2,
+        Threshold= 1,
+        ComparisonOperator='GreaterThanOrEqualToThreshold',
+        TreatMissingData='missing',
+        Dimensions=[
+            { 'Name':'EndpointName', 'Value': endpoint_name },
+        ],
+        Period= 60,
+        AlarmActions=[step_policy_response['PolicyARN']]
+    )
+
     print(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, variant_name):
