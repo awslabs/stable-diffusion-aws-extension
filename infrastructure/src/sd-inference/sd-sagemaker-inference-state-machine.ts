@@ -81,6 +81,7 @@ export class SagemakerInferenceStateMachine {
                 "ecr:CompleteLayerUpload",
                 "ecr:PutImage",
                 "cloudwatch:PutMetricAlarm", 
+                "cloudwatch:PutMetricData",
                 "sagemaker:DescribeEndpointConfig",
                 "cloudwatch:DeleteAlarms",
                 "cloudwatch:DescribeAlarms",
@@ -175,6 +176,7 @@ export class SagemakerInferenceStateMachine {
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
                 role: lambdaErrorHandlerRole,
+                timeout: Duration.seconds(900),
             }
         );
 
@@ -219,6 +221,7 @@ export class SagemakerInferenceStateMachine {
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
                 role: lambdaStartDeployRole,
+                timeout: Duration.seconds(900),
             }
         );
 
@@ -263,6 +266,7 @@ export class SagemakerInferenceStateMachine {
                     INFERENCE_ECR_IMAGE_URL: inference_ecr_url
                 },
                 role: lambdaCheckDeploymentStatusRole,
+                timeout: Duration.seconds(30)
             }
         );
 
