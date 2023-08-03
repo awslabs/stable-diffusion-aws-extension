@@ -281,21 +281,25 @@ class SageMakerUI(scripts.Script):
             }
         }
         print(payload)
-
-        response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
-        response.raise_for_status()
-        upload_param_response = response.json()
         err = None
-        if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
-            upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
-            upload_s3_resp.raise_for_status()
-            inference_id = upload_param_response['inference']['id']
-            # start run infer
-            response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload, headers={'x-api-key': api_key})
+        inference_id = None
+        try:
+            response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
             response.raise_for_status()
-            self.current_inference_id = inference_id
-        elif upload_param_response['status'] != 200:
-            err = upload_param_response['error']
+            upload_param_response = response.json()
+
+            if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
+                upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
+                upload_s3_resp.raise_for_status()
+                inference_id = upload_param_response['inference']['id']
+                # start run infer
+                response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload, headers={'x-api-key': api_key})
+                response.raise_for_status()
+                self.current_inference_id = inference_id
+            elif upload_param_response['status'] != 200:
+                err = upload_param_response['error']
+        except Exception as e:
+            err = str(e)
 
         from modules import processing
         from modules.processing import Processed
@@ -317,7 +321,7 @@ class SageMakerUI(scripts.Script):
                 p,
                 images_list=[],
                 seed=0,
-                info='',
+                info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
                 subseed=0,
                 index_of_first_image=0,
                 infotexts=[],
@@ -339,7 +343,7 @@ class SageMakerUI(scripts.Script):
     def process(self, p, *args):
         pass
 
-    def postprocess(self, p, processed, *args):
+    def _postprocess(self, p, processed, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
         if on_docker == "true":
             return
@@ -361,6 +365,7 @@ class SageMakerUI(scripts.Script):
         while resp['status'] == "inprogress":
             time.sleep(3)
             resp = sagemaker_ui.get_inference_job(self.current_inference_id)
+
         if resp['status'] == "failed":
             infotexts = f"Inference job {self.current_inference_id} is failed"
             processed.images = image_list

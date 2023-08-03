@@ -892,19 +892,20 @@ def create_ui(is_img2img):
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
         with gr.Box():
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-            with gr.Column(variant='panel'):
-                with gr.Row():
-                    global sagemaker_endpoint
-                    sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                                     label="Select Cloud SageMaker Endpoint",
-                                                     elem_id="sagemaker_endpoint_dropdown"
-                                                     )
+            with gr.Row():
+                global sagemaker_endpoint
+                sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
+                                                 label="Select Cloud SageMaker Endpoint",
+                                                 elem_id="sagemaker_endpoint_dropdown"
+                                                 )
 
-                    modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints, "value": None}, "refresh_sagemaker_endpoints")
+                modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints, "value": None}, "refresh_sagemaker_endpoints")
+
+
                 # with gr.Row():
                 #     sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
                 #     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
-            with gr.Column():
+            with gr.Row():
                 global generate_on_cloud_button_with_js
                 # if not is_img2img:
                 #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
