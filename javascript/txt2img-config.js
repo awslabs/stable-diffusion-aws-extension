@@ -144,7 +144,7 @@ function uploadFileToS3(file, groupName) {
             checkpoint_type: groupName,
             filenames: [{
                 filename: fileName,
-                parts_number: currentChunk
+                parts_number: totalChunks
             }],
             params: { message: "placeholder for chkpts upload test" }
         };
