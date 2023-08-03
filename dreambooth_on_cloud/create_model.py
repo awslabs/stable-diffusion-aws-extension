@@ -101,7 +101,7 @@ def async_create_model_on_sagemaker(
                 "filenames": [],
                 "params": {
                     "ckpt_from_cloud": True,
-                    "s3_ckpt_path": os.path.join(ckpt_dict[ckpt_key]["s3Location"], ckpt_name_list[0]),
+                    "s3_ckpt_path": f'{ckpt_dict[ckpt_key]["s3Location"]}/{ckpt_name_list[0]}',
                     "create_model_params": params
                 }
             }
