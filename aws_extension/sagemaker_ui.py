@@ -136,7 +136,6 @@ def update_sagemaker_endpoints():
 
         else:
             print("The API response is empty for update_sagemaker_endpoints().")
-
     except Exception as e:
         print(f"An error occurred while updating SageMaker endpoints: {e}")
 
@@ -889,25 +888,27 @@ def create_ui(is_img2img):
 
     init_refresh_resource_list_from_cloud()
 
-    with gr.Group():
-        with gr.Accordion("Amazon SageMaker Inference", open=False):
+    with gr.Blocks():
+        gr.HTML('<h3>Amazon SageMaker Inference</h3>')
+        with gr.Box():
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-            with gr.Column(variant='panel'):
-                with gr.Row():
-                    global sagemaker_endpoint
-                    sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
-                                                     label="Select Cloud SageMaker Endpoint",
-                                                     elem_id="sagemaker_endpoint_dropdown"
-                                                     )
+            with gr.Row():
+                global sagemaker_endpoint
+                sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
+                                                 label="Select Cloud SageMaker Endpoint",
+                                                 elem_id="sagemaker_endpoint_dropdown"
+                                                 )
 
-                    modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
-                with gr.Row():
-                    sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
-                    sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
-            with gr.Column():
+                modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints, "value": None}, "refresh_sagemaker_endpoints")
+
+
+                # with gr.Row():
+                #     sd_checkpoint = gr.Dropdown(multiselect=True, label="Stable Diffusion Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
+                #     sd_checkpoint_refresh_button = modules.ui.create_refresh_button(sd_checkpoint, update_sd_checkpoints, lambda: {"choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+            with gr.Row():
                 global generate_on_cloud_button_with_js
-                if not is_img2img:
-                    generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
+                # if not is_img2img:
+                #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
                 global generate_on_cloud_button_with_js_img2img
                 global interrogate_clip_on_cloud_button
                 global interrogate_deep_booru_on_cloud_button
@@ -917,8 +918,8 @@ def create_ui(is_img2img):
                             interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP", elem_id="interrogate_clip_on_cloud_button")
                         with gr.Column():
                             interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru", elem_id="interrogate_deep_booru_on_cloud_button")
-                        with gr.Column():
-                            generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
+                        # with gr.Column():
+                        #     generate_on_cloud_button_with_js_img2img = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button_img2img",queue=True, show_progress=True)
             with gr.Row():
                 global inference_job_dropdown
                 global txt2img_inference_job_ids
@@ -943,42 +944,41 @@ def create_ui(is_img2img):
                 img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
                 interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
 
-            with gr.Row():
-                gr.HTML(value="Extra Networks for Cloud Inference")
-
-            with gr.Row():
-                global textual_inversion_dropdown
-                textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
-                create_refresh_button(
-                    textual_inversion_dropdown,
-                    get_texual_inversion_list,
-                    lambda: {"choices": sorted(get_texual_inversion_list())},
-                    "refresh_textual_inversion",
-                )
-                global lora_dropdown
-                lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="sagemaker_lora_list_dropdown")
-                create_refresh_button(
-                    lora_dropdown,
-                    get_lora_list,
-                    lambda: {"choices": sorted(get_lora_list())},
-                    "refresh_lora",
-                )
-            with gr.Row():
-                global hyperNetwork_dropdown
-                hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
-                create_refresh_button(
-                    hyperNetwork_dropdown,
-                    get_hypernetwork_list,
-                    lambda: {"choices": sorted(get_hypernetwork_list())},
-                    "refresh_hypernetworks",
-                )
-                # controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="sagemaker_controlnet_model_dropdown")
-                # create_refresh_button(
-                #     controlnet_dropdown,
-                #     get_controlnet_model_list,
-                #     lambda: {"choices": sorted(get_controlnet_model_list())},
-                #     "refresh_controlnet",
-                # )
+            # with gr.Row():
+            #     gr.HTML(value="Extra Networks for Cloud Inference")
+            # with gr.Row():
+            #     global textual_inversion_dropdown
+            #     textual_inversion_dropdown = gr.Dropdown(multiselect=True, label="Textual Inversion", choices=sorted(get_texual_inversion_list()),elem_id="sagemaker_texual_inversion_dropdown")
+            #     create_refresh_button(
+            #         textual_inversion_dropdown,
+            #         get_texual_inversion_list,
+            #         lambda: {"choices": sorted(get_texual_inversion_list())},
+            #         "refresh_textual_inversion",
+            #     )
+            #     global lora_dropdown
+            #     lora_dropdown = gr.Dropdown(lora_list,  multiselect=True, label="LoRA", elem_id="sagemaker_lora_list_dropdown")
+            #     create_refresh_button(
+            #         lora_dropdown,
+            #         get_lora_list,
+            #         lambda: {"choices": sorted(get_lora_list())},
+            #         "refresh_lora",
+            #     )
+            # with gr.Row():
+            #     global hyperNetwork_dropdown
+            #     hyperNetwork_dropdown = gr.Dropdown(multiselect=True, label="HyperNetwork", choices=sorted(get_hypernetwork_list()), elem_id="sagemaker_hypernetwork_dropdown")
+            #     create_refresh_button(
+            #         hyperNetwork_dropdown,
+            #         get_hypernetwork_list,
+            #         lambda: {"choices": sorted(get_hypernetwork_list())},
+            #         "refresh_hypernetworks",
+            #     )
+            #     controlnet_dropdown = gr.Dropdown(multiselect=True, label="ControlNet-Model", choices=sorted(get_controlnet_model_list()), elem_id="sagemaker_controlnet_model_dropdown")
+            #     create_refresh_button(
+            #         controlnet_dropdown,
+            #         get_controlnet_model_list,
+            #         lambda: {"choices": sorted(get_controlnet_model_list())},
+            #         "refresh_controlnet",
+            #     )
 
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
@@ -1000,4 +1000,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud", variant='primary')
 
     # return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, controlnet_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
-    return sagemaker_endpoint, sd_checkpoint, sd_checkpoint_refresh_button, textual_inversion_dropdown, lora_dropdown, hyperNetwork_dropdown, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
