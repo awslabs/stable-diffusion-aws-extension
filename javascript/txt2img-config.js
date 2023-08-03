@@ -118,6 +118,7 @@ function showFileName(event) {
 }
 
 function uploadFiles() {
+    const uploadedFiles = uploadedFilesMap.values();
     if (uploadedFiles.length > 0) {
         const progressBarDiv = document.getElementById("progress-bar");
         progressBarDiv.innerHTML = "";
@@ -141,6 +142,7 @@ function uploadFiles() {
     } else {
         alert("未选择文件，无法上传。");
     }
+    return uploadedFilesMap;
 }
 
 // Save configuration in txt2img panel

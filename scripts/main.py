@@ -480,6 +480,7 @@ def on_ui_tabs():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="uploadFiles",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                                  # inputs=[sagemaker_ui.checkpoint_info],
                                                   outputs=[test_connection_result])
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
