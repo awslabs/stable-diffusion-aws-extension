@@ -57,30 +57,38 @@ function showFileName(event) {
         uploadedFilesMap.set(typeValue,event.target.files);
     }else {
         // uploadedFiles.push(...event.target.files);
-        if(!uploadedFilesMap.has(typeValue)){
-            uploadedFilesMap.set(typeValue,event.target.files);
-        }else {
+        if (uploadedFilesMap.has(typeValue)) {
             for (const file of event.target.files) {
-                for(const uploadFile of uploadedFilesMap.get(typeValue)) {
+                for (const uploadFile of uploadedFilesMap.get(typeValue)) {
                     if (uploadFile.name == file.name && uploadFile.size == file.size) {
                         alert("Duplicate model to upload！");
                         return;
                     }
                 }
             }
-            uploadedFilesMap.get(typeValue).push(...event.target.files);
+            let uploadedMapFiles = uploadedFilesMap.get(typeValue);
+            let newFileList = Array.from(uploadedMapFiles); // 将当前 FileList 转换为数组
+            newFileList.push(...event.target.files);
+            uploadedFilesMap.set(typeValue, newFileList);
+        } else {
+            uploadedFilesMap.set(typeValue, event.target.files);
         }
     }
     fileListDiv.innerHTML = "";
-    for (let [key, uploadedFiles] of uploadedFilesMap) {
+    for (let [typeKey, uploadedFiles] of uploadedFilesMap) {
         const fileItemSpan = document.createElement("span");
-        fileItemSpan.innerHTML = `${key}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+        fileItemSpan.innerHTML = `${typeKey}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
         fileListDiv.appendChild(fileItemSpan);
         const fileArray = Array.from(uploadedFiles);
-        for (let i = 0; i < uploadedFiles.length; i++) {
-            const fileName = uploadedFiles[i].name;
-            const fileSize = uploadedFiles[i].size;
-            const fileType = uploadedFiles[i].type;
+
+        let map = new Map();
+        fileArray.forEach(row => {
+          map.set(row.name, row);
+        })
+        for (let [key, uploadedFile] of map) {
+            const fileName = uploadedFile.name;
+            const fileSize = uploadedFile.size;
+            const fileType = uploadedFile.type;
             const fileItemDiv = document.createElement("div");
             fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
@@ -89,16 +97,24 @@ function showFileName(event) {
             deleteButton.style.borderRadius = "2px";
             deleteButton.textContent = "DELETE";
             deleteButton.addEventListener("click", () => {
-                uploadedFiles.splice(i, 1);
-                // uploadedFilesMap.get(typeValue).splice(i, 1);
-                fileListDiv.removeChild(fileItemDiv);
+                map.delete(key);
+                const parentNode = fileItemDiv.parentNode;
+                if (parentNode) {
+                    // 判断 fileItemDiv 是否是最后一个元素
+                    const isLastChild = Array.from(parentNode.children).indexOf(fileItemDiv) === parentNode.children.length - 1;
+                    // 删除对应的 fileItemDiv 和 fileItemSpan
+                    parentNode.removeChild(fileItemDiv);
+                    if (isLastChild) {
+                        parentNode.removeChild(fileItemSpan);
+                    }
+                }
+                // fileListDiv.removeChild(fileItemDiv);
             });
             fileItemDiv.appendChild(deleteButton);
             fileListDiv.appendChild(fileItemDiv);
         }
-        uploadedFiles = Array.from(fileArray)
+        uploadedFilesMap.set(typeKey,map.values())
     }
-
 }
 
 function uploadFiles() {
