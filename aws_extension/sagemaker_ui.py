@@ -469,6 +469,26 @@ nest_asyncio.apply()
 
 MAX_RUNNING_LIMIT = 10
 
+def async_loop_wrapper(f):
+    global loop
+    # check if there are any running or queued tasks inside the event loop
+    if loop.is_running():
+        # Calculate the number of running tasks
+        while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
+            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            time.sleep(1)
+    else:
+        # check if loop is closed and create a new one
+        if loop.is_closed():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            # log this event since it should never happen
+            print('Event loop was closed, created a new one')
+
+    # Add new task to the event loop
+    result = loop.run_until_complete(f())
+    return result
+
 def async_loop_wrapper_with_input(sagemaker_endpoint, type):
     global loop
     # check if there are any running or queued tasks inside the event loop
@@ -550,54 +570,59 @@ async def call_remote_inference(sagemaker_endpoint, type):
         print(f"Raw server response: {response.text}")
     else:
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
-        image_list = []  # Return an empty list if selected_value is None
-        info_text = ''
-        infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
-        json_list = []
-        prompt_txt = ''
-
         try:
-            resp = get_inference_job(inference_id)
-            if resp is None:
-                return image_list, info_text, plaintext_to_html(infotexts)
-            else:
-                if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
-                    while resp['status'] == "inprogress":
-                        time.sleep(3)
-                        resp = get_inference_job(inference_id)
-                    if resp['status'] == "failed":
-                        infotexts = f"Inference job {inference_id} is failed"
-                        return image_list, info_text, plaintext_to_html(infotexts)
-                    elif resp['status'] == "succeed":
-                        if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
-                            prompt_txt = resp['caption']
-                            # return with default value, including image_list, info_text, infotexts
-                            return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
-                        images = get_inference_job_image_output(inference_id.strip())
-                        inference_param_json_list = get_inference_job_param_output(inference_id)
-                        # todo: these not need anymore
-                        if resp['taskType'] == "txt2img":
-                            image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                            json_list = download_images(inference_param_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                            json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                        elif resp['taskType'] == "img2img":
-                            image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                            json_list = download_images(inference_param_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                            json_file = f"outputs/img2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                        if os.path.isfile(json_file):
-                            with open(json_file) as f:
-                                log_file = json.load(f)
-                                info_text = log_file["info"]
-                                infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
-                        else:
-                            print(f"File {json_file} does not exist.")
-                            info_text = 'something wrong when trying to download the inference parameters'
-                            infotexts = info_text
-                        return image_list, info_text, plaintext_to_html(infotexts)
-                else:
-                    return image_list, info_text, plaintext_to_html(infotexts)
+            return process_result_by_inference_id(inference_id)
         except Exception as e:
             print(f"Failed to get inference job {inference_id}, error: {e}")
+
+
+def process_result_by_inference_id(inference_id):
+    image_list = []  # Return an empty list if selected_value is None
+    info_text = ''
+    infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
+    json_list = []
+    prompt_txt = ''
+
+
+    resp = get_inference_job(inference_id)
+    if resp is None:
+        return image_list, info_text, plaintext_to_html(infotexts)
+    else:
+        if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
+            while resp['status'] == "inprogress":
+                time.sleep(3)
+                resp = get_inference_job(inference_id)
+            if resp['status'] == "failed":
+                infotexts = f"Inference job {inference_id} is failed"
+                return image_list, info_text, plaintext_to_html(infotexts)
+            elif resp['status'] == "succeed":
+                if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
+                    prompt_txt = resp['caption']
+                    # return with default value, including image_list, info_text, infotexts
+                    return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
+                images = get_inference_job_image_output(inference_id.strip())
+                inference_param_json_list = get_inference_job_param_output(inference_id)
+                # todo: these not need anymore
+                if resp['taskType'] == "txt2img":
+                    image_list = download_images(images,f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
+                    json_list = download_images(inference_param_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
+                    json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
+                elif resp['taskType'] == "img2img":
+                    image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
+                    json_list = download_images(inference_param_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
+                    json_file = f"outputs/img2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
+                if os.path.isfile(json_file):
+                    with open(json_file) as f:
+                        log_file = json.load(f)
+                        info_text = log_file["info"]
+                        infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                else:
+                    print(f"File {json_file} does not exist.")
+                    info_text = 'something wrong when trying to download the inference parameters'
+                    infotexts = info_text
+                return image_list, info_text, plaintext_to_html(infotexts)
+        else:
+            return image_list, info_text, plaintext_to_html(infotexts)
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
     print(f"start delete sagemaker endpoint delete function")
@@ -713,9 +738,9 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     else:
         print(f"response for rest api {r}")
 
-def txt2img_config_save():
-    # placeholder for saving txt2img config
-    pass
+# def txt2img_config_save():
+#     # placeholder for saving txt2img config
+#     pass
 
 def displayEndpointInfo(input_string: str):
     print(f"selected value is {input_string}")

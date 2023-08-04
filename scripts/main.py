@@ -74,10 +74,22 @@ async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarg
 
 
 class SageMakerUI(scripts.Script):
+    latest_result = None
     current_inference_id = None
+    inference_queue = []
     hijacked_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
+
+    txt2img_generation_info = None
+    txt2img_gallery = None
+    txt2img_html_info = None
+
+    img2img_generation_info = None
+    img2img_gallery = None
+    img2img_html_info = None
+
+    ph = None
 
     def title(self):
         return "SageMaker embeddings"
@@ -91,7 +103,49 @@ class SageMakerUI(scripts.Script):
                 self.txt2img_generate_btn = component
             elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
                 self.img2img_generate_btn = component
+
+        if type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img' and self.is_txt2img:
+            self.txt2img_generation_info = component
+
+        if type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'txt2img_gallery' and self.is_txt2img:
+            self.txt2img_gallery = component
+
+        if type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img' and self.is_txt2img:
+            self.txt2img_html_info = component
+
+        async def _update_result():
+            if self.inference_queue and len(self.inference_queue) > 0:
+                inference_id = self.inference_queue.pop(0)
+                self.latest_result = sagemaker_ui.process_result_by_inference_id(inference_id)
+                return self.latest_result
+
+            return gr.skip(), gr.skip(), gr.skip()
+
+        if self.txt2img_html_info and self.txt2img_gallery and self.txt2img_generation_info:
+            self.txt2img_generation_info.change(
+                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
+                inputs=None,
+                outputs=[self.txt2img_gallery, self.txt2img_generation_info, self.txt2img_html_info]
+            )
+
+        if type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img' and self.is_img2img:
+            self.img2img_generation_info = component
+
+        if type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery' and self.is_img2img:
+            self.img2img_gallery = component
+
+        if type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img' and self.is_img2img:
+            self.img2img_html_info = component
+
+        if self.img2img_html_info and self.img2img_gallery and self.img2img_generation_info:
+            self.img2img_generation_info.change(
+                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
+                inputs=None,
+                outputs=[self.img2img_gallery, self.img2img_generation_info, self.img2img_html_info]
+            )
+
         pass
+
 
     def ui(self, is_img2img):
         if not is_img2img:
@@ -99,6 +153,7 @@ class SageMakerUI(scripts.Script):
                 is_img2img)
             sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint,
                                       outputs=[self.txt2img_generate_btn])
+
             return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
@@ -307,6 +362,7 @@ class SageMakerUI(scripts.Script):
                                         headers={'x-api-key': api_key})
                 response.raise_for_status()
                 self.current_inference_id = inference_id
+                self.inference_queue.append(inference_id)
             elif upload_param_response['status'] != 200:
                 err = upload_param_response['error']
         except Exception as e:
@@ -340,7 +396,7 @@ class SageMakerUI(scripts.Script):
             if p.scripts is not None:
                 p.scripts.postprocess(p, processed)
 
-            self.current_inference_id = None
+            # self.current_inference_id = None
             from modules import processing
             processing.process_images_inner = self.hijacked_images_inner
 
@@ -356,63 +412,6 @@ class SageMakerUI(scripts.Script):
         pass
 
     def process(self, p, *args):
-        pass
-
-    def _postprocess(self, p, processed, *args):
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
-            return
-
-        if not args[0]:
-            return
-
-        # process result
-        import time
-        import json
-
-        image_list = []
-        info_text = ''
-
-        if not self.current_inference_id:
-            return
-
-        resp = sagemaker_ui.get_inference_job(self.current_inference_id)
-        while resp['status'] == "inprogress":
-            time.sleep(3)
-            resp = sagemaker_ui.get_inference_job(self.current_inference_id)
-
-        if resp['status'] == "failed":
-            infotexts = f"Inference job {self.current_inference_id} is failed"
-            processed.images = image_list
-            processed.info = infotexts
-        elif resp['status'] == "succeed":
-            inference_param_json_list = sagemaker_ui.get_inference_job_param_output(self.current_inference_id)
-            images = sagemaker_ui.get_inference_job_image_output(self.current_inference_id.strip())
-            task_type = "txt2img" if self.is_txt2img else "img2img"
-
-            image_list = sagemaker_ui.download_images(
-                images,
-                f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/"
-            )
-            json_list = sagemaker_ui.download_images(
-                inference_param_json_list,
-                f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/"
-            )
-            json_file = f"outputs/{task_type}-images/{sagemaker_ui.get_current_date()}/{self.current_inference_id}/{self.current_inference_id}_param.json"
-            if os.path.isfile(json_file):
-                with open(json_file) as f:
-                    log_file = json.load(f)
-                    info_text = log_file["info"]
-            else:
-                print(f"File {json_file} does not exist.")
-                info_text = 'something wrong when trying to download the inference parameters'
-
-        processed.images = image_list
-        processed.info = info_text
-
-        # self.current_inference_id = None
-        # from modules import processing
-        # processing.process_images_inner = self.hijacked_images_inner
         pass
 
     def _process_args_by_plugin(self, script_name, arg):
