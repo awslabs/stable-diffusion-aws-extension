@@ -91,6 +91,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
     )
 
     # Define scaling policy
+    """
     response = client.put_scaling_policy(
         PolicyName='StableDiffusionDefaultScalingPolicy',
         ServiceNamespace='sagemaker',
@@ -106,8 +107,8 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
             'ScaleOutCooldown': 300
         }
     )
-
     """
+    
     response = client.put_scaling_policy(
         PolicyName='CPUUtil-ScalingPolicy',
         ServiceNamespace='sagemaker',
@@ -122,7 +123,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
                 'Namespace': '/aws/sagemaker/Endpoints',
                 'Dimensions': [
                     {'Name': 'EndpointName', 'Value': endpoint_name },
-                    {'Name': 'VariantName','Value': 'AllTraffic'}
+                    {'Name': 'VariantName','Value': 'prod'}
                 ],
                 'Statistic': 'Average', # Possible - 'Statistic': 'Average'|'Minimum'|'Maximum'|'SampleCount'|'Sum'
                 'Unit': 'Percent'
@@ -131,7 +132,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
             'ScaleOutCooldown': 300
         }
     )
-    """
+    
     step_policy_response = client.put_scaling_policy(
         PolicyName="HasBacklogWithoutCapacity-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the service that provides the resource.
