@@ -3,7 +3,6 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict
-from fastapi.responses import JSONResponse
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
@@ -70,7 +69,11 @@ def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointEvent(**raw_event)
     _type = event.checkpoint_type
-
+    headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+    }
     try:
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
         presign_url_map = batch_get_s3_multipart_signed_urls(
@@ -102,6 +105,7 @@ def create_checkpoint_api(raw_event, context):
         if len(filenames_only) == 0:
             return {
                 'statusCode': 400,
+                'headers': headers,
                 'errorMsg': 'no checkpoint name (file names) detected'
             }
 
@@ -115,8 +119,9 @@ def create_checkpoint_api(raw_event, context):
             timestamp=datetime.datetime.now().timestamp()
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
-        content = {
+        return {
             'statusCode': 200,
+            'headers': headers,
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -128,16 +133,11 @@ def create_checkpoint_api(raw_event, context):
         }
     except Exception as e:
         logger.error(e)
-        content = {
+        return {
             'statusCode': 500,
+            'headers': headers,
             'error': str(e)
         }
-    headers = {
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Origin": "*",
-    }
-    response = JSONResponse(content=content, headers=headers)
-    return response
 
 
 @dataclass
