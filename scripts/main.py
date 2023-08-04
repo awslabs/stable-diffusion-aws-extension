@@ -339,6 +339,11 @@ class SageMakerUI(scripts.Script):
 
             if p.scripts is not None:
                 p.scripts.postprocess(p, processed)
+
+            self.current_inference_id = None
+            from modules import processing
+            processing.process_images_inner = self.hijacked_images_inner
+
             return processed
 
         self.hijacked_images_inner = processing.process_images_inner
@@ -405,9 +410,9 @@ class SageMakerUI(scripts.Script):
         processed.images = image_list
         processed.info = info_text
 
-        self.current_inference_id = None
-        from modules import processing
-        processing.process_images_inner = self.hijacked_images_inner
+        # self.current_inference_id = None
+        # from modules import processing
+        # processing.process_images_inner = self.hijacked_images_inner
         pass
 
     def _process_args_by_plugin(self, script_name, arg):
