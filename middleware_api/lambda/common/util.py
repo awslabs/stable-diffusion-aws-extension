@@ -67,10 +67,3 @@ def save_json_to_file(json_string: str, folder_path: str, file_name: str):
         file.write(json.dumps(json_string))
 
     return file_path
-
-
-def upload_file_to_s3():
-    resp = s3.put_object(Bucket=S3_BUCKET_NAME, Key='inference/' + file_name, Body=json_data)
-    
-    return resp
-
