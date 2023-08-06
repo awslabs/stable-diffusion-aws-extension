@@ -82,7 +82,7 @@ def getInferenceJob(inference_job_id):
         resp = inference_table.query(
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
         )
-        logger.info(resp)
+        # logger.info(resp)
         record_list = resp['Items']
         if len(record_list) == 0:
             logger.error(f"No inference job info item for id: {inference_job_id}")
@@ -322,7 +322,9 @@ async def deploy_sagemaker_endpoint(request: Request):
         Item={
             'EndpointDeploymentJobId': endpoint_deployment_id,
             'startTime': current_time,
-            'status': 'inprogress'
+            'status': 'inprogress',
+            'max_instance_number': payload['initial_instance_count'],
+            'autoscaling': payload['autoscaling_enabled']
         })
 
         logger.info("trigger step-function with following response")
@@ -444,11 +446,11 @@ async def get_endpoint_deployment_job(jobID: str = None):
 @app.get("/inference/get-inference-job")
 async def get_inference_job(jobID: str = None):
     inference_jobId = jobID
-    logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
+    # logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
     try:
         return getInferenceJob(inference_jobId)
     except Exception as e:
-        logger.error(f"Error getting inference job: {str(e)}")
+        # logger.error(f"Error getting inference job: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/inference/get-inference-job-image-output")

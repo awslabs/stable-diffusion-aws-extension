@@ -70,8 +70,7 @@ img2img_html_info = None
 modelmerger_merge_hook = None
 modelmerger_merge_component = None
 
-async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge"]
-
+async_inference_choices=["ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge","ml.g5.2xlarge","ml.g5.4xlarge","ml.g5.8xlarge","ml.g5.12xlarge","ml.g5.12xlarge"]
 
 class SageMakerUI(scripts.Script):
     current_inference_id = None
@@ -874,23 +873,60 @@ def on_ui_tabs():
                                                            controlnet_model_path])
 
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
-                    gr.HTML(value="<u><b>Deploy New SageMaker Endpoint</b></u>")
+                    gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
+                    default_table = """
+<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
+  <tr>
+    <th style="border: 1px solid grey; padding: 15px; text-align: left; background-color: #f2f2f2;" colspan="2">Default SageMaker Endpoint Config</th>
+  </tr>
+  <tr>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
+  </tr>
+  <tr>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+    <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
+  </tr>
+
+</table>
+                    """
+                    gr.HTML(value=default_table)
                     with gr.Row():
-                        instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type",
-                                                             choices=async_inference_choices,
-                                                             elem_id="sagemaker_inference_instance_type_textbox",
-                                                             value="ml.g4dn.xlarge")
-                        instance_count_dropdown = gr.Dropdown(label="Please select Instance count",
-                                                              choices=["1", "2", "3", "4"],
-                                                              elem_id="sagemaker_inference_instance_count_textbox",
-                                                              value="1")
+                        # instance_type_dropdown = gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
+                        # instance_count_dropdown = gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
+                        endpoint_advance_config_enabled = gr.Checkbox(
+                            label="Advanced Endpoint Configuration", value=False, visible=True
+                        )
+                    # with gr.Row(variant='panel', visible=False) as filter_row:
+                    with gr.Row(variant='panel', visible=False) as filter_row:
+                        endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custome endpoint name ", label="Specify Endpoint Name", visible=True)
+                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g5.2xlarge")
+                        instance_count_dropdown = gr.Dropdown(label="Max Instance count", choices=["1","2","3","4","5","6"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
+                        autoscaling_enabled = gr.Checkbox(
+                                    label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
+                            )
+                    def toggle_new_rows(checkbox_state):
+                        if checkbox_state:
+                            return gr.update(visible=True)
+                        else:
+                            return gr.update(visible=False)
+
+                    endpoint_advance_config_enabled.change(
+                        fn=toggle_new_rows,
+                        inputs=endpoint_advance_config_enabled,
+                        outputs=filter_row
+                    )
 
                     with gr.Row():
                         sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                             elem_id="sagemaker_deploy_endpoint_buttion")
                         sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
                                                       _js="deploy_endpoint", \
-                                                      inputs=[instance_type_dropdown, instance_count_dropdown],
+                                                      inputs = [endpoint_name_textbox, instance_type_dropdown, instance_count_dropdown, autoscaling_enabled],
                                                       outputs=[test_connection_result])
 
                 with gr.Blocks(title="Delete SageMaker Endpoint", variant='panel'):
