@@ -12,6 +12,7 @@ import {
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
+import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { PolicyStatementProps } from 'aws-cdk-lib/aws-iam';
@@ -35,7 +36,7 @@ request and Lambda function to avoid request payload limitation
 Note: Sync Inference is put here for reference, we use Async Inference now
 */
 export interface SDAsyncInferenceStackProps extends StackProps {
-  api_gate_way: apigw.RestApi;
+  routers: {[key: string]: Resource};
   s3_bucket: s3.Bucket;
   training_table: dynamodb.Table;
   snsTopic: sns.Topic;
@@ -59,21 +60,21 @@ export class SDAsyncInferenceStack extends NestedStack {
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
-    if (!props?.api_gate_way) {
-      throw new Error('api_gate_way is required');
-    }
-    const restful_api = <apigw.RestApi>apigw.RestApi.fromRestApiAttributes(
-      this,
-      'ImportedRestApi',
-      {
-        restApiId: props.api_gate_way.restApiId,
-        rootResourceId: props.api_gate_way.restApiRootResourceId,
-      },
-    );
+    // if (!props?.api_gate_way) {
+    //   throw new Error('api_gate_way is required');
+    // }
+    // const restful_api = <apigw.RestApi>apigw.RestApi.fromRestApiAttributes(
+    //   this,
+    //   'ImportedRestApi',
+    //   {
+    //     restApiId: props.api_gate_way.restApiId,
+    //     rootResourceId: props.api_gate_way.restApiRootResourceId,
+    //   },
+    // );
 
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
-    const inference = restful_api.root.addResource('inference');
+    const inference = props.routers.inference;
     const inferV2Router = inference.addResource('v2');
     const srcRoot = '../middleware_api/lambda';
     new CreateInferenceJobApi(
@@ -239,7 +240,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
     // The api can be invoked directly from the user's client code, the path starts with /api
-    const inferenceApi = restful_api.root.addResource('inference-api');
+    const inferenceApi = props.routers['inference-api'];
     const run_sagemaker_inference_api = inferenceApi.addResource(
       'inference',
     );
@@ -250,9 +251,9 @@ export class SDAsyncInferenceStack extends NestedStack {
     // Add a POST method with prefix inference
 
 
-    if (!restful_api) {
-      throw new Error('restful_api is needed');
-    }
+    // if (!restful_api) {
+    //   throw new Error('restful_api is needed');
+    // }
 
     if (!inference) {
       throw new Error('inference is undefined');
@@ -351,12 +352,13 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
+    // fixme: this api is actually no needed anymore, delete later
     const test_output = inference.addResource('generate-s3-presigned-url-for-uploading');
-    test_output.addCorsPreflight({
-      allowOrigins: apigw.Cors.ALL_ORIGINS,
-      allowMethods: apigw.Cors.ALL_METHODS,
-      allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
-    });
+    // test_output.addCorsPreflight({
+    //   allowOrigins: apigw.Cors.ALL_ORIGINS,
+    //   allowMethods: apigw.Cors.ALL_METHODS,
+    //   allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
+    // });
 
     test_output.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,

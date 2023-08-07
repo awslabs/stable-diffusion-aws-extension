@@ -72,6 +72,8 @@ export class Middleware extends Stack {
       'trains',
       'dataset',
       'datasets',
+      'inference',
+      'inference-api',
       api_train_path,
     ]);
 
@@ -97,7 +99,6 @@ export class Middleware extends Stack {
             <SDAsyncInferenceStackProps>{
               // env: devEnv,
               synthesizer: props.synthesizer,
-              api_gate_way: restApi.apiGateway,
               s3_bucket: s3BucketStore.s3Bucket,
               training_table: ddbTables.trainingTable,
               snsTopic: snsTopics.snsTopic,
@@ -106,6 +107,7 @@ export class Middleware extends Stack {
               sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
               commonLayer: commonLayers.commonLayer,
               checkpointTable: ddbTables.checkPointTable,
+              routers: restApi.routers,
             },
     );
 
