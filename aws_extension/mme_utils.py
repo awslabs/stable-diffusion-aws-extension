@@ -1,15 +1,14 @@
-import logging
 import os
 import io
 import base64
 from PIL import Image
-import uuid
-
-import boto3
-
-import modules.shared as shared
 from utils import ModelsRef
-from modules import sd_hijack, sd_models, sd_vae
+
+try:
+    import modules.shared as shared
+    from modules import sd_hijack, sd_models, sd_vae
+except Exception:
+    print('default modules load fails')
 
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors"]
 models_type_list = ['Stable-diffusion', 'hypernetworks', 'Lora', 'ControlNet', 'embeddings']
@@ -22,22 +21,25 @@ models_path['Lora'] = 'models/Lora'
 models_path['embeddings'] = 'embeddings'
 disk_path = '/tmp'
 #disk_path = '/'
-def checkspace_and_update_models(selected_models, checkpoint_info):
+def checkspace_and_update_models(selected_models):
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
     # os.system("df -h")
     for type_id in range(models_num):
         model_type = models_type_list[type_id]
+        if model_type not in selected_models:
+            continue
+
         selected_models_name = selected_models[model_type]
         local_models = []
         for path, subdirs, files in os.walk(models_path[model_type]):
             for name in files:
-                full_path_name = os.path.join(path, name) 
+                full_path_name = os.path.join(path, name)
                 name_local = os.path.relpath(full_path_name, models_path[model_type])
                 local_models.append(name_local)
-        for selected_model_name in selected_models_name:
-            models_used_count[model_type].add_models_ref(selected_model_name)
-            if selected_model_name in local_models:
+        for model in selected_models_name:
+            models_used_count[model_type].add_models_ref(model['model_name'])
+            if model['model_name'] in local_models:
                 continue
             else:
                 st = os.statvfs(disk_path)
@@ -45,12 +47,14 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
                 print('!!!!!!!!!!!!current free space is', free)
                 if free < space_free_size:
                     #### delete least used model to get more space ########
-                    space_check_succese = False
+                    space_check_success = False
                     for i in range(models_num):
                         type_id_check = (type_id + i)%models_num
                         type_check = models_type_list[type_id_check]
+                        if type_check not in selected_models:
+                            continue
                         selected_models_name_check = selected_models[type_check]
-                        print(os.listdir(models_path[type_check]))
+                        print(f'check current model folder: {os.listdir(models_path[type_check])}')
                         local_models_check = [f for f in os.listdir(models_path[type_check]) if os.path.splitext(f)[1] in CN_MODEL_EXTS]
                         if len(local_models_check) == 0:
                             continue
@@ -66,28 +70,19 @@ def checkspace_and_update_models(selected_models, checkpoint_info):
                                 free = (st.f_bavail * st.f_frsize)
                                 print('!!!!!!!!!!!!current free space is', free)
                                 if free > space_free_size:
-                                    space_check_succese = True
+                                    space_check_success = True
                                     break
-                        if space_check_succese:
+                        if space_check_success:
                             break
-                    if not space_check_succese:
+                    if not space_check_success:
                         print('can not get enough space to download models!!!!!!')
                         return
+
                 ####down load models######
-                if model_type in checkpoint_info and selected_model_name in checkpoint_info[model_type]:
-                    selected_model_s3_pos = checkpoint_info[model_type][selected_model_name]
-                    download_and_update(model_type, selected_model_name, selected_model_s3_pos)
-                else:
-                    print(f'can not get right key to download models!!!!!! {model_type} or'
-                          f' {selected_model_name} not in {checkpoint_info}')
-                    return
-    
-    shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]
-<<<<<<< HEAD
-    #shared.opts.sd_vae = selected_models['sd_vae'][0]
-=======
+                download_and_update(model_type, f'{model["s3"]}/{model["model_name"]}')
+
+    shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]["model_name"]
     #shared.opts.sd_vae = selected_models['vae'][0]
->>>>>>> 018408d747bb381d7e271cc04af4122821922148
     import psutil
     sd_models.reload_model_weights()
     sd_vae.reload_vae_weights()
@@ -100,9 +95,9 @@ def download_model(model_name, model_s3_pos):
 def upload_model(model_type, model_name, model_s3_pos):
     #upload model to s3
     os.system(f"tar cvf {model_name} {models_path[model_type]}/{model_name}")
-    os.system(f'./tools/s5cmd cp {model_name} {model_s3_pos}') 
+    os.system(f'./tools/s5cmd cp {model_name} {model_s3_pos}')
 
-def download_and_update(model_type, model_name, model_s3_pos):
+def download_and_update(model_type, model_s3_pos):
     #download from s3
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     tar_name = model_s3_pos.split('/')[-1]

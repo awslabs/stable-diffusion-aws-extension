@@ -6,6 +6,7 @@ INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
 INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
 INITIAL_SUPPORT_COMMIT_SAM=5df716be8445e0f358f6e8d4b65a87cc611bfe08
 
+
 # Clone stable-diffusion-webui
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
 
