@@ -161,8 +161,8 @@ function uploadFileToS3(file, groupName) {
         .then((response) => response.json())
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
-            const fileNameStr = fileName;
-            const presignedUrl = presignedUrlList.fileNameStr;
+            // const fileNameStr = fileName;
+            const presignedUrl = presignedUrlList.get(fileName);
             presignedUrls.push(presignedUrl);
             // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
             if (presignedUrls.length === totalChunks) {
