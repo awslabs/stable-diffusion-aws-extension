@@ -138,31 +138,29 @@ function uploadFileToS3(file, groupName) {
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
         document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
     // 发送POST请求到服务器，获取文件分段的S3 presigned URL
-    for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
-        const fileName = file.name;
-        const payload = {
-            checkpoint_type: groupName,
-            filenames: [{
-                filename: fileName,
-                parts_number: totalChunks
-            }],
-            params: { message: "placeholder for chkpts upload test" }
-        };
-        const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
-        const apiKey = apiToken;
-        const url = apiUrl + "checkpoint";
-        fetch(url, {
-            method: "POST",
-            headers: {
-                'x-api-key': apiKey
-            },
-            body: JSON.stringify(payload),
-        })
+    const fileName = file.name;
+    const payload = {
+        checkpoint_type: groupName,
+        filenames: [{
+            filename: fileName,
+            parts_number: totalChunks
+        }],
+        params: { message: "placeholder for chkpts upload test" }
+    };
+    const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
+    const apiKey = apiToken;
+    const url = apiUrl + "checkpoint";
+    fetch(url, {
+        method: "POST",
+        headers: {
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify(payload),
+    })
         .then((response) => response.json())
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
-            // const fileNameStr = fileName;
-            const presignedUrl = presignedUrlList.get(fileName);
+            const presignedUrl = presignedUrlList[fileName];
             presignedUrls.push(presignedUrl);
             // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
             if (presignedUrls.length === totalChunks) {
@@ -173,7 +171,6 @@ function uploadFileToS3(file, groupName) {
             console.error("Error getting presigned URL:", error);
             // 处理错误
         });
-    }
 }
 
 function uploadFileChunks(file, presignedUrls, groupName) {
