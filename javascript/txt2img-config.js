@@ -180,6 +180,7 @@ function uploadFileChunks(file, presignedUrls, groupName) {
         if (currentChunk >= totalChunks) {
             console.log("All chunks uploaded successfully!");
             // 可在此处触发上传完成后的操作
+            uploadedFilesMap.clear();
             return;
         }
         const chunk = file.slice(
