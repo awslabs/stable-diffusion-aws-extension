@@ -863,13 +863,14 @@ def on_ui_tabs():
                     with FormRow(elem_id="model_upload_form_row_02"):
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_form_row_03"):
-                        upload_label = gr.Label(label="upload process", elem_id="progress-bar")
+                        upload_label = gr.HTML(label="upload process", elem_id="progress-bar")
                     with gr.Row():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="uploadFiles",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
                                                   # inputs=[sagemaker_ui.checkpoint_info],
-                                                  outputs=[test_connection_result])
+                                                  outputs=[upload_label]
+                                                  )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
                     default_table = """

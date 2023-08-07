@@ -222,9 +222,11 @@ function uploadFiles() {
         .then(() => {
             console.log("All files uploaded successfully!");
             // All files are uploaded, you can perform further actions here if needed.
+            return "All files uploaded successfully!"
         })
         .catch((error) => {
             console.error("Error uploading files:", error);
+            return "Error uploading files"
             // Handle errors as needed.
         });
 }
