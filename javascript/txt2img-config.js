@@ -58,17 +58,17 @@ function showFileName(event) {
     }else {
         // uploadedFiles.push(...event.target.files);
         if (uploadedFilesMap.has(typeValue)) {
-            for (const file of event.target.files) {
-                for (const uploadFile of uploadedFilesMap.get(typeValue)) {
+            let existFiles = new Array(0);
+            for (const uploadFile of uploadedFilesMap.get(typeValue)) {
+                existFiles.push(uploadFile);
+                for (const file of event.target.files) {
                     if (uploadFile.name == file.name && uploadFile.size == file.size) {
                         alert("Duplicate model to upload！");
                         return;
                     }
                 }
             }
-            let uploadedMapFiles = uploadedFilesMap.get(typeValue);
-            let newFileList = Array.from(uploadedMapFiles); // 将当前 FileList 转换为数组
-            newFileList.push(...event.target.files);
+            existFiles.push(...event.target.files);
             uploadedFilesMap.set(typeValue, newFileList);
         } else {
             uploadedFilesMap.set(typeValue, event.target.files);
