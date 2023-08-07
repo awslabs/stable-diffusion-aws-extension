@@ -8,7 +8,7 @@ import {
   RemovalPolicy,
   aws_ecr,
   CustomResource,
-  NestedStack, aws_dynamodb,
+  NestedStack, aws_dynamodb, aws_sns,
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
@@ -21,7 +21,7 @@ import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import * as sns from 'aws-cdk-lib/aws-sns';
+// import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
@@ -39,7 +39,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   routers: {[key: string]: Resource};
   s3_bucket: s3.Bucket;
   training_table: dynamodb.Table;
-  snsTopic: sns.Topic;
+  snsTopic: aws_sns.Topic;
   ecr_image_tag: string;
   sd_inference_job_table: aws_dynamodb.Table;
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
@@ -106,12 +106,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     // Create an SNS topic to get async inference result
-    const inference_result_topic = new sns.Topic(
+    const inference_result_topic = new aws_sns.Topic(
       this,
       'SNS-Receive-SageMaker-inference-success',
     );
 
-    const inference_result_error_topic = new sns.Topic(
+    const inference_result_error_topic = new aws_sns.Topic(
       this,
       'SNS-Receive-SageMaker-inference-error',
     );
@@ -126,7 +126,7 @@ export class SDAsyncInferenceStack extends NestedStack {
       endpointDeploymentJobTable: sd_endpoint_deployment_job_table,
       userNotifySNS:
                 props?.snsTopic ??
-                new sns.Topic(this, 'MyTopic', {
+                new aws_sns.Topic(this, 'MyTopic', {
                   displayName: 'My SNS Topic',
                 }),
       inference_ecr_url: inferenceECR_url,
@@ -249,12 +249,6 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
 
     // Add a POST method with prefix inference
-
-
-    // if (!restful_api) {
-    //   throw new Error('restful_api is needed');
-    // }
-
     if (!inference) {
       throw new Error('inference is undefined');
     }

@@ -199,6 +199,4 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
     });
   }
-
-
 }
