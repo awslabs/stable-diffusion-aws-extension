@@ -85,7 +85,8 @@ export class SagemakerInferenceStateMachine {
         'sagemaker:DescribeEndpointConfig',
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
-        'sagemaker:UpdateEndpointWeightsAndCapacities'
+        'sagemaker:UpdateEndpointWeightsAndCapacities',
+        'iam:CreateServiceLinkedRole'
       ],
       resources: ['*'],
     });
