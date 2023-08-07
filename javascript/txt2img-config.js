@@ -76,10 +76,14 @@ function showFileName(event) {
     }
     fileListDiv.innerHTML = "";
     for (let [typeKey, uploadedFiles] of uploadedFilesMap) {
+        const fileArray = Array.from(uploadedFiles);
+        if(fileArray.length === 0){
+            continue;
+        }
         const fileItemSpan = document.createElement("span");
         fileItemSpan.innerHTML = `${typeKey}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
         fileListDiv.appendChild(fileItemSpan);
-        const fileArray = Array.from(uploadedFiles);
+
 
         let map = new Map();
         fileArray.forEach(row => {
