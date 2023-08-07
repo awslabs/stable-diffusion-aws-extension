@@ -80,6 +80,12 @@ export class SagemakerInferenceStateMachine {
         'ecr:UploadLayerPart',
         'ecr:CompleteLayerUpload',
         'ecr:PutImage',
+        'cloudwatch:PutMetricAlarm', 
+        'cloudwatch:PutMetricData',
+        'sagemaker:DescribeEndpointConfig',
+        'cloudwatch:DeleteAlarms',
+        'cloudwatch:DescribeAlarms',
+        'sagemaker:UpdateEndpointWeightsAndCapacities'
       ],
       resources: ['*'],
     });
@@ -106,6 +112,14 @@ export class SagemakerInferenceStateMachine {
       ],
       resources: [snsTopic.topicArn, snsErrorTopic.topicArn, userNotifySNS.topicArn],
     });
+
+    const endpointAutoScalingStatement = new iam.PolicyStatement({
+      actions: [
+        'application-autoscaling:RegisterScalableTarget',
+        'application-autoscaling:PutScalingPolicy'
+      ],
+      resources: ['*']
+        })
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
@@ -162,6 +176,7 @@ export class SagemakerInferenceStateMachine {
           INFERENCE_ECR_IMAGE_URL: inference_ecr_url,
         },
         role: lambdaErrorHandlerRole,
+        timeout: Duration.seconds(900),
       },
     );
 
@@ -206,6 +221,7 @@ export class SagemakerInferenceStateMachine {
           INFERENCE_ECR_IMAGE_URL: inference_ecr_url,
         },
         role: lambdaStartDeployRole,
+        timeout: Duration.seconds(900),
       },
     );
 
@@ -218,6 +234,7 @@ export class SagemakerInferenceStateMachine {
     lambdaCheckDeploymentStatusRole.addToPolicy(s3Statement);
     lambdaCheckDeploymentStatusRole.addToPolicy(endpointStatement);
     lambdaCheckDeploymentStatusRole.addToPolicy(ddbStatement);
+    lambdaCheckDeploymentStatusRole.addToPolicy(endpointAutoScalingStatement);
     lambdaCheckDeploymentStatusRole.addToPolicy(
       new iam.PolicyStatement({
         actions: [
@@ -249,6 +266,7 @@ export class SagemakerInferenceStateMachine {
           INFERENCE_ECR_IMAGE_URL: inference_ecr_url,
         },
         role: lambdaCheckDeploymentStatusRole,
+        timeout: Duration.seconds(30)
       },
     );
 
