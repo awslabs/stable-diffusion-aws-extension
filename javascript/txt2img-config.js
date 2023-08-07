@@ -64,12 +64,12 @@ function showFileName(event) {
                 for (const file of event.target.files) {
                     if (uploadFile.name == file.name && uploadFile.size == file.size) {
                         alert("Duplicate model to upload！");
-                        return;
+                        continue;
                     }
                 }
             }
             existFiles.push(...event.target.files);
-            uploadedFilesMap.set(typeValue, newFileList);
+            uploadedFilesMap.set(typeValue, existFiles);
         } else {
             uploadedFilesMap.set(typeValue, event.target.files);
         }
