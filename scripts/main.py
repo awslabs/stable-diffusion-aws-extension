@@ -1,5 +1,6 @@
 import datetime
 import sys
+from queue import Queue
 from typing import Dict, List
 
 import requests
@@ -76,7 +77,7 @@ async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarg
 class SageMakerUI(scripts.Script):
     latest_result = None
     current_inference_id = None
-    inference_queue = []
+    inference_queue = Queue(maxsize=30)
     hijacked_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
@@ -114,8 +115,8 @@ class SageMakerUI(scripts.Script):
             self.txt2img_html_info = component
 
         async def _update_result():
-            if self.inference_queue and len(self.inference_queue) > 0:
-                inference_id = self.inference_queue.pop(0)
+            if self.inference_queue and not self.inference_queue.empty():
+                inference_id = self.inference_queue.get()
                 self.latest_result = sagemaker_ui.process_result_by_inference_id(inference_id)
                 return self.latest_result
 
@@ -362,7 +363,7 @@ class SageMakerUI(scripts.Script):
                                         headers={'x-api-key': api_key})
                 response.raise_for_status()
                 self.current_inference_id = inference_id
-                self.inference_queue.append(inference_id)
+                self.inference_queue.put(inference_id)
             elif upload_param_response['status'] != 200:
                 err = upload_param_response['error']
         except Exception as e:
