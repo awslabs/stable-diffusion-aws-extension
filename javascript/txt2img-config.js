@@ -174,9 +174,7 @@ function uploadFileToS3(files, groupName) {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
                 // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
-                if (presignedUrls.length === totalChunks) {
-                    uploadFileChunks(file, presignedUrls, groupName);
-                }
+                uploadFileChunks(file, presignedUrls, groupName);
             }
         })
         .catch((error) => {
@@ -187,7 +185,12 @@ function uploadFileToS3(files, groupName) {
 }
 
 function uploadFileChunks(file, presignedUrls, groupName) {
-    const totalChunks = presignedUrls.length;
+    const fileSize = file.size;
+    const totalChunks = Math.ceil(fileSize / chunkSize);
+    if(totalChunks != presignedUrls.length){
+        alert("generate presignedUrls error!")
+        return;
+    }
     let currentChunk = 0;
     function uploadNextChunk() {
         if (currentChunk >= totalChunks) {
