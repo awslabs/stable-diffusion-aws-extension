@@ -80,13 +80,13 @@ export class SagemakerInferenceStateMachine {
         'ecr:UploadLayerPart',
         'ecr:CompleteLayerUpload',
         'ecr:PutImage',
-        'cloudwatch:PutMetricAlarm', 
+        'cloudwatch:PutMetricAlarm',
         'cloudwatch:PutMetricData',
         'sagemaker:DescribeEndpointConfig',
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
         'sagemaker:UpdateEndpointWeightsAndCapacities',
-        'iam:CreateServiceLinkedRole'
+        'iam:CreateServiceLinkedRole',
       ],
       resources: ['*'],
     });
@@ -117,10 +117,10 @@ export class SagemakerInferenceStateMachine {
     const endpointAutoScalingStatement = new iam.PolicyStatement({
       actions: [
         'application-autoscaling:RegisterScalableTarget',
-        'application-autoscaling:PutScalingPolicy'
+        'application-autoscaling:PutScalingPolicy',
       ],
-      resources: ['*']
-        })
+      resources: ['*'],
+    });
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
@@ -267,7 +267,7 @@ export class SagemakerInferenceStateMachine {
           INFERENCE_ECR_IMAGE_URL: inference_ecr_url,
         },
         role: lambdaCheckDeploymentStatusRole,
-        timeout: Duration.seconds(30)
+        timeout: Duration.seconds(30),
       },
     );
 

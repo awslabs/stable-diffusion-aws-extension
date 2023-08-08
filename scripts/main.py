@@ -169,7 +169,14 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
-        # todo: check if endpoint is inService
+        # check if endpoint is inService
+        sagemaker_endpoint = ''
+        if args[0]:
+            sagemaker_endpoint = args[0].split('+')[0] if args[0].split('+')[1] == 'InService' else ''
+
+        if not sagemaker_endpoint:
+            return
+
         if not args[0]:
             return
 
@@ -327,13 +334,6 @@ class SageMakerUI(scripts.Script):
         api_key = get_variable_from_json('api_token')
         if not url or not api_key:
             logging.debug("Url or API-Key is not setting.")
-            return
-
-        sagemaker_endpoint = ''
-        if args[0]:
-            sagemaker_endpoint = args[0].split('+')[0] if args[0].split('+')[1] == 'InService' else ''
-
-        if not sagemaker_endpoint:
             return
 
         payload = {

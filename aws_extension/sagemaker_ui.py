@@ -68,14 +68,6 @@ def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
 
-def get_s3_file_names(bucket, folder):
-    """Get a list of file names from an S3 bucket and folder."""
-    s3 = boto3.resource('s3')
-    bucket = s3.Bucket(bucket)
-    objects = bucket.objects.filter(Prefix=folder)
-    names = [obj.key for obj in objects]
-    return names
-
 def get_current_date():
     today = datetime.today()
     formatted_date = today.strftime('%Y-%m-%d')
