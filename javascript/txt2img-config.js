@@ -171,23 +171,26 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
-            for(const file of fileArrays){
+
+            Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
-                // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
-                const payloadPut = uploadFileChunks(file, presignedUrls, checkpointId, groupName);
-                if(payloadPut != null){
-                    fetch(url, {
+                return uploadFileChunks(file, presignedUrls, checkpointId, groupName);
+            })).then(results => {
+                fetch(url, {
                         method: "PUT",
                         headers: {
                             'x-api-key': apiKey
                         },
-                        body: JSON.stringify(payloadPut),
+                        body: JSON.stringify(results),
                     }).then((response) => {
                         console.log(response.json());
                     });
-                }
-            }
+            }).catch(error => {
+                console.error("Error uploading chunks:", error);
+                // 处理错误
+                alert("Error uploading chunks! Upload stopped, please refresh your UI and retry");
+            });
         })
         .catch((error) => {
             console.error("Error getting presigned URL:", error);
