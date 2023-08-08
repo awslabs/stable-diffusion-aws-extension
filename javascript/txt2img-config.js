@@ -234,7 +234,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
                 const etag = response.headers.etag;
                 parts.push({
                     ETag: etag,
-                    PartNumber: i + 1
+                    PartNumber: currentChunk + 1
                 });
                 currentChunk++;
                 const progress = (currentChunk / totalChunks) * 100;
