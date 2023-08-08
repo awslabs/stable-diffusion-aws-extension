@@ -225,7 +225,10 @@ function uploadFileChunks(file, presignedUrls, groupName) {
 
 function uploadFiles() {
     const uploadPromises = [];
-    uploadPromises.push(uploadFileToS3(uploadedFilesMap.values(), groupName));
+    for (const [groupName, files] of uploadedFilesMap.entries()) {
+        uploadPromises.push(uploadFileToS3(files, groupName));
+    }
+
     Promise.all(uploadPromises)
         .then(() => {
             console.log("All files uploaded successfully!");
