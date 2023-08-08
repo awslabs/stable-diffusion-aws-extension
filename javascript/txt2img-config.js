@@ -58,7 +58,7 @@ function showFileName(event) {
     }else {
         // uploadedFiles.push(...event.target.files);
         if (uploadedFilesMap.has(typeValue)) {
-            let existFiles = new Array(0);
+            let existFiles = new Array();
             for (const uploadFile of uploadedFilesMap.get(typeValue)) {
                 existFiles.push(uploadFile);
                 for (const file of event.target.files) {
@@ -189,29 +189,29 @@ function uploadFileChunks(file, presignedUrls, groupName) {
             return;
         }
         const chunk = file.slice(
-        currentChunk * chunkSize,
-        (currentChunk + 1) * chunkSize
-    );
-    // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
-    fetch(presignedUrls[currentChunk], {
-        method: "PUT",
-        body: chunk,
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error("Chunk upload failed");
-            }
-            currentChunk++;
-            const progress = (currentChunk / totalChunks) * 100;
-            // 更新进度条的宽度或显示上传百分比
-            updateProgress(groupName, file.name, progress);
-            uploadNextChunk();
+            currentChunk * chunkSize,
+            (currentChunk + 1) * chunkSize
+        );
+        // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
+        fetch(presignedUrls[currentChunk], {
+            method: "PUT",
+            body: chunk,
         })
-        .catch((error) => {
-            console.error(`Error uploading chunk ${currentChunk}:`, error);
-            // 处理错误
-            alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
-        });
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Chunk upload failed");
+                }
+                currentChunk++;
+                const progress = (currentChunk / totalChunks) * 100;
+                // 更新进度条的宽度或显示上传百分比
+                updateProgress(groupName, file.name, progress);
+                uploadNextChunk();
+            })
+            .catch((error) => {
+                console.error(`Error uploading chunk ${currentChunk}:`, error);
+                // 处理错误
+                alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
+            });
     }
     // 开始上传第一个分片
     uploadNextChunk();
