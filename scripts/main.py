@@ -803,7 +803,7 @@ def on_ui_tabs():
                         model_update_button.click(_js="uploadFiles",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
                                                   # inputs=[sagemaker_ui.checkpoint_info],
-                                                  outputs=[upload_label]
+                                                  # outputs=[upload_label]
                                                   )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
