@@ -210,11 +210,10 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
             console.log("All chunks uploaded successfully!");
             // 可在此处触发上传完成后的操作
             uploadedFilesMap.clear();
-            const fileNameStr = file.name;
             const payload = {
                 "checkpoint_id": checkpointId,
                 "status": "Active",
-                "multi_parts_tags": {fileNameStr: parts}
+                "multi_parts_tags": {[file.name]: parts}
             }
             return payload;
         }
