@@ -239,6 +239,8 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
                 const progress = (currentChunk / totalChunks) * 100;
                 // 更新进度条的宽度或显示上传百分比
                 updateProgress(groupName, file.name, progress);
+                return response;
+            }).then((response) =>{
                 uploadNextChunk();
             })
             .catch((error) => {
