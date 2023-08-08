@@ -851,7 +851,7 @@ def on_ui_tabs():
                 with gr.Accordion("Upload Model to S3", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_form_row_01"):
-                        model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork"], elem_id="model_type_ele_id")
+                        model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "vae"], elem_id="model_type_ele_id")
                         model_type_hiden_text = gr.Textbox(elem_id="model_type_value_ele_id", visible=False)
                         def change_model_type_value(model_type: str):
                             model_type_hiden_text.value = model_type
@@ -863,7 +863,7 @@ def on_ui_tabs():
                     with FormRow(elem_id="model_upload_form_row_02"):
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_form_row_03"):
-                        upload_label = gr.HTML(label="upload process", elem_id="progress-bar")
+                        upload_label = gr.TextArea(label="upload process", elem_id="progress-bar")
                     with gr.Row():
                         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button", size=(200, 50))
                         model_update_button.click(_js="uploadFiles",

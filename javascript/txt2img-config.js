@@ -94,7 +94,7 @@ function showFileName(event) {
             const fileSize = uploadedFile.size;
             const fileType = uploadedFile.type;
             const fileItemDiv = document.createElement("div");
-            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;`;
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
             deleteButton.style.backgroundColor = "#E5E5E5";
             deleteButton.style.border = "1px solid black";
@@ -165,7 +165,7 @@ function uploadFileToS3(file, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const presignedUrl = presignedUrlList[fileName];
-            presignedUrls.push(presignedUrl);
+            presignedUrls.push(...presignedUrl);
             // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
             if (presignedUrls.length === totalChunks) {
                 uploadFileChunks(file, presignedUrls, groupName);
@@ -174,6 +174,7 @@ function uploadFileToS3(file, groupName) {
         .catch((error) => {
             console.error("Error getting presigned URL:", error);
             // 处理错误
+            alert("Error getting presigned URL! Upload stop,please refresh your ui and retry");
         });
 }
 
