@@ -72,13 +72,30 @@ export class Middleware extends Stack {
       'trains',
       'dataset',
       'datasets',
+      'inference',
+      'inference-api',
       api_train_path,
     ]);
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3');
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
+
+    new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
+      routers: restApi.routers,
+      // env: devEnv,
+      s3_bucket: s3BucketStore.s3Bucket,
+      training_table: ddbTables.trainingTable,
+      snsTopic: snsTopics.snsTopic,
+      ecr_image_tag: ecrImageTagParam.valueAsString,
+      sd_inference_job_table: ddbTables.inferenceJobTable,
+      sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
+      checkpointTable: ddbTables.checkPointTable,
+      commonLayer: commonLayers.commonLayer,
+      synthesizer: props.synthesizer,
+    });
+
+    new SdTrainDeployStack(this, 'SdDBTrainStack', {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
@@ -89,25 +106,6 @@ export class Middleware extends Stack {
       s3Bucket: s3BucketStore.s3Bucket,
       snsTopic: snsTopics.snsTopic,
     });
-
-
-    new SDAsyncInferenceStack(
-      this,
-      'SdAsyncInferenceStack-dev',
-            <SDAsyncInferenceStackProps>{
-              // env: devEnv,
-              synthesizer: props.synthesizer,
-              api_gate_way: restApi.apiGateway,
-              s3_bucket: s3BucketStore.s3Bucket,
-              training_table: ddbTables.trainingTable,
-              snsTopic: snsTopics.snsTopic,
-              ecr_image_tag: ecrImageTagParam.valueAsString,
-              sd_inference_job_table: ddbTables.inferenceJobTable,
-              sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
-              commonLayer: commonLayers.commonLayer,
-              checkpointTable: ddbTables.checkPointTable,
-            },
-    );
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {
