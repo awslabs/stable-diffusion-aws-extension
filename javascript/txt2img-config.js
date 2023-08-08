@@ -230,7 +230,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
                 if (!response.ok) {
                     throw new Error("Chunk upload failed");
                 }
-                const etag = response.headers.etag;
+                const etag = response.headers.get('ETag');
                 parts.push({
                     ETag: etag,
                     PartNumber: currentChunk + 1
