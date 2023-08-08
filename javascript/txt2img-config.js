@@ -197,60 +197,64 @@ function uploadFileToS3(files, groupName) {
 }
 
 function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
-    const fileSize = file.size;
-    const totalChunks = Math.ceil(fileSize / chunkSize);
-    if(totalChunks != presignedUrls.length){
-        alert("generate presignedUrls error!")
-        return null;
-    }
-    let currentChunk = 0;
-    const parts = [];
-    function uploadNextChunk() {
-        if (currentChunk >= totalChunks) {
-            console.log("All chunks uploaded successfully!");
-            // 可在此处触发上传完成后的操作
-            uploadedFilesMap.clear();
-            const payload = {
-                "checkpoint_id": checkpointId,
-                "status": "Active",
-                "multi_parts_tags": {[file.name]: parts}
-            }
-            return payload;
+    return new Promise((resolve, reject) => {
+        const fileSize = file.size;
+        const totalChunks = Math.ceil(fileSize / chunkSize);
+        if(totalChunks != presignedUrls.length){
+            const errorMessage = "Generated presignedUrls do not match totalChunks";
+            alert(errorMessage);
+            reject(new Error(errorMessage));
+            return;
         }
-        const chunk = file.slice(
-            currentChunk * chunkSize,
-            (currentChunk + 1) * chunkSize
-        );
-        // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
-        fetch(presignedUrls[currentChunk], {
-            method: "PUT",
-            body: chunk,
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Chunk upload failed");
+        let currentChunk = 0;
+        const parts = [];
+        // 开始上传第一个分片
+        uploadNextChunk();
+        function uploadNextChunk() {
+            if (currentChunk >= totalChunks) {
+                console.log("All chunks uploaded successfully!");
+                // 可在此处触发上传完成后的操作
+                uploadedFilesMap.clear();
+                const payload = {
+                    "checkpoint_id": checkpointId,
+                    "status": "Active",
+                    "multi_parts_tags": {[file.name]: parts}
                 }
-                const etag = response.headers.get('ETag');
-                parts.push({
-                    ETag: etag,
-                    PartNumber: currentChunk + 1
-                });
-                currentChunk++;
-                const progress = (currentChunk / totalChunks) * 100;
-                // 更新进度条的宽度或显示上传百分比
-                updateProgress(groupName, file.name, progress);
-                return response;
-            }).then((response) =>{
-                uploadNextChunk();
+                resolve(payload);
+                return;
+            }
+            const chunk = file.slice(
+                currentChunk * chunkSize,
+                (currentChunk + 1) * chunkSize
+            );
+            // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
+            fetch(presignedUrls[currentChunk], {
+                method: "PUT",
+                body: chunk,
             })
-            .catch((error) => {
-                console.error(`Error uploading chunk ${currentChunk}:`, error);
-                // 处理错误
-                alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
-            });
-    }
-    // 开始上传第一个分片
-    uploadNextChunk();
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Chunk upload failed");
+                    }
+                    const etag = response.headers.get('ETag');
+                    parts.push({
+                        ETag: etag,
+                        PartNumber: currentChunk + 1
+                    });
+                    currentChunk++;
+                    const progress = (currentChunk / totalChunks) * 100;
+                    // 更新进度条的宽度或显示上传百分比
+                    updateProgress(groupName, file.name, progress);
+                    uploadNextChunk();
+                })
+                .catch((error) => {
+                    console.error(`Error uploading chunk ${currentChunk}:`, error);
+                    // 处理错误
+                    alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
+                    reject(error);
+                });
+        }
+    });
 }
 
 function uploadFiles() {
