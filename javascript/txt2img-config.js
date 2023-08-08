@@ -170,11 +170,23 @@ function uploadFileToS3(files, groupName) {
         .then((response) => response.json())
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
+            const checkpointId = data.checkpoint.id;
             for(const file of fileArrays){
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
                 // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
-                uploadFileChunks(file, presignedUrls, groupName);
+                const payloadPut = uploadFileChunks(file, presignedUrls, checkpointId, groupName);
+                if(payloadPut != null){
+                    fetch(url, {
+                        method: "PUT",
+                        headers: {
+                            'x-api-key': apiKey
+                        },
+                        body: JSON.stringify(payloadPut),
+                    }).then((response) => {
+                        console.log(response.json());
+                    });
+                }
             }
         })
         .catch((error) => {
@@ -184,20 +196,27 @@ function uploadFileToS3(files, groupName) {
         });
 }
 
-function uploadFileChunks(file, presignedUrls, groupName) {
+function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
     const fileSize = file.size;
     const totalChunks = Math.ceil(fileSize / chunkSize);
     if(totalChunks != presignedUrls.length){
         alert("generate presignedUrls error!")
-        return;
+        return null;
     }
     let currentChunk = 0;
+    const parts = [];
     function uploadNextChunk() {
         if (currentChunk >= totalChunks) {
             console.log("All chunks uploaded successfully!");
             // 可在此处触发上传完成后的操作
             uploadedFilesMap.clear();
-            return;
+            const fileNameStr = file.name;
+            const payload = {
+                "checkpoint_id": checkpointId,
+                "status": "Active",
+                "multi_parts_tags": {fileNameStr: parts}
+            }
+            return payload;
         }
         const chunk = file.slice(
             currentChunk * chunkSize,
@@ -212,6 +231,11 @@ function uploadFileChunks(file, presignedUrls, groupName) {
                 if (!response.ok) {
                     throw new Error("Chunk upload failed");
                 }
+                const etag = response.headers.etag;
+                parts.push({
+                    ETag: etag,
+                    PartNumber: i + 1
+                });
                 currentChunk++;
                 const progress = (currentChunk / totalChunks) * 100;
                 // 更新进度条的宽度或显示上传百分比
