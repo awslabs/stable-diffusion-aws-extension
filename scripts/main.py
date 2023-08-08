@@ -783,71 +783,6 @@ def on_ui_tabs():
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-                # with gr.Accordion("Upload Model to S3", open=False):
-                #     gr.HTML(value="Refresh to select the model to upload to S3")
-                #     exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
-                #     root_path = os.getcwd()
-                #     model_folders = {
-                #         "ckpt": os.path.join(root_path, "models", "Stable-diffusion"),
-                #         "text": os.path.join(root_path, "embeddings"),
-                #         "lora": os.path.join(root_path, "models", "Lora"),
-                #         "control": os.path.join(root_path, "models", "ControlNet"),
-                #         "hyper": os.path.join(root_path, "models", "hypernetworks"),
-                #     }
-                #     def scan_sd_ckpt():
-                #         model_files = os.listdir(model_folders["ckpt"])
-                #         # filter non-model files not in exts
-                #         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                #         model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
-                #         return model_files
-                #     def scan_textural_inversion_model():
-                #         model_files = os.listdir(model_folders["text"])
-                #         # filter non-model files not in exts
-                #         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                #         model_files = [os.path.join(model_folders["text"], f) for f in model_files]
-                #         return model_files
-                #     def scan_lora_model():
-                #         model_files = os.listdir(model_folders["lora"])
-                #         # filter non-model files not in exts
-                #         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                #         model_files = [os.path.join(model_folders["lora"], f) for f in model_files]
-                #         return model_files
-                #     def scan_control_model():
-                #         model_files = os.listdir(model_folders["control"])
-                #         # filter non-model files not in exts
-                #         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                #         model_files = [os.path.join(model_folders["control"], f) for f in model_files]
-                #         return model_files
-                #     def scan_hypernetwork_model():
-                #         model_files = os.listdir(model_folders["hyper"])
-                #         # filter non-model files not in exts
-                #         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                #         model_files = [os.path.join(model_folders["hyper"], f) for f in model_files]
-                #         return model_files
-                #
-                #     with FormRow(elem_id="model_upload_form_row_01"):
-                #         sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()), elem_id="sd_ckpt_dropdown")
-                #         create_refresh_button(sd_checkpoints_path, scan_sd_ckpt, lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
-                #
-                #         textual_inversion_path = gr.Dropdown(label="Textual Inversion", choices=sorted(scan_textural_inversion_model()),elem_id="textual_inversion_model_dropdown")
-                #         create_refresh_button(textual_inversion_path, scan_textural_inversion_model, lambda: {"choices": sorted(scan_textural_inversion_model())},  "refresh_textual_inversion_model")
-                #     with FormRow(elem_id="model_upload_form_row_02"):
-                #         lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()), elem_id="lora_model_dropdown")
-                #         create_refresh_button(lora_path, scan_lora_model, lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model",)
-                #
-                #         controlnet_model_path = gr.Dropdown(label="ControlNet model", choices=sorted(scan_control_model()), elem_id="controlnet_model_dropdown")
-                #         create_refresh_button(controlnet_model_path, scan_control_model, lambda: {"choices": sorted(scan_control_model())}, "refresh_controlnet_models")
-                #     with FormRow(elem_id="model_upload_form_row_03"):
-                #         hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),elem_id="hyper_model_dropdown")
-                #         create_refresh_button(hypernetwork_path, scan_hypernetwork_model, lambda: {"choices": sorted(scan_hypernetwork_model())}, "refresh_hyper_models")
-                #
-                #     with gr.Row():
-                #         model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",elem_id="sagemaker_model_update_button", size=(200, 50))
-                #         model_update_button.click(_js="model_update",
-                #                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
-                #                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
-                #                                   outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
-
                 with gr.Accordion("Upload Model to S3", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_form_row_01"):
@@ -855,7 +790,6 @@ def on_ui_tabs():
                         model_type_hiden_text = gr.Textbox(elem_id="model_type_value_ele_id", visible=False)
                         def change_model_type_value(model_type: str):
                             model_type_hiden_text.value = model_type
-                            print(f"change_model_type_value:{model_type}")
                             return model_type
                         model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
                                                     inputs=[model_type_drop_down], outputs=model_type_hiden_text)
