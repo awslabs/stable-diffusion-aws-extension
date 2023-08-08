@@ -140,6 +140,7 @@ function uploadFileToS3(files, groupName) {
         document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
     const presignedUrls = [];
     const filenames = [];
+    const fileArrays = [];
     for(const file of files){
         const fileSize = file.size;
         const totalChunks = Math.ceil(fileSize / chunkSize);
@@ -148,7 +149,8 @@ function uploadFileToS3(files, groupName) {
             filename: fileName,
             parts_number: totalChunks
         }
-        filenames.push(fileParam)
+        fileArrays.push(file);
+        filenames.push(fileParam);
     }
     const payload = {
         checkpoint_type: groupName,
@@ -168,7 +170,7 @@ function uploadFileToS3(files, groupName) {
         .then((response) => response.json())
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
-            for(const file of files){
+            for(const file of fileArrays){
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
                 // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
@@ -226,6 +228,9 @@ function uploadFileChunks(file, presignedUrls, groupName) {
 function uploadFiles() {
     const uploadPromises = [];
     for (const [groupName, files] of uploadedFilesMap.entries()) {
+        // for (const file of files) {
+        //     uploadPromises.push(uploadFileToS3(file, groupName));
+        // }
         uploadPromises.push(uploadFileToS3(files, groupName));
     }
 
