@@ -210,6 +210,7 @@ function uploadFileChunks(file, presignedUrls, groupName) {
         .catch((error) => {
             console.error(`Error uploading chunk ${currentChunk}:`, error);
             // 处理错误
+            alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
         });
     }
     // 开始上传第一个分片
