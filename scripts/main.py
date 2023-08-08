@@ -276,6 +276,14 @@ class SageMakerUI(scripts.Script):
         js = json.dumps(api_param, default=encode_no_json)
 
         # fixme: not handle batches yet
+        from modules import shared
+        if shared.opts.sd_vae and shared.opts.sd_vae != 'None':
+            if shared.opts.sd_vae == 'Automatic':
+                models['VAE'] = [models['Stable-diffusion'][0]]
+            else:
+                models['VAE'] = [shared.opts.sd_vae]
+
+
         p.setup_prompts()
         p.prompts = p.all_prompts
         p.negative_prompts = p.all_negative_prompts
@@ -352,8 +360,7 @@ class SageMakerUI(scripts.Script):
             response.raise_for_status()
             upload_param_response = response.json()
 
-            if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response[
-                'inference']:
+            if 'inference' in upload_param_response and 'api_params_s3_upload_url' in upload_param_response['inference']:
                 upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'], data=js)
                 upload_s3_resp.raise_for_status()
                 inference_id = upload_param_response['inference']['id']
