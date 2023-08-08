@@ -340,7 +340,7 @@ def refresh_all_models():
 
 
 def sagemaker_upload_model_s3():
-    log = "start upload model to s3:"
+    log = "Start upload:"
     return log
 
 def generate_on_cloud(sagemaker_endpoint):
