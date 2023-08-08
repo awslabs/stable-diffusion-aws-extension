@@ -78,11 +78,6 @@ img_status = None
 img_endpoint = None
 img_checkpoint = None
 
-task_type_dropdown = None
-status_dropdown = None
-sagemaker_endpoint_filter = None
-sd_checkpoint_filter = None
-
 show_all_inference_job = False
 
 
@@ -1155,17 +1150,13 @@ def create_ui(is_img2img):
                 with gr.Column(scale=2):
                     with gr.Row():
                         task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
-                        global task_type_dropdown
                         task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
                         status_choices = ["succeed", "inprogress", "failure"]
-                        global status_dropdown
                         status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
                     with gr.Row():
-                        global sagemaker_endpoint_filter
                         sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
                         modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
                     with gr.Row():
-                        global sd_checkpoint_filter
                         sd_checkpoint_filter = gr.Dropdown(label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
                         modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
                     if is_img2img:
