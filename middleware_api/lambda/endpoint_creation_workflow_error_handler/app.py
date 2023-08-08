@@ -40,7 +40,7 @@ def send_message_to_sns(message_json):
             'body': json.dumps('Message sent successfully')
         }
 
-    except ClientError as e:
+    except Exception as e:
         print(f"Error sending message to SNS topic: {sns_topic_arn}")
         return {
             'statusCode': 500,

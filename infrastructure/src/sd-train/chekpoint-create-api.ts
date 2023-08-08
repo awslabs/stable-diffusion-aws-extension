@@ -118,13 +118,25 @@ export class CreateCheckPointApi {
       lambdaFunction,
       {
         proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        integrationResponses: [{
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
+            'method.response.header.Access-Control-Allow-Methods': "'GET,POST,PUT,OPTIONS'",
+            'method.response.header.Access-Control-Allow-Origin': "'*'",
+          },
+        }],
       },
     );
     this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
       apiKeyRequired: true,
       methodResponses: [{
         statusCode: '200',
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Headers': true,
+          'method.response.header.Access-Control-Allow-Methods': true,
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
       }],
     });
   }
