@@ -133,22 +133,26 @@ function updateProgress(groupName, fileName, progress) {
     }
 }
 
-function uploadFileToS3(file, groupName) {
-    const fileSize = file.size;
-    const totalChunks = Math.ceil(fileSize / chunkSize);
-    const presignedUrls = [];
+function uploadFileToS3(files, groupName) {
     const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
         document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
-    // 发送POST请求到服务器，获取文件分段的S3 presigned URL
-    const fileName = file.name;
-    const payload = {
-        checkpoint_type: groupName,
-        filenames: [{
+    const presignedUrls = [];
+    const filenames = [];
+    for(const file of files){
+        const fileSize = file.size;
+        const totalChunks = Math.ceil(fileSize / chunkSize);
+        const fileName = file.name;
+        const fileParam = {
             filename: fileName,
             parts_number: totalChunks
-        }],
+        }
+        filenames.push(fileParam)
+    }
+    const payload = {
+        checkpoint_type: groupName,
+        filenames: filenames,
         params: { message: "placeholder for chkpts upload test" }
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
@@ -164,11 +168,13 @@ function uploadFileToS3(file, groupName) {
         .then((response) => response.json())
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
-            const presignedUrl = presignedUrlList[fileName];
-            presignedUrls.push(...presignedUrl);
-            // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
-            if (presignedUrls.length === totalChunks) {
-                uploadFileChunks(file, presignedUrls, groupName);
+            for(const file of files){
+                const presignedUrl = presignedUrlList[file.name];
+                presignedUrls.push(...presignedUrl);
+                // 当获取到所有分片的S3 presigned URL后，开始上传文件分片
+                if (presignedUrls.length === totalChunks) {
+                    uploadFileChunks(file, presignedUrls, groupName);
+                }
             }
         })
         .catch((error) => {
@@ -219,11 +225,7 @@ function uploadFileChunks(file, presignedUrls, groupName) {
 
 function uploadFiles() {
     const uploadPromises = [];
-    for (const [groupName, files] of uploadedFilesMap.entries()) {
-        for (const file of files) {
-            uploadPromises.push(uploadFileToS3(file, groupName));
-        }
-    }
+    uploadPromises.push(uploadFileToS3(uploadedFilesMap.values(), groupName));
     Promise.all(uploadPromises)
         .then(() => {
             console.log("All files uploaded successfully!");
