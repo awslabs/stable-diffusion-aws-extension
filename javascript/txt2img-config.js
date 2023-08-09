@@ -129,7 +129,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
         // 更新进度条的宽度或显示上传百分比
         // progressDiv.style.width = `${progress}%`;
         // progressDiv.innerText = `${groupName}-${fileName}: ${progress.toFixed(2)}%`;
-        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part}: finished`;
+        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part+1}: finished`;
         progressBar.appendChild(progressDiv)
     }
 }
