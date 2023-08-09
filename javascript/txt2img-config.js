@@ -35,7 +35,7 @@ window.onload = function() {
 };
 
 let uploadedFilesMap = new Map();
-let chunkSize = 200 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
+let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 
 function getModelTypeValue(dropdowm_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
