@@ -10,8 +10,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import generate_presign_url, load_json_from_s3
-# from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3
+from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3
 from inference_v2._types import InferenceJob, InvocationsRequest
 from model_and_train._types import CheckPoint
 
@@ -23,22 +22,6 @@ inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 logger = logging.getLogger('inference_v2')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-
-# TODO: remove it, since it is in util
-import boto3
-import json
-s3 = boto3.client('s3')
-
-def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
-    '''
-    Upload the JSON file from the specified bucket and key
-    '''
-    try:
-        s3.put_object(Body=json.dumps(json_data), Bucket=bucket_name, Key=file_key)
-        print(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")
-    except Exception as e:
-        print(f"Error uploading dictionary: {e}")
-# TODO: remove it, since it is in util
 
 @dataclasses.dataclass
 class PrepareEvent:
