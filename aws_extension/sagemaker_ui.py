@@ -844,7 +844,7 @@ def create_ui(is_img2img):
                                                      label="Inference Job: Time-Type-Status-Uuid",
                                                      elem_id="txt2img_inference_job_ids_dropdown"
                                                      )
-                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
+                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids, "value": None}, "refresh_txt2img_inference_job_ids")
                 # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
 
             with gr.Row():
