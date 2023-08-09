@@ -34,7 +34,316 @@ window.onload = function() {
     }, 2000);
 };
 
+let uploadedFilesMap = new Map();
+let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 
+function getModelTypeValue(dropdowm_value){
+    const typeDom = document.getElementById("model_type_value_ele_id");
+    typeDom.value = dropdowm_value
+    return dropdowm_value
+}
+
+function showFileName(event) {
+    const fileListDiv = document.getElementById("hidden_bind_upload_files");
+    // show file name key
+    const typeDom = document.getElementById("model_type_value_ele_id");
+    const typeValue = typeDom.value
+    if(typeValue == null){
+        alert("Please choose model type!")
+        return;
+    }
+    if (uploadedFilesMap.size == 0){
+        // uploadedFiles = event.target.files;
+        uploadedFilesMap.set(typeValue,event.target.files);
+    }else {
+        // uploadedFiles.push(...event.target.files);
+        if (uploadedFilesMap.has(typeValue)) {
+            let existFiles = new Array();
+            for (const uploadFile of uploadedFilesMap.get(typeValue)) {
+                existFiles.push(uploadFile);
+                for (const file of event.target.files) {
+                    if (uploadFile.name == file.name && uploadFile.size == file.size) {
+                        alert("Duplicate model to upload！");
+                        continue;
+                    }
+                }
+            }
+            existFiles.push(...event.target.files);
+            uploadedFilesMap.set(typeValue, existFiles);
+        } else {
+            uploadedFilesMap.set(typeValue, event.target.files);
+        }
+    }
+    fileListDiv.innerHTML = "";
+    for (let [typeKey, uploadedFiles] of uploadedFilesMap) {
+        const fileArray = Array.from(uploadedFiles);
+        if(fileArray.length === 0){
+            continue;
+        }
+        const fileItemSpan = document.createElement("span");
+        fileItemSpan.innerHTML = `${typeKey}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+        fileListDiv.appendChild(fileItemSpan);
+
+
+        let map = new Map();
+        fileArray.forEach(row => {
+          map.set(row.name, row);
+        })
+        for (let [key, uploadedFile] of map) {
+            const fileName = uploadedFile.name;
+            const fileSize = uploadedFile.size;
+            const fileType = uploadedFile.type;
+            const fileItemDiv = document.createElement("div");
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+            const deleteButton = document.createElement("button");
+            deleteButton.style.backgroundColor = "#E5E5E5";
+            deleteButton.style.border = "1px solid black";
+            deleteButton.style.borderRadius = "2px";
+            deleteButton.textContent = "DELETE";
+            deleteButton.addEventListener("click", () => {
+                map.delete(key);
+                const parentNode = fileItemDiv.parentNode;
+                if (parentNode) {
+                    // 判断 fileItemDiv 是否是最后一个元素
+                    const isLastChild = Array.from(parentNode.children).indexOf(fileItemDiv) === parentNode.children.length - 1;
+                    // 删除对应的 fileItemDiv 和 fileItemSpan
+                    parentNode.removeChild(fileItemDiv);
+                    if (isLastChild) {
+                        parentNode.removeChild(fileItemSpan);
+                    }
+                }
+                // fileListDiv.removeChild(fileItemDiv);
+            });
+            fileItemDiv.appendChild(deleteButton);
+            fileListDiv.appendChild(fileItemDiv);
+        }
+        uploadedFilesMap.set(typeKey,map.values())
+    }
+}
+
+function updateProgress(groupName, fileName, progress, part, total) {
+    // 根据groupName找到对应的进度条或其他UI元素
+    const progressBar = document.getElementById(`progress-bar`);
+    const progressDiv = document.createElement(`div`);
+    if (progressBar) {
+        // 更新进度条的宽度或显示上传百分比
+        // progressDiv.style.width = `${progress}%`;
+        // progressDiv.innerText = `${groupName}-${fileName}: ${progress.toFixed(2)}%`;
+        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part+1}: finished`;
+        progressBar.appendChild(progressDiv)
+    }
+}
+
+function uploadFileToS3(files, groupName) {
+    const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
+        document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
+    const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
+        document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
+    const presignedUrls = [];
+    const filenames = [];
+    const fileArrays = [];
+    for(const file of files){
+        const fileSize = file.size;
+        const totalChunks = Math.ceil(fileSize / chunkSize);
+        const fileName = file.name;
+        const fileParam = {
+            filename: fileName,
+            parts_number: totalChunks
+        }
+        fileArrays.push(file);
+        filenames.push(fileParam);
+    }
+    const payload = {
+        checkpoint_type: groupName,
+        filenames: filenames,
+        params: { message: "placeholder for chkpts upload test" }
+    };
+    const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
+    const apiKey = apiToken;
+    const url = apiUrl + "checkpoint";
+    fetch(url, {
+        method: "POST",
+        headers: {
+            'x-api-key': apiKey
+        },
+        body: JSON.stringify(payload),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            const presignedUrlList = data.s3PresignUrl;
+            const checkpointId = data.checkpoint.id;
+
+            Promise.all(fileArrays.map(file => {
+                const presignedUrl = presignedUrlList[file.name];
+                presignedUrls.push(...presignedUrl);
+                return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
+            })).then(results => {
+                 console.log(results);
+            }).catch(error => {
+                console.error("Error uploading chunks:", error);
+                // 处理错误
+                alert("Error uploading chunks! Upload stopped, please refresh your UI and retry");
+            });
+        })
+        .catch((error) => {
+            console.error("Error getting presigned URL:", error);
+            // 处理错误
+            alert("Error getting presigned URL! Upload stop,please refresh your ui and retry");
+        });
+}
+
+function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey) {
+    return new Promise((resolve, reject) => {
+        const fileSize = file.size;
+        const totalChunks = Math.ceil(fileSize / chunkSize);
+        if(totalChunks != presignedUrls.length){
+            const errorMessage = "Generated presignedUrls do not match totalChunks";
+            alert(errorMessage);
+            reject(new Error(errorMessage));
+            return;
+        }
+        let currentChunk = 0;
+        const parts = [];
+        // 开始上传第一个分片
+        uploadNextChunk();
+        function uploadNextChunk() {
+            if (currentChunk >= totalChunks) {
+                console.log("All chunks uploaded successfully!");
+                // 可在此处触发上传完成后的操作
+                uploadedFilesMap.clear();
+                const payload = {
+                    "checkpoint_id": checkpointId,
+                    "status": "Active",
+                    "multi_parts_tags": {[file.name]: parts}
+                }
+                fetch(url, {
+                    method: "PUT",
+                    headers: {
+                        'x-api-key': apiKey
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then((response) => {
+                        console.log(response.json());
+                    });
+                resolve(payload);
+                return;
+            }
+            const chunk = file.slice(
+                currentChunk * chunkSize,
+                (currentChunk + 1) * chunkSize
+            );
+            // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
+            fetch(presignedUrls[currentChunk], {
+                method: "PUT",
+                body: chunk,
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Chunk upload failed");
+                    }
+                    const etag = response.headers.get('ETag');
+                    parts.push({
+                        ETag: etag,
+                        PartNumber: currentChunk + 1
+                    });
+                    currentChunk++;
+                    const progress = (currentChunk / totalChunks) * 100;
+                    // 更新进度条的宽度或显示上传百分比
+                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
+                    uploadNextChunk();
+                })
+                .catch((error) => {
+                    console.error(`Error uploading chunk ${currentChunk}:`, error);
+                    // 处理错误
+                    alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
+                    reject(error);
+                });
+        }
+    });
+}
+
+function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey) {
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const workerPromises = [];
+    const parts = [];
+    for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
+        const chunk = file.slice(
+            currentChunk * chunkSize,
+            (currentChunk + 1) * chunkSize
+        );
+        const presignedUrl = presignedUrls[currentChunk];
+        // TODO
+        const worker = new Worker('http://127.0.0.1:7860/file=extensions/stable-diffusion-aws-extension/javascript/uploadfile.js');
+        const promise = new Promise((resolve, reject) => {
+            worker.addEventListener('message', function(event) {
+                if (event.data.error) {
+                    reject(new Error(event.data.error));
+                } else {
+                    parts.push({
+                        ETag: event.data.etag,
+                        PartNumber: currentChunk + 1
+                    });
+                    const progress = (currentChunk + 1) / totalChunks * 100;
+                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
+                    resolve();
+                }
+                worker.terminate();
+            });
+            worker.postMessage({
+                presignedUrl,
+                chunk,
+            });
+        });
+        workerPromises.push(promise);
+    }
+
+    return Promise.all(workerPromises)
+        .then(() => {
+            const payload = {
+                "checkpoint_id": checkpointId,
+                "status": "Active",
+                "multi_parts_tags": { [file.name]: parts }
+            };
+            fetch(url, {
+                method: "PUT",
+                headers: {
+                    'x-api-key': apiKey
+                },
+                body: JSON.stringify(payload),
+            })
+                .then((response) => {
+                    console.log(response.json());
+                });
+            return payload;
+        })
+        .catch(error => {
+            console.error("Error uploading chunks:", error);
+            // 可以在这里处理错误情况
+            throw error;
+        });
+}
+function uploadFiles() {
+    const uploadPromises = [];
+    for (const [groupName, files] of uploadedFilesMap.entries()) {
+        // for (const file of files) {
+        //     uploadPromises.push(uploadFileToS3(file, groupName));
+        // }
+        uploadPromises.push(uploadFileToS3(files, groupName));
+    }
+
+    Promise.all(uploadPromises)
+        .then(() => {
+            console.log("All files uploaded successfully!");
+            // All files are uploaded, you can perform further actions here if needed.
+            return "All files uploaded successfully!"
+        })
+        .catch((error) => {
+            console.error("Error uploading files:", error);
+            return "Error uploading files"
+            // Handle errors as needed.
+        });
+}
 
 // Save configuration in txt2img panel
 function getDomValue(selector, defaultValue, isTextContent = false) {
