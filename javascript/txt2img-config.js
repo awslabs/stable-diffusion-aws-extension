@@ -121,14 +121,15 @@ function showFileName(event) {
     }
 }
 
-function updateProgress(groupName, fileName, progress) {
+function updateProgress(groupName, fileName, progress, part, total) {
     // 根据groupName找到对应的进度条或其他UI元素
     const progressBar = document.getElementById(`progress-bar`);
     const progressDiv = document.createElement(`div`);
     if (progressBar) {
         // 更新进度条的宽度或显示上传百分比
-        progressDiv.style.width = `${progress}%`;
-        progressDiv.innerText = `${groupName}-${fileName}: ${progress.toFixed(2)}%`;
+        // progressDiv.style.width = `${progress}%`;
+        // progressDiv.innerText = `${groupName}-${fileName}: ${progress.toFixed(2)}%`;
+        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part}: finished`;
         progressBar.appendChild(progressDiv)
     }
 }
@@ -175,17 +176,9 @@ function uploadFileToS3(files, groupName) {
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
-                return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName);
+                return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
             })).then(results => {
-                fetch(url, {
-                        method: "PUT",
-                        headers: {
-                            'x-api-key': apiKey
-                        },
-                        body: JSON.stringify(results),
-                    }).then((response) => {
-                        console.log(response.json());
-                    });
+                 console.log(results);
             }).catch(error => {
                 console.error("Error uploading chunks:", error);
                 // 处理错误
@@ -199,7 +192,7 @@ function uploadFileToS3(files, groupName) {
         });
 }
 
-function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
+function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey) {
     return new Promise((resolve, reject) => {
         const fileSize = file.size;
         const totalChunks = Math.ceil(fileSize / chunkSize);
@@ -223,6 +216,16 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
                     "status": "Active",
                     "multi_parts_tags": {[file.name]: parts}
                 }
+                fetch(url, {
+                    method: "PUT",
+                    headers: {
+                        'x-api-key': apiKey
+                    },
+                    body: JSON.stringify(payload),
+                })
+                    .then((response) => {
+                        console.log(response.json());
+                    });
                 resolve(payload);
                 return;
             }
@@ -247,7 +250,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
                     currentChunk++;
                     const progress = (currentChunk / totalChunks) * 100;
                     // 更新进度条的宽度或显示上传百分比
-                    updateProgress(groupName, file.name, progress);
+                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
                     uploadNextChunk();
                 })
                 .catch((error) => {
@@ -260,40 +263,65 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
     });
 }
 
-function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName) {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker('uploadfile.js');
-
-        worker.addEventListener('message', (event) => {
-            const { progress, parts, error } = event.data;
-            if (progress !== undefined) {
-                // 更新进度条的宽度或显示上传百分比
-                updateProgress(groupName, file.name, progress);
-            }
-            if (parts !== undefined) {
-                console.log("All chunks uploaded successfully!");
-                // 可在此处触发上传完成后的操作
-                uploadedFilesMap.clear();
-                const payload = {
-                    "checkpoint_id": checkpointId,
-                    "status": "Active",
-                    "multi_parts_tags": { [file.name]: parts }
-                };
-                resolve(payload);
-            }
-            if (error !== undefined) {
-                // 处理错误
-                alert("Error uploading chunk! Upload stop, please refresh your UI and retry");
-                reject(error);
-            }
+function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey) {
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const workerPromises = [];
+    const parts = [];
+    for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
+        const chunk = file.slice(
+            currentChunk * chunkSize,
+            (currentChunk + 1) * chunkSize
+        );
+        const presignedUrl = presignedUrls[currentChunk];
+        // TODO
+        const worker = new Worker('http://127.0.0.1:7860/file=extensions/stable-diffusion-aws-extension/javascript/uploadfile.js');
+        const promise = new Promise((resolve, reject) => {
+            worker.addEventListener('message', function(event) {
+                if (event.data.error) {
+                    reject(new Error(event.data.error));
+                } else {
+                    parts.push({
+                        ETag: event.data.etag,
+                        PartNumber: currentChunk + 1
+                    });
+                    const progress = (currentChunk + 1) / totalChunks * 100;
+                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
+                    resolve();
+                }
+                worker.terminate();
+            });
+            worker.postMessage({
+                presignedUrl,
+                chunk,
+            });
         });
+        workerPromises.push(promise);
+    }
 
-        worker.postMessage({
-            file,
-            presignedUrls,
-            chunkSize
+    return Promise.all(workerPromises)
+        .then(() => {
+            const payload = {
+                "checkpoint_id": checkpointId,
+                "status": "Active",
+                "multi_parts_tags": { [file.name]: parts }
+            };
+            fetch(url, {
+                method: "PUT",
+                headers: {
+                    'x-api-key': apiKey
+                },
+                body: JSON.stringify(payload),
+            })
+                .then((response) => {
+                    console.log(response.json());
+                });
+            return payload;
+        })
+        .catch(error => {
+            console.error("Error uploading chunks:", error);
+            // 可以在这里处理错误情况
+            throw error;
         });
-    });
 }
 function uploadFiles() {
     const uploadPromises = [];
