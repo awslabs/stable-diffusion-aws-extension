@@ -96,16 +96,6 @@ def build_filter_expression(checkpoint, end_time, endpoint, start_time, status, 
             filter_expression &= Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
         else:
             filter_expression = Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
-    # if checkpoint:
-    #     if filter_expression:
-    #         filter_expression &= Attr('params.used_models.Stable-diffusion').contains({"model_name": checkpoint})
-    #     else:
-    #         filter_expression = Attr('params.used_models.Stable-diffusion').contains({"model_name": checkpoint})
-    # if checkpoint:
-    #     if filter_expression:
-    #         filter_expression &= Attr('params.used_models.Stable-diffusion').contains(checkpoint)
-    #     else:
-    #         filter_expression = Attr('params.used_models.Stable-diffusion').contains(checkpoint)
     return filter_expression
 
 
