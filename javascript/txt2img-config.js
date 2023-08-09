@@ -35,7 +35,7 @@ window.onload = function() {
 };
 
 let uploadedFilesMap = new Map();
-let chunkSize = 1024 * 1024 * 1024; // 1GB chunk size, you can adjust this as needed.
+let chunkSize = 200 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 
 function getModelTypeValue(dropdowm_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
@@ -175,7 +175,7 @@ function uploadFileToS3(files, groupName) {
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
-                return uploadFileChunks(file, presignedUrls, checkpointId, groupName);
+                return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName);
             })).then(results => {
                 fetch(url, {
                         method: "PUT",
@@ -260,6 +260,41 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName) {
     });
 }
 
+function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName) {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker('uploadfile.js');
+
+        worker.addEventListener('message', (event) => {
+            const { progress, parts, error } = event.data;
+            if (progress !== undefined) {
+                // 更新进度条的宽度或显示上传百分比
+                updateProgress(groupName, file.name, progress);
+            }
+            if (parts !== undefined) {
+                console.log("All chunks uploaded successfully!");
+                // 可在此处触发上传完成后的操作
+                uploadedFilesMap.clear();
+                const payload = {
+                    "checkpoint_id": checkpointId,
+                    "status": "Active",
+                    "multi_parts_tags": { [file.name]: parts }
+                };
+                resolve(payload);
+            }
+            if (error !== undefined) {
+                // 处理错误
+                alert("Error uploading chunk! Upload stop, please refresh your UI and retry");
+                reject(error);
+            }
+        });
+
+        worker.postMessage({
+            file,
+            presignedUrls,
+            chunkSize
+        });
+    });
+}
 function uploadFiles() {
     const uploadPromises = [];
     for (const [groupName, files] of uploadedFilesMap.entries()) {
