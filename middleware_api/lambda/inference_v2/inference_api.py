@@ -29,7 +29,6 @@ import boto3
 import json
 s3 = boto3.client('s3')
 
-
 def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
     '''
     Upload the JSON file from the specified bucket and key
@@ -49,17 +48,25 @@ class PrepareEvent:
     filters: dict[str, Any]
 
 
+def validate_task_type(task_type):
+    if task_type not in ['txt2img', 'img2img']:
+        return {
+            'status': 400,
+            'err': f'task type {task_type} should be either txt2img or img2img'
+        }
+    return None
+
+
+
 # POST /v2/inference
 def prepare_inference(raw_event, context):
     request_id = context.aws_request_id
     event = PrepareEvent(**raw_event)
     _type = event.task_type
 
-    if _type not in ['txt2img', 'img2img']:
-        return {
-            'status': 400,
-            'err': f'task type {event.task_type} should be either txt2img or img2img'
-        }
+    validation_result = validate_task_type(event.task_type)
+    if validation_result:
+        return validation_result
 
     # check if endpoint table for endpoint status and existence
     # fixme: endpoint is not indexed by name, and this is very expensive query
@@ -217,130 +224,54 @@ def inference_l2(raw_event, context):
             'status': 400,
             'err': f'task_type, sagemaker_endpoint_name, models should be in the request body'
         }
-
     task_type = raw_event['task_type']
-    if task_type not in ['txt2img', 'img2img']:
-        return {
-            'status': 400,
-            'err': f'task type {task_type} should be either txt2img or img2img'
-        }
+    ep_name = raw_event['sagemaker_endpoint_name']
 
-    # check if endpoint table for endpoint status and existence
-    # fixme: endpoint is not indexed by name, and this is very expensive query
-    # fixme: we can either add index for endpoint name or make endpoint as the partition key
-    sagemaker_endpoint_name = raw_event['sagemaker_endpoint_name']
-    sagemaker_endpoint_raw = ddb_service.scan(sagemaker_endpoint_table, filters={
-        'endpoint_name': sagemaker_endpoint_name
-    })[0]
-    sagemaker_endpoint_raw = ddb_service.deserialize(sagemaker_endpoint_raw)
-    if sagemaker_endpoint_raw is None or len(sagemaker_endpoint_raw) == 0:
+    prepare_infer_event = {
+        'sagemaker_endpoint_name': raw_event['sagemaker_endpoint_name'],
+        'task_type': task_type,
+        'models': raw_event['models'],
+        'filters': {
+            'creator': 'l2api'
+        }
+    }
+    prepare_resp = prepare_inference(prepare_infer_event, context)
+
+    if 'inference' not in prepare_resp or 'api_params_s3_location' not in prepare_resp['inference']:
         return {
             'status': 500,
-            'error': f'sagemaker endpoint with name {sagemaker_endpoint_name} is not found'
+            'err': f'fail to prepare inference for {request_id}, no s3 location is generated'
         }
 
-    if sagemaker_endpoint_raw['endpoint_status'] != 'InService':
-        return {
-            'status': 400,
-            'error': f'sagemaker endpoint is not ready with status: {sagemaker_endpoint_raw["endpoint_status"]}'
-        }
-
-    endpoint_name = sagemaker_endpoint_raw['endpoint_name']
-    endpoint_id = sagemaker_endpoint_raw['EndpointDeploymentJobId']
-
-    # check if model(checkpoint) path(s) exists. return error if not
-    ckpts = []
-    ckpts_to_upload = []
-    for ckpt_type, names in raw_event['models'].items():
-        for name in names:
-            ckpt = _get_checkpoint_by_name(name, ckpt_type)
-            if ckpt is None:
-                ckpts_to_upload.append({
-                    'name': name,
-                    'ckpt_type': ckpt_type
-                })
-            else:
-                ckpts.append(ckpt)
-
-    if len(ckpts_to_upload) > 0:
-        return {
-            'status': 400,
-            'error': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
-        }
-
-    # generate param s3 location for upload
-    param_s3_key = f'{get_base_inference_param_s3_key(task_type, request_id)}/api_param.json'
-    s3_location = f's3://{bucket_name}/{param_s3_key}'
+    s3_location = prepare_resp['inference']['api_params_s3_location']
+    bucket_and_key = s3_location.replace("s3://", "").split("/", 1)
+    if len(bucket_and_key) > 1:
+        s3_file_key = bucket_and_key[1]
+    else:
+        # compose S3 key if fail to get it from response
+        s3_file_key = f'{get_base_inference_param_s3_key(task_type, request_id)}/api_param.json'
+    
     # merge the parameters with template
     param_template = load_json_from_s3(bucket_name, 'template/inferenceTemplate.json')
     merged_param = {**param_template, **raw_event}
-    upload_json_to_s3(bucket_name, param_s3_key, merged_param)
+    upload_json_to_s3(bucket_name, s3_file_key, merged_param)
+
+    run_infer_resp = run_inference({
+        'pathStringParameters': {
+            'inference_id': request_id
+        }
+    }, context)  
     
-    # create inference job with param location in ddb, status set to Created
-    used_models = {}
-    for ckpt in ckpts:
-        if ckpt.checkpoint_type not in used_models:
-            used_models[ckpt.checkpoint_type] = []
-
-        used_models[ckpt.checkpoint_type].append(
-            {
-                'id': ckpt.id,
-                'model_name': ckpt.checkpoint_names[0],
-                's3': ckpt.s3_location,
-                'type': ckpt.checkpoint_type
-            }
-        )
-
-    inference_job = InferenceJob(
-        InferenceJobId=request_id,
-        startTime=str(datetime.now()),
-        status='created',
-        taskType=task_type,
-        params={
-            'input_body_s3': s3_location,
-            'input_body_presign_url': '',
-            'used_models': used_models,
-            'sagemaker_inference_endpoint_id': endpoint_id,
-            'sagemaker_inference_endpoint_name': endpoint_name,
-        },
-    )
-    # ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
-
-    infer_id = request_id
-    payload = InvocationsRequest(
-        task=inference_job.taskType,
-        username="test",
-        models={
-            "space_free_size": 4e10,
-            **inference_job.params['used_models'],
-        },
-        param_s3=inference_job.params['input_body_s3']
-    )
-
-    # start async inference
-    predictor = Predictor(endpoint_name)
-    initial_args = {"InvocationTimeoutSeconds": 3600}
-    predictor = AsyncPredictor(predictor, name=endpoint_name)
-    predictor.serializer = JSONSerializer()
-    predictor.deserializer = JSONDeserializer()
-    prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args, inference_id=infer_id)
-    output_path = prediction.output_path
-
-    # update the ddb job status to 'inprogress' and save to ddb
-    inference_job.status = 'inprogress'
-    inference_job.params['output_path'] = output_path
-    ddb_service.put_items(inference_table_name, inference_job.__dict__)
-
     return {
         'status': 200,
         'inference': {
-            'inference_id': infer_id,
-            'status': inference_job.status,
-            'output_path': output_path,
-            'models': [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts],
+            'inference_id': request_id,
+            'status': run_infer_resp['inference']['status'],
+            'output_path': run_infer_resp['inference']['output_path'],
+            'models': prepare_resp['inference']['models'],
             'api_params_s3_location': s3_location,
             'type': task_type,
-            'endpoint_name': endpoint_name
+            'endpoint_name': ep_name
         }
     }
 
