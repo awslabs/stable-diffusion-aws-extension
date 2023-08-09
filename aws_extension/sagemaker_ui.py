@@ -1046,7 +1046,7 @@ def create_ui(is_img2img):
                     with gr.Row():
                         task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
                         task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
-                        status_choices = ["succeed", "inprogress", "failure"]
+                        status_choices = ["succeed", "inprogress", "failed"]
                         status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
                     with gr.Row():
                         sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
