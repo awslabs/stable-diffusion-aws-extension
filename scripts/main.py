@@ -77,7 +77,7 @@ class SageMakerUI(scripts.Script):
     latest_result = None
     current_inference_id = None
     inference_queue = Queue(maxsize=30)
-    hijacked_images_inner = None
+    default_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
 
@@ -248,18 +248,19 @@ class SageMakerUI(scripts.Script):
                 continue
 
             all_used_models = []
+            script_args = p.script_args[script.args_from:script.args_to]
             if script.alwayson:
                 print(f'{script.name} {script.args_from} {script.args_to}')
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
-                for arg in p.script_args[script.args_from:script.args_to]:
-                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                for _id, arg in enumerate(script_args):
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_index == sid:
                 api_param.script_name = script.name
-                for arg in p.script_args[script.args_from:script.args_to]:
-                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                for _id, arg in enumerate(script_args):
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 
@@ -273,18 +274,33 @@ class SageMakerUI(scripts.Script):
                                 models[key].append(val)
 
         api_param.sampler_index = p.sampler_name
+        # finished construct api payload
         js = json.dumps(api_param, default=encode_no_json)
 
         # fixme: not handle batches yet
         from modules import shared
-        if shared.opts.sd_vae and shared.opts.sd_vae != 'None':
-            if shared.opts.sd_vae == 'Automatic':
-                models['VAE'] = [models['Stable-diffusion'][0]]
-            else:
-                models['VAE'] = [shared.opts.sd_vae]
+        # as discussed, we not support automatic for simplicity because the default is Automatic
+        # if user need, has to select a vae model manually in the setting page
+        if shared.opts.sd_vae and shared.opts.sd_vae != 'None' and shared.opts.sd_vae != 'Automatic':
+            models['VAE'] = [shared.opts.sd_vae]
 
+        from modules.processing import get_fixed_seed
 
+        seed = get_fixed_seed(p.seed)
+        subseed = get_fixed_seed(p.subseed)
         p.setup_prompts()
+
+        if type(seed) == list:
+            p.all_seeds = seed
+        else:
+            p.all_seeds = [int(seed) + (x if p.subseed_strength == 0 else 0) for x in range(len(p.all_prompts))]
+
+        if type(subseed) == list:
+            p.all_subseeds = subseed
+        else:
+            p.all_subseeds = [int(subseed) + x for x in range(len(p.all_prompts))]
+
+        p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
         p.prompts = p.all_prompts
         p.negative_prompts = p.all_negative_prompts
         p.seeds = p.all_seeds
@@ -400,16 +416,17 @@ class SageMakerUI(scripts.Script):
                 infotexts=[],
             )
 
-            if p.scripts is not None:
-                p.scripts.postprocess(p, processed)
-
             # self.current_inference_id = None
-            from modules import processing
-            processing.process_images_inner = self.hijacked_images_inner
+            if not self.default_images_inner:
+                default_processing = importlib.import_module("modules.processing")
+                self.default_images_inner = default_processing.process_images_inner
 
+            if self.default_images_inner:
+                processing.process_images_inner = self.default_images_inner
             return processed
 
-        self.hijacked_images_inner = processing.process_images_inner
+        default_processing = importlib.import_module("modules.processing")
+        self.default_images_inner = default_processing.process_images_inner
         processing.process_images_inner = process_image_inner_hijack
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -421,14 +438,17 @@ class SageMakerUI(scripts.Script):
     def process(self, p, *args):
         pass
 
-    def _process_args_by_plugin(self, script_name, arg):
-        processors = {'controlnet': self._controlnet_args}
+    def _process_args_by_plugin(self, script_name, arg, current_index, args):
+        processors = {
+            'controlnet': self._controlnet_args,
+            'x/y/z plot': self._xyz_args,
+        }
         models = {}
         if script_name not in processors:
             return arg, models
 
         f = processors[script_name]
-        mdls = f(script_name, arg)
+        mdls = f(script_name, arg, current_index, args)
         for key, val in mdls.items():
             if not val:
                 continue
@@ -440,7 +460,28 @@ class SageMakerUI(scripts.Script):
 
         return arg, models
 
-    def _controlnet_args(self, script_name, arg) -> Dict[str, List[str]]:
+    def _xyz_args(self, script_name, arg, current_index, args) -> Dict[str, List[str]]:
+        if script_name != 'x/y/z plot':
+            return {}
+
+        if type(arg) is not list:
+            return {}
+
+        if not arg:
+            return {}
+
+        # 10 represent the checkpoint_name option for both img2img and txt2img
+        # ref: xyz_grid.py#204
+        if current_index - 2 < 0 or args[current_index - 2] != 10:
+            return {}
+
+        models = [' '.join(md.split()[:-1]) for md in arg]
+        for _id, val in enumerate(models):
+            args[current_index][_id] = val
+
+        return {'Stable-diffusion': models}
+
+    def _controlnet_args(self, script_name, arg, *_) -> Dict[str, List[str]]:
         if script_name != 'controlnet' or not arg.enabled:
             return {}
 
