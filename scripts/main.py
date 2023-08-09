@@ -279,9 +279,9 @@ class SageMakerUI(scripts.Script):
 
         # fixme: not handle batches yet
         from modules import shared
-        # as discussed, we not support automatic for simplicity because the default is Automatic
+        # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        if shared.opts.sd_vae and shared.opts.sd_vae != 'None' and shared.opts.sd_vae != 'Automatic':
+        if shared.opts.sd_vae and shared.opts.sd_vae not in ['None', 'Automatic']:
             models['VAE'] = [shared.opts.sd_vae]
 
         from modules.processing import get_fixed_seed
@@ -464,14 +464,11 @@ class SageMakerUI(scripts.Script):
         if script_name != 'x/y/z plot':
             return {}
 
-        if type(arg) is not list:
-            return {}
-
-        if not arg:
+        if not arg or type(arg) is not list:
             return {}
 
         # 10 represent the checkpoint_name option for both img2img and txt2img
-        # ref: xyz_grid.py#204
+        # ref: xyz_grid.py#L204
         if current_index - 2 < 0 or args[current_index - 2] != 10:
             return {}
 
