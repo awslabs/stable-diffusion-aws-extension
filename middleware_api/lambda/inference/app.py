@@ -96,11 +96,16 @@ def build_filter_expression(checkpoint, end_time, endpoint, start_time, status, 
             filter_expression &= Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
         else:
             filter_expression = Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
-    if checkpoint:
-        if filter_expression:
-            filter_expression &= Attr('params.used_models').contains(checkpoint)
-        else:
-            filter_expression = Attr('params.used_models').contains(checkpoint)
+    # if checkpoint:
+    #     if filter_expression:
+    #         filter_expression &= Attr('params.used_models.Stable-diffusion').contains({"model_name": checkpoint})
+    #     else:
+    #         filter_expression = Attr('params.used_models.Stable-diffusion').contains({"model_name": checkpoint})
+    # if checkpoint:
+    #     if filter_expression:
+    #         filter_expression &= Attr('params.used_models.Stable-diffusion').contains(checkpoint)
+    #     else:
+    #         filter_expression = Attr('params.used_models.Stable-diffusion').contains(checkpoint)
     return filter_expression
 
 
@@ -110,38 +115,49 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
     try:
         response = None
         filter_expression = build_filter_expression(checkpoint, end_time, endpoint, start_time, status, task_type)
-        if limit == const.PAGE_LIMIT_ALL:
-            if filter_expression:
-                response = inference_table.scan(
-                    FilterExpression=filter_expression
-                )
-            else:
-                response = inference_table.scan()
-            logger.info(f"query inference job list response is {str(response)}")
-            if response:
-                return response['Items']
-            return response
+        if limit != const.PAGE_LIMIT_ALL and limit <= 0:
+            logger.info(f"query inference job list error because of limit <0 {limit}")
+            return ""
+        if filter_expression:
+            response = inference_table.scan(
+                FilterExpression=filter_expression
+            )
         else:
-            if limit <= 0:
-                logger.info(f"query inference job list error because of limit <0 {limit}")
-                return ""
-            if filter_expression:
-                response = inference_table.scan(
-                    FilterExpression=filter_expression
-                )
-            else:
-                response = inference_table.scan()
-            logger.info(f"query inference job list response is {str(response)}")
-            if response:
-                if len(response['Items']) >= limit:
-                    return response['Items'][0: limit]
-                else:
-                    return response['Items']
-            return response
+            response = inference_table.scan()
+        logger.info(f"query inference job list response is {str(response)}")
+        if response:
+            return filter_checkpoint_items(limit, checkpoint, response['Items'])
+        return response
     except Exception as e:
         logger.info(f"query inference job list error ")
         logger.info(e)
         return ""
+
+
+def filter_checkpoint_items(limit, checkpoint, items):
+    if checkpoint:
+        filtered_data = []
+        for item in items:
+            if "params" in item and "used_models" in item["params"]:
+                used_models = item["params"]["used_models"].get("Stable-diffusion", [])
+                for model in used_models:
+                    if "model_name" in model and model["model_name"] == checkpoint:
+                        filtered_data.append(item)
+        if limit == const.PAGE_LIMIT_ALL:
+            return filtered_data
+        else:
+            if len(filtered_data) >= limit:
+                return filtered_data[0: limit]
+            else:
+                return filtered_data
+    if limit == const.PAGE_LIMIT_ALL:
+        return items
+    else:
+        if len(items) >= limit:
+            return items[0: limit]
+        else:
+            return items
+
 
 def getInferenceJob(inference_job_id):
     if not inference_job_id:
