@@ -72,7 +72,7 @@ def getInferenceJobList():
     logger.info(f"inference job list response is {str(response)}")
     return response['Items']
 
-def build_filter_expression(checkpoint, end_time, endpoint, start_time, status, task_type):
+def build_filter_expression(end_time, endpoint, start_time, status, task_type):
     filter_expression = None
     if status:
         filter_expression = Attr('status').eq(status)
@@ -104,7 +104,7 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
     print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
     try:
         response = None
-        filter_expression = build_filter_expression(checkpoint, end_time, endpoint, start_time, status, task_type)
+        filter_expression = build_filter_expression(end_time, endpoint, start_time, status, task_type)
         if limit != const.PAGE_LIMIT_ALL and limit <= 0:
             logger.info(f"query inference job list error because of limit <0 {limit}")
             return ""
