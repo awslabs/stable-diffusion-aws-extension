@@ -866,7 +866,7 @@ def on_ui_tabs():
                     with gr.Row():
                         model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button_local", size=(200, 50))
                         model_update_button_local.click(_js="uploadFiles",
-                                                  fn=sagemaker_ui.sagemaker_upload_model_s3_local(),
+                                                  fn=sagemaker_ui.sagemaker_upload_model_s3_local,
                                                   # inputs=[sagemaker_ui.checkpoint_info],
                                                   # outputs=[upload_label]
                                                   )
