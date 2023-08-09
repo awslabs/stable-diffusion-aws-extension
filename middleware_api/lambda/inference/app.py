@@ -93,14 +93,14 @@ def build_filter_expression(checkpoint, end_time, endpoint, start_time, status, 
             filter_expression = Attr('startTime').lte(end_time)
     if endpoint:
         if filter_expression:
-            filter_expression &= Attr('endpoint').eq(endpoint)
+            filter_expression &= Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
         else:
-            filter_expression = Attr('endpoint').eq(endpoint)
+            filter_expression = Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
     if checkpoint:
         if filter_expression:
-            filter_expression &= Attr('checkpoint').eq(checkpoint)
+            filter_expression &= Attr('params.used_models').contains(checkpoint)
         else:
-            filter_expression = Attr('checkpoint').eq(checkpoint)
+            filter_expression = Attr('params.used_models').contains(checkpoint)
     return filter_expression
 
 
