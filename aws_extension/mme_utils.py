@@ -19,6 +19,7 @@ models_path['ControlNet'] = 'models/ControlNet'
 models_path['hypernetworks'] = 'models/hypernetworks'
 models_path['Lora'] = 'models/Lora'
 models_path['embeddings'] = 'embeddings'
+models_path['VAE'] = 'models/VAE'
 disk_path = '/tmp'
 #disk_path = '/'
 def checkspace_and_update_models(selected_models):
@@ -82,10 +83,10 @@ def checkspace_and_update_models(selected_models):
                 download_and_update(model_type, f'{model["s3"]}/{model["model_name"]}')
 
     shared.opts.sd_model_checkpoint = selected_models['Stable-diffusion'][0]["model_name"]
-    #shared.opts.sd_vae = selected_models['vae'][0]
-    import psutil
     sd_models.reload_model_weights()
-    sd_vae.reload_vae_weights()
+    if 'VAE' in selected_models:
+        shared.opts.sd_vae = selected_models['VAE'][0]['model_name']
+        sd_vae.reload_vae_weights()
 
 def download_model(model_name, model_s3_pos):
     #download from s3
