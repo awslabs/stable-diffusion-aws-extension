@@ -462,6 +462,40 @@ function set_textbox_value_gradio(elementId, newValue) {
     }
 }
 
+function inference_job_timepicker_text_change(){
+    // 获取日期选择器元素
+    const dateStartInput = document.querySelector("#start_timepicker_text");
+    const selectedStartDate = dateStartInput.value;
+    const dateEndInput = document.querySelector("#end_timepicker_text");
+    const selectedEndDate = dateEndInput.value;
+    gradioApp().getElementById("start_time_picker_button_hidden").click()
+    gradioApp().getElementById("end_time_picker_button_hidden").click()
+    gradioApp().getElementById("start_time_picker_button_hidden").value = selectedStartDate
+    gradioApp().getElementById("end_time_picker_button_hidden").value= selectedEndDate
+}
+
+function get_time_button_value(){
+    const dateStartInput = document.querySelector("#start_timepicker_text");
+    const selectedStartDate = dateStartInput.value;
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_text");
+    const selectedEndDate = dateEndInput.value;
+    return [selectedStartDate,selectedEndDate]
+}
+
+function inference_job_timepicker_img_change(){
+    // 获取日期选择器元素
+    const dateStartInput = document.querySelector("#start_timepicker_img");
+    const selectedStartDate = dateStartInput.value;
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_img");
+    const selectedEndDate = dateEndInput.value;
+    dateEndInput.setAttribute("value",selectedEndDate)
+    gradioApp().getElementById("start_time_picker_img_hidden").click()
+    gradioApp().getElementById("end_time_picker_img_hidden").click()
+    gradioApp().getElementById("start_time_picker_img_hidden").value = selectedStartDate
+    gradioApp().getElementById("end_time_picker_img_hidden").value= selectedEndDate
+}
 
 async function txt2img_config_save(endpoint_value) {
     var config = {};

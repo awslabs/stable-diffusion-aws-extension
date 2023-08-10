@@ -63,10 +63,51 @@ for ckpt_type, ckpt_name in zip(checkpoint_type, checkpoint_name):
 api_gateway_url = get_variable_from_json('api_gateway_url')
 api_key = get_variable_from_json('api_token')
 
+start_time_picker_img_value = None
+end_time_picker_img_value = None
+start_time_picker_txt_value = None
+end_time_picker_txt_value = None
+
+txt_task_type = None
+txt_status = None
+txt_endpoint = None
+txt_checkpoint = None
+
+img_task_type = None
+img_status = None
+img_endpoint = None
+img_checkpoint = None
+
+show_all_inference_job = False
+
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
+
+
+def server_request_post(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.post(list_endpoint_url, json=params, headers=headers)
+    return response
+
+
+def get_s3_file_names(bucket, folder):
+    """Get a list of file names from an S3 bucket and folder."""
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket)
+    objects = bucket.objects.filter(Prefix=folder)
+    names = [obj.key for obj in objects]
+    return names
 
 def get_current_date():
     today = datetime.today()
@@ -138,7 +179,121 @@ def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkb
 
 def origin_update_txt2img_inference_job_ids():
     # global origin_txt2img_inference_job_ids
-    return get_inference_job_list(True, True, True)
+    return query_inference_job_list('', '', '', '', '')
+
+
+def query_page_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, is_img2img: bool, show_all: bool):
+    global show_all_inference_job
+    show_all_inference_job = show_all
+    if is_img2img:
+        global img_task_type
+        img_task_type = task_type
+        global img_status
+        img_status = status
+        global img_endpoint
+        img_endpoint = endpoint
+        global img_checkpoint
+        img_checkpoint = checkpoint
+        opt_type = 'img2img'
+        print(f"{opt_type} {img_task_type} {img_status} {img_endpoint} {img_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+    else:
+        global txt_task_type
+        txt_task_type = task_type
+        global txt_status
+        txt_status = txt_status
+        global txt_endpoint
+        txt_endpoint = endpoint
+        global txt_checkpoint
+        txt_checkpoint = checkpoint
+        opt_type = 'txt2img'
+        print(f"{opt_type} {txt_task_type} {txt_status} {txt_endpoint} {txt_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_img_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str):
+    opt_type = 'img2img'
+    global img_task_type
+    img_task_type = task_type
+    global img_status
+    img_status = status
+    global img_endpoint
+    img_endpoint = endpoint
+    global img_checkpoint
+    img_checkpoint = checkpoint
+    return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_txt_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str):
+    opt_type = 'txt2img'
+    global txt_task_type
+    txt_task_type = task_type
+    global txt_status
+    txt_status = status
+    global txt_endpoint
+    txt_endpoint = endpoint
+    global txt_checkpoint
+    txt_checkpoint = checkpoint
+
+    return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, opt_type: str):
+    print(
+        f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
+    try:
+        body_params = {}
+        if status:
+            body_params['status'] = status
+        if task_type:
+            body_params['task_type'] = task_type
+        if opt_type == 'txt2img':
+            if start_time_picker_txt_value:
+                body_params['start_time'] = start_time_picker_txt_value
+            if end_time_picker_txt_value:
+                body_params['end_time'] = end_time_picker_txt_value
+        elif opt_type == 'img2img':
+            if start_time_picker_img_value:
+                body_params['start_time'] = start_time_picker_img_value
+            if end_time_picker_img_value:
+                body_params['end_time'] = end_time_picker_img_value
+        if endpoint:
+            endpoint_name_array = endpoint.split("+")
+            if len(endpoint_name_array) > 0:
+                body_params['endpoint'] = endpoint_name_array[0]
+        if checkpoint:
+            body_params['checkpoint'] = checkpoint
+        body_params['limit'] = -1 if show_all_inference_job else 10
+        response = server_request_post(f'inference/query-inference-jobs', body_params)
+        r = response.json()
+        print(r)
+        if r:
+            txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
+            temp_list = []
+            for obj in r:
+                if obj.get('completeTime') is None:
+                    complete_time = obj.get('startTime')
+                else:
+                    complete_time = obj.get('completeTime')
+                status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
+                inference_job_id = obj.get('InferenceJobId')
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
+                temp_list.append((complete_time, combined_string))
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+            # Append the sorted combined strings to the txt2img_inference_job_ids list
+            for item in sorted_list:
+                txt2img_inference_job_ids.append(item[1])
+            # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
+            return gr.Dropdown.update(choices=txt2img_inference_job_ids)
+        else:
+            print("The API response is empty.")
+            return gr.Dropdown.update(choices=[])
+    except Exception as e:
+        print("Exception occurred when fetching inference_job_ids")
+        print(e)
+        return gr.Dropdown.update(choices=[])
 
 
 def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
@@ -798,6 +953,25 @@ def init_refresh_resource_list_from_cloud():
     else:
         print(f"there is no api-gateway url and token in local file,")
 
+
+def on_txt_time_change(start_time, end_time):
+    print(f"!!!!!!!!!on_txt_time_change!!!!!!{start_time},{end_time}")
+    global start_time_picker_txt_value
+    global end_time_picker_txt_value
+    start_time_picker_txt_value = start_time
+    end_time_picker_txt_value = end_time
+    return query_inference_job_list(txt_task_type, txt_status, txt_endpoint, txt_checkpoint, "txt2img")
+
+
+def on_img_time_change(start_time, end_time):
+    print(f"!!!!!!!!!on_img_time_change!!!!!!{start_time},{end_time}")
+    global start_time_picker_img_value
+    global end_time_picker_img_value
+    start_time_picker_img_value = start_time
+    end_time_picker_img_value = end_time
+    return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
+
+
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
@@ -847,18 +1021,128 @@ def create_ui(is_img2img):
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids, "value": None}, "refresh_txt2img_inference_job_ids")
                 # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
 
+            # with gr.Row():
+            #     with gr.Column(scale=1):
+            #         gr.HTML(value="Inference Job type filters")
+            #     with gr.Column(scale=4):
+            #         with gr.Row():
+            #             txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
+            #             img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
+            #             interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
+            #
+            #     txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+            #     img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+            #     interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
             with gr.Row():
+                inference_job_filter = gr.Checkbox(
+                    label="Advanced Inference Job filter", value=False, visible=True
+                )
+                inference_job_page = gr.Checkbox(label="Show All(unchecked: max 10 items)",
+                                                 elem_id="inference_job_page_checkbox", value=False)
+            with gr.Row(variant='panel', visible=False) as filter_row:
                 with gr.Column(scale=1):
                     gr.HTML(value="Inference Job type filters")
-                with gr.Column(scale=4):
+                with gr.Column(scale=2):
                     with gr.Row():
-                        txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
-                        img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
-                        interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
+                        task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
+                        task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
+                        status_choices = ["succeed", "inprogress", "failed"]
+                        status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
+                    with gr.Row():
+                        sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
+                        modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
+                    with gr.Row():
+                        sd_checkpoint_filter = gr.Dropdown(label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
+                        modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+                    if is_img2img:
+                        with gr.Row():
+                            start_time_picker_img = gr.HTML(elem_id="start_timepicker_img_e",
+                                                            value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                            end_time_picker_img = gr.HTML(elem_id="end_timepicker_img_e",
+                                                          value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                            start_time_picker_img_hidden = gr.Button(elem_id="start_time_picker_img_hidden",
+                                                                     visible=True)
+                            end_time_picker_img_hidden = gr.Button(elem_id="end_time_picker_img_hidden",
+                                                                   visible=True)
+                        start_time_picker_img_hidden.click(fn=on_img_time_change,
+                                                           _js='get_time_button_value',
+                                                           inputs=[start_time_picker_img, end_time_picker_img],
+                                                           outputs=inference_job_dropdown)
+                        end_time_picker_img_hidden.click(fn=on_img_time_change,
+                                                         _js='get_time_button_value',
+                                                         inputs=[start_time_picker_img, end_time_picker_img],
+                                                         outputs=inference_job_dropdown
+                                                         )
+                        task_type_dropdown.change(fn=query_img_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown,
+                                                          sagemaker_endpoint_filter,
+                                                          sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_img_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown, sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_img_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown,
+                                                                 sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_img_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown,
+                                                            sagemaker_endpoint_filter,
+                                                            sd_checkpoint_filter], outputs=inference_job_dropdown)
+                    else:
+                        with gr.Row():
+                            start_time_picker_text = gr.HTML(elem_id="start_timepicker_text_e",
+                                                             value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                            end_time_picker_text = gr.HTML(elem_id="end_timepicker_text_e",
+                                                           value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                            start_time_picker_button_hidden = gr.Button(elem_id="start_time_picker_button_hidden",
+                                                                        visible=False)
+                            end_time_picker_button_hidden = gr.Button(elem_id="end_time_picker_button_hidden",
+                                                                      visible=False)
+                        start_time_picker_button_hidden.click(fn=on_txt_time_change,
+                                                              _js='get_time_button_value',
+                                                              inputs=[start_time_picker_text, end_time_picker_text],
+                                                              outputs=inference_job_dropdown)
+                        end_time_picker_button_hidden.click(fn=on_txt_time_change,
+                                                            _js='get_time_button_value',
+                                                            inputs=[start_time_picker_text, end_time_picker_text],
+                                                            outputs=inference_job_dropdown)
+                        task_type_dropdown.change(fn=query_txt_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown,
+                                                          sagemaker_endpoint_filter, sd_checkpoint_filter],
+                                                  outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_txt_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown,
+                                                       sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_txt_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown,
+                                                                 sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_txt_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown,
+                                                            sagemaker_endpoint_filter, sd_checkpoint_filter],
+                                                    outputs=inference_job_dropdown)
 
-                txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+                    def toggle_new_rows(create_from):
+                        global start_time_picker_txt_value
+                        start_time_picker_txt_value = None
+                        global end_time_picker_txt_value
+                        end_time_picker_txt_value = None
+                        return [gr.update(visible=create_from), None, None, None, None]
+
+                    inference_job_filter.change(
+                        fn=toggle_new_rows,
+                        inputs=[inference_job_filter],
+                        outputs=[filter_row, task_type_dropdown, status_dropdown, sagemaker_endpoint_filter,
+                                 sd_checkpoint_filter],
+                    )
+                    hidden_check_type = gr.Textbox(elem_id="hidden_check_type", value=is_img2img, visible=False)
+                    inference_job_page.change(fn=query_page_inference_job_list,
+                                              inputs=[task_type_dropdown, status_dropdown,
+                                                      sagemaker_endpoint_filter,
+                                                      sd_checkpoint_filter, hidden_check_type,
+                                                      inference_job_page],
+                                              outputs=inference_job_dropdown)
 
             # with gr.Row():
             #     gr.HTML(value="Extra Networks for Cloud Inference")
