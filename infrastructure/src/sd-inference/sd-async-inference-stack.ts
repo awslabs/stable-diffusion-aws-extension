@@ -28,6 +28,7 @@ import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
+import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -244,9 +245,20 @@ export class SDAsyncInferenceStack extends NestedStack {
     const run_sagemaker_inference_api = inferenceApi.addResource(
       'inference',
     );
-    run_sagemaker_inference_api.addMethod('POST', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
+
+    new InferenceL2Api(
+      this, 'sd-infer-l2-api',
+      <InferenceL2ApiProps>{
+        checkpointTable: props.checkpointTable,
+        commonLayer: props.commonLayer,
+        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        httpMethod: 'POST',
+        inferenceJobTable: sd_inference_job_table,
+        router: run_sagemaker_inference_api,
+        s3Bucket: props.s3_bucket,
+        srcRoot: srcRoot,
+      },
+    );
 
     // Add a POST method with prefix inference
     if (!inference) {
