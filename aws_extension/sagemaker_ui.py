@@ -499,7 +499,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path]
 
-    print(f"Refresh checkpionts before upload to get rid of duplicate uploads...")
+    print(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
     refresh_all_models()
 
     for lp, rp in zip(local_paths, checkpoint_type):
@@ -600,7 +600,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         except Exception as e:
             print(f"fail to upload model {lp}, error: {e}")
 
-    print(f"Refresh checkpionts after upload...")
+    print(f"Refresh checkpoints after upload...")
     refresh_all_models()
     return log, None, None, None, None, None
 
