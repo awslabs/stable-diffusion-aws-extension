@@ -77,7 +77,7 @@ class SageMakerUI(scripts.Script):
     latest_result = None
     current_inference_id = None
     inference_queue = Queue(maxsize=30)
-    hijacked_images_inner = None
+    default_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
 
@@ -248,18 +248,19 @@ class SageMakerUI(scripts.Script):
                 continue
 
             all_used_models = []
+            script_args = p.script_args[script.args_from:script.args_to]
             if script.alwayson:
                 print(f'{script.name} {script.args_from} {script.args_to}')
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
-                for arg in p.script_args[script.args_from:script.args_to]:
-                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                for _id, arg in enumerate(script_args):
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_index == sid:
                 api_param.script_name = script.name
-                for arg in p.script_args[script.args_from:script.args_to]:
-                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg)
+                for _id, arg in enumerate(script_args):
+                    parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 
@@ -273,18 +274,33 @@ class SageMakerUI(scripts.Script):
                                 models[key].append(val)
 
         api_param.sampler_index = p.sampler_name
+        # finished construct api payload
         js = json.dumps(api_param, default=encode_no_json)
 
         # fixme: not handle batches yet
         from modules import shared
-        if shared.opts.sd_vae and shared.opts.sd_vae != 'None':
-            if shared.opts.sd_vae == 'Automatic':
-                models['VAE'] = [models['Stable-diffusion'][0]]
-            else:
-                models['VAE'] = [shared.opts.sd_vae]
+        # we not support automatic for simplicity because the default is Automatic
+        # if user need, has to select a vae model manually in the setting page
+        if shared.opts.sd_vae and shared.opts.sd_vae not in ['None', 'Automatic']:
+            models['VAE'] = [shared.opts.sd_vae]
 
+        from modules.processing import get_fixed_seed
 
+        seed = get_fixed_seed(p.seed)
+        subseed = get_fixed_seed(p.subseed)
         p.setup_prompts()
+
+        if type(seed) == list:
+            p.all_seeds = seed
+        else:
+            p.all_seeds = [int(seed) + (x if p.subseed_strength == 0 else 0) for x in range(len(p.all_prompts))]
+
+        if type(subseed) == list:
+            p.all_subseeds = subseed
+        else:
+            p.all_subseeds = [int(subseed) + x for x in range(len(p.all_prompts))]
+
+        p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
         p.prompts = p.all_prompts
         p.negative_prompts = p.all_negative_prompts
         p.seeds = p.all_seeds
@@ -400,16 +416,17 @@ class SageMakerUI(scripts.Script):
                 infotexts=[],
             )
 
-            if p.scripts is not None:
-                p.scripts.postprocess(p, processed)
-
             # self.current_inference_id = None
-            from modules import processing
-            processing.process_images_inner = self.hijacked_images_inner
+            if not self.default_images_inner:
+                default_processing = importlib.import_module("modules.processing")
+                self.default_images_inner = default_processing.process_images_inner
 
+            if self.default_images_inner:
+                processing.process_images_inner = self.default_images_inner
             return processed
 
-        self.hijacked_images_inner = processing.process_images_inner
+        default_processing = importlib.import_module("modules.processing")
+        self.default_images_inner = default_processing.process_images_inner
         processing.process_images_inner = process_image_inner_hijack
 
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -421,14 +438,17 @@ class SageMakerUI(scripts.Script):
     def process(self, p, *args):
         pass
 
-    def _process_args_by_plugin(self, script_name, arg):
-        processors = {'controlnet': self._controlnet_args}
+    def _process_args_by_plugin(self, script_name, arg, current_index, args):
+        processors = {
+            'controlnet': self._controlnet_args,
+            'x/y/z plot': self._xyz_args,
+        }
         models = {}
         if script_name not in processors:
             return arg, models
 
         f = processors[script_name]
-        mdls = f(script_name, arg)
+        mdls = f(script_name, arg, current_index, args)
         for key, val in mdls.items():
             if not val:
                 continue
@@ -440,7 +460,25 @@ class SageMakerUI(scripts.Script):
 
         return arg, models
 
-    def _controlnet_args(self, script_name, arg) -> Dict[str, List[str]]:
+    def _xyz_args(self, script_name, arg, current_index, args) -> Dict[str, List[str]]:
+        if script_name != 'x/y/z plot':
+            return {}
+
+        if not arg or type(arg) is not list:
+            return {}
+
+        # 10 represent the checkpoint_name option for both img2img and txt2img
+        # ref: xyz_grid.py#L204
+        if current_index - 2 < 0 or args[current_index - 2] != 10:
+            return {}
+
+        models = [' '.join(md.split()[:-1]) for md in arg]
+        for _id, val in enumerate(models):
+            args[current_index][_id] = val
+
+        return {'Stable-diffusion': models}
+
+    def _controlnet_args(self, script_name, arg, *_) -> Dict[str, List[str]]:
         if script_name != 'controlnet' or not arg.enabled:
             return {}
 
@@ -792,93 +830,26 @@ def on_ui_tabs():
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
                 with gr.Accordion("Upload Model to S3", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
-                    exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
-                    root_path = os.getcwd()
-                    model_folders = {
-                        "ckpt": os.path.join(root_path, "models", "Stable-diffusion"),
-                        "text": os.path.join(root_path, "embeddings"),
-                        "lora": os.path.join(root_path, "models", "Lora"),
-                        "control": os.path.join(root_path, "models", "ControlNet"),
-                        "hyper": os.path.join(root_path, "models", "hypernetworks"),
-                    }
-
-                    def scan_sd_ckpt():
-                        model_files = os.listdir(model_folders["ckpt"])
-                        # filter non-model files not in exts
-                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                        model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
-                        return model_files
-
-                    def scan_textural_inversion_model():
-                        model_files = os.listdir(model_folders["text"])
-                        # filter non-model files not in exts
-                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                        model_files = [os.path.join(model_folders["text"], f) for f in model_files]
-                        return model_files
-
-                    def scan_lora_model():
-                        model_files = os.listdir(model_folders["lora"])
-                        # filter non-model files not in exts
-                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                        model_files = [os.path.join(model_folders["lora"], f) for f in model_files]
-                        return model_files
-
-                    def scan_control_model():
-                        model_files = os.listdir(model_folders["control"])
-                        # filter non-model files not in exts
-                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                        model_files = [os.path.join(model_folders["control"], f) for f in model_files]
-                        return model_files
-
-                    def scan_hypernetwork_model():
-                        model_files = os.listdir(model_folders["hyper"])
-                        # filter non-model files not in exts
-                        model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                        model_files = [os.path.join(model_folders["hyper"], f) for f in model_files]
-                        return model_files
-
                     with FormRow(elem_id="model_upload_form_row_01"):
-                        sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()),
-                                                          elem_id="sd_ckpt_dropdown")
-                        create_refresh_button(sd_checkpoints_path, scan_sd_ckpt,
-                                              lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
-
-                        textual_inversion_path = gr.Dropdown(label="Textual Inversion",
-                                                             choices=sorted(scan_textural_inversion_model()),
-                                                             elem_id="textual_inversion_model_dropdown")
-                        create_refresh_button(textual_inversion_path, scan_textural_inversion_model,
-                                              lambda: {"choices": sorted(scan_textural_inversion_model())},
-                                              "refresh_textual_inversion_model")
+                        model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_type_ele_id")
+                        model_type_hiden_text = gr.Textbox(elem_id="model_type_value_ele_id", visible=False)
+                        def change_model_type_value(model_type: str):
+                            model_type_hiden_text.value = model_type
+                            return model_type
+                        model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
+                                                    inputs=[model_type_drop_down], outputs=model_type_hiden_text)
+                        file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)"></div></div>')
                     with FormRow(elem_id="model_upload_form_row_02"):
-                        lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()),
-                                                elem_id="lora_model_dropdown")
-                        create_refresh_button(lora_path, scan_lora_model,
-                                              lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model", )
-
-                        controlnet_model_path = gr.Dropdown(label="ControlNet model",
-                                                            choices=sorted(scan_control_model()),
-                                                            elem_id="controlnet_model_dropdown")
-                        create_refresh_button(controlnet_model_path, scan_control_model,
-                                              lambda: {"choices": sorted(scan_control_model())},
-                                              "refresh_controlnet_models")
+                        hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_form_row_03"):
-                        hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),
-                                                        elem_id="hyper_model_dropdown")
-                        create_refresh_button(hypernetwork_path, scan_hypernetwork_model,
-                                              lambda: {"choices": sorted(scan_hypernetwork_model())},
-                                              "refresh_hyper_models")
-
+                        upload_label = gr.HTML(label="upload process", elem_id="progress-bar")
                     with gr.Row():
-                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                        elem_id="sagemaker_model_update_button", size=(200, 50))
-                        model_update_button.click(_js="model_update",
+                        model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button", size=(200, 50))
+                        model_update_button.click(_js="uploadFiles",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
-                                                  inputs=[sd_checkpoints_path, textual_inversion_path, lora_path,
-                                                          hypernetwork_path, controlnet_model_path],
-                                                  outputs=[test_connection_result, sd_checkpoints_path,
-                                                           textual_inversion_path, lora_path, hypernetwork_path,
-                                                           controlnet_model_path])
-
+                                                  # inputs=[sagemaker_ui.checkpoint_info],
+                                                  # outputs=[upload_label]
+                                                  )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
                     default_table = """
