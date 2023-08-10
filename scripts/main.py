@@ -828,7 +828,7 @@ def on_ui_tabs():
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-                with gr.Accordion("Upload Model to S3 from WebUI path", open=False):
+                with gr.Accordion("Upload Model to S3 from WebUI", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
                     root_path = os.getcwd()
@@ -893,7 +893,7 @@ def on_ui_tabs():
                                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path],
                                                   outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path])
 
-                with gr.Accordion("Upload Model to S3 from Local Path", open=False):
+                with gr.Accordion("Upload Model to S3 from Laptop", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_local_form_row_01"):
                         model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_type_ele_id")
