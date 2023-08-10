@@ -858,7 +858,7 @@ def on_ui_tabs():
                             return model_type
                         model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
                                                     inputs=[model_type_drop_down], outputs=model_type_hiden_text)
-                        file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)"></div></div>')
+                        file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)" style="width:100%"></div></div>')
                     with FormRow(elem_id="model_upload_form_row_02"):
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_form_row_03"):
@@ -868,7 +868,7 @@ def on_ui_tabs():
                         model_update_button_local.click(_js="uploadFiles",
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3_local,
                                                   # inputs=[sagemaker_ui.checkpoint_info],
-                                                  # outputs=[upload_label]
+                                                  outputs=[upload_label]
                                                   )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
