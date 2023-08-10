@@ -603,7 +603,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
     logging.info(f"Refresh checkpoints after upload...")
     refresh_all_models()
-    return log, None, None, None, None, None
+    return log, None, None, None, None, None, None
 
 
 def sagemaker_upload_model_s3_local():
