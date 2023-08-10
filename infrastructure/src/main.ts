@@ -4,9 +4,14 @@ import {
   CompositeECRRepositoryAspect,
 } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
-import { ECR_IMAGE_TAG } from './common/dockerImageTag';
+import { LambdaCommonLayer } from './shared/common-layer';
+import { Database } from './shared/database';
+import { RestApiGateway } from './shared/rest-api-gateway';
+import { S3BucketStore } from './shared/s3-bucket';
+import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
 
@@ -35,7 +40,7 @@ export class Middleware extends Stack {
     const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
-      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'], // todo: add more
+      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
       // API Key value should be at least 20 characters
       default: 'ml.r5.large',
     });
@@ -54,35 +59,57 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
-    const trainStack = new SdTrainDeployStack(this, 'SdDreamBoothTrainStack', {
+    const ddbTables = new Database(this, 'sd-ddb');
+
+    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+    const api_train_path = 'train-api/train';
+    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+      'model',
+      'models',
+      'checkpoint',
+      'checkpoints',
+      'train',
+      'trains',
+      'dataset',
+      'datasets',
+      'inference',
+      'inference-api',
+      api_train_path,
+    ]);
+
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3');
+    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+
+
+    new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
+      routers: restApi.routers,
       // env: devEnv,
+      s3_bucket: s3BucketStore.s3Bucket,
+      training_table: ddbTables.trainingTable,
+      snsTopic: snsTopics.snsTopic,
+      ecr_image_tag: ecrImageTagParam.valueAsString,
+      sd_inference_job_table: ddbTables.inferenceJobTable,
+      sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
+      checkpointTable: ddbTables.checkPointTable,
+      commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
-      emailParam: emailParam,
-      apiKey: apiKeyParam.valueAsString,
-      modelInfInstancetype: utilInstanceType.valueAsString,
-      ecr_image_tag: ecrImageTagParam.valueAsString, 
     });
 
-    const inferenceStack = new SDAsyncInferenceStack(
-      this,
-      'SdAsyncInferenceStack-dev',
-            <SDAsyncInferenceStackProps>{
-              // env: devEnv,
-              api_gate_way: trainStack.apiGateway,
-              s3_bucket: trainStack.s3Bucket,
-              training_table: trainStack.trainingTable,
-              snsTopic: trainStack.snsTopic,
-              synthesizer: props.synthesizer,
-              default_endpoint_name: trainStack.default_endpoint_name,
-              ecr_image_tag: ecrImageTagParam.valueAsString, 
-            },
-    );
-
-    inferenceStack.addDependency(trainStack);
+    new SdTrainDeployStack(this, 'SdDBTrainStack', {
+      commonLayer: commonLayers.commonLayer,
+      // env: devEnv,
+      synthesizer: props.synthesizer,
+      modelInfInstancetype: utilInstanceType.valueAsString,
+      ecr_image_tag: ecrImageTagParam.valueAsString,
+      database: ddbTables,
+      routers: restApi.routers,
+      s3Bucket: s3BucketStore.s3Bucket,
+      snsTopic: snsTopics.snsTopic,
+    });
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {
-      value: trainStack.apiGateway.url,
+      value: restApi.apiGateway.url,
       description: 'API Gateway URL',
     });
 
@@ -92,12 +119,12 @@ export class Middleware extends Stack {
     });
 
     new CfnOutput(this, 'S3BucketName', {
-      value: trainStack.s3Bucket.bucketName,
+      value: s3BucketStore.s3Bucket.bucketName,
       description: 'S3 Bucket Name',
     });
 
     new CfnOutput(this, 'SNSTopicName', {
-      value: trainStack.snsTopic.topicName,
+      value: snsTopics.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
     });
   }

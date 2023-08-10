@@ -2,9 +2,11 @@
 
 # Usage: ./pre-flight_check.sh -p to do the pre-flight check for WebUI -s to auto sync the repo and plugin to compatible commit id
 
-INITIAL_SUPPORT_COMMIT_ROOT="394ffa7b0a7fff3ec484bcd084e673a8b301ccc8"
-INITIAL_SUPPORT_COMMIT_CONTROLNET="2785cbe61a61c137d4e980752771f6329b03612a"
-INITIAL_SUPPORT_COMMIT_DREAMBOOTH="dc413a14379b165355502d9f65856c40a4bb5b6f"
+INITIAL_SUPPORT_COMMIT_ROOT=68f336bd994bed5442ad95bad6b6ad5564a5409a
+INITIAL_SUPPORT_COMMIT_CONTROLNET=efda6ddfd82ebafc6e1150fbb7e1f27163482a82
+INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
+INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
+INITIAL_SUPPORT_COMMIT_SAM=5df716be8445e0f358f6e8d4b65a87cc611bfe08
 
 # built the initial support commit list from option or default value if not provided
 INITIAL_SUPPORT_COMMIT_LIST=(
@@ -16,15 +18,22 @@ INITIAL_SUPPORT_COMMIT_LIST=(
 REPO_URL_LIST=(
     "https://github.com/Mikubill/sd-webui-controlnet.git"
     "https://github.com/d8ahazard/sd_dreambooth_extension.git"
+    "https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git"
+    "https://github.com/continue-revolution/sd-webui-segment-anything.git"
 )
 
 REPO_FOLDER_LIST=(
     "sd-webui-controlnet"
     "sd_dreambooth_extension"
+    "stable-diffusion-webui-rembg"
+    "sd-webui-segment-anything"
 )
 
 show_help() {
-    echo "Usage: $(basename "$0") -p/--pre-flight -s/--version-sync"
+    echo "Usage: $(basename "$0") [options]
+        -h/--help: to show this help;\n
+        -p/--pre-flight: to check version compatibility;\n
+        -s/--version-sync: to sync the repo and plugin to compatible commit id";
 }
 
 # Function to get supported commit list
@@ -117,44 +126,69 @@ version_sync() {
 
     # check if the extension folder is empty otherwise return directly
     if [ "$(ls -A ../../extensions)" ]; then
-        echo "The extension folder is not empty, please make sure it is empty before running this script."
+        echo "The extension folder is not empty, continue to sync the version will overwrite the existing files."
         # confirm to proceed
-        # read -p "Do you want to proceed? (y/n) " -n 1 -r
-        # echo
-        # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        #     echo "Exiting..."
-        #     exit 1
-        # fi
+        read -p "Do you want to proceed? (y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Exiting..."
+            exit 1
+        fi
     fi
 
     cd ../../
     # Reset to specific commit
+    git checkout master
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 
     # Go to "extensions" directory
     cd extensions
 
-    # Clone stable-diffusion-aws-extension
-    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-
+    # Clone stable-diffusion-aws-extension if not exist
+    if [ ! -d "stable-diffusion-aws-extension" ]; then
+        git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
+    fi
     # Checkout aigc branch
     cd stable-diffusion-aws-extension
     cd ..
 
-    # Clone sd-webui-controlnet
-    git clone https://github.com/Mikubill/sd-webui-controlnet.git
-
+    # Clone sd-webui-controlnet if not exist
+    if [ ! -d "sd-webui-controlnet" ]; then
+        git clone https://github.com/Mikubill/sd-webui-controlnet.git
+    fi
     # Go to sd-webui-controlnet directory and reset to specific commit
     cd sd-webui-controlnet
+    git checkout main
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_CONTROLNET}
     cd ..
 
-    # Clone sd_dreambooth_extension
-    git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
-
+    # Clone sd_dreambooth_extension if not exist
+    if [ ! -d "sd_dreambooth_extension" ]; then
+        git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
+    fi
     # Go to sd_dreambooth_extension directory and reset to specific commit
     cd sd_dreambooth_extension
+    git checkout main
+    git pull
     git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
+    cd ..
+
+    # Clone stable-diffusion-webui-rembg
+    git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git
+
+    # Go to stable-diffusion-webui-rembg directory and reset to specific commit
+    cd stable-diffusion-webui-rembg
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
+    cd ..
+
+    # Clone sd-webui-segment-anything
+    git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
+
+    # Go to sd-webui-segment-anything directory and reset to specific commit
+    cd sd-webui-segment-anything
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
     cd ..
 }
 

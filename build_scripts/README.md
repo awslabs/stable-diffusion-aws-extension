@@ -1,13 +1,12 @@
 # Version control for stable-diffusion-aws-extension
 
-Update time: 20230703
+Update time: 20230727
 
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
-| stable-diffusion-webui|1.4.0|20230627|394ffa7b0a7fff3ec484bcd084e673a8b301ccc8|
-| sd-webui-controlnet | v1.1.227|20230703| 2785cbe61a61c137d4e980752771f6329b03612a|
-| sd_dreambooth_extension | 1.0.14| 20230606| dc413a14379b165355502d9f65856c40a4bb5b6f|
-
+| stable-diffusion-webui|1.5.1|20230727|68f336bd994bed5442ad95bad6b6ad5564a5409a|
+| sd-webui-controlnet | v1.1.233|20230727|efda6ddfd82ebafc6e1150fbb7e1f27163482a82|
+| sd_dreambooth_extension | 1.0.14| 20230708| c2a5617c587b812b5a408143ddfb18fc49234edf|
 # How to play with /stable-diffusion-webui
 
 ```

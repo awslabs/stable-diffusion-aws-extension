@@ -18,9 +18,14 @@ def lambda_handler(event, context):
     print(f"event is {event}")
 
     endpoint_deployment_id = event["endpoint_deployment_id"][:7]
+    endpoint_name_from_request = event["endpoint_name"]
     sagemaker_model_name = f"infer-model-{endpoint_deployment_id}"
     sagemaker_endpoint_config = f"infer-config-{endpoint_deployment_id}"
-    sagemaker_endpoint_name = f"infer-endpoint-{endpoint_deployment_id}"
+
+    if not endpoint_name_from_request.strip():
+        sagemaker_endpoint_name = f"infer-endpoint-{endpoint_deployment_id}"
+    else:
+        sagemaker_endpoint_name = endpoint_name_from_request
 
     image_url = INFERENCE_ECR_IMAGE_URL 
     model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
