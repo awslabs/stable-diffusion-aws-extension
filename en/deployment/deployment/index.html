@@ -17,7 +17,7 @@
         <link rel="next" href="../../uninstall/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
     
     
       
@@ -25,7 +25,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
       
 
@@ -608,8 +608,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui" class="md-nav__link">
-    Step 1: Deploy Stable Diffusion WebUI.
+  <a href="#step-1-deploy-stable-diffusion-webui-linux" class="md-nav__link">
+    Step 1: Deploy Stable Diffusion WebUI (Linux).
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-deploy-stable-diffusion-webui-windows" class="md-nav__link">
+    Step 1: Deploy Stable Diffusion WebUI (Windows).
   </a>
   
 </li>
@@ -938,8 +945,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui" class="md-nav__link">
-    Step 1: Deploy Stable Diffusion WebUI.
+  <a href="#step-1-deploy-stable-diffusion-webui-linux" class="md-nav__link">
+    Step 1: Deploy Stable Diffusion WebUI (Linux).
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-1-deploy-stable-diffusion-webui-windows" class="md-nav__link">
+    Step 1: Deploy Stable Diffusion WebUI (Windows).
   </a>
   
 </li>
@@ -995,7 +1009,7 @@
 <li>Step 3: Configure API url and API token.</li>
 </ul>
 <h2 id="deployment-steps">Deployment steps</h2>
-<h3 id="step-1-deploy-stable-diffusion-webui">Step 1: Deploy Stable Diffusion WebUI.</h3>
+<h3 id="step-1-deploy-stable-diffusion-webui-linux">Step 1: Deploy Stable Diffusion WebUI (Linux).</h3>
 <ol>
 <li>
 <p>Download the CloudFormation Template from <a href="https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml">link</a></p>
@@ -1024,6 +1038,16 @@
 <li>
 <p>Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the <strong>WebUIURL</strong> value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.</p>
 </li>
+</ol>
+<h3 id="step-1-deploy-stable-diffusion-webui-windows">Step 1: Deploy Stable Diffusion WebUI (Windows).</h3>
+<ol>
+<li>Start a Windows Server and log in via RDP.</li>
+<li>Refer to <a href="https://docs.aws.amazon.com/en_us/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html">this link</a> to install the NVIDIA driver.</li>
+<li>Visit the <a href="https://www.python.org/downloads/release/python-3106/">Python website</a>, download Python, and install it. Remember to check "Add Python to Path" during installation.</li>
+<li>Visit the <a href="https://git-scm.com/download/win">Git website</a>, download Git, and install it.</li>
+<li>Open PowerShell and download the source code of this project by executing: <code>git clone https://github.com/awslabs/stable-diffusion-aws-extension</code>.</li>
+<li>Inside the source code directory, run <code>install.bat</code>.</li>
+<li>In the downloaded <code>stable-diffusion-webui</code> folder, run <code>webui-user.bat</code>.</li>
 </ol>
 <h3 id="step-2-deploy-the-solution-as-a-middleware">Step 2: Deploy the solution as a middleware.</h3>
 <p>This automated AWS CloudFormation template deploys the solution in the AWS Cloud.</p>

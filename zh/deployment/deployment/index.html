@@ -19,7 +19,7 @@
         <link rel="next" href="../../uninstall/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
+      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.26e3688c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
       
 
@@ -610,8 +610,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1stable-diffusion-webui" class="md-nav__link">
-    步骤1：部署Stable Diffusion WebUI。
+  <a href="#1stable-diffusion-webui-linux" class="md-nav__link">
+    步骤1：部署Stable Diffusion WebUI (Linux)。
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1stable-diffusion-webui-windows" class="md-nav__link">
+    步骤1：部署Stable Diffusion WebUI (Windows)。
   </a>
   
 </li>
@@ -940,8 +947,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1stable-diffusion-webui" class="md-nav__link">
-    步骤1：部署Stable Diffusion WebUI。
+  <a href="#1stable-diffusion-webui-linux" class="md-nav__link">
+    步骤1：部署Stable Diffusion WebUI (Linux)。
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1stable-diffusion-webui-windows" class="md-nav__link">
+    步骤1：部署Stable Diffusion WebUI (Windows)。
   </a>
   
 </li>
@@ -1000,7 +1014,7 @@
 <!-- - 步骤2：在您的现有Stable Diffusion WebUI上安装插件Stable Diffusion AWS Extension。 -->
 
 <h2 id="_3">部署步骤</h2>
-<h3 id="1stable-diffusion-webui">步骤1：部署Stable Diffusion WebUI。</h3>
+<h3 id="1stable-diffusion-webui-linux">步骤1：部署Stable Diffusion WebUI (Linux)。</h3>
 <ol>
 <li>
 <p>从<a href="https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml">链接</a>下载CloudFormation模板。</p>
@@ -1029,6 +1043,16 @@
 <li>
 <p>查找CloudFormation堆栈的输出值，并通过单击<strong>WebUIURL</strong>值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。</p>
 </li>
+</ol>
+<h3 id="1stable-diffusion-webui-windows">步骤1：部署Stable Diffusion WebUI (Windows)。</h3>
+<ol>
+<li>启动一台Windows Server，通过RDP登陆。</li>
+<li>参考<a href="https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html">链接</a>安装NVIDIA驱动程序。</li>
+<li>访问<a href="https://www.python.org/downloads/release/python-3106/">Python网站</a>，下载Python并安装，记得要选上 Add Python to Path。</li>
+<li>访问<a href="https://git-scm.com/download/win">Git网站</a>，下载Git并安装。</li>
+<li>打开PowerShell，下载本方案源码（git clone https://github.com/awslabs/stable-diffusion-aws-extension）。</li>
+<li>在源码中，执行 install.bat。</li>
+<li>在下载的stable-diffusion-webui文件夹中，执行webui-user.bat。</li>
 </ol>
 <h3 id="2">步骤2：部署本解决方案中间件。</h3>
 <p>此自动化Amazon CloudFormation模板在亚马逊云科技中部署解决方案。</p>
