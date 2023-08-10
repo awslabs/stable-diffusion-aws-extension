@@ -93,12 +93,13 @@ function showFileName(event) {
             const fileName = uploadedFile.name;
             const fileSize = uploadedFile.size;
             const fileType = uploadedFile.type;
-            const fileItemDiv = document.createElement("div");
+            const fileItemDiv = document.createElement("tr");
             fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
             deleteButton.style.backgroundColor = "#E5E5E5";
             deleteButton.style.border = "1px solid black";
             deleteButton.style.borderRadius = "2px";
+            deleteButton.style.float = "right";
             deleteButton.textContent = "DELETE";
             deleteButton.addEventListener("click", () => {
                 map.delete(key);
@@ -479,6 +480,15 @@ function get_time_button_value(){
     const selectedStartDate = dateStartInput.value;
     dateStartInput.setAttribute("value",selectedStartDate)
     const dateEndInput = document.querySelector("#end_timepicker_text");
+    const selectedEndDate = dateEndInput.value;
+    return [selectedStartDate,selectedEndDate]
+}
+
+function get_time_img_value(){
+    const dateStartInput = document.querySelector("#start_timepicker_img");
+    const selectedStartDate = dateStartInput.value;
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_img");
     const selectedEndDate = dateEndInput.value;
     return [selectedStartDate,selectedEndDate]
 }
