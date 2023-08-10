@@ -845,7 +845,7 @@ def on_ui_tabs():
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
                         model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
                         return model_files
-                    def scan_textural_inversion_model():
+                    def scan_textual_inversion_model():
                         model_files = os.listdir(model_folders["text"])
                         # filter non-model files not in exts
                         model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
@@ -874,8 +874,8 @@ def on_ui_tabs():
                         sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()), elem_id="sd_ckpt_dropdown")
                         create_refresh_button(sd_checkpoints_path, scan_sd_ckpt, lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
 
-                        textual_inversion_path = gr.Dropdown(label="Textual Inversion", choices=sorted(scan_textural_inversion_model()),elem_id="textual_inversion_model_dropdown")
-                        create_refresh_button(textual_inversion_path, scan_textural_inversion_model, lambda: {"choices": sorted(scan_textural_inversion_model())},  "refresh_textual_inversion_model")
+                        textual_inversion_path = gr.Dropdown(label="Textual Inversion", choices=sorted(scan_textual_inversion_model()),elem_id="textual_inversion_model_dropdown")
+                        create_refresh_button(textual_inversion_path, scan_textual_inversion_model, lambda: {"choices": sorted(scan_textual_inversion_model())},  "refresh_textual_inversion_model")
                     with FormRow(elem_id="model_upload_form_row_02"):
                         lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()), elem_id="lora_model_dropdown")
                         create_refresh_button(lora_path, scan_lora_model, lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model",)
