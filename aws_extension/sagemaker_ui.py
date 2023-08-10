@@ -51,8 +51,8 @@ ControlNet_model_list = []
 
 # Initial checkpoints information
 checkpoint_info = {}
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet"]
-checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet"]
+checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
+checkpoint_name = ["stable_diffusion", "embeddings", "lora", "hypernetworks", "controlnet", "VAE"]
 stable_diffusion_list = []
 embeddings_list = []
 lora_list = []
@@ -495,10 +495,10 @@ def refresh_all_models():
         print(f"Error refresh all models: {e}")
 
 
-def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
+def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path):
     log = "start upload model to s3:"
 
-    local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path]
+    local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path]
 
     print(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
     refresh_all_models()
