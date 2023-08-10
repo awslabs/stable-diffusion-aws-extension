@@ -31,25 +31,17 @@ class PrepareEvent:
     filters: dict[str, Any]
 
 
-def validate_task_type(task_type):
-    if task_type not in ['txt2img', 'img2img']:
-        return {
-            'status': 400,
-            'err': f'task type {task_type} should be either txt2img or img2img'
-        }
-    return None
-
-
-
 # POST /v2/inference
 def prepare_inference(raw_event, context):
     request_id = context.aws_request_id
     event = PrepareEvent(**raw_event)
     _type = event.task_type
 
-    validation_result = validate_task_type(event.task_type)
-    if validation_result:
-        return validation_result
+    if _type not in ['txt2img', 'img2img']:
+        return {
+            'status': 400,
+            'err': f'task type {event.task_type} should be either txt2img or img2img'
+        }
 
     # check if endpoint table for endpoint status and existence
     # fixme: endpoint is not indexed by name, and this is very expensive query
@@ -281,4 +273,3 @@ def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoin
 
 def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
     return f'{_type}/infer_v2/{request_id}'
-
