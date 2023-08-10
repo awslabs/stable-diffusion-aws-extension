@@ -10,7 +10,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3
+from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from inference_v2._types import InferenceJob, InvocationsRequest
 from model_and_train._types import CheckPoint
 
@@ -219,12 +219,7 @@ def inference_l2(raw_event, context):
         }
 
     s3_location = prepare_resp['inference']['api_params_s3_location']
-    bucket_and_key = s3_location.replace("s3://", "").split("/", 1)
-    if len(bucket_and_key) > 1:
-        s3_file_key = bucket_and_key[1]
-    else:
-        # compose S3 key if fail to get it from response
-        s3_file_key = f'{get_base_inference_param_s3_key(task_type, request_id)}/api_param.json'
+    bucket, s3_file_key = split_s3_path(s3_location)
     
     # merge the parameters with template
     param_template = load_json_from_s3(bucket_name, 'template/inferenceTemplate.json')

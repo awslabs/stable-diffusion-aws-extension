@@ -80,3 +80,11 @@ def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
         logger.info(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")
     except Exception as e:
         logger.info(f"Error uploading dictionary: {e}")
+
+
+def split_s3_path(s3_path):
+    path_parts = s3_path.replace("s3://", "").split("/")
+    bucket = path_parts.pop(0)
+    key = "/".join(path_parts)
+    return bucket, key
+
