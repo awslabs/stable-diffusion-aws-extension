@@ -484,6 +484,15 @@ function get_time_button_value(){
     return [selectedStartDate,selectedEndDate]
 }
 
+function get_time_img_value(){
+    const dateStartInput = document.querySelector("#start_timepicker_img");
+    const selectedStartDate = dateStartInput.value;
+    dateStartInput.setAttribute("value",selectedStartDate)
+    const dateEndInput = document.querySelector("#end_timepicker_img");
+    const selectedEndDate = dateEndInput.value;
+    return [selectedStartDate,selectedEndDate]
+}
+
 function inference_job_timepicker_img_change(){
     // 获取日期选择器元素
     const dateStartInput = document.querySelector("#start_timepicker_img");

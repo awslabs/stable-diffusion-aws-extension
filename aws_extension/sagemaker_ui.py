@@ -1176,11 +1176,11 @@ def create_ui(is_img2img):
                             end_time_picker_img_hidden = gr.Button(elem_id="end_time_picker_img_hidden",
                                                                    visible=True)
                         start_time_picker_img_hidden.click(fn=on_img_time_change,
-                                                           _js='get_time_button_value',
+                                                           _js='get_time_img_value',
                                                            inputs=[start_time_picker_img, end_time_picker_img],
                                                            outputs=inference_job_dropdown)
                         end_time_picker_img_hidden.click(fn=on_img_time_change,
-                                                         _js='get_time_button_value',
+                                                         _js='get_time_img_value',
                                                          inputs=[start_time_picker_img, end_time_picker_img],
                                                          outputs=inference_job_dropdown
                                                          )
