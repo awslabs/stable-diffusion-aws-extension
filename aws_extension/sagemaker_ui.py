@@ -1,5 +1,6 @@
 import copy
 import itertools
+import logging
 import os
 from pathlib import Path
 import html
@@ -494,14 +495,125 @@ def refresh_all_models():
         print(f"Error refresh all models: {e}")
 
 
-def sagemaker_upload_model_s3():
+def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
+    log = "start upload model to s3:"
+
+    local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path]
+
+    print(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
+    refresh_all_models()
+
+    for lp, rp in zip(local_paths, checkpoint_type):
+        if lp == "" or not lp:
+            continue
+        logging.info(f"lp is {lp}")
+        model_name = lp.split(os.sep)[-1]
+
+        exist_model_list = list(checkpoint_info[rp].keys())
+
+        if model_name in exist_model_list:
+            logging.info(f"!!!skip to upload duplicate model {model_name}")
+            continue
+
+        part_size = 1000 * 1024 * 1024
+        file_size = os.stat(lp)
+        parts_number = math.ceil(file_size.st_size/part_size)
+        logging.info('!!!!!!!!!!', file_size, parts_number)
+
+        #local_tar_path = f'{model_name}.tar'
+        local_tar_path = model_name
+        payload = {
+            "checkpoint_type": rp,
+            "filenames": [{
+                "filename": local_tar_path,
+                "parts_number": parts_number
+            }],
+            "params": {"message": "placeholder for chkpts upload test"}
+        }
+        api_gateway_url = get_variable_from_json('api_gateway_url')
+        # Check if api_url ends with '/', if not append it
+        if not api_gateway_url.endswith('/'):
+            api_gateway_url += '/'
+        api_key = get_variable_from_json('api_token')
+        logging.info('!!!!!!api_gateway_url', api_gateway_url)
+
+        url = str(api_gateway_url) + "checkpoint"
+
+        logging.info(f"Post request for upload s3 presign url: {url}")
+
+        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+
+        try:
+            json_response = response.json()
+            # print(f"Response json {json_response}")
+            s3_base = json_response["checkpoint"]["s3_location"]
+            checkpoint_id = json_response["checkpoint"]["id"]
+            logging.info(f"Upload to S3 {s3_base}")
+            logging.info(f"Checkpoint ID: {checkpoint_id}")
+
+            #s3_presigned_url = json_response["s3PresignUrl"][model_name]
+            s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
+            # Upload src model to S3.
+            if rp != "embeddings" :
+                local_model_path_in_repo = os.sep.join(['models', rp, model_name])
+            else:
+                local_model_path_in_repo = os.sep.join([rp, model_name])
+            #local_tar_path = f'{model_name}.tar'
+            logging.info("Pack the model file.")
+            # os.system(f"cp -f {lp} {local_model_path_in_repo}")
+            cp(lp, local_model_path_in_repo, recursive=True)
+            if rp == "Stable-diffusion":
+                model_yaml_name = model_name.split('.')[0] + ".yaml"
+                local_model_yaml_path = os.sep.join([*lp.split(os.sep)[:-1], model_yaml_name])
+                local_model_yaml_path_in_repo = os.sep.join(["models", rp, model_yaml_name])
+                if os.path.isfile(local_model_yaml_path):
+                    # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
+                    cp(local_model_yaml_path, local_model_yaml_path_in_repo, recursive=True)
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
+                else:
+                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                    tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
+            else:
+                # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
+                tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
+            #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
+            multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
+                local_tar_path,
+                s3_signed_urls_resp,
+                part_size
+            )
+
+            payload = {
+                "checkpoint_id": checkpoint_id,
+                "status": "Active",
+                "multi_parts_tags": {local_tar_path: multiparts_tags}
+            }
+            # Start creating model on cloud.
+            response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+            s3_input_path = s3_base
+            logging.info(response)
+
+            log = f"\n finish upload {local_tar_path} to {s3_base}"
+
+            # os.system(f"rm {local_tar_path}")
+            rm(local_tar_path, recursive=True)
+        except Exception as e:
+            logging.info(f"fail to upload model {lp}, error: {e}")
+
+    logging.info(f"Refresh checkpoints after upload...")
+    refresh_all_models()
+    return log, None, None, None, None, None
+
+
+def sagemaker_upload_model_s3_local():
     log = "Start upload:"
     return log
 
 
 def generate_on_cloud(sagemaker_endpoint):
-    print(f"checkpiont_info {checkpoint_info}")
-    print(f"sagemaker endpoint {sagemaker_endpoint}")
+    logging.info(f"checkpiont_info {checkpoint_info}")
+    logging.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
@@ -517,7 +629,7 @@ def async_loop_wrapper(f):
     if loop.is_running():
         # Calculate the number of running tasks
         while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
-            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            logging.info(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
             time.sleep(1)
     else:
         # check if loop is closed and create a new one
@@ -525,7 +637,7 @@ def async_loop_wrapper(f):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             # log this event since it should never happen
-            print('Event loop was closed, created a new one')
+            logging.info('Event loop was closed, created a new one')
 
     # Add new task to the event loop
     result = loop.run_until_complete(f())
@@ -537,7 +649,7 @@ def async_loop_wrapper_with_input(sagemaker_endpoint, type):
     if loop.is_running():
         # Calculate the number of running tasks
         while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
-            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            logging.info(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
             time.sleep(1)
     else:
         # check if loop is closed and create a new one
@@ -545,7 +657,7 @@ def async_loop_wrapper_with_input(sagemaker_endpoint, type):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             # log this event since it should never happen
-            print('Event loop was closed, created a new one')
+            logging.info('Event loop was closed, created a new one')
 
     # Add new task to the event loop
     result = loop.run_until_complete(call_remote_inference(sagemaker_endpoint, type))
@@ -564,8 +676,8 @@ def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_wi
     return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_deepbooru')
 
 async def call_remote_inference(sagemaker_endpoint, type):
-    print(f"chosen ep {sagemaker_endpoint}")
-    print(f"inference type is {type}")
+    logging.info(f"chosen ep {sagemaker_endpoint}")
+    logging.info(f"inference type is {type}")
 
     if sagemaker_endpoint == '':
         image_list = []  # Return an empty list if selected_value is None
@@ -600,22 +712,22 @@ async def call_remote_inference(sagemaker_endpoint, type):
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
     payload['task_type'] = type
-    print(f"checkpointinfo is {payload}")
+    logging.info(f"checkpointinfo is {payload}")
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
-    print(f"Raw server response: {response.text}")
+    logging.info(f"Raw server response: {response.text}")
     try:
         r = response.json()
     except JSONDecodeError as e:
-        print(f"Failed to decode JSON response: {e}")
-        print(f"Raw server response: {response.text}")
+        logging.info(f"Failed to decode JSON response: {e}")
+        logging.info(f"Raw server response: {response.text}")
     else:
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
         try:
             return process_result_by_inference_id(inference_id)
         except Exception as e:
-            print(f"Failed to get inference job {inference_id}, error: {e}")
+            logging.info(f"Failed to get inference job {inference_id}, error: {e}")
 
 
 def process_result_by_inference_id(inference_id):
@@ -659,7 +771,7 @@ def process_result_by_inference_id(inference_id):
                         info_text = log_file["info"]
                         infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
                 else:
-                    print(f"File {json_file} does not exist.")
+                    logging.info(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
                     infotexts = info_text
                 return image_list, info_text, plaintext_to_html(infotexts)
@@ -667,17 +779,17 @@ def process_result_by_inference_id(inference_id):
             return image_list, info_text, plaintext_to_html(infotexts)
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
-    print(f"start delete sagemaker endpoint delete function")
-    print(f"delete endpoint list: {delete_endpoint_list}")
+    logging.info(f"start delete sagemaker endpoint delete function")
+    logging.info(f"delete endpoint list: {delete_endpoint_list}")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
     delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
-    print(f"delete endpoint list: {delete_endpoint_list}")
+    logging.info(f"delete endpoint list: {delete_endpoint_list}")
 
     # check if api_gateway_url and api_key are set
     if api_gateway_url is None or api_key is None:
-        print("api_gateway_url and api_key are not set")
+        logging.info("api_gateway_url and api_key are not set")
         return
 
     # Check if api_url ends with '/', if not append it
@@ -698,7 +810,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
     try:
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
         return r
     except Exception as e:
         return f"Failed to delete sagemaker endpoint with exception: {e}"
@@ -713,14 +825,14 @@ def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_coun
         (None)
     """
     # function code to call sagemaker deploy api
-    print(f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
+    logging.info(f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
 
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
     # check if api_gateway_url and api_key are set
     if api_gateway_url is None or api_key is None:
-        print("api_gateway_url and api_key are not set")
+        logging.info("api_gateway_url and api_key are not set")
         return
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
@@ -743,13 +855,13 @@ def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_coun
     try:
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
         return "Endpoint deployment started"
     except Exception as e:
         return f"Failed to start endpoint deployment with exception: {e}"
 
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
-    print(f"function under development, current checkpoint_info is {checkpoint_info}")
+    logging.info(f"function under development, current checkpoint_info is {checkpoint_info}")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
@@ -757,7 +869,7 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     api_key = get_variable_from_json('api_token')
 
     if api_gateway_url is None:
-        print(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
+        logging.info(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
         return []
     modelmerge_url = f"{api_gateway_url}inference/run-model-merge"
 
@@ -777,17 +889,17 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     try:
         r = response.json()
     except JSONDecodeError as e:
-        print(f"Failed to decode JSON response: {e}")
-        print(f"Raw server response: {response.text}")
+        logging.info(f"Failed to decode JSON response: {e}")
+        logging.info(f"Raw server response: {response.text}")
     else:
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
 
 # def txt2img_config_save():
 #     # placeholder for saving txt2img config
 #     pass
 
 def displayEndpointInfo(input_string: str):
-    print(f"selected value is {input_string}")
+    logging.info(f"selected value is {input_string}")
     if not input_string:
         return
     parts = input_string.split('+')
@@ -818,9 +930,9 @@ def update_txt2imgPrompt_from_Lora(selected_items, txt2img_prompt):
     return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'Lora', True)
 
 def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings', with_angle_brackets=False):
-    print(selected_items) #example ['FastNegativeV2.pt']
-    print(txt2img_prompt)
-    print(get_model_list_by_type('embeddings'))
+    logging.info(selected_items) #example ['FastNegativeV2.pt']
+    logging.info(txt2img_prompt)
+    logging.info(get_model_list_by_type('embeddings'))
     full_dropdown_items = get_model_list_by_type(model_name) #example ['FastNegativeV2.pt', 'okuryl3nko.pt']
 
     # Remove extensions from selected_items and full_dropdown_items
@@ -853,8 +965,8 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
 
 
 def fake_gan(selected_value, original_prompt):
-    print(f"selected value is {selected_value}")
-    print(f"original prompt is {original_prompt}")
+    logging.info(f"selected value is {selected_value}")
+    logging.info(f"original prompt is {original_prompt}")
     if selected_value is not None:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
@@ -880,20 +992,20 @@ def fake_gan(selected_value, original_prompt):
                 image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
                 json_list = download_images(inference_pram_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
                 json_file = f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            print(f"{str(images)}")
-            print(f"{str(inference_pram_json_list)}")
+            logging.info(f"{str(images)}")
+            logging.info(f"{str(inference_pram_json_list)}")
             if os.path.isfile(json_file):
                 with open(json_file) as f:
                     log_file = json.load(f)
                     info_text = log_file["info"]
                     infotexts = json.loads(info_text)["infotexts"][0]
             else:
-                print(f"File {json_file} does not exist.")
+                logging.info(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
                 infotexts = 'something wrong when trying to download the inference parameters'
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             job_status = get_inference_job(inference_job_id)
-            print(job_status)
+            logging.info(job_status)
             caption = job_status['caption']
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
@@ -909,7 +1021,7 @@ def fake_gan(selected_value, original_prompt):
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 def display_inference_result(inference_id: str ):
-    print(f"selected value is {inference_id}")
+    logging.info(f"selected value is {inference_id}")
     if inference_id is not None:
         # Extract the InferenceJobId value
         inference_job_id = inference_id
@@ -921,8 +1033,8 @@ def display_inference_result(inference_id: str ):
         json_list = []
         json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
+        logging.info(f"{str(images)}")
+        logging.info(f"{str(inference_pram_json_list)}")
 
         json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
@@ -941,7 +1053,7 @@ def display_inference_result(inference_id: str ):
     return image_list, info_text, plaintext_to_html(infotexts)
 
 def init_refresh_resource_list_from_cloud():
-    print(f"start refreshing resource list from cloud")
+    logging.info(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         update_sagemaker_endpoints()
         refresh_all_models()
@@ -951,11 +1063,11 @@ def init_refresh_resource_list_from_cloud():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,")
+        logging.info(f"there is no api-gateway url and token in local file,")
 
 
 def on_txt_time_change(start_time, end_time):
-    print(f"!!!!!!!!!on_txt_time_change!!!!!!{start_time},{end_time}")
+    logging.info(f"!!!!!!!!!on_txt_time_change!!!!!!{start_time},{end_time}")
     global start_time_picker_txt_value
     global end_time_picker_txt_value
     start_time_picker_txt_value = start_time
@@ -964,7 +1076,7 @@ def on_txt_time_change(start_time, end_time):
 
 
 def on_img_time_change(start_time, end_time):
-    print(f"!!!!!!!!!on_img_time_change!!!!!!{start_time},{end_time}")
+    logging.info(f"!!!!!!!!!on_img_time_change!!!!!!{start_time},{end_time}")
     global start_time_picker_img_value
     global end_time_picker_img_value
     start_time_picker_img_value = start_time
@@ -1019,7 +1131,7 @@ def create_ui(is_img2img):
                                                      elem_id="txt2img_inference_job_ids_dropdown"
                                                      )
                 txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids, "value": None}, "refresh_txt2img_inference_job_ids")
-                # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
+                # logging.info(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
 
             # with gr.Row():
             #     with gr.Column(scale=1):
@@ -1065,11 +1177,11 @@ def create_ui(is_img2img):
                             end_time_picker_img_hidden = gr.Button(elem_id="end_time_picker_img_hidden",
                                                                    visible=True)
                         start_time_picker_img_hidden.click(fn=on_img_time_change,
-                                                           _js='get_time_button_value',
+                                                           _js='get_time_img_value',
                                                            inputs=[start_time_picker_img, end_time_picker_img],
                                                            outputs=inference_job_dropdown)
                         end_time_picker_img_hidden.click(fn=on_img_time_change,
-                                                         _js='get_time_button_value',
+                                                         _js='get_time_img_value',
                                                          inputs=[start_time_picker_img, end_time_picker_img],
                                                          outputs=inference_job_dropdown
                                                          )
