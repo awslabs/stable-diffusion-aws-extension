@@ -87,7 +87,7 @@ Resources:
           cd stable-diffusion-webui/extensions
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
           cd stable-diffusion-aws-extension/
-          ./pre-flight.sh -s            
+          ./pre-flight.sh -f     
           cd ..
           sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
           cd ..
