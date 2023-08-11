@@ -962,21 +962,28 @@
 <h1 id="main-tab">Main Tab</h1>
 <p>This chapter will provide a detailed overview of the convenient cloud-based resource management approach offered by this solution.</p>
 <h2 id="upload-model">Upload Model</h2>
-<p>To use extra models for inference, you will need to upload model through steps below, and follow steps in <a href="../txt2img-guide/">txt2img</a> or <a href="../img2img-guide/">img2img</a>to inference with extra models as need.</p>
-<ol>
-<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
-<img alt="Upload Models to S3" src="../../images/Upload-models.png" /></li>
-<li>
-<p>Enter the local model path under corresponding model text box. </p>
+<p>To use extra models for inference, you could upload model through steps below in two ways, and follow steps in <a href="../txt2img-guide/">txt2img</a> or <a href="../img2img-guide/">img2img</a>to inference with extra models as need.</p>
+<p>Method One:
+1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
+<img alt="Upload Models to S3" src="../../images/Upload-models-old.png" />
+2. Select the Upload Model to S3 from WebUI drop-down box, which means to upload the model from the models file path where the WebUI service is deployed.
+3. Enter the model path where the WebUI service is deployed under corresponding model text box.</p>
 <blockquote>
-<p><strong>Note</strong>: You can upload multiple kinds of models by entering multiple local model paths in text box.</p>
+<p><strong>Note</strong>: You can upload multiple kinds of models by entering multiple local model paths in text box.
+4. Click <strong>Upload Models to Cloud</strong> to start uploading process.
+5.Message will appear on left right once uploading completes.</p>
 </blockquote>
-</li>
-<li>
-<p>Click <strong>Upload Models to Cloud</strong> to start uploading process.</p>
-</li>
-<li>Message will appear on left right once uploading completes.</li>
-</ol>
+<p>Method Two:
+1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
+<img alt="Upload Models to S3" src="../../images/Upload-models-new.png" />
+2. Select the Upload Model to S3 from Laptop drop-down box, which means to upload the model from the local path to access the WebUI.
+3. Select the type of model to upload, currently supports six types: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
+3. Select the model file to be uploaded locally.</p>
+<blockquote>
+<p><strong>Note</strong>: You can select models multiple, but subject to browser restrictions, it is best to select no more than 10 files, and the total size should not exceed 8g.
+4. Click <strong>Upload Models to Cloud</strong> to start uploading process.
+5. The upload will be uploaded in pieces asynchronously based on the file size and quantity. After each piece is uploaded, you will see a prompt under the <strong>Choose File</strong> button</p>
+</blockquote>
 <h2 id="amazon-sagemaker-endpoint-management">Amazon SageMaker Endpoint Management</h2>
 <h3 id="deploy-new-endpoint">Deploy new endpoint</h3>
 <ol>
