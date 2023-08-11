@@ -10,7 +10,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.util import generate_presign_url
+from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from inference_v2._types import InferenceJob, InvocationsRequest
 from model_and_train._types import CheckPoint
 
@@ -187,6 +187,61 @@ def run_inference(event, _):
             'status': inference_job.status,
             'endpoint_name': endpoint_name,
             'output_path': output_path
+        }
+    }
+
+
+# POST /inference-api
+def inference_l2(raw_event, context):
+    request_id = context.aws_request_id
+    if 'task_type' not in raw_event or 'sagemaker_endpoint_name' not in raw_event or 'models' not in raw_event:
+        return {
+            'status': 400,
+            'err': f'task_type, sagemaker_endpoint_name, models should be in the request body'
+        }
+    task_type = raw_event['task_type']
+    ep_name = raw_event['sagemaker_endpoint_name']
+
+    prepare_infer_event = {
+        'sagemaker_endpoint_name': raw_event['sagemaker_endpoint_name'],
+        'task_type': task_type,
+        'models': raw_event['models'],
+        'filters': {
+            'creator': 'l2api'
+        }
+    }
+    prepare_resp = prepare_inference(prepare_infer_event, context)
+
+    if 'inference' not in prepare_resp or 'api_params_s3_location' not in prepare_resp['inference']:
+        return {
+            'status': 500,
+            'err': f'fail to prepare inference for {request_id}, no s3 location is generated'
+        }
+
+    s3_location = prepare_resp['inference']['api_params_s3_location']
+    bucket, s3_file_key = split_s3_path(s3_location)
+    
+    # merge the parameters with template
+    param_template = load_json_from_s3(bucket_name, 'template/inferenceTemplate.json')
+    merged_param = {**param_template, **raw_event}
+    upload_json_to_s3(bucket_name, s3_file_key, merged_param)
+
+    run_infer_resp = run_inference({
+        'pathStringParameters': {
+            'inference_id': request_id
+        }
+    }, context)  
+    
+    return {
+        'status': 200,
+        'inference': {
+            'inference_id': request_id,
+            'status': run_infer_resp['inference']['status'],
+            'output_path': run_infer_resp['inference']['output_path'],
+            'models': prepare_resp['inference']['models'],
+            'api_params_s3_location': s3_location,
+            'type': task_type,
+            'endpoint_name': ep_name
         }
     }
 
