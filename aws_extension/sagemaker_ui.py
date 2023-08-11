@@ -1,5 +1,6 @@
 import copy
 import itertools
+import logging
 import os
 from pathlib import Path
 import html
@@ -63,10 +64,43 @@ for ckpt_type, ckpt_name in zip(checkpoint_type, checkpoint_name):
 api_gateway_url = get_variable_from_json('api_gateway_url')
 api_key = get_variable_from_json('api_token')
 
+start_time_picker_img_value = None
+end_time_picker_img_value = None
+start_time_picker_txt_value = None
+end_time_picker_txt_value = None
+
+txt_task_type = None
+txt_status = None
+txt_endpoint = None
+txt_checkpoint = None
+
+img_task_type = None
+img_status = None
+img_endpoint = None
+img_checkpoint = None
+
+show_all_inference_job = False
+
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
+
+
+def server_request_post(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.post(list_endpoint_url, json=params, headers=headers)
+    return response
+
 
 def get_s3_file_names(bucket, folder):
     """Get a list of file names from an S3 bucket and folder."""
@@ -146,7 +180,121 @@ def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkb
 
 def origin_update_txt2img_inference_job_ids():
     # global origin_txt2img_inference_job_ids
-    return get_inference_job_list(True, True, True)
+    return query_inference_job_list('', '', '', '', '')
+
+
+def query_page_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, is_img2img: bool, show_all: bool):
+    global show_all_inference_job
+    show_all_inference_job = show_all
+    if is_img2img:
+        global img_task_type
+        img_task_type = task_type
+        global img_status
+        img_status = status
+        global img_endpoint
+        img_endpoint = endpoint
+        global img_checkpoint
+        img_checkpoint = checkpoint
+        opt_type = 'img2img'
+        print(f"{opt_type} {img_task_type} {img_status} {img_endpoint} {img_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+    else:
+        global txt_task_type
+        txt_task_type = task_type
+        global txt_status
+        txt_status = txt_status
+        global txt_endpoint
+        txt_endpoint = endpoint
+        global txt_checkpoint
+        txt_checkpoint = checkpoint
+        opt_type = 'txt2img'
+        print(f"{opt_type} {txt_task_type} {txt_status} {txt_endpoint} {txt_checkpoint} {show_all}")
+        return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_img_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str):
+    opt_type = 'img2img'
+    global img_task_type
+    img_task_type = task_type
+    global img_status
+    img_status = status
+    global img_endpoint
+    img_endpoint = endpoint
+    global img_checkpoint
+    img_checkpoint = checkpoint
+    return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_txt_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str):
+    opt_type = 'txt2img'
+    global txt_task_type
+    txt_task_type = task_type
+    global txt_status
+    txt_status = status
+    global txt_endpoint
+    txt_endpoint = endpoint
+    global txt_checkpoint
+    txt_checkpoint = checkpoint
+
+    return query_inference_job_list(task_type, status, endpoint, checkpoint, opt_type)
+
+
+def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, opt_type: str):
+    print(
+        f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
+    try:
+        body_params = {}
+        if status:
+            body_params['status'] = status
+        if task_type:
+            body_params['task_type'] = task_type
+        if opt_type == 'txt2img':
+            if start_time_picker_txt_value:
+                body_params['start_time'] = start_time_picker_txt_value
+            if end_time_picker_txt_value:
+                body_params['end_time'] = end_time_picker_txt_value
+        elif opt_type == 'img2img':
+            if start_time_picker_img_value:
+                body_params['start_time'] = start_time_picker_img_value
+            if end_time_picker_img_value:
+                body_params['end_time'] = end_time_picker_img_value
+        if endpoint:
+            endpoint_name_array = endpoint.split("+")
+            if len(endpoint_name_array) > 0:
+                body_params['endpoint'] = endpoint_name_array[0]
+        if checkpoint:
+            body_params['checkpoint'] = checkpoint
+        body_params['limit'] = -1 if show_all_inference_job else 10
+        response = server_request_post(f'inference/query-inference-jobs', body_params)
+        r = response.json()
+        print(r)
+        if r:
+            txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
+            temp_list = []
+            for obj in r:
+                if obj.get('completeTime') is None:
+                    complete_time = obj.get('startTime')
+                else:
+                    complete_time = obj.get('completeTime')
+                status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
+                inference_job_id = obj.get('InferenceJobId')
+                combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
+                temp_list.append((complete_time, combined_string))
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+            # Append the sorted combined strings to the txt2img_inference_job_ids list
+            for item in sorted_list:
+                txt2img_inference_job_ids.append(item[1])
+            # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
+            return gr.Dropdown.update(choices=txt2img_inference_job_ids)
+        else:
+            print("The API response is empty.")
+            return gr.Dropdown.update(choices=[])
+    except Exception as e:
+        print("Exception occurred when fetching inference_job_ids")
+        print(e)
+        return gr.Dropdown.update(choices=[])
 
 
 def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
@@ -346,30 +494,31 @@ def refresh_all_models():
     except Exception as e:
         print(f"Error refresh all models: {e}")
 
+
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path):
-    log = "start upload model to s3..."
+    log = "start upload model to s3:"
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path]
 
-    print(f"Refresh checkpionts before upload to get rid of duplicate uploads...")
+    print(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
     refresh_all_models()
 
     for lp, rp in zip(local_paths, checkpoint_type):
         if lp == "" or not lp:
             continue
-        print(f"lp is {lp}")
+        logging.info(f"lp is {lp}")
         model_name = lp.split(os.sep)[-1]
 
         exist_model_list = list(checkpoint_info[rp].keys())
 
         if model_name in exist_model_list:
-            print(f"!!!skip to upload duplicate model {model_name}")
+            logging.info(f"!!!skip to upload duplicate model {model_name}")
             continue
 
         part_size = 1000 * 1024 * 1024
         file_size = os.stat(lp)
         parts_number = math.ceil(file_size.st_size/part_size)
-        print('!!!!!!!!!!', file_size, parts_number)
+        logging.info('!!!!!!!!!!', file_size, parts_number)
 
         #local_tar_path = f'{model_name}.tar'
         local_tar_path = model_name
@@ -386,11 +535,11 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         if not api_gateway_url.endswith('/'):
             api_gateway_url += '/'
         api_key = get_variable_from_json('api_token')
-        print('!!!!!!api_gateway_url', api_gateway_url)
+        logging.info('!!!!!!api_gateway_url', api_gateway_url)
 
         url = str(api_gateway_url) + "checkpoint"
 
-        print(f"Post request for upload s3 presign url: {url}")
+        logging.info(f"Post request for upload s3 presign url: {url}")
 
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
@@ -399,8 +548,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             # print(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
-            print(f"Upload to S3 {s3_base}")
-            print(f"Checkpoint ID: {checkpoint_id}")
+            logging.info(f"Upload to S3 {s3_base}")
+            logging.info(f"Checkpoint ID: {checkpoint_id}")
 
             #s3_presigned_url = json_response["s3PresignUrl"][model_name]
             s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
@@ -410,7 +559,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             else:
                 local_model_path_in_repo = os.sep.join([rp, model_name])
             #local_tar_path = f'{model_name}.tar'
-            print("Pack the model file.")
+            logging.info("Pack the model file.")
             # os.system(f"cp -f {lp} {local_model_path_in_repo}")
             cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
@@ -443,23 +592,28 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             # Start creating model on cloud.
             response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
             s3_input_path = s3_base
-            print(response)
+            logging.info(response)
 
             log = f"\n finish upload {local_tar_path} to {s3_base}"
 
             # os.system(f"rm {local_tar_path}")
             rm(local_tar_path, recursive=True)
         except Exception as e:
-            print(f"fail to upload model {lp}, error: {e}")
+            logging.info(f"fail to upload model {lp}, error: {e}")
 
-    print(f"Refresh checkpionts after upload...")
+    logging.info(f"Refresh checkpoints after upload...")
     refresh_all_models()
-
     return log, None, None, None, None, None
 
+
+def sagemaker_upload_model_s3_local():
+    log = "Start upload:"
+    return log
+
+
 def generate_on_cloud(sagemaker_endpoint):
-    print(f"checkpiont_info {checkpoint_info}")
-    print(f"sagemaker endpoint {sagemaker_endpoint}")
+    logging.info(f"checkpiont_info {checkpoint_info}")
+    logging.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
 
@@ -475,7 +629,7 @@ def async_loop_wrapper(f):
     if loop.is_running():
         # Calculate the number of running tasks
         while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
-            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            logging.info(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
             time.sleep(1)
     else:
         # check if loop is closed and create a new one
@@ -483,7 +637,7 @@ def async_loop_wrapper(f):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             # log this event since it should never happen
-            print('Event loop was closed, created a new one')
+            logging.info('Event loop was closed, created a new one')
 
     # Add new task to the event loop
     result = loop.run_until_complete(f())
@@ -495,7 +649,7 @@ def async_loop_wrapper_with_input(sagemaker_endpoint, type):
     if loop.is_running():
         # Calculate the number of running tasks
         while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
-            print(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
+            logging.info(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
             time.sleep(1)
     else:
         # check if loop is closed and create a new one
@@ -503,7 +657,7 @@ def async_loop_wrapper_with_input(sagemaker_endpoint, type):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             # log this event since it should never happen
-            print('Event loop was closed, created a new one')
+            logging.info('Event loop was closed, created a new one')
 
     # Add new task to the event loop
     result = loop.run_until_complete(call_remote_inference(sagemaker_endpoint, type))
@@ -522,8 +676,8 @@ def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_wi
     return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_deepbooru')
 
 async def call_remote_inference(sagemaker_endpoint, type):
-    print(f"chosen ep {sagemaker_endpoint}")
-    print(f"inference type is {type}")
+    logging.info(f"chosen ep {sagemaker_endpoint}")
+    logging.info(f"inference type is {type}")
 
     if sagemaker_endpoint == '':
         image_list = []  # Return an empty list if selected_value is None
@@ -558,22 +712,22 @@ async def call_remote_inference(sagemaker_endpoint, type):
     checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
     payload = checkpoint_info
     payload['task_type'] = type
-    print(f"checkpointinfo is {payload}")
+    logging.info(f"checkpointinfo is {payload}")
 
     inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
     response = requests.post(inference_url, json=payload, headers=headers)
-    print(f"Raw server response: {response.text}")
+    logging.info(f"Raw server response: {response.text}")
     try:
         r = response.json()
     except JSONDecodeError as e:
-        print(f"Failed to decode JSON response: {e}")
-        print(f"Raw server response: {response.text}")
+        logging.info(f"Failed to decode JSON response: {e}")
+        logging.info(f"Raw server response: {response.text}")
     else:
         inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
         try:
             return process_result_by_inference_id(inference_id)
         except Exception as e:
-            print(f"Failed to get inference job {inference_id}, error: {e}")
+            logging.info(f"Failed to get inference job {inference_id}, error: {e}")
 
 
 def process_result_by_inference_id(inference_id):
@@ -617,7 +771,7 @@ def process_result_by_inference_id(inference_id):
                         info_text = log_file["info"]
                         infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
                 else:
-                    print(f"File {json_file} does not exist.")
+                    logging.info(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
                     infotexts = info_text
                 return image_list, info_text, plaintext_to_html(infotexts)
@@ -625,17 +779,17 @@ def process_result_by_inference_id(inference_id):
             return image_list, info_text, plaintext_to_html(infotexts)
 
 def sagemaker_endpoint_delete(delete_endpoint_list):
-    print(f"start delete sagemaker endpoint delete function")
-    print(f"delete endpoint list: {delete_endpoint_list}")
+    logging.info(f"start delete sagemaker endpoint delete function")
+    logging.info(f"delete endpoint list: {delete_endpoint_list}")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
     delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
-    print(f"delete endpoint list: {delete_endpoint_list}")
+    logging.info(f"delete endpoint list: {delete_endpoint_list}")
 
     # check if api_gateway_url and api_key are set
     if api_gateway_url is None or api_key is None:
-        print("api_gateway_url and api_key are not set")
+        logging.info("api_gateway_url and api_key are not set")
         return
 
     # Check if api_url ends with '/', if not append it
@@ -656,7 +810,7 @@ def sagemaker_endpoint_delete(delete_endpoint_list):
     try:
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
         return r
     except Exception as e:
         return f"Failed to delete sagemaker endpoint with exception: {e}"
@@ -671,14 +825,14 @@ def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_coun
         (None)
     """
     # function code to call sagemaker deploy api
-    print(f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
+    logging.info(f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
 
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
     # check if api_gateway_url and api_key are set
     if api_gateway_url is None or api_key is None:
-        print("api_gateway_url and api_key are not set")
+        logging.info("api_gateway_url and api_key are not set")
         return
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
@@ -701,13 +855,13 @@ def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_coun
     try:
         response = requests.post(deployment_url, json=payload, headers=headers)
         r = response.json()
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
         return "Endpoint deployment started"
     except Exception as e:
         return f"Failed to start endpoint deployment with exception: {e}"
 
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
-    print(f"function under development, current checkpoint_info is {checkpoint_info}")
+    logging.info(f"function under development, current checkpoint_info is {checkpoint_info}")
     api_gateway_url = get_variable_from_json('api_gateway_url')
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
@@ -715,7 +869,7 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     api_key = get_variable_from_json('api_token')
 
     if api_gateway_url is None:
-        print(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
+        logging.info(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
         return []
     modelmerge_url = f"{api_gateway_url}inference/run-model-merge"
 
@@ -735,17 +889,17 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
     try:
         r = response.json()
     except JSONDecodeError as e:
-        print(f"Failed to decode JSON response: {e}")
-        print(f"Raw server response: {response.text}")
+        logging.info(f"Failed to decode JSON response: {e}")
+        logging.info(f"Raw server response: {response.text}")
     else:
-        print(f"response for rest api {r}")
+        logging.info(f"response for rest api {r}")
 
 # def txt2img_config_save():
 #     # placeholder for saving txt2img config
 #     pass
 
 def displayEndpointInfo(input_string: str):
-    print(f"selected value is {input_string}")
+    logging.info(f"selected value is {input_string}")
     if not input_string:
         return
     parts = input_string.split('+')
@@ -776,9 +930,9 @@ def update_txt2imgPrompt_from_Lora(selected_items, txt2img_prompt):
     return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'Lora', True)
 
 def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings', with_angle_brackets=False):
-    print(selected_items) #example ['FastNegativeV2.pt']
-    print(txt2img_prompt)
-    print(get_model_list_by_type('embeddings'))
+    logging.info(selected_items) #example ['FastNegativeV2.pt']
+    logging.info(txt2img_prompt)
+    logging.info(get_model_list_by_type('embeddings'))
     full_dropdown_items = get_model_list_by_type(model_name) #example ['FastNegativeV2.pt', 'okuryl3nko.pt']
 
     # Remove extensions from selected_items and full_dropdown_items
@@ -811,8 +965,8 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
 
 
 def fake_gan(selected_value, original_prompt):
-    print(f"selected value is {selected_value}")
-    print(f"original prompt is {original_prompt}")
+    logging.info(f"selected value is {selected_value}")
+    logging.info(f"original prompt is {original_prompt}")
     if selected_value is not None:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
@@ -838,20 +992,20 @@ def fake_gan(selected_value, original_prompt):
                 image_list = download_images(images,f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
                 json_list = download_images(inference_pram_json_list, f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
                 json_file = f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            print(f"{str(images)}")
-            print(f"{str(inference_pram_json_list)}")
+            logging.info(f"{str(images)}")
+            logging.info(f"{str(inference_pram_json_list)}")
             if os.path.isfile(json_file):
                 with open(json_file) as f:
                     log_file = json.load(f)
                     info_text = log_file["info"]
                     infotexts = json.loads(info_text)["infotexts"][0]
             else:
-                print(f"File {json_file} does not exist.")
+                logging.info(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
                 infotexts = 'something wrong when trying to download the inference parameters'
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             job_status = get_inference_job(inference_job_id)
-            print(job_status)
+            logging.info(job_status)
             caption = job_status['caption']
             prompt_txt = caption
             image_list = []  # Return an empty list if selected_value is None
@@ -867,7 +1021,7 @@ def fake_gan(selected_value, original_prompt):
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 def display_inference_result(inference_id: str ):
-    print(f"selected value is {inference_id}")
+    logging.info(f"selected value is {inference_id}")
     if inference_id is not None:
         # Extract the InferenceJobId value
         inference_job_id = inference_id
@@ -879,8 +1033,8 @@ def display_inference_result(inference_id: str ):
         json_list = []
         json_list = download_images(inference_pram_json_list, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
 
-        print(f"{str(images)}")
-        print(f"{str(inference_pram_json_list)}")
+        logging.info(f"{str(images)}")
+        logging.info(f"{str(inference_pram_json_list)}")
 
         json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
 
@@ -899,7 +1053,7 @@ def display_inference_result(inference_id: str ):
     return image_list, info_text, plaintext_to_html(infotexts)
 
 def init_refresh_resource_list_from_cloud():
-    print(f"start refreshing resource list from cloud")
+    logging.info(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         update_sagemaker_endpoints()
         refresh_all_models()
@@ -909,7 +1063,26 @@ def init_refresh_resource_list_from_cloud():
         get_controlnet_model_list()
         get_inference_job_list()
     else:
-        print(f"there is no api-gateway url and token in local file,")
+        logging.info(f"there is no api-gateway url and token in local file,")
+
+
+def on_txt_time_change(start_time, end_time):
+    logging.info(f"!!!!!!!!!on_txt_time_change!!!!!!{start_time},{end_time}")
+    global start_time_picker_txt_value
+    global end_time_picker_txt_value
+    start_time_picker_txt_value = start_time
+    end_time_picker_txt_value = end_time
+    return query_inference_job_list(txt_task_type, txt_status, txt_endpoint, txt_checkpoint, "txt2img")
+
+
+def on_img_time_change(start_time, end_time):
+    logging.info(f"!!!!!!!!!on_img_time_change!!!!!!{start_time},{end_time}")
+    global start_time_picker_img_value
+    global end_time_picker_img_value
+    start_time_picker_img_value = start_time
+    end_time_picker_img_value = end_time
+    return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
+
 
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
@@ -957,21 +1130,131 @@ def create_ui(is_img2img):
                                                      label="Inference Job: Time-Type-Status-Uuid",
                                                      elem_id="txt2img_inference_job_ids_dropdown"
                                                      )
-                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids}, "refresh_txt2img_inference_job_ids")
-                # print(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
+                txt2img_inference_job_ids_refresh_button = modules.ui.create_refresh_button(inference_job_dropdown, origin_update_txt2img_inference_job_ids, lambda: {"choices": txt2img_inference_job_ids, "value": None}, "refresh_txt2img_inference_job_ids")
+                # logging.info(f"gr.Row() txt2img_inference_job_ids is {txt2img_inference_job_ids}")
 
+            # with gr.Row():
+            #     with gr.Column(scale=1):
+            #         gr.HTML(value="Inference Job type filters")
+            #     with gr.Column(scale=4):
+            #         with gr.Row():
+            #             txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
+            #             img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
+            #             interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
+            #
+            #     txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+            #     img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+            #     interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
             with gr.Row():
+                inference_job_filter = gr.Checkbox(
+                    label="Advanced Inference Job filter", value=False, visible=True
+                )
+                inference_job_page = gr.Checkbox(label="Show All(unchecked: max 10 items)",
+                                                 elem_id="inference_job_page_checkbox", value=False)
+            with gr.Row(variant='panel', visible=False) as filter_row:
                 with gr.Column(scale=1):
                     gr.HTML(value="Inference Job type filters")
-                with gr.Column(scale=4):
+                with gr.Column(scale=2):
                     with gr.Row():
-                        txt2img_type_checkbox = gr.Checkbox(label="txt2img_type", value=True, elem_id="txt2img_type_checkbox")
-                        img2img_type_checkbox = gr.Checkbox(label="img2img_type", value=True, elem_id="img2img_type_checkbox")
-                        interrogate_type_checkbox = gr.Checkbox(label="interrogate_type", value=True, elem_id="interrogate_type_checkbox")
+                        task_type_choices = ["txt2img", "img2img", "interrogate_clip", "interrogate_deepbooru"]
+                        task_type_dropdown = gr.Dropdown(label="Task Type", choices=task_type_choices, elem_id="task_type_ids_dropdown")
+                        status_choices = ["succeed", "inprogress", "failed"]
+                        status_dropdown = gr.Dropdown(label="Status", choices=status_choices, elem_id="task_status_dropdown")
+                    with gr.Row():
+                        sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint", elem_id="sagemaker_endpoint_dropdown" )
+                        modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints, lambda: {"choices": sagemaker_endpoints}, "refresh_sagemaker_endpoints")
+                    with gr.Row():
+                        sd_checkpoint_filter = gr.Dropdown(label="Checkpoint", choices=sorted(update_sd_checkpoints()), elem_id="stable_diffusion_checkpoint_dropdown")
+                        modules.ui.create_refresh_button(sd_checkpoint_filter, update_sd_checkpoints, lambda: { "choices": sorted(update_sd_checkpoints())}, "refresh_sd_checkpoints")
+                    if is_img2img:
+                        with gr.Row():
+                            start_time_picker_img = gr.HTML(elem_id="start_timepicker_img_e",
+                                                            value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                            end_time_picker_img = gr.HTML(elem_id="end_timepicker_img_e",
+                                                          value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_img" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_img_change()"></span>')
+                            start_time_picker_img_hidden = gr.Button(elem_id="start_time_picker_img_hidden",
+                                                                     visible=True)
+                            end_time_picker_img_hidden = gr.Button(elem_id="end_time_picker_img_hidden",
+                                                                   visible=True)
+                        start_time_picker_img_hidden.click(fn=on_img_time_change,
+                                                           _js='get_time_img_value',
+                                                           inputs=[start_time_picker_img, end_time_picker_img],
+                                                           outputs=inference_job_dropdown)
+                        end_time_picker_img_hidden.click(fn=on_img_time_change,
+                                                         _js='get_time_img_value',
+                                                         inputs=[start_time_picker_img, end_time_picker_img],
+                                                         outputs=inference_job_dropdown
+                                                         )
+                        task_type_dropdown.change(fn=query_img_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown,
+                                                          sagemaker_endpoint_filter,
+                                                          sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_img_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown, sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_img_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown,
+                                                                 sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_img_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown,
+                                                            sagemaker_endpoint_filter,
+                                                            sd_checkpoint_filter], outputs=inference_job_dropdown)
+                    else:
+                        with gr.Row():
+                            start_time_picker_text = gr.HTML(elem_id="start_timepicker_text_e",
+                                                             value='<span class="svelte-1ed2p3z" style="color: #6B7280">Start Time<input type="date" lang="en" id="start_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                            end_time_picker_text = gr.HTML(elem_id="end_timepicker_text_e",
+                                                           value='<span class="svelte-1ed2p3z" style="color: #6B7280">End Time<input type="date" lang="en" id="end_timepicker_text" min="2023-01-01" max="2033-12-31" class="wrap svelte-aqlk7e" style="color: #6B7280" onchange="inference_job_timepicker_text_change()"></span>')
+                            start_time_picker_button_hidden = gr.Button(elem_id="start_time_picker_button_hidden",
+                                                                        visible=False)
+                            end_time_picker_button_hidden = gr.Button(elem_id="end_time_picker_button_hidden",
+                                                                      visible=False)
+                        start_time_picker_button_hidden.click(fn=on_txt_time_change,
+                                                              _js='get_time_button_value',
+                                                              inputs=[start_time_picker_text, end_time_picker_text],
+                                                              outputs=inference_job_dropdown)
+                        end_time_picker_button_hidden.click(fn=on_txt_time_change,
+                                                            _js='get_time_button_value',
+                                                            inputs=[start_time_picker_text, end_time_picker_text],
+                                                            outputs=inference_job_dropdown)
+                        task_type_dropdown.change(fn=query_txt_inference_job_list,
+                                                  inputs=[task_type_dropdown, status_dropdown,
+                                                          sagemaker_endpoint_filter, sd_checkpoint_filter],
+                                                  outputs=inference_job_dropdown)
+                        status_dropdown.change(fn=query_txt_inference_job_list,
+                                               inputs=[task_type_dropdown, status_dropdown,
+                                                       sagemaker_endpoint_filter,
+                                                       sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sagemaker_endpoint_filter.change(fn=query_txt_inference_job_list,
+                                                         inputs=[task_type_dropdown, status_dropdown,
+                                                                 sagemaker_endpoint_filter,
+                                                                 sd_checkpoint_filter], outputs=inference_job_dropdown)
+                        sd_checkpoint_filter.change(fn=query_txt_inference_job_list,
+                                                    inputs=[task_type_dropdown, status_dropdown,
+                                                            sagemaker_endpoint_filter, sd_checkpoint_filter],
+                                                    outputs=inference_job_dropdown)
 
-                txt2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                img2img_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
-                interrogate_type_checkbox.change(update_txt2img_inference_job_ids, inputs=[inference_job_dropdown, txt2img_type_checkbox, img2img_type_checkbox, interrogate_type_checkbox], outputs=inference_job_dropdown)
+                    def toggle_new_rows(create_from):
+                        global start_time_picker_txt_value
+                        start_time_picker_txt_value = None
+                        global end_time_picker_txt_value
+                        end_time_picker_txt_value = None
+                        return [gr.update(visible=create_from), None, None, None, None]
+
+                    inference_job_filter.change(
+                        fn=toggle_new_rows,
+                        inputs=[inference_job_filter],
+                        outputs=[filter_row, task_type_dropdown, status_dropdown, sagemaker_endpoint_filter,
+                                 sd_checkpoint_filter],
+                    )
+                    hidden_check_type = gr.Textbox(elem_id="hidden_check_type", value=is_img2img, visible=False)
+                    inference_job_page.change(fn=query_page_inference_job_list,
+                                              inputs=[task_type_dropdown, status_dropdown,
+                                                      sagemaker_endpoint_filter,
+                                                      sd_checkpoint_filter, hidden_check_type,
+                                                      inference_job_page],
+                                              outputs=inference_job_dropdown)
 
             # with gr.Row():
             #     gr.HTML(value="Extra Networks for Cloud Inference")
