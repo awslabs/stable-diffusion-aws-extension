@@ -1,14 +1,27 @@
 本章节将详细介绍本解决方案提供的便捷云上资源管理方式。
 
 ## 上传训练模型
-如需在txt2img或img2img使用非云端推理模型，您只需按下列步骤完成推理模型上传，即可按[txt2img](./txt2img-guide.md)或[img2img](./img2img-guide.md)相应步骤完成模型调用及推理。
+如需在txt2img或img2img使用非云端推理模型，您可以选择按下列两种方式的步骤完成推理模型上传，即可按[txt2img](./txt2img-guide.md)或[img2img](./img2img-guide.md)相应步骤完成模型调用及推理。
 
+方式一：
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块。
-![Upload Models to S3](../images/Upload-models.png)
-2. 在对应的模型输入本地文件地址。
-3. 点击**Upload Models to Cloud**，启动模型上传。
-4. 上传完成后，会在左侧**Label**看到提示。
+2. 选择Upload Model to S3 from WebUI下拉框, 该方式表示从部署WebUI服务的models文件路径上传模型。
+![Upload Models to S3](../images/Upload-models-old.png)
+3. 在对应的模型输入部署WebUI服务的models文件路径地址。
+> **提示**: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。
+4. 点击**Upload Models to Cloud**，启动模型上传。
+5. 上传完成后，会在左侧**Label**看到提示。
 
+
+方式二：
+1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块。
+2. 选择Upload Model to S3 from Laptop, 该方式表示从访问WebUI的本地路径上传模型。
+![Upload Models to S3](../images/Upload-models-new.png)
+3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
+4. 本地选择要上传的模型文件。
+> **提示**: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。
+5. 点击**Upload Models to Cloud**，启动模型上传。
+6. 上传会依据文件大小与数量异步分片上传，各分片上传完成后，会在**选择文件**按钮下看到提示。
 
 ## Amazon SageMaker推理节点管理
 

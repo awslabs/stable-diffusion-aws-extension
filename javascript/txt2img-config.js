@@ -130,7 +130,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
         // 更新进度条的宽度或显示上传百分比
         // progressDiv.style.width = `${progress}%`;
         // progressDiv.innerText = `${groupName}-${fileName}: ${progress.toFixed(2)}%`;
-        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part+1}: finished`;
+        progressDiv.innerText = `${groupName}-${fileName}: total: ${total} parts, part${part}: finished`;
         progressBar.appendChild(progressDiv)
     }
 }
@@ -177,7 +177,8 @@ function uploadFileToS3(files, groupName) {
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
-                return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
+                // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
+                return uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey);
             })).then(results => {
                  console.log(results);
             }).catch(error => {
@@ -244,6 +245,12 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                         throw new Error("Chunk upload failed");
                     }
                     const etag = response.headers.get('ETag');
+                    console.log(etag)
+                    const headersObject = {};
+                    response.headers.forEach((value, name) => {
+                      headersObject[name] = value;
+                    });
+                    console.log(headersObject)
                     parts.push({
                         ETag: etag,
                         PartNumber: currentChunk + 1
