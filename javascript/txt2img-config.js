@@ -37,10 +37,23 @@ window.onload = function() {
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 
+function clearFileInput() {
+    var fileInput = document.getElementById('file-uploader');
+    var newFileInput = document.createElement('input');
+    newFileInput.type = 'file';
+    newFileInput.id = 'file-uploader';
+    newFileInput.className = 'lg secondary gradio-button svelte-1ipelgc';
+    newFileInput.multiple = true;
+    newFileInput.style.width = '100%';
+    newFileInput.onchange = showFileName;
+    fileInput.parentNode.replaceChild(newFileInput, fileInput);
+}
+
 function getModelTypeValue(dropdowm_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
     typeDom.value = dropdowm_value
-    return dropdowm_value
+    clearFileInput();
+    return dropdowm_value;
 }
 
 function showFileName(event) {
