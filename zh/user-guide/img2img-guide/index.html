@@ -1036,22 +1036,26 @@
 <h2 id="img2img_1">img2img的使用方法</h2>
 <h3 id="img2img_2">img2img不同标签功能的标准流程</h3>
 <ol>
-<li>进入<strong>img2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。</li>
+<li>进入<strong>img2img</strong>标签页，进入<strong>Amazon SageMaker Inference</strong>面板。</li>
 <li>
-<p>输入推理所需参数。同于本地推理，您可以按需编辑<strong>img2img</strong>原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。对于<strong>img2img</strong>，<strong>sketch</strong>，<strong>inpaint</strong>，<strong>inpaint sketch</strong>和<strong>inpaint upload</strong>，都可以按照原生方式进行图片上传和修饰。</p>
+<p>输入推理所需参数。同于本地推理，您可以按需编辑<strong>img2img</strong>原生的推理参数，包括模型(stable diffusion checkpoint, VAE, extra networks:Lora,Hypernetworks, VAE等)，提示词，负提示词，取样参数，推理参数等。对于<strong>img2img</strong>，<strong>sketch</strong>，<strong>inpaint</strong>，<strong>inpaint sketch</strong>和<strong>inpaint upload</strong>，都可以按照原生方式进行图片上传和修饰。</p>
+<div class="admonition important">
+<p class="admonition-title">提示</p>
+<p>选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理</p>
+</div>
 </li>
 <li>
-<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。</p>
+<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点, 则会触发右上角<strong>Generate</strong>按钮变为<strong>Generate on Clound</strong>。
+<img alt="Gnerate button面板" src="../../images/txt2img-generate-button.png" /></p>
 <div class="admonition important">
 <p class="admonition-title">提示</p>
 <p>此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击<strong>Generate on Cloud</strong>开启云上推理功能时会报错。</p>
 </div>
 </li>
 <li>
-<p>点击模型下拉框右侧的刷新按钮，选择推理所需的<strong>Stable Diffusion Checkpoint</strong>（必选，可多选）及其他所需的<strong>Extra Networks for Cloud Inference</strong>（可选，并且可多模型多选叠加）。</p>
+<p>参数设置完成后，点击<strong>Generate on Cloud</strong>。</p>
 </li>
-<li>点击<strong>Generate on Cloud</strong>。</li>
-<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。img2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to extras</strong>等，进行后续工作流。<blockquote>
+<li>查看推理结果。通过点击<strong>Inference Job: Time-Type-Status-Uuid</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。img2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to extras</strong>等，进行后续工作流。<blockquote>
 <p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;任务类型（txt2img/img2img/interrogate_clip/interrogate_deepbooru）-&gt;推理状态（succeed/in progress/fail） -&gt;inference id</strong>。</p>
 </blockquote>
 </li>

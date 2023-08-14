@@ -715,6 +715,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#support-multicontrolnet" class="md-nav__link">
+    Support Multicontrolnet
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#openpose-use-guide" class="md-nav__link">
     Openpose use guide
   </a>
@@ -956,6 +963,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#support-multicontrolnet" class="md-nav__link">
+    Support Multicontrolnet
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#openpose-use-guide" class="md-nav__link">
     Openpose use guide
   </a>
@@ -990,21 +1004,28 @@
 <h2 id="instructino-for-using-txt2img">Instructino for using txt2img</h2>
 <h3 id="general-inference-scenario">General Inference Scenario</h3>
 <ol>
-<li>Navigate to <strong>txt2img</strong> tab, open <strong>Amazon SageMaker Inference</strong> panel. 
-<img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
-<li>Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native <strong>txt2img</strong>, including prompts, negative prompts, sampling parameters, and inference parameters.</li>
+<li>Navigate to <strong>txt2img</strong> tab, find <strong>Amazon SageMaker Inference</strong> panel. 
+<img alt="Sagemaker Inference面板" src="../../images/txt2img-inference.png" /></li>
+<li>Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native <strong>txt2img</strong>, including model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, and inference parameters. For VAE model switch, navigate to <strong>Settings</strong> tab, select <strong>Stable Diffusion</strong> in the left panel, and then select VAE mdoel in **SD VAE (choose VAE model: Automatic = use one with same filename as checkpoint; None = use VAE from checkpoint).
+<img alt="Settings 面板" src="../../images/setting-vae.png" /></li>
+</ol>
+<p>!!! Important "Notice" 
+       The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter <strong>Cloud Assets Management</strong></p>
+<ol>
 <li>
-<p>Select an endpoint for inference. Refresh and select an endpoint from <strong>Select Cloud SageMaker Endpoint</strong> dropdown list that is in the <em>InService</em> state.</p>
+<p>Select an endpoint for inference. Refresh and select an endpoint from <strong>Select Cloud SageMaker Endpoint</strong> dropdown list that is in the <em>InService</em> state. After select one <em>InService</em> endpoint, the button <strong>Generate</strong> will change to button <strong>Generate on Clound</strong>。
+<img alt="Gnerate button面板" src="../../images/txt2img-generate-button.png" /></p>
 <div class="admonition important">
 <p class="admonition-title">Notice</p>
 <p>This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click <strong>Generate on Cloud</strong> to initiate cloud-based inference.</p>
 </div>
 </li>
 <li>
-<p>Fresh and select <strong>Stable Diffusion Checkpoint</strong> (required single select) and other extra models needed in <strong>Extra Networks for Cloud Inference</strong> (optional, multi-selection allowed).</p>
+<p>Finish setting all the paramters, and then click <strong>Generate on Cloud</strong>.</p>
 </li>
-<li>Click <strong>Generate on Cloud</strong>.</li>
-<li>Check inference result. Fresh and select the top option among <strong>Inference Job ID</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the <strong>txt2img</strong> tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to img2img</strong>.<blockquote>
+<li>
+<p>Check inference result. Fresh and select the top option among <strong>Inference Job: Time-Type-Status-Uuid</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the <strong>txt2img</strong> tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to img2img</strong>.</p>
+<blockquote>
 <p><strong>Note：</strong> The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of <em>inference time -&gt; inference id</em>.</p>
 </blockquote>
 </li>
@@ -1020,13 +1041,28 @@
 <h2 id="controlnet-guide">Controlnet Guide</h2>
 <ul>
 <li>
+<h3 id="support-multicontrolnet">Support Multicontrolnet</h3>
+</li>
+<li>
+<p>Navigate to <strong>Settings</strong> tab, select <strong>ControlNet</strong> in the left panel, and then set the number of controlNet unit in <strong>Multi ControlNet: Max models amount (requires restart)</strong>, and then restart the webui.
+<img alt="Setting-Controlnet" src="../../images/setting-multi-controlnet.png" /></p>
+</li>
+<li>
+<p>Naviaget to <strong>txt2img</strong>，if we set the number is 3, there will be 3 ControlNet Units in the <strong>ControlNet</strong> panel.
+<img alt="Setting-Controlnet" src="../../images/multi-controlnet-inference.png" /></p>
+</li>
+<li>
 <h3 id="openpose-use-guide">Openpose use guide</h3>
 </li>
-<li>Open ControlNet panel, check <strong>Enable</strong>, select <strong>openpose</strong> from <strong>Preprocessor</strong>, and then upload am image.
+<li>Open ControlNet panel, choose <strong>ControlNet Unit 0</strong>, check <strong>Enable</strong>, select <strong>openpose</strong> from <strong>Preprocessor</strong>, and then upload am image.
 <img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></li>
-<li>Open <strong>Amazon SageMaker Inference</strong>panel, select one checkpoint from <strong>Stable Diffusion Checkpoint</strong> and one model from <strong>ControlNet-Model</strong>. For example: below is the ineference based on <strong>v1-5-pruned-emaonly.safetensors</strong> and <strong>control_openpose-fp16.safetensors</strong>, prompts <strong>a cute dog</strong>, click <strong>Generate on Cloud</strong>.
-<img alt="Choose-controlnet-model" src="../../images/choose-controlnet-model.png" /></li>
-<li>Refresh and select the top Inference Job from <strong>Inference Job IDs</strong>, inference result will be displayed in <strong>Output</strong> section.</li>
+<li>Similar to local inference, you can customize the inference parameters of the native <strong>ControlNet</strong>. The controlnet model "<strong>control_openpose-fp16.safetensors</strong>" should be uploaded to the cloud before generate. </li>
+<li>
+<p>Click <strong>Generate on Cloud</strong> after finished all parameters setting.</p>
+</li>
+<li>
+<p>Refresh and select the top Inference Job from <strong>Inference Job: Time-Type-Status-Uuid</strong>, inference result will be displayed in <strong>Output</strong> section.</p>
+</li>
 </ul>
 
 

@@ -1034,20 +1034,26 @@
 <h2 id="img2img-use-guide">img2img use guide</h2>
 <h3 id="standard-process-for-different-functional-labels-in-img2img">Standard process for different functional labels in img2img</h3>
 <ol>
-<li>Navigate to tab <strong>img2img</strong>, open panel <strong>Amazon SageMaker Inference</strong>.</li>
-<li>Input parameters for inference. The same as local inferance, you could edit parameters in native fields for prompts, negative prompts, sampling parameters, inference parameters and etc. For functions <strong>img2img</strong>, <strong>sketch</strong>, <strong>inpaint</strong>, <strong>inpaint sketch</strong> and <strong>inpaint upload</strong>, you could upload and modify images in the native way.</li>
+<li>Navigate to tab <strong>img2img</strong>, find panel <strong>Amazon SageMaker Inference</strong>.</li>
 <li>
-<p>Select the inference endpoint. Click the refresh button on the right side of <strong>Select Cloud SageMaker Endpoint</strong> to choose an inference endpoint that is in the <strong>InService</strong> state.</p>
+<p>Input parameters for inference. The same as local inferance, you could edit parameters in native fields for model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, inference parameters and etc. For functions <strong>img2img</strong>, <strong>sketch</strong>, <strong>inpaint</strong>, <strong>inpaint sketch</strong> and <strong>inpaint upload</strong>, you could upload and modify images in the native way.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter <strong>Cloud Assets Management</strong></p>
+</div>
+<ol>
+<li>Select the inference endpoint. Click the refresh button on the right side of <strong>Select Cloud SageMaker Endpoint</strong> to choose an inference endpoint that is in the <strong>InService</strong> state. After select one <em>InService</em> endpoint, the button <strong>Generate</strong> will change to button <strong>Generate on Clound</strong>。
+<img alt="Gnerate button面板" src="../../images/txt2img-generate-button.png" /></li>
+</ol>
 <div class="admonition important">
 <p class="admonition-title">Notice</p>
 <p>This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click <strong>Generate on Cloud</strong> to initiate cloud-based inference.</p>
 </div>
 </li>
 <li>
-<p>Fresh and select <strong>Stable Diffusion Checkpoint</strong> (required single select) and other extra models needed in <strong>Extra Networks for Cloud Inference</strong> (optional, multi-selection allowed).</p>
+<p>Click<strong>Generate on Cloud</strong>。</p>
 </li>
-<li>Click<strong>Generate on Cloud</strong>。</li>
-<li>Check inference result. Fresh and select the top option among <strong>Inference Job ID</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the img2img tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to extras</strong>.<blockquote>
+<li>Check inference result. Fresh and select the top option among <strong>Inference Job: Time-Type-Status-Uuid</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the img2img tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to extras</strong>.<blockquote>
 <p><strong>Note:</strong> The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of <strong>inference time -&gt; job type(txt2img/img2img/interrogate_clip/interrogate_deepbooru) -&gt; inference status(succeed/in progress/fail) -&gt;inference id</strong>.</p>
 </blockquote>
 </li>

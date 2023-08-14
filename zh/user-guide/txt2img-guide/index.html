@@ -717,6 +717,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controlnet_1" class="md-nav__link">
+    支持多个controlnet同时启用
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#openpose" class="md-nav__link">
     openpose的使用方法
   </a>
@@ -958,6 +965,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controlnet_1" class="md-nav__link">
+    支持多个controlnet同时启用
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#openpose" class="md-nav__link">
     openpose的使用方法
   </a>
@@ -992,21 +1006,26 @@
 <h2 id="txt2img_1">txt2img的使用方法</h2>
 <h3 id="_1">通用场景</h3>
 <ol>
-<li>进入<strong>txt2img</strong>标签页，展开<strong>Amazon SageMaker Inference</strong>面板。
-<img alt="Sagemaker Inference面板" src="../../images/txt2img-sagemaker-inference.png" /></li>
-<li>输入推理所需参数。同于本地推理，您可以按需编辑<strong>txt2img</strong>原生的推理参数，包括提示词，负提示词，取样参数，推理参数等。</li>
+<li>进入<strong>txt2img</strong>标签页，找到<strong>Amazon SageMaker Inference</strong>面板。
+<img alt="Sagemaker Inference面板" src="../../images/txt2img-inference.png" /></li>
+<li>输入推理所需参数。同于本地推理，您可以按需编辑<strong>txt2img</strong>原生的推理参数，包括模型(stable diffusion checkpoint, extra networks:Lora,Hypernetworks, VAE等)，提示词，负提示词，取样参数，推理参数等。VAE模型切换需要点击<strong>Settings</strong>按钮进入设置面板，在左侧一栏选择Stable Diffusion, 右侧面板<strong>SD VAE (choose VAE model: Automatic = use one with same filename as checkpoint; None = use VAE from checkpoint)</strong>处右侧刷新选择要用的VAE模型完成VAE模型切换。
+<img alt="Settings 面板" src="../../images/setting-vae.png" /></li>
+</ol>
+<p>!!! Important "提示" 
+       选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理</p>
+<ol>
 <li>
-<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点。</p>
+<p>选择推理节点。点击<strong>Select Cloud SageMaker Endpoint</strong>右侧的刷新按钮，选择一个处于<strong>InService</strong>状态的推理节点, 则会触发右上角<strong>Generate</strong>按钮变为<strong>Generate on Clound</strong>。
+<img alt="Gnerate button面板" src="../../images/txt2img-generate-button.png" /></p>
 <div class="admonition important">
 <p class="admonition-title">提示</p>
 <p>此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击<strong>Generate on Cloud</strong>开启云上推理功能时会报错。</p>
 </div>
 </li>
 <li>
-<p>点击模型下拉框右侧的刷新按钮，选择推理所需的<strong>Stable Diffusion Checkpoint</strong>（必选，可多选）及其他所需的<strong>Extra Networks for Cloud Inference</strong>（可选，并且可多模型多选叠加）。</p>
+<p>所有参数设置完成后，点击<strong>Generate on Cloud</strong>。</p>
 </li>
-<li>点击<strong>Generate on Cloud</strong>。</li>
-<li>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
+<li>查看推理结果。通过点击<strong>Inference Job: Time-Type-Status-Uuid</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的<strong>Inference Job ID</strong>。txt2img标签页右上方的<strong>Output</strong>区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等，进行后续工作流。<blockquote>
 <p><strong>补充：</strong> 列表按照推理时间倒序排列，即最近的推理任务排在最上方。每条记录的命名格式为<strong>推理时间-&gt;推理状态（succeed/in progress/fail)-&gt;inference id</strong>。</p>
 </blockquote>
 </li>
@@ -1020,21 +1039,31 @@
 </ol>
 <p><img alt="generate results" src="../../images/continue-inference.png" /></p>
 <h2 id="controlnet">Controlnet的使用方法</h2>
+<h3 id="controlnet_1">支持多个controlnet同时启用</h3>
+<ol>
+<li>
+<p>点击<strong>Settings</strong>按钮进入设置面板，在左侧一栏选择ControlNet, 右侧面板<strong>Multi ControlNet: Max models amount (requires restart)</strong>处设置ConrolNet数量（1-10）,重新启动webui,Multi ControlNet生效。
+<img alt="Setting-Controlnet" src="../../images/setting-multi-controlnet.png" /></p>
+</li>
+<li>
+<p>重新进入txt2img推理界面，ControlNet面板处则出现相同个数的ControlNet Unit，如下图同时启动三个ControlNet。
+<img alt="Setting-Controlnet" src="../../images/multi-controlnet-inference.png" /></p>
+</li>
+</ol>
 <h3 id="openpose">openpose的使用方法</h3>
 <ol>
 <li>
-<p>打开ControlNet面板，勾选<strong>Enable</strong>，选择<strong>Preprocessor</strong>为<strong>openpose</strong>，同时上传图片。
+<p>打开ControlNet面板，点击ControlNet Unit 0勾选<strong>Enable</strong>，选择<strong>Preprocessor</strong>为<strong>openpose</strong>，同时上传图片。
  <img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></p>
 </li>
 <li>
-<p>在<strong>Amazon SageMaker Inference</strong>面板的里面选择<strong>Stable Diffusion Checkpoint</strong>和<strong>ControlNet-Model</strong>。如下方示例图中选择<strong>v1-5-pruned-emaonly.safetensors</strong>和<strong>control_openpose-fp16.safetensors</strong>。提示词<strong>a cute dog</strong>。
-<img alt="Choose-controlnet-model" src="../../images/choose-controlnet-model.png" /></p>
+<p>同于本地ControlNet推理，您可以按需编辑<strong>ControlNet</strong>原生的参数，其中Model处使用的模型需要提前传到S3，才能进行正常推理。</p>
 </li>
 <li>
 <p>点击<strong>Generate on Cloud</strong>。</p>
 </li>
 <li>
-<p>查看推理结果。通过点击<strong>Inference Job JDs</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。</p>
+<p>查看推理结果。通过点击<strong>Inference Job: Time-Type-Status-Uuid</strong>右侧的刷新按钮进行下拉列表刷新，查看最上方的、符合推理提交时间戳的Inference Job ID。</p>
 </li>
 <li>
 <p>后续操作。如需对推理图片保存或作进一步处理，可以点击<strong>Save</strong>或者<strong>Send to img2img</strong>等。
