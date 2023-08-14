@@ -5,16 +5,19 @@ You can open the **img2img tab** and use the original region along with the **Am
 ## img2img use guide
 ### Standard process for different functional labels in img2img
 
-1. Navigate to tab **img2img**, open panel **Amazon SageMaker Inference**.
-2. Input parameters for inference. The same as local inferance, you could edit parameters in native fields for prompts, negative prompts, sampling parameters, inference parameters and etc. For functions **img2img**, **sketch**, **inpaint**, **inpaint sketch** and **inpaint upload**, you could upload and modify images in the native way.
-3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state.
+1. Navigate to tab **img2img**, find panel **Amazon SageMaker Inference**.
+2. Input parameters for inference. The same as local inferance, you could edit parameters in native fields for model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, inference parameters and etc. For functions **img2img**, **sketch**, **inpaint**, **inpaint sketch** and **inpaint upload**, you could upload and modify images in the native way.
+    
+    !!! Important "Notice" 
+        The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter **Cloud Assets Management**
+3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Clound**。
+![Gnerate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
         This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
 
-4. Fresh and select **Stable Diffusion Checkpoint** (required single select) and other extra models needed in **Extra Networks for Cloud Inference** (optional, multi-selection allowed).
-5. Click**Generate on Cloud**。
-6. Check inference result. Fresh and select the top option among **Inference Job ID** dropdown list. The **Output** section in the top-right area of the img2img tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking **Save** or **Send to extras**.
+4. Click**Generate on Cloud**。
+5. Check inference result. Fresh and select the top option among **Inference Job: Time-Type-Status-Uuid** dropdown list. The **Output** section in the top-right area of the img2img tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking **Save** or **Send to extras**.
 > **Note:** The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of **inference time -> job type(txt2img/img2img/interrogate_clip/interrogate_deepbooru) -> inference status(succeed/in progress/fail) ->inference id**.
 
 
