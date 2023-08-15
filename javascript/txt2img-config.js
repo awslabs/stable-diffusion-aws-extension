@@ -49,11 +49,11 @@ function clearFileInput() {
     fileInput.parentNode.replaceChild(newFileInput, fileInput);
 }
 
-function getModelTypeValue(dropdowm_value){
+function getModelTypeValue(dropdown_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
-    typeDom.value = dropdowm_value
+    typeDom.value = dropdown_value
     clearFileInput();
-    return dropdowm_value;
+    return dropdown_value;
 }
 
 function showFileName(event) {
@@ -302,37 +302,6 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
               updatePercentProgress(`${percentComplete.toFixed(2)}%`);
             };
             xhr.send(chunk);
-            // fetch(presignedUrls[currentChunk], {
-            //     method: "PUT",
-            //     body: chunk,
-            // })
-            //     .then((response) => {
-            //         if (!response.ok) {
-            //             throw new Error("Chunk upload failed");
-            //         }
-            //         const etag = response.headers.get('ETag');
-            //         console.log(etag)
-            //         const headersObject = {};
-            //         response.headers.forEach((value, name) => {
-            //           headersObject[name] = value;
-            //         });
-            //         console.log(headersObject)
-            //         parts.push({
-            //             ETag: etag,
-            //             PartNumber: currentChunk + 1
-            //         });
-            //         currentChunk++;
-            //         const progress = (currentChunk / totalChunks) * 100;
-            //         // 更新进度条的宽度或显示上传百分比
-            //         updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
-            //         uploadNextChunk();
-            //     })
-            //     .catch((error) => {
-            //         console.error(`Error uploading chunk ${currentChunk}:`, error);
-            //         // 处理错误
-            //         alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
-            //         reject(error);
-            //     });
         }
     });
 }
