@@ -298,7 +298,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
 
             xhr.upload.onprogress = function (event) {
               const percentComplete = (event.loaded / event.total) * 100;
-              console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+              // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
               updatePercentProgress(`${percentComplete.toFixed(2)}%`);
             };
             xhr.send(chunk);
