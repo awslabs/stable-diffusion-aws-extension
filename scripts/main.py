@@ -212,6 +212,8 @@ class SageMakerUI(scripts.Script):
             raise NotImplementedError
 
         api_param = api_param_cls(**p.__dict__)
+        if self.is_img2img:
+            api_param.mask = p.image_mask
 
         def get_pil_metadata(pil_image):
             # Copy any text-only metadata
