@@ -28,11 +28,22 @@
 ### 部署推理节点
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块的**Deploy New SageMaker Endpoint**区域。
-2. 选择推理实例类型**SageMaker Instance Type**和数目**Please select Instance count**，点击**Deploy**, 可以在左侧**Label**处看到**Endpoint deployment started**的提示信息。
+2. 方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击**Deploy**按钮启动Sagemaker endpoint的部署。
+3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Ednpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:
+
+    | 参数名                | 描述                                                                                                            |
+    |--------------------|---------------------------------------------------------------------------------------------------------------|
+    | Endpoint Name (可选) | 如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为infer-endpoint-XXXXX                            |
+    | Instance Type      | 下拉框选择部署的Endpoint的实例类型                                                                                         |
+    | Max Instance count | 下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩                      |
+    | Enable Autoscaling | 如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩, 否则Endpoint对应的instance数会固定在Max Instance count |
+
+
+4. 选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击**Deploy**, 可以在左侧**Label**处看到**Endpoint deployment started**的提示信息。
 ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
-3. 您可进入**txt2img**或**img2img**的**Amazon SageMaker Inference**模块的下拉菜单**Select Cloud SageMaker Endpoint**，刷新并看到当前所有推理节点的部署状态。
+5. 您可进入**txt2img**或**img2img**的**Amazon SageMaker Inference**模块的下拉菜单**Select Cloud SageMaker Endpoint**，刷新并看到当前所有推理节点的部署状态。
 > **补充：** 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。
-4. 等待大约10分钟，即可看到最新推理节点的状态变成**InService**，表明推理节点部署成功。
+6. 等待大约10分钟，即可看到最新推理节点的状态变成**InService**，表明推理节点部署成功。
 
 
 
