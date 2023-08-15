@@ -397,6 +397,13 @@ class SageMakerUI(scripts.Script):
         from modules.processing import Processed
 
         def process_image_inner_hijack(processing_param):
+            if not self.default_images_inner:
+                default_processing = importlib.import_module("modules.processing")
+                self.default_images_inner = default_processing.process_images_inner
+
+            if self.default_images_inner:
+                processing.process_images_inner = self.default_images_inner
+
             if err:
                 return Processed(
                     p,
@@ -418,13 +425,6 @@ class SageMakerUI(scripts.Script):
                 infotexts=[],
             )
 
-            # self.current_inference_id = None
-            if not self.default_images_inner:
-                default_processing = importlib.import_module("modules.processing")
-                self.default_images_inner = default_processing.process_images_inner
-
-            if self.default_images_inner:
-                processing.process_images_inner = self.default_images_inner
             return processed
 
         default_processing = importlib.import_module("modules.processing")
