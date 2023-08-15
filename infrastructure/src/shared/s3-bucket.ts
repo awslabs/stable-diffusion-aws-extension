@@ -14,6 +14,7 @@ export class S3BucketStore {
         allowedHeaders: ['*'],
         allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.HEAD, s3.HttpMethods.GET],
         allowedOrigins: ['*'],
+        exposedHeaders: ['ETag'],
       },
     ];
 

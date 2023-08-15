@@ -150,7 +150,11 @@ class UpdateCheckPointEvent:
 # PUT /checkpoint
 def update_checkpoint_api(raw_event, context):
     event = UpdateCheckPointEvent(**raw_event)
-
+    headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+    }
     try:
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': event.checkpoint_id
@@ -158,6 +162,7 @@ def update_checkpoint_api(raw_event, context):
         if raw_checkpoint is None or len(raw_checkpoint) == 0:
             return {
                 'statusCode': 500,
+                'headers': headers,
                 'error': f'checkpoint not found with id {event.checkpoint_id}'
             }
 
@@ -175,6 +180,7 @@ def update_checkpoint_api(raw_event, context):
         )
         return {
             'statusCode': 200,
+            'headers': headers,
             'checkpoint': {
                 'id': checkpoint.id,
                 'type': checkpoint.checkpoint_type,
@@ -187,5 +193,6 @@ def update_checkpoint_api(raw_event, context):
         logger.error(e)
         return {
             'statusCode': 500,
+            'headers': headers,
             'msg': str(e)
         }
