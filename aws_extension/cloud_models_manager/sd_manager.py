@@ -7,7 +7,7 @@ from modules import scripts, sd_models, shared
 from utils import get_variable_from_json
 
 
-postfix = 'Sagemaker'
+postfix = 'SageMaker'
 sapi_dir = os.path.join(scripts.basedir(), 'aws_extension', 'cloud_models_manager')
 
 
