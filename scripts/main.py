@@ -153,6 +153,8 @@ class SageMakerUI(scripts.Script):
         def _check_generate(endpoint):
             if endpoint:
                 self.sd_model_manager.update_models()
+            else:
+                self.sd_model_manager.clear()
             return f'Generate{" on Cloud" if endpoint else ""}'
 
         if not is_img2img:

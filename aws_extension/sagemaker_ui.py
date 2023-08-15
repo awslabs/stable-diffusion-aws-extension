@@ -551,33 +551,26 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             logging.info(f"Upload to S3 {s3_base}")
             logging.info(f"Checkpoint ID: {checkpoint_id}")
 
-            #s3_presigned_url = json_response["s3PresignUrl"][model_name]
             s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
             # Upload src model to S3.
             if rp != "embeddings" :
                 local_model_path_in_repo = os.sep.join(['models', rp, model_name])
             else:
                 local_model_path_in_repo = os.sep.join([rp, model_name])
-            #local_tar_path = f'{model_name}.tar'
             logging.info("Pack the model file.")
-            # os.system(f"cp -f {lp} {local_model_path_in_repo}")
             cp(lp, local_model_path_in_repo, recursive=True)
             if rp == "Stable-diffusion":
                 model_yaml_name = model_name.split('.')[0] + ".yaml"
                 local_model_yaml_path = os.sep.join([*lp.split(os.sep)[:-1], model_yaml_name])
                 local_model_yaml_path_in_repo = os.sep.join(["models", rp, model_yaml_name])
                 if os.path.isfile(local_model_yaml_path):
-                    # os.system(f"cp -f {local_model_yaml_path} {local_model_yaml_path_in_repo}")
-                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo} {local_model_yaml_path_in_repo}")
                     cp(local_model_yaml_path, local_model_yaml_path_in_repo, recursive=True)
                     tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo, local_model_yaml_path_in_repo], verbose=True)
                 else:
-                    # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
                     tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
             else:
-                # os.system(f"tar cvf {local_tar_path} {local_model_path_in_repo}")
                 tar(mode='c', archive=local_tar_path, sfiles=[local_model_path_in_repo], verbose=True)
-            #upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
+
             multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                 local_tar_path,
                 s3_signed_urls_resp,
