@@ -37,12 +37,13 @@ window.onload = function() {
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
+let filButtonId = 'file-uploader';
 
 function clearFileInput() {
     var fileInput = document.getElementById('file-uploader');
     var newFileInput = document.createElement('input');
     newFileInput.type = 'file';
-    newFileInput.id = 'file-uploader';
+    newFileInput.id = filButtonId;
     newFileInput.className = filButtonClass;
     newFileInput.multiple = true;
     newFileInput.style.width = '100%';
