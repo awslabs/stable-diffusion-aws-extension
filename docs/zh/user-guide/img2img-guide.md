@@ -6,7 +6,7 @@
 ## img2img的使用方法
 ### img2img不同标签功能的标准流程
 
-1. 进入**img2img**标签页，进入**Amazon SageMaker Inference**面板。
+1. 进入**img2img**标签页，**Amazon SageMaker Inference**面板。
 2. 输入推理所需参数。同于本地推理，您可以按需编辑**img2img**原生的推理参数，包括模型(stable diffusion checkpoint, VAE, extra networks:Lora,Hypernetworks, VAE等)，提示词，负提示词，取样参数，推理参数等。对于**img2img**，**sketch**，**inpaint**，**inpaint sketch**和**inpaint upload**，都可以按照原生方式进行图片上传和修饰。
 
     !!! Important "提示" 
@@ -88,3 +88,6 @@ img2img标签的提示词区域就能看到结果。
 3. 在新的**Inference Job ID**出现后，便可再次点击**Generate on Cloud**进行下一次推理。
 
 ![continuous generate results](../images/continue-inference.png)
+
+## Inference Job
+Inference Job下拉列表默认列出最近10条推理任务，命名格式遵循 Time-Type-Status-Uid。如果需要列出账户历史上所有推理任务，只需选中**Show All**。如果需要应用筛选器，缩小显示列表，可以勾选**Advanced Inference Job filter**，页面下方会自动增加本解决方案提供的筛选器维度，用户可以按需选择。
