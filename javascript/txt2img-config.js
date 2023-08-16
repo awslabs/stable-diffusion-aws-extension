@@ -124,7 +124,7 @@ function showFileName(event) {
             const fileSize = uploadedFile.size/unitMb;
             const fileType = uploadedFile.type;
             const fileItemDiv = document.createElement("tr");
-            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} MB | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize.toFixed(2)} MB | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
             deleteButton.style.backgroundColor = "#E5E5E5";
             deleteButton.style.border = "1px solid black";
