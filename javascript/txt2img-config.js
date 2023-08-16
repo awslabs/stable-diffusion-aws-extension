@@ -36,11 +36,40 @@ window.onload = function() {
 
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
+let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
+let filButtonId = 'file-uploader';
 
-function getModelTypeValue(dropdowm_value){
+const modelTypeMap = {
+    'SD Checkpoints': 'Stable-diffusion',
+    'Textual Inversion': 'embeddings',
+    'LoRA model': 'Lora',
+    'ControlNet model': 'ControlNet',
+    'Hypernetwork': 'hypernetworks',
+    'VAE': 'VAE'
+};
+
+function clearFileInput() {
+    var fileInput = document.getElementById('file-uploader');
+    var newFileInput = document.createElement('input');
+    newFileInput.type = 'file';
+    newFileInput.id = filButtonId;
+    newFileInput.className = filButtonClass;
+    newFileInput.multiple = true;
+    newFileInput.style.width = '100%';
+    newFileInput.onchange = showFileName;
+    fileInput.parentNode.replaceChild(newFileInput, fileInput);
+}
+
+function getModelTypeValue(dropdown_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
-    typeDom.value = dropdowm_value
-    return dropdowm_value
+    if (modelTypeMap.hasOwnProperty(dropdown_value)) {
+        typeDom.value = modelTypeMap[dropdown_value];
+    } else {
+        // 如果没有找到匹配的值，你可能需要处理这种情况
+        console.error("Unsupported dropdown value:", dropdown_value);
+    }
+    clearFileInput();
+    return dropdown_value;
 }
 
 function showFileName(event) {
@@ -122,6 +151,17 @@ function showFileName(event) {
     }
 }
 
+
+function updatePercentProgress(progress) {
+    // 根据groupName找到对应的进度条或其他UI元素
+    const progressBar = document.getElementById(`progress-percent`);
+    // const progressDiv = document.createElement(`div`);
+    if (progressBar) {
+        progressBar.innerText = `${progress}`;
+        // progressBar.innerHTML = progressDiv;
+    }
+}
+
 function updateProgress(groupName, fileName, progress, part, total) {
     // 根据groupName找到对应的进度条或其他UI元素
     const progressBar = document.getElementById(`progress-bar`);
@@ -199,7 +239,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
         const fileSize = file.size;
         const totalChunks = Math.ceil(fileSize / chunkSize);
         if(totalChunks != presignedUrls.length){
-            const errorMessage = "Generated presignedUrls do not match totalChunks";
+            const errorMessage = `Generated presignedUrls do not match totalChunks ${totalChunks} ${presignedUrls.length}`;
             alert(errorMessage);
             reject(new Error(errorMessage));
             return;
@@ -236,37 +276,48 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                 (currentChunk + 1) * chunkSize
             );
             // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
-            fetch(presignedUrls[currentChunk], {
-                method: "PUT",
-                body: chunk,
-            })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Chunk upload failed");
-                    }
-                    const etag = response.headers.get('ETag');
-                    console.log(etag)
-                    const headersObject = {};
-                    response.headers.forEach((value, name) => {
-                      headersObject[name] = value;
-                    });
-                    console.log(headersObject)
-                    parts.push({
-                        ETag: etag,
-                        PartNumber: currentChunk + 1
-                    });
-                    currentChunk++;
-                    const progress = (currentChunk / totalChunks) * 100;
-                    // 更新进度条的宽度或显示上传百分比
-                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
-                    uploadNextChunk();
-                })
-                .catch((error) => {
-                    console.error(`Error uploading chunk ${currentChunk}:`, error);
-                    // 处理错误
-                    alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
-                    reject(error);
+                        const xhr = new XMLHttpRequest();
+            xhr.open("PUT", presignedUrls[currentChunk], true);
+            // xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log("Chunk uploaded successfully");
+                    // Proceed to upload the next chunk or finalize the upload process
+                } else {
+                    console.error("Chunk upload failed");
+                }
+                const headersString = xhr.getAllResponseHeaders();
+                const headersArray = headersString.trim().split("\r\n");
+                const headersObject = {};
+                headersArray.forEach((header) => {
+                    const [name, value] = header.split(": ");
+                    headersObject[name] = value;
                 });
+                const etag = headersObject['etag'];
+                console.log(etag)
+                console.log(headersObject)
+                parts.push({
+                    ETag: etag,
+                    PartNumber: currentChunk + 1
+                });
+                currentChunk++;
+                const progress = (currentChunk / totalChunks) * 100;
+                // 更新进度条的宽度或显示上传百分比
+                updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
+                uploadNextChunk();
+            };
+            xhr.onerror = function () {
+              console.error("Chunk upload failed");
+              reject();
+            };
+
+            xhr.upload.onprogress = function (event) {
+              const percentComplete = (event.loaded / event.total) * 100;
+              // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+              updatePercentProgress(`${percentComplete.toFixed(2)}%`);
+            };
+            xhr.send(chunk);
         }
     });
 }

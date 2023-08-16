@@ -930,6 +930,7 @@ def on_ui_tabs():
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_local_form_row_03"):
                         upload_label = gr.HTML(label="upload process", elem_id="progress-bar")
+                        upload_percent_label = gr.HTML(label="upload percent process", elem_id="progress-percent")
                     with gr.Row():
                         model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button_local", size=(200, 50))
                         model_update_button_local.click(_js="uploadFiles",
