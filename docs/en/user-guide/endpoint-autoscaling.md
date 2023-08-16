@@ -27,7 +27,7 @@ The step scaling policy is defined to adjust the capacity based on the `HasBackl
 {
     "ScalingPolicies": [
         {
-            "PolicyARN": "arn:aws:autoscaling:us-west-2:489670441870:scalingPolicy:484e71d8-31df-4677-9f38-9e19024f2b9c:resource/sagemaker/endpoint/infer-endpoint-c356f91/variant/prod:policyName/HasBacklogWithoutCapacity-ScalingPolicy",
+            "PolicyARN": "Your PolicyARN",
             "PolicyName": "HasBacklogWithoutCapacity-ScalingPolicy",
             "ServiceNamespace": "sagemaker",
             "ResourceId": "endpoint/infer-endpoint-c356f91/variant/prod",
@@ -47,13 +47,13 @@ The step scaling policy is defined to adjust the capacity based on the `HasBackl
             "Alarms": [
                 {
                     "AlarmName": "stable-diffusion-hasbacklogwithoutcapacity-alarm",
-                    "AlarmARN": "arn:aws:cloudwatch:us-west-2:489670441870:alarm:stable-diffusion-hasbacklogwithoutcapacity-alarm"
+                    "AlarmARN": "Your AlarmARN"
                 }
             ],
             "CreationTime": "2023-08-14T13:53:10.480000+08:00"
         },
         {
-            "PolicyARN": "arn:aws:autoscaling:us-west-2:489670441870:scalingPolicy:484e71d8-31df-4677-9f38-9e19024f2b9c:resource/sagemaker/endpoint/infer-endpoint-c356f91/variant/prod:policyName/CPUUtil-ScalingPolicy",
+            "PolicyARN": "Your PolicyARN",
             "PolicyName": "CPUUtil-ScalingPolicy",
             "ServiceNamespace": "sagemaker",
             "ResourceId": "endpoint/infer-endpoint-c356f91/variant/prod",
@@ -83,11 +83,11 @@ The step scaling policy is defined to adjust the capacity based on the `HasBackl
             "Alarms": [
                 {
                     "AlarmName": "TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmHigh-c915b303-9048-40b2-99a7-f5b7e49ab7c4",
-                    "AlarmARN": "arn:aws:cloudwatch:us-west-2:489670441870:alarm:TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmHigh-c915b303-9048-40b2-99a7-f5b7e49ab7c4"
+                    "AlarmARN": "Your AlarmARN"
                 },
                 {
                     "AlarmName": "TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmLow-2fd61f99-c2e5-4ac6-9722-54030c3f0216",
-                    "AlarmARN": "arn:aws:cloudwatch:us-west-2:489670441870:alarm:TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmLow-2fd61f99-c2e5-4ac6-9722-54030c3f0216"
+                    "AlarmARN": "Your AlarmARN"
                 }
             ],
             "CreationTime": "2023-08-14T13:53:10.182000+08:00"
