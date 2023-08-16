@@ -4,25 +4,24 @@ This chapter will provide a detailed overview of the convenient cloud-based reso
 ## Upload Model
 To use extra models for inference, you could upload model through steps below in two ways, and follow steps in [txt2img](txt2img-guide.md) or [img2img](img2img-guide.md)to inference with extra models as need.
 
-### Upload model from webUI to cloud
-Considering the diverse range of user scenarios, this approach is suitable for deploying the webUI frontend on machines other than the local computer. Similar to the native using process of webUI, user is expected to put corresponding models under correct type of sub-foloder of webUI project. And user can follow the steps below for uploading such models to cloud for further processing. 
-
-1. Navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**, **Upload Model to S3 from WebUI**.
+Method One:
+1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**.
 ![Upload Models to S3](../images/Upload-models-old.png)
-2. Select the corresponding model path that is expected to be uploaded, and click **Upload Models to Cloud** to start uploading process..
+2. Select the Upload Model to S3 from WebUI drop-down box, which means to upload the model from the models file path where the WebUI service is deployed.
+3. Enter the model path where the WebUI service is deployed under corresponding model text box.
 > **Note**: You can upload multiple kinds of models by entering multiple local model paths in text box.
-3. Message will display on left right once uploading completes.
+4. Click **Upload Models to Cloud** to start uploading process.
+5.Message will appear on left right once uploading completes.
 
-### Upload model from local to cloud
-Considering the diverse range of user scenarios, this approach is suitable for deploying the webUI frontend on the local computer.
-
-1. Navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**, **Upload Model to S3 from local**.
+Method Two:
+1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**.
 ![Upload Models to S3](../images/Upload-models-new.png)
-2. Select the type of the model from drop down list, and select file(s) that are expected to upload by clicking **Browser**. Currently the module supports six types of model uploading, which are SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE.
+2. Select the Upload Model to S3 from Laptop drop-down box, which means to upload the model from the local path to access the WebUI.
+3. Select the type of model to upload, currently supports six types: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
+3. Select the model file to be uploaded locally.
 > **Note**: You can select models multiple, but subject to browser restrictions, it is best to select no more than 10 files, and the total size should not exceed 8g.
-
-3. Click **Upload Models to Cloud** to start uploading process.
-4. The upload will be uploaded in pieces asynchronously based on the file size and quantity. After each piece is uploaded, you will see a prompt under the **Choose File** button
+4. Click **Upload Models to Cloud** to start uploading process.
+5. The upload will be uploaded in pieces asynchronously based on the file size and quantity. After each piece is uploaded, you will see a prompt under the **Choose File** button
 
 
 ## Amazon SageMaker Endpoint Management
@@ -54,9 +53,9 @@ Considering the diverse range of user scenarios, this approach is suitable for d
 
 
 
-## AWS Dataset Management
+# AWS Dataset Management
 
-### Create Dataset
+## Create Dataset
 In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.
 
 1. Navigate to main tab **Amazon SageMaker**, section **AWS Dataset Management**，sub-tab **Create**.
@@ -64,11 +63,11 @@ In functions such as model fine-tuning, it is necessary to provide a file of ima
 
 2. Click **Click to Upload a File**, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.
 3. Enter file name in **Dataset Name**, enter file description in **Dataset Description**, click **Create Dataset**.
-4. The meessage **Complete Dataset XXXX creation** will be displayed once process completes.
+4. The message **Complete Dataset XXXX creation** will be displayed on the right side once the process completes.
 
-### Explore Dataset
-Once the dataset upload is completed, this feature module allows users to quickly explore and obtain the corresponding S3 address for the dataset. Users can copy this S3 path and paste it into the appropriate location where image collections need to be uploaded.
+## Explore Dataset
+After the dataset has been successfully uploaded, this feature module allows users to quickly obtain the corresponding cloud-based address of the dataset. Users can copy this address and paste it into the location where the collection of images needs to be uploaded.
 
-1. Navigate to **Amazon SageMaker** tab，**AWS Dataset Management** - **Browse** session.
-2. Refresh the drop down list of **Dataset From Cloud**, and select target dataset name.
-3. Field **dataset s3 location** will display corresponding S3 address, user can copy as need.
+1. Navigate to **Amazon SageMaker**，**AWS Dataset Management** session，**Browse** tab, refresh the list **Dataset From Cloud** and select desired dataset.
+2. Field **dataset s3 location** will display the corresponding S3 path on the cloud. User can copy to use as need.
+
