@@ -36,6 +36,7 @@ window.onload = function() {
 
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
+let unitMb = 1000* 1024;
 let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
 let filButtonId = 'file-uploader';
 
@@ -120,10 +121,10 @@ function showFileName(event) {
         })
         for (let [key, uploadedFile] of map) {
             const fileName = uploadedFile.name;
-            const fileSize = uploadedFile.size;
+            const fileSize = uploadedFile.size/unitMb;
             const fileType = uploadedFile.type;
             const fileItemDiv = document.createElement("tr");
-            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} MB | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
             deleteButton.style.backgroundColor = "#E5E5E5";
             deleteButton.style.border = "1px solid black";
