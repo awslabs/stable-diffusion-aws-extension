@@ -225,7 +225,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
         const fileSize = file.size;
         const totalChunks = Math.ceil(fileSize / chunkSize);
         if(totalChunks != presignedUrls.length){
-            const errorMessage = "Generated presignedUrls do not match totalChunks";
+            const errorMessage = `Generated presignedUrls do not match totalChunks ${totalChunks} ${presignedUrls.length}`;
             alert(errorMessage);
             reject(new Error(errorMessage));
             return;
