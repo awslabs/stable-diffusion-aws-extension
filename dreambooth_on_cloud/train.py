@@ -85,9 +85,9 @@ def get_cloud_db_model_name_list():
 def hack_db_config(db_config, db_config_file_path, model_name, data_list, class_data_list, local_model_name):
     for k in db_config:
         if k == "model_dir":
-            db_config[k] = re.sub(".+/(models/dreambooth/).+$", f"\\1{model_name}", db_config[k])
+            db_config[k] = re.sub(".*/?(models/dreambooth/).+$", f"\\1{model_name}", db_config[k])
         elif k == "pretrained_model_name_or_path":
-            db_config[k] = re.sub(".+/(models/dreambooth/).+(working)$", f"\\1{model_name}/\\2", db_config[k])
+            db_config[k] = re.sub(".*/?(models/dreambooth/).+(working)$", f"\\1{model_name}/\\2", db_config[k])
         elif k == "model_name":
             db_config[k] = db_config[k].replace(local_model_name, model_name)
         elif k == "concepts_list":

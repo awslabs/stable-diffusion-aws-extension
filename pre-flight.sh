@@ -33,7 +33,8 @@ show_help() {
     echo "Usage: $(basename "$0") [options]
         -h/--help: to show this help;\n
         -p/--pre-flight: to check version compatibility;\n
-        -s/--version-sync: to sync the repo and plugin to compatible commit id";
+        -s/--version-sync: to sync the repo and plugin to compatible commit id;\n
+        -f/--force: to force skip the folder check when sync the version";
 }
 
 # Function to get supported commit list
@@ -124,8 +125,8 @@ pre_flight_check() {
 version_sync() {
     echo -e "Start version sync for WebUI, make sure the extension folder is empty..."
 
-    # check if the extension folder is empty otherwise return directly
-    if [ "$(ls -A ../../extensions)" ]; then
+    # check if the extension folder is empty and force option is not included
+    if [ "$(ls -A ../../extensions)" ] && [ "$1" != "-f" ] && [ "$1" != "--force" ]; then
         echo "The extension folder is not empty, continue to sync the version will overwrite the existing files."
         # confirm to proceed
         read -p "Do you want to proceed? (y/n) " -n 1 -r
@@ -193,7 +194,7 @@ version_sync() {
 }
 
 # Parse options with help of getopt
-TEMP=$(getopt -o x:y:hps -l initial_support_commit_controlnet:,initial_support_commit_dreambooth:,help,pre-flight,version-sync -n "$(basename "$0")" -- "$@")
+TEMP=$(getopt -o x:y:hpsf -l initial_support_commit_controlnet:,initial_support_commit_dreambooth:,help,pre-flight,version-sync,force -n "$(basename "$0")" -- "$@")
 eval set -- "$TEMP"
 
 while true; do
@@ -212,6 +213,10 @@ while true; do
             ;;
         -s|--version-sync)
             version_sync
+            exit
+            ;;
+        -f|--force)
+            version_sync -f
             exit
             ;;
         -h|--help)
