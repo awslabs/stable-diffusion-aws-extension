@@ -680,11 +680,11 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#instructino-for-using-txt2img" class="md-nav__link">
-    Instructino for using txt2img
+  <a href="#txt2img-user-guide" class="md-nav__link">
+    txt2img user guide
   </a>
   
-    <nav class="md-nav" aria-label="Instructino for using txt2img">
+    <nav class="md-nav" aria-label="txt2img user guide">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -695,8 +695,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#continuous-inference-scenarios" class="md-nav__link">
-    Continuous Inference Scenarios
+  <a href="#continuous-inference-scenario" class="md-nav__link">
+    Continuous Inference Scenario
   </a>
   
 </li>
@@ -707,29 +707,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#controlnet-guide" class="md-nav__link">
-    Controlnet Guide
+  <a href="#inference-job" class="md-nav__link">
+    Inference Job
   </a>
-  
-    <nav class="md-nav" aria-label="Controlnet Guide">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#support-multicontrolnet" class="md-nav__link">
-    Support Multicontrolnet
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#openpose-use-guide" class="md-nav__link">
-    Openpose use guide
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -750,6 +730,20 @@
     <li class="md-nav__item">
       <a href="../img2img-guide/" class="md-nav__link">
         img2img guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controlnet-guide/" class="md-nav__link">
+        controlNet guide
       </a>
     </li>
   
@@ -928,11 +922,11 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#instructino-for-using-txt2img" class="md-nav__link">
-    Instructino for using txt2img
+  <a href="#txt2img-user-guide" class="md-nav__link">
+    txt2img user guide
   </a>
   
-    <nav class="md-nav" aria-label="Instructino for using txt2img">
+    <nav class="md-nav" aria-label="txt2img user guide">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -943,8 +937,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#continuous-inference-scenarios" class="md-nav__link">
-    Continuous Inference Scenarios
+  <a href="#continuous-inference-scenario" class="md-nav__link">
+    Continuous Inference Scenario
   </a>
   
 </li>
@@ -955,29 +949,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#controlnet-guide" class="md-nav__link">
-    Controlnet Guide
+  <a href="#inference-job" class="md-nav__link">
+    Inference Job
   </a>
-  
-    <nav class="md-nav" aria-label="Controlnet Guide">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#support-multicontrolnet" class="md-nav__link">
-    Support Multicontrolnet
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#openpose-use-guide" class="md-nav__link">
-    Openpose use guide
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1001,17 +975,19 @@
 
 <h1 id="txt2img-guide">txt2img Guide</h1>
 <p>You can open the <strong>txt2img</strong> tab to perform text-to-image inference using the combined functionality of the native region of txt2img and the newly added "Amazon SageMaker Inference" panel in the solution. This allows you to invoke cloud resources for txt2img inference tasks.</p>
-<h2 id="instructino-for-using-txt2img">Instructino for using txt2img</h2>
+<h2 id="txt2img-user-guide">txt2img user guide</h2>
 <h3 id="general-inference-scenario">General Inference Scenario</h3>
 <ol>
 <li>Navigate to <strong>txt2img</strong> tab, find <strong>Amazon SageMaker Inference</strong> panel. 
 <img alt="Sagemaker Inference面板" src="../../images/txt2img-inference.png" /></li>
-<li>Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native <strong>txt2img</strong>, including model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, and inference parameters. For VAE model switch, navigate to <strong>Settings</strong> tab, select <strong>Stable Diffusion</strong> in the left panel, and then select VAE mdoel in **SD VAE (choose VAE model: Automatic = use one with same filename as checkpoint; None = use VAE from checkpoint).
-<img alt="Settings 面板" src="../../images/setting-vae.png" /></li>
-</ol>
-<p>!!! Important "Notice" 
-       The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter <strong>Cloud Assets Management</strong></p>
-<ol>
+<li>
+<p>Enter the required parameters for inference. Similar to local inference, you can customize the inference parameters of the native <strong>txt2img</strong>, including model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, and inference parameters. For VAE model switch, navigate to <strong>Settings</strong> tab, select <strong>Stable Diffusion</strong> in the left panel, and then select VAE mdoel in <strong>SD VAE</strong> (choose VAE model: Automatic = use one with same filename as checkpoint; None = use VAE from checkpoint).
+<img alt="Settings 面板" src="../../images/setting-vae.png" /></p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter <strong>Cloud Assets Management</strong></p>
+</div>
+</li>
 <li>
 <p>Select an endpoint for inference. Refresh and select an endpoint from <strong>Select Cloud SageMaker Endpoint</strong> dropdown list that is in the <em>InService</em> state. After select one <em>InService</em> endpoint, the button <strong>Generate</strong> will change to button <strong>Generate on Clound</strong>。
 <img alt="Gnerate button面板" src="../../images/txt2img-generate-button.png" /></p>
@@ -1024,46 +1000,22 @@
 <p>Finish setting all the paramters, and then click <strong>Generate on Cloud</strong>.</p>
 </li>
 <li>
-<p>Check inference result. Fresh and select the top option among <strong>Inference Job: Time-Type-Status-Uuid</strong> dropdown list. The <strong>Output</strong> section in the top-right area of the <strong>txt2img</strong> tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to img2img</strong>.</p>
+<p>Check inference result. Fresh and select the top option among <strong>Inference Job</strong> dropdown list, the <strong>Output</strong> section in the top-right area of the <strong>txt2img</strong> tab will display the results of the inference once completed, including the generated images, prompts, and inference parameters. Based on this, you can perform subsequent workflows such as clicking <strong>Save</strong> or <strong>Send to img2img</strong>.</p>
 <blockquote>
 <p><strong>Note：</strong> The list is sorted in reverse chronological order based on the inference time, with the most recent inference task appearing at the top. Each record is named in the format of <em>inference time -&gt; inference id</em>.</p>
 </blockquote>
 </li>
 </ol>
 <p><img alt="generate results" src="../../images/generate-results.png" /></p>
-<h3 id="continuous-inference-scenarios">Continuous Inference Scenarios</h3>
+<h3 id="continuous-inference-scenario">Continuous Inference Scenario</h3>
 <ol>
 <li>Following the <strong>General Inference Scenario</strong>, complete the parameter inputs and click <strong>Generate on Cloud</strong> to submit the initial inference task.</li>
 <li>Wait for the appearance of a new <strong>Inference ID</strong>in the right-side "Output" section.</li>
 <li>Once the new <strong>Inference ID</strong> appears, you can proceed to click <strong>Generate on Cloud</strong> again for the next inference task.</li>
 </ol>
 <p><img alt="generate results" src="../../images/continue-inference.png" /></p>
-<h2 id="controlnet-guide">Controlnet Guide</h2>
-<ul>
-<li>
-<h3 id="support-multicontrolnet">Support Multicontrolnet</h3>
-</li>
-<li>
-<p>Navigate to <strong>Settings</strong> tab, select <strong>ControlNet</strong> in the left panel, and then set the number of controlNet unit in <strong>Multi ControlNet: Max models amount (requires restart)</strong>, and then restart the webui.
-<img alt="Setting-Controlnet" src="../../images/setting-multi-controlnet.png" /></p>
-</li>
-<li>
-<p>Naviaget to <strong>txt2img</strong>，if we set the number is 3, there will be 3 ControlNet Units in the <strong>ControlNet</strong> panel.
-<img alt="Setting-Controlnet" src="../../images/multi-controlnet-inference.png" /></p>
-</li>
-<li>
-<h3 id="openpose-use-guide">Openpose use guide</h3>
-</li>
-<li>Open ControlNet panel, choose <strong>ControlNet Unit 0</strong>, check <strong>Enable</strong>, select <strong>openpose</strong> from <strong>Preprocessor</strong>, and then upload am image.
-<img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></li>
-<li>Similar to local inference, you can customize the inference parameters of the native <strong>ControlNet</strong>. The controlnet model "<strong>control_openpose-fp16.safetensors</strong>" should be uploaded to the cloud before generate. </li>
-<li>
-<p>Click <strong>Generate on Cloud</strong> after finished all parameters setting.</p>
-</li>
-<li>
-<p>Refresh and select the top Inference Job from <strong>Inference Job: Time-Type-Status-Uuid</strong>, inference result will be displayed in <strong>Output</strong> section.</p>
-</li>
-</ul>
+<h2 id="inference-job">Inference Job</h2>
+<p>Inference Job displays latest 10 inference job by default, following naming format Time-Type-Status-Uuid. Checking <strong>Show All</strong> will display all inference jobs the account has. Checking <strong>Advanced Inference Job filter</strong> and apply filters as need will provide users customorized infenrence job list.</p>
 
 
 

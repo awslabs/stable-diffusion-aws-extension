@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/deployment/ecr_image_param/">
+        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/endpoint-autoscaling/">
       
       
       
@@ -17,7 +17,7 @@
     
     
       
-        <title>How to modify the ECR image tag used in the solution - Extension for Stable Diffusion on AWS</title>
+        <title>SageMaker Async Endpoint Autoscaling - Extension for Stable Diffusion on AWS</title>
       
     
     
@@ -59,7 +59,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-modify-the-ecr-image-tag-used-in-the-solution" class="md-skip">
+        <a href="#sagemaker-async-endpoint-autoscaling" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              How to modify the ECR image tag used in the solution
+              SageMaker Async Endpoint Autoscaling
             
           </span>
         </div>
@@ -532,7 +532,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../template/" class="md-nav__link">
+      <a href="../../deployment/template/" class="md-nav__link">
         AWS CloudFormation template
       </a>
     </li>
@@ -546,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deployment/" class="md-nav__link">
+      <a href="../../deployment/deployment/" class="md-nav__link">
         Deployment step
       </a>
     </li>
@@ -608,7 +608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preparation/" class="md-nav__link">
+      <a href="../preparation/" class="md-nav__link">
         Preparation
       </a>
     </li>
@@ -622,7 +622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
+      <a href="../CloudAssetsManage/" class="md-nav__link">
         Cloud Assets Management
       </a>
     </li>
@@ -636,7 +636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
+      <a href="../txt2img-guide/" class="md-nav__link">
         txt2img guide
       </a>
     </li>
@@ -650,7 +650,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/img2img-guide/" class="md-nav__link">
+      <a href="../img2img-guide/" class="md-nav__link">
         img2img guide
       </a>
     </li>
@@ -664,7 +664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/controlnet-guide/" class="md-nav__link">
+      <a href="../controlnet-guide/" class="md-nav__link">
         controlNet guide
       </a>
     </li>
@@ -678,7 +678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../dreambooth-guide/" class="md-nav__link">
         Dreambooth guide
       </a>
     </li>
@@ -837,6 +837,34 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-of-sagemaker-async-endpoint-autoscaling-policy-below" class="md-nav__link">
+    Example of Sagemaker async endpoint autoscaling policy below:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -853,27 +881,97 @@
   
 
 
-<h1 id="how-to-modify-the-ecr-image-tag-used-in-the-solution">How to modify the ECR image tag used in the solution</h1>
-<p>The current project uses the following three Public ECR images for training and inference:
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference: TAG_NAME
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils: TAG_NAME
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training: TAG_NAME</p>
-<p>The corresponding CDK deployment code can be found in:
-1. infrastructure/src/common/dockerImages.ts</p>
-<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_INFERENCE</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:&#39;</span><span class="p">;</span>
-<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_UTILS</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:&#39;</span><span class="p">;</span>
-<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_DREAMBOOTH_TRAINING</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:&#39;</span><span class="p">;</span>
-</code></pre></div>
+<h1 id="sagemaker-async-endpoint-autoscaling">SageMaker Async Endpoint Autoscaling</h1>
+<p>Amazon SageMaker provides capabilities to automatically scale model inference endpoints in response to the changes in traffic patterns. This document explains how autoscaling is enabled for an Amazon SageMaker async endpoint created by this Solution</p>
+<h2 id="overview">Overview</h2>
+<p>The solution provided enables autoscaling for a specific endpoint and variant in Amazon SageMaker. Autoscaling is managed through two scaling policies:</p>
 <ol>
-<li>infrastructure/src/common/dockerImageTag.ts</li>
+<li><strong>Target Tracking Scaling Policy</strong>: This policy adjusts the desired instance count based on the <code>CPUUtilization</code> metric. It aims to keep the CPU utilization at 50%. If the average CPU utilization is above 50 for 5 minutes, the alarm will trigger application autoscaling to scale out Sagemaker endpoint until it reach the maximum number of instances.</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">ECR_IMAGE_TAG</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;dev&#39;</span><span class="p">;</span>
+<p>The scaling policy based on CPU utilization is defined using the <code>put_scaling_policy</code> method. It specifies the following parameters:
+    - <code>TargetValue</code>: 50% CPU utilization
+    - <code>ScaleInCooldown</code>: 300 seconds
+    - <code>ScaleOutCooldown</code>: 300 seconds</p>
+<ol>
+<li><strong>Step Scaling Policy</strong>: This policy allows you to define steps for scaling adjustments based on the <code>HasBacklogWithoutCapacity</code> metric. This policy is created to let application autoscaling increase the instance number from 0 to 1 when there is inference request but endpoint has 0 instance.</li>
+</ol>
+<p>The step scaling policy is defined to adjust the capacity based on the <code>HasBacklogWithoutCapacity</code> metric. It includes:
+- <code>AdjustmentType</code>: ChangeInCapacity
+- <code>MetricAggregationType</code>: Average
+- <code>Cooldown</code>: 300 seconds
+- <code>StepAdjustments</code>: Specifies the scaling adjustments based on the size of the alarm breach.</p>
+<h3 id="example-of-sagemaker-async-endpoint-autoscaling-policy-below">Example of Sagemaker async endpoint autoscaling policy below:</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;ScalingPolicies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;PolicyARN&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your PolicyARN&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;PolicyName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;HasBacklogWithoutCapacity-ScalingPolicy&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ServiceNamespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sagemaker&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ResourceId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;endpoint/infer-endpoint-c356f91/variant/prod&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ScalableDimension&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sagemaker:variant:DesiredInstanceCount&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;PolicyType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StepScaling&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;StepScalingPolicyConfiguration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;AdjustmentType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ChangeInCapacity&quot;</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;StepAdjustments&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                    </span><span class="p">{</span>
+<span class="w">                        </span><span class="nt">&quot;MetricIntervalLowerBound&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span>
+<span class="w">                        </span><span class="nt">&quot;ScalingAdjustment&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                    </span><span class="p">}</span>
+<span class="w">                </span><span class="p">],</span>
+<span class="w">                </span><span class="nt">&quot;Cooldown&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;MetricAggregationType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Average&quot;</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;Alarms&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;stable-diffusion-hasbacklogwithoutcapacity-alarm&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmARN&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your AlarmARN&quot;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;CreationTime&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-08-14T13:53:10.480000+08:00&quot;</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;PolicyARN&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your PolicyARN&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;PolicyName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CPUUtil-ScalingPolicy&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ServiceNamespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sagemaker&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ResourceId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;endpoint/infer-endpoint-c356f91/variant/prod&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;ScalableDimension&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sagemaker:variant:DesiredInstanceCount&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;PolicyType&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TargetTrackingScaling&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;TargetTrackingScalingPolicyConfiguration&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;TargetValue&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">50.0</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;CustomizedMetricSpecification&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;MetricName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;CPUUtilization&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;Namespace&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/aws/sagemaker/Endpoints&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;Dimensions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;EndpointName&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;infer-endpoint-c356f91&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="p">{</span>
+<span class="w">                            </span><span class="nt">&quot;Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;VariantName&quot;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nt">&quot;Value&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prod&quot;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                    </span><span class="p">],</span>
+<span class="w">                    </span><span class="nt">&quot;Statistic&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Average&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;Unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Percent&quot;</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="nt">&quot;ScaleOutCooldown&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
+<span class="w">                </span><span class="nt">&quot;ScaleInCooldown&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;Alarms&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmHigh-c915b303-9048-40b2-99a7-f5b7e49ab7c4&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmARN&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your AlarmARN&quot;</span>
+<span class="w">                </span><span class="p">},</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmLow-2fd61f99-c2e5-4ac6-9722-54030c3f0216&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nt">&quot;AlarmARN&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Your AlarmARN&quot;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">],</span>
+<span class="w">            </span><span class="nt">&quot;CreationTime&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-08-14T13:53:10.182000+08:00&quot;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>TAG_NAME is defined by the CloudFormation deployment parameter <code>ecrimagetag</code>. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.</p>
-<p>In most cases, users do not need to modify the ECR tag name. However, if users need to change the tag value, they can modify the default parameter value during the deployment of the solution's CloudFormation stack. Currently, we have two tag values available for users to choose from:
-1. v1.0.0
-2. v1.0.1-COMMITID</p>
-<p>```</p>
 
 
 

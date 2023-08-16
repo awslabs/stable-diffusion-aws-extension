@@ -8,16 +8,20 @@
       
       
       
-        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/deployment/ecr_image_param/">
+        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/controlnet-guide/">
       
       
+        <link rel="prev" href="../img2img-guide/">
+      
+      
+        <link rel="next" href="../dreambooth-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
     
     
       
-        <title>How to modify the ECR image tag used in the solution - Extension for Stable Diffusion on AWS</title>
+        <title>controlNet guide - Extension for Stable Diffusion on AWS</title>
       
     
     
@@ -59,7 +63,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-modify-the-ecr-image-tag-used-in-the-solution" class="md-skip">
+        <a href="#use-controlnet-for-inferencing" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              How to modify the ECR image tag used in the solution
+              controlNet guide
             
           </span>
         </div>
@@ -193,6 +197,8 @@
         
   
   
+    
+  
 
 
   
@@ -204,7 +210,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         Implementation Guide
       </a>
     </li>
@@ -262,14 +268,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
       
@@ -278,7 +286,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Implementation Guide
@@ -532,7 +540,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../template/" class="md-nav__link">
+      <a href="../../deployment/template/" class="md-nav__link">
         AWS CloudFormation template
       </a>
     </li>
@@ -546,7 +554,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deployment/" class="md-nav__link">
+      <a href="../../deployment/deployment/" class="md-nav__link">
         Deployment step
       </a>
     </li>
@@ -579,14 +587,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
       
       
       
@@ -595,7 +605,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1_7">
           <span class="md-nav__icon md-icon"></span>
           Use the solution
@@ -608,7 +618,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/preparation/" class="md-nav__link">
+      <a href="../preparation/" class="md-nav__link">
         Preparation
       </a>
     </li>
@@ -622,7 +632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/CloudAssetsManage/" class="md-nav__link">
+      <a href="../CloudAssetsManage/" class="md-nav__link">
         Cloud Assets Management
       </a>
     </li>
@@ -636,7 +646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/txt2img-guide/" class="md-nav__link">
+      <a href="../txt2img-guide/" class="md-nav__link">
         txt2img guide
       </a>
     </li>
@@ -650,7 +660,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/img2img-guide/" class="md-nav__link">
+      <a href="../img2img-guide/" class="md-nav__link">
         img2img guide
       </a>
     </li>
@@ -662,11 +672,72 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../user-guide/controlnet-guide/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          controlNet guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         controlNet guide
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controlnet-user-guide" class="md-nav__link">
+    Controlnet User Guide
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlnet User Guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-controlnet-user-guide" class="md-nav__link">
+    Multi-controlnet user guide
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openpose-user-guide" class="md-nav__link">
+    openpose User Guide
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -678,7 +749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../dreambooth-guide/" class="md-nav__link">
         Dreambooth guide
       </a>
     </li>
@@ -837,6 +908,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#controlnet-user-guide" class="md-nav__link">
+    Controlnet User Guide
+  </a>
+  
+    <nav class="md-nav" aria-label="Controlnet User Guide">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#multi-controlnet-user-guide" class="md-nav__link">
+    Multi-controlnet user guide
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#openpose-user-guide" class="md-nav__link">
+    openpose User Guide
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -853,27 +959,30 @@
   
 
 
-<h1 id="how-to-modify-the-ecr-image-tag-used-in-the-solution">How to modify the ECR image tag used in the solution</h1>
-<p>The current project uses the following three Public ECR images for training and inference:
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference: TAG_NAME
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils: TAG_NAME
-- public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training: TAG_NAME</p>
-<p>The corresponding CDK deployment code can be found in:
-1. infrastructure/src/common/dockerImages.ts</p>
-<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_INFERENCE</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:&#39;</span><span class="p">;</span>
-<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_UTILS</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-utils:&#39;</span><span class="p">;</span>
-<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_DREAMBOOTH_TRAINING</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:&#39;</span><span class="p">;</span>
-</code></pre></div>
+<h1 id="use-controlnet-for-inferencing">Use Controlnet for inferencing</h1>
+<p>You can open <strong>controlnet</strong> sub-session, by combining the use of native functionalities <strong>txt2img</strong> or <strong>img2img</strong> along with the added panel of <strong>Amazon SageMaker Inference</strong> in the solution, the inference tasks involving cloud resources can be invoked.</p>
+<h2 id="controlnet-user-guide">Controlnet User Guide</h2>
+<h3 id="multi-controlnet-user-guide">Multi-controlnet user guide</h3>
 <ol>
-<li>infrastructure/src/common/dockerImageTag.ts</li>
+<li>
+<p>Navigate to <strong>Settings</strong> tab. In the left sidebar, select <strong>ControlNet</strong>, and adjust the <strong>Multi ControlNet</strong> in the right panel: Max models amount (requires restart) setting to specify the number of ControlNets (1-10). Afterward, restart the webUI for the changes to take effect, and the Multi ControlNet configuration will be active.
+<img alt="Setting-Controlnet" src="../../images/setting-multi-controlnet.png" /></p>
+</li>
+<li>
+<p>Navigate to <strong>txt2img</strong> or <strong>img2img</strong> tab，an equal number of ControlNet units will appear. For example, below shows 3 controlNet units started simultaneously.
+<img alt="Setting-Controlnet" src="../../images/multi-controlnet-inference.png" /></p>
+</li>
 </ol>
-<div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">ECR_IMAGE_TAG</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;dev&#39;</span><span class="p">;</span>
-</code></pre></div>
-<p>TAG_NAME is defined by the CloudFormation deployment parameter <code>ecrimagetag</code>. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.</p>
-<p>In most cases, users do not need to modify the ECR tag name. However, if users need to change the tag value, they can modify the default parameter value during the deployment of the solution's CloudFormation stack. Currently, we have two tag values available for users to choose from:
-1. v1.0.0
-2. v1.0.1-COMMITID</p>
-<p>```</p>
+<h3 id="openpose-user-guide">openpose User Guide</h3>
+<ol>
+<li>Open ControlNet panel, choose <strong>ControlNet Unit 0</strong>, check <strong>Enable</strong>, select <strong>openpose</strong> from <strong>Preprocessor</strong>, and then upload am image.
+<img alt="Controlnet-openpose-prepare" src="../../images/controlnet-openpose-prepare.png" /></li>
+<li>Similar to local inference, you can customize the inference parameters of the native <strong>ControlNet</strong>. The controlnet model "<strong>control_openpose-fp16.safetensors</strong>" should be uploaded to the cloud before generate. </li>
+<li>Click <strong>Generate on Cloud</strong> after finished all parameters setting.</li>
+<li>Refresh and select the top Inference Job from <strong>Inference Job: Time-Type-Status-Uid</strong>, inference result will be displayed in <strong>Output</strong> section.</li>
+<li>Subsequent actions. You can click <strong>Save</strong> or others as need to perform further processing.
+<img alt="generate results controlnet" src="../../images/cute-dog-controlnet.png" /></li>
+</ol>
 
 
 

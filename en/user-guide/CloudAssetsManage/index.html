@@ -742,6 +742,20 @@
   
   
     <li class="md-nav__item">
+      <a href="../controlnet-guide/" class="md-nav__link">
+        controlNet guide
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../dreambooth-guide/" class="md-nav__link">
         Dreambooth guide
       </a>
@@ -987,8 +1001,41 @@
 <h2 id="amazon-sagemaker-endpoint-management">Amazon SageMaker Endpoint Management</h2>
 <h3 id="deploy-new-endpoint">Deploy new endpoint</h3>
 <ol>
-<li>Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>, <strong>Deploy New SageMaker Endpoint</strong>, select Amazon SageMaker instance type for inference under <strong>SageMaker Instance Type</strong>, and count in <strong>Please select Instance count</strong>, click <strong>Deploy</strong>, message <em>Endpoint deployment started</em> will appear on the left side.
-<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
+<li>Navigate to the <strong>Amazon SageMaker</strong> main tab of the solution. In the <strong>Cloud Assets Management</strong> module, locate the <strong>Deploy New SageMaker Endpoint</strong> section.</li>
+<li>The default deployment type for the solution is ml.g5.2xlarge, with 1 instance. The endpoint autoscaling feature is enabled by default. Simply click the <strong>Deploy</strong> button to initiate the deployment of the Sagemaker endpoint.</li>
+<li>If users wish to specify the endpoint name, instance type, and maximum instance count for the endpoint's instances, they can check the <strong>Advanced Endpoint Configuration</strong> checkbox. This will display additional parameters for user input. The following table lists the names and descriptions of these parameters:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Parameter Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Endpoint Name (Optional)</td>
+<td>If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be infer-endpoint-XXXXX.</td>
+</tr>
+<tr>
+<td>Instance Type</td>
+<td>Select the instance type for the deployed endpoint from the dropdown list.</td>
+</tr>
+<tr>
+<td>Max Instance Count</td>
+<td>Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage.</td>
+</tr>
+<tr>
+<td>Enable Autoscaling</td>
+<td>If this checkbox is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage. Otherwise, the instance count for the endpoint will remain fixed at the Max Instance Count.</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li>
+<p>After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click <strong>Deploy</strong>. You'll see a message indicating <strong>Endpoint deployment started</strong> on the left side under <strong>Label</strong>.
+   <img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></p>
+</li>
 <li>
 <p>You can navigate to tab <strong>txt2img</strong>, session <strong>Amazon SageMaker Inference</strong>, refresh and select drop down list <strong>Select Cloud SageMaker Endpoint</strong> to check all the deployment status of endpoints.</p>
 <blockquote>
@@ -1016,14 +1063,13 @@
 <p>Click <strong>Click to Upload a File</strong>, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.</p>
 </li>
 <li>Enter file name in <strong>Dataset Name</strong>, enter file description in <strong>Dataset Description</strong>, click <strong>Create Dataset</strong>.</li>
-<li>Once the message <strong>Complete Dataset XXXX creation</strong>，即表示该数据集已经成功上传到云上。</li>
+<li>The message <strong>Complete Dataset XXXX creation</strong> will be displayed on the right side once the process completes.</li>
 </ol>
-<h2 id="_1">数据集浏览</h2>
-<p>数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。</p>
+<h2 id="explore-dataset">Explore Dataset</h2>
+<p>After the dataset has been successfully uploaded, this feature module allows users to quickly obtain the corresponding cloud-based address of the dataset. Users can copy this address and paste it into the location where the collection of images needs to be uploaded.</p>
 <ol>
-<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，<strong>AWS Dataset Management</strong>区块，<strong>Browse</strong>标签页。</li>
-<li>刷新<strong>Dataset From Cloud</strong>列表，选择需要浏览的图片集名称。</li>
-<li>等待几秒，<strong>dataset s3 location</strong>区域即会显示该数据集的云上S3地址，复制粘贴即可取用，做后续步骤。</li>
+<li>Navigate to <strong>Amazon SageMaker</strong>，<strong>AWS Dataset Management</strong> session，<strong>Browse</strong> tab, refresh the list <strong>Dataset From Cloud</strong> and select desired dataset.</li>
+<li>Field <strong>dataset s3 location</strong> will display the corresponding S3 path on the cloud. User can copy to use as need.</li>
 </ol>
 
 

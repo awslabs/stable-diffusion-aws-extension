@@ -668,6 +668,26 @@
     上传训练模型
   </a>
   
+    <nav class="md-nav" aria-label="上传训练模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webui" class="md-nav__link">
+    从原生webUI上传模型至云上
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    从本地机器上传模型至云上
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -679,14 +699,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     部署推理节点
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     删除已部署推理节点
   </a>
   
@@ -706,14 +726,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     数据集上传
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     数据集浏览
   </a>
   
@@ -755,6 +775,20 @@
     <li class="md-nav__item">
       <a href="../img2img-guide/" class="md-nav__link">
         img2img指南
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controlnet-guide/" class="md-nav__link">
+        controlNet指南
       </a>
     </li>
   
@@ -935,6 +969,26 @@
     上传训练模型
   </a>
   
+    <nav class="md-nav" aria-label="上传训练模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webui" class="md-nav__link">
+    从原生webUI上传模型至云上
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    从本地机器上传模型至云上
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -946,14 +1000,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     部署推理节点
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     删除已部署推理节点
   </a>
   
@@ -973,14 +1027,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     数据集上传
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     数据集浏览
   </a>
   
@@ -1009,49 +1063,89 @@
   
 
 
+  <h1>云上资源管理</h1>
+
 <p>本章节将详细介绍本解决方案提供的便捷云上资源管理方式。</p>
 <h2 id="_1">上传训练模型</h2>
 <p>如需在txt2img或img2img使用非云端推理模型，您可以选择按下列两种方式的步骤完成推理模型上传，即可按<a href="../txt2img-guide/">txt2img</a>或<a href="../img2img-guide/">img2img</a>相应步骤完成模型调用及推理。</p>
-<p>方式一：
-1. 进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。
-2. 选择Upload Model to S3 from WebUI下拉框, 该方式表示从部署WebUI服务的models文件路径上传模型。
-<img alt="Upload Models to S3" src="../../images/Upload-models-old.png" />
-3. 在对应的模型输入部署WebUI服务的models文件路径地址。</p>
-<blockquote>
-<p><strong>提示</strong>: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。
-4. 点击<strong>Upload Models to Cloud</strong>，启动模型上传。
-5. 上传完成后，会在左侧<strong>Label</strong>看到提示。</p>
+<h3 id="webui">从原生webUI上传模型至云上</h3>
+<p>考虑到用户多样的使用场景，本方式适用于将webUI前端部署在非本地电脑的其他机器上的场景。同于webUI社区原生使用方式，用户需要首先将相关模型上传至部署了webUI前端的机器上，对应webUI项目文件夹下、models子文件夹的对应处，之后即可跟从下面步骤完成模型上传到云上。</p>
+<ol>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。</li>
+<li>选择Upload Model to S3 from WebUI下拉框, 该方式表示从部署WebUI服务的models文件路径上传模型。
+<img alt="Upload Models to S3" src="../../images/Upload-models-old.png" /></li>
+<li>在对应的模型输入部署WebUI服务的models文件路径地址。<blockquote>
+<p><strong>提示</strong>: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。</p>
 </blockquote>
-<p>方式二：
-1. 进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。
-2. 选择Upload Model to S3 from Laptop, 该方式表示从访问WebUI的本地路径上传模型。
-<img alt="Upload Models to S3" src="../../images/Upload-models-new.png" />
-3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
-4. 本地选择要上传的模型文件。</p>
-<blockquote>
-<p><strong>提示</strong>: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。
-5. 点击<strong>Upload Models to Cloud</strong>，启动模型上传。
-6. 上传会依据文件大小与数量异步分片上传，各分片上传完成后，会在<strong>选择文件</strong>按钮下看到提示。</p>
+</li>
+<li>点击<strong>Upload Models to Cloud</strong>，启动模型上传。</li>
+<li>上传完成后，会在左侧<strong>Label</strong>看到提示。</li>
+</ol>
+<h3 id="_2">从本地机器上传模型至云上</h3>
+<p>考虑到用户多样的使用场景，本方式适用于将webUI前端部署在本地电脑上的场景。</p>
+<ol>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。</li>
+<li>选择Upload Model to S3 from Laptop, 该方式表示从访问WebUI的本地路径上传模型。
+<img alt="Upload Models to S3" src="../../images/Upload-models-new.png" /></li>
+<li>选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE</li>
+<li>本地选择要上传的模型文件。<blockquote>
+<p><strong>提示</strong>: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。</p>
 </blockquote>
+</li>
+<li>点击<strong>Upload Models to Cloud</strong>，启动模型上传。</li>
+<li>上传会依据文件大小与数量异步分片上传，各分片上传完成后，会在<strong>选择文件</strong>按钮下看到提示。</li>
+</ol>
 <h2 id="amazon-sagemaker">Amazon SageMaker推理节点管理</h2>
-<h3 id="_2">部署推理节点</h3>
+<h3 id="_3">部署推理节点</h3>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块的<strong>Deploy New SageMaker Endpoint</strong>区域。</li>
-<li>选择推理实例类型<strong>SageMaker Instance Type</strong>和数目<strong>Please select Instance count</strong>，点击<strong>Deploy</strong>, 可以在左侧<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
-<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
+<li>方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击<strong>Deploy</strong>按钮启动Sagemaker endpoint的部署。</li>
+<li>
+<p>如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击<strong>Advanced Ednpoint Configuration</strong>的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:</p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Endpoint Name (可选)</td>
+<td>如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为infer-endpoint-XXXXX</td>
+</tr>
+<tr>
+<td>Instance Type</td>
+<td>下拉框选择部署的Endpoint的实例类型</td>
+</tr>
+<tr>
+<td>Max Instance count</td>
+<td>下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩</td>
+</tr>
+<tr>
+<td>Enable Autoscaling</td>
+<td>如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩, 否则Endpoint对应的instance数会固定在Max Instance count</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p>选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击<strong>Deploy</strong>, 可以在左侧<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
+<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></p>
+</li>
 <li>您可进入<strong>txt2img</strong>或<strong>img2img</strong>的<strong>Amazon SageMaker Inference</strong>模块的下拉菜单<strong>Select Cloud SageMaker Endpoint</strong>，刷新并看到当前所有推理节点的部署状态。<blockquote>
 <p><strong>补充：</strong> 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。</p>
 </blockquote>
 </li>
 <li>等待大约10分钟，即可看到最新推理节点的状态变成<strong>InService</strong>，表明推理节点部署成功。</li>
 </ol>
-<h3 id="_3">删除已部署推理节点</h3>
+<h3 id="_4">删除已部署推理节点</h3>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，点击<strong>Select Cloud SageMaker Endpoint</strong>列表右侧刷新按钮，刷新下拉列表，选择需要删除的推理节点。</li>
 <li>点击<strong>Delete</strong>，左侧<strong>Label</strong>处会显示提示信息，完成推理节点删除。</li>
 </ol>
-<h1 id="aws">AWS数据集管理</h1>
-<h2 id="_4">数据集上传</h2>
+<h2 id="aws">AWS数据集管理</h2>
+<h3 id="_5">数据集上传</h3>
 <p>在模型微调等功能中，需要输入一个图片集，用以微调工作。该功能模块助力用户快速上传图片集到云端。</p>
 <ol>
 <li>
@@ -1064,7 +1158,7 @@
 <li>在<strong>Dataset Name</strong>输入该图片文件夹的名字，在<strong>Dataset Description</strong>输入该数据集的描述，点击<strong>Create Dataset</strong>。</li>
 <li>等待几秒，下方的<strong>Create Result</strong>区域显示<strong>Complete Dataset XXXX creation</strong>，即表示该数据集已经成功上传到云上。</li>
 </ol>
-<h2 id="_5">数据集浏览</h2>
+<h3 id="_6">数据集浏览</h3>
 <p>数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。</p>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，<strong>AWS Dataset Management</strong>区块，<strong>Browse</strong>标签页。</li>

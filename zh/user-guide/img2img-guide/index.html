@@ -16,7 +16,7 @@
         <link rel="prev" href="../txt2img-guide/">
       
       
-        <link rel="next" href="../dreambooth-guide/">
+        <link rel="next" href="../controlnet-guide/">
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
       <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.1.21">
@@ -764,10 +764,31 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#inference-job" class="md-nav__link">
+    Inference Job
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../controlnet-guide/" class="md-nav__link">
+        controlNet指南
+      </a>
     </li>
   
 
@@ -1013,6 +1034,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#inference-job" class="md-nav__link">
+    Inference Job
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1036,7 +1064,7 @@
 <h2 id="img2img_1">img2img的使用方法</h2>
 <h3 id="img2img_2">img2img不同标签功能的标准流程</h3>
 <ol>
-<li>进入<strong>img2img</strong>标签页，进入<strong>Amazon SageMaker Inference</strong>面板。</li>
+<li>进入<strong>img2img</strong>标签页，<strong>Amazon SageMaker Inference</strong>面板。</li>
 <li>
 <p>输入推理所需参数。同于本地推理，您可以按需编辑<strong>img2img</strong>原生的推理参数，包括模型(stable diffusion checkpoint, VAE, extra networks:Lora,Hypernetworks, VAE等)，提示词，负提示词，取样参数，推理参数等。对于<strong>img2img</strong>，<strong>sketch</strong>，<strong>inpaint</strong>，<strong>inpaint sketch</strong>和<strong>inpaint upload</strong>，都可以按照原生方式进行图片上传和修饰。</p>
 <div class="admonition important">
@@ -1136,6 +1164,8 @@ img2img标签的提示词区域就能看到结果。
 <li>在新的<strong>Inference Job ID</strong>出现后，便可再次点击<strong>Generate on Cloud</strong>进行下一次推理。</li>
 </ol>
 <p><img alt="continuous generate results" src="../../images/continue-inference.png" /></p>
+<h2 id="inference-job">Inference Job</h2>
+<p>Inference Job下拉列表默认列出最近10条推理任务，命名格式遵循 Time-Type-Status-Uid。如果需要列出账户历史上所有推理任务，只需选中<strong>Show All</strong>。如果需要应用筛选器，缩小显示列表，可以勾选<strong>Advanced Inference Job filter</strong>，页面下方会自动增加本解决方案提供的筛选器维度，用户可以按需选择。</p>
 
 
 
