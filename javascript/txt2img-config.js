@@ -286,6 +286,8 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                     // Proceed to upload the next chunk or finalize the upload process
                 } else {
                     console.error("Chunk upload failed");
+                    reject();
+                    return;
                 }
                 const headersString = xhr.getAllResponseHeaders();
                 const headersArray = headersString.trim().split("\r\n");
