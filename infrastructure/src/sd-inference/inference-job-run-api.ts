@@ -94,6 +94,7 @@ export class RunInferenceJobApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:CreateBucket',
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,

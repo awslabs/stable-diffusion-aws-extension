@@ -27,14 +27,26 @@ Considering the diverse range of user scenarios, this approach is suitable for d
 
 ## Amazon SageMaker Endpoint Management
 ### Deploy new endpoint
-1. Navigate to solution main tab **Amazon SageMaker**, find session **Cloud Assets Management**, **Deploy New SageMaker Endpoint**.
-2. To simplify the user deployment process, this solution defaults the endpoint configuration to an ml.g5.2xlarge instance type, 1 instance count with auto scale enabled. If users have additional requirements, they can check the **Advanced Endpoint Configuration** . Below the checkbox, more selectable parameters will be displayed, including options for custom endpoint naming, instance types, and instance counts. Additionally, users can indicate whether the new endpoint deployment requires auto scale by checking the **Enable Autoscaling** option. Once all parameter selections are complete, click **Deploy** to proceed.
-select Amazon SageMaker instance type for inference under **SageMaker Instance Type**, and count in **Please select Instance count**, click **Deploy**, message *Endpoint deployment started* will appear on the left side.
-3. You can navigate to tab **txt2img**, session **Amazon SageMaker Inference**, refresh and select drop down list **Select Cloud SageMaker Endpoint** to check all the deployment status of endpoints.
+1. Navigate to the **Amazon SageMaker** main tab of the solution. In the **Cloud Assets Management** module, locate the **Deploy New SageMaker Endpoint** section.
+2. The default deployment type for the solution is ml.g5.2xlarge, with 1 instance. The endpoint autoscaling feature is enabled by default. Simply click the **Deploy** button to initiate the deployment of the Sagemaker endpoint.
+3. If users wish to specify the endpoint name, instance type, and maximum instance count for the endpoint's instances, they can check the **Advanced Endpoint Configuration** checkbox. This will display additional parameters for user input. The following table lists the names and descriptions of these parameters:
+
+   | Parameter Name    | Description                                                                                                  |
+       |-------------------|--------------------------------------------------------------------------------------------------------------|
+   | Endpoint Name (Optional) | If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be infer-endpoint-XXXXX. |
+   | Instance Type     | Select the instance type for the deployed endpoint from the dropdown list.                                 |
+   | Max Instance Count | Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage. |
+   | Enable Autoscaling | If this checkbox is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage. Otherwise, the instance count for the endpoint will remain fixed at the Max Instance Count. |
+
+4. After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click **Deploy**. You'll see a message indicating **Endpoint deployment started** on the left side under **Label**.
+   ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
+
+5. You can navigate to tab **txt2img**, session **Amazon SageMaker Inference**, refresh and select drop down list **Select Cloud SageMaker Endpoint** to check all the deployment status of endpoints.
 
     > **Note:** The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time.
 
-4. It will take around 10 mins for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
+6. It will take around 10 mins for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
+
 
 ### Delete deployed endpoints
 1. Refresh and select endpoint(s) under dropdown list of **Select Cloud SageMaker Endpoint**.

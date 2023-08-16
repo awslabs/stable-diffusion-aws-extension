@@ -8,6 +8,7 @@ import logging
 import gradio as gr
 import os
 import modules.scripts as scripts
+from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, postfix
 from modules import script_callbacks
 from modules.ui import create_refresh_button
 from modules.ui_components import FormRow
@@ -19,6 +20,7 @@ from utils import save_variable_to_json
 from aws_extension import sagemaker_ui
 
 dreambooth_available = True
+
 
 
 def dummy_function(*args, **kwargs):
@@ -80,6 +82,7 @@ class SageMakerUI(scripts.Script):
     default_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
+    sd_model_manager = CloudSDModelsManager()
 
     txt2img_generation_info = None
     txt2img_gallery = None
@@ -146,12 +149,18 @@ class SageMakerUI(scripts.Script):
 
         pass
 
-
     def ui(self, is_img2img):
+        def _check_generate(endpoint):
+            if endpoint:
+                self.sd_model_manager.update_models()
+            else:
+                self.sd_model_manager.clear()
+            return f'Generate{" on Cloud" if endpoint else ""}'
+
         if not is_img2img:
             sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
                 is_img2img)
-            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint,
+            sagemaker_endpoint.change(_check_generate, inputs=sagemaker_endpoint,
                                       outputs=[self.txt2img_generate_btn])
 
             return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
@@ -159,7 +168,7 @@ class SageMakerUI(scripts.Script):
         else:
             sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
                 is_img2img)
-            sagemaker_endpoint.change(lambda x: f'Generate{" on Cloud" if x else ""}', inputs=sagemaker_endpoint,
+            sagemaker_endpoint.change(_check_generate, inputs=sagemaker_endpoint,
                                       outputs=[self.img2img_generate_btn])
             return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
@@ -191,7 +200,7 @@ class SageMakerUI(scripts.Script):
 
         current_model = sd_models.select_checkpoint()
         print(current_model.name)
-        models = {'Stable-diffusion': [current_model.name]}
+        models = {'Stable-diffusion': [current_model.name.replace(f'.{postfix}', '')]}
 
         api_param_cls = None
 
@@ -205,6 +214,8 @@ class SageMakerUI(scripts.Script):
             raise NotImplementedError
 
         api_param = api_param_cls(**p.__dict__)
+        if self.is_img2img:
+            api_param.mask = p.image_mask
 
         def get_pil_metadata(pil_image):
             # Copy any text-only metadata
@@ -395,6 +406,13 @@ class SageMakerUI(scripts.Script):
         from modules.processing import Processed
 
         def process_image_inner_hijack(processing_param):
+            if not self.default_images_inner:
+                default_processing = importlib.import_module("modules.processing")
+                self.default_images_inner = default_processing.process_images_inner
+
+            if self.default_images_inner:
+                processing.process_images_inner = self.default_images_inner
+
             if err:
                 return Processed(
                     p,
@@ -416,13 +434,6 @@ class SageMakerUI(scripts.Script):
                 infotexts=[],
             )
 
-            # self.current_inference_id = None
-            if not self.default_images_inner:
-                default_processing = importlib.import_module("modules.processing")
-                self.default_images_inner = default_processing.process_images_inner
-
-            if self.default_images_inner:
-                processing.process_images_inner = self.default_images_inner
             return processed
 
         default_processing = importlib.import_module("modules.processing")
