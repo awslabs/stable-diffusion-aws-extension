@@ -39,6 +39,15 @@ let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as n
 let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
 let filButtonId = 'file-uploader';
 
+const modelTypeMap = {
+    'SD Checkpoints': 'Stable-diffusion',
+    'Textual Inversion': 'embeddings',
+    'LoRA model': 'Lora',
+    'ControlNet model': 'ControlNet',
+    'Hypernetwork': 'hypernetworks',
+    'VAE': 'VAE'
+};
+
 function clearFileInput() {
     var fileInput = document.getElementById('file-uploader');
     var newFileInput = document.createElement('input');
@@ -53,7 +62,12 @@ function clearFileInput() {
 
 function getModelTypeValue(dropdown_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
-    typeDom.value = dropdown_value
+    if (modelTypeMap.hasOwnProperty(dropdown_value)) {
+        typeDom.value = modelTypeMap[dropdown_value];
+    } else {
+        // 如果没有找到匹配的值，你可能需要处理这种情况
+        console.error("Unsupported dropdown value:", dropdown_value);
+    }
     clearFileInput();
     return dropdown_value;
 }
