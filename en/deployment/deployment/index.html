@@ -1071,6 +1071,10 @@
 <li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
 <li>
 <p>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. Under <strong>Parameters</strong>, enter a valid bucket name under <strong>aigcbucketname</strong> for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under <strong>email</strong> for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>sdextensionapikey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>ecrimagetag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.Choose <strong>Next</strong>.</p>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>Please do not change <strong>ecrimagetag</strong> before consulting solution team.</p>
+</div>
 </li>
 <li>
 <p>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</p>

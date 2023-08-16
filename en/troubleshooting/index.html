@@ -864,7 +864,13 @@
 
   <h1>Troubleshooting</h1>
 
-
+<p>The following help you to fix errors or problems that you might encounter when using Extension for Stable Diffusion on AWS.</p>
+<p><strong>Error: It presents error message 'RuntimeError: "LayerNormKernelImpl" not implemented for 'Half'' when I use txt2img inference function</strong></p>
+<p>The error appears when deploying webUI frontend. It's recommended to start webUI adding <code>--precision full --no-half</code>
+<div class="highlight"><pre><span></span><code>./webui.sh --skip-torch-cuda-test --precision full --no-half
+</code></pre></div></p>
+<p><strong>Error: I cannot install python venv on Ubuntu using <code>python3 -m venv env</code></strong></p>
+<p>The error comes out when your system's default is Python 3.9, and Ubunton 20.04 is Python 3.8. User can install venv package using <code>sudo apt install python3.8-venv</code> to explicitly mentioning the full version of Python.</p>
 
 
 
