@@ -31,6 +31,11 @@ Currently, it is recommended that users install the third-party extensions suppo
 
 Before attempting to access the webUI link in your browser, please ensure that the necessary ports are open and not being blocked by a firewall.
 
+**Q: How can I update the solution?**
+
+Currently, it is recommended that users avoid frequently updating solutions by deploying stacks through CloudFormation. If updates are necessary, it is advised to uninstall the existing solution stack and then deploy a new stack based on the CloudFormation template.
+
+
 
 ## Pricing
 
