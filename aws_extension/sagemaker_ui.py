@@ -443,7 +443,8 @@ def get_model_list_by_type(model_type):
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
                 checkpoint_list.append(ckpt_name)
 
-        return checkpoint_list
+        unique_list = list(set(checkpoint_list))
+        return unique_list
     except Exception as e:
         print(f"Error fetching model list: {e}")
         return []
