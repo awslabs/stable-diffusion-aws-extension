@@ -46,7 +46,7 @@ for model in model_list:
     response = requests.post(url=f'{url}/invocations', json=payload)
 
     print(f'Model {model} Running Time {time.time()-start_time} s RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
-    print(response)
+    print(response.json())
     # gc.collect()
 
 # r = response.json()
