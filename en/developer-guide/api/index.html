@@ -878,12 +878,12 @@
 <h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
 
 <h1 id="overview">Overview</h1>
-<p>This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WEBUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. </p>
+<p>This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WebUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. </p>
 <p>In order to support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.</p>
 <p>After user <a href="../../deployment/deployment/">deployed</a> solution middleware cloudformation, user can get the API URL and Token in the output part of the main stack. Please refer to <a href="../../deployment/deployment/">this document</a></p>
 <p><strong>Base URLs:</strong></p>
 <ul>
-<li>&lt;a href="https://\&lt;Your API Gateway ID&gt;.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod">https://\&lt;Your API Gateway ID&gt;.execute-api.\&lt;Your AWS Account Region&gt;.amazonaws.com/prod</a></li>
+<li>https://API_Gateway_ID.execute-api.AWS_Account_Region.amazonaws.com/prod</li>
 </ul>
 <p><strong>Authentication</strong></p>
 <ul>
@@ -914,8 +914,8 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 <h2 id="3-train-a-model">3. Train a model</h2>
 <h2 id="4-do-inference">4. Do Inference</h2>
 <p><img alt="Do Inference" src="../../images/do-inference.png" />
-After Sagemaker endpoint is in inService status, you can call <a href="#apiinferencerun-sagemaker-inference">/api/inference/run-sagemaker-inference</a> to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in <a href="#apiinferencerun-sagemaker-inference">/api/inference/run-sagemaker-inference</a>.</p>
-<p><a href="#apiinferencerun-sagemaker-inference">/api/inference/run-sagemaker-inference</a> will return following json structure to client:
+After Sagemaker endpoint is in inService status, you can call <a href="#inference-l2-api">/inference-api/inference</a> to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in <a href="#inference-l2-api">/inference-api/inference</a>.</p>
+<p><a href="#inference-l2-api">/inference-api/inference</a> will return following json structure to client:
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;inference_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;XXXXXXX&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;inprogress | failed&quot;</span><span class="p">,</span>
@@ -938,7 +938,7 @@ Client then can call <a href="#inferenceget-inference-job">/inference/get-infere
 
 title Do Inference
 
-Client->Middleware:Call **/api/inference/run-sagemaker-inference**
+Client->Middleware:Call **/inference-api/inference**
 Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
 Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
@@ -992,7 +992,7 @@ Middleware->Client: return the inference parameter in presigned url format
 <tr>
 <td>6</td>
 <td>POST</td>
-<td><a href="#apiinferencerun-sagemaker-inference">/api/inference/run-sagemaker-inference</a></td>
+<td><a href="#inference-l2-api">/inference-api/inference</a></td>
 <td>Run sagemaker inference using default parameters</td>
 </tr>
 <tr>
@@ -1204,8 +1204,8 @@ This operation does not require authentication
 
 <p><br/></p>
 <h1 id="inference-apiinference">/inference-api/inference</h1>
-<p><a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a></p>
 <p>Generate a new image from a text prompt.</p>
+<p><a id="inference-l2-api"></a></p>
 <h3 id="code-samples_1"><strong>Code samples :</strong></h3>
 <p>Python example code:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
@@ -1221,13 +1221,12 @@ This operation does not require authentication
       <span class="s2">&quot;v1-5-pruned-emaonly.safetensors&quot;</span>
     <span class="p">]</span>
   <span class="p">},</span>
-  <span class="s2">&quot;sagemaker_endpoint&quot;</span><span class="p">:</span> <span class="s2">&quot;infer-endpoint-cb821ea&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;task_type&quot;</span><span class="p">:</span> <span class="s2">&quot;txt2img&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;sagemaker_endpoint_name&quot;</span><span class="p">:</span> <span class="s2">&quot;infer-endpoint-cb821ea&quot;</span><span class="p">,</span>
   <span class="s2">&quot;prompt&quot;</span><span class="p">:</span> <span class="s2">&quot;a cute panda&quot;</span><span class="p">,</span>
   <span class="s2">&quot;denoising_strength&quot;</span><span class="p">:</span> <span class="mf">0.75</span>
 <span class="p">}</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/</span><span class="si">{basePath}</span><span class="s2">/api/inference/run-sagemaker-inference&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">body</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/</span><span class="si">{basePath}</span><span class="s2">/inference-api/inference&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">body</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -1239,8 +1238,7 @@ This operation does not require authentication
 <span class="s1">      &quot;v1-5-pruned-emaonly.safetensors&quot;</span>
 <span class="s1">    ]</span>
 <span class="s1">  },</span>
-<span class="s1">  &quot;sagemaker_endpoint&quot;: &quot;infer-endpoint-cb821ea&quot;,</span>
-<span class="s1">  &quot;task_type&quot;: &quot;txt2img&quot;,</span>
+<span class="s1">  &quot;sagemaker_endpoint_name&quot;: &quot;infer-endpoint-cb821ea&quot;,</span>
 <span class="s1">  &quot;prompt&quot;: &quot;a cute panda&quot;,</span>
 <span class="s1">  &quot;denoising_strength&quot;: 0.75</span>
 <span class="s1">}&#39;</span><span class="p">;</span>
@@ -1250,7 +1248,7 @@ This operation does not require authentication
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference&quot;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/{basePath}/inference-api/inference&quot;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nx">inputBody</span><span class="p">,</span>
@@ -1262,7 +1260,7 @@ This operation does not require authentication
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>POST /api/inference/run-sagemaker-inference</code></p>
+<p><code>POST /inference-api/inference</code></p>
 <blockquote>
 <p>Body parameter</p>
 </blockquote>
@@ -1273,13 +1271,12 @@ This operation does not require authentication
 <span class="w">      </span><span class="s2">&quot;v1-5-pruned-emaonly.safetensors&quot;</span>
 <span class="w">    </span><span class="p">]</span>
 <span class="w">  </span><span class="p">},</span>
-<span class="w">  </span><span class="nt">&quot;sagemaker_endpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;infer-endpoint-cb821ea&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;task_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;txt2img&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;sagemaker_endpoint_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;infer-endpoint-cb821ea&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;prompt&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;a cute panda&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;denoising_strength&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.75</span>
 <span class="p">}</span>
 </code></pre></div>
-<h3 id="run-sagemaker-inference-parameters">Parameters</h3>
+<h3 id="inference-api">Parameters</h3>
 
 <blockquote>
 <p>Parameter example</p>
@@ -1385,7 +1382,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 <span class="w">  </span><span class="nt">&quot;output_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path_of_prediction_output&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
-<h3 id="run-sagemaker-inference-responses">Responses</h3>
+<h3 id="inference-api">Responses</h3>
 
 <table>
 <thead>
