@@ -2,18 +2,6 @@ import dataclasses
 from typing import Optional, Any
 
 
-@dataclasses.dataclass
-class InferenceJob:
-    InferenceJobId: str
-    startTime: str
-    status: str
-    taskType: str
-    inference_info_name: Optional[Any] = None
-    image_names: Optional[Any] = None
-    sagemakerRaw: Optional[Any] = None
-    params: Optional[dict[str, Any]] = None
-
-
 # a copy of aws_extensions.models.InvocationsRequest
 @dataclasses.dataclass
 class InvocationsRequest:
