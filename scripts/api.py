@@ -47,7 +47,7 @@ except Exception as e:
 #     from dreambooth.utils.image_utils import get_images
 #     from dreambooth.utils.model_utils import get_db_models, get_lora_models
 # except:
-#     logger.info("Exception importing api")
+#     print("Exception importing api")
 #     traceback.print_exc()
 
 if os.environ.get("DEBUG_API", False):
@@ -61,8 +61,8 @@ def merge_model_on_cloud(req):
         try:
             results = modules.extras.run_modelmerger(*args)
         except Exception as e:
-            logger.info(f"Error loading/saving model file: {e}")
-            logger.info(traceback.format_exc(), file=sys.stderr)
+            print(f"Error loading/saving model file: {e}")
+            print(traceback.format_exc(), file=sys.stderr)
             # modules.sd_models.list_models()  # to remove the potentially missing models from the list
             return [None, None, None, None, f"Error merging checkpoints: {e}"]
         return results
@@ -104,7 +104,7 @@ def merge_model_on_cloud(req):
         if raw_name == tertiary_model_name:
             tertiary_model_name = model_name
 
-    logger.info(f"sd model checkpoint list is {sd_models.checkpoints_list}")
+    print(f"sd model checkpoint list is {sd_models.checkpoints_list}")
 
     [primary_model_name, secondary_model_name, tertiary_model_name, component_dict_sd_model_checkpoints, modelmerger_result] = \
         modelmerger("fake_id_task", primary_model_name, secondary_model_name, tertiary_model_name, \
@@ -131,7 +131,7 @@ def merge_model_on_cloud(req):
     model_yaml = (merge_model_name[:-len(merge_model_name.split('.')[-1])]+'yaml').replace('(','\(').replace(')','\)')
     model_yaml_complete_path = base_path + '/' + model_yaml
 
-    logger.info(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
+    print(f"m {merge_model_name_complete_path}, n_m {new_merge_model_name_complete_path}, yaml {model_yaml_complete_path}")
 
     if yaml_states:
         new_model_yaml = model_yaml.replace('(','_').replace(')','_')
@@ -145,7 +145,7 @@ def merge_model_on_cloud(req):
     os.system(f'rm {new_merge_model_name_complete_path}')
     os.system(f'rm {new_model_yaml_complete_path}')
 
-    logger.info(f"output model path is {output_model_position}")
+    print(f"output model path is {output_model_position}")
 
     return output_model_position
 
@@ -165,39 +165,39 @@ def sagemaker_api(_, app: FastAPI):
         Check the current state of Dreambooth processes.
         @return:
         """
-        logger.info('-------invocation------')
+        print('-------invocation------')
 
         def show_slim_dict(payload):
             pay_type = type(payload)
             if pay_type is dict:
                 for k, v in payload.items():
-                    logger.info(f"{k}")
+                    print(f"{k}")
                     show_slim_dict(v)
             elif pay_type is list:
                 for v in payload:
-                    logger.info(f"list")
+                    print(f"list")
                     show_slim_dict(v)
             elif pay_type is str:
                 if len(payload) > 50:
-                    logger.info(f" : {len(payload)} contents")
+                    print(f" : {len(payload)} contents")
                 else:
-                    logger.info(f" : {payload}")
+                    print(f" : {payload}")
             else:
-                logger.info(f" : {payload}")
+                print(f" : {payload}")
 
         with condition:
             thread_deque.append(req)
-            logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+            print(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
             if len(thread_deque) > THREAD_CHECK_COUNT and len(thread_deque) <= CONDITION_POOL_MAX_COUNT:
-                logger.info(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                print(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
                 condition.wait(timeout=CONDITION_WAIT_TIME_OUT)
             elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
-                logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
+                print(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
                 raise MemoryError
 
             print(f'current version: dev')
-            logger.info(f"task is {req.task}")
-            logger.info(f"models is {req.models}")
+            print(f"task is {req.task}")
+            print(f"models is {req.models}")
             payload = {}
             if req.param_s3:
                 def parse_constant(c: str) -> float:
@@ -212,38 +212,38 @@ def sagemaker_api(_, app: FastAPI):
                 payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
                 show_slim_dict(payload)
 
-            logger.info(f"extra_single_payload is: ")
+            print(f"extra_single_payload is: ")
             extra_single_payload = {} if req.extras_single_payload is None else json.loads(
                 req.extras_single_payload.json())
             show_slim_dict(extra_single_payload)
-            logger.info(f"extra_batch_payload is: ")
+            print(f"extra_batch_payload is: ")
             extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
                 req.extras_batch_payload.json())
             show_slim_dict(extra_batch_payload)
-            logger.info(f"interrogate_payload is: ")
+            print(f"interrogate_payload is: ")
             interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
             show_slim_dict(interrogate_payload)
-            # logger.info(f"db_create_model_payload is: ")
-            # logger.info(f"{req.db_create_model_payload}")
-            # logger.info(f"merge_checkpoint_payload is: ")
-            # logger.info(f"{req.merge_checkpoint_payload}")
-            # logger.info(f"json is {json.loads(req.json())}")
+            # print(f"db_create_model_payload is: ")
+            # print(f"{req.db_create_model_payload}")
+            # print(f"merge_checkpoint_payload is: ")
+            # print(f"{req.merge_checkpoint_payload}")
+            # print(f"json is {json.loads(req.json())}")
             try:
                 if req.task == 'txt2img':
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
                     checkspace_and_update_models(req.models)
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                                              json=payload)
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     return response.json()
                 elif req.task == 'img2img':
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
                     checkspace_and_update_models(req.models)
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
                                              json=payload)
-                    logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
+                    print(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     return response.json()
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
@@ -284,22 +284,22 @@ def sagemaker_api(_, app: FastAPI):
                                 s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
                                 local_model_path = db_create_model_params["ckpt_path"]
                                 input_path = get_path_from_s3_path(s3_input_path)
-                                logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                                print(f"ckpt from s3 {input_path} {local_model_path}")
                             else:
                                 s3_input_path = db_create_model_payload["s3_input_path"]
                                 local_model_path = db_create_model_params["ckpt_path"]
                                 input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
-                                logger.info(f"ckpt from local {input_path} {local_model_path}")
+                                print(f"ckpt from local {input_path} {local_model_path}")
                             input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
                             logging.info("Check disk usage before download.")
                             os.system("df -h")
-                            logger.info(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
+                            print(f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
                             download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
                             # Refresh the ckpt list.
                             sd_models.list_models()
-                            logger.info("Check disk usage after download.")
+                            print("Check disk usage after download.")
                             os.system("df -h")
-                        logger.info("Start creating model.")
+                        print("Start creating model.")
                         # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
                         #                         params=db_create_model_params)
                         create_model_func_args = copy.deepcopy(db_create_model_params)
@@ -333,13 +333,13 @@ def sagemaker_api(_, app: FastAPI):
                         return response
                     finally:
                         # Clean up
-                        logger.info("Delete src model.")
+                        print("Delete src model.")
                         delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
-                        logger.info(delete_src_command)
+                        print(delete_src_command)
                         os.system(delete_src_command)
                         logging.info("Delete tgt model.")
                         delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
-                        logger.info(delete_tgt_command)
+                        print(delete_tgt_command)
                         os.system(delete_tgt_command)
                         logging.info("Check disk usage after request.")
                         os.system("df -h")
@@ -383,7 +383,7 @@ def get_file_md5_dict(path):
 def move_model_to_tmp(_, app: FastAPI):
     # os.system("rm -rf models")
     # Create model dir
-    # logger.info("Create model dir")
+    # print("Create model dir")
     # os.system("mkdir models")
     # Move model dir to /tmp
     logging.info("Copy model dir to tmp")
@@ -403,7 +403,7 @@ def move_model_to_tmp(_, app: FastAPI):
     if is_complete:
         os.system(f"rm -rf models")
         # Delete tmp model dir
-        # logger.info("Delete tmp model dir")
+        # print("Delete tmp model dir")
         # os.system("rm -rf /tmp/models")
         # Link model dir
         logging.info("Link model dir")
