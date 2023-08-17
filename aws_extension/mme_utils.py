@@ -109,20 +109,22 @@ def download_and_update(model_type, model_s3_pos):
     # os.system("df -h")
 
     print(f'./tools/s5cmd cp {model_s3_pos} ./')
-
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     tar_name = model_s3_pos.split('/')[-1]
     file_type, encoding = mimetypes.guess_type(f'./{tar_name}')
     if file_type == 'tar':
+        print("model type is tar")
         os.system(f"tar xvf {tar_name}")
         os.system(f"rm {tar_name}")
         os.system("df -h")
     else:
+        print("model type is origin file type")
         prefix_name = model_s3_pos.split('.')[0]
         command = ["./tools/s5cmd", "ls", f"{prefix_name}"]
         result = subprocess.run(command, capture_output=True, text=True, check=True)
         # 获取文件列表
         file_list = result.stdout.strip().split("\n")
+        print(f"file list:{file_list}")
         for s3_file in file_list:
             s3_file_name = s3_file.split("/")[-1]
             download_command = ["./tools/s5cmd", "cp", s3_file, f'./models/{model_type}/{s3_file_name}']
