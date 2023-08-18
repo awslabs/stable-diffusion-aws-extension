@@ -24,9 +24,8 @@ models_path['embeddings'] = 'embeddings'
 models_path['VAE'] = 'models/VAE'
 disk_path = '/tmp'
 #disk_path = '/'
-
 TAR_TYPE_FILE = 'application/x-tar'
-ORIGIN_TYPE_FILE = 'application/x-tar'
+
 
 def checkspace_and_update_models(selected_models):
     models_num = len(models_type_list)

@@ -284,7 +284,7 @@ def sagemaker_api(_, app: FastAPI):
                                 s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
                                 local_model_path = db_create_model_params["ckpt_path"]
                                 input_path = get_path_from_s3_path(s3_input_path)
-                                print(f"ckpt from s3 {input_path} {local_model_path}")
+                                logging.info(f"ckpt from s3 {input_path} {local_model_path}")
                             else:
                                 s3_input_path = db_create_model_payload["s3_input_path"]
                                 local_model_path = db_create_model_params["ckpt_path"]

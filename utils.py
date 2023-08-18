@@ -1,4 +1,3 @@
-import logging
 import os
 import requests
 import boto3
@@ -9,6 +8,7 @@ from urllib.parse import urlparse
 import requests
 import json
 import gradio as gr
+import logging
 
 sys.path.append(os.getcwd())
 # from modules.timer import Timer
