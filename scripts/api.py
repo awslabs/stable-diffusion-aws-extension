@@ -210,7 +210,6 @@ def sagemaker_api(_, app: FastAPI):
                     return float(c)
 
                 payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
-                print(f"payload: {payload}")
                 show_slim_dict(payload)
 
             print(f"extra_single_payload is: ")

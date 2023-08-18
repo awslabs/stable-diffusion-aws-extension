@@ -3,7 +3,6 @@ import io
 import base64
 from PIL import Image
 from utils import ModelsRef
-import mimetypes
 import subprocess
 
 try:
@@ -24,6 +23,10 @@ models_path['embeddings'] = 'embeddings'
 models_path['VAE'] = 'models/VAE'
 disk_path = '/tmp'
 #disk_path = '/'
+
+TAR_TYPE_FILE = 'application/x-tar'
+ORIGIN_TYPE_FILE = 'application/x-tar'
+
 def checkspace_and_update_models(selected_models):
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
@@ -111,25 +114,20 @@ def download_and_update(model_type, model_s3_pos):
     print(f'./tools/s5cmd cp {model_s3_pos} ./')
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     tar_name = model_s3_pos.split('/')[-1]
-    file_type, encoding = mimetypes.guess_type(f'./{tar_name}')
-    if file_type == 'tar':
+    print(tar_name)
+    command = f"file --mime-type -b ./{tar_name}"
+    file_type = subprocess.check_output(command, shell=True).decode('utf-8').strip()
+    print(f"file_type is {file_type}")
+    if file_type == TAR_TYPE_FILE:
         print("model type is tar")
         os.system(f"tar xvf {tar_name}")
         os.system(f"rm {tar_name}")
         os.system("df -h")
     else:
-        print("model type is origin file type")
+        os.system(f"rm {tar_name}")
+        print(f"model type is origin file type: {file_type}")
         prefix_name = model_s3_pos.split('.')[0]
-        command = ["./tools/s5cmd", "ls", f"{prefix_name}"]
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        # 获取文件列表
-        file_list = result.stdout.strip().split("\n")
-        print(f"file list:{file_list}")
-        for s3_file in file_list:
-            s3_file_name = s3_file.split("/")[-1]
-            download_command = ["./tools/s5cmd", "cp", s3_file, f'./models/{model_type}/{s3_file_name}']
-            subprocess.run(download_command, check=True)
-            print(f"download {s3_file} to {s3_file_name}")
+        os.system(f'./tools/s5cmd cp {prefix_name}* ./models/{model_type}/')
         print("download finished")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()
