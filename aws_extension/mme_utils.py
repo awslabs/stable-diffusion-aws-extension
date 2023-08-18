@@ -4,6 +4,7 @@ import base64
 from PIL import Image
 from utils import ModelsRef
 import subprocess
+import logging
 
 try:
     import modules.shared as shared
@@ -105,30 +106,24 @@ def upload_model(model_type, model_name, model_s3_pos):
 
 def download_and_update(model_type, model_s3_pos):
     #download from s3
-    # os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
-    # tar_name = model_s3_pos.split('/')[-1]
-    # os.system(f"tar xvf {tar_name}")
-    # os.system(f"rm {tar_name}")
-    # os.system("df -h")
-
-    print(f'./tools/s5cmd cp {model_s3_pos} ./')
+    logging.info(f'./tools/s5cmd cp {model_s3_pos} ./')
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     tar_name = model_s3_pos.split('/')[-1]
-    print(tar_name)
+    logging.info(tar_name)
     command = f"file --mime-type -b ./{tar_name}"
     file_type = subprocess.check_output(command, shell=True).decode('utf-8').strip()
-    print(f"file_type is {file_type}")
+    logging.info(f"file_type is {file_type}")
     if file_type == TAR_TYPE_FILE:
-        print("model type is tar")
+        logging.info("model type is tar")
         os.system(f"tar xvf {tar_name}")
         os.system(f"rm {tar_name}")
         os.system("df -h")
     else:
         os.system(f"rm {tar_name}")
-        print(f"model type is origin file type: {file_type}")
+        logging.info(f"model type is origin file type: {file_type}")
         prefix_name = model_s3_pos.split('.')[0]
         os.system(f'./tools/s5cmd cp {prefix_name}* ./models/{model_type}/')
-        print("download finished")
+        logging.info("download finished")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()
     if model_type == 'hypernetworks':
