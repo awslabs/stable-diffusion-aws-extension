@@ -209,6 +209,7 @@ def read_from_s3(s3_path):
         Bucket=bucket,
         Key=key,
     )
+    print(f"get_s3 object from {s3_resp}")
 
     if s3_resp['ContentLength'] > 0:
         return s3_resp['Body'].read()
