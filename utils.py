@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 import requests
 import json
 import gradio as gr
-import logging
 
 sys.path.append(os.getcwd())
 # from modules.timer import Timer
@@ -205,12 +204,10 @@ def split_s3_path(s3_path):
 def read_from_s3(s3_path):
     s3 = boto3.client('s3')
     bucket, key = split_s3_path(s3_path)
-    logging.info(f"read_from_s3: {bucket} {key}")
     s3_resp = s3.get_object(
         Bucket=bucket,
         Key=key,
     )
-    logging.info(f"get_s3 object from {s3_resp}")
     if s3_resp['ContentLength'] > 0:
         return s3_resp['Body'].read()
     raise Exception(f'no content for file {s3_path}')
