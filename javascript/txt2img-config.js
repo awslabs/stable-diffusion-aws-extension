@@ -218,7 +218,7 @@ function uploadFileToS3(files, groupName) {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
                 // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
-                return uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey);
+                return uploadFileChunks(file, presignedUrl, checkpointId, groupName, url, apiKey);
             })).then(results => {
                  console.log(results);
             }).catch(error => {
