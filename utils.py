@@ -208,8 +208,10 @@ def read_from_s3(s3_path):
         Bucket=bucket,
         Key=key,
     )
+
     if s3_resp['ContentLength'] > 0:
         return s3_resp['Body'].read()
+
     raise Exception(f'no content for file {s3_path}')
 
 def fast_upload(session, bucketname, s3dir, filelist, progress_func=None, workers=10):
