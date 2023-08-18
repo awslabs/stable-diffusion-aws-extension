@@ -204,6 +204,7 @@ def split_s3_path(s3_path):
 def read_from_s3(s3_path):
     s3 = boto3.client('s3')
     bucket, key = split_s3_path(s3_path)
+    print(f"read_from_s3: {bucket} {key}")
     s3_resp = s3.get_object(
         Bucket=bucket,
         Key=key,
