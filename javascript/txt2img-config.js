@@ -181,7 +181,6 @@ function uploadFileToS3(files, groupName) {
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
         document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
-    const presignedUrls = [];
     const filenames = [];
     const fileArrays = [];
     for(const file of files){
@@ -214,7 +213,7 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
-
+            const presignedUrls = [];
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
                 presignedUrls.push(...presignedUrl);
@@ -316,7 +315,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
             };
 
             xhr.upload.onprogress = function (event) {
-              const percentComplete = (event.loaded / event.total) * 100 / totalChunks;
+              const percentComplete = (event.loaded / event.total) * 100 / totalChunks + currentChunk/totalChunks;
               // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
               updatePercentProgress(`${percentComplete.toFixed(2)}%`);
             };
