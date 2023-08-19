@@ -199,6 +199,7 @@ function uploadFileToS3(files, groupName) {
         filenames: filenames,
         params: { message: "placeholder for chkpts upload test" }
     };
+    const presignedUrls = [];
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
     const url = apiUrl + "checkpoint";
@@ -213,10 +214,9 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
-            const presignedUrls = [];
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
-                presignedUrls.push(...presignedUrl);
+                // presignedUrls.push(...presignedUrl);
                 // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
                 return uploadFileChunks(file, presignedUrl, checkpointId, groupName, url, apiKey);
             })).then(results => {
