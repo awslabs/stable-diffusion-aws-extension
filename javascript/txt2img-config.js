@@ -181,6 +181,7 @@ function uploadFileToS3(files, groupName) {
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
         document.querySelector("#aws_middleware_token > label > textarea")["value"]: "";
+    const presignedUrls = [];
     const filenames = [];
     const fileArrays = [];
     for(const file of files){
@@ -199,7 +200,6 @@ function uploadFileToS3(files, groupName) {
         filenames: filenames,
         params: { message: "placeholder for chkpts upload test" }
     };
-    const presignedUrls = [];
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
     const url = apiUrl + "checkpoint";
