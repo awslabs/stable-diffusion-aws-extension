@@ -88,13 +88,15 @@ startup_timer.record("other imports")
 
 from modules import cmd_args
 
-cmd_opts = cmd_args.parser
+if os.environ.get('IGNORE_CMD_ARGS_ERRORS', None) is None:
+    cmd_opts = cmd_args.parser.parse_args()
+else:
+    cmd_opts, _ = cmd_args.parser.parse_known_args()
 
 if cmd_opts.server_name:
     server_name = cmd_opts.server_name
 else:
     server_name = "0.0.0.0" if cmd_opts.listen else None
-
 
 def fix_asyncio_event_loop_policy():
     """

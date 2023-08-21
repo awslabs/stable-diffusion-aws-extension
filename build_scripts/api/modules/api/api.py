@@ -15,6 +15,7 @@ from fastapi.encoders import jsonable_encoder
 import threading
 import json
 from secrets import compare_digest
+from modules import paths
 
 # import modules.shared as shared
 # from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
@@ -35,7 +36,7 @@ import piexif
 import piexif.helper
 from contextlib import closing
 
-from models import *
+from modules.api import models
 
 import logging
 
@@ -181,42 +182,8 @@ class Api:
         self.queue_lock = queue_lock
         # # TODO: do we need api_middleware? Xiujuan
         api_middleware(self.app)
-        # self.add_api_route("/sdapi/v1/txt2img", self.text2imgapi, methods=["POST"], response_model=models.TextToImageResponse)
-        # self.add_api_route("/sdapi/v1/img2img", self.img2imgapi, methods=["POST"], response_model=models.ImageToImageResponse)
-        # self.add_api_route("/sdapi/v1/extra-single-image", self.extras_single_image_api, methods=["POST"], response_model=models.ExtrasSingleImageResponse)
-        # self.add_api_route("/sdapi/v1/extra-batch-images", self.extras_batch_images_api, methods=["POST"], response_model=models.ExtrasBatchImagesResponse)
-        # self.add_api_route("/sdapi/v1/png-info", self.pnginfoapi, methods=["POST"], response_model=models.PNGInfoResponse)
-        # self.add_api_route("/sdapi/v1/progress", self.progressapi, methods=["GET"], response_model=models.ProgressResponse)
-        # self.add_api_route("/sdapi/v1/interrogate", self.interrogateapi, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/interrupt", self.interruptapi, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/skip", self.skip, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/options", self.get_config, methods=["GET"], response_model=models.OptionsModel)
-        # self.add_api_route("/sdapi/v1/options", self.set_config, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/cmd-flags", self.get_cmd_flags, methods=["GET"], response_model=models.FlagsModel)
-        # self.add_api_route("/sdapi/v1/samplers", self.get_samplers, methods=["GET"], response_model=List[models.SamplerItem])
-        # self.add_api_route("/sdapi/v1/upscalers", self.get_upscalers, methods=["GET"], response_model=List[models.UpscalerItem])
-        # self.add_api_route("/sdapi/v1/latent-upscale-modes", self.get_latent_upscale_modes, methods=["GET"], response_model=List[models.LatentUpscalerModeItem])
-        # self.add_api_route("/sdapi/v1/sd-models", self.get_sd_models, methods=["GET"], response_model=List[models.SDModelItem])
-        # self.add_api_route("/sdapi/v1/sd-vae", self.get_sd_vaes, methods=["GET"], response_model=List[models.SDVaeItem])
-        # self.add_api_route("/sdapi/v1/hypernetworks", self.get_hypernetworks, methods=["GET"], response_model=List[models.HypernetworkItem])
-        # self.add_api_route("/sdapi/v1/face-restorers", self.get_face_restorers, methods=["GET"], response_model=List[models.FaceRestorerItem])
-        # self.add_api_route("/sdapi/v1/realesrgan-models", self.get_realesrgan_models, methods=["GET"], response_model=List[models.RealesrganItem])
-        # self.add_api_route("/sdapi/v1/prompt-styles", self.get_prompt_styles, methods=["GET"], response_model=List[models.PromptStyleItem])
-        # self.add_api_route("/sdapi/v1/embeddings", self.get_embeddings, methods=["GET"], response_model=models.EmbeddingsResponse)
-        # self.add_api_route("/sdapi/v1/refresh-checkpoints", self.refresh_checkpoints, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/create/embedding", self.create_embedding, methods=["POST"], response_model=models.CreateResponse)
-        # self.add_api_route("/sdapi/v1/create/hypernetwork", self.create_hypernetwork, methods=["POST"], response_model=models.CreateResponse)
-        # self.add_api_route("/sdapi/v1/preprocess", self.preprocess, methods=["POST"], response_model=models.PreprocessResponse)
-        # self.add_api_route("/sdapi/v1/train/embedding", self.train_embedding, methods=["POST"], response_model=models.TrainResponse)
-        # self.add_api_route("/sdapi/v1/train/hypernetwork", self.train_hypernetwork, methods=["POST"], response_model=models.TrainResponse)
-        # self.add_api_route("/sdapi/v1/memory", self.get_memory, methods=["GET"], response_model=models.MemoryResponse)
-        # self.add_api_route("/sdapi/v1/unload-checkpoint", self.unloadapi, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/reload-checkpoint", self.reloadapi, methods=["POST"])
-        # self.add_api_route("/sdapi/v1/scripts", self.get_scripts_list, methods=["GET"], response_model=models.ScriptsList)
-        # self.add_api_route("/sdapi/v1/script-info", self.get_script_info, methods=["GET"], response_model=List[models.ScriptInfo])
-
         self.add_api_route("/invocations", self.invocations, methods=["POST"], response_model=[])
-        self.add_api_route("/ping", self.ping, methods=["GET"], reponse_model=PingResponse)
+        self.add_api_route("/ping", self.ping, methods=["GET"], reponse_model=models.PingResponse)
 
         # if shared.cmd_opts.api_server_stop:
         #     self.add_api_route("/sdapi/v1/server-kill", self.kill_webui, methods=["POST"])
@@ -239,7 +206,7 @@ class Api:
 
     #     raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
 
-    def invocations(self, req: InvocationsRequest):
+    def invocations(self, req: models.InvocationsRequest):
         """
         @return:
         """
