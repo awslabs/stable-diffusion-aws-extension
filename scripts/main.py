@@ -915,7 +915,7 @@ def on_ui_tabs():
                                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path],
                                                   outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path])
 
-                with gr.Accordion("Upload Model to S3 from My Computer", open=False, visible= False):
+                with gr.Accordion("Upload Model to S3 from My Computer", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_local_form_row_01"):
                         model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_type_ele_id")
