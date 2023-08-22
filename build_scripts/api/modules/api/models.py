@@ -111,27 +111,27 @@ StableDiffusionTxt2ImgProcessingAPI = PydanticModelGenerator(
     ]
 ).generate_model()
 
-# StableDiffusionImg2ImgProcessingAPI = PydanticModelGenerator(
-#     "StableDiffusionProcessingImg2Img",
-#     StableDiffusionProcessingImg2Img,
-#     [
-#         {"key": "sampler_index", "type": str, "default": "Euler"},
-#         {"key": "init_images", "type": list, "default": None},
-#         {"key": "denoising_strength", "type": float, "default": 0.75},
-#         {"key": "mask", "type": str, "default": None},
-#         {"key": "include_init_images", "type": bool, "default": False, "exclude" : True},
-#         {"key": "script_name", "type": str, "default": None},
-#         {"key": "script_args", "type": list, "default": []},
-#         {"key": "send_images", "type": bool, "default": True},
-#         {"key": "save_images", "type": bool, "default": False},
-#         {"key": "alwayson_scripts", "type": dict, "default": {}},
-#     ]
-# ).generate_model()
+StableDiffusionImg2ImgProcessingAPI = PydanticModelGenerator(
+    "StableDiffusionProcessingImg2Img",
+    StableDiffusionProcessingImg2Img,
+    [
+        {"key": "sampler_index", "type": str, "default": "Euler"},
+        {"key": "init_images", "type": list, "default": None},
+        {"key": "denoising_strength", "type": float, "default": 0.75},
+        {"key": "mask", "type": str, "default": None},
+        {"key": "include_init_images", "type": bool, "default": False, "exclude" : True},
+        {"key": "script_name", "type": str, "default": None},
+        {"key": "script_args", "type": list, "default": []},
+        {"key": "send_images", "type": bool, "default": True},
+        {"key": "save_images", "type": bool, "default": False},
+        {"key": "alwayson_scripts", "type": dict, "default": {}},
+    ]
+).generate_model()
 
-# class TextToImageResponse(BaseModel):
-#     images: List[str] = Field(default=None, title="Image", description="The generated image in base64 format.")
-#     parameters: dict
-#     info: str
+class TextToImageResponse(BaseModel):
+    images: List[str] = Field(default=None, title="Image", description="The generated image in base64 format.")
+    parameters: dict
+    info: str
 
 # class ImageToImageResponse(BaseModel):
 #     images: List[str] = Field(default=None, title="Image", description="The generated image in base64 format.")
@@ -318,8 +318,8 @@ class InvocationsRequest(BaseModel):
     username: Optional[str]
     checkpoint_info:Optional[dict]
     models: Optional[dict]
-    txt2img_payload: Optional[dict]
-    img2img_payload: Optional[dict]
+    txt2img_payload: Optional[StableDiffusionTxt2ImgProcessingAPI]
+    img2img_payload: Optional[StableDiffusionImg2ImgProcessingAPI]
     extras_single_payload: Optional[dict]
     extras_batch_payload: Optional[dict]
     interrogate_payload: Optional[dict]

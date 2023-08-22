@@ -348,7 +348,8 @@ class StableDiffusionProcessing:
             required_prompts,
             steps,
             opts.CLIP_stop_at_last_layers,
-            shared.sd_model.sd_checkpoint_info,
+            # shared.sd_model.sd_checkpoint_info,
+            None,
             extra_network_data,
             opts.sdxl_crop_left,
             opts.sdxl_crop_top,
@@ -400,7 +401,7 @@ class Processed:
         self.batch_size = p.batch_size
         self.restore_faces = p.restore_faces
         self.face_restoration_model = opts.face_restoration_model if p.restore_faces else None
-        self.sd_model_hash = shared.sd_model.sd_model_hash
+        # self.sd_model_hash = shared.sd_model.sd_model_hash
         self.seed_resize_from_w = p.seed_resize_from_w
         self.seed_resize_from_h = p.seed_resize_from_h
         self.denoising_strength = getattr(p, 'denoising_strength', None)
@@ -451,7 +452,7 @@ class Processed:
             "batch_size": self.batch_size,
             "restore_faces": self.restore_faces,
             "face_restoration_model": self.face_restoration_model,
-            "sd_model_hash": self.sd_model_hash,
+            # "sd_model_hash": self.sd_model_hash,
             "seed_resize_from_w": self.seed_resize_from_w,
             "seed_resize_from_h": self.seed_resize_from_h,
             "denoising_strength": self.denoising_strength,
@@ -633,8 +634,8 @@ def create_infotext(p, all_prompts, all_seeds, all_subseeds, comments=None, iter
         "Seed": all_seeds[index],
         "Face restoration": (opts.face_restoration_model if p.restore_faces else None),
         "Size": f"{p.width}x{p.height}",
-        "Model hash": getattr(p, 'sd_model_hash', None if not opts.add_model_hash_to_info or not shared.sd_model.sd_model_hash else shared.sd_model.sd_model_hash),
-        "Model": (None if not opts.add_model_name_to_info else shared.sd_model.sd_checkpoint_info.name_for_extra),
+        # "Model hash": getattr(p, 'sd_model_hash', None if not opts.add_model_hash_to_info or not shared.sd_model.sd_model_hash else shared.sd_model.sd_model_hash),
+        # "Model": (None if not opts.add_model_name_to_info else shared.sd_model.sd_checkpoint_info.name_for_extra),
         "Variation seed": (None if p.subseed_strength == 0 else all_subseeds[index]),
         "Variation seed strength": (None if p.subseed_strength == 0 else p.subseed_strength),
         "Seed resize from": (None if p.seed_resize_from_w <= 0 or p.seed_resize_from_h <= 0 else f"{p.seed_resize_from_w}x{p.seed_resize_from_h}"),
@@ -668,25 +669,25 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
 
     try:
         # if no checkpoint override or the override checkpoint can't be found, remove override entry and load opts checkpoint
-        if sd_models.checkpoint_aliases.get(p.override_settings.get('sd_model_checkpoint')) is None:
-            p.override_settings.pop('sd_model_checkpoint', None)
-            sd_models.reload_model_weights()
+        # if sd_models.checkpoint_aliases.get(p.override_settings.get('sd_model_checkpoint')) is None:
+        #     p.override_settings.pop('sd_model_checkpoint', None)
+        #     sd_models.reload_model_weights()
 
-        for k, v in p.override_settings.items():
-            setattr(opts, k, v)
+        # for k, v in p.override_settings.items():
+        #     setattr(opts, k, v)
 
-            if k == 'sd_model_checkpoint':
-                sd_models.reload_model_weights()
+        #     if k == 'sd_model_checkpoint':
+        #         sd_models.reload_model_weights()
 
-            if k == 'sd_vae':
-                sd_vae.reload_vae_weights()
+        #     if k == 'sd_vae':
+        #         sd_vae.reload_vae_weights()
 
-        sd_models.apply_token_merging(p.sd_model, p.get_token_merging_ratio())
+        # sd_models.apply_token_merging(p.sd_model, p.get_token_merging_ratio())
 
         res = process_images_inner(p)
 
     finally:
-        sd_models.apply_token_merging(p.sd_model, 0)
+        # sd_models.apply_token_merging(p.sd_model, 0)
 
         # restore opts to original state
         if p.override_settings_restore_afterwards:
@@ -741,15 +742,15 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
     infotexts = []
     output_images = []
 
-    with torch.no_grad(), p.sd_model.ema_scope():
+    with torch.no_grad():
         with devices.autocast():
             p.init(p.all_prompts, p.all_seeds, p.all_subseeds)
 
             # for OSX, loading the model during sampling changes the generated picture, so it is loaded here
-            if shared.opts.live_previews_enable and opts.show_progress_type == "Approx NN":
-                sd_vae_approx.model()
+            # if shared.opts.live_previews_enable and opts.show_progress_type == "Approx NN":
+            #     sd_vae_approx.model()
 
-            sd_unet.apply_unet()
+            # sd_unet.apply_unet()
 
         if state.job_count == -1:
             state.job_count = p.n_iter
@@ -787,20 +788,20 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             # infotext could be modified by that callback
             # Example: a wildcard processed by process_batch sets an extra model
             # strength, which is saved as "Model Strength: 1.0" in the infotext
-            if n == 0:
-                with open(os.path.join(paths.data_path, "params.txt"), "w", encoding="utf8") as file:
-                    processed = Processed(p, [], p.seed, "")
-                    file.write(processed.infotext(p, 0))
+            # if n == 0:
+            #     with open(os.path.join(paths.data_path, "params.txt"), "w", encoding="utf8") as file:
+            #         processed = Processed(p, [], p.seed, "")
+            #         file.write(processed.infotext(p, 0))
 
-            p.setup_conds()
+            # p.setup_conds()
 
-            for comment in model_hijack.comments:
-                comments[comment] = 1
+            # for comment in model_hijack.comments:
+            #     comments[comment] = 1
 
-            p.extra_generation_params.update(model_hijack.extra_generation_params)
+            # p.extra_generation_params.update(model_hijack.extra_generation_params)
 
-            if p.n_iter > 1:
-                shared.state.job = f"Batch {n+1} out of {p.n_iter}"
+            # if p.n_iter > 1:
+            #     shared.state.job = f"Batch {n+1} out of {p.n_iter}"
 
             with devices.without_autocast() if devices.unet_needs_upcast else devices.autocast():
                 samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts)
@@ -816,8 +817,8 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             del samples_ddim
 
-            if lowvram.is_enabled(shared.sd_model):
-                lowvram.send_everything_to_cpu()
+            # if lowvram.is_enabled(shared.sd_model):
+            #     lowvram.send_everything_to_cpu()
 
             devices.torch_gc()
 
@@ -854,8 +855,8 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
                 image = apply_overlay(image, p.paste_to, i, p.overlay_images)
 
-                if opts.samples_save and not p.do_not_save_samples:
-                    images.save_image(image, p.outpath_samples, "", p.seeds[i], p.prompts[i], opts.samples_format, info=infotext(n, i), p=p)
+                # if opts.samples_save and not p.do_not_save_samples:
+                #     images.save_image(image, p.outpath_samples, "", p.seeds[i], p.prompts[i], opts.samples_format, info=infotext(n, i), p=p)
 
                 text = infotext(n, i)
                 infotexts.append(text)
@@ -900,8 +901,8 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
                 output_images.insert(0, grid)
                 index_of_first_image = 1
 
-            if opts.grid_save:
-                images.save_image(grid, p.outpath_grids, "grid", p.all_seeds[0], p.all_prompts[0], opts.grid_format, info=infotext(use_main_prompt=True), short_filename=not opts.grid_extended_filename, p=p, grid=True)
+            # if opts.grid_save:
+            #     images.save_image(grid, p.outpath_grids, "grid", p.all_seeds[0], p.all_prompts[0], opts.grid_format, info=infotext(use_main_prompt=True), short_filename=not opts.grid_extended_filename, p=p, grid=True)
 
     if not p.disable_extra_networks and p.extra_network_data:
         extra_networks.deactivate(p, p.extra_network_data)
@@ -1122,8 +1123,8 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
             else:
                 pil_images = [Image.fromarray(image) for image in images]
             return pil_images
-        # images = numpy_to_pil(images)
-        # images[0].save("test.png")
+        images = numpy_to_pil(images)
+        images[0].save("test.png")
 
         if not self.enable_hr:
             return samples

@@ -13,9 +13,8 @@ import cv2
 from skimage import exposure
 from typing import Any, Dict, List
 
-import modules.sd_hijack
+from modules import sd_hijack
 from modules import devices, prompt_parser, masking, sd_samplers, lowvram, generation_parameters_copypaste, extra_networks, sd_vae_approx, scripts, sd_samplers_common, sd_unet, errors
-from modules.sd_hijack import model_hijack
 from modules.shared import opts, cmd_opts, state
 import modules.shared as shared
 import modules.paths as paths
@@ -699,8 +698,8 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
     seed = get_fixed_seed(p.seed)
     subseed = get_fixed_seed(p.subseed)
 
-    modules.sd_hijack.model_hijack.apply_circular(p.tiling)
-    modules.sd_hijack.model_hijack.clear_comments()
+    sd_hijack.model_hijack.apply_circular(p.tiling)
+    sd_hijack.model_hijack.clear_comments()
 
     comments = {}
 
@@ -720,7 +719,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
         return create_infotext(p, p.all_prompts, p.all_seeds, p.all_subseeds, comments, iteration, position_in_batch, use_main_prompt)
 
     if os.path.exists(cmd_opts.embeddings_dir) and not p.do_not_reload_embeddings:
-        model_hijack.embedding_db.load_textual_inversion_embeddings()
+        modules.sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings()
 
     if p.scripts is not None:
         p.scripts.process(p)
