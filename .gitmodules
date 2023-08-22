@@ -4,3 +4,6 @@
 [submodule "build_scripts/api/repositories/k-diffusion"]
 	path = build_scripts/api/repositories/k-diffusion
 	url = git@github.com:crowsonkb/k-diffusion.git
+[submodule "build_scripts/api/repositories/stable-diffusion-stability-ai"]
+	path = build_scripts/api/repositories/stable-diffusion-stability-ai
+	url = git@github.com:Stability-AI/stablediffusion.git
