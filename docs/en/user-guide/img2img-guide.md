@@ -2,7 +2,7 @@
 You can open the **img2img tab** and use the original region along with the **Amazon SageMaker Inference** to perform inference on the cloud.
 
 
-## img2img use guide
+## img2img user guide
 ### Standard process for different functional labels in img2img
 
 1. Navigate to tab **img2img**, find panel **Amazon SageMaker Inference**.

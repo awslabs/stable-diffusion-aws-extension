@@ -17,7 +17,7 @@ headingLevel: 2
 <h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
 
 # Overview
-This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WEBUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
+This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WebUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
 
 In order to support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.
 
@@ -26,7 +26,8 @@ After user [deployed](../deployment/deployment.md) solution middleware cloudform
 
 **Base URLs:**
 
-* <a href="https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod">https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod</a>
+* https://API_Gateway_ID.execute-api.AWS_Account_Region.amazonaws.com/prod
+
 
 **Authentication**
 
@@ -62,9 +63,9 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 
 ## 4. Do Inference
 ![Do Inference](../images/do-inference.png)
-After Sagemaker endpoint is in inService status, you can call [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference).
+After Sagemaker endpoint is in inService status, you can call [/inference-api/inference](#inference-l2-api) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/inference-api/inference](#inference-l2-api).
 
-[/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) will return following json structure to client:
+[/inference-api/inference](#inference-l2-api) will return following json structure to client:
 ```json
 {
   "inference_id": "XXXXXXX",
@@ -94,7 +95,7 @@ Also Client can call [/inference/get-inference-job-param-output](#inferenceget-i
   
 title Do Inference
 
-Client->Middleware:Call **/api/inference/run-sagemaker-inference**
+Client->Middleware:Call **/inference-api/inference**
 Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
 Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
@@ -118,7 +119,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
 | 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job.               |
 | 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job.                                     |
-| 6     | POST        | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference)                          | Run sagemaker inference using default parameters                                       |
+| 6     | POST        | [/inference-api/inference](#inference-l2-api)                          | Run sagemaker inference using default parameters                                       |
 | 7     | POST        | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | Deploys a SageMaker endpoint.                                                         |
 | 8     | POST        | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | Deletes a SageMaker endpoint.                                                         |
 | 9     | GET         | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | Lists all endpoint deployment jobs.                                                   |
@@ -216,9 +217,9 @@ This operation does not require authentication
 
 # /inference-api/inference
 
-<a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a>
-
 Generate a new image from a text prompt.
+
+<a id="inference-l2-api"></a>
 
 ### **Code samples :**
 
@@ -238,13 +239,12 @@ body = {
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, json = body)
+r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference", headers = headers, json = body)
 
 print(r.json())
 
@@ -260,8 +260,7 @@ const inputBody = '{
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }';
@@ -271,7 +270,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference",
+fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference",
 {
   method: "POST",
   body: inputBody,
@@ -285,7 +284,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /api/inference/run-sagemaker-inference`
+`POST /inference-api/inference`
 
 > Body parameter
 
@@ -297,14 +296,13 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 ```
 
-<h3 id="run-sagemaker-inference-parameters">Parameters</h3>
+<h3 id="inference-api">Parameters</h3>
 
 > Parameter example
 
@@ -413,7 +411,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 }
 ```
 
-<h3 id="run-sagemaker-inference-responses">Responses</h3>
+<h3 id="inference-api">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
