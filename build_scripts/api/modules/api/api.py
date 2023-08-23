@@ -4,7 +4,6 @@ import os
 import time
 import datetime
 import uvicorn
-import gradio as gr
 from threading import Lock
 from io import BytesIO
 from fastapi import APIRouter, Depends, FastAPI, Request, Response

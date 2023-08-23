@@ -42,8 +42,8 @@ startup_timer = timer.startup_timer
 startup_timer.record("launcher")
 
 import torch
-import pytorch_lightning   # noqa: F401 # pytorch_lightning should be imported after torch, but it re-enables warnings on import so import once to disable them
-warnings.filterwarnings(action="ignore", category=DeprecationWarning, module="pytorch_lightning")
+# import pytorch_lightning   # noqa: F401 # pytorch_lightning should be imported after torch, but it re-enables warnings on import so import once to disable them
+# warnings.filterwarnings(action="ignore", category=DeprecationWarning, module="pytorch_lightning")
 warnings.filterwarnings(action="ignore", category=UserWarning, module="torchvision")
 startup_timer.record("import torch")
 
