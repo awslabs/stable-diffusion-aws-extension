@@ -1,4 +1,11 @@
-import { App, Stack, StackProps, Aspects, CfnParameter, CfnOutput } from 'aws-cdk-lib';
+import {
+  App,
+  Stack,
+  StackProps,
+  Aspects,
+  CfnParameter,
+  CfnOutput,
+} from 'aws-cdk-lib';
 import {
   BootstraplessStackSynthesizer,
   CompositeECRRepositoryAspect,
@@ -59,10 +66,26 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
-    const ddbTables = new Database(this, 'sd-ddb');
+    const createFromExist = new CfnParameter(this, 'create_from_exist', {
+      type: 'String',
+      description: 'Create Stack from existing resources',
+      default: 'no',
+      allowedValues: ['yes', 'no'],
+    });
+
+    const useExist = createFromExist.valueAsString;
+
+    const s3BucketName = new CfnParameter(this, 'exist_bucket', {
+      type: 'String',
+      description: 'New bucket name or Existing Bucket name',
+      minLength: 0,
+    });
+
+    const ddbTables = new Database(this, 'sd-ddb', useExist);
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
     const api_train_path = 'train-api/train';
+
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'model',
       'models',
@@ -77,9 +100,9 @@ export class Middleware extends Stack {
       api_train_path,
     ]);
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3');
-    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
 
+    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
 
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
@@ -88,11 +111,14 @@ export class Middleware extends Stack {
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
       ecr_image_tag: ecrImageTagParam.valueAsString,
-      sd_inference_job_table: ddbTables.inferenceJobTable,
-      sd_endpoint_deployment_job_table: ddbTables.endpointDeploymentJobTable,
-      checkpointTable: ddbTables.checkPointTable,
+      sd_inference_job_table: ddbTables.sDInferenceJobTable,
+      sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
+      checkpointTable: ddbTables.checkpointTable,
       commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
+      inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
+      inferenceResultTopic: snsTopics.inferenceResultTopic,
+      useExist: useExist,
     });
 
     new SdTrainDeployStack(this, 'SdDBTrainStack', {
@@ -105,6 +131,8 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3BucketStore.s3Bucket,
       snsTopic: snsTopics.snsTopic,
+      createModelFailureTopic: snsTopics.createModelFailureTopic,
+      createModelSuccessTopic: snsTopics.createModelSuccessTopic,
     });
 
     // Adding Outputs for apiGateway and s3Bucket

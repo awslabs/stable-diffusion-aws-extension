@@ -21,14 +21,14 @@ import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-// import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
-import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -37,6 +37,8 @@ request and Lambda function to avoid request payload limitation
 Note: Sync Inference is put here for reference, we use Async Inference now
 */
 export interface SDAsyncInferenceStackProps extends StackProps {
+  inferenceErrorTopic: sns.Topic;
+  inferenceResultTopic: sns.Topic;
   routers: {[key: string]: Resource};
   s3_bucket: s3.Bucket;
   training_table: dynamodb.Table;
@@ -46,6 +48,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
+  useExist: string;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -55,7 +58,6 @@ export class SDAsyncInferenceStack extends NestedStack {
     props: SDAsyncInferenceStackProps,
   ) {
     super(scope, id, props);
-
     if (!props?.ecr_image_tag) {
       throw new Error('default_inference_ecr_image is required');
     }
@@ -107,30 +109,20 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     // Create an SNS topic to get async inference result
-    const inference_result_topic = new aws_sns.Topic(
-      this,
-      'SNS-Receive-SageMaker-inference-success',
-    );
+    const inference_result_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-tp`, props.inferenceResultTopic.topicArn);
 
-    const inference_result_error_topic = new aws_sns.Topic(
-      this,
-      'SNS-Receive-SageMaker-inference-error',
-    );
+    const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
 
     const inferenceECR_url = this.createInferenceECR(srcImg);
-
     const stepFunctionStack = new SagemakerInferenceStateMachine(this, <SagemakerInferenceProps>{
       snsTopic: inference_result_topic,
       snsErrorTopic: inference_result_error_topic,
       s3_bucket: props.s3_bucket,
       inferenceJobTable: sd_inference_job_table,
       endpointDeploymentJobTable: sd_endpoint_deployment_job_table,
-      userNotifySNS:
-                props?.snsTopic ??
-                new aws_sns.Topic(this, 'MyTopic', {
-                  displayName: 'My SNS Topic',
-                }),
+      userNotifySNS: props.snsTopic,
       inference_ecr_url: inferenceECR_url,
+      useExist: props.useExist,
     });
 
     const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {
