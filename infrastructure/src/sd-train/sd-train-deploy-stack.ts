@@ -163,7 +163,7 @@ export class SdTrainDeployStack extends NestedStack {
     // POST /dataset
     new CreateDatasetApi(this, 'aigc-create-dataset', {
       commonLayer: commonLayer,
-      datasetInfoTable: props.database.checkPointTable,
+      datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'POST',
       router: routers.dataset,
