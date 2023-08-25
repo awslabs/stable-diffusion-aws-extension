@@ -2,6 +2,7 @@ import datetime
 import sys
 from queue import Queue
 from typing import Dict, List
+from PIL import Image
 
 import requests
 import logging
@@ -1153,7 +1154,7 @@ def on_ui_tabs():
                                 api_key = get_variable_from_json('api_token')
                                 raw_response = requests.get(url=url, headers={'x-api-key': api_key})
                                 raw_response.raise_for_status()
-                                dataset_items = [(item['preview_url'], item['key']) for item in
+                                dataset_items = [(Image.open(requests.get(item['preview_url'], stream=True).raw), item['key']) for item in
                                                  raw_response.json()['data']]
                                 return ds['s3'], ds['description'], dataset_items
 
