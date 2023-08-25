@@ -10,14 +10,16 @@ import safetensors.torch
 from omegaconf import OmegaConf
 from os import mkdir
 from urllib import request
-import ldm.modules.midas as midas
+# import ldm.modules.midas as midas
 
-from ldm.util import instantiate_from_config
+# from ldm.util import instantiate_from_config
 
 from modules import paths, shared, modelloader, devices, script_callbacks, sd_vae, sd_disable_initialization, errors, hashes, sd_models_config, sd_unet, sd_models_xl
 from modules.sd_hijack_inpainting import do_inpainting_hijack
 from modules.timer import Timer
 import tomesd
+from diffusers import StableDiffusionPipeline
+from diffusers.models import AutoencoderKL
 
 model_dir = "Stable-diffusion"
 model_path = os.path.abspath(os.path.join(paths.models_path, model_dir))
@@ -448,7 +450,6 @@ class SdModelData:
     def set_sd_model(self, v):
         self.sd_model = v
 
-
 model_data = SdModelData()
 
 
@@ -513,7 +514,7 @@ def load_model(checkpoint_info=None, already_loaded_state_dict=None):
         lowvram.setup_for_low_vram(sd_model, shared.cmd_opts.medvram)
     else:
         sd_model.to(shared.device)
-
+        
     timer.record("move model to device")
 
     sd_hijack.model_hijack.hijack(sd_model)
@@ -641,3 +642,113 @@ def apply_token_merging(sd_model, token_merging_ratio):
         )
 
     sd_model.applied_token_merged_ratio = token_merging_ratio
+
+
+class DiffuserPipelineData:
+    def __init__(self):
+        self.sd_pipeline = None
+        self.was_loaded_at_least_once = False
+        self.lock = threading.Lock()
+
+    def get_sd_pipeline(self):
+        if self.was_loaded_at_least_once:
+            return self.sd_pipeline
+
+        if self.sd_pipeline is None:
+            with self.lock:
+                if self.sd_pipeline is not None or self.was_loaded_at_least_once:
+                    return self.sd_pipeline
+
+                try:
+                    load_pipeline()
+                except Exception as e:
+                    errors.display(e, "loading diffuser pipeline", full_traceback=True)
+                    print("", file=sys.stderr)
+                    print("Diffuser pipeline failed to load", file=sys.stderr)
+                    self.sd_pipeline = None
+
+        return self.sd_pipeline
+
+    def set_sd_pipeline(self, v):
+        self.sd_pipeline = v
+
+pipeline_data = DiffuserPipelineData()
+
+def load_pipeline(checkpoint_info=None):
+    checkpoint_info = checkpoint_info or select_checkpoint()
+
+    if pipeline_data.sd_pipeline:
+        pipeline_data.sd_pipeline = None
+        gc.collect()
+        devices.torch_gc()
+
+
+    timer = Timer()
+
+    timer.record("create model")
+
+    sd_model_hash = checkpoint_info.calculate_shorthash()
+    timer.record("calculate hash")
+
+    shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
+    from diffusers.models import AutoencoderKL
+    sd_pipeline = StableDiffusionPipeline.from_single_file("api/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors", torch_dtype=torch.float16, variant="fp16")
+    # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+    #sd_pipeline.vae = vae
+    #sd_pipeline = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+   
+    sd_pipeline.enable_xformers_memory_efficient_attention()
+
+    pipeline_name = str(type(sd_pipeline)).split('.')[-1][:-2]
+
+    sd_pipeline.sd_model_hash = sd_model_hash
+    sd_pipeline.sd_model_checkpoint = checkpoint_info.filename
+    sd_pipeline.sd_checkpoint_info = checkpoint_info
+    sd_pipeline.pipeline_name = pipeline_name
+    shared.opts.data["sd_checkpoint_hash"] = checkpoint_info.sha256
+
+    sd_pipeline.to(shared.device)
+
+    timer.record("move model to device")
+
+    pipeline_data.sd_pipeline = sd_pipeline
+    pipeline_data.was_loaded_at_least_once = True
+
+    
+    #sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)  # Reload embeddings after model load as they may or may not fit the model
+    #timer.record("load textual inversion embeddings")
+
+    print(f"Model loaded in {timer.summary()}.")
+
+    return sd_pipeline
+
+
+def reload_pipeline_weights(sd_pipeline=None, info=None):
+    from modules import devices
+    checkpoint_info = info or select_checkpoint()
+
+    if not sd_pipeline:
+        sd_pipeline = pipeline_data.sd_pipeline
+
+    if sd_pipeline is None:  # previous model load failed
+        current_checkpoint_info = None
+    else:
+        current_checkpoint_info = sd_pipeline.sd_checkpoint_info
+        if sd_pipeline.sd_model_checkpoint == checkpoint_info.filename:
+            return
+
+        sd_pipeline.to(devices.cpu)
+
+    timer = Timer()
+    del sd_pipeline
+    try:
+        load_pipeline(checkpoint_info)
+    except Exception:
+        print("Failed to load checkpoint, restoring previous")
+        load_pipeline(current_checkpoint_info)
+
+    
+    load_pipeline(checkpoint_info)
+    timer.record("move model to device")
+
+    return pipeline_data.sd_pipeline

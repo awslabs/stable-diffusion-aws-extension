@@ -31,23 +31,16 @@ from tqdm import tqdm
 
 from einops import repeat, rearrange
 from blendmodes.blend import blendLayers, BlendType
-from diffusers import (
-    DDPMScheduler,
-    DDIMScheduler,
-    PNDMScheduler,
-    LMSDiscreteScheduler,
-    EulerDiscreteScheduler,
-    EulerAncestralDiscreteScheduler,
-    DPMSolverMultistepScheduler,
-)
 
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 # some of those options should not be changed at all because they would break the model, so I removed them from options.
 opt_C = 4
 opt_f = 8
-from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline
-pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float32)
-pipeline.to("cuda")
+from diffusers import DiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionPipeline, StableDiffusionControlNetPipeline, StableDiffusionXLControlNetPipeline
+# pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float32)
+# test_pipeline = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+# test_pipeline.to("cuda")
 
 def setup_color_correction(image):
     logging.info("Calibrating color correction.")
@@ -122,15 +115,86 @@ class StableDiffusionProcessing:
     cached_uc = [None, None]
     cached_c = [None, None]
 
-    def __init__(self, sd_model=None, outpath_samples=None, outpath_grids=None, prompt: str = "", styles: List[str] = None, seed: int = -1, subseed: int = -1, subseed_strength: float = 0, seed_resize_from_h: int = -1, seed_resize_from_w: int = -1, seed_enable_extras: bool = True, sampler_name: str = None, batch_size: int = 1, n_iter: int = 1, steps: int = 50, cfg_scale: float = 7.0, width: int = 512, height: int = 512, restore_faces: bool = False, tiling: bool = False, do_not_save_samples: bool = False, do_not_save_grid: bool = False, extra_generation_params: Dict[Any, Any] = None, overlay_images: Any = None, negative_prompt: str = None, eta: float = None, do_not_reload_embeddings: bool = False, denoising_strength: float = 0, ddim_discretize: str = None, s_min_uncond: float = 0.0, s_churn: float = 0.0, s_tmax: float = None, s_tmin: float = 0.0, s_noise: float = 1.0, override_settings: Dict[str, Any] = None, override_settings_restore_afterwards: bool = True, sampler_index: int = None, script_args: list = None):
+    def __init__(
+        self, 
+        sd_model=None, 
+        outpath_samples=None, 
+        outpath_grids=None, 
+        prompt: str = "", 
+        styles: List[str] = None, 
+        seed: int = -1, 
+        subseed: int = -1, 
+        subseed_strength: float = 0, 
+        seed_resize_from_h: int = -1, 
+        seed_resize_from_w: int = -1, 
+        seed_enable_extras: bool = True, 
+        sampler_name: str = None, 
+        batch_size: int = 1, 
+        n_iter: int = 1, 
+        steps: int = 50, 
+        cfg_scale: float = 7.0, 
+        width: int = 512, 
+        height: int = 512, 
+        restore_faces: bool = False, 
+        tiling: bool = False, 
+        do_not_save_samples: bool = False, 
+        do_not_save_grid: bool = False, 
+        extra_generation_params: Dict[Any, Any] = None, 
+        overlay_images: Any = None, 
+        negative_prompt: str = None, 
+        eta: float = None, 
+        do_not_reload_embeddings: bool = False, 
+        denoising_strength: float = 0, 
+        ddim_discretize: str = None, 
+        s_min_uncond: float = 0.0, 
+        s_churn: float = 0.0, 
+        s_tmax: float = None, 
+        s_tmin: float = 0.0, 
+        s_noise: float = 1.0, 
+        override_settings: Dict[str, Any] = None, 
+        override_settings_restore_afterwards: bool = True, 
+        sampler_index: int = None, 
+        script_args: list = None, 
+        pipeline_name: str = "StableDiffusionPipeline", 
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        latents: Optional[torch.FloatTensor] = None,
+        prompt_embeds: Optional[torch.FloatTensor] = None,
+        negative_prompt_embeds: Optional[torch.FloatTensor] = None,
+        pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+        negative_pooled_prompt_embeds: Optional[torch.FloatTensor] = None,
+        output_type: Optional[str] = "latent",
+        callback: Optional[Callable[[int, int, torch.FloatTensor], None]] = None,
+        callback_steps: int = 1,
+        cross_attention_kwargs: Optional[Dict[str, Any]] = None,
+        guidance_rescale: float = 0.0,
+        original_size: Optional[Tuple[int, int]] = None,
+        crops_coords_top_left: Tuple[int, int] = (0, 0),
+        target_size: Optional[Tuple[int, int]] = None,
+        denoising_start: Optional[float] = None,
+        denoising_end: Optional[float] = None,
+        use_refiner: bool = False,
+        strength: float = 0.3,
+        aesthetic_score: float = 6.0,
+        negative_aesthetic_score: float = 2.5,
+        controlnet_conditioning_scale: Union[float, List[float]] = 1.0,
+        guess_mode: bool = False,
+        control_guidance_start: Union[float, List[float]] = 0.0,
+        control_guidance_end: Union[float, List[float]] = 1.0,
+        aws_dus: bool = True,
+    ):
+        # self.test_pipeline = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", force_download=True, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+        # # self.test_pipeline = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float32)
+        # self.test_pipeline.to("cuda")
         if sampler_index is not None:
             print("sampler_index argument for StableDiffusionProcessing does not do anything; use sampler_name", file=sys.stderr)
 
         self.outpath_samples: str = outpath_samples
         self.outpath_grids: str = outpath_grids
         self.prompt: str = prompt
+        self.prompt_2: str = None
         self.prompt_for_display: str = None
         self.negative_prompt: str = (negative_prompt or "")
+        self.negative_prompt_2: str = None
         self.styles: list = styles or []
         self.seed: int = seed
         self.subseed: int = subseed
@@ -198,10 +262,50 @@ class StableDiffusionProcessing:
         self.c = None
 
         self.user = None
+        # control diffuser output
+        self.output_type = output_type
+        self.pipeline_name = pipeline_name
+        self.generator = generator
+        self.prompt_embeds = prompt_embeds
+        self.negative_prompt_embeds = negative_prompt_embeds
+        self.output_type = output_type
+        self.callback = callback
+        self.callback_steps = callback_steps
+        self.cross_attention_kwargs = cross_attention_kwargs
+
+        # parameters for sdxl
+        self.denoising_end = denoising_end
+        self.pooled_prompt_embeds = pooled_prompt_embeds
+        self.negative_pooled_prompt_embeds = negative_pooled_prompt_embeds
+        self.guidance_rescale = guidance_rescale
+        self.original_size = original_size
+        self.crops_coords_top_left = crops_coords_top_left
+        self.target_size = target_size
+        self.use_refiner = use_refiner
+
+        # parameters for refiner
+        self.strength = strength
+        self.denoising_start = denoising_start
+        self.aesthetic_score = aesthetic_score
+        self.negative_aesthetic_score = negative_aesthetic_score
+
+        # parameters for controlnet
+        self.controlnet_conditioning_scale = controlnet_conditioning_scale
+        self.guess_mode = guess_mode
+        self.control_guidance_start = control_guidance_start
+        self.control_guidance_end = control_guidance_end
+
+        # signal for implementation based on diffusers
+        self.aws_dus = aws_dus
 
     @property
     def sd_model(self):
         return shared.sd_model
+
+    @property
+    def sd_pipeline(self):
+        return shared.sd_pipeline
+        # return self.test_pipeline
 
     def txt2img_image_conditioning(self, x, width=None, height=None):
         self.is_using_inpainting_conditioning = self.sd_model.model.conditioning_key in {'hybrid', 'concat'}
@@ -348,8 +452,7 @@ class StableDiffusionProcessing:
             required_prompts,
             steps,
             opts.CLIP_stop_at_last_layers,
-            # shared.sd_model.sd_checkpoint_info,
-            None,
+            shared.sd_model.sd_checkpoint_info,
             extra_network_data,
             opts.sdxl_crop_left,
             opts.sdxl_crop_top,
@@ -402,6 +505,7 @@ class Processed:
         self.restore_faces = p.restore_faces
         self.face_restoration_model = opts.face_restoration_model if p.restore_faces else None
         # self.sd_model_hash = shared.sd_model.sd_model_hash
+        self.sd_model_hash = None
         self.seed_resize_from_w = p.seed_resize_from_w
         self.seed_resize_from_h = p.seed_resize_from_h
         self.denoising_strength = getattr(p, 'denoising_strength', None)
@@ -452,7 +556,7 @@ class Processed:
             "batch_size": self.batch_size,
             "restore_faces": self.restore_faces,
             "face_restoration_model": self.face_restoration_model,
-            # "sd_model_hash": self.sd_model_hash,
+            "sd_model_hash": self.sd_model_hash,
             "seed_resize_from_w": self.seed_resize_from_w,
             "seed_resize_from_h": self.seed_resize_from_h,
             "denoising_strength": self.denoising_strength,
@@ -635,7 +739,10 @@ def create_infotext(p, all_prompts, all_seeds, all_subseeds, comments=None, iter
         "Face restoration": (opts.face_restoration_model if p.restore_faces else None),
         "Size": f"{p.width}x{p.height}",
         # "Model hash": getattr(p, 'sd_model_hash', None if not opts.add_model_hash_to_info or not shared.sd_model.sd_model_hash else shared.sd_model.sd_model_hash),
+        "Model hash": None,
         # "Model": (None if not opts.add_model_name_to_info else shared.sd_model.sd_checkpoint_info.name_for_extra),
+        "Model": None,
+        # (None if not opts.add_model_name_to_info else shared.sd_model.sd_checkpoint_info.name_for_extra),
         "Variation seed": (None if p.subseed_strength == 0 else all_subseeds[index]),
         "Variation seed strength": (None if p.subseed_strength == 0 else p.subseed_strength),
         "Seed resize from": (None if p.seed_resize_from_w <= 0 or p.seed_resize_from_h <= 0 else f"{p.seed_resize_from_w}x{p.seed_resize_from_h}"),
@@ -668,7 +775,7 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
     stored_opts = {k: opts.data[k] for k in p.override_settings.keys()}
 
     try:
-        # if no checkpoint override or the override checkpoint can't be found, remove override entry and load opts checkpoint
+        # # if no checkpoint override or the override checkpoint can't be found, remove override entry and load opts checkpoint
         # if sd_models.checkpoint_aliases.get(p.override_settings.get('sd_model_checkpoint')) is None:
         #     p.override_settings.pop('sd_model_checkpoint', None)
         #     sd_models.reload_model_weights()
@@ -685,6 +792,10 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
         # sd_models.apply_token_merging(p.sd_model, p.get_token_merging_ratio())
 
         res = process_images_inner(p)
+        # pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", force_download=True, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+        # pipe.to("cuda")
+        # prompt = "An astronaut riding a green horse"
+        # images = pipe(prompt=prompt).images[0]
 
     finally:
         # sd_models.apply_token_merging(p.sd_model, 0)
@@ -699,6 +810,18 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
 
     return res
 
+def check_controlnet(p: StableDiffusionProcessing):
+    controlnet_state = False
+    valid_script = None
+    for script in p.scripts.alwayson_scripts:
+        api_info_name = script.api_info.name
+        if api_info_name == 'controlnet':
+            enabled_units_len = len(script.get_enabled_units(p))
+            if enabled_units_len > 0:
+                controlnet_state = True
+                valid_script = script
+            break
+    return controlnet_state, valid_script
 
 def process_images_inner(p: StableDiffusionProcessing) -> Processed:
     """this is the main loop that both txt2img and img2img use; it calls func_init once inside all the scopes and func_sample once per batch"""
@@ -788,28 +911,59 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             # infotext could be modified by that callback
             # Example: a wildcard processed by process_batch sets an extra model
             # strength, which is saved as "Model Strength: 1.0" in the infotext
-            # if n == 0:
-            #     with open(os.path.join(paths.data_path, "params.txt"), "w", encoding="utf8") as file:
-            #         processed = Processed(p, [], p.seed, "")
-            #         file.write(processed.infotext(p, 0))
+            if n == 0:
+                with open(os.path.join(paths.data_path, "params.txt"), "w", encoding="utf8") as file:
+                    processed = Processed(p, [], p.seed, "")
+                    file.write(processed.infotext(p, 0))
 
             # p.setup_conds()
 
-            # for comment in model_hijack.comments:
-            #     comments[comment] = 1
+            for comment in model_hijack.comments:
+                comments[comment] = 1
 
-            # p.extra_generation_params.update(model_hijack.extra_generation_params)
+            p.extra_generation_params.update(model_hijack.extra_generation_params)
 
-            # if p.n_iter > 1:
-            #     shared.state.job = f"Batch {n+1} out of {p.n_iter}"
+            if p.n_iter > 1:
+                shared.state.job = f"Batch {n+1} out of {p.n_iter}"
 
-            with devices.without_autocast() if devices.unet_needs_upcast else devices.autocast():
-                samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts)
-                latents = 1 / pipeline.vae.config.scaling_factor * samples_ddim
-                image = pipeline.vae.decode(latents).sample
-                image = (image / 2 + 0.5).clamp(0, 1)
-                x_samples_ddim = image
-                # x_samples_ddim = pipeline.decode_latents(samples_ddim)
+            # with devices.without_autocast() if devices.unet_needs_upcast else devices.autocast():
+    #             samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts)
+    #             latents = 1 / p.sd_pipeline.vae.config.scaling_factor * samples_ddim
+    #             image = p.sd_pipeline.vae.decode(latents).sample
+    #             image = (image / 2 + 0.5).clamp(0, 1)
+    #             x_samples_ddim = image
+            # with devices.without_autocast() if devices.unet_needs_upcast else devices.autocast():
+            # with torch.autocast("cuda"):
+            # check whether controlnet is needed
+            # controlnet_state, controlnet_script = check_controlnet(p)
+            controlnet_state = False
+            controlnet_images = []
+
+            if controlnet_state == True:
+                # TODO XY: update pipeline
+                # get controled image
+                pipeline_name = shared.sd_pipeline.pipeline_name
+                controlnet_images = []
+                for detected_map in controlnet_script.detected_map:
+                    controlnet_image = detected_map[0]
+                    controlnet_images.append(controlnet_image)
+                if pipeline_name != 'StableDiffusionXLControlNetPipeline' and pipeline_name != 'StableDiffusionControlNetPipeline':
+                    if pipeline_name == 'StableDiffusionXLPipeline':
+                        shared.sd_pipeline = StableDiffusionXLControlNetPipeline(**p.sd_pipeline.components, controlnet=controlnet_script.control_networks[0])
+                        shared.sd_pipeline.pipeline_name = 'StableDiffusionXLControlNetPipeline'
+                    else:
+                        shared.sd_pipeline = StableDiffusionControlNetPipeline(**p.sd_pipeline.components, controlnet=controlnet_script.control_networks[0])
+                        shared.sd_pipeline.pipeline_name = 'StableDiffusionControlNetPipeline'
+                else:
+                    shared.sd_pipeline.controlnet = controlnet_script.control_networks[0]
+            else:
+                controlnet_image = None
+
+            samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts, controlnet_image=controlnet_images)
+            latents = 1 / p.sd_pipeline.vae.config.scaling_factor * samples_ddim
+            image = p.sd_pipeline.vae.decode(latents).sample
+            image = (image / 2 + 0.5).clamp(0, 1)
+            x_samples_ddim = image
 
             # x_samples_ddim = decode_latent_batch(p.sd_model, samples_ddim, target_device=devices.cpu, check_for_nans=True)
             # x_samples_ddim = torch.stack(x_samples_ddim).float()
@@ -901,13 +1055,14 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
                 output_images.insert(0, grid)
                 index_of_first_image = 1
 
-            # if opts.grid_save:
-            #     images.save_image(grid, p.outpath_grids, "grid", p.all_seeds[0], p.all_prompts[0], opts.grid_format, info=infotext(use_main_prompt=True), short_filename=not opts.grid_extended_filename, p=p, grid=True)
+            if opts.grid_save:
+                images.save_image(grid, p.outpath_grids, "grid", p.all_seeds[0], p.all_prompts[0], opts.grid_format, info=infotext(use_main_prompt=True), short_filename=not opts.grid_extended_filename, p=p, grid=True)
 
     if not p.disable_extra_networks and p.extra_network_data:
         extra_networks.deactivate(p, p.extra_network_data)
 
     devices.torch_gc()
+
 
     res = Processed(
         p,
@@ -977,12 +1132,15 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
         self.cached_hr_c = StableDiffusionPipelineTxt2Img.cached_hr_c
         self.hr_c = None
         self.hr_uc = None
-        self.tokenizer = pipeline.tokenizer
-        self.unet = pipeline.unet
-        # self.vae = pipeline.vae
-        self.scheduler = pipeline.scheduler
-        self.text_encoder = pipeline.text_encoder
-        # self.decode_latents = pipeline.decode_latents
+        # self.tokenizer = self.sd_pipeline.tokenizer
+        # self.tokenizer_2 = None ##for SDXL
+        # self.unet = self.sd_pipeline.unet
+        # self.vae = self.sd_pipeline.vae
+        # self.scheduler = self.sd_pipeline.scheduler
+        # self.text_encoder = self.sd_pipeline.text_encoder
+        # self.text_encoder_2 = None ##for SDXL
+        # self.decode_latents = self.sd_pipeline.decode_latents
+        # self.pipeline_name = self.sd_pipeline.pipeline_name
 
     def init(self, all_prompts, all_seeds, all_subseeds):
         if self.enable_hr:
@@ -1056,75 +1214,322 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
                 self.extra_generation_params["Hires upscaler"] = self.hr_upscaler
 
     def decode_latents(self):
-        return pipeline.decode_latents
+        return self.sd_pipeline.decode_latents
 
-    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts):
+    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts, controlnet_image=None):
         # self.sampler = sd_samplers.create_sampler(self.sampler_name, self.sd_model)
+
+        # update sampler
+        sd_pipeline = sd_samplers.update_sampler(self.sampler_name, self.sd_pipeline, self.pipeline_name)
+        # sd_pipeline = self.sd_pipeline
 
         latent_scale_mode = shared.latent_upscale_modes.get(self.hr_upscaler, None) if self.hr_upscaler is not None else shared.latent_upscale_modes.get(shared.latent_upscale_default_mode, "nearest")
         if self.enable_hr and latent_scale_mode is None:
             if not any(x.name == self.hr_upscaler for x in shared.sd_upscalers):
                 raise Exception(f"could not find upscaler named {self.hr_upscaler}")
 
+        # common parameters for sd
+        prompt = self.prompt 
+        height = self.width
+        width = self.height
+        num_inference_steps = self.steps
+        guidance_scale = self.cfg_scale
+        negative_prompt = self.negative_prompt or ""
+        num_images_per_prompt = self.batch_size
+        eta = self.eta
+        generator = self.generator
         latents = create_random_tensors([opt_C, self.height // opt_f, self.width // opt_f], seeds=seeds, subseeds=subseeds, subseed_strength=self.subseed_strength, seed_resize_from_h=self.seed_resize_from_h, seed_resize_from_w=self.seed_resize_from_w, p=self)
+        prompt_embeds = self.prompt_embeds
+        negative_prompt_embeds = self.negative_prompt_embeds
+        output_type = self.output_type
+        callback = self.callback
+        callback_steps = self.callback_steps
+        cross_attention_kwargs = self.cross_attention_kwargs
 
-        # prompt text embedding
-        text_input = self.tokenizer(
-            [self.prompt] * self.batch_size, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
-        )
-        with torch.no_grad():
-            text_embeddings = self.text_encoder(text_input.input_ids.to(shared.device))[0]
+        # parameters for sdxl
+        prompt_2 = self.prompt_2 or self.prompt
+        negative_prompt_2 = self.negative_prompt_2 or self.negative_prompt
+        denoising_end = self.denoising_end
+        pooled_prompt_embeds = self.pooled_prompt_embeds
+        negative_pooled_prompt_embeds = self.negative_pooled_prompt_embeds
+        guidance_rescale = self.guidance_rescale
+        original_size = self.original_size
+        crops_coords_top_left = self.crops_coords_top_left
+        target_size = self.target_size
+        use_refiner = self.use_refiner
 
-        max_length = text_input.input_ids.shape[-1]
-        uncond_input = self.tokenizer([""] * self.batch_size, padding="max_length", max_length=max_length, return_tensors="pt")
-        uncond_embeddings = self.text_encoder(uncond_input.input_ids.to(shared.device))[0]
-        text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
+        # parameters for refiner
+        strength = self.strength
+        denoising_start = self.denoising_start
+        aesthetic_score = self.aesthetic_score
+        negative_aesthetic_score = self.negative_aesthetic_score
+
+        # parameters for controlnet
+        controlnet_conditioning_scale = self.controlnet_conditioning_scale
+        guess_mode = self.guess_mode
+        control_guidance_start = self.control_guidance_start
+        control_guidance_end = self.control_guidance_end
+
+        pipeline_name = sd_pipeline.pipeline_name
+        # default output: latents
+        if pipeline_name == 'StableDiffusionPipeline':
+            # images = sd_pipeline(
+            #     prompt = prompt).images
+            latents = latents.to(torch.float16)
+            images = sd_pipeline(
+                prompt = prompt,
+                height = height,
+                width = width,
+                num_inference_steps = num_inference_steps,
+                guidance_scale = guidance_scale,
+                negative_prompt = negative_prompt,
+                num_images_per_prompt= num_images_per_prompt,
+                eta = eta,
+                generator = generator,
+                latents = latents,
+                prompt_embeds = prompt_embeds,
+                negative_prompt_embeds= negative_prompt_embeds,
+                output_type = output_type,
+                return_dict = True,
+                callback = callback,
+                callback_steps = callback_steps,
+                cross_attention_kwargs = cross_attention_kwargs).images
+        elif pipeline_name == 'StableDiffusionXLPipeline':
+            latents = latents.to(torch.float16)
+            images = sd_pipeline(
+                prompt = prompt,
+                prompt_2 = prompt_2,
+                height = height,
+                width = width,
+                num_inference_steps = num_inference_steps,
+                denoising_end = denoising_end,
+                guidance_scale = guidance_scale,
+                negative_prompt = negative_prompt,
+                negative_prompt_2 = negative_prompt_2,
+                num_images_per_prompt = num_images_per_prompt,
+                eta = eta,
+                generator = generator,
+                latents = latents,
+                prompt_embeds = prompt_embeds,
+                negative_prompt_embeds = negative_prompt_embeds,
+                pooled_prompt_embeds = pooled_prompt_embeds,
+                negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                output_type = output_type,
+                return_dict = True,
+                callback = callback,
+                callback_steps = callback_steps,
+                cross_attention_kwargs = cross_attention_kwargs,
+                guidance_rescale = guidance_rescale,
+                original_size = original_size,
+                crops_coords_top_left = crops_coords_top_left,
+                target_size = target_size).images
+        elif pipeline_name == 'StableDiffusionControlNetPipeline':
+            images = sd_pipeline(
+                prompt = prompt,
+                image = controlnet_image,
+                height = height,
+                width = width,
+                num_inference_steps = num_inference_steps,
+                guidance_scale = guidance_scale,
+                negative_prompt = negative_prompt,
+                num_images_per_prompt = num_images_per_prompt,
+                eta = eta,
+                generator = generator,
+                latents = latents,
+                prompt_embeds = prompt_embeds,
+                negative_prompt_embeds = negative_prompt_embeds,
+                negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                output_type = output_type,
+                return_dict = True,
+                callback = callback,
+                callback_steps = callback_steps,
+                cross_attention_kwargs = cross_attention_kwargs,
+                controlnet_conditioning_scale = controlnet_conditioning_scale,
+                guess_mode = guess_mode,
+                control_guidance_start = control_guidance_start,
+                control_guidance_end = control_guidance_end).images
+        elif pipeline_name == 'StableDiffusionXLControlNetPipeline':
+            images = sd_pipeline(
+                prompt = prompt,
+                prompt_2 = prompt_2,
+                image = controlnet_image,
+                height = height,
+                width = width,
+                num_inference_steps = num_inference_steps,
+                guidance_scale = guidance_scale,
+                negative_prompt = negative_prompt,
+                negative_prompt_2 = negative_prompt_2,
+                num_images_per_prompt = num_images_per_prompt,
+                eta = eta,
+                generator = generator,
+                latents = latents,
+                prompt_embeds = prompt_embeds,
+                negative_prompt_embeds = negative_prompt_embeds,
+                #pooled_prompt_embeds = pooled_prompt_embeds,
+                #negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                output_type = output_type,
+                return_dict = True,
+                callback = callback,
+                callback_steps = callback_steps,
+                cross_attention_kwargs = cross_attention_kwargs,
+                controlnet_conditioning_scale = controlnet_conditioning_scale,
+                guess_mode = guess_mode,
+                control_guidance_start = control_guidance_start,
+                control_guidance_end = control_guidance_end,
+                original_size = original_size).images
+
+        if use_refiner:
+            images = self.refiner_pipeline(
+                prompt = prompt,
+                prompt_2 = prompt_2,
+                image = images,
+                strength = strength,
+                num_inference_steps = num_inference_steps,
+                denoising_start = denoising_start,
+                denoising_end = denoising_end,
+                guidance_scale = guidance_scale,
+                negative_prompt = negative_prompt,
+                negative_prompt_2 = negative_prompt_2,
+                num_images_per_prompt = num_images_per_prompt,
+                eta = eta,
+                generator = generator,
+                prompt_embeds = prompt_embeds,
+                negative_prompt_embeds = negative_prompt_embeds,
+                pooled_prompt_embeds = pooled_prompt_embeds,
+                negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                output_type = output_type,
+                return_dict = True,
+                callback = callback,
+                callback_steps = callback_steps,
+                cross_attention_kwargs = cross_attention_kwargs,
+                guidance_rescale = guidance_rescale,
+                original_size = original_size,
+                crops_coords_top_left = crops_coords_top_left,
+                target_size = target_size,
+                aesthetic_score = aesthetic_score,
+                negative_aesthetic_score = negative_aesthetic_score).images
+                
+            # images = images.to(torch.float32)
+
+        samples = images
+        # do_classifier_free_guidance = self.cfg_scale > 1.0
+
+        # if self.prompt is not None and isinstance(self.prompt, str):
+        #     prompt_batch_size = 1
+        # elif self.prompt is not None and isinstance(self.prompt, list):
+        #     prompt_batch_size = len(self.prompt)
+
+        # ## SDXL ###
+        # model_type = 'SD' ### 'SDXL'
+        # if model_type == 'SDXL':
+        #     self.prompt_2 = self.prompt_2 or self.prompt
+        #     self.negative_prompt = self.negative_prompt or ""
+        #     self.negative_prompt_2 = self.negative_prompt_2 or self.negative_prompt
         
-        # prepare timesteps
-        self.scheduler = EulerAncestralDiscreteScheduler.from_config(self.scheduler.config)
-        self.scheduler.set_timesteps(self.steps)
-        latents = latents * self.scheduler.init_noise_sigma
+        # prompts = [self.prompt, self.prompt_2] if self.prompt_2 is not None else [self.prompt]
+        # negative_prompts = [self.negative_prompt, self.negative_prompt_2] if self.negative_prompt_2 is not None else [self.negative_prompt]
+        
+        # # Define tokenizers and text encoders
+        # tokenizers = [self.tokenizer, self.tokenizer_2] if self.tokenizer is not None else [self.tokenizer_2]
+        # text_encoders = (
+        #     [self.text_encoder, self.text_encoder_2] if self.text_encoder is not None else [self.text_encoder_2]
+        # )
 
-        for t in tqdm(self.scheduler.timesteps):
-            # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
-            latent_model_input = torch.cat([latents] * 2)
-            # latent_model_input = latents
+        # # prompt text embedding
+        # text_embeddings_list = []
+        # for prompt, tokenizer, text_encoder in zip(prompts, tokenizers, text_encoders):
+        #     text_input = tokenizer(
+        #         prompt, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
+        #     )
+        #     with torch.no_grad():
+        #         text_embeddings = text_encoder(text_input.input_ids.to(shared.device))[0]
+        #     text_embeddings_list.append(text_embeddings)
+        # text_embeddings = torch.concat(text_embeddings_list, dim=-1)
 
-            latent_model_input = self.scheduler.scale_model_input(latent_model_input, timestep=t)
 
-            # predict the noise residual
-            with torch.no_grad():
-                noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)
-                noise_pred = noise_pred.sample
+        # if do_classifier_free_guidance:
+        #     negative_prompt_embeds_list = []
+        #     max_length = text_embeddings.shape[1]
+        #     for negative_prompt, tokenizer, text_encoder in zip(negative_prompts, tokenizers, text_encoders):
+        #         uncond_input = tokenizer(
+        #             negative_prompt,
+        #             padding="max_length",
+        #             max_length=max_length,
+        #             truncation=True,
+        #             return_tensors="pt",
+        #         )
 
-            # perform guidance
-            noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-            noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
+        #         negative_prompt_embeds = text_encoder(
+        #             uncond_input.input_ids.to(shared.device),
+        #         )[0]
+        #         # # We are only ALWAYS interested in the pooled output of the final text encoder
+        #         # negative_pooled_prompt_embeds = negative_prompt_embeds[0]
+        #         # negative_prompt_embeds = negative_prompt_embeds.hidden_states[-2]
 
-            # compute the previous noisy sample x_t -> x_t-1
-            latents = self.scheduler.step(noise_pred, t, latents).prev_sample
-        # latents = 1 / 0.18215 * latents
-        # samples = copy.deepcopy(latents)
-        samples = latents
-        images = pipeline.decode_latents(latents)
-        # 9. Run safety checker
-        # image, has_nsfw_concept = self.run_safety_checker(image, shared.device, prompt_embeds.dtype)
-        # 10. Convert to PIL
-        def numpy_to_pil(images):
-            """
-            Convert a numpy image or a batch of images to a PIL image.
-            """
-            if images.ndim == 3:
-                images = images[None, ...]
-            images = (images * 255).round().astype("uint8")
-            if images.shape[-1] == 1:
-                # special case for grayscale (single channel) images
-                pil_images = [Image.fromarray(image.squeeze(), mode="L") for image in images]
-            else:
-                pil_images = [Image.fromarray(image) for image in images]
-            return pil_images
-        images = numpy_to_pil(images)
-        images[0].save("test.png")
+        #         negative_prompt_embeds_list.append(negative_prompt_embeds)
+
+        #     negative_prompt_embeds = torch.concat(negative_prompt_embeds_list, dim=-1)
+        
+        # text_embeddings = text_embeddings.to(dtype=self.text_encoder.dtype, device=shared.device)
+        # bs_embed, seq_len, _ = text_embeddings.shape
+        # # duplicate text embeddings for each generation per prompt, using mps friendly method
+        # text_embeddings = text_embeddings.repeat(1, self.n_iter, 1)
+        # text_embeddings = text_embeddings.view(bs_embed * self.n_iter, seq_len, -1)
+
+        # if do_classifier_free_guidance:
+        #     seq_len = negative_prompt_embeds.shape[1]
+        #     negative_prompt_embeds = negative_prompt_embeds.to(dtype=self.text_encoder.dtype, device=shared.device)
+        #     negative_prompt_embeds = negative_prompt_embeds.repeat(1, self.n_iter, 1)
+        #     negative_prompt_embeds = negative_prompt_embeds.view(prompt_batch_size * self.n_iter, seq_len, -1)
+        #     text_embeddings = torch.cat([negative_prompt_embeds, text_embeddings])
+        
+        # # prepare timesteps
+        # self.scheduler = EulerAncestralDiscreteScheduler.from_config(self.scheduler.config)
+        # self.scheduler.set_timesteps(self.steps)
+        # latents = latents * self.scheduler.init_noise_sigma
+
+        # for t in tqdm(self.scheduler.timesteps):
+        #     # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
+        #     latent_model_input = torch.cat([latents] * 2)
+        #     # latent_model_input = latents
+
+        #     latent_model_input = self.scheduler.scale_model_input(latent_model_input, timestep=t)
+
+        #     # predict the noise residual
+        #     with torch.no_grad():
+        #         noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)
+        #         noise_pred = noise_pred.sample
+
+        #     # perform guidance
+        #     if do_classifier_free_guidance:
+        #         noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+        #         noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
+
+        #     # compute the previous noisy sample x_t -> x_t-1
+        #     latents = self.scheduler.step(noise_pred, t, latents).prev_sample
+        # # latents = 1 / 0.18215 * latents
+        # # samples = copy.deepcopy(latents)
+        # samples = latents
+        # images = self.decode_latents(latents)
+        # # 9. Run safety checker
+        # # image, has_nsfw_concept = self.run_safety_checker(image, shared.device, prompt_embeds.dtype)
+        # # 10. Convert to PIL
+        # def numpy_to_pil(images):
+        #     """
+        #     Convert a numpy image or a batch of images to a PIL image.
+        #     """
+        #     if images.ndim == 3:
+        #         images = images[None, ...]
+        #     images = (images * 255).round().astype("uint8")
+        #     if images.shape[-1] == 1:
+        #         # special case for grayscale (single channel) images
+        #         pil_images = [Image.fromarray(image.squeeze(), mode="L") for image in images]
+        #     else:
+        #         pil_images = [Image.fromarray(image) for image in images]
+        #     return pil_images
+        # # images = numpy_to_pil(images)
+        # # images[0].save("test.png")
+
 
         if not self.enable_hr:
             return samples
@@ -1318,12 +1723,12 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
         self.mask = None
         self.nmask = None
         self.image_conditioning = None
-        self.tokenizer = pipeline.tokenizer
-        self.unet = pipeline.unet
-        self.vae = pipeline.vae
-        self.scheduler = pipeline.scheduler
-        self.text_encoder = pipeline.text_encoder
-        self.decode_latents = pipeline.decode_latents
+        self.tokenizer = self.sd_pipeline.tokenizer
+        self.unet = self.sd_pipeline.unet
+        self.vae = self.sd_pipeline.vae
+        self.scheduler = self.sd_pipeline.scheduler
+        self.text_encoder = self.sd_pipeline.text_encoder
+        self.decode_latents = self.sd_pipeline.decode_latents
         self.generator = torch.Generator(device=shared.device)
 
     def init(self, all_prompts, all_seeds, all_subseeds):
@@ -1427,9 +1832,12 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
         image = 2. * image - 1.
         image = image.to(shared.device, dtype=devices.dtype_vae)
         
-        self.init_latent = self.vae.encode(image).latent_dist.sample(self.generator)
+        self.init_latent = self.vae.encode(image)
+        self.init_latent = self.init_latent.latent_dist.sample(self.generator)
         self.init_latent = self.vae.config.scaling_factor * self.init_latent
-
+        
+        #old_latent = self.sd_model.get_first_stage_encoding(self.sd_model.encode_first_stage(image))
+        
         if self.resize_mode == 3:
             self.init_latent = torch.nn.functional.interpolate(self.init_latent, size=(self.height // opt_f, self.width // opt_f), mode="bilinear")
 
@@ -1456,79 +1864,252 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
         # get the original timestep using init_timestep
         init_timestep = min(int(num_inference_steps * strength), num_inference_steps)
 
-        t_start = max(num_inference_steps - init_timestep, 0)
+        t_start = max(num_inference_steps - init_timestep - 1, 0)
         timesteps = self.scheduler.timesteps[t_start:]
 
         return timesteps, num_inference_steps - t_start
 
     def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts):
-        x = create_random_tensors([opt_C, self.height // opt_f, self.width // opt_f], seeds=seeds, subseeds=subseeds, subseed_strength=self.subseed_strength, seed_resize_from_h=self.seed_resize_from_h, seed_resize_from_w=self.seed_resize_from_w, p=self)
+        
+        # update sampler
+        sd_pipeline = sd_samplers.update_sampler(self.sampler_name, self.sd_pipeline, self.pipeline_name)
+
+        # common parameters for sd
+        prompt = self.prompt 
+        height = self.width
+        width = self.height
+        num_inference_steps = self.steps
+        guidance_scale = self.cfg_scale
+        negative_prompt = self.negative_prompt or ""
+        num_images_per_prompt = self.batch_size
+        eta = self.eta
+        generator = self.generator
+        prompt_embeds = self.prompt_embeds
+        negative_prompt_embeds = self.negative_prompt_embeds
+        output_type = self.output_type
+        callback = self.callback
+        callback_steps = self.callback_steps
+        cross_attention_kwargs = self.cross_attention_kwargs
+
+        # parameters for sdxl
+        prompt_2 = self.prompt_2 or self.prompt
+        negative_prompt_2 = self.negative_prompt_2 or self.negative_prompt
+        denoising_end = self.denoising_end
+        pooled_prompt_embeds = self.pooled_prompt_embeds
+        negative_pooled_prompt_embeds = self.negative_pooled_prompt_embeds
+        guidance_rescale = self.guidance_rescale
+        original_size = self.original_size
+        crops_coords_top_left = self.crops_coords_top_left
+        target_size = self.target_size
+        use_refiner = self.use_refiner
+
+        # parameters for refiner
+        strength = self.strength
+        denoising_start = self.denoising_start
+        aesthetic_score = self.aesthetic_score
+        negative_aesthetic_score = self.negative_aesthetic_score
+
+        noise = create_random_tensors([opt_C, self.height // opt_f, self.width // opt_f], seeds=seeds, subseeds=subseeds, subseed_strength=self.subseed_strength, seed_resize_from_h=self.seed_resize_from_h, seed_resize_from_w=self.seed_resize_from_w, p=self)
 
         if self.initial_noise_multiplier != 1.0:
             self.extra_generation_params["Noise multiplier"] = self.initial_noise_multiplier
-            x *= self.initial_noise_multiplier
+            noise *= self.initial_noise_multiplier
+        
+
+        pipeline_name = self.pipeline_name
+        # default output: latents
+        if pipeline_name == 'StableDiffusionPipeline':
+            generator = generator.manual_seed(seed=seeds)
+            if self.image_mask is None:
+                images = sd_pipeline(
+                    prompt = prompt,
+                    image = self.init_latent,
+                    strength = self.denoising_strength,
+                    num_inference_steps = num_inference_steps,
+                    guidance_scale = guidance_scale,
+                    negative_prompt = negative_prompt,
+                    num_images_per_prompt= num_images_per_prompt,
+                    eta = eta,
+                    generator = generator,
+                    prompt_embeds = prompt_embeds,
+                    negative_prompt_embeds= negative_prompt_embeds,
+                    output_type = output_type,
+                    return_dict = True,
+                    callback = callback,
+                    callback_steps = callback_steps,
+                    cross_attention_kwargs = cross_attention_kwargs).images[0]
+            else:
+                generator = generator.manual_seed(seed=seeds)
+                images = sd_pipeline(
+                    prompt = prompt,
+                    image = self.init_images,
+                    mask_image = self.image_mask,
+                    height = height,
+                    width = width,
+                    strength = self.denoising_strength,
+                    num_inference_steps = num_inference_steps,
+                    guidance_scale = guidance_scale,
+                    negative_prompt = negative_prompt,
+                    num_images_per_prompt= num_images_per_prompt,
+                    eta = eta,
+                    generator = generator,
+                    latents = None,
+                    prompt_embeds = prompt_embeds,
+                    negative_prompt_embeds= negative_prompt_embeds,
+                    output_type = output_type,
+                    return_dict = True,
+                    callback = callback,
+                    callback_steps = callback_steps,
+                    cross_attention_kwargs = cross_attention_kwargs).images[0]
+        elif pipeline_name == 'StableDiffusionXLPipeline':
+            ### image = self.init_latent + noise -> need set denoising_start is not none
+            generator = generator.manual_seed(seed=seeds)
+            if self.image_mask is None:
+                images = sd_pipeline(
+                    prompt = prompt,
+                    prompt_2 = prompt_2,
+                    image = self.init_latent,
+                    strength = self.denoising_strength,
+                    num_inference_steps = num_inference_steps,
+                    denoising_start = denoising_start,
+                    denoising_end = denoising_end,
+                    guidance_scale = guidance_scale,
+                    negative_prompt = negative_prompt,
+                    negative_prompt_2 = negative_prompt_2,
+                    num_images_per_prompt = num_images_per_prompt,
+                    eta = eta,
+                    generator = generator,
+                    latents = None,
+                    prompt_embeds = prompt_embeds,
+                    negative_prompt_embeds = negative_prompt_embeds,
+                    pooled_prompt_embeds = pooled_prompt_embeds,
+                    negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                    output_type = output_type,
+                    return_dict = True,
+                    callback = callback,
+                    callback_steps = callback_steps,
+                    cross_attention_kwargs = cross_attention_kwargs,
+                    guidance_rescale = guidance_rescale,
+                    original_size = original_size,
+                    crops_coords_top_left = crops_coords_top_left,
+                    target_size = target_size,
+                    aesthetic_score = aesthetic_score,
+                    negative_aesthetic_score = negative_aesthetic_score).images[0],
+            else:
+                images = sd_pipeline(
+                    prompt = prompt,
+                    prompt_2 = prompt_2,
+                    image = self.init_latent,
+                    mask_image = self.image_mask,
+                    height = height,
+                    width = width,
+                    strength = self.denoising_strength,
+                    num_inference_steps = num_inference_steps,
+                    denoising_start = denoising_start,
+                    denoising_end = denoising_end,
+                    guidance_scale = guidance_scale,
+                    negative_prompt = negative_prompt,
+                    negative_prompt_2 = negative_prompt_2,
+                    num_images_per_prompt = num_images_per_prompt,
+                    eta = eta,
+                    generator = generator,
+                    latents = None,
+                    prompt_embeds = prompt_embeds,
+                    negative_prompt_embeds = negative_prompt_embeds,
+                    pooled_prompt_embeds = pooled_prompt_embeds,
+                    negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
+                    output_type = output_type,
+                    return_dict = True,
+                    callback = callback,
+                    callback_steps = callback_steps,
+                    cross_attention_kwargs = cross_attention_kwargs,
+                    guidance_rescale = guidance_rescale,
+                    original_size = original_size,
+                    crops_coords_top_left = crops_coords_top_left,
+                    target_size = target_size,
+                    aesthetic_score = aesthetic_score,
+                    negative_aesthetic_score = negative_aesthetic_score).images[0],
+
+            
+        samples = images[None,:,:,:]
 
         #samples = self.sampler.sample_img2img(self, self.init_latent, x, conditioning, unconditional_conditioning, image_conditioning=self.image_conditioning)
 
-        # diffuser pipeline
-        noise = x 
+        # # diffuser pipeline
+        # noise = x 
         
-        # text embedding
-        text_input = self.tokenizer(
-            self.prompt, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
-        )
-        with torch.no_grad():
-            text_embeddings = self.text_encoder(text_input.input_ids.to(shared.device))[0]
+        # # text embedding
+        # text_input = self.tokenizer(
+        #     self.prompt, padding="max_length", max_length=self.tokenizer.model_max_length, truncation=True, return_tensors="pt"
+        # )
+        # with torch.no_grad():
+        #     text_embeddings = self.text_encoder(text_input.input_ids.to(shared.device))[0]
         
-        do_classifier_free_guidance = self.cfg_scale > 1.0
-        # get unconditional embeddings for classifier free guidance
-        if do_classifier_free_guidance:
-            max_length = text_input.input_ids.shape[-1]
-            uncond_input = self.tokenizer(
-                [""] * self.batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
-            )
-            uncond_embeddings = self.text_encoder(uncond_input.input_ids.to(shared.device))[0]
+        # do_classifier_free_guidance = self.cfg_scale > 1.0
+        # # get unconditional embeddings for classifier free guidance
+        # if do_classifier_free_guidance:
+        #     max_length = text_input.input_ids.shape[-1]
+        #     uncond_input = self.tokenizer(
+        #         [""] * self.batch_size, padding="max_length", max_length=max_length, return_tensors="pt"
+        #     )
+        #     uncond_embeddings = self.text_encoder(uncond_input.input_ids.to(shared.device))[0]
 
-            # For classifier free guidance, we need to do two forward passes.
-            # Here we concatenate the unconditional and text embeddings into a single batch
-            # to avoid doing two forward passes
-            text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
+        #     # For classifier free guidance, we need to do two forward passes.
+        #     # Here we concatenate the unconditional and text embeddings into a single batch
+        #     # to avoid doing two forward passes
+        #     text_embeddings = torch.cat([uncond_embeddings, text_embeddings])
 
 
-        # set timesteps
-        self.scheduler = EulerAncestralDiscreteScheduler.from_config(self.scheduler.config)
-        self.scheduler.set_timesteps(self.steps, device=shared.device)
-        timesteps, num_inference_steps = self.get_timesteps(self.steps, self.denoising_strength, shared.device)
-        latent_timestep = timesteps[:1].repeat(self.batch_size * self.n_iter)
+        # # set timesteps
+        # self.scheduler = EulerAncestralDiscreteScheduler.from_config(self.scheduler.config)
+        # self.scheduler.set_timesteps(self.steps, device=shared.device)
+        # timesteps, num_inference_steps = self.get_timesteps(self.steps, self.denoising_strength, shared.device)
+        # latent_timestep = timesteps[:1].repeat(self.batch_size * self.n_iter)
         
-        init_latents = self.scheduler.add_noise(self.init_latent, noise, latent_timestep)
-        latents = init_latents
+        # init_latents = self.scheduler.add_noise(self.init_latent, noise, latent_timestep)
+        # latents = init_latents
+
+        # num_channels_unet = self.unet.config.in_channels
         
-        for t in tqdm(timesteps):
-            # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
-            latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
-            #latent_model_input = torch.cat([latents] * 2)
+        # for i, t in tqdm(enumerate(timesteps)):
+        #     # expand the latents if we are doing classifier-free guidance to avoid doing two forward passes.
+        #     latent_model_input = torch.cat([latents] * 2) if do_classifier_free_guidance else latents
+        #     #latent_model_input = torch.cat([latents] * 2)
 
-            latent_model_input = self.scheduler.scale_model_input(latent_model_input, timestep=t)
+        #     latent_model_input = self.scheduler.scale_model_input(latent_model_input, timestep=t)
 
-            # predict the noise residual
-            with torch.no_grad():
-                noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)[0]
+        #     if self.image_mask is not None and num_channels_unet == 9:
+        #         mask_image_conditioning = torch.cat([self.image_conditioning] * 2) if do_classifier_free_guidance else self.image_conditioning
+        #         latent_model_input = torch.cat([latent_model_input, mask_image_conditioning], dim=1)
 
-            # perform guidance
-            if do_classifier_free_guidance:
-                noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-                noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
-            #noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-            #noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
 
-            # compute the previous noisy sample x_t -> x_t-1
-            latents = self.scheduler.step(noise_pred, t, latents)[0]
-        
-        samples = latents
+        #     # predict the noise residual
+        #     with torch.no_grad():
+        #         noise_pred = self.unet(latent_model_input, t, encoder_hidden_states=text_embeddings)[0]
 
-        if self.mask is not None:
-            samples = samples * self.nmask + self.init_latent * self.mask
+        #     # perform guidance
+        #     if do_classifier_free_guidance:
+        #         noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+        #         noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
+        #     #noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+        #     #noise_pred = noise_pred_uncond + self.cfg_scale * (noise_pred_text - noise_pred_uncond)
+
+        #     # compute the previous noisy sample x_t -> x_t-1
+        #     latents = self.scheduler.step(noise_pred, t, latents)[0]
+
+        #     if self.image_mask is not None and num_channels_unet == 4:
+        #             init_latents_proper = self.init_latent
+        #             init_mask = self.mask
+
+        #             if i < len(timesteps) - 1:
+        #                 noise_timestep = timesteps[i + 1]
+        #                 init_latents_proper = self.scheduler.add_noise(
+        #                     init_latents_proper, noise, torch.tensor([noise_timestep])
+        #                 )
+
+        #             latents = (1 - init_mask) * init_latents_proper + init_mask * latents
+
+        # samples = latents
         
         ##### debug for show the results
         # images = pipeline.decode_latents(latents)

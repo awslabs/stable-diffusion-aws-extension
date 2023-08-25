@@ -320,6 +320,10 @@ def initialize_rest(*, reload_script_modules=False):
         if modules.sd_hijack.current_optimizer is None:
             modules.sd_hijack.apply_optimizations()
 
+        # # TODO: disable to debug pipeline
+        ### load pipeline
+        shared.sd_pipeline
+
     Thread(target=load_model).start()
 
     Thread(target=devices.first_time_calculation).start()
