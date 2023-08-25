@@ -5,6 +5,7 @@ INITIAL_SUPPORT_COMMIT_CONTROLNET=efda6ddfd82ebafc6e1150fbb7e1f27163482a82
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
 INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
 INITIAL_SUPPORT_COMMIT_SAM=5df716be8445e0f358f6e8d4b65a87cc611bfe08
+INITIAL_SUPPORT_COMMIT_TILEDVAE=f9f8073e64f4e682838f255215039ba7884553bf
 
 
 # Clone stable-diffusion-webui
@@ -55,4 +56,10 @@ git clone https://github.com/continue-revolution/sd-webui-segment-anything.git
 # Go to sd-webui-segment-anything directory and reset to specific commit
 cd sd-webui-segment-anything
 git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
+cd ..
+
+# Clone Tiled VAE
+git clone https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git
+cd multidiffusion-upscaler-for-automatic1111
+git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
 cd ..
