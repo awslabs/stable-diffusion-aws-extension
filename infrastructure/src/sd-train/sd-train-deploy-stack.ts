@@ -26,6 +26,8 @@ import { Database } from '../shared/database';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
+  createModelSuccessTopic: aws_sns.Topic;
+  createModelFailureTopic: aws_sns.Topic;
   modelInfInstancetype: string;
   ecr_image_tag: string;
   database: Database;
@@ -63,10 +65,10 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
     });
-
+    const checkPointTable = props.database.checkpointTable;
     // POST /train
     new CreateTrainJobApi(this, 'aigc-create-train', {
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       modelTable: props.database.modelTable,
@@ -78,7 +80,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // PUT /train
     new UpdateTrainJobApi(this, 'aigc-put-train', {
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       modelTable: props.database.modelTable,
@@ -98,7 +100,7 @@ export class SdTrainDeployStack extends NestedStack {
       modelTable: props.database.modelTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
     });
 
     // GET /models
@@ -119,9 +121,11 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
       snsTopic: snsTopic,
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       trainMachineType: props.modelInfInstancetype,
       ecr_image_tag: props.ecr_image_tag,
+      createModelFailureTopic: props.createModelFailureTopic,
+      createModelSuccessTopic: props.createModelSuccessTopic,
     });
 
     // this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
@@ -129,7 +133,7 @@ export class SdTrainDeployStack extends NestedStack {
     // GET /checkpoints
     new ListAllCheckPointsApi(this, 'aigc-list-all-ckpts', {
       s3Bucket: s3Bucket,
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.checkpoints,
@@ -138,7 +142,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // POST /checkpoint
     new CreateCheckPointApi(this, 'aigc-create-ckpt', {
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       router: routers.checkpoint,
@@ -148,7 +152,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // PUT /checkpoint
     new UpdateCheckPointApi(this, 'aigc-update-ckpt', {
-      checkpointTable: props.database.checkPointTable,
+      checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoint,

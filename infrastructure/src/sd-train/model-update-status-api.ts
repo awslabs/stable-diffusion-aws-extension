@@ -23,6 +23,8 @@ import { AIGC_WEBUI_UTILS } from '../common/dockerImages';
 
 
 export interface UpdateModelStatusRestApiProps {
+  createModelFailureTopic: aws_sns.Topic;
+  createModelSuccessTopic: aws_sns.Topic;
   httpMethod: string;
   router: Resource;
   modelTable: aws_dynamodb.Table;
@@ -38,7 +40,7 @@ export interface UpdateModelStatusRestApiProps {
 export class UpdateModelStatusRestApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
-  private readonly imageUrl: string; 
+  private readonly imageUrl: string;
   private readonly machineType: string;
 
   private readonly src;
@@ -79,6 +81,8 @@ export class UpdateModelStatusRestApi {
       modelTable: this.modelTable,
       rootSrc: this.src,
       userSnsTopic: props.snsTopic,
+      successTopic: props.createModelSuccessTopic,
+      failureTopic: props.createModelFailureTopic,
     });
     this.sagemakerEndpoint.model.node.addDependency(dockerDeployment.customJob);
     // create lambda to trigger
