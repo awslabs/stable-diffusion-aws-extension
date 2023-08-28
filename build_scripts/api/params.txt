@@ -1,2 +1,0 @@
-toyota land cruiser lc70
-Steps: 20, Sampler: Euler a, CFG scale: 7.0, Seed: 1234, Size: 512x512, Denoising strength: 0.75, Version: v1.0.1-120-gf67c48a
