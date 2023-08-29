@@ -23,6 +23,8 @@ export interface CreateModelSageMakerEndpointProps {
   modelTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
   userSnsTopic: aws_sns.Topic;
+  successTopic: aws_sns.Topic;
+  failureTopic: aws_sns.Topic;
 }
 
 export class CreateModelSageMakerEndpoint {
@@ -39,7 +41,6 @@ export class CreateModelSageMakerEndpoint {
   public readonly modelConfig: aws_sagemaker.CfnEndpointConfig;
   public readonly modelEndpoint: aws_sagemaker.CfnEndpoint;
 
-
   public readonly successTopic: aws_sns.Topic;
   public readonly failureTopic: aws_sns.Topic;
 
@@ -50,16 +51,8 @@ export class CreateModelSageMakerEndpoint {
     this.layer = props.commonLayer;
     this.rootSrc = props.rootSrc;
     this.userSnsTopic = props.userSnsTopic;
-
-
-    this.successTopic = new aws_sns.Topic(scope, `${id}-success-topic`, {
-      displayName: 'successCreateModel',
-      topicName: 'successCreateModel',
-    });
-    this.failureTopic = new aws_sns.Topic(scope, `${id}-failure-topic`, {
-      displayName: 'failureCreateModel',
-      topicName: 'failureCreateModel',
-    });
+    this.successTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
+    this.failureTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
