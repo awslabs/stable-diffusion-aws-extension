@@ -72,7 +72,7 @@ if ".dev" in torch.__version__ or "+git" in torch.__version__:
 # import modules.img2img
 
 # import modules.lowvram
-# import modules.scripts
+import modules.scripts
 # import modules.sd_hijack
 # import modules.sd_hijack_optimizations
 # import modules.sd_models
@@ -346,7 +346,7 @@ def initialize():
     # modules.textual_inversion.textual_inversion.list_textual_inversion_templates()
     # startup_timer.record("refresh textual inversion templates")
 
-    # # TODO: do we need list optimizers? YX
+    # TODO: do we need list optimizers? YX
     # modules.script_callbacks.on_list_optimizers(modules.sd_hijack_optimizations.list_optimizers)
     # modules.sd_hijack.list_optimizers()
     # startup_timer.record("scripts list_optimizers")

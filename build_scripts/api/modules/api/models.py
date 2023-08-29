@@ -5,6 +5,7 @@ from typing import Any, Optional
 from typing_extensions import Literal
 from inflection import underscore
 from modules.processing import StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img
+from modules.pipeline import StableDiffusionPipelineTxt2Img
 # from modules.shared import sd_upscalers, opts, parser
 from typing import Dict, List
 

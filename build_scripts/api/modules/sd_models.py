@@ -15,7 +15,7 @@ from urllib import request
 # from ldm.util import instantiate_from_config
 
 from modules import paths, shared, modelloader, devices, script_callbacks, sd_vae, sd_disable_initialization, errors, hashes, sd_models_config, sd_unet, sd_models_xl
-from modules.sd_hijack_inpainting import do_inpainting_hijack
+# from modules.sd_hijack_inpainting import do_inpainting_hijack
 from modules.timer import Timer
 import tomesd
 from diffusers import StableDiffusionPipeline
@@ -692,7 +692,7 @@ def load_pipeline(checkpoint_info=None):
 
     shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
     from diffusers.models import AutoencoderKL
-    sd_pipeline = StableDiffusionPipeline.from_single_file("api/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors", torch_dtype=torch.float16, variant="fp16")
+    sd_pipeline = StableDiffusionPipeline.from_single_file("models/Stable-diffusion/v1-5-pruned-emaonly.safetensors", torch_dtype=torch.float16, variant="fp16")
     # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
     #sd_pipeline.vae = vae
     #sd_pipeline = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)

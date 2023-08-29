@@ -13,7 +13,7 @@ import cv2
 from skimage import exposure
 from typing import Any, Dict, List
 
-from modules import sd_hijack
+# from modules import sd_hijack
 from modules import devices, prompt_parser, masking, sd_samplers, lowvram, generation_parameters_copypaste, extra_networks, sd_vae_approx, scripts, sd_samplers_common, sd_unet, errors
 from modules.shared import opts, cmd_opts, state
 import modules.shared as shared
