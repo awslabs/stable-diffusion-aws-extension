@@ -129,7 +129,7 @@ def sort_by_start_time(item):
 
 
 def filter_checkpoint_items(limit, checkpoint, items):
-    sorted_items = sorted(items, key=sort_by_start_time)
+    items = sorted(items, key=sort_by_start_time)
     if checkpoint:
         filtered_data = []
         for item in items:
