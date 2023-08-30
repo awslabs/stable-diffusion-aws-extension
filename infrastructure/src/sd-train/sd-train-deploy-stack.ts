@@ -10,6 +10,7 @@ import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 import { CreateCheckPointApi } from './chekpoint-create-api';
+import { UploadCheckPointApi } from './checkpoint-upload-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
 import { ListAllCheckPointsApi } from './chekpoints-listall-api';
 import { CreateDatasetApi } from './dataset-create-api';
@@ -139,6 +140,17 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
     });
+
+    // POST /upload_checkpoint
+    new UploadCheckPointApi(this, 'aigc-upload-ckpt', {
+      checkpointTable: props.database.checkPointTable,
+      commonLayer: commonLayer,
+      httpMethod: 'POST',
+      router: routers.upload_checkpoint,
+      s3Bucket: s3Bucket,
+      srcRoot: this.srcRoot,
+    });
+
 
     // POST /checkpoint
     new CreateCheckPointApi(this, 'aigc-create-ckpt', {

@@ -3,10 +3,17 @@ import decimal
 from typing import Dict, Any
 
 import boto3
+import os
 from datetime import datetime
 from datetime import timedelta
+import logging
+import concurrent.futures
+import urllib.request
+import math
 
 from _types import MultipartFileReq, CheckPoint
+
+PART_SIZE=500 * 1024 * 1024
 
 
 def batch_get_s3_multipart_signed_urls(bucket_name, base_key, filenames: [MultipartFileReq]) -> Dict[str, Any]:
@@ -87,6 +94,56 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
+
+
+def upload_part_file(s3, bucket, key, part_number, upload_id, part_data):
+    response = s3.upload_part(
+        Bucket=bucket,
+        Key=key,
+        PartNumber=part_number,
+        UploadId=upload_id,
+        Body=part_data
+    )
+    return {'PartNumber': part_number, 'ETag': response['ETag']}
+
+
+def multipart_upload_from_url(url, bucket_name, s3_key):
+    s3 = boto3.client('s3')
+    logging.info(f"start multipart_upload_from_url:{url}, {s3_key}")
+    with urllib.request.urlopen(url) as response:
+        # 获取文件总大小
+        total_size = int(response.info().get('Content-Length'))
+        part_count = math.ceil(total_size / PART_SIZE)
+        upload_id = s3.create_multipart_upload(Bucket=bucket_name, Key=s3_key,
+        Expires=datetime.now() + timedelta(seconds=3600 * 24 * 7))['UploadId']
+        logging.info(f"multipart_upload_from_url:   total_size:{total_size}, part_count:{part_count} upload_id:{upload_id}")
+        parts = []
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for part_number in range(1, part_count + 1):
+                start = (part_number - 1) * PART_SIZE
+                end = min(part_number * PART_SIZE, total_size)
+                part_data = response.read(end - start)
+                futures.append(
+                    executor.submit(upload_part_file, s3, bucket_name, s3_key, part_number, upload_id, part_data))
+
+            for future in concurrent.futures.as_completed(futures):
+                parts.append(future.result())
+        parts.sort(key=lambda part: part['PartNumber'])
+        # 完成Multipart上传
+        s3.complete_multipart_upload(
+            Bucket=bucket_name,
+            Key=s3_key,
+            UploadId=upload_id,
+            MultipartUpload={'Parts': parts}
+        )
+        logging.info("Multipart upload completed!")
+        return {
+            "uploadId": upload_id,
+            "key": s3_key,
+            "bucket": bucket_name,
+        }
 
 
 class DecimalEncoder(json.JSONEncoder):
