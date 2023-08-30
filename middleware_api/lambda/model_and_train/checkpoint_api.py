@@ -95,6 +95,7 @@ def concurrent_upload(file_urls, base_key, fine_names, multipart_upload):
             future.result()
 
 
+# POST /upload_checkpoint
 def upload_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
     event = UploadCheckPointEvent(**raw_event)
