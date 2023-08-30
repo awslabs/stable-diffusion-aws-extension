@@ -20,7 +20,7 @@ checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "C
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-x
+
 # GET /checkpoints
 def list_all_checkpoints_api(event, context):
     _filter = {}
