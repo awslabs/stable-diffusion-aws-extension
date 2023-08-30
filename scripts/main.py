@@ -959,7 +959,7 @@ def on_ui_tabs():
                         )
                     # with gr.Row(variant='panel', visible=False) as filter_row:
                     with gr.Row(variant='panel', visible=False) as filter_row:
-                        endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custome endpoint name ", label="Specify Endpoint Name", visible=True)
+                        endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name ", label="Specify Endpoint Name", visible=True)
                         instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g5.2xlarge")
                         instance_count_dropdown = gr.Dropdown(label="Max Instance count", choices=["1","2","3","4","5","6"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
                         autoscaling_enabled = gr.Checkbox(
