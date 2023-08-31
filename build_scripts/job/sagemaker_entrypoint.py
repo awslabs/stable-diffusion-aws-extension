@@ -13,8 +13,6 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
 import boto3
 
-sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
-sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
 from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 
@@ -216,8 +214,8 @@ def sync_status(job_id, bucket_name, model_dir):
     sync_status_thread.start()
 
 def main(s3_input_path, s3_output_path, params):
-    import launch
-    launch.prepare_environment()
+    # import launch
+    # launch.prepare_environment()
     params = params["training_params"]
     model_name = params["model_name"]
     model_type = params["model_type"]
