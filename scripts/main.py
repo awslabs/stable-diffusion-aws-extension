@@ -253,7 +253,7 @@ class SageMakerUI(scripts.Script):
                 return str(obj)
 
         selected_script_index = p.script_args[0] - 1
-        selected_script_name = p.scripts.selectable_scripts[selected_script_index].name
+        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[selected_script_index].name
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
