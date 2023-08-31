@@ -2,6 +2,7 @@ import datetime
 import sys
 from queue import Queue
 from typing import Dict, List
+from PIL import Image
 
 import requests
 import logging
@@ -252,6 +253,7 @@ class SageMakerUI(scripts.Script):
                 return str(obj)
 
         selected_script_index = p.script_args[0] - 1
+        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[selected_script_index].name
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
@@ -268,7 +270,7 @@ class SageMakerUI(scripts.Script):
                     parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
-            elif selected_script_index == sid:
+            elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
                     parsed_args, used_models = self._process_args_by_plugin(script.name, arg, _id, script_args)
@@ -1153,7 +1155,7 @@ def on_ui_tabs():
                                 api_key = get_variable_from_json('api_token')
                                 raw_response = requests.get(url=url, headers={'x-api-key': api_key})
                                 raw_response.raise_for_status()
-                                dataset_items = [(item['preview_url'], item['key']) for item in
+                                dataset_items = [(Image.open(requests.get(item['preview_url'], stream=True).raw), item['key']) for item in
                                                  raw_response.json()['data']]
                                 return ds['s3'], ds['description'], dataset_items
 
