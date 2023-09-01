@@ -829,8 +829,8 @@ def on_ui_tabs():
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
                 # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-                gr.Text(value="Upload Model to S3")
-                with gr.Tab("Upload Model to S3 from WebUI"):
+                gr.HTML(value="<div style='font-weight: bold;margin-bottom:-10px'>Upload Model to S3</div>")
+                with gr.Tab("From WebUI"):
                 # with gr.Accordion("Upload Model to S3 from WebUI", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
@@ -906,7 +906,7 @@ def on_ui_tabs():
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
                                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path],
                                                   outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path])
-                with gr.Tab("Upload Model to S3 from My Computer"):
+                with gr.Tab("From My Computer"):
                 # with gr.Accordion("Upload Model to S3 from My Computer", open=False):
                     with FormRow(elem_id="model_upload_local_form_row_01"):
                         model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_type_ele_id")
@@ -930,14 +930,13 @@ def on_ui_tabs():
                                                   # inputs=[sagemaker_ui.checkpoint_info],
                                                   outputs=[upload_label]
                                                   )
-                with gr.Tab("Upload Model to S3 from URL"):
+                with gr.Tab("From URL"):
                     with FormRow(elem_id="model_upload_url_form_row_01"):
                         model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
                     with FormRow(elem_id="model_upload_url_form_row_02"):
-                        file_upload_url_component = gr.TextArea(elem_id="model_urls_value_ele_id", label="Comma-separated list of URLs in English")
+                        file_upload_url_component = gr.TextArea(elem_id="model_urls_value_ele_id", label="URL List (Comma-separated in English)", placeholder="Best to keep the total model size below 5 GB, and preferably not exceeding 10 GB.")
+                        file_upload_params_component = gr.TextArea(elem_id="model_params_value_ele_id", label="Models Description (Optional)", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
                     with FormRow(elem_id="model_upload_url_form_row_03"):
-                        file_upload_params_component = gr.TextArea(elem_id="model_params_value_ele_id", label="Optional Params")
-                    with FormRow(elem_id="model_upload_url_form_row_04"):
                         file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
                     with gr.Row():
                         model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button_url", size=(200, 50))
