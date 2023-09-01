@@ -232,10 +232,17 @@ export class SDAsyncInferenceStack extends NestedStack {
       ],
       resources: [props?.snsTopic.topicArn, inference_result_error_topic.topicArn, inference_result_topic.topicArn],
     });
+    const autoScaleStatement = new iam.PolicyStatement({
+      actions: [
+        'application-autoscaling:DeregisterScalableTarget',
+      ],
+      resources: ['*'],
+    });
     inferenceLambda.addToRolePolicy(ddbStatement);
     inferenceLambda.addToRolePolicy(s3Statement);
     inferenceLambda.addToRolePolicy(stateMachineStatement);
     inferenceLambda.addToRolePolicy(snsStatement);
+    inferenceLambda.addToRolePolicy(autoScaleStatement);
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
