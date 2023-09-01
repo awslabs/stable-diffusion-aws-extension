@@ -64,7 +64,7 @@ def list_all_checkpoints_api(event, context):
 
 @dataclass
 class UploadCheckPointEvent:
-    checkpoint_type: str
+    checkpointType: str
     modelUrl: [str]
     params: dict[str, Any]
 
