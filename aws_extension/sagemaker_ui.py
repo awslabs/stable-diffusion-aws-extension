@@ -623,9 +623,13 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
         url_list = url_list.split(',')
     else:
         return "Please fill in right url list."
-    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params}
+    params_dict = json.loads(params)
+    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
     response = server_request_post('upload_checkpoint', body_params)
-    log = "Start upload! " + response.json()
+    logging.info(f"sagemaker_upload_model_s3_url response:{response.json()}")
+    log = "Start upload! "
+    if response.json() == "{'message': 'Endpoint request timed out'}":
+        return log
     return response.json()
 
 
