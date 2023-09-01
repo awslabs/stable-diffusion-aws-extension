@@ -624,9 +624,9 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
     else:
         return "Please fill in right url list."
     body_params = {'checkpoint_type': model_type, 'modelUrl': url_list, 'params': params}
-    response = server_request_post('inference/upload_checkpoint', body_params)
+    response = server_request_post('upload_checkpoint', body_params)
     log = "Start upload! " + response.json()
-    return log
+    return response.json()
 
 
 def generate_on_cloud(sagemaker_endpoint):
