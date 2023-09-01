@@ -81,6 +81,15 @@ img_checkpoint = None
 
 show_all_inference_job = False
 
+modelTypeMap = {
+    'SD Checkpoints': 'Stable-diffusion',
+    'Textual Inversion': 'embeddings',
+    'LoRA model': 'Lora',
+    'ControlNet model': 'ControlNet',
+    'Hypernetwork': 'hypernetworks',
+    'VAE': 'VAE'
+}
+
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
@@ -606,7 +615,17 @@ def sagemaker_upload_model_s3_local():
 
 
 def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
-    log = "Start upload:"+model_type + url_list + params
+    model_type = modelTypeMap.get(model_type)
+    if not model_type:
+        return "Please choose the model type."
+    url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+    if re.match(f'^{url_pattern}$', url_list):
+        url_list = url_list.split(',')
+    else:
+        return "Please fill in right url list."
+    body_params = {'checkpoint_type': model_type, 'modelUrl': url_list, 'params': params}
+    response = server_request_post('inference/upload_checkpoint', body_params)
+    log = "Start upload! " + response
     return log
 
 
