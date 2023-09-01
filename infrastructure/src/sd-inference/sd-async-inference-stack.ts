@@ -186,6 +186,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           'sagemaker:DeleteEndpoint',
           'sagemaker:InvokeEndpoint',
           'sagemaker:InvokeEndpointAsync',
+          'application-autoscaling:DeregisterScalableTarget',
           's3:CreateBucket',
           's3:ListBucket',
           's3:GetObject',
