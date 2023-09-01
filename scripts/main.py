@@ -828,8 +828,8 @@ def on_ui_tabs():
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
-                sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-
+                # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+                gr.Text(value="Upload Model to S3")
                 with gr.Tab("Upload Model to S3 from WebUI"):
                 # with gr.Accordion("Upload Model to S3 from WebUI", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
@@ -930,7 +930,21 @@ def on_ui_tabs():
                                                   # inputs=[sagemaker_ui.checkpoint_info],
                                                   outputs=[upload_label]
                                                   )
-
+                with gr.Tab("Upload Model to S3 from URL"):
+                    with FormRow(elem_id="model_upload_url_form_row_01"):
+                        model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
+                    with FormRow(elem_id="model_upload_url_form_row_02"):
+                        file_upload_url_component = gr.TextArea(elem_id="model_urls_value_ele_id", label="Comma-separated list of URLs in English")
+                    with FormRow(elem_id="model_upload_url_form_row_03"):
+                        file_upload_params_component = gr.TextArea(elem_id="model_params_value_ele_id", label="Optional Params")
+                    with FormRow(elem_id="model_upload_url_form_row_04"):
+                        file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
+                    with gr.Row():
+                        model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary", elem_id="sagemaker_model_update_button_url", size=(200, 50))
+                        model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_local,
+                                                  inputs=[model_type_url_drop_down, file_upload_url_component, file_upload_params_component],
+                                                  outputs=[file_upload_result_component]
+                                                  )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
                     default_table = """
