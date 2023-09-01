@@ -605,6 +605,11 @@ def sagemaker_upload_model_s3_local():
     return log
 
 
+def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
+    log = "Start upload:"+model_type + url_list + params
+    return log
+
+
 def generate_on_cloud(sagemaker_endpoint):
     logging.info(f"checkpiont_info {checkpoint_info}")
     logging.info(f"sagemaker endpoint {sagemaker_endpoint}")
