@@ -63,7 +63,7 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.2xlarge
+      InstanceType: r6i.large
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
       # KeyName: !Ref KeyName
       BlockDeviceMappings:
