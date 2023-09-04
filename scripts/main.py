@@ -350,18 +350,8 @@ class SageMakerUI(scripts.Script):
 
         p.setup_conds()
 
-        # load textual inversion
-        for key, val in model_hijack.extra_generation_params.items():
-            if val.split(': ')[0] not in model_hijack.embedding_db.word_embeddings:
-                continue
-
-            textual_inv_name = \
-            model_hijack.embedding_db.word_embeddings[val.split(': ')[0]].filename.split(os.path.sep)[-1]
-            if 'embeddings' not in models:
-                models['embeddings'] = []
-
-            if textual_inv_name not in models['embeddings']:
-                models['embeddings'].append(textual_inv_name)
+        # load all embedding models
+        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in model_hijack.embedding_db.word_embeddings.values()]
 
         # create an inference and upload to s3
         # Start creating model on cloud.
