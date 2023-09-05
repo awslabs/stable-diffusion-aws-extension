@@ -1,6 +1,6 @@
 # Version control for stable-diffusion-aws-extension
 
-Update time: 20230727
+Update time: 20230905
 
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
