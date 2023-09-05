@@ -7,7 +7,6 @@ import sys
 from urllib.parse import urlparse
 import requests
 import json
-import gradio as gr
 
 sys.path.append(os.getcwd())
 # from modules.timer import Timer
@@ -145,10 +144,10 @@ def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_siz
             return parts
         except Exception as e:
             print(e)
-            gr.Error(f'Upload file{local_path} failed, please try again. If still not work, contact your admin')
+            # gr.Error(f'Upload file{local_path} failed, please try again. If still not work, contact your admin')
         finally:
             if not integral_uploaded:
-                gr.Error(f'Upload file {local_path} not complete, please try again or create new one.')
+                # gr.Error(f'Upload file {local_path} not complete, please try again or create new one.')
                 raise Exception('failed at multipart')
 
 
