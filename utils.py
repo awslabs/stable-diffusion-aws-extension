@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 import boto3
@@ -16,6 +17,8 @@ import tarfile
 import shutil
 from pathlib import Path
 import psutil
+
+LOGGING_LEVEL = logging.DEBUG
 
 class ModelsRef:
     def __init__(self):

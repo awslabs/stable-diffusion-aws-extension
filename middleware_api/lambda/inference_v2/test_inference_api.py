@@ -29,7 +29,13 @@ class InferenceApiTest(TestCase):
 
     def test_prepare_inference(self):
         from inference_api import prepare_inference
-        event = {'sagemaker_endpoint_name': 'infer-endpoint-9958bc4', 'task_type': 'txt2img', 'models': {'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'], 'ControlNet': ['control_v11p_sd15_canny.pth']}, 'filters': {'creator': 1690781890.311581}}
+        event = {
+            'sagemaker_endpoint_name': 'infer-endpoint-9958bc4',
+            'task_type': 'txt2img',
+            'models': {
+                'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'],
+                'ControlNet': ['control_v11p_sd15_canny.pth']},
+            'filters': {'creator': 1690781890.311581}}
 
         _id = str(datetime.now().timestamp())
         resp = prepare_inference(event, MockContext(aws_request_id=_id))
