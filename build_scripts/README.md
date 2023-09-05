@@ -4,9 +4,11 @@ Update time: 20230727
 
 | Supported Framework/Extension | Version No.| Update date | Commit ID |
 | --------------------- | --------- | --------------------- | --------- |
-| stable-diffusion-webui|1.5.1|20230727|68f336bd994bed5442ad95bad6b6ad5564a5409a|
-| sd-webui-controlnet | v1.1.233|20230727|efda6ddfd82ebafc6e1150fbb7e1f27163482a82|
+| stable-diffusion-webui|1.6.0|20230901|5ef669de080814067961f28357256e8fe27544f4|
+| sd-webui-controlnet | v1.1.401|20230905|fd37e9fc7ced2c3a39aaa3860916672c8d0fbfe8|
 | sd_dreambooth_extension | 1.0.14| 20230708| c2a5617c587b812b5a408143ddfb18fc49234edf|
+| multidiffusion-upscaler-for-automatic111 | - | 20230722 |
+f9f8073e64f4e682838f255215039ba7884553bf|
 # How to play with /stable-diffusion-webui
 
 ```
