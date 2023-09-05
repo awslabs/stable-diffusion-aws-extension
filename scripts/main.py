@@ -828,6 +828,13 @@ def on_ui_tabs():
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
+                with gr.Row("Uploaded Models"):
+                    examples = [
+                        [5, "add", 3],
+                        [4, "divide", 2],
+                        [-4, "multiply", 2.5],
+                        [0, "subtract", 1.2],
+                    ]
                 # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
                 gr.HTML(value="<div style='font-weight: bold;margin-bottom:-10px'>Upload Model to S3</div>")
                 with gr.Tab("From WebUI"):
