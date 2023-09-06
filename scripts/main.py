@@ -828,14 +828,30 @@ def on_ui_tabs():
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
-                with gr.Row("Uploaded Models"):
-                    examples = [
-                        [5, "add", 3],
-                        [4, "divide", 2],
-                        [-4, "multiply", 2.5],
-                        [0, "subtract", 1.2],
-                    ]
-                # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+                with gr.Accordion("Uploaded Models", open=False):
+                    with gr.Tab("SD Checkpoints"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("Stable-diffusion"),
+                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
+                                     elem_id="sd_df", every=300)
+                    with gr.Tab("LoRA model"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("Lora"),
+                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
+                                     elem_id="sd_df", every=300)
+                    with gr.Tab("Hypernetwork"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("hypernetworks"),
+                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
+                                     elem_id="hyn_df", every=300)
+                    with gr.Tab("Textual Inversion"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("embeddings"),
+                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
+                                     elem_id="emb_df", every=300)
+                    with gr.Tab("ControlNet model"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("ControlNet"),
+                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
+                                     elem_id="ctrl_df", every=300)
+                    with gr.Tab("VAE"):
+                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("VAE"), headers=["name", "upload time"],
+                                     datatype=["str", "str"], col_count=(2, "fixed"), elem_id="vae_df", every=300)
                 gr.HTML(value="<div style='font-weight: bold;margin-bottom:-10px'>Upload Model to S3</div>")
                 with gr.Tab("From WebUI"):
                 # with gr.Accordion("Upload Model to S3 from WebUI", open=False):

@@ -459,6 +459,38 @@ def get_model_list_by_type(model_type):
         return []
 
 
+def get_checkpoints_by_type(model_type):
+    url = "checkpoints?status=Active"
+    if isinstance(model_type, list):
+        url += "&types=" + "&types=".join(model_type)
+    else:
+        url += f"&types={model_type}"
+    try:
+        response = server_request(url)
+        response.raise_for_status()
+        json_response = response.json()
+        if "checkpoints" not in json_response.keys():
+            return []
+        checkpoint_dict = {}
+        for ckpt in json_response["checkpoints"]:
+            if "name" not in ckpt:
+                continue
+            if ckpt["name"] is None:
+                continue
+            ckpt_type = ckpt["type"]
+            create_time = ckpt['created']
+            created = datetime.fromtimestamp(create_time)
+            for ckpt_name in ckpt["name"]:
+                checkpoint = [ckpt_name, created]
+                if ckpt_name not in checkpoint_dict:
+                    checkpoint_dict[ckpt_name] = checkpoint
+        checkpoint_list = list(checkpoint_dict.values())
+        return checkpoint_list
+    except Exception as e:
+        logging.error(f"Error fetching model list: {e}")
+        return []
+
+
 def update_sd_checkpoints():
     model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
