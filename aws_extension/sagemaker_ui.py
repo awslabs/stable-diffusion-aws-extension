@@ -655,7 +655,10 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
         url_list = url_list.split(',')
     else:
         return "Please fill in right url list."
-    params_dict = json.loads(params)
+    if params:
+        params_dict = json.loads(params)
+    else:
+        params_dict = {}
     body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
     response = server_request_post('upload_checkpoint', body_params)
     logging.info(f"sagemaker_upload_model_s3_url response:{response.json()}")
