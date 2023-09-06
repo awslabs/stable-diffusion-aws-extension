@@ -147,6 +147,8 @@ def datetime_to_short_form(datetime_str):
 
 def update_sagemaker_endpoints():
     global sagemaker_endpoints
+    import inspect
+    logger.debug(f'caller name: {inspect.stack()[1][3]}')
 
     sagemaker_endpoints.clear()
     try:
@@ -1132,7 +1134,14 @@ def create_ui(is_img2img):
 
     init_refresh_resource_list_from_cloud()
 
-    with gr.Blocks():
+    with gr.Blocks() as sagemaker_tab:
+        def test_session(request: gr.Request):
+            return request.username, gr.update(visible=request.username == 'alvindaiyan', interactive=request.username == 'alvindaiyan')
+
+        user_session = gr.State()  # todo: 感觉用不到这么复杂
+        t = gr.Textbox(value='show for alvindaiyan')
+        sagemaker_tab.load(test_session, None, [user_session, t])
+
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
         with gr.Box():
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')

@@ -19,6 +19,7 @@ window.onload = function() {
         for (let selector of selectors) {
             let element = document.querySelector(selector);
             if (element != null) {
+                console.log('click element', element)
                 element.click();
             } else {
                 allElementsFound = false;
