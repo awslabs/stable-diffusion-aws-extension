@@ -132,8 +132,6 @@ def user_settings_tab():
                 ]
 
             gr.HTML(value="<b>Users Table</b>")
-            current_page_token = gr.State()
-
             user_table = gr.Dataframe(
                 headers=["name", "role", "created by"],
                 datatype=["str", "str", "str"],
@@ -145,11 +143,16 @@ def user_settings_tab():
                 if evt.index[1] != 0:
                     return gr.skip(), gr.skip(), gr.skip()
 
+                # todo: to be done
                 return 'cyanda', '123123', ['IT Operator', 'Designer']
 
             user_table.select(fn=choose_user, inputs=[], outputs=[username, pwd, user_roles])
 
             with gr.Row():
+                current_page_token = gr.State({
+                    'previous_token': '',
+                    'next_token': '',
+                })
                 next_page = gr.Button(value="Next Page", variant='primary')
                 previous_page = gr.Button(value="Previous Page", variant='primary')
 
