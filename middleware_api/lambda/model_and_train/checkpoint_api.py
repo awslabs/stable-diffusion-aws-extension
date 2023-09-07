@@ -65,7 +65,7 @@ def list_all_checkpoints_api(event, context):
 @dataclass
 class UploadCheckPointEvent:
     checkpointType: str
-    modelUrl: [str]
+    modelUrl: list[str]
     params: dict[str, Any]
 
 
@@ -73,8 +73,9 @@ def download_and_upload_models(url: str, base_key: str, file_names: list, multip
     logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
     filename = ""
     response = requests.get(url, allow_redirects=False)
-    if response.status_code == 307:
-        url = response.headers.get('Location')
+    if response and response.status_code == 307:
+        if response.headers and 'Location' in response.headers:
+            url = response.headers.get('Location')
     parsed_url = urllib.parse.urlparse(url)
     filename = os.path.basename(parsed_url.path)
     logger.info(f"file name is :{filename}")

@@ -249,8 +249,6 @@ def query_txt_inference_job_list(task_type: str, status: str, endpoint: str, che
 
 
 def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, opt_type: str):
-    # print(
-    #     f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
     try:
         body_params = {}
         if status:
@@ -445,6 +443,8 @@ def get_model_list_by_type(model_type):
             if "name" not in ckpt:
                 continue
             if ckpt["name"] is None:
+                continue
+            if ckpt["type"] is None:
                 continue
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
@@ -664,8 +664,9 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
     response_data = response.json();
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
-    if 'checkpoint' in response_data and response_data['checkpoint'].get('status') == 'Active':
-        log = "upload success!"
+    if 'checkpoint' in response_data:
+        if response_data['checkpoint'].get('status') == 'Active':
+            log = "upload success!"
     return log
 
 
