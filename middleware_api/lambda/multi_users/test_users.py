@@ -130,7 +130,7 @@ class InferenceApiTest(TestCase):
 
     def test_list_username(self):
         from multi_users.multi_users_api import list_user
-        username = 'batman10'
+        username = 'superman'
         event = {
             'queryStringParameters': {
                 'show_password': True,

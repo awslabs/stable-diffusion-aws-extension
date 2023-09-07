@@ -96,6 +96,7 @@ export class MultiUsersStack extends NestedStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
       srcRoot: this.srcRoot,
+      passwordKey: passwordKey,
     });
 
   }

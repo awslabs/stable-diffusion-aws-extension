@@ -3,7 +3,7 @@ import {
   aws_apigateway,
   aws_apigateway as apigw,
   aws_dynamodb,
-  aws_iam,
+  aws_iam, aws_kms,
   aws_lambda,
   Duration,
 } from 'aws-cdk-lib';
@@ -19,6 +19,7 @@ export interface ListAllUsersApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
+  passwordKey: aws_kms.IKey;
 }
 
 export class ListAllUsersApi {
@@ -28,12 +29,14 @@ export class ListAllUsersApi {
   private readonly scope: Construct;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
+  private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: ListAllUsersApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
+    this.passwordKey = props.passwordKey;
     this.httpMethod = props.httpMethod;
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
@@ -55,6 +58,19 @@ export class ListAllUsersApi {
         'dynamodb:Query',
       ],
       resources: [this.multiUserTable.tableArn],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'kms:Decrypt',
+      ],
+      resources: ['*'],
+      conditions: {
+        StringEquals: {
+          'kms:RequestAlias': `alias/${this.passwordKey.keyId}`,
+        },
+      },
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -83,6 +99,7 @@ export class ListAllUsersApi {
       memorySize: 1024,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        KEY_ID: `alias/${this.passwordKey.keyId}`,
       },
       layers: [this.layer],
     });

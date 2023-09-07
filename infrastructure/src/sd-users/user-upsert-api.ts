@@ -64,14 +64,18 @@ export class UserUpsertApi {
         this.multiUserTable.tableArn,
       ],
     }));
-
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
         'kms:Encrypt',
         'kms:Decrypt',
       ],
-      resources: [this.passwordKey.keyArn],
+      resources: ['*'],
+      conditions: {
+        StringEquals: {
+          'kms:RequestAlias': `alias/${this.passwordKey.keyId}`,
+        },
+      },
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -99,7 +103,7 @@ export class UserUpsertApi {
       memorySize: 1024,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        KEY_ID: this.passwordKey.keyId,
+        KEY_ID: `alias/${this.passwordKey.keyId}`,
       },
       layers: [this.layer],
     });
