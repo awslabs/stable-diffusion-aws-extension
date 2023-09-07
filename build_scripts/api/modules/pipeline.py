@@ -816,14 +816,15 @@ def check_controlnet(p: StableDiffusionProcessing):
     controlnet_state = False
     valid_script = None
     
-    for script in p.scripts.alwayson_scripts:
-        api_info_name = script.api_info.name
-        if api_info_name == 'controlnet':
-            enabled_units_len = len(script.get_enabled_units(p))
-            if enabled_units_len > 0:
-                controlnet_state = True
-                valid_script = script
-            break
+    if p.scripts is not None:
+        for script in p.scripts.alwayson_scripts:
+            api_info_name = script.api_info.name
+            if api_info_name == 'controlnet':
+                enabled_units_len = len(script.get_enabled_units(p))
+                if enabled_units_len > 0:
+                    controlnet_state = True
+                    valid_script = script
+                break
     return request_type, controlnet_state, valid_script
 
 def convert_pipeline(controlnet_state, controlnet_script, request_type, p: StableDiffusionProcessing):

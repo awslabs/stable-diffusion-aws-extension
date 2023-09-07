@@ -711,7 +711,10 @@ def load_pipeline(checkpoint_info=None):
     pipeline_data.was_loaded_at_least_once = True
     
     embeddings_dir = shared.cmd_opts.embeddings_dir
-    sd_pipeline.load_textual_inversion(embeddings_dir) 
+    try:
+        sd_pipeline.load_textual_inversion(embeddings_dir) 
+    except:
+        print(f"No embeddings.")
     timer.record("load textual inversion embeddings")
 
     print(f"Model loaded in {timer.summary()}.")
