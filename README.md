@@ -3,8 +3,6 @@ This is a WebUI extension to help user migrate existing workload (inference, tra
 
 ## How to get started:
 
->**Notice** : This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
-
 ### **Part1**: Install the stable-diffusion-webui and extension
 If you have not install the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
 

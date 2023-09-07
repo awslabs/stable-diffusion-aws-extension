@@ -362,6 +362,7 @@ def _exec(model_job: Model, action: CreateModelStatus):
 def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
     payload = {
         "task": "db-create-model",  # router
+        "param_s3": "",
         "db_create_model_payload": json.dumps({
             "s3_output_path": job.output_s3_location,  # output object
             "s3_input_path": checkpoint.s3_location,
