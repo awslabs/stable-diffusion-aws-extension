@@ -81,6 +81,15 @@ img_checkpoint = None
 
 show_all_inference_job = False
 
+modelTypeMap = {
+    'SD Checkpoints': 'Stable-diffusion',
+    'Textual Inversion': 'embeddings',
+    'LoRA model': 'Lora',
+    'ControlNet model': 'ControlNet',
+    'Hypernetwork': 'hypernetworks',
+    'VAE': 'VAE'
+}
+
 
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
@@ -450,6 +459,38 @@ def get_model_list_by_type(model_type):
         return []
 
 
+def get_checkpoints_by_type(model_type):
+    url = "checkpoints?status=Active"
+    if isinstance(model_type, list):
+        url += "&types=" + "&types=".join(model_type)
+    else:
+        url += f"&types={model_type}"
+    try:
+        response = server_request(url)
+        response.raise_for_status()
+        json_response = response.json()
+        if "checkpoints" not in json_response.keys():
+            return []
+        checkpoint_dict = {}
+        for ckpt in json_response["checkpoints"]:
+            if "name" not in ckpt:
+                continue
+            if ckpt["name"] is None:
+                continue
+            ckpt_type = ckpt["type"]
+            create_time = ckpt['created']
+            created = datetime.fromtimestamp(create_time)
+            for ckpt_name in ckpt["name"]:
+                checkpoint = [ckpt_name, created]
+                if ckpt_name not in checkpoint_dict:
+                    checkpoint_dict[ckpt_name] = checkpoint
+        checkpoint_list = list(checkpoint_dict.values())
+        return checkpoint_list
+    except Exception as e:
+        logging.error(f"Error fetching model list: {e}")
+        return []
+
+
 def update_sd_checkpoints():
     model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
@@ -602,6 +643,26 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
 def sagemaker_upload_model_s3_local():
     log = "Start upload:"
+    return log
+
+
+def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
+    model_type = modelTypeMap.get(model_type)
+    if not model_type:
+        return "Please choose the model type."
+    url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+    if re.match(f'^{url_pattern}$', url_list):
+        url_list = url_list.split(',')
+    else:
+        return "Please fill in right url list."
+    if params:
+        params_dict = json.loads(params)
+    else:
+        params_dict = {}
+    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
+    response = server_request_post('upload_checkpoint', body_params)
+    logging.info(f"sagemaker_upload_model_s3_url response:{response.json()}")
+    log = "uploading……"
     return log
 
 
