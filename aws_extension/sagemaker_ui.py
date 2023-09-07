@@ -476,7 +476,6 @@ def get_checkpoints_by_type(model_type):
                 continue
             if ckpt["name"] is None:
                 continue
-            ckpt_type = ckpt["type"]
             create_time = ckpt['created']
             created = datetime.fromtimestamp(create_time)
             for ckpt_name in ckpt["name"]:
