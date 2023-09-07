@@ -69,8 +69,8 @@ class UploadCheckPointEvent:
     params: dict[str, Any]
 
 
-def download_and_upload_models(url: str, base_key: str, fine_names: list, multipart_upload: dict):
-    logger.info(f"download_and_upload_models: {url}, {base_key}, {fine_names}")
+def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict):
+    logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
     filename = ""
     response = requests.get(url, allow_redirects=False)
     if response.status_code == 307:
@@ -78,18 +78,18 @@ def download_and_upload_models(url: str, base_key: str, fine_names: list, multip
     parsed_url = urllib.parse.urlparse(url)
     filename = os.path.basename(parsed_url.path)
     logger.info(f"file name is :{filename}")
-    fine_names.append(filename)
+    file_names.append(filename)
     s3_key = f'{base_key}/{filename}'
     logger.info(f"upload s3 key is :{filename}")
     multipart_upload[filename] = multipart_upload_from_url(url, bucket_name, s3_key)
 
 
 # 并发上传文件
-def concurrent_upload(file_urls, base_key, fine_names, multipart_upload):
+def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for file_url in file_urls:
-            futures.append(executor.submit(download_and_upload_models, file_url, base_key, fine_names, multipart_upload))
+            futures.append(executor.submit(download_and_upload_models, file_url, base_key, file_names, multipart_upload))
 
         for future in concurrent.futures.as_completed(futures):
             future.result()
@@ -116,21 +116,21 @@ def upload_checkpoint_api(raw_event, context):
     try:
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
         urls = event.modelUrl
-        fine_names = []
+        file_names = []
         logger.info(f"start to upload models:{urls}")
         checkpoint_params = {}
         if event.params is not None and len(event.params) > 0:
             checkpoint_params = event.params
         checkpoint_params['created'] = str(datetime.datetime.now())
         checkpoint_params['multipart_upload'] = {}
-        concurrent_upload(urls, base_key, fine_names, checkpoint_params['multipart_upload'])
+        concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
         logger.info("finished upload, prepare to insert item to ddb")
 
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
             s3_location=f's3://{bucket_name}/{base_key}',
-            checkpoint_names=fine_names,
+            checkpoint_names=file_names,
             checkpoint_status=CheckPointStatus.Active,
             params=checkpoint_params,
             timestamp=datetime.datetime.now().timestamp()
