@@ -422,200 +422,200 @@ sdxl_clip_weight = 'conditioner.embedders.1.model.ln_final.weight'
 sdxl_refiner_clip_weight = 'conditioner.embedders.0.model.ln_final.weight'
 
 
-class SdModelData:
-    def __init__(self):
-        self.sd_model = None
-        self.was_loaded_at_least_once = False
-        self.lock = threading.Lock()
+# class SdModelData:
+#     def __init__(self):
+#         self.sd_model = None
+#         self.was_loaded_at_least_once = False
+#         self.lock = threading.Lock()
 
-    def get_sd_model(self):
-        if self.was_loaded_at_least_once:
-            return self.sd_model
+#     def get_sd_model(self):
+#         if self.was_loaded_at_least_once:
+#             return self.sd_model
 
-        if self.sd_model is None:
-            with self.lock:
-                if self.sd_model is not None or self.was_loaded_at_least_once:
-                    return self.sd_model
+#         if self.sd_model is None:
+#             with self.lock:
+#                 if self.sd_model is not None or self.was_loaded_at_least_once:
+#                     return self.sd_model
 
-                try:
-                    load_model()
-                except Exception as e:
-                    errors.display(e, "loading stable diffusion model", full_traceback=True)
-                    print("", file=sys.stderr)
-                    print("Stable diffusion model failed to load", file=sys.stderr)
-                    self.sd_model = None
+#                 try:
+#                     load_model()
+#                 except Exception as e:
+#                     errors.display(e, "loading stable diffusion model", full_traceback=True)
+#                     print("", file=sys.stderr)
+#                     print("Stable diffusion model failed to load", file=sys.stderr)
+#                     self.sd_model = None
 
-        return self.sd_model
+#         return self.sd_model
 
-    def set_sd_model(self, v):
-        self.sd_model = v
+#     def set_sd_model(self, v):
+#         self.sd_model = v
 
-model_data = SdModelData()
-
-
-def get_empty_cond(sd_model):
-    if hasattr(sd_model, 'conditioner'):
-        d = sd_model.get_learned_conditioning([""])
-        return d['crossattn']
-    else:
-        return sd_model.cond_stage_model([""])
+# model_data = SdModelData()
 
 
+# def get_empty_cond(sd_model):
+#     if hasattr(sd_model, 'conditioner'):
+#         d = sd_model.get_learned_conditioning([""])
+#         return d['crossattn']
+#     else:
+#         return sd_model.cond_stage_model([""])
 
-def load_model(checkpoint_info=None, already_loaded_state_dict=None):
-    from modules import lowvram, sd_hijack
-    checkpoint_info = checkpoint_info or select_checkpoint()
 
-    if model_data.sd_model:
-        sd_hijack.model_hijack.undo_hijack(model_data.sd_model)
-        model_data.sd_model = None
-        gc.collect()
-        devices.torch_gc()
 
-    do_inpainting_hijack()
+# def load_model(checkpoint_info=None, already_loaded_state_dict=None):
+#     from modules import lowvram, sd_hijack
+#     checkpoint_info = checkpoint_info or select_checkpoint()
 
-    timer = Timer()
+#     if model_data.sd_model:
+#         sd_hijack.model_hijack.undo_hijack(model_data.sd_model)
+#         model_data.sd_model = None
+#         gc.collect()
+#         devices.torch_gc()
 
-    if already_loaded_state_dict is not None:
-        state_dict = already_loaded_state_dict
-    else:
-        state_dict = get_checkpoint_state_dict(checkpoint_info, timer)
+#     do_inpainting_hijack()
 
-    checkpoint_config = sd_models_config.find_checkpoint_config(state_dict, checkpoint_info)
-    clip_is_included_into_sd = any(x for x in [sd1_clip_weight, sd2_clip_weight, sdxl_clip_weight, sdxl_refiner_clip_weight] if x in state_dict)
+#     timer = Timer()
 
-    timer.record("find config")
+#     if already_loaded_state_dict is not None:
+#         state_dict = already_loaded_state_dict
+#     else:
+#         state_dict = get_checkpoint_state_dict(checkpoint_info, timer)
 
-    sd_config = OmegaConf.load(checkpoint_config)
-    repair_config(sd_config)
+#     checkpoint_config = sd_models_config.find_checkpoint_config(state_dict, checkpoint_info)
+#     clip_is_included_into_sd = any(x for x in [sd1_clip_weight, sd2_clip_weight, sdxl_clip_weight, sdxl_refiner_clip_weight] if x in state_dict)
 
-    timer.record("load config")
+#     timer.record("find config")
 
-    print(f"Creating model from config: {checkpoint_config}")
+#     sd_config = OmegaConf.load(checkpoint_config)
+#     repair_config(sd_config)
 
-    sd_model = None
-    try:
-        with sd_disable_initialization.DisableInitialization(disable_clip=clip_is_included_into_sd or shared.cmd_opts.do_not_download_clip):
-            sd_model = instantiate_from_config(sd_config.model)
-    except Exception:
-        pass
+#     timer.record("load config")
 
-    if sd_model is None:
-        print('Failed to create model quickly; will retry using slow method.', file=sys.stderr)
-        sd_model = instantiate_from_config(sd_config.model)
+#     print(f"Creating model from config: {checkpoint_config}")
 
-    sd_model.used_config = checkpoint_config
+#     sd_model = None
+#     try:
+#         with sd_disable_initialization.DisableInitialization(disable_clip=clip_is_included_into_sd or shared.cmd_opts.do_not_download_clip):
+#             sd_model = instantiate_from_config(sd_config.model)
+#     except Exception:
+#         pass
 
-    timer.record("create model")
+#     if sd_model is None:
+#         print('Failed to create model quickly; will retry using slow method.', file=sys.stderr)
+#         sd_model = instantiate_from_config(sd_config.model)
 
-    load_model_weights(sd_model, checkpoint_info, state_dict, timer)
+#     sd_model.used_config = checkpoint_config
 
-    if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
-        lowvram.setup_for_low_vram(sd_model, shared.cmd_opts.medvram)
-    else:
-        sd_model.to(shared.device)
+#     timer.record("create model")
+
+#     load_model_weights(sd_model, checkpoint_info, state_dict, timer)
+
+#     if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
+#         lowvram.setup_for_low_vram(sd_model, shared.cmd_opts.medvram)
+#     else:
+#         sd_model.to(shared.device)
         
-    timer.record("move model to device")
+#     timer.record("move model to device")
 
-    sd_hijack.model_hijack.hijack(sd_model)
+#     sd_hijack.model_hijack.hijack(sd_model)
 
-    timer.record("hijack")
+#     timer.record("hijack")
 
-    sd_model.eval()
-    model_data.sd_model = sd_model
-    model_data.was_loaded_at_least_once = True
+#     sd_model.eval()
+#     model_data.sd_model = sd_model
+#     model_data.was_loaded_at_least_once = True
 
-    sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)  # Reload embeddings after model load as they may or may not fit the model
+#     sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)  # Reload embeddings after model load as they may or may not fit the model
 
-    timer.record("load textual inversion embeddings")
+#     timer.record("load textual inversion embeddings")
 
-    script_callbacks.model_loaded_callback(sd_model)
+#     script_callbacks.model_loaded_callback(sd_model)
 
-    timer.record("scripts callbacks")
+#     timer.record("scripts callbacks")
 
-    with devices.autocast(), torch.no_grad():
-        sd_model.cond_stage_model_empty_prompt = get_empty_cond(sd_model)
+#     with devices.autocast(), torch.no_grad():
+#         sd_model.cond_stage_model_empty_prompt = get_empty_cond(sd_model)
 
-    timer.record("calculate empty prompt")
+#     timer.record("calculate empty prompt")
 
-    print(f"Model loaded in {timer.summary()}.")
+#     print(f"Model loaded in {timer.summary()}.")
 
-    return sd_model
-
-
-def reload_model_weights(sd_model=None, info=None):
-    from modules import lowvram, devices, sd_hijack
-    checkpoint_info = info or select_checkpoint()
-
-    if not sd_model:
-        sd_model = model_data.sd_model
-
-    if sd_model is None:  # previous model load failed
-        current_checkpoint_info = None
-    else:
-        current_checkpoint_info = sd_model.sd_checkpoint_info
-        if sd_model.sd_model_checkpoint == checkpoint_info.filename:
-            return
-
-        sd_unet.apply_unet("None")
-
-        if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
-            lowvram.send_everything_to_cpu()
-        else:
-            sd_model.to(devices.cpu)
-
-        sd_hijack.model_hijack.undo_hijack(sd_model)
-
-    timer = Timer()
-
-    state_dict = get_checkpoint_state_dict(checkpoint_info, timer)
-
-    checkpoint_config = sd_models_config.find_checkpoint_config(state_dict, checkpoint_info)
-
-    timer.record("find config")
-
-    if sd_model is None or checkpoint_config != sd_model.used_config:
-        del sd_model
-        load_model(checkpoint_info, already_loaded_state_dict=state_dict)
-        return model_data.sd_model
-
-    try:
-        load_model_weights(sd_model, checkpoint_info, state_dict, timer)
-    except Exception:
-        print("Failed to load checkpoint, restoring previous")
-        load_model_weights(sd_model, current_checkpoint_info, None, timer)
-        raise
-    finally:
-        sd_hijack.model_hijack.hijack(sd_model)
-        timer.record("hijack")
-
-        script_callbacks.model_loaded_callback(sd_model)
-        timer.record("script callbacks")
-
-        if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
-            sd_model.to(devices.device)
-            timer.record("move model to device")
-
-    print(f"Weights loaded in {timer.summary()}.")
-
-    return sd_model
+#     return sd_model
 
 
-def unload_model_weights(sd_model=None, info=None):
-    from modules import devices, sd_hijack
-    timer = Timer()
+# def reload_model_weights(sd_model=None, info=None):
+#     from modules import lowvram, devices, sd_hijack
+#     checkpoint_info = info or select_checkpoint()
 
-    if model_data.sd_model:
-        model_data.sd_model.to(devices.cpu)
-        sd_hijack.model_hijack.undo_hijack(model_data.sd_model)
-        model_data.sd_model = None
-        sd_model = None
-        gc.collect()
-        devices.torch_gc()
+#     if not sd_model:
+#         sd_model = model_data.sd_model
 
-    print(f"Unloaded weights {timer.summary()}.")
+#     if sd_model is None:  # previous model load failed
+#         current_checkpoint_info = None
+#     else:
+#         current_checkpoint_info = sd_model.sd_checkpoint_info
+#         if sd_model.sd_model_checkpoint == checkpoint_info.filename:
+#             return
 
-    return sd_model
+#         sd_unet.apply_unet("None")
+
+#         if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
+#             lowvram.send_everything_to_cpu()
+#         else:
+#             sd_model.to(devices.cpu)
+
+#         sd_hijack.model_hijack.undo_hijack(sd_model)
+
+#     timer = Timer()
+
+#     state_dict = get_checkpoint_state_dict(checkpoint_info, timer)
+
+#     checkpoint_config = sd_models_config.find_checkpoint_config(state_dict, checkpoint_info)
+
+#     timer.record("find config")
+
+#     if sd_model is None or checkpoint_config != sd_model.used_config:
+#         del sd_model
+#         load_model(checkpoint_info, already_loaded_state_dict=state_dict)
+#         return model_data.sd_model
+
+#     try:
+#         load_model_weights(sd_model, checkpoint_info, state_dict, timer)
+#     except Exception:
+#         print("Failed to load checkpoint, restoring previous")
+#         load_model_weights(sd_model, current_checkpoint_info, None, timer)
+#         raise
+#     finally:
+#         sd_hijack.model_hijack.hijack(sd_model)
+#         timer.record("hijack")
+
+#         script_callbacks.model_loaded_callback(sd_model)
+#         timer.record("script callbacks")
+
+#         if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
+#             sd_model.to(devices.device)
+#             timer.record("move model to device")
+
+#     print(f"Weights loaded in {timer.summary()}.")
+
+#     return sd_model
+
+
+# def unload_model_weights(sd_model=None, info=None):
+#     from modules import devices, sd_hijack
+#     timer = Timer()
+
+#     if model_data.sd_model:
+#         model_data.sd_model.to(devices.cpu)
+#         sd_hijack.model_hijack.undo_hijack(model_data.sd_model)
+#         model_data.sd_model = None
+#         sd_model = None
+#         gc.collect()
+#         devices.torch_gc()
+
+#     print(f"Unloaded weights {timer.summary()}.")
+
+#     return sd_model
 
 
 def apply_token_merging(sd_model, token_merging_ratio):
@@ -691,11 +691,7 @@ def load_pipeline(checkpoint_info=None):
     timer.record("calculate hash")
 
     shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
-    from diffusers.models import AutoencoderKL
-    sd_pipeline = StableDiffusionPipeline.from_single_file("models/Stable-diffusion/v1-5-pruned-emaonly.safetensors", torch_dtype=torch.float16, variant="fp16")
-    # vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
-    #sd_pipeline.vae = vae
-    #sd_pipeline = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+    sd_pipeline = StableDiffusionPipeline.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
    
     # sd_pipeline.enable_xformers_memory_efficient_attention()
 
@@ -713,10 +709,10 @@ def load_pipeline(checkpoint_info=None):
 
     pipeline_data.sd_pipeline = sd_pipeline
     pipeline_data.was_loaded_at_least_once = True
-
     
-    #sd_hijack.model_hijack.embedding_db.load_textual_inversion_embeddings(force_reload=True)  # Reload embeddings after model load as they may or may not fit the model
-    #timer.record("load textual inversion embeddings")
+    embeddings_dir = shared.cmd_opts.embeddings_dir
+    sd_pipeline.load_textual_inversion(embeddings_dir) 
+    timer.record("load textual inversion embeddings")
 
     print(f"Model loaded in {timer.summary()}.")
 
