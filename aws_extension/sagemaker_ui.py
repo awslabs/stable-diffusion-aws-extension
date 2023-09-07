@@ -249,8 +249,8 @@ def query_txt_inference_job_list(task_type: str, status: str, endpoint: str, che
 
 
 def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpoint: str, opt_type: str):
-    print(
-        f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
+    # print(
+    #     f"query_inference_job_list start！！{status},{task_type},{endpoint},{checkpoint},{start_time_picker_txt_value},{end_time_picker_txt_value} {show_all_inference_job}")
     try:
         body_params = {}
         if status:
@@ -276,7 +276,7 @@ def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpo
         body_params['limit'] = -1 if show_all_inference_job else 10
         response = server_request_post(f'inference/query-inference-jobs', body_params)
         r = response.json()
-        print(r)
+        # print(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
             temp_list = []
