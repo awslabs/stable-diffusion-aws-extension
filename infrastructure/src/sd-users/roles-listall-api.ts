@@ -82,7 +82,7 @@ export class ListAllRolesApi {
       role: this.iamRole(),
       memorySize: 1024,
       environment: {
-        DATASET_INFO_TABLE: this.multiUserTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });

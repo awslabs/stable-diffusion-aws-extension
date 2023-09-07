@@ -1,5 +1,13 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_kms, CfnCondition, Fn, NestedStack, RemovalPolicy, StackProps } from 'aws-cdk-lib';
+import {
+  aws_dynamodb,
+  aws_kms,
+  CfnCondition,
+  Fn,
+  NestedStack,
+  RemovalPolicy,
+  StackProps,
+} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { RoleUpsertApi } from './role-upsert-api';
@@ -19,7 +27,6 @@ export interface MultiUsersStackProps extends StackProps {
 export class MultiUsersStack extends NestedStack {
   private readonly srcRoot='../middleware_api/lambda';
 
-
   constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
     super(scope, id, props);
 
@@ -32,16 +39,23 @@ export class MultiUsersStack extends NestedStack {
     );
     const keyAlias = 'sd-extension-password-key';
     const newPasswordKey = new aws_kms.Key(scope, `${id}-password-key`, {
+    // const passwordKey = new aws_kms.Key(scope, `${id}-password-key`, {
       description: 'a custom key for sd extension to encrypt and decrypt password',
-      alias: keyAlias,
+      // alias: keyAlias,
       removalPolicy: RemovalPolicy.RETAIN,
       enableKeyRotation: false,
     });
 
-    (newPasswordKey.node.defaultChild as aws_kms.CfnKey).cfnOptions.condition = shouldCreatePasswordKeyCondition;
-    const passwordKey = aws_kms.Key.fromLookup(scope, `${id}-createOrNew-passwordKey`, {
+    const newKeyAlias = new aws_kms.Alias(scope, `${id}-passwordkey-alias`, {
       aliasName: keyAlias,
+      removalPolicy: RemovalPolicy.RETAIN,
+      targetKey: newPasswordKey,
+      // targetKey: passwordKey,
     });
+
+    (newPasswordKey.node.defaultChild as aws_kms.CfnKey).cfnOptions.condition = shouldCreatePasswordKeyCondition;
+    (newKeyAlias.node.defaultChild as aws_kms.CfnAlias).cfnOptions.condition = shouldCreatePasswordKeyCondition;
+    const passwordKey = aws_kms.Alias.fromAliasName(scope, `${id}-createOrNew-passwordKey`, keyAlias);
 
     new RoleUpsertApi(scope, 'roleUpsert', {
       commonLayer: props.commonLayer,
