@@ -13,7 +13,7 @@ except Exception:
     print('default modules load fails')
 
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors"]
-models_type_list = ['Stable-diffusion', 'hypernetworks', 'Lora', 'ControlNet', 'embeddings']
+models_type_list = ['Stable-diffusion', 'hypernetworks', 'Lora', 'ControlNet', 'embeddings', 'VAE']
 models_used_count = {key: ModelsRef() for key in models_type_list}
 models_path = {key: None for key in models_type_list}
 models_path['Stable-diffusion'] = 'models/Stable-diffusion'
@@ -134,6 +134,8 @@ def download_and_update(model_type, model_s3_pos):
         from scripts import global_state
         global_state.update_cn_models()
         #sys.path.remove("extensions/sd-webui-controlnet/scripts/")
+    if model_type == 'VAE':
+        sd_vae.refresh_vae_list()
 
 def decode_base64_to_image(encoding):
     if encoding.startswith("data:image/"):
