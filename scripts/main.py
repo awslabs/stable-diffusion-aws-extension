@@ -1259,7 +1259,7 @@ def ui_tabs_callback():
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
                                             interactive=False,
-                                            every=3,
+                                            # every=3,
                                             elem_id='training_job_dashboard'
                                             # show_progress=True
                                         )
@@ -1317,8 +1317,8 @@ def ui_tabs_callback():
                                             datatype=["str", "str", "str"],
                                             col_count=(3, "fixed"),
                                             value=get_create_model_job_list,
-                                            interactive=False,
-                                            every=3
+                                            interactive=False
+                                            # every=3
                                             # show_progress=True
                                         )
 
