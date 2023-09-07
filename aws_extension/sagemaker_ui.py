@@ -274,7 +274,6 @@ def query_inference_job_list(task_type: str, status: str, endpoint: str, checkpo
         body_params['limit'] = -1 if show_all_inference_job else 10
         response = server_request_post(f'inference/query-inference-jobs', body_params)
         r = response.json()
-        # print(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
             temp_list = []
