@@ -10,11 +10,11 @@ import logging
 import concurrent.futures
 import urllib.request
 import math
+import threading
 
 from _types import MultipartFileReq, CheckPoint
 
 PART_SIZE=500 * 1024 * 1024
-
 
 def batch_get_s3_multipart_signed_urls(bucket_name, base_key, filenames: [MultipartFileReq]) -> Dict[str, Any]:
     presign_url_map = {}
@@ -110,6 +110,7 @@ def upload_part_file(s3, bucket, key, part_number, upload_id, part_data):
 def multipart_upload_from_url(url, bucket_name, s3_key):
     s3 = boto3.client('s3')
     logging.info(f"start multipart_upload_from_url:{url}, {s3_key}")
+    lock = threading.Lock()
     with urllib.request.urlopen(url) as response:
         # 获取文件总大小
         total_size = int(response.info().get('Content-Length'))
@@ -118,15 +119,15 @@ def multipart_upload_from_url(url, bucket_name, s3_key):
         Expires=datetime.now() + timedelta(seconds=3600 * 24 * 7))['UploadId']
         logging.info(f"multipart_upload_from_url:   total_size:{total_size}, part_count:{part_count} upload_id:{upload_id}")
         parts = []
-
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = []
             for part_number in range(1, part_count + 1):
-                start = (part_number - 1) * PART_SIZE
-                end = min(part_number * PART_SIZE, total_size)
-                part_data = response.read(end - start)
-                futures.append(
-                    executor.submit(upload_part_file, s3, bucket_name, s3_key, part_number, upload_id, part_data))
+                with lock:
+                    start = (part_number - 1) * PART_SIZE
+                    end = min(part_number * PART_SIZE, total_size)
+                    part_data = response.read(end - start)
+                    futures.append(
+                        executor.submit(upload_part_file, s3, bucket_name, s3_key, part_number, upload_id, part_data))
 
             for future in concurrent.futures.as_completed(futures):
                 parts.append(future.result())
