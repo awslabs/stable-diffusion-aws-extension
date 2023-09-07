@@ -697,7 +697,7 @@ def load_pipeline(checkpoint_info=None):
     #sd_pipeline.vae = vae
     #sd_pipeline = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
    
-    sd_pipeline.enable_xformers_memory_efficient_attention()
+    # sd_pipeline.enable_xformers_memory_efficient_attention()
 
     pipeline_name = str(type(sd_pipeline)).split('.')[-1][:-2]
 
