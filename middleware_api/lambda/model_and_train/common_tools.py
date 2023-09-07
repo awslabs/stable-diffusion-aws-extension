@@ -111,6 +111,14 @@ def upload_part_file(s3, bucket, key, part_number, upload_id, part_data):
         return {'PartNumber': part_number, 'ETag': None}
 
 
+# Args:
+#     url (str): model source file url,eg:eg：https://civitai.com/api/download/models/xxxx or https://huggingface.co/stabilityai/stable-diffusion-xxxx/resolve/main/xxxx.safetensors
+#     bucket_name(str): bucket name
+#     s3_key(str):s3 key
+# Returns:
+#     upload_id: s3 uploadId
+#     key:s3 key
+#     bucket: bucket name
 def multipart_upload_from_url(url, bucket_name, s3_key):
     s3 = boto3.client('s3')
     logging.info(f"start multipart_upload_from_url:{url}, {s3_key}")
