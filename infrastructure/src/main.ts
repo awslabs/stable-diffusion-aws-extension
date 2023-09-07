@@ -19,6 +19,7 @@ import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
+import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -105,12 +106,19 @@ export class Middleware extends Stack {
       api_train_path,
     ]);
 
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
+      commonLayer: commonLayers,
+      multiUserTable: ddbTables.multiUserTable,
+      useExist: useExist,
+    });
+
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
       useExist: useExist,
+      passwordKeyAlias: authorizerLambda.passwordKeyAlias,
     });
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);

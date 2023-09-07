@@ -251,6 +251,15 @@ def save_variable_to_json(variable_name, variable_value, filename='sagemaker_ui.
     with open(filename, 'w') as json_file:
         json.dump(data, json_file)
 
+def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
+    if os.path.exists(filename):
+        with open(filename, 'r') as json_file:
+            data = json.load(json_file)
+            return ('api_gateway_url' in data and data['api_gateway_url']) and \
+                   ('api_token' in data and data['api_token'])
+
+    return False
+
 def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
     if not os.path.exists(filename):
         initial_data = {
