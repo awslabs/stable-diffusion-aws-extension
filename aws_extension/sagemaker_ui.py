@@ -661,8 +661,13 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
         params_dict = {}
     body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
     response = server_request_post('upload_checkpoint', body_params)
-    logging.info(f"sagemaker_upload_model_s3_url response:{response.json()}")
+    response_data = response.json();
+    logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
+    if 'checkpoint' in response_data and response_data['checkpoint'].get('status') == 'Active':
+        status = response.get('checkpoint', {}).get('status')
+        if status == 'Active':
+            log = "upload success!"
     return log
 
 
