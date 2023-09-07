@@ -12,8 +12,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
-
-export interface ListAllUsersApiProps {
+export interface UserDeleteApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   multiUserTable: aws_dynamodb.Table;
@@ -21,25 +20,26 @@ export interface ListAllUsersApiProps {
   commonLayer: aws_lambda.LayerVersion;
 }
 
-export class ListAllUsersApi {
+export class UserDeleteApi {
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
-  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
+  private readonly multiUserTable: aws_dynamodb.Table;
+
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: ListAllUsersApiProps) {
+  constructor(scope: Construct, id: string, props: UserDeleteApiProps) {
     this.scope = scope;
+    this.httpMethod = props.httpMethod;
+    this.src = props.srcRoot;
     this.baseId = id;
     this.router = props.router;
-    this.httpMethod = props.httpMethod;
-    this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.multiUserTable = props.multiUserTable;
 
-    this.listAllUsersApi();
+    this.deleteUserApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -53,8 +53,14 @@ export class ListAllUsersApi {
         'dynamodb:GetItem',
         'dynamodb:Scan',
         'dynamodb:Query',
+        'dynamodb:BatchWriteItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:DeleteItem',
       ],
-      resources: [this.multiUserTable.tableArn],
+      resources: [
+        this.multiUserTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -63,62 +69,53 @@ export class ListAllUsersApi {
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',
-        'kms:Decrypt',
       ],
       resources: ['*'],
     }));
     return newRole;
   }
 
-  private listAllUsersApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+  private deleteUserApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      functionName: `${this.baseId}-delete`,
       entry: `${this.src}/multi_users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'multi_users_api.py',
-      handler: 'list_user',
+      handler: 'delete_user',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,
       environment: {
-        DATASET_INFO_TABLE: this.multiUserTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
-
-    const listUsersIntegration = new apigw.LambdaIntegration(
+    const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
         proxy: false,
         requestParameters: {
-          'integration.request.querystring.last_evaluated_key': 'method.request.querystring.last_evaluated_key',
-          'integration.request.querystring.limit': 'method.request.querystring.limit',
-          'integration.request.querystring.username': 'method.request.querystring.username',
-          'integration.request.querystring.filter': 'method.request.querystring.filter',
-          'integration.request.querystring.show_password': 'method.request.querystring.show_password',
+          'integration.request.path.username': 'method.request.path.username',
         },
         requestTemplates: {
           'application/json': '{\n' +
-                        '    "queryStringParameters": {\n' +
-                        '        #foreach($queryParam in $input.params().querystring.keySet())\n' +
-                        '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
-                        '        #if($foreach.hasNext),#end\n' +
-                        '        #end\n' +
-                        '    }\n' +
-                        '}',
+              '    "pathStringParameters": {\n' +
+              '        #foreach($pathParam in $input.params().path.keySet())\n' +
+              '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
+              '        #if($foreach.hasNext),#end\n' +
+              '        #end\n' +
+              '    }\n' +
+              '}',
         },
         integrationResponses: [{ statusCode: '200' }],
       },
     );
-    this.router.addMethod(this.httpMethod, listUsersIntegration, <MethodOptions>{
+    const userRouter = this.router.addResource('{username}');
+    userRouter.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestParameters: {
-        'method.request.querystring.last_evaluated_key': false,
-        'method.request.querystring.limit': false,
-        'method.request.querystring.username': false,
-        'method.request.querystring.filter': false,
-        'method.request.querystring.show_password': false,
+        'method.request.path.username': true,
       },
       methodResponses: [{
         statusCode: '200',

@@ -14,6 +14,7 @@ import { Construct } from 'constructs';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
@@ -97,8 +98,20 @@ export class Middleware extends Stack {
       'datasets',
       'inference',
       'inference-api',
+      'user',
+      'users',
+      'role',
+      'roles',
       api_train_path,
     ]);
+
+    new MultiUsersStack(this, 'multiUserSt', {
+      synthesizer: props.synthesizer,
+      commonLayer: commonLayers.commonLayer,
+      multiUserTable: ddbTables.multiUserTable,
+      routers: restApi.routers,
+      useExist: useExist,
+    });
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
 
