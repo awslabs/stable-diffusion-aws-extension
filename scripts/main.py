@@ -14,7 +14,7 @@ from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts
 from aws_extension import sagemaker_ui
-from aws_extension.auth_service.sagemaker_auth import CloudAuthLoader, config_path
+
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, postfix
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
@@ -336,8 +336,10 @@ script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.ui_tabs_callback = ui_tabs_callback
 
-cloud_auth_manager = CloudAuthLoader()
-cloud_auth_manager.create_config()
-cmd_opts.gradio_auth_path = config_path
+
+from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
+
+if cloud_auth_manager.enableAuth:
+    cmd_opts.gradio_auth = cloud_auth_manager.create_config()
 
 

@@ -1,5 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  aws_apigateway,
   aws_dynamodb,
   aws_kms,
   NestedStack,
@@ -20,6 +21,7 @@ export interface MultiUsersStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   useExist: string;
   passwordKeyAlias: aws_kms.IKey;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class MultiUsersStack extends NestedStack {
@@ -51,6 +53,7 @@ export class MultiUsersStack extends NestedStack {
       passwordKey: props.passwordKeyAlias,
       router: props.routers.user,
       srcRoot: this.srcRoot,
+      authorizer: props.authorizer,
     });
 
     new UserDeleteApi(scope, 'userDelete', {
@@ -68,6 +71,7 @@ export class MultiUsersStack extends NestedStack {
       router: props.routers.users,
       srcRoot: this.srcRoot,
       passwordKey: props.passwordKeyAlias,
+      authorizer: props.authorizer,
     });
 
   }

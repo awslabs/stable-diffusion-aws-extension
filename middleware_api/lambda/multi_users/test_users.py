@@ -1,3 +1,4 @@
+import json
 import os
 from dataclasses import dataclass
 from unittest import TestCase
@@ -14,6 +15,9 @@ class MockContext:
 
 
 class InferenceApiTest(TestCase):
+
+    def test_hash(self):
+        json.dumps({token_zero: ""})
 
     def test_kms(self):
         from common.ddb_service.client import DynamoDbUtilsService

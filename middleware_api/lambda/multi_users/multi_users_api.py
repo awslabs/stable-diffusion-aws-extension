@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 import logging
 import os
@@ -26,6 +27,7 @@ class UpsertUserEvent:
 
 # POST /user
 def upsert_user(raw_event, ctx):
+    print(raw_event)
     event = UpsertUserEvent(**raw_event)
 
     # check if creator exist
@@ -114,6 +116,7 @@ def delete_user(event, ctx):
 
 # GET /users?last_evaluated_key=xxx&limit=10&username=USER_NAME&filter=key:value,key:value&show_password=1
 def list_user(event, ctx):
+    # todo: if user has no list all, we should add username to self, prevent security issue
     _filter = {}
     if 'queryStringParameters' not in event:
         return {
@@ -126,6 +129,10 @@ def list_user(event, ctx):
     limit = parameters['limit'] if 'limit' in parameters and parameters['limit'] else None
     last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
         'last_evaluated_key'] else None
+
+    if last_evaluated_key and isinstance(last_evaluated_key, str):
+        last_evaluated_key = json.loads(last_evaluated_key)
+
     show_password = parameters['show_password'] if 'show_password' in parameters and parameters['show_password'] else 0
     username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 

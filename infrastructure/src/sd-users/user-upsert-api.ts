@@ -19,6 +19,7 @@ export interface UserUpsertApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class UserUpsertApi {
@@ -30,6 +31,7 @@ export class UserUpsertApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   constructor(scope: Construct, id: string, props: UserUpsertApiProps) {
     this.scope = scope;
@@ -40,6 +42,7 @@ export class UserUpsertApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
+    this.authorizer = props.authorizer;
 
     this.upsertUserApi();
   }
@@ -111,11 +114,21 @@ export class UserUpsertApi {
       lambdaFunction,
       {
         proxy: false,
+        requestTemplates: {
+          'application/json': '{\n' +
+              '    "body": $input.json("$"),' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
+              '    }\n' +
+              '}',
+        },
         integrationResponses: [{ statusCode: '200' }],
       },
     );
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       methodResponses: [{
         statusCode: '200',
       }],

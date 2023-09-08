@@ -20,6 +20,7 @@ export interface ListAllUsersApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllUsersApi {
@@ -31,6 +32,7 @@ export class ListAllUsersApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   constructor(scope: Construct, id: string, props: ListAllUsersApiProps) {
     this.scope = scope;
@@ -41,6 +43,7 @@ export class ListAllUsersApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.authorizer = props.authorizer;
 
     this.listAllUsersApi();
   }
@@ -122,6 +125,10 @@ export class ListAllUsersApi {
                         '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
                         '        #if($foreach.hasNext),#end\n' +
                         '        #end\n' +
+                        '    },\n' +
+                        '    "x-auth": {\n' +
+                        '        "username": "$context.authorizer.username",\n' +
+                        '        "role": "$context.authorizer.role"\n' +
                         '    }\n' +
                         '}',
         },
@@ -130,6 +137,7 @@ export class ListAllUsersApi {
     );
     this.router.addMethod(this.httpMethod, listUsersIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.last_evaluated_key': false,
         'method.request.querystring.limit': false,

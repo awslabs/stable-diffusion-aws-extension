@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -6,6 +7,7 @@ import requests
 
 import utils
 from aws_extension import sagemaker_ui
+from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
@@ -17,7 +19,6 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
                            "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.12xlarge"]
-
 
 test_connection_result = None
 api_gateway_url = None
@@ -31,10 +32,10 @@ def on_ui_tabs():
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
                     api_tab = api_setting_tab()
-                with gr.Column(variant="panel", scale=2):
+                with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
                     user_settings_tab()
         with gr.Tab(label='Cloud Assets Management', variant='panel'):
-            with gr.Row():
+            with gr.Row(visible=False) as model_and_endpoint:
                 # todo: the output message is not right yet
                 model_upload = model_upload_tab()
                 sagemaker_part = sagemaker_endpoint_tab()
@@ -42,11 +43,26 @@ def on_ui_tabs():
                 with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
                     sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
                     sm_save_params = gr.Button(value="Save Settings", elem_id="aws_save_params", visible=False)
-                    sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model", visible=False)
+                    sm_train_model = gr.Button(value="Train", variant="primary", elem_id="aws_train_model",
+                                               visible=False)
                     sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt", visible=False)
 
         with gr.Tab(label='Create AWS dataset', variant='panel'):
-            dataset_tab()
+            with gr.Row(visible=False) as dataset_asset:
+                dataset_tab()
+
+        def ui_tab_setup():
+            from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
+            visible = cloud_auth_manager.enableAuth
+            return gr.update(visible=visible), \
+                   gr.update(visible=visible), \
+                   gr.update(visible=visible)
+
+        sagemaker_interface.load(ui_tab_setup, None, [
+            user_setting,
+            model_and_endpoint,
+            dataset_asset,
+        ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
@@ -85,13 +101,15 @@ def api_setting_tab():
             modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key},
                                              "refresh_api_token")
 
+        username_textbox, password_textbox = ui_user_settings_tab()
         global test_connection_result
         test_connection_result = gr.Label(title="Output")
         aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
         aws_connect_button.click(_js="update_auth_settings",
                                  fn=update_connect_config,
-                                 inputs=[api_url_textbox, api_token_textbox],
+                                 inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                  outputs=[test_connection_result])
+
         aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
         aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
                               outputs=[test_connection_result])
@@ -109,34 +127,53 @@ def api_setting_tab():
     return api_setting
 
 
+def ui_user_settings_tab():
+    with gr.Column():
+        gr.HTML('<b>Username</b>')
+        with gr.Row():
+            username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True, placeholder='Please enter username', show_label=False)
+            modules.ui.create_refresh_button(username_textbox, lambda: get_variable_from_json('username'), lambda: {"value": get_variable_from_json('username')},
+                                             "refresh_username")
+        gr.HTML('<b>Password</b>')
+        with gr.Row():
+            password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True, placeholder='Please enter your password', show_label=False)
+            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'), lambda: {"value": get_variable_from_json('password')},
+                                             "refresh_password")
+    return username_textbox, password_textbox
+
+
 def user_settings_tab():
     gr.HTML(value="<u><b>Manage User's Access</b></u>")
     with gr.Row(variant='panel') as user_tab:
         with gr.Column(scale=1):
             def roles():
-                # todo: fixme
-                return ['IT Operator', 'Designer']
+                resp = cloud_auth_manager.list_roles()
+                return [role['role_name'] for role in resp['roles']]
 
             gr.HTML(value="<b>Update a User Setting</b>")
             username = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
             pwd = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
             user_roles = gr.Dropdown(choices=roles(), multiselect=True, label="User Role")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
-            disable_user_button = gr.Button(value="Disable a User", variant='primary')
+            delete_user_button = gr.Button(value="Delete a User", variant='primary')
+            # todo: upsert user and delete User
         with gr.Column(scale=2):
-            def list_users():
-                # todo: fixme
-                return [
-                    ['cyanda', 'IT Operator, Designer', 'cyanda'],
-                    ['alvindaiyan', 'Designer', 'cyanda']
-                ]
+            def list_users(limit=10, last_evaluated_key=""):
+                resp = cloud_auth_manager.list_users(limit, last_evaluated_key)
 
+                table = []
+                for user in resp['users']:
+                    table.append([user['username'], ', '.join(user['roles']), user['creator']])
+
+                return table, resp['last_evaluated_key']
+
+            page_zero, token_zero = list_users()
             gr.HTML(value="<b>Users Table</b>")
             user_table = gr.Dataframe(
                 headers=["name", "role", "created by"],
                 datatype=["str", "str", "str"],
                 max_rows=10,
-                value=list_users
+                value=page_zero
             )
 
             def choose_user(evt: gr.SelectData):
@@ -149,12 +186,43 @@ def user_settings_tab():
             user_table.select(fn=choose_user, inputs=[], outputs=[username, pwd, user_roles])
 
             with gr.Row():
-                current_page_token = gr.State({
+                user_table_state = gr.State(value={
+                    'previous_lookup': {},
                     'previous_token': '',
-                    'next_token': '',
+                    'current_token': token_zero,
                 })
-                next_page = gr.Button(value="Next Page", variant='primary')
-                previous_page = gr.Button(value="Previous Page", variant='primary')
+
+                previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
+                next_page_btn = gr.Button(value="Next Page", variant='primary')
+
+                def next_page(table_token_state):
+                    user_list, new_token = list_users(last_evaluated_key=table_token_state['current_token'])
+                    table_token_state['previous_lookup'][json.dumps(table_token_state['current_token'])] = table_token_state['previous_token']
+                    table_token_state['previous_token'] = table_token_state['current_token']
+                    table_token_state['current_token'] = new_token
+                    return user_list, table_token_state
+
+                next_page_btn.click(fn=next_page, inputs=[user_table_state], outputs=[user_table, user_table_state])
+
+                def previous_page(table_token_state):
+                    search_token = table_token_state['previous_lookup'][json.dumps(table_token_state['previous_token'])]
+                    user_list, new_token = list_users(last_evaluated_key=search_token)
+                    table_token_state['previous_token'] = search_token
+                    table_token_state['current_token'] = new_token
+                    return user_list, table_token_state
+
+                previous_page_btn.click(fn=previous_page, inputs=[user_table_state], outputs=[user_table, user_table_state])
+
+                def update_user_table_button_state(token_state):
+                    show_previous = True if token_state['previous_token'] else False
+                    show_next = True if token_state['current_token'] else False
+                    return gr.update(visible=show_previous), gr.update(visible=show_next)
+
+                user_table.change(fn=update_user_table_button_state,
+                                  inputs=[user_table_state],
+                                  outputs=[previous_page_btn, next_page_btn]
+                                  )
+
 
     return user_tab
 
@@ -545,13 +613,15 @@ def dataset_tab():
     return dt
 
 
-def update_connect_config(api_url, api_token):
+def update_connect_config(api_url, api_token, username=None, password=None):
     # Check if api_url ends with '/', if not append it
     if not api_url.endswith('/'):
         api_url += '/'
 
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
+    save_variable_to_json('username', username)
+    save_variable_to_json('password', password)
     global api_gateway_url
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key

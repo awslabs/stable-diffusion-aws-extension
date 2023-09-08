@@ -20,7 +20,7 @@ function delete_sagemaker_endpoint(endpoint_list){
     return [endpoint_list];
 }
 
-function update_auth_settings(api_url_textbox, api_token_textbox){
+function update_auth_settings(api_url_textbox, api_token_textbox, username_textbox, password_textbox){
     console.log("Settings update started with input: " + api_url_textbox + ", " + api_token_textbox)
     res = confirm("You are about to update authentication settings. Do you want to continue?");
     if (res === true) {
@@ -28,5 +28,5 @@ function update_auth_settings(api_url_textbox, api_token_textbox){
     } else {
         console.log("Settings update cancelled.");
     }
-    return [api_url_textbox, api_token_textbox];
+    return [api_url_textbox, api_token_textbox, username_textbox, password_textbox];
 }
