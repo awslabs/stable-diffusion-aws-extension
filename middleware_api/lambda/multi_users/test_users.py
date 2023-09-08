@@ -3,9 +3,9 @@ import os
 from dataclasses import dataclass
 from unittest import TestCase
 
-os.environ.setdefault('AWS_PROFILE', 'playground')
+os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
-os_key_id = os.environ.get('TEST_KEY_ID')  # kms key id
+os_key_id = 'alias/sd-extension-password-key'
 os.environ.setdefault('KEY_ID', os_key_id)
 
 
@@ -33,7 +33,7 @@ class InferenceApiTest(TestCase):
         from multi_users._types import User
         ddb_service.put_items(table_name, User(
             kind='user',
-            sort_key='alvindaiyan',
+            sort_key='superman',
             password=cipher_text,
             creator='alvindaiyan',
             roles=['IT Operator', 'Designer']
