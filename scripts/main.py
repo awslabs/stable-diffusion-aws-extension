@@ -337,7 +337,7 @@ script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.ui_tabs_callback = ui_tabs_callback
 
 
-from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()

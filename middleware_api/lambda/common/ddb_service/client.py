@@ -184,18 +184,33 @@ class DynamoDbUtilsService:
         filter_expressions = ' AND '.join(prepare_filter_expressions)
         return filter_expressions, expression_values
 
-    def scan(self, table: str, filters: Dict[str, Any] = None, last_evaluated_key=None, limit: int = None) -> List[Dict[str, Dict[str, Any]]]:
+    def scan(self, table: str, filters: Dict[str, Any] = None, last_evaluated_key=None, limit: int = None):
         if filters is None or len(filters) == 0:
-            scan_resp = self.client.scan(
-                TableName=table,
-            )
-            resp = scan_resp['Items']
-            while 'LastEvaluatedKey' in scan_resp:
+            if limit:
+                if last_evaluated_key:
+                    resp = self.client.scan(
+                        TableName=table,
+                        ExclusiveStartKey=last_evaluated_key,
+                        Limit=limit
+                    )
+                else:
+                    resp = self.client.query(
+                        TableName=table,
+                        Limit=limit
+                    )
+            else:
                 scan_resp = self.client.scan(
                     TableName=table,
-                    ExclusiveStartKey=scan_resp['LastEvaluatedKey']
                 )
-                resp.extend(scan_resp['Items'])
+                resp = scan_resp['Items']
+                while 'LastEvaluatedKey' in scan_resp:
+                    scan_resp = self.client.scan(
+                        TableName=table,
+                        ExclusiveStartKey=scan_resp['LastEvaluatedKey']
+                    )
+                    resp.extend(scan_resp['Items'])
+
+                return resp
         else:
             filter_expressions, expression_values = self._get_ddb_filter(filters)
             if last_evaluated_key:
@@ -214,23 +229,26 @@ class DynamoDbUtilsService:
                     Limit=limit
                 )
             else:
-                resp = self.client.scan(
+                scan_resp = self.client.scan(
                     TableName=table,
                     FilterExpression=filter_expressions,
                     ExpressionAttributeValues=expression_values
                 )
-        # self.logger.info('scan response: %s', json.dumps(resp))
+                resp = scan_resp['Items']
+                while 'LastEvaluatedKey' in scan_resp:
+                    scan_resp = self.client.scan(
+                        TableName=table,
+                        FilterExpression=filter_expressions,
+                        ExpressionAttributeValues=expression_values,
+                        ExclusiveStartKey=scan_resp['LastEvaluatedKey']
+                    )
+                    resp.extend(scan_resp['Items'])
+
+                return resp
+
         named_ = ScanOutput(**resp)
         # FIXME: handle failures
-        return named_['Items']
-
-    # def _get_all(self, table: str) -> List[dict[str, Any]]:
-    #     resp = self.client.scan(TableName=table)
-    #     named_ = ScanOutput(**resp)
-    #     result = []
-    #     for item in named_['Items']:
-    #         result.append(self.deserialize(item))
-    #     return result
+        return named_['Items'], named_['LastEvaluatedKey'] if 'LastEvaluatedKey' in named_ else None
 
     def delete_item(self, table: str, keys: dict[str, Any]):
         keys = self._serialize(keys)

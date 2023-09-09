@@ -15,6 +15,8 @@ from urllib.parse import urljoin
 import gradio as gr
 
 import utils
+from aws_extension.cloud_api_manager.api_manager import api_manager
+
 from modules import shared, scripts
 from modules.ui import create_refresh_button
 from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton, FormHTML
@@ -47,7 +49,6 @@ secondary_model_name = None
 tertiary_model_name = None
 
 # TODO: convert to dynamically init the following variables
-sagemaker_endpoints = []
 txt2img_inference_job_ids = []
 
 sd_checkpoints = []
@@ -145,46 +146,7 @@ def datetime_to_short_form(datetime_str):
     return short_form
 
 
-def update_sagemaker_endpoints():
-    global sagemaker_endpoints
-    import inspect
-    logger.debug(f'caller name: {inspect.stack()[1][3]}')
 
-    sagemaker_endpoints.clear()
-    try:
-        response = server_request('inference/list-endpoint-deployment-jobs')
-        r = response.json()
-        if r:
-            sagemaker_endpoints.clear()  # Clear the existing list before appending new values
-            sagemaker_raw_endpoints = []
-            for obj in r:
-                if "EndpointDeploymentJobId" in obj:
-                    if "endpoint_name" in obj:
-                        endpoint_name = obj["endpoint_name"]
-                        endpoint_status = obj["endpoint_status"]
-                    else:
-                        endpoint_name = obj["EndpointDeploymentJobId"]
-                        endpoint_status = obj["status"]
-
-                    # Skip if status is 'deleted'
-                    if endpoint_status == 'deleted':
-                        continue
-
-                    if "endTime" in obj:
-                        endpoint_time = obj["endTime"]
-                    else:
-                        endpoint_time = "N/A"
-
-                    endpoint_info = f"{endpoint_name}+{endpoint_status}+{endpoint_time}"
-                    sagemaker_raw_endpoints.append(endpoint_info)
-
-            # Sort the list based on completeTime in descending order
-            sagemaker_endpoints = sorted(sagemaker_raw_endpoints, key=lambda x: x.split('+')[-1], reverse=True)
-
-        else:
-            logger.info("The API response is empty for update_sagemaker_endpoints().")
-    except Exception as e:
-        logger.error(f"An error occurred while updating SageMaker endpoints: {e}")
 
 
 def update_txt2img_inference_job_ids(inference_job_dropdown, txt2img_type_checkbox=True, img2img_type_checkbox=True,
@@ -807,91 +769,6 @@ def process_result_by_inference_id(inference_id):
             return image_list, info_text, plaintext_to_html(infotexts)
 
 
-def sagemaker_endpoint_delete(delete_endpoint_list):
-    logger.debug(f"start delete sagemaker endpoint delete function")
-    logger.debug(f"delete endpoint list: {delete_endpoint_list}")
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-
-    delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
-    logger.debug(f"delete endpoint list: {delete_endpoint_list}")
-
-    # check if api_gateway_url and api_key are set
-    if api_gateway_url is None or api_key is None:
-        logger.debug("api_gateway_url and api_key are not set")
-        return
-
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-
-    payload = {
-        "delete_endpoint_list": delete_endpoint_list,
-    }
-
-    deployment_url = f"{api_gateway_url}inference/delete-sagemaker-endpoint"
-
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-
-    try:
-        response = requests.post(deployment_url, json=payload, headers=headers)
-        r = response.json()
-        logger.debug(f"response for rest api {r}")
-        return r
-    except Exception as e:
-        logger.error(e)
-        return f"Failed to delete sagemaker endpoint with exception: {e}"
-
-
-def sagemaker_deploy(endpoint_name_textbox, instance_type, initial_instance_count=1, autoscaling_enabled=True):
-    """ Create SageMaker endpoint for GPU inference.
-    Args:
-        instance_type (string): the ML compute instance type.
-        initial_instance_count (integer): Number of instances to launch initially.
-    Returns:
-        (None)
-    """
-    # function code to call sagemaker deploy api
-    logger.debug(
-        f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
-
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    api_key = get_variable_from_json('api_token')
-
-    # check if api_gateway_url and api_key are set
-    if api_gateway_url is None or api_key is None:
-        logger.debug("api_gateway_url and api_key are not set")
-        return
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-
-    payload = {
-        "endpoint_name": endpoint_name_textbox,
-        "instance_type": instance_type,
-        "initial_instance_count": initial_instance_count,
-        "autoscaling_enabled": autoscaling_enabled
-    }
-
-    deployment_url = f"{api_gateway_url}inference/deploy-sagemaker-endpoint"
-
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-
-    try:
-        response = requests.post(deployment_url, json=payload, headers=headers)
-        r = response.json()
-        logger.debug(f"response for rest api {r}")
-        return "Endpoint deployment started"
-    except Exception as e:
-        logger.error(e)
-        return f"Failed to start endpoint deployment with exception: {e}"
-
 
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
     logger.debug(f"function under development, current checkpoint_info is {checkpoint_info}")
@@ -1099,7 +976,7 @@ def display_inference_result(inference_id: str):
 def init_refresh_resource_list_from_cloud():
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
-        update_sagemaker_endpoints()
+        # api_manager.list_all_sagemaker_endpoints()
         refresh_all_models()
         get_texual_inversion_list()
         get_lora_list()
@@ -1147,13 +1024,13 @@ def create_ui(is_img2img):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with gr.Row():
                 global sagemaker_endpoint
-                sagemaker_endpoint = gr.Dropdown(sagemaker_endpoints,
+                sagemaker_endpoint = gr.Dropdown(api_manager.list_all_sagemaker_endpoints(),
                                                  label="Select Cloud SageMaker Endpoint",
                                                  elem_id="sagemaker_endpoint_dropdown"
                                                  )
 
-                modules.ui.create_refresh_button(sagemaker_endpoint, update_sagemaker_endpoints,
-                                                 lambda: {"choices": sagemaker_endpoints, "value": None},
+                modules.ui.create_refresh_button(sagemaker_endpoint, lambda: None,
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(), "value": None},
                                                  "refresh_sagemaker_endpoints")
 
                 # with gr.Row():
@@ -1222,10 +1099,10 @@ def create_ui(is_img2img):
                         status_dropdown = gr.Dropdown(label="Status", choices=status_choices,
                                                       elem_id="task_status_dropdown")
                     with gr.Row():
-                        sagemaker_endpoint_filter = gr.Dropdown(sagemaker_endpoints, label="SageMaker Endpoint",
+                        sagemaker_endpoint_filter = gr.Dropdown(api_manager.list_all_sagemaker_endpoints(), label="SageMaker Endpoint",
                                                                 elem_id="sagemaker_endpoint_dropdown")
-                        modules.ui.create_refresh_button(sagemaker_endpoint_filter, update_sagemaker_endpoints,
-                                                         lambda: {"choices": sagemaker_endpoints},
+                        modules.ui.create_refresh_button(sagemaker_endpoint_filter, lambda: None,
+                                                         lambda: {"choices": api_manager.list_all_sagemaker_endpoints()},
                                                          "refresh_sagemaker_endpoints")
                     with gr.Row():
                         sd_checkpoint_filter = gr.Dropdown(label="Checkpoint", choices=sorted(update_sd_checkpoints()),

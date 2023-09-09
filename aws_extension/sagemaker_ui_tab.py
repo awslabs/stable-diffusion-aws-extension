@@ -7,7 +7,9 @@ import requests
 
 import utils
 from aws_extension import sagemaker_ui
-from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+
+from aws_extension.cloud_api_manager.api_manager import api_manager
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
@@ -28,17 +30,21 @@ api_key = None
 def on_ui_tabs():
     buildin_model_list = ['AWS JumpStart Model', 'AWS BedRock Model', 'Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
+        user_session_state = gr.State({
+            'username': '',
+            'roles': []
+        })
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
-                    api_tab = api_setting_tab()
+                    api_tab = api_setting_tab(user_session_state)
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
-                    user_settings_tab()
+                    user_settings_tab(user_session_state)
         with gr.Tab(label='Cloud Assets Management', variant='panel'):
             with gr.Row(visible=False) as model_and_endpoint:
                 # todo: the output message is not right yet
-                model_upload = model_upload_tab()
-                sagemaker_part = sagemaker_endpoint_tab()
+                model_upload = model_upload_tab(user_session_state)
+                sagemaker_part = sagemaker_endpoint_tab(user_session_state)
             with gr.Row(visible=False):
                 with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
                     sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
@@ -49,25 +55,31 @@ def on_ui_tabs():
 
         with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row(visible=False) as dataset_asset:
-                dataset_tab()
+                dataset_tab(user_session_state)
 
-        def ui_tab_setup():
-            from aws_extension.auth_service.sagemaker_auth import cloud_auth_manager
+        def ui_tab_setup(session, req: gr.Request):
+            logger.debug(f'user {req.username} logged in')
+            session['username'] = req.username
+            user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
+            session['roles'] = user['roles']
+            logger.debug(f"user roles are: {user['roles']}")
             visible = cloud_auth_manager.enableAuth
             return gr.update(visible=visible), \
                    gr.update(visible=visible), \
-                   gr.update(visible=visible)
+                   gr.update(visible=visible), \
+                   req.username
 
-        sagemaker_interface.load(ui_tab_setup, None, [
+        sagemaker_interface.load(ui_tab_setup, [user_session_state], [
             user_setting,
             model_and_endpoint,
             dataset_asset,
+            user_session_state
         ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
 
-def api_setting_tab():
+def api_setting_tab(gr_user_session):
     with gr.Blocks() as api_setting:
         gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
         gr.HTML(value="Enter your API URL & Token to start the connection.")
@@ -101,7 +113,14 @@ def api_setting_tab():
             modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key},
                                              "refresh_api_token")
 
-        username_textbox, password_textbox = ui_user_settings_tab()
+        username_textbox, password_textbox, user_settings_form = ui_user_settings_tab()
+
+        def server_user_setting_up(user_sess):
+            if not cloud_auth_manager.enableAuth:
+                return gr.skip()
+            return gr.update(visible=cloud_auth_manager.username == user_sess['username'])
+
+        api_setting.load(server_user_setting_up, [gr_user_session], [user_settings_form])
         global test_connection_result
         test_connection_result = gr.Label(title="Output")
         aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
@@ -128,7 +147,8 @@ def api_setting_tab():
 
 
 def ui_user_settings_tab():
-    with gr.Column():
+
+    with gr.Column() as ui_user_setting:
         gr.HTML('<b>Username</b>')
         with gr.Row():
             username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True, placeholder='Please enter username', show_label=False)
@@ -139,27 +159,32 @@ def ui_user_settings_tab():
             password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True, placeholder='Please enter your password', show_label=False)
             modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'), lambda: {"value": get_variable_from_json('password')},
                                              "refresh_password")
-    return username_textbox, password_textbox
+
+    return username_textbox, password_textbox, ui_user_setting
 
 
-def user_settings_tab():
+def roles(user_token):
+    resp = api_manager.list_roles(user_token=user_token)
+    return [role['role_name'] for role in resp['roles']]
+
+
+def user_settings_tab(gr_user_session):
     gr.HTML(value="<u><b>Manage User's Access</b></u>")
     with gr.Row(variant='panel') as user_tab:
         with gr.Column(scale=1):
-            def roles():
-                resp = cloud_auth_manager.list_roles()
-                return [role['role_name'] for role in resp['roles']]
 
             gr.HTML(value="<b>Update a User Setting</b>")
             username = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
             pwd = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
-            user_roles = gr.Dropdown(choices=roles(), multiselect=True, label="User Role")
+            user_roles = gr.Dropdown(choices=roles(gr_user_session.value['username']), multiselect=True, label="User Role")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
             # todo: upsert user and delete User
         with gr.Column(scale=2):
             def list_users(limit=10, last_evaluated_key=""):
-                resp = cloud_auth_manager.list_users(limit, last_evaluated_key)
+                resp = api_manager.list_users(limit=limit,
+                                              last_evaluated_key=last_evaluated_key,
+                                              user_token=gr_user_session.value['username'])
 
                 table = []
                 for user in resp['users']:
@@ -205,7 +230,9 @@ def user_settings_tab():
                 next_page_btn.click(fn=next_page, inputs=[user_table_state], outputs=[user_table, user_table_state])
 
                 def previous_page(table_token_state):
-                    search_token = table_token_state['previous_lookup'][json.dumps(table_token_state['previous_token'])]
+                    search_token = None
+                    if json.dumps(table_token_state['previous_token']) in table_token_state['previous_lookup']:
+                        search_token = table_token_state['previous_lookup'][json.dumps(table_token_state['previous_token'])]
                     user_list, new_token = list_users(last_evaluated_key=search_token)
                     table_token_state['previous_token'] = search_token
                     table_token_state['current_token'] = new_token
@@ -227,7 +254,7 @@ def user_settings_tab():
     return user_tab
 
 
-def model_upload_tab():
+def model_upload_tab(gr_user_session):
     with gr.Column() as upload_tab:
         gr.HTML(value="<b>Upload Model to Cloud</b>")
         # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
@@ -381,7 +408,7 @@ def model_upload_tab():
     return upload_tab
 
 
-def sagemaker_endpoint_tab():
+def sagemaker_endpoint_tab(gr_user_session):
     with gr.Column() as sagemaker_tab:
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
@@ -428,13 +455,14 @@ def sagemaker_endpoint_tab():
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
 
+            user_roles = gr.Dropdown(choices=roles(gr_user_session.value['username']), multiselect=True, label="User Role")
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
-            sagemaker_deploy_button.click(sagemaker_ui.sagemaker_deploy,
+            sagemaker_deploy_button.click(api_manager.sagemaker_deploy,
                                           _js="deploy_endpoint",
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
-                                                  instance_count_dropdown, autoscaling_enabled],
-                                          outputs=[test_connection_result])
+                                                  instance_count_dropdown, autoscaling_enabled, user_roles],
+                                          outputs=[test_connection_result])     # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
@@ -451,17 +479,17 @@ def sagemaker_endpoint_tab():
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=sagemaker_ui.sagemaker_endpoints,
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(),
                                                                  multiselect=True,
                                                                  label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
-                                                 sagemaker_ui.update_sagemaker_endpoints,
-                                                 lambda: {"choices": sagemaker_ui.sagemaker_endpoints},
+                                                 lambda: None,
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints()},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
                                                          elem_id="sagemaker_endpoint_delete_button")
-            sagemaker_endpoint_delete_button.click(sagemaker_ui.sagemaker_endpoint_delete,
+            sagemaker_endpoint_delete_button.click(api_manager.sagemaker_endpoint_delete,
                                                    _js="delete_sagemaker_endpoint",
                                                    inputs=[sagemaker_endpoint_delete_dropdown],
                                                    outputs=[test_connection_result])
@@ -469,7 +497,7 @@ def sagemaker_endpoint_tab():
         return sagemaker_tab
 
 
-def dataset_tab():
+def dataset_tab(gr_user_session):
     with gr.Row() as dt:
         with gr.Column(variant='panel'):
             gr.HTML(value="<u><b>Create a Dataset</b></u>")

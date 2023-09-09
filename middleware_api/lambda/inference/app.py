@@ -408,7 +408,8 @@ async def deploy_sagemaker_endpoint(request: Request):
             'startTime': current_time,
             'status': 'inprogress',
             'max_instance_number': payload['initial_instance_count'],
-            'autoscaling': payload['autoscaling_enabled']
+            'autoscaling': payload['autoscaling_enabled'],
+            'allowed_roles': payload['assign_to_roles']
         })
 
         logger.info("trigger step-function with following response")

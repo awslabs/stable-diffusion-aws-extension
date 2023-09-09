@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from dataclasses import dataclass
@@ -61,6 +62,10 @@ def list_roles(event, ctx):
     limit = parameters['limit'] if 'limit' in parameters and parameters['limit'] else None
     last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
         'last_evaluated_key'] else None
+
+    if last_evaluated_key and isinstance(last_evaluated_key, str):
+        last_evaluated_key = json.loads(last_evaluated_key)
+
     role = parameters['role'] if 'role' in parameters and parameters['role'] else 0
     last_token = None
     if not role:
