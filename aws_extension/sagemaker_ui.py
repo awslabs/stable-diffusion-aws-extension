@@ -971,7 +971,7 @@ def display_inference_result(inference_id: str):
 def init_refresh_resource_list_from_cloud():
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
-        if cloud_auth_manager.enableAuth:
+        if not cloud_auth_manager.enableAuth:
             # api_manager.list_all_sagemaker_endpoints()
             refresh_all_models()
             get_texual_inversion_list()

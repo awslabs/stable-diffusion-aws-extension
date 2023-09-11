@@ -33,10 +33,11 @@ def list_all_checkpoints_api(event, context):
     if 'status' in parameters and len(parameters['status']) > 0:
         _filter['checkpoint_status'] = parameters['status']
 
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
+    # todo: support multi user fetch later
+    username = parameters['username'] if 'username' in parameters and parameters['username'] else None
     user_roles = ['*']
     if username:
-        user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+        user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username[0])
 
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:

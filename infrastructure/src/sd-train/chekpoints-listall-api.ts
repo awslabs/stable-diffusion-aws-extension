@@ -61,7 +61,7 @@ export class ListAllCheckPointsApi {
         'dynamodb:Scan',
         'dynamodb:Query',
       ],
-      resources: [this.checkpointTable.tableArn],
+      resources: [this.checkpointTable.tableArn, this.multiUserTable.tableArn],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
