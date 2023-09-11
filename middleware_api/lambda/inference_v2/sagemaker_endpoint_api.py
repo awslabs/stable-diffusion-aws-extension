@@ -28,7 +28,7 @@ def list_all_sagemaker_endpoints(event, ctx):
                                                                           parameters['endpointDeploymentJobId'] else None
     username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
-    if not endpoint_deployment_job_id:
+    if endpoint_deployment_job_id:
         scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
                                             key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id})
     else:
@@ -43,6 +43,10 @@ def list_all_sagemaker_endpoints(event, ctx):
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
         if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
             results.append(endpoint)
+        elif 'x-auth' in event and 'IT Operator' in event['x-auth']['role']:
+            # todo: this is not save to do without checking current user roles
+            results.append(endpoint)
+
     return {
         'statusCode': 200,
         'endpoints': results

@@ -23,11 +23,12 @@ class EndpointDeploymentJob:
     endpoint_name: str
     endpoint_status: str
     endTime: str
-    error: str
     max_instance_number: str
     startTime: str
     status: str
-    owner_group_or_role: str
+    error: Optional[str] = None
+    owner_group_or_role: Optional[List[str]] = None
+
 
 
 # a copy of aws_extensions.models.InvocationsRequest

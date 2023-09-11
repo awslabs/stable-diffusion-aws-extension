@@ -426,11 +426,13 @@ def sagemaker_endpoint_tab():
                                      label="User Role")
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
+            output_textbox = gr.Textbox(interactive=False, show_label=False)
             sagemaker_deploy_button.click(api_manager.sagemaker_deploy,
                                           _js="deploy_endpoint",
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
-                                          outputs=[test_connection_result])  # todo: make a new output
+                                          outputs=[output_textbox])  # todo: make a new output
+
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
@@ -447,12 +449,13 @@ def sagemaker_endpoint_tab():
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(),
+                # todo: this list is not safe
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username),
                                                                  multiselect=True,
                                                                  label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
                                                  lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints()},
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username)},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
