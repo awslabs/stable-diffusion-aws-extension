@@ -144,7 +144,7 @@ class CloudApiManager:
                                     'limit': limit,
                                     'last_evaluated_key': json.dumps(last_evaluated_key)
                                 },
-                                headers=self._get_headers_by_user(user_token))  # todo: not right
+                                headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()
 

@@ -8,15 +8,17 @@ from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
 from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload
+from multi_users.utils import get_user_roles, check_user_permissions
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
+user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
-# GET /checkpoints
+# GET /checkpoints?username=USER_NAME&types=value&status=value
 def list_all_checkpoints_api(event, context):
     _filter = {}
     if 'queryStringParameters' not in event:
@@ -31,6 +33,11 @@ def list_all_checkpoints_api(event, context):
     if 'status' in parameters and len(parameters['status']) > 0:
         _filter['checkpoint_status'] = parameters['status']
 
+    username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
+    user_roles = ['*']
+    if username:
+        user_roles += get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:
         return {
@@ -39,18 +46,17 @@ def list_all_checkpoints_api(event, context):
         }
 
     ckpts = []
-
     for r in raw_ckpts:
         ckpt = CheckPoint(**(ddb_service.deserialize(r)))
-        ckpts.append({
-            'id': ckpt.id,
-            's3Location': ckpt.s3_location,
-            'type': ckpt.checkpoint_type,
-            'status': ckpt.checkpoint_status.value,
-            'name': ckpt.checkpoint_names,
-            'created': ckpt.timestamp,
-        })
-
+        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username):
+            ckpts.append({
+                'id': ckpt.id,
+                's3Location': ckpt.s3_location,
+                'type': ckpt.checkpoint_type,
+                'status': ckpt.checkpoint_status.value,
+                'name': ckpt.checkpoint_names,
+                'created': ckpt.timestamp,
+            })
     return {
         'statusCode': 200,
         'checkpoints': ckpts
@@ -109,6 +115,10 @@ def create_checkpoint_api(raw_event, context):
                 'errorMsg': 'no checkpoint name (file names) detected'
             }
 
+        user_roles = ['*']
+        if 'creator' in event.params and event.params['creator']:
+            user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
@@ -116,7 +126,8 @@ def create_checkpoint_api(raw_event, context):
             checkpoint_names=filenames_only,
             checkpoint_status=CheckPointStatus.Initial,
             params=checkpoint_params,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         return {

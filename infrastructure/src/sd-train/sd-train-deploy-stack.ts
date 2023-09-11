@@ -57,7 +57,7 @@ export class SdTrainDeployStack extends NestedStack {
     const routers = props.routers;
 
     // GET /trains
-    new ListAllTrainJobsApi(this, 'aigc-trains', {
+    new ListAllTrainJobsApi(this, 'sdExtn-trains', {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trains,
@@ -66,8 +66,9 @@ export class SdTrainDeployStack extends NestedStack {
       trainTable: props.database.trainingTable,
     });
     const checkPointTable = props.database.checkpointTable;
+    const multiUserTable = props.database.multiUserTable;
     // POST /train
-    new CreateTrainJobApi(this, 'aigc-create-train', {
+    new CreateTrainJobApi(this, 'sdExtn-createTrain', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -79,7 +80,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /train
-    new UpdateTrainJobApi(this, 'aigc-put-train', {
+    new UpdateTrainJobApi(this, 'sdExtn-putTrain', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
@@ -93,7 +94,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /model
-    new CreateModelJobApi(this, 'aigc-create-model', {
+    new CreateModelJobApi(this, 'sdExtn-createModel', {
       router: routers.model,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
@@ -104,7 +105,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /models
-    new ListAllModelJobApi(this, 'aigc-listall-model', {
+    new ListAllModelJobApi(this, 'sdExtn-listallModel', {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -113,7 +114,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /model
-    new UpdateModelStatusRestApi(this, 'aigc-update-model', {
+    new UpdateModelStatusRestApi(this, 'sdExtn-updateModel', {
       s3Bucket: s3Bucket,
       router: routers.model,
       httpMethod: 'PUT',
@@ -131,27 +132,29 @@ export class SdTrainDeployStack extends NestedStack {
     // this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
 
     // GET /checkpoints
-    new ListAllCheckPointsApi(this, 'aigc-list-all-ckpts', {
+    new ListAllCheckPointsApi(this, 'sdExtn-listAllCkpts', {
       s3Bucket: s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
+      multiUserTable: multiUserTable,
     });
 
     // POST /checkpoint
-    new CreateCheckPointApi(this, 'aigc-create-ckpt', {
+    new CreateCheckPointApi(this, 'sdExtn-createCkpt', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       router: routers.checkpoint,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      multiUserTable: multiUserTable,
     });
 
     // PUT /checkpoint
-    new UpdateCheckPointApi(this, 'aigc-update-ckpt', {
+    new UpdateCheckPointApi(this, 'sdExtn-updateCkpt', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
@@ -161,7 +164,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /dataset
-    new CreateDatasetApi(this, 'aigc-create-dataset', {
+    new CreateDatasetApi(this, 'sdExtn-createDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -172,7 +175,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /dataset
-    new UpdateDatasetApi(this, 'aigc-update-dataset', {
+    new UpdateDatasetApi(this, 'sdExtn-updateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -183,7 +186,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /datasets
-    new ListAllDatasetsApi(this, 'aigc-listall-datasets', {
+    new ListAllDatasetsApi(this, 'sdExtn-listallDatasets', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
@@ -193,7 +196,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /dataset/{dataset_name}/data
-    new ListAllDatasetItemsApi(this, 'aigc-listall-dataset-items', {
+    new ListAllDatasetItemsApi(this, 'sdExtn-listallDsItems', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,

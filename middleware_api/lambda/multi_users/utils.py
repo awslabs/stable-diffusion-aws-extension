@@ -3,7 +3,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
-from multi_users._types import PARTITION_KEYS
+from multi_users._types import PARTITION_KEYS, User
 
 
 class KeyEncryptService:
@@ -56,3 +56,26 @@ def check_user_existence(ddb_service, user_table, username):
     })
 
     return not creator or len(creator) == 0
+
+
+def get_user_roles(ddb_service, user_table_name, username):
+    user = ddb_service.query_items(table=user_table_name, key_values={
+        'kind': PARTITION_KEYS.user,
+        'sort_key': username,
+    })
+    if not user or len(user) == 0:
+        raise Exception(f'user: "{username}" not exist')
+
+    user = User(**ddb_service.deserialize(user[0]))
+    return user.roles
+
+
+def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_name: str) -> bool:
+    if not checkpoint_owners or user_name in checkpoint_owners or '*' in checkpoint_owners:
+        return True
+
+    for user_role in user_roles:
+        if user_role in checkpoint_owners:
+            return True
+
+    return False

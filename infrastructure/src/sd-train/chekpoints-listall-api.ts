@@ -17,6 +17,7 @@ export interface ListAllCheckPointsApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -28,6 +29,7 @@ export class ListAllCheckPointsApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
 
@@ -39,6 +41,7 @@ export class ListAllCheckPointsApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -88,6 +91,7 @@ export class ListAllCheckPointsApi {
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -97,6 +101,7 @@ export class ListAllCheckPointsApi {
       {
         proxy: false,
         requestParameters: {
+          'integration.request.querystring.username': 'method.request.querystring.username',
           'integration.request.querystring.status': 'method.request.querystring.status',
           'integration.request.querystring.types': 'method.request.querystring.types',
         },
@@ -119,8 +124,9 @@ export class ListAllCheckPointsApi {
     this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestParameters: {
-        'method.request.querystring.status': true,
-        'method.request.querystring.types': true,
+        'method.request.querystring.username': false,
+        'method.request.querystring.status': false,
+        'method.request.querystring.types': false,
       },
       methodResponses: [{
         statusCode: '200',

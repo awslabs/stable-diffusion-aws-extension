@@ -12,6 +12,8 @@ encode_type = "utf-8"
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
+Admin_Role = 'IT Operator'
+Designer_Role = 'Designer'
 
 def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
     if os.path.exists(filename):

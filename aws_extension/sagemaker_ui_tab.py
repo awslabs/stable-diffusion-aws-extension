@@ -7,7 +7,7 @@ import requests
 
 import utils
 from aws_extension import sagemaker_ui
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
 
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
@@ -37,11 +37,11 @@ def on_ui_tabs():
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
-                    api_tab = api_setting_tab(user_session_state)
+                    _, user_setting_form = api_setting_tab(user_session_state)
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
                     user_settings_tab(user_session_state)
         with gr.Tab(label='Cloud Assets Management', variant='panel'):
-            with gr.Row(visible=False) as model_and_endpoint:
+            with gr.Row():
                 # todo: the output message is not right yet
                 model_upload = model_upload_tab(user_session_state)
                 sagemaker_part = sagemaker_endpoint_tab(user_session_state)
@@ -54,8 +54,8 @@ def on_ui_tabs():
                     sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt", visible=False)
 
         with gr.Tab(label='Create AWS dataset', variant='panel'):
-            with gr.Row(visible=False) as dataset_asset:
-                dataset_tab(user_session_state)
+            with gr.Row():
+                dataset_asset = dataset_tab(user_session_state)
 
         def ui_tab_setup(session, req: gr.Request):
             logger.debug(f'user {req.username} logged in')
@@ -63,16 +63,17 @@ def on_ui_tabs():
             user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
             session['roles'] = user['roles']
             logger.debug(f"user roles are: {user['roles']}")
-            visible = cloud_auth_manager.enableAuth
-            return gr.update(visible=visible), \
-                   gr.update(visible=visible), \
-                   gr.update(visible=visible), \
+            admin_visible = Admin_Role in user['roles']
+            # todo: any initial values should from here
+            return gr.update(visible=admin_visible), \
+                   gr.update(visible=admin_visible), \
+                   gr.update(visible=admin_visible), \
                    req.username
 
         sagemaker_interface.load(ui_tab_setup, [user_session_state], [
+            user_setting_form,
             user_setting,
-            model_and_endpoint,
-            dataset_asset,
+            sagemaker_part,
             user_session_state
         ])
 
@@ -114,13 +115,6 @@ def api_setting_tab(gr_user_session):
                                              "refresh_api_token")
 
         username_textbox, password_textbox, user_settings_form = ui_user_settings_tab()
-
-        def server_user_setting_up(user_sess):
-            if not cloud_auth_manager.enableAuth:
-                return gr.skip()
-            return gr.update(visible=cloud_auth_manager.username == user_sess['username'])
-
-        api_setting.load(server_user_setting_up, [gr_user_session], [user_settings_form])
         global test_connection_result
         test_connection_result = gr.Label(title="Output")
         aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
@@ -143,21 +137,24 @@ def api_setting_tab(gr_user_session):
                                  or authority over the third-party generative AI service in this web UI, and does not make
                                   any representations or warranties that the third-party generative AI service is secure,
                                    virus-free, operational, or compatible with your production environment and standards.""")
-    return api_setting
+    return api_setting, user_settings_form
 
 
 def ui_user_settings_tab():
-
     with gr.Column() as ui_user_setting:
         gr.HTML('<b>Username</b>')
         with gr.Row():
-            username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True, placeholder='Please enter username', show_label=False)
-            modules.ui.create_refresh_button(username_textbox, lambda: get_variable_from_json('username'), lambda: {"value": get_variable_from_json('username')},
+            username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True,
+                                          placeholder='Please enter username', show_label=False)
+            modules.ui.create_refresh_button(username_textbox, lambda: get_variable_from_json('username'),
+                                             lambda: {"value": get_variable_from_json('username')},
                                              "refresh_username")
         gr.HTML('<b>Password</b>')
         with gr.Row():
-            password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True, placeholder='Please enter your password', show_label=False)
-            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'), lambda: {"value": get_variable_from_json('password')},
+            password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True,
+                                          placeholder='Please enter your password', show_label=False)
+            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'),
+                                             lambda: {"value": get_variable_from_json('password')},
                                              "refresh_password")
 
     return username_textbox, password_textbox, ui_user_setting
@@ -176,7 +173,8 @@ def user_settings_tab(gr_user_session):
             gr.HTML(value="<b>Update a User Setting</b>")
             username = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
             pwd = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
-            user_roles = gr.Dropdown(choices=roles(gr_user_session.value['username']), multiselect=True, label="User Role")
+            user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                     label="User Role")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
             # todo: upsert user and delete User
@@ -184,7 +182,7 @@ def user_settings_tab(gr_user_session):
             def list_users(limit=10, last_evaluated_key=""):
                 resp = api_manager.list_users(limit=limit,
                                               last_evaluated_key=last_evaluated_key,
-                                              user_token=gr_user_session.value['username'])
+                                              user_token=cloud_auth_manager.username)
 
                 table = []
                 for user in resp['users']:
@@ -222,7 +220,8 @@ def user_settings_tab(gr_user_session):
 
                 def next_page(table_token_state):
                     user_list, new_token = list_users(last_evaluated_key=table_token_state['current_token'])
-                    table_token_state['previous_lookup'][json.dumps(table_token_state['current_token'])] = table_token_state['previous_token']
+                    table_token_state['previous_lookup'][json.dumps(table_token_state['current_token'])] = \
+                    table_token_state['previous_token']
                     table_token_state['previous_token'] = table_token_state['current_token']
                     table_token_state['current_token'] = new_token
                     return user_list, table_token_state
@@ -232,13 +231,15 @@ def user_settings_tab(gr_user_session):
                 def previous_page(table_token_state):
                     search_token = None
                     if json.dumps(table_token_state['previous_token']) in table_token_state['previous_lookup']:
-                        search_token = table_token_state['previous_lookup'][json.dumps(table_token_state['previous_token'])]
+                        search_token = table_token_state['previous_lookup'][
+                            json.dumps(table_token_state['previous_token'])]
                     user_list, new_token = list_users(last_evaluated_key=search_token)
                     table_token_state['previous_token'] = search_token
                     table_token_state['current_token'] = new_token
                     return user_list, table_token_state
 
-                previous_page_btn.click(fn=previous_page, inputs=[user_table_state], outputs=[user_table, user_table_state])
+                previous_page_btn.click(fn=previous_page, inputs=[user_table_state],
+                                        outputs=[user_table, user_table_state])
 
                 def update_user_table_button_state(token_state):
                     show_previous = True if token_state['previous_token'] else False
@@ -249,7 +250,6 @@ def user_settings_tab(gr_user_session):
                                   inputs=[user_table_state],
                                   outputs=[previous_page_btn, next_page_btn]
                                   )
-
 
     return user_tab
 
@@ -272,89 +272,59 @@ def model_upload_tab(gr_user_session):
                 "vae": os.path.join(root_path, "models", "VAE"),
             }
 
-            def scan_sd_ckpt():
-                model_files = os.listdir(model_folders["ckpt"])
+            def scan_local_model_files_by_suffix(suffix):
+                model_files = os.listdir(model_folders[suffix])
                 # filter non-model files not in exts
                 model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["ckpt"], f) for f in model_files]
-                return model_files
-
-            def scan_textual_inversion_model():
-                model_files = os.listdir(model_folders["text"])
-                # filter non-model files not in exts
-                model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["text"], f) for f in model_files]
-                return model_files
-
-            def scan_lora_model():
-                model_files = os.listdir(model_folders["lora"])
-                # filter non-model files not in exts
-                model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["lora"], f) for f in model_files]
-                return model_files
-
-            def scan_control_model():
-                model_files = os.listdir(model_folders["control"])
-                # filter non-model files not in exts
-                model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["control"], f) for f in model_files]
-                return model_files
-
-            def scan_hypernetwork_model():
-                model_files = os.listdir(model_folders["hyper"])
-                # filter non-model files not in exts
-                model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["hyper"], f) for f in model_files]
-                return model_files
-
-            def scan_vae_model():
-                model_files = os.listdir(model_folders["vae"])
-                # filter non-model files not in exts
-                model_files = [f for f in model_files if os.path.splitext(f)[1] in exts]
-                model_files = [os.path.join(model_folders["vae"], f) for f in model_files]
+                model_files = [os.path.join(model_folders[suffix], f) for f in model_files]
                 return model_files
 
             with FormRow(elem_id="model_upload_form_row_01"):
-                sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints", choices=sorted(scan_sd_ckpt()),
+                sd_checkpoints_path = gr.Dropdown(label="SD Checkpoints",
+                                                  choices=sorted(scan_local_model_files_by_suffix("ckpt")),
                                                   elem_id="sd_ckpt_dropdown")
-                create_refresh_button(sd_checkpoints_path, scan_sd_ckpt,
-                                      lambda: {"choices": sorted(scan_sd_ckpt())}, "refresh_sd_ckpt")
+                create_refresh_button(sd_checkpoints_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("ckpt"))},
+                                      "refresh_sd_ckpt")
 
                 textual_inversion_path = gr.Dropdown(label="Textual Inversion",
-                                                     choices=sorted(scan_textual_inversion_model()),
+                                                     choices=sorted(scan_local_model_files_by_suffix("text")),
                                                      elem_id="textual_inversion_model_dropdown")
-                create_refresh_button(textual_inversion_path, scan_textual_inversion_model,
-                                      lambda: {"choices": sorted(scan_textual_inversion_model())},
+                create_refresh_button(textual_inversion_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("text"))},
                                       "refresh_textual_inversion_model")
             with FormRow(elem_id="model_upload_form_row_02"):
-                lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_lora_model()),
+                lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_local_model_files_by_suffix("lora")),
                                         elem_id="lora_model_dropdown")
-                create_refresh_button(lora_path, scan_lora_model,
-                                      lambda: {"choices": sorted(scan_lora_model())}, "refresh_lora_model", )
+                create_refresh_button(lora_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("lora"))},
+                                      "refresh_lora_model", )
 
                 controlnet_model_path = gr.Dropdown(label="ControlNet model",
-                                                    choices=sorted(scan_control_model()),
+                                                    choices=sorted(scan_local_model_files_by_suffix("control")),
                                                     elem_id="controlnet_model_dropdown")
-                create_refresh_button(controlnet_model_path, scan_control_model,
-                                      lambda: {"choices": sorted(scan_control_model())},
+                create_refresh_button(controlnet_model_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("control"))},
                                       "refresh_controlnet_models")
             with FormRow(elem_id="model_upload_form_row_03"):
-                hypernetwork_path = gr.Dropdown(label="Hypernetwork", choices=sorted(scan_hypernetwork_model()),
+                hypernetwork_path = gr.Dropdown(label="Hypernetwork",
+                                                choices=sorted(scan_local_model_files_by_suffix("hyper")),
                                                 elem_id="hyper_model_dropdown")
-                create_refresh_button(hypernetwork_path, scan_hypernetwork_model,
-                                      lambda: {"choices": sorted(scan_hypernetwork_model())},
+                create_refresh_button(hypernetwork_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("hyper"))},
                                       "refresh_hyper_models")
 
-                vae_path = gr.Dropdown(label="VAE", choices=sorted(scan_vae_model()),
+                vae_path = gr.Dropdown(label="VAE", choices=sorted(scan_local_model_files_by_suffix("vae")),
                                        elem_id="vae_model_dropdown")
-                create_refresh_button(vae_path, scan_vae_model, lambda: {"choices": sorted(scan_vae_model())},
+                create_refresh_button(vae_path, lambda: None,
+                                      lambda: {"choices": sorted(scan_local_model_files_by_suffix("vae"))},
                                       "refresh_vae_models")
 
             with gr.Row():
                 model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
                                                 elem_id="sagemaker_model_update_button", size=(200, 50))
-                model_update_button.click(_js="model_update",
-                                          fn=sagemaker_ui.sagemaker_upload_model_s3,
+                model_update_button.click(fn=sagemaker_ui.sagemaker_upload_model_s3,
+                                          # _js="model_update",
                                           inputs=[sd_checkpoints_path, textual_inversion_path, lora_path,
                                                   hypernetwork_path, controlnet_model_path, vae_path],
                                           outputs=[test_connection_result, sd_checkpoints_path,
@@ -455,14 +425,15 @@ def sagemaker_endpoint_tab(gr_user_session):
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
 
-            user_roles = gr.Dropdown(choices=roles(gr_user_session.value['username']), multiselect=True, label="User Role")
+            user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                     label="User Role")
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
             sagemaker_deploy_button.click(api_manager.sagemaker_deploy,
                                           _js="deploy_endpoint",
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
-                                          outputs=[test_connection_result])     # todo: make a new output
+                                          outputs=[test_connection_result])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:

@@ -8,6 +8,8 @@ import boto3
 import time
 
 import json
+
+import gradio
 import requests
 import base64
 from urllib.parse import urljoin
@@ -478,7 +480,7 @@ def refresh_all_models():
 
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path,
-                              controlnet_model_path, vae_path):
+                              controlnet_model_path, vae_path, pr: gradio.Request):
     log = "start upload model to s3:"
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
@@ -512,7 +514,10 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                 "filename": local_tar_path,
                 "parts_number": parts_number
             }],
-            "params": {"message": "placeholder for chkpts upload test"}
+            "params": {
+                "message": "placeholder for chkpts upload test",
+                "creator": pr.username
+            }
         }
         api_gateway_url = get_variable_from_json('api_gateway_url')
         # Check if api_url ends with '/', if not append it
