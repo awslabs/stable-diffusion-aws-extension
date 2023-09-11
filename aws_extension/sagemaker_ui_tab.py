@@ -34,6 +34,8 @@ def on_ui_tabs():
             'username': '',
             'roles': []
         })
+        invisible_user_name_for_ui = gr.Textbox(type='text', visible=True, interactive=False, container=False,
+                                                show_label=False, elem_id='invisible_user_name_for_ui')
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
@@ -66,14 +68,16 @@ def on_ui_tabs():
             admin_visible = Admin_Role in user['roles']
             # todo: any initial values should from here
             return gr.update(visible=admin_visible), \
-                   gr.update(visible=admin_visible), \
-                   gr.update(visible=admin_visible), \
-                   req.username
+                gr.update(visible=admin_visible), \
+                gr.update(visible=admin_visible), \
+                req.username, \
+                req.username
 
         sagemaker_interface.load(ui_tab_setup, [user_session_state], [
             user_setting_form,
             user_setting,
             sagemaker_part,
+            invisible_user_name_for_ui,
             user_session_state
         ])
 
@@ -221,7 +225,7 @@ def user_settings_tab(gr_user_session):
                 def next_page(table_token_state):
                     user_list, new_token = list_users(last_evaluated_key=table_token_state['current_token'])
                     table_token_state['previous_lookup'][json.dumps(table_token_state['current_token'])] = \
-                    table_token_state['previous_token']
+                        table_token_state['previous_token']
                     table_token_state['previous_token'] = table_token_state['current_token']
                     table_token_state['current_token'] = new_token
                     return user_list, table_token_state

@@ -177,7 +177,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
     }
 }
 
-function uploadFileToS3(files, groupName) {
+function uploadFileToS3(files, groupName, username) {
     const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
@@ -199,7 +199,7 @@ function uploadFileToS3(files, groupName) {
     const payload = {
         checkpoint_type: groupName,
         filenames: filenames,
-        params: { message: "placeholder for chkpts upload test" }
+        params: { message: "placeholder for chkpts upload test", "creator": username }
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
@@ -390,11 +390,12 @@ function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName
 }
 function uploadFiles() {
     const uploadPromises = [];
+    const username = document.querySelector('#invisible_user_name_for_ui > label > textarea')['value']
     for (const [groupName, files] of uploadedFilesMap.entries()) {
         // for (const file of files) {
         //     uploadPromises.push(uploadFileToS3(file, groupName));
         // }
-        uploadPromises.push(uploadFileToS3(files, groupName));
+        uploadPromises.push(uploadFileToS3(files, groupName, username));
     }
 
     Promise.all(uploadPromises)
