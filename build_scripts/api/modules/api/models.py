@@ -317,7 +317,8 @@ class TextToImageResponse(BaseModel):
 class InvocationsRequest(BaseModel):
     task: str
     username: Optional[str]
-    checkpoint_info:Optional[dict]
+    # checkpoint_info:Optional[dict]
+    param_s3: str
     models: Optional[dict]
     txt2img_payload: Optional[StableDiffusionTxt2ImgProcessingAPI]
     img2img_payload: Optional[StableDiffusionImg2ImgProcessingAPI]

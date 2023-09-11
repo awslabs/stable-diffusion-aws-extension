@@ -693,7 +693,7 @@ def load_pipeline(checkpoint_info=None):
     shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
     sd_pipeline = StableDiffusionPipeline.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
    
-    sd_pipeline.enable_xformers_memory_efficient_attention()
+    # sd_pipeline.enable_xformers_memory_efficient_attention()
 
     pipeline_name = str(type(sd_pipeline)).split('.')[-1][:-2]
 
@@ -711,7 +711,10 @@ def load_pipeline(checkpoint_info=None):
     pipeline_data.was_loaded_at_least_once = True
     
     embeddings_dir = shared.cmd_opts.embeddings_dir
-    sd_pipeline.load_textual_inversion(embeddings_dir) 
+    try:
+        sd_pipeline.load_textual_inversion(embeddings_dir) 
+    except:
+        print(f"No embeddings.")
     timer.record("load textual inversion embeddings")
 
     print(f"Model loaded in {timer.summary()}.")

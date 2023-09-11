@@ -145,12 +145,10 @@ def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_siz
             return parts
         except Exception as e:
             print(e)
-            gr.Error(f'Upload file{local_path} failed, please try again. If still not work, contact your admin')
         finally:
             if not integral_uploaded:
                 gr.Error(f'Upload file {local_path} not complete, please try again or create new one.')
                 raise Exception('failed at multipart')
-
 
 def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
     s3_resource = boto3.resource('s3')
@@ -199,7 +197,6 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
-
 
 def read_from_s3(s3_path):
     s3 = boto3.client('s3')
