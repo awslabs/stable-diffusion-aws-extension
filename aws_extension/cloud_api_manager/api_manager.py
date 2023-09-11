@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 encode_type = "utf-8"
 
+
 class CloudApiManager:
 
     def __init__(self):
@@ -119,7 +120,7 @@ class CloudApiManager:
             logger.error(f"An error occurred while updating SageMaker endpoints: {e}")
             return []
 
-    def get_user_by_username(self, username='', user_token=''):
+    def get_user_by_username(self, username='', user_token='', show_password=False):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
@@ -127,7 +128,8 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
                                 params={
-                                    'username': username
+                                    'username': username,
+                                    'show_password': show_password
                                 },
                                 headers=self._get_headers_by_user(user_token))  # todo: not right
         raw_resp.raise_for_status()
@@ -157,6 +159,37 @@ class CloudApiManager:
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()
+
+    def list_models_on_cloud(self, username, user_token=""):
+        # if not self.auth_manger.enableAuth:
+        #     return []
+        #
+        # raw_resp = requests.get(url=f'{self.auth_manger.api_url}checkpoints', params={
+        #     'username': username,
+        #     'types': 'Stable-diffusion',
+        #     'status': 'Active'
+        # }, headers=self._get_headers_by_user(user_token))
+        #
+        # raw_resp.raise_for_status()
+        # checkpoints = []
+        # resp = raw_resp.json()
+        # for ckpt in resp['checkpoints']:
+        #     checkpoints.append(ckpt['name'])
+        #
+        # return checkpoints
+        return ['ckpt-1', 'ckpt-2']
+
+    def list_all_inference_jobs_on_cloud(self, username, user_token=""):
+        # if not self.auth_manger.enableAuth:
+        #     return []
+        #
+        # raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
+        #     'username': username,
+        # }, headers=self._get_headers_by_user(user_token))
+        # raw_resp.raise_for_status()
+        # resp = raw_resp.json()
+        # return resp['inferences']
+        return ['inference-1', 'inference-2']
 
 
 api_manager = CloudApiManager()

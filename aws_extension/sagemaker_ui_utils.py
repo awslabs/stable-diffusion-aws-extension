@@ -1,7 +1,9 @@
+import gradio
 import gradio as gr
 
 from aws_extension import sagemaker_ui
 from dreambooth_on_cloud.train import async_cloud_train
+from modules.ui_components import ToolButton
 
 training_job_dashboard = None
 txt2img_show_hook = None
@@ -112,18 +114,19 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
 
-        sagemaker_ui.sagemaker_endpoint.change(
-            fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[txt2img_html_info]
-        )
-        sagemaker_ui.modelmerger_merge_on_cloud.click(
-            fn=sagemaker_ui.modelmerger_on_cloud_func,
-            # fn=None,
-            # _js="txt2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint],
-            outputs=[
-            ])
+        # fixme: not sure what is this for?
+        # sagemaker_ui.sagemaker_endpoint.change(
+        #     fn=lambda selected_value: sagemaker_ui.displayEndpointInfo(selected_value),
+        #     inputs=[sagemaker_ui.sagemaker_endpoint],
+        #     outputs=[txt2img_html_info]
+        # )
+        # sagemaker_ui.modelmerger_merge_on_cloud.click(
+        #     fn=sagemaker_ui.modelmerger_on_cloud_func,
+        #     # fn=None,
+        #     # _js="txt2img_config_save",
+        #     inputs=[sagemaker_ui.sagemaker_endpoint],
+        #     outputs=[
+        #     ])
         # Hook image display logic
     global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
         img2img_prompt, \
@@ -193,18 +196,40 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
         )
 
-        sagemaker_ui.interrogate_clip_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_clip,
-            _js="img2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
-                    init_img_inpaint, init_mask_inpaint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
-        )
+        # fixme: no need to select endpoint
+        # sagemaker_ui.interrogate_clip_on_cloud_button.click(
+        #     fn=sagemaker_ui.call_interrogate_clip,
+        #     _js="img2img_config_save",
+        #     inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
+        #             init_img_inpaint, init_mask_inpaint],
+        #     outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+        # )
+        #
+        # sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
+        #     fn=sagemaker_ui.call_interrogate_deepbooru,
+        #     _js="img2img_config_save",
+        #     inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
+        #             init_img_inpaint, init_mask_inpaint],
+        #     outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
+        # )
 
-        sagemaker_ui.interrogate_deep_booru_on_cloud_button.click(
-            fn=sagemaker_ui.call_interrogate_deepbooru,
-            _js="img2img_config_save",
-            inputs=[sagemaker_ui.sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
-                    init_img_inpaint, init_mask_inpaint],
-            outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
-        )
+
+def create_refresh_button(refresh_component, refresh_method, refreshed_args, elem_id):
+    def refresh(pr: gradio.Request):
+        refresh_method(pr.username)
+        args = refreshed_args() if callable(refreshed_args) else refreshed_args
+
+        for k, v in args.items():
+            setattr(refresh_component, k, v)
+
+        return gr.update(**(args or {}))
+
+    refresh_symbol = '\U0001f504'  # 🔄
+    refresh_button = ToolButton(value=refresh_symbol, elem_id=elem_id)
+    refresh_button.click(
+        fn=refresh,
+        inputs=[],
+        outputs=[refresh_component]
+    )
+
+    return refresh_button

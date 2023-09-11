@@ -7,6 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -66,6 +67,9 @@ class SageMakerUI(scripts.Script):
     sd_model_manager = CloudSDModelsManager()
     infer_manager = SimpleSagemakerInfer()
 
+    refresh_sd_model_checkpoint_btn = None
+    setting_sd_model_checkpoint_dropdown = None
+
     txt2img_generation_info = None
     txt2img_gallery = None
     txt2img_html_info = None
@@ -89,13 +93,16 @@ class SageMakerUI(scripts.Script):
             elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
                 self.img2img_generate_btn = component
 
-        if type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_txt2img' and self.is_txt2img:
+        if type(component) is gr.Textbox and getattr(component, 'elem_id',
+                                                     None) == 'generation_info_txt2img' and self.is_txt2img:
             self.txt2img_generation_info = component
 
-        if type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'txt2img_gallery' and self.is_txt2img:
+        if type(component) is gr.Gallery and getattr(component, 'elem_id',
+                                                     None) == 'txt2img_gallery' and self.is_txt2img:
             self.txt2img_gallery = component
 
-        if type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_txt2img' and self.is_txt2img:
+        if type(component) is gr.HTML and getattr(component, 'elem_id',
+                                                  None) == 'html_info_txt2img' and self.is_txt2img:
             self.txt2img_html_info = component
 
         async def _update_result():
@@ -113,13 +120,16 @@ class SageMakerUI(scripts.Script):
                 outputs=[self.txt2img_gallery, self.txt2img_generation_info, self.txt2img_html_info]
             )
 
-        if type(component) is gr.Textbox and getattr(component, 'elem_id', None) == 'generation_info_img2img' and self.is_img2img:
+        if type(component) is gr.Textbox and getattr(component, 'elem_id',
+                                                     None) == 'generation_info_img2img' and self.is_img2img:
             self.img2img_generation_info = component
 
-        if type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery' and self.is_img2img:
+        if type(component) is gr.Gallery and getattr(component, 'elem_id',
+                                                     None) == 'img2img_gallery' and self.is_img2img:
             self.img2img_gallery = component
 
-        if type(component) is gr.HTML and getattr(component, 'elem_id', None) == 'html_info_img2img' and self.is_img2img:
+        if type(component) is gr.HTML and getattr(component, 'elem_id',
+                                                  None) == 'html_info_img2img' and self.is_img2img:
             self.img2img_html_info = component
 
         if self.img2img_html_info and self.img2img_gallery and self.img2img_generation_info:
@@ -132,27 +142,25 @@ class SageMakerUI(scripts.Script):
         pass
 
     def ui(self, is_img2img):
-        def _check_generate(endpoint):
-            if endpoint:
-                self.sd_model_manager.update_models()
-            else:
-                self.sd_model_manager.clear()
-            return f'Generate{" on Cloud" if endpoint else ""}'
+        def _check_generate(model_selected):
+            return f'Generate{" on Cloud" if model_selected and model_selected != None_Option_For_On_Cloud_Model else ""}'
 
         if not is_img2img:
-            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
-                is_img2img)
-            sagemaker_endpoint.change(_check_generate, inputs=sagemaker_endpoint,
-                                      outputs=[self.txt2img_generate_btn])
+            model_on_cloud, inference_job_dropdown, primary_model_name, \
+                secondary_model_name, tertiary_model_name, \
+                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
 
-            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
+            model_on_cloud.change(_check_generate, inputs=model_on_cloud,
+                                  outputs=[self.txt2img_generate_btn])
+
+            return [model_on_cloud, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
-            sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud = sagemaker_ui.create_ui(
-                is_img2img)
-            sagemaker_endpoint.change(_check_generate, inputs=sagemaker_endpoint,
-                                      outputs=[self.img2img_generate_btn])
-            return [sagemaker_endpoint, inference_job_dropdown, txt2img_inference_job_ids_refresh_button,
+            model_on_cloud, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, \
+                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+            model_on_cloud.change(_check_generate, inputs=model_on_cloud,
+                                  outputs=[self.img2img_generate_btn])
+            return [model_on_cloud, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
@@ -161,19 +169,13 @@ class SageMakerUI(scripts.Script):
             return
 
         # check if endpoint is inService
-        sagemaker_endpoint = ''
-        if args[0]:
-            sagemaker_endpoint = args[0].split('+')[0] if args[0].split('+')[1] == 'InService' else ''
-
-        if not sagemaker_endpoint:
-            return
-
-        if not args[0]:
+        sd_model_on_cloud = args[0]
+        if not sd_model_on_cloud:
             return
 
         current_model = sd_models.select_checkpoint()
         logger.debug(current_model.name)
-        models = {'Stable-diffusion': [current_model.name.replace(f'.{postfix}', '')]}
+        models = {'Stable-diffusion': [sd_model_on_cloud]}
 
         api_param_cls = None
 
@@ -282,11 +284,12 @@ class SageMakerUI(scripts.Script):
         p.setup_conds()
 
         # load all embedding models
-        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in model_hijack.embedding_db.word_embeddings.values()]
+        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
+                                model_hijack.embedding_db.word_embeddings.values()]
 
         err = None
         try:
-            inference_id = self.infer_manager.run(sagemaker_endpoint, models, api_param, self.is_txt2img)
+            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
         except Exception as e:
@@ -336,10 +339,7 @@ script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
 script_callbacks.ui_tabs_callback = ui_tabs_callback
 
-
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
-
-

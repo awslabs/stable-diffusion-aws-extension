@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 
 @dataclass
@@ -8,9 +8,11 @@ class InferenceJob:
     startTime: str
     status: str
     taskType: str
+    owner_group_or_role: Optional[List[str]] = None
     inference_info_name: Optional[Any] = None
     image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
+    completeTime: Optional[Any] = None
     params: Optional[dict[str, Any]] = None
 
 

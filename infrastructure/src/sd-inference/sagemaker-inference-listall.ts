@@ -13,7 +13,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 
-export interface ListAllSageMakerEndpointsApiProps {
+export interface ListAllSageMakerInferencesApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   endpointDeploymentTable: aws_dynamodb.Table;
@@ -23,7 +23,7 @@ export interface ListAllSageMakerEndpointsApiProps {
   authorizer: aws_apigateway.IAuthorizer;
 }
 
-export class ListAllSagemakerEndpointsApi {
+export class ListAllInferencesApi {
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -35,18 +35,18 @@ export class ListAllSagemakerEndpointsApi {
   private readonly authorizer: aws_apigateway.IAuthorizer;
 
 
-  constructor(scope: Construct, id: string, props: ListAllSageMakerEndpointsApiProps) {
+  constructor(scope: Construct, id: string, props: ListAllSageMakerInferencesApiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
+    this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listAllSageMakerEndpointsApi();
+    this.listAllSageMakerInferenceJobApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -80,14 +80,14 @@ export class ListAllSagemakerEndpointsApi {
     return newRole;
   }
 
-  private listAllSageMakerEndpointsApi() {
+  private listAllSageMakerInferenceJobApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
       functionName: `${this.baseId}-listall`,
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'sagemaker_endpoint_api.py',
-      handler: 'list_all_sagemaker_endpoints',
+      index: 'inference_api.py',
+      handler: 'list_all_inference_jobs',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,
@@ -98,7 +98,7 @@ export class ListAllSagemakerEndpointsApi {
       layers: [this.layer],
     });
 
-    const listSagemakerEndpointsIntegration = new apigw.LambdaIntegration(
+    const listSagemakerInferencesIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
         proxy: false,
@@ -121,7 +121,7 @@ export class ListAllSagemakerEndpointsApi {
         integrationResponses: [{ statusCode: '200' }],
       },
     );
-    this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, listSagemakerInferencesIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
       requestParameters: {

@@ -103,11 +103,13 @@ export class Middleware extends Stack {
       'users',
       'role',
       'roles',
+      'endpoints',
+      'inferences',
       api_train_path,
     ]);
 
     const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers,
+      commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       useExist: useExist,
     });
@@ -119,10 +121,10 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       useExist: useExist,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
+      authorizer: authorizerLambda.authorizer,
     });
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
-
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
 
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
@@ -135,6 +137,7 @@ export class Middleware extends Stack {
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
+      multiUserTable: ddbTables.multiUserTable,
       commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,

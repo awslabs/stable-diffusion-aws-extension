@@ -30,23 +30,19 @@ api_key = None
 def on_ui_tabs():
     buildin_model_list = ['AWS JumpStart Model', 'AWS BedRock Model', 'Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
-        user_session_state = gr.State({
-            'username': '',
-            'roles': []
-        })
-        invisible_user_name_for_ui = gr.Textbox(type='text', visible=True, interactive=False, container=False,
+        invisible_user_name_for_ui = gr.Textbox(type='text', visible=False, interactive=False, container=False,
                                                 show_label=False, elem_id='invisible_user_name_for_ui')
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
-                    _, user_setting_form = api_setting_tab(user_session_state)
+                    _, user_setting_form = api_setting_tab()
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
-                    user_settings_tab(user_session_state)
+                    user_settings_tab()
         with gr.Tab(label='Cloud Assets Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
-                model_upload = model_upload_tab(user_session_state)
-                sagemaker_part = sagemaker_endpoint_tab(user_session_state)
+                model_upload = model_upload_tab()
+                sagemaker_part = sagemaker_endpoint_tab()
             with gr.Row(visible=False):
                 with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
                     sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
@@ -57,34 +53,30 @@ def on_ui_tabs():
 
         with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row():
-                dataset_asset = dataset_tab(user_session_state)
+                dataset_asset = dataset_tab()
 
-        def ui_tab_setup(session, req: gr.Request):
+        def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
-            session['username'] = req.username
             user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
-            session['roles'] = user['roles']
             logger.debug(f"user roles are: {user['roles']}")
             admin_visible = Admin_Role in user['roles']
             # todo: any initial values should from here
             return gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
-                req.username, \
                 req.username
 
-        sagemaker_interface.load(ui_tab_setup, [user_session_state], [
+        sagemaker_interface.load(ui_tab_setup, [], [
             user_setting_form,
             user_setting,
             sagemaker_part,
-            invisible_user_name_for_ui,
-            user_session_state
+            invisible_user_name_for_ui
         ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
 
 
-def api_setting_tab(gr_user_session):
+def api_setting_tab():
     with gr.Blocks() as api_setting:
         gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
         gr.HTML(value="Enter your API URL & Token to start the connection.")
@@ -169,7 +161,7 @@ def roles(user_token):
     return [role['role_name'] for role in resp['roles']]
 
 
-def user_settings_tab(gr_user_session):
+def user_settings_tab():
     gr.HTML(value="<u><b>Manage User's Access</b></u>")
     with gr.Row(variant='panel') as user_tab:
         with gr.Column(scale=1):
@@ -208,7 +200,8 @@ def user_settings_tab(gr_user_session):
                     return gr.skip(), gr.skip(), gr.skip()
 
                 # todo: to be done
-                return 'cyanda', '123123', ['IT Operator', 'Designer']
+                user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
+                return user['username'], user['password'], user['roles']
 
             user_table.select(fn=choose_user, inputs=[], outputs=[username, pwd, user_roles])
 
@@ -258,7 +251,7 @@ def user_settings_tab(gr_user_session):
     return user_tab
 
 
-def model_upload_tab(gr_user_session):
+def model_upload_tab():
     with gr.Column() as upload_tab:
         gr.HTML(value="<b>Upload Model to Cloud</b>")
         # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
@@ -382,7 +375,7 @@ def model_upload_tab(gr_user_session):
     return upload_tab
 
 
-def sagemaker_endpoint_tab(gr_user_session):
+def sagemaker_endpoint_tab():
     with gr.Column() as sagemaker_tab:
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
@@ -472,7 +465,7 @@ def sagemaker_endpoint_tab(gr_user_session):
         return sagemaker_tab
 
 
-def dataset_tab(gr_user_session):
+def dataset_tab():
     with gr.Row() as dt:
         with gr.Column(variant='panel'):
             gr.HTML(value="<u><b>Create a Dataset</b></u>")

@@ -28,6 +28,7 @@ import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
 import { ListAllSagemakerEndpointsApi, ListAllSageMakerEndpointsApiProps } from './sagemaker-endpoints-listall';
+import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
@@ -44,6 +45,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   routers: {[key: string]: Resource};
   s3_bucket: s3.Bucket;
   training_table: dynamodb.Table;
+  multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
   ecr_image_tag: string;
   sd_inference_job_table: aws_dynamodb.Table;
@@ -117,10 +119,24 @@ export class SDAsyncInferenceStack extends NestedStack {
           router: props.routers.endpoints,
           commonLayer: props.commonLayer,
           endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
           httpMethod: 'GET',
           srcRoot: srcRoot,
           authorizer: props.authorizer,
         },
+    );
+
+    new ListAllInferencesApi(
+      this, 'sd-infer-v2-allInferences',
+      {
+        authorizer: props.authorizer,
+        commonLayer: props.commonLayer,
+        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        multiUserTable: props.multiUserTable,
+        httpMethod: 'GET',
+        router: props.routers.inferences,
+        srcRoot: srcRoot,
+      },
     );
 
     // Create an SNS topic to get async inference result

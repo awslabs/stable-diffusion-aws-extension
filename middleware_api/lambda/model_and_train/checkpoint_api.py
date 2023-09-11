@@ -36,7 +36,7 @@ def list_all_checkpoints_api(event, context):
     username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
     user_roles = ['*']
     if username:
-        user_roles += get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+        user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:

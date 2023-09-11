@@ -12,7 +12,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 class SimpleSagemakerInfer(InferManager):
 
-    def run(self, sagemaker_endpoint, models, sd_param, is_txt2img):
+    def run(self, userid, models, sd_param, is_txt2img):
         # finished construct api payload
         sd_api_param_json = _parse_api_param_to_json(api_param=sd_param)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -29,7 +29,8 @@ class SimpleSagemakerInfer(InferManager):
             return
 
         payload = {
-            'sagemaker_endpoint_name': sagemaker_endpoint,
+            # 'sagemaker_endpoint_name': sagemaker_endpoint,
+            'user_id': userid,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
             'filters': {
