@@ -18,6 +18,7 @@ export interface ListAllSageMakerInferencesApiProps {
   httpMethod: string;
   endpointDeploymentTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
+  inferenceJobTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
@@ -30,6 +31,7 @@ export class ListAllInferencesApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
+  private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
   private readonly authorizer: aws_apigateway.IAuthorizer;
@@ -41,6 +43,7 @@ export class ListAllInferencesApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.multiUserTable = props.multiUserTable;
+    this.inferenceJobTable = props.inferenceJobTable;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.authorizer = props.authorizer;
     this.src = props.srcRoot;
@@ -94,6 +97,7 @@ export class ListAllInferencesApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
       },
       layers: [this.layer],
     });

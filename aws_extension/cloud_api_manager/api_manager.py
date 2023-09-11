@@ -83,6 +83,9 @@ class CloudApiManager:
 
     def list_all_sagemaker_endpoints(self, user_token=""):
         try:
+            if self.auth_manger.enableAuth and not user_token:
+                return []
+
             response = requests.get(f'{self.auth_manger.api_url}endpoints',
                                     headers=self._get_headers_by_user(user_token))
             response.raise_for_status()

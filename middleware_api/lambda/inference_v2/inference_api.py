@@ -207,7 +207,7 @@ def list_all_inference_jobs(event, ctx):
 
     username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
-    scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+    scan_rows = ddb_service.scan(inference_table_name, filters=None)
     results = []
     user_roles = []
     if username:
