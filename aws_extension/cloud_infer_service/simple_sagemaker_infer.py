@@ -57,8 +57,6 @@ class SimpleSagemakerInfer(InferManager):
             response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload,
                                     headers={'x-api-key': api_key})
             response.raise_for_status()
-        elif upload_param_response['status'] != 200:
-            raise Exception(upload_param_response['error'])
 
         return inference_id
 

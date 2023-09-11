@@ -176,7 +176,7 @@ def run_inference(event, _):
     ddb_service.put_items(inference_table_name, inference_job.__dict__)
 
     return {
-        'status': 200,
+        'statusCode': 200,
         'inference': {
             'inference_id': infer_id,
             'status': inference_job.status,

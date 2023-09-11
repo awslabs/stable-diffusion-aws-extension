@@ -28,12 +28,12 @@ class UpsertUserEvent:
 # POST /user
 def upsert_user(raw_event, ctx):
     print(raw_event)
-    event = UpsertUserEvent(**raw_event)
-
+    event = UpsertUserEvent(**raw_event['body'])
+    # todo: need check x-auth
     # check if creator exist
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
         return {
-            'status': 400,
+            'statusCode': 400,
             'errMsg': f'creator {event.creator} not exist'
         }
 
@@ -51,7 +51,7 @@ def upsert_user(raw_event, ctx):
     for role in event.roles:
         if role not in roles_pool:
             return {
-                'status': 400,
+                'statusCode': 400,
                 'errMsg': f'user roles "{role}" not exist'
             }
 
@@ -64,7 +64,7 @@ def upsert_user(raw_event, ctx):
     ).__dict__)
 
     return {
-        'status': 200,
+        'statusCode': 200,
         'user': {
             'username': event.username,
             'roles': event.roles,
@@ -101,6 +101,7 @@ def delete_user(event, ctx):
         }
 
     user = User(**(ddb_service.deserialize(scan_rows[0])))
+    # todo: need to figure out what happens to user's resources
     ddb_service.delete_item(user_table, keys={
         'kind': PARTITION_KEYS.user,
         'sort_key': username

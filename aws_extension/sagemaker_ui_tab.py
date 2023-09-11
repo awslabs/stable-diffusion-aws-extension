@@ -167,13 +167,37 @@ def user_settings_tab():
         with gr.Column(scale=1):
 
             gr.HTML(value="<b>Update a User Setting</b>")
-            username = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
-            pwd = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
-            user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                     label="User Role")
+            username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
+            pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
+            user_roles_dropdown = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                              label="User Role")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
-            # todo: upsert user and delete User
+            user_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
+
+            def upsert_user(username, password, user_roles):
+                try:
+                    resp = api_manager.upsert_user(username=username, password=password,
+                                                   roles=user_roles, creator=cloud_auth_manager.username,
+                                                   user_token=cloud_auth_manager.username)
+                    if resp:
+                        return f'User upsert complete "{username}"'
+                except Exception as e:
+                    return f'User upsert failed: {e}'
+
+            upsert_user_button.click(fn=upsert_user, inputs=[username_textbox, pwd_textbox, user_roles_dropdown],
+                                     outputs=[user_setting_out_textbox])
+
+            def delete_user(username):
+                try:
+                    resp = api_manager.delete_user(username=username, user_token=cloud_auth_manager.username)
+                    if resp:
+                        return f'User delete complete "{username}"'
+                except Exception as e:
+                    return f'User delete failed: {e}'
+
+            delete_user_button.click(fn=delete_user, inputs=[username_textbox], outputs=[user_setting_out_textbox])
+            # todo: need reload the user table
         with gr.Column(scale=2):
             def list_users(limit=10, last_evaluated_key=""):
                 resp = api_manager.list_users(limit=limit,
@@ -203,7 +227,7 @@ def user_settings_tab():
                 user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
                 return user['username'], user['password'], user['roles']
 
-            user_table.select(fn=choose_user, inputs=[], outputs=[username, pwd, user_roles])
+            user_table.select(fn=choose_user, inputs=[], outputs=[username_textbox, pwd_textbox, user_roles_dropdown])
 
             with gr.Row():
                 user_table_state = gr.State(value={

@@ -21,9 +21,9 @@ class CloudApiManager:
     # todo: not sure how to get current login user's password from gradio
     # todo: use username only for authorize checking for now only, e.g. user_token = username
     def _get_headers_by_user(self, user_token):
-        self._auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
+        _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
         return {
-            'Authorization': f'Bearer {user_token}',
+            'Authorization': f'Bearer {_auth_token}',
             'x-api-key': self.api_key,
             'Content-Type': 'application/json',
         }
@@ -134,7 +134,7 @@ class CloudApiManager:
                                     'username': username,
                                     'show_password': show_password
                                 },
-                                headers=self._get_headers_by_user(user_token))  # todo: not right
+                                headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()['users'][0]
 
@@ -162,6 +162,39 @@ class CloudApiManager:
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()
+
+    def upsert_user(self, username, password, roles, creator, user_token=""):
+        if not self.auth_manger.enableAuth:
+            return {}
+
+        payload = {
+            "username": username,
+            "password": password,
+            "roles": roles,
+            "creator": creator,
+        }
+
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}user',
+                                 json=payload,
+                                 headers=self._get_headers_by_user(user_token)
+                                 )
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        if resp['statusCode'] != 200:
+            raise Exception(resp['errMsg'])
+        return True
+
+    def delete_user(self, username, user_token=""):
+        if not self.auth_manger.enableAuth:
+            return {}
+
+        raw_resp = requests.delete(f'{cloud_auth_manager.api_url}user/{username}',
+                                   headers=self._get_headers_by_user(user_token))
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        if resp['statusCode'] != 200:
+            raise Exception(resp['errMsg'])
+        return True
 
     def list_models_on_cloud(self, username, user_token=""):
         if not self.auth_manger.enableAuth:
