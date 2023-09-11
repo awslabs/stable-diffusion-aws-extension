@@ -12,7 +12,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
-from inference_v2._types import InferenceJob, InvocationsRequest
+from inference_v2._types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
 from model_and_train._types import CheckPoint
 from multi_users.utils import get_user_roles, check_user_permissions
 
@@ -44,14 +44,14 @@ def prepare_inference(raw_event, context):
     try:
         if _type not in ['txt2img', 'img2img']:
             return {
-                'status': 400,
+                'statusCode': 400,
                 'err': f'task type {event.task_type} should be either txt2img or img2img'
             }
 
         # check if endpoint table for endpoint status and existence
         inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
-        endpoint_name = inference_endpoint['endpoint_name']
-        endpoint_id = inference_endpoint['EndpointDeploymentJobId']
+        endpoint_name = inference_endpoint.endpoint_name
+        endpoint_id = inference_endpoint.EndpointDeploymentJobId
 
         # check if model(checkpoint) path(s) exists. return error if not
         ckpts = []
@@ -59,6 +59,7 @@ def prepare_inference(raw_event, context):
         for ckpt_type, names in event.models.items():
             for name in names:
                 ckpt = _get_checkpoint_by_name(name, ckpt_type)
+                # todo: need check if user has permission for the model
                 if ckpt is None:
                     ckpts_to_upload.append({
                         'name': name,
@@ -69,7 +70,7 @@ def prepare_inference(raw_event, context):
 
         if len(ckpts_to_upload) > 0:
             return {
-                'status': 400,
+                'statusCode': 400,
                 'error': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
             }
 
@@ -109,7 +110,7 @@ def prepare_inference(raw_event, context):
         )
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
         return {
-            'status': 200,
+            'statusCode': 200,
             'inference': {
                 'id': request_id,
                 'type': _type,
@@ -214,9 +215,9 @@ def list_all_inference_jobs(event, ctx):
         user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
     for row in scan_rows:
-        endpoint = InferenceJob(**(ddb_service.deserialize(row)))
-        if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
-            results.append(endpoint)
+        inference = InferenceJob(**(ddb_service.deserialize(row)))
+        if username and check_user_permissions(inference.owner_group_or_role, user_roles, username):
+            results.append(inference.__dict__)
 
     return {
         'statusCode': 200,
@@ -317,17 +318,17 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
 
         if sagemaker_endpoint_raw['endpoint_status'] != 'InService':
             raise Exception(f'sagemaker endpoint is not ready with status: {sagemaker_endpoint_raw["endpoint_status"]}')
-        return sagemaker_endpoint_raw
+        return EndpointDeploymentJob(**sagemaker_endpoint_raw)
     elif user_id:
         sagemaker_endpoint_raws = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         user_roles = get_user_roles(ddb_service, user_table, user_id)
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
-            endpoint = ddb_service.deserialize(row)
-            if endpoint['endpoint_status'] != 'InService':
+            endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
+            if endpoint.endpoint_status != 'InService':
                 continue
 
-            if check_user_permissions(endpoint['assign_to_roles'], user_roles, user_id):
+            if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):
                 available_endpoints.append(endpoint)
 
         if len(available_endpoints) == 0:

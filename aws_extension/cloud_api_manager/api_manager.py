@@ -177,7 +177,9 @@ class CloudApiManager:
         checkpoints = []
         resp = raw_resp.json()
         for ckpt in resp['checkpoints']:
-            checkpoints.append(ckpt['name'])
+            for name in ckpt['name']:
+                if name not in checkpoints:
+                    checkpoints.append(name)
 
         return checkpoints
 

@@ -65,7 +65,7 @@ export class CreateCheckPointApi {
         'dynamodb:UpdateItem',
         'dynamodb:DeleteItem',
       ],
-      resources: [this.checkpointTable.tableArn],
+      resources: [this.checkpointTable.tableArn, this.multiUserTable.tableArn],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({

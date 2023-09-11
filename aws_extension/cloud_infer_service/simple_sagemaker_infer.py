@@ -34,7 +34,8 @@ class SimpleSagemakerInfer(InferManager):
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
             'filters': {
-                'creator': datetime.now().timestamp()
+                'createAt': datetime.now().timestamp(),
+                'creator': 'sd-webui'
             }
         }
         logger.debug(payload)
@@ -43,6 +44,9 @@ class SimpleSagemakerInfer(InferManager):
         response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
         upload_param_response = response.json()
+        if upload_param_response['statusCode'] != 200:
+            raise Exception(upload_param_response['errMsg'])
+
         if 'inference' in upload_param_response and \
                 'api_params_s3_upload_url' in upload_param_response['inference']:
             upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],

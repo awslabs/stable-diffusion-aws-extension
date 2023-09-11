@@ -317,7 +317,7 @@ def model_upload_tab():
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("vae"))},
                                       "refresh_vae_models")
 
-            with gr.Row():
+            with gr.Column():
                 model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
                                                 elem_id="sagemaker_model_update_button", size=(200, 50))
                 webui_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
@@ -364,7 +364,7 @@ def model_upload_tab():
             with FormRow(elem_id="model_upload_local_form_row_03"):
                 upload_label = gr.HTML(label="upload process", elem_id="progress-bar")
                 upload_percent_label = gr.HTML(label="upload percent process", elem_id="progress-percent")
-            with gr.Row():
+            with gr.Column():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
                                                       elem_id="sagemaker_model_update_button_local",
                                                       size=(200, 50))

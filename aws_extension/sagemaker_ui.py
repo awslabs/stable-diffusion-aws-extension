@@ -494,7 +494,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         part_size = 1000 * 1024 * 1024
         file_size = os.stat(lp)
         parts_number = math.ceil(file_size.st_size / part_size)
-        logger.info('!!!!!!!!!!', file_size, parts_number)
+        logger.info(f'!!!!!!!!!!{file_size} {parts_number}')
 
         # local_tar_path = f'{model_name}.tar'
         local_tar_path = model_name
@@ -523,6 +523,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
         try:
+            response.raise_for_status()
             json_response = response.json()
             logger.debug(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]

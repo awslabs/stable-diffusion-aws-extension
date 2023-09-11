@@ -309,7 +309,7 @@ class SageMakerUI(scripts.Script):
                     p,
                     images_list=[],
                     seed=0,
-                    info=f"Inference job is failed: {', '.join(err)}",
+                    info=f"Inference job is failed: { ', '.join(err) if isinstance(err, list) else err}",
                     subseed=0,
                     index_of_first_image=0,
                     infotexts=[],
