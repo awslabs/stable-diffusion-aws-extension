@@ -830,7 +830,7 @@ def on_ui_tabs():
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
-                with gr.Accordion("Uploaded Models", open=False):
+                with gr.Accordion("Uploaded Models", open=False, visible=False):
                     with gr.Tab("SD Checkpoints"):
                         gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("Stable-diffusion"),
                                      headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
@@ -955,23 +955,23 @@ def on_ui_tabs():
                                                   # inputs=[sagemaker_ui.checkpoint_info],
                                                   outputs=[upload_label]
                                                   )
-                with gr.Tab("From URL"):
-                    with FormRow(elem_id="model_upload_url_form_row_01"):
-                        model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
-                    with FormRow(elem_id="model_upload_url_form_row_02"):
-                        file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
-                        file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
-                    with FormRow(elem_id="model_upload_url_form_row_03"):
-                        file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
-                    with gr.Row():
-                        model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                              elem_id="sagemaker_model_update_button_url",
-                                                              size=(200, 50))
-                        model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
-                                                        inputs=[model_type_url_drop_down, file_upload_url_component,
-                                                                file_upload_params_component],
-                                                        outputs=[file_upload_result_component]
-                                                        )
+                # with gr.Tab("From URL"):
+                #     with FormRow(elem_id="model_upload_url_form_row_01"):
+                #         model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
+                #     with FormRow(elem_id="model_upload_url_form_row_02"):
+                #         file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
+                #         file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
+                #     with FormRow(elem_id="model_upload_url_form_row_03"):
+                #         file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
+                #     with gr.Row():
+                #         model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
+                #                                               elem_id="sagemaker_model_update_button_url",
+                #                                               size=(200, 50))
+                #         model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
+                #                                         inputs=[model_type_url_drop_down, file_upload_url_component,
+                #                                                 file_upload_params_component],
+                #                                         outputs=[file_upload_result_component]
+                #                                         )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
                     default_table = """
