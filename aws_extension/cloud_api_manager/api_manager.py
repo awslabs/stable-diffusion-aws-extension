@@ -161,35 +161,33 @@ class CloudApiManager:
         return raw_resp.json()
 
     def list_models_on_cloud(self, username, user_token=""):
-        # if not self.auth_manger.enableAuth:
-        #     return []
-        #
-        # raw_resp = requests.get(url=f'{self.auth_manger.api_url}checkpoints', params={
-        #     'username': username,
-        #     'types': 'Stable-diffusion',
-        #     'status': 'Active'
-        # }, headers=self._get_headers_by_user(user_token))
-        #
-        # raw_resp.raise_for_status()
-        # checkpoints = []
-        # resp = raw_resp.json()
-        # for ckpt in resp['checkpoints']:
-        #     checkpoints.append(ckpt['name'])
-        #
-        # return checkpoints
-        return ['ckpt-1', 'ckpt-2']
+        if not self.auth_manger.enableAuth:
+            return []
+
+        raw_resp = requests.get(url=f'{self.auth_manger.api_url}checkpoints', params={
+            'username': username,
+            'types': 'Stable-diffusion',
+            'status': 'Active'
+        }, headers=self._get_headers_by_user(user_token))
+
+        raw_resp.raise_for_status()
+        checkpoints = []
+        resp = raw_resp.json()
+        for ckpt in resp['checkpoints']:
+            checkpoints.append(ckpt['name'])
+
+        return checkpoints
 
     def list_all_inference_jobs_on_cloud(self, username, user_token=""):
-        # if not self.auth_manger.enableAuth:
-        #     return []
-        #
-        # raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
-        #     'username': username,
-        # }, headers=self._get_headers_by_user(user_token))
-        # raw_resp.raise_for_status()
-        # resp = raw_resp.json()
-        # return resp['inferences']
-        return ['inference-1', 'inference-2']
+        if not self.auth_manger.enableAuth:
+            return []
+
+        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
+            'username': username,
+        }, headers=self._get_headers_by_user(user_token))
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        return resp['inferences']
 
 
 api_manager = CloudApiManager()

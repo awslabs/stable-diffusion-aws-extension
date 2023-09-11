@@ -1218,26 +1218,23 @@ def create_ui(is_img2img):
             inference_jobs = [None_Option_For_On_Cloud_Model]
             inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(pr.username, pr.username)
 
-            # todo: delete me:
-            inference_jobs += inferences_jobs_list
-
-            # temp_list = []
-            # for obj in inferences_jobs_list:
-            #     if obj.get('completeTime') is None:
-            #         complete_time = obj.get('startTime')
-            #     else:
-            #         complete_time = obj.get('completeTime')
-            #     status = obj.get('status')
-            #     task_type = obj.get('taskType', 'txt2img')
-            #     inference_job_id = obj.get('InferenceJobId')
-            #     # if filter_checkbox and task_type not in selected_types:
-            #     #     continue
-            #     temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
-            # # Sort the list based on completeTime in ascending order
-            # sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
-            # # Append the sorted combined strings to the txt2img_inference_job_ids list
-            # for item in sorted_list:
-            #     inference_jobs.append(item[1])
+            temp_list = []
+            for obj in inferences_jobs_list:
+                if obj.get('completeTime') is None:
+                    complete_time = obj.get('startTime')
+                else:
+                    complete_time = obj.get('completeTime')
+                status = obj.get('status')
+                task_type = obj.get('taskType', 'txt2img')
+                inference_job_id = obj.get('InferenceJobId')
+                # if filter_checkbox and task_type not in selected_types:
+                #     continue
+                temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+            # Sort the list based on completeTime in ascending order
+            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+            # Append the sorted combined strings to the txt2img_inference_job_ids list
+            for item in sorted_list:
+                inference_jobs.append(item[1])
             return gr.update(choices=models_on_cloud), gr.update(choices=inference_jobs)
 
         sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[], outputs=[sd_model_on_cloud_dropdown, inference_job_dropdown])
