@@ -1,10 +1,4 @@
-
-# {
-#   'type': 'TOKEN',
-#   'methodArn': 'arn:aws:execute-api:us-east-1:648149843064:bcxifc5mkb/prod/GET/users',
-#   'authorizationToken': 'test'
-#  }
-
+# todo: this is not done yet
 permission_mapper = {
     'create': 'POST',
     'update': '[POST|PUT]',
