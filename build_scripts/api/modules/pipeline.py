@@ -991,7 +991,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
                     extra_networks.activate(p, p.extra_network_data)
 
             if p.scripts is not None:
-                p.scripts.process_batch(p, batch_number=n, prompts=p.prompts, seeds=p.seeds, subseeds=p.subseeds)
+                p.scripts.processe_batch(p, batch_number=n, prompts=p.prompts, seeds=p.seeds, subseeds=p.subseeds)
 
             # params.txt should be saved after scripts.process_batch, since the
             # infotext could be modified by that callback
