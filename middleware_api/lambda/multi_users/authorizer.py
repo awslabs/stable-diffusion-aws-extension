@@ -31,6 +31,6 @@ def auth(event, context):
         },
         "context": {
             "username": "alvndaiyan",
-            "role": ['role1', 'role2']
+            "role": "IT Operator,Designer"
         }
     }

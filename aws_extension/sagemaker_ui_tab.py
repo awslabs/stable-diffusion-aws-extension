@@ -320,13 +320,15 @@ def model_upload_tab():
             with gr.Row():
                 model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
                                                 elem_id="sagemaker_model_update_button", size=(200, 50))
+                webui_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button.click(fn=sagemaker_ui.sagemaker_upload_model_s3,
                                           # _js="model_update",
                                           inputs=[sd_checkpoints_path, textual_inversion_path, lora_path,
                                                   hypernetwork_path, controlnet_model_path, vae_path],
-                                          outputs=[test_connection_result, sd_checkpoints_path,
+                                          outputs=[webui_upload_model_textbox, sd_checkpoints_path,
                                                    textual_inversion_path, lora_path, hypernetwork_path,
                                                    controlnet_model_path, vae_path])
+
 
         with gr.Column(variant="panel"):
             gr.HTML(value="<b>Upload Model to S3 from My Computer</b>")
@@ -366,10 +368,11 @@ def model_upload_tab():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
                                                       elem_id="sagemaker_model_update_button_local",
                                                       size=(200, 50))
+                mycomp_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button_local.click(_js="uploadFiles",
                                                 fn=sagemaker_ui.sagemaker_upload_model_s3_local,
                                                 # inputs=[sagemaker_ui.checkpoint_info],
-                                                outputs=[upload_label]
+                                                outputs=[mycomp_upload_model_textbox]
                                                 )
 
     return upload_tab
@@ -426,12 +429,12 @@ def sagemaker_endpoint_tab():
                                      label="User Role")
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
-            output_textbox = gr.Textbox(interactive=False, show_label=False)
+            create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
             sagemaker_deploy_button.click(api_manager.sagemaker_deploy,
                                           _js="deploy_endpoint",
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
-                                          outputs=[output_textbox])  # todo: make a new output
+                                          outputs=[create_ep_output_textbox])  # todo: make a new output
 
 
         def toggle_new_rows(checkbox_state):
@@ -460,10 +463,11 @@ def sagemaker_endpoint_tab():
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
                                                          elem_id="sagemaker_endpoint_delete_button")
+            delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
             sagemaker_endpoint_delete_button.click(api_manager.sagemaker_endpoint_delete,
                                                    _js="delete_sagemaker_endpoint",
                                                    inputs=[sagemaker_endpoint_delete_dropdown],
-                                                   outputs=[test_connection_result])
+                                                   outputs=[delete_ep_output_textbox])
 
         return sagemaker_tab
 
