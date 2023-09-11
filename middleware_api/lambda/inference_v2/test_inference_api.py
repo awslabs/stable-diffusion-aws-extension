@@ -3,10 +3,12 @@ import os
 from datetime import datetime
 from unittest import TestCase
 
-os.environ.setdefault('AWS_PROFILE', 'playground')
+os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
 os.environ.setdefault('S3_BUCKET', 'stable-diffusion-aws-exten-sds3aigcbucket7db76a0b-ns8u1vc8kcce')
 os.environ.setdefault('DATASET_ITEM_TABLE', 'DatasetItemTable')
 os.environ.setdefault('DATASET_INFO_TABLE', 'DatasetInfoTable')
+os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
+
 os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
@@ -30,12 +32,22 @@ class InferenceApiTest(TestCase):
     def test_prepare_inference(self):
         from inference_api import prepare_inference
         event = {
-            'sagemaker_endpoint_name': 'infer-endpoint-9958bc4',
-            'task_type': 'txt2img',
-            'models': {
-                'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'],
-                'ControlNet': ['control_v11p_sd15_canny.pth']},
-            'filters': {'creator': 1690781890.311581}}
+            "user_id": "mickey",
+            "task_type": "txt2img",
+            "models": {
+                "Stable-diffusion": [
+                    "v1-5-pruned-emaonly.safetensors"
+                ],
+                "VAE": [
+                    "vae-ft-mse-840000-ema-pruned.ckpt"
+                ],
+                "embeddings": []
+            },
+            "filters": {
+                "createAt": 1694436281.4273,
+                "creator": "sd-webui"
+            }
+        }
 
         _id = str(datetime.now().timestamp())
         resp = prepare_inference(event, MockContext(aws_request_id=_id))
@@ -120,7 +132,7 @@ class InferenceApiTest(TestCase):
         from inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
-                'inference_id': '1690782130.721205'
+                'inference_id': '0b7e766a-7874-4008-b01c-57d14b15b11f'
             }
         }, {})
         print(resp)
@@ -141,3 +153,24 @@ class InferenceApiTest(TestCase):
         }
         model_parts = arg['model'].split()
         print(' '.join(model_parts[:-1]))
+
+    def test_list_all_sagemaker_endpoints(self):
+        from inference_v2.sagemaker_endpoint_api import list_all_sagemaker_endpoints
+        resp = list_all_sagemaker_endpoints({
+            'queryStringParameters': {},
+            'x-auth': {
+                'role': "IT Operator,Designer"
+            }
+
+        }, {})
+        print(resp)
+
+    def test_list_all_inference_jobs(self):
+        from inference_v2.inference_api import list_all_inference_jobs
+        resp = list_all_inference_jobs({
+            'queryStringParameters': {
+                'username': 'mickey'
+            }
+        }, {})
+
+        print(resp)

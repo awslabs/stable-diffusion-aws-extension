@@ -1,4 +1,3 @@
-import json
 import os
 from dataclasses import dataclass
 from unittest import TestCase
@@ -15,9 +14,6 @@ class MockContext:
 
 
 class InferenceApiTest(TestCase):
-
-    def test_hash(self):
-        json.dumps({token_zero: ""})
 
     def test_kms(self):
         from common.ddb_service.client import DynamoDbUtilsService
@@ -207,3 +203,14 @@ class InferenceApiTest(TestCase):
         }
         resp = list_user(event, {})
         assert len(resp['users']) == 0
+
+
+    def test_get_user_roles(self):
+        from multi_users.utils import get_user_roles
+        import logging
+        logger = logging.getLogger('roles_api')
+        from common.ddb_service.client import DynamoDbUtilsService
+
+        ddb_service = DynamoDbUtilsService(logger=logger)
+        resp = get_user_roles(ddb_service, user_table_name='MultiUserTable', username='mickey')
+        print(resp)
