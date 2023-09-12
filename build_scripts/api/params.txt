@@ -1,2 +1,0 @@
-a girl
-Steps: 20, Sampler: Euler a, CFG scale: 7.0, Seed: 419435265, Size: 512x512, Version: v1.0.1-139-g8d1a4c9
