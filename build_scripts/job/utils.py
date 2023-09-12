@@ -193,6 +193,25 @@ def get_path_from_s3_path(s3_path) -> str:
     s3_path = s3_path.replace("s3://", "")
     return "/".join(s3_path.split("/")[1:])
 
+def split_s3_path(s3_path):
+    path_parts = s3_path.replace("s3://", "").split("/")
+    bucket = path_parts.pop(0)
+    key = "/".join(path_parts)
+    return bucket, key
+
+def read_from_s3(s3_path):
+    s3 = boto3.client('s3')
+    bucket, key = split_s3_path(s3_path)
+    s3_resp = s3.get_object(
+        Bucket=bucket,
+        Key=key,
+    )
+
+    if s3_resp['ContentLength'] > 0:
+        return s3_resp['Body'].read()
+
+    raise Exception(f'no content for file {s3_path}')
+
 def fast_upload(session, bucketname, s3dir, filelist, progress_func=None, workers=10):
     # timer = Timer()
     botocore_config = botocore.config.Config(max_pool_connections=workers)
