@@ -68,18 +68,6 @@ export class SDAsyncInferenceStack extends NestedStack {
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
-    // if (!props?.api_gate_way) {
-    //   throw new Error('api_gate_way is required');
-    // }
-    // const restful_api = <apigw.RestApi>apigw.RestApi.fromRestApiAttributes(
-    //   this,
-    //   'ImportedRestApi',
-    //   {
-    //     restApiId: props.api_gate_way.restApiId,
-    //     rootResourceId: props.api_gate_way.restApiRootResourceId,
-    //   },
-    // );
-
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
     const inference = props.routers.inference;
@@ -129,6 +117,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     new ListAllInferencesApi(
       this, 'sd-infer-v2-allInferences',
       {
+        inferenceJobTable: sd_inference_job_table,
         authorizer: props.authorizer,
         commonLayer: props.commonLayer,
         endpointDeploymentTable: sd_endpoint_deployment_job_table,

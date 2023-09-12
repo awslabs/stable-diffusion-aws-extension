@@ -61,6 +61,7 @@ def list_all_checkpoints_api(event, context):
                 'status': ckpt.checkpoint_status.value,
                 'name': ckpt.checkpoint_names,
                 'created': ckpt.timestamp,
+                'allowed_roles_or_users': ckpt.allowed_roles_or_users
             })
     return {
         'statusCode': 200,
