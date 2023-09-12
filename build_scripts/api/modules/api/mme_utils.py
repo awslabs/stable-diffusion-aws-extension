@@ -2,7 +2,7 @@ import os
 import io
 import base64
 from PIL import Image
-from utils import ModelsRef
+from modules.api.utils import ModelsRef
 import subprocess
 import logging
 
