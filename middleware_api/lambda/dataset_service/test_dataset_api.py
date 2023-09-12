@@ -63,3 +63,14 @@ class DatasetApiTest(TestCase):
             }
         }, {})
         print(resp)
+
+
+    def test_python(self):
+        def add(a, b, c):
+            global args
+            args = locals()
+            return a+b+c
+
+        print(add(1, 2, 3))
+        print(args)
+        print(add(**args))

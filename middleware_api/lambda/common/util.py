@@ -3,8 +3,10 @@ from typing import Dict
 import os
 import tarfile
 import boto3
+import logging
 
 s3 = boto3.client('s3')
+logger = logging.getLogger('util')
 
 
 def publish_msg(topic_arn, msg, subject):
@@ -69,8 +71,20 @@ def save_json_to_file(json_string: str, folder_path: str, file_name: str):
     return file_path
 
 
-def upload_file_to_s3():
-    resp = s3.put_object(Bucket=S3_BUCKET_NAME, Key='inference/' + file_name, Body=json_data)
-    
-    return resp
+def upload_json_to_s3(bucket_name: str, file_key: str, json_data: dict):
+    '''
+    Upload the JSON file from the specified bucket and key
+    '''
+    try:
+        s3.put_object(Body=json.dumps(json_data), Bucket=bucket_name, Key=file_key)
+        logger.info(f"Dictionary uploaded to S3://{bucket_name}/{file_key}")
+    except Exception as e:
+        logger.info(f"Error uploading dictionary: {e}")
+
+
+def split_s3_path(s3_path):
+    path_parts = s3_path.replace("s3://", "").split("/")
+    bucket = path_parts.pop(0)
+    key = "/".join(path_parts)
+    return bucket, key
 

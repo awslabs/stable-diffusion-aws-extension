@@ -69,7 +69,11 @@ def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointEvent(**raw_event)
     _type = event.checkpoint_type
-
+    headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+    }
     try:
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
         presign_url_map = batch_get_s3_multipart_signed_urls(
@@ -101,6 +105,7 @@ def create_checkpoint_api(raw_event, context):
         if len(filenames_only) == 0:
             return {
                 'statusCode': 400,
+                'headers': headers,
                 'errorMsg': 'no checkpoint name (file names) detected'
             }
 
@@ -116,6 +121,7 @@ def create_checkpoint_api(raw_event, context):
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         return {
             'statusCode': 200,
+            'headers': headers,
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -129,6 +135,7 @@ def create_checkpoint_api(raw_event, context):
         logger.error(e)
         return {
             'statusCode': 500,
+            'headers': headers,
             'error': str(e)
         }
 

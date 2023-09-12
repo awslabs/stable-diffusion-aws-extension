@@ -14,7 +14,6 @@ start_time = time.time()
 
 url = "http://127.0.0.1:8080"
 checkpoint_info = {'Stable-diffusion': {'v2-1_768-ema-pruned.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/13896019-1ba4-478a-a5ec-b7e143e840ca/v2-1_768-ema-pruned.safetensors', 'meinamix_meinaV10.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/491803b4-8293-4604-b879-7b1d3fa8f1df/meinamix_meinaV10.safetensors', 'cheeseDaddys_41.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/6fc2a447-a2d6-427c-b520-fef0f4c5ce85/cheeseDaddys_41.safetensors', 'AnythingV5Ink_ink.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/1a0227fc-5bb0-436b-aa87-80d487a536b3/AnythingV5Ink_ink.safetensors', 'camelliamix25DV2_v2.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/2f5063ee-e2ac-40be-b48e-8762dfdc25eb/camelliamix25DV2_v2.safetensors', 'sd-v1-5-inpainting.ckpt': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/822a6754-87e7-495b-b71a-543cf78cefb2/sd-v1-5-inpainting.ckpt', 'yangk-style_2160_lora.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/7a8ad4b0-0159-4c0d-a5b9-a6692f90902a/yangk-style_2160_lora.safetensors'}, 'embeddings': {}, 'Lora': {}, 'hypernetworks': {}, 'ControlNet': {'control_v11p_sd15_canny.pth': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/ControlNet/checkpoint/custom/a20edd04-535c-4d85-842b-95c3c743d819/control_v11p_sd15_canny.pth'}, 'sagemaker_endpoint': 'infer-endpoint-5d9775d', 'task_type': 'txt2img'}
-
 task_type = 'txt2img'
 print(f"Task Type: {task_type}")
 
@@ -50,7 +49,6 @@ model_list.append("v1-5-pruned-emaonly.safetensors")
 # model_list.append("camelliamix25DV2_v2.safetensors")
 # model_list.append("AnythingV5Ink_ink.safetensors")
 # model_list.append("v2-1_768-ema-pruned.safetensors")
-
 import psutil
 # import gc
 
