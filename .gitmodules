@@ -7,3 +7,6 @@
 [submodule "build_scripts/api/repositories/stable-diffusion-stability-ai"]
 	path = build_scripts/api/repositories/stable-diffusion-stability-ai
 	url = https://github.com/Stability-AI/stablediffusion.git
+[submodule "build_scripts/CodeFormer"]
+	path = build_scripts/CodeFormer
+	url = https://github.com/sczhou/CodeFormer.git
