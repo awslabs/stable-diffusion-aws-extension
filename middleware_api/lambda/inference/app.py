@@ -45,9 +45,6 @@ sagemaker = boto3.client('sagemaker')
 inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
-# name for utils sagemaker endpoint name
-utils_endpoint_name = os.environ.get("SAGEMAKER_ENDPOINT_NAME")
-
 async def custom_exception_handler(request: Request, exc: HTTPException):
     headers = {
         "Access-Control-Allow-Headers": "Content-Type",
@@ -75,7 +72,83 @@ def getInferenceJobList():
     logger.info(f"inference job list response is {str(response)}")
     return response['Items']
 
-    
+def build_filter_expression(end_time, endpoint, start_time, status, task_type):
+    filter_expression = None
+    if status:
+        filter_expression = Attr('status').eq(status)
+    if task_type:
+        if filter_expression:
+            filter_expression &= Attr('taskType').eq(task_type)
+        else:
+            filter_expression = Attr('taskType').eq(task_type)
+    if start_time:
+        if filter_expression:
+            filter_expression &= Attr('startTime').gte(start_time)
+        else:
+            filter_expression = Attr('startTime').gte(start_time)
+    if end_time:
+        if filter_expression:
+            filter_expression &= Attr('startTime').lte(end_time)
+        else:
+            filter_expression = Attr('startTime').lte(end_time)
+    if endpoint:
+        if filter_expression:
+            filter_expression &= Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
+        else:
+            filter_expression = Attr('params.sagemaker_inference_endpoint_name').eq(endpoint)
+    return filter_expression
+
+
+def query_inference_job_list(status: str, task_type: str, start_time: str, end_time: str,
+                             endpoint: str, checkpoint: str, limit: int):
+    print(f"query_inference_job_list params are:{status},{task_type},{start_time},{end_time},{checkpoint},{endpoint}")
+    try:
+        response = None
+        filter_expression = build_filter_expression(end_time, endpoint, start_time, status, task_type)
+        if limit != const.PAGE_LIMIT_ALL and limit <= 0:
+            logger.info(f"query inference job list error because of limit <0 {limit}")
+            return ""
+        if filter_expression:
+            response = inference_table.scan(
+                FilterExpression=filter_expression
+            )
+        else:
+            response = inference_table.scan()
+        logger.info(f"query inference job list response is {str(response)}")
+        if response:
+            return filter_checkpoint_items(limit, checkpoint, response['Items'])
+        return response
+    except Exception as e:
+        logger.info(f"query inference job list error ")
+        logger.info(e)
+        return ""
+
+
+def filter_checkpoint_items(limit, checkpoint, items):
+    if checkpoint:
+        filtered_data = []
+        for item in items:
+            if "params" in item and "used_models" in item["params"]:
+                used_models = item["params"]["used_models"].get("Stable-diffusion", [])
+                for model in used_models:
+                    if "model_name" in model and model["model_name"] == checkpoint:
+                        filtered_data.append(item)
+        if limit == const.PAGE_LIMIT_ALL:
+            return filtered_data
+        else:
+            if len(filtered_data) >= limit:
+                return filtered_data[0: limit]
+            else:
+                return filtered_data
+    if limit == const.PAGE_LIMIT_ALL:
+        return items
+    else:
+        if len(items) >= limit:
+            return items[0: limit]
+        else:
+            return items
+
+
 def getInferenceJob(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")
@@ -85,7 +158,7 @@ def getInferenceJob(inference_job_id):
         resp = inference_table.query(
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
         )
-        logger.info(resp)
+        # logger.info(resp)
         record_list = resp['Items']
         if len(record_list) == 0:
             logger.error(f"No inference job info item for id: {inference_job_id}")
@@ -94,7 +167,7 @@ def getInferenceJob(inference_job_id):
     except Exception as e:
         logger.error(f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
         raise
-    
+
 def getEndpointDeploymentJobList():
     try:
         sagemaker = boto3.client('sagemaker')
@@ -112,7 +185,7 @@ def getEndpointDeploymentJobList():
         # Filter the endpoint job list
         filtered_endpoint_jobs = []
         for job in response['Items']:
-            if 'endpoint_name' in job:  
+            if 'endpoint_name' in job:
                 endpoint_name = job['endpoint_name']
                 deployment_job_id = job['EndpointDeploymentJobId']
 
@@ -122,7 +195,7 @@ def getEndpointDeploymentJobList():
                     # Remove the job item from the DynamoDB table if the endpoint doesn't exist in SageMaker
                     endpoint_deployment_table.delete_item(Key={'EndpointDeploymentJobId': deployment_job_id})
             else:
-                filtered_endpoint_jobs.append(job) 
+                filtered_endpoint_jobs.append(job)
 
         return filtered_endpoint_jobs
 
@@ -162,7 +235,7 @@ def getEndpointDeployJob_with_endpoint_name(endpoint_name):
         logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)
         return {}
 
-    return record_list[0] 
+    return record_list[0]
 
 def get_s3_objects(bucket_name, folder_name):
     # Ensure the folder name ends with a slash
@@ -176,7 +249,7 @@ def get_s3_objects(bucket_name, folder_name):
     object_names = [obj['Key'][len(folder_name):] for obj in response.get('Contents', []) if obj['Key'] != folder_name]
 
     return object_names
- 
+
 def load_json_from_s3(bucket_name, key):
 
     # Get the JSON file from the specified bucket and key
@@ -195,11 +268,11 @@ stepf_client = boto3.client('stepfunctions')
 def root():
     return {"message": const.SOLUTION_NAME}
 
-def get_curent_time():
-    # Get the current time
-    now = datetime.now()
-    formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-    return formatted_time
+# def get_curent_time():
+#     # Get the current time
+#     now = datetime.now()
+#     formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
+#     return formatted_time
 
 @app.post("/inference/run-sagemaker-inference")
 @app.post("/inference-api/inference")
@@ -225,7 +298,11 @@ async def run_sagemaker_inference(request: Request):
         # logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info, task_type)
         print(f"input in json format:")
-        
+        checkpoint_name = None
+        if task_type == 'img2img':
+            checkpoint_name = params_dict['img2img_sagemaker_stable_diffusion_checkpoint']
+        elif task_type == 'txt2img':
+            checkpoint_name = params_dict['txt2img_sagemaker_stable_diffusion_checkpoint']
         def show_slim_dict(payload):
             pay_type = type(payload)
             if pay_type is dict:
@@ -243,16 +320,15 @@ async def run_sagemaker_inference(request: Request):
                     print(f" : {payload}")
             else:
                 print(f" : {payload}")
-        
+
         show_slim_dict(payload)
-        
+
         endpoint_name = payload["endpoint_name"]
 
         predictor = Predictor(endpoint_name)
 
         # adjust time out time to 1 hour
-        initial_args = {}
-        initial_args["InvocationTimeoutSeconds"]=3600
+        initial_args = {"InvocationTimeoutSeconds": 3600}
 
         predictor = AsyncPredictor(predictor, name=endpoint_name)
         predictor.serializer = JSONSerializer()
@@ -267,6 +343,8 @@ async def run_sagemaker_inference(request: Request):
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
                 'status': 'inprogress',
+                'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
                 'taskType': task_type
             })
         print(f"output_path is {output_path}")
@@ -291,19 +369,22 @@ async def run_sagemaker_inference(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
-        current_time = get_curent_time()
+        current_time = str(datetime.now())
         response = inference_table.put_item(
             Item={
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
                 'completeTime': current_time,
                 'status': 'failure',
+                'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
                 'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
             )
-         
+
         response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
         return response
+
 
 @app.post("/inference/deploy-sagemaker-endpoint")
 async def deploy_sagemaker_endpoint(request: Request):
@@ -325,7 +406,9 @@ async def deploy_sagemaker_endpoint(request: Request):
         Item={
             'EndpointDeploymentJobId': endpoint_deployment_id,
             'startTime': current_time,
-            'status': 'inprogress'
+            'status': 'inprogress',
+            'max_instance_number': payload['initial_instance_count'],
+            'autoscaling': payload['autoscaling_enabled']
         })
 
         logger.info("trigger step-function with following response")
@@ -341,7 +424,7 @@ async def deploy_sagemaker_endpoint(request: Request):
             'EndpointDeploymentJobId': endpoint_deployment_id,
             'startTime': current_time,
             'status': 'failed',
-            'completeTime': current_time, 
+            'completeTime': current_time,
             'error': str(e)
         })
         return 0
@@ -362,9 +445,9 @@ async def delete_sagemaker_endpoint(request: Request):
                     response = sagemaker.describe_endpoint(EndpointName=endpoint)
                     if response['EndpointStatus'] == 'Creating':
                         print('endpoint in Creating status can not be deleted')
-                        return "Sagemaker Endpoint in Creating status can not be deleted" 
+                        return "Sagemaker Endpoint in Creating status can not be deleted"
                     print(response)
-    
+
                     logger.info(f"Deleting endpoint: {endpoint}")
                     # If the endpoint exists and you want to delete it, you can do so here:
                     sagemaker.delete_endpoint(EndpointName=endpoint)
@@ -375,7 +458,7 @@ async def delete_sagemaker_endpoint(request: Request):
                     else:
                         # Handle other potential errors
                         print(error)
-                
+
                 # update DynamoDB status
                 resp = getEndpointDeployJob(endpoint)
                 if resp:
@@ -433,25 +516,42 @@ async def list_endpoint_deployment_jobs():
 
 @app.get("/inference/list-inference-jobs")
 async def list_inference_jobs():
-    logger.info(f"entering list_endpoint_deployment_jobs") 
+    logger.info(f"entering list_endpoint_deployment_jobs")
     return getInferenceJobList()
+
+
+@app.post("/inference/query-inference-jobs")
+async def query_inference_jobs(request: Request):
+    logger.info(f"entering query-inference-jobs")
+    query_params = await request.json()
+    logger.info(query_params)
+    status = query_params.get('status')
+    task_type = query_params.get('task_type')
+    start_time = query_params.get('start_time')
+    end_time = query_params.get('end_time')
+    endpoint = query_params.get('endpoint')
+    checkpoint = query_params.get('checkpoint')
+    limit = query_params.get("limit") if query_params.get("limit") else const.PAGE_LIMIT_ALL
+    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
+    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
+
 
 @app.get("/inference/get-endpoint-deployment-job")
 async def get_endpoint_deployment_job(jobID: str = None):
     logger.info(f"entering get_endpoint_deployment_job function ")
-    # endpoint_deployment_jobId = request.query_params 
-    endpoint_deployment_jobId = jobID 
+    # endpoint_deployment_jobId = request.query_params
+    endpoint_deployment_jobId = jobID
     logger.info(f"endpoint_deployment_jobId is {str(endpoint_deployment_jobId)}")
-    return getEndpointDeployJob(endpoint_deployment_jobId) 
+    return getEndpointDeployJob(endpoint_deployment_jobId)
 
 @app.get("/inference/get-inference-job")
 async def get_inference_job(jobID: str = None):
     inference_jobId = jobID
-    logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
+    # logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
     try:
         return getInferenceJob(inference_jobId)
     except Exception as e:
-        logger.error(f"Error getting inference job: {str(e)}")
+        # logger.error(f"Error getting inference job: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/inference/get-inference-job-image-output")
@@ -493,7 +593,7 @@ async def get_inference_job_param_output(jobID: str = None) -> List[str]:
 
     if inference_jobId is None or inference_jobId.strip() == "":
         logger.info(f"jobId is empty string or None, just return empty string list")
-        return [] 
+        return []
 
     logger.info(f"Entering get_inference_job_param_output function with jobId: {inference_jobId}")
 
@@ -568,11 +668,11 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
 @app.get("/inference/get-texual-inversion-list")
 async def get_texual_inversion_list():
     logger.info(f"entering get_texual_inversion_list()")
-    return get_s3_objects(S3_BUCKET_NAME,'texual_inversion') 
+    return get_s3_objects(S3_BUCKET_NAME,'texual_inversion')
 
 @app.get("/inference/get-lora-list")
 async def get_lora_list():
-    return get_s3_objects(S3_BUCKET_NAME,'lora') 
+    return get_s3_objects(S3_BUCKET_NAME,'lora')
 
 @app.get("/inference/get-hypernetwork-list")
 async def get_hypernetwork_list():
@@ -598,9 +698,13 @@ async def run_model_merge(request: Request):
         logger.info(json.dumps(params_dict))
         payload = json_convert_to_payload(params_dict, payload_checkpoint_info)
         print(f"input in json format {payload}")
-        
+        task_type = payload_checkpoint_info.get('task_type')
         endpoint_name = payload["endpoint_name"]
-
+        checkpoint_name = None
+        if task_type == 'img2img':
+            checkpoint_name = params_dict['img2img_sagemaker_stable_diffusion_checkpoint']
+        elif task_type == 'txt2img':
+            checkpoint_name = params_dict['txt2img_sagemaker_stable_diffusion_checkpoint']
         predictor = Predictor(endpoint_name)
 
         predictor = AsyncPredictor(predictor, name=endpoint_name)
@@ -610,12 +714,14 @@ async def run_model_merge(request: Request):
         output_path = prediction.output_path
 
         #put the item to inference DDB for later check status
-        current_time = get_curent_time()
+        current_time = str(datetime.now())
         response = inference_table.put_item(
             Item={
                 'InferenceJobId': inference_id,
                 'startTime': current_time,
-                'status': 'inprogress'
+                'status': 'inprogress',
+                'endpoint': endpoint_name,
+                'checkpoint': checkpoint_name,
             })
         print(f"output_path is {output_path}")
 

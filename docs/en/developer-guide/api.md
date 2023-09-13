@@ -214,7 +214,7 @@ This operation does not require authentication
 
 <br/>
 
-# /api/inference/run-sagemaker-inference
+# /inference-api/inference
 
 <a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a>
 
@@ -232,7 +232,12 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 body = {
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "task_type": "txt2img",
+  "models": {
+    "Stable-diffusion": [
+      "v1-5-pruned-emaonly.safetensors"
+    ]
+  },
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
   "prompt": "a cute panda",
@@ -249,7 +254,12 @@ Javascript example code:
 
 ```javascript
 const inputBody = '{
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "task_type": "txt2img",
+  "models": {
+    "Stable-diffusion": [
+      "v1-5-pruned-emaonly.safetensors"
+    ]
+  },
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
   "prompt": "a cute panda",
@@ -281,7 +291,12 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```json
 {
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"],
+  "task_type": "txt2img",
+  "models": {
+    "Stable-diffusion": [
+      "v1-5-pruned-emaonly.safetensors"
+    ]
+  },
   "sagemaker_endpoint": "infer-endpoint-cb821ea",
   "task_type": "txt2img",
   "prompt": "a cute panda",
@@ -293,46 +308,96 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 > Parameter example
 
+Below JSON shows the parameters with default value. 
+sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, other parameters are optional.
+
 ```json
 {
-  "sagemaker_endpoint": "infer-endpoint-ef3abcd", --- mandatory, endpoint name
-  "task_type": "txt2img", --- mandatory, txt2img: text-to-image
-  "prompt": "", --- mandatory, the prompt to generate an image
-  "stable_diffusion_model": ["v1-5-pruned-emaonly.safetensors"], --- optional
-  "embeddings": [], --- optional
-  "lora_model": [], --- optional
-  "hypernetwork_model": [], --- optional
-  "controlnet_model": [], --- optional
-  "denoising_strength": 0.75, --- optional
-  "styles": [ 
-    "string" --- optional
-  ],
-  "seed": -1, --- optional,
-  "subseed": -1, --- optional
-  "subseed_strength": 0, --- optional
-  "seed_resize_from_h": -1, --- optional
-  "seed_resize_from_w": -1, --- optional
-  "batch_size": 1, --- optional, default is 1
-  "n_iter": 1, --- optional, image number, default is 1
-  "steps": 50, --- optional, default is 20
-  "cfg_scale": 7, --- optional, default is 7 
-  "width": 512, --- optional, default is 512
-  "height": 512, --- optional, default is 512
-  "restore_faces": false, --- optional
-  "tiling": false, --- optional
-  "negative_prompt": "string", --- optional, default is ""
-  "override_settings": {}, --- hardcoded, parameter not work, it will be override in code, value is {}
-  "script_args": [], --- optional
-  "sampler_index": "Euler", --- optional, default is "Euler a"
-  "script_name": "string", --- optional, default is ""
-  "enable_hr": false, --- optional, enable hi-res
-  "firstphase_width": 0, --- optional, default is 0
-  "firstphase_height": 0,  --- optional, default is 0
-  "hr_scale": 2, --- optional, default is 2
-  "hr_upscaler": "string", --- optional, default is Latent
-  "hr_second_pass_steps": 0, --- optional, default is 0
-  "hr_resize_x": 0, --- optional
-  "hr_resize_y": 0, --- optional
+  "sagemaker_endpoint_name": "infer-endpoint-ef3abcd", 
+  "task_type": "txt2img",
+  "prompt": "",
+  "models": {
+    "Stable-diffusion": [
+      "v1-5-pruned-emaonly.safetensors"
+    ],
+    "Lora": [
+      "raidenshogun1-000009.safetensors"
+    ]
+  },
+  "enable_hr": false,
+  "denoising_strength": null,
+  "firstphase_width": 0,
+  "firstphase_height": 0,
+  "hr_scale": 2.0,
+  "hr_upscaler": "Latent",
+  "hr_second_pass_steps": 0,
+  "hr_resize_x": 0,
+  "hr_resize_y": 0,
+  "hr_sampler_name": null,
+  "hr_prompt": "",
+  "hr_negative_prompt": "",
+  "prompt": "",
+  "styles": [],
+  "seed": -1,
+  "subseed": -1,
+  "subseed_strength": 0.0,
+  "seed_resize_from_h": 0,
+  "seed_resize_from_w": 0,
+  "sampler_name": "Euler a",
+  "batch_size": 1,
+  "n_iter": 1,
+  "steps": 28,
+  "cfg_scale": 7.0,
+  "width": 512,
+  "height": 512,
+  "restore_faces": false,
+  "tiling": false,
+  "do_not_save_samples": false,
+  "do_not_save_grid": false,
+  "negative_prompt": "",
+  "eta": null,
+  "s_min_uncond": 0.0,
+  "s_churn": 0.0,
+  "s_tmax": 1.0,
+  "s_tmin": 0.0,
+  "s_noise": 1.0,
+  "override_settings": {},
+  "override_settings_restore_afterwards": true,
+  "script_args": [],
+  "sampler_index": "Euler a",
+  "script_name": null,
+  "send_images": true,
+  "save_images": false,
+  "alwayson_scripts": {
+    "controlnet": {
+      "args": [
+        {
+          "enabled": false,
+          "module": "none",
+          "model": "None",
+          "weight": 1,
+          "image": null,
+          "resize_mode": "Crop and Resize",
+          "low_vram": false,
+          "processor_res": -1,
+          "threshold_a": -1,
+          "threshold_b": -1,
+          "guidance_start": 0,
+          "guidance_end": 1,
+          "pixel_perfect": false,
+          "control_mode": "Balanced",
+          "is_ui": true,
+          "input_mode": "simple",
+          "batch_images": "",
+          "output_dir": "",
+          "loopback": false
+        }
+      ]
+    },
+    "extra options": {
+      "args": []
+    }
+  }
 }
 ```
 > Example responses
