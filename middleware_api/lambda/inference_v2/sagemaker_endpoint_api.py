@@ -42,10 +42,10 @@ def list_all_sagemaker_endpoints(event, ctx):
     for row in scan_rows:
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
         if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
-            results.append(endpoint)
+            results.append(endpoint.__dict__)
         elif 'x-auth' in event and 'IT Operator' in event['x-auth']['role']:
             # todo: this is not save to do without checking current user roles
-            results.append(endpoint)
+            results.append(endpoint.__dict__)
 
     return {
         'statusCode': 200,

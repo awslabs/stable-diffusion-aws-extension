@@ -133,7 +133,10 @@ def upload_checkpoint_api(raw_event, context):
         checkpoint_params['multipart_upload'] = {}
         concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
         logger.info("finished upload, prepare to insert item to ddb")
-
+        user_roles = ['*']
+        if 'creator' in event.params and event.params['creator']:
+            user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+            
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
@@ -141,7 +144,8 @@ def upload_checkpoint_api(raw_event, context):
             checkpoint_names=file_names,
             checkpoint_status=CheckPointStatus.Active,
             params=checkpoint_params,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=user_roles,
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         logger.info("finished insert item to ddb")

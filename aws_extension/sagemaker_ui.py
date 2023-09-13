@@ -1281,7 +1281,7 @@ def create_ui(is_img2img):
 
         def setup_inference_for_plugin(pr: gr.Request):
             models_on_cloud = [None_Option_For_On_Cloud_Model]
-            models_on_cloud += api_manager.list_models_on_cloud(pr.username, pr.username)
+            models_on_cloud += [model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]
             inference_jobs = [None_Option_For_On_Cloud_Model]
             inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(pr.username, pr.username)
 

@@ -81,12 +81,32 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
 
-    def list_all_sagemaker_endpoints(self, user_token=""):
+    def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
+        if self.auth_manger.enableAuth and not user_token:
+            return []
+
+        response = requests.get(f'{self.auth_manger.api_url}endpoints',
+                                params={
+                                    'username': username,
+                                },
+                                headers=self._get_headers_by_user(user_token))
+        response.raise_for_status()
+        r = response.json()
+        if not r or r['statusCode'] != 200:
+            logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['errMsg']}")
+            return []
+
+        return r['endpoints']
+
+    def list_all_sagemaker_endpoints(self, username=None, user_token=""):
         try:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
             response = requests.get(f'{self.auth_manger.api_url}endpoints',
+                                    params={
+                                        'username': username,
+                                    },
                                     headers=self._get_headers_by_user(user_token))
             response.raise_for_status()
             r = response.json()
@@ -196,14 +216,14 @@ class CloudApiManager:
             raise Exception(resp['errMsg'])
         return True
 
-    def list_models_on_cloud(self, username, user_token=""):
+    def list_models_on_cloud(self, username, user_token="", types='Stable-diffusion', status='Active'):
         if not self.auth_manger.enableAuth:
             return []
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}checkpoints', params={
             'username': username,
-            'types': 'Stable-diffusion',
-            'status': 'Active'
+            'types': types,
+            'status': status
         }, headers=self._get_headers_by_user(user_token))
 
         raw_resp.raise_for_status()
@@ -212,7 +232,15 @@ class CloudApiManager:
         for ckpt in resp['checkpoints']:
             for name in ckpt['name']:
                 if name not in checkpoints:
-                    checkpoints.append(name)
+                    checkpoints.append({
+                        'name': name,
+                        'id': ckpt['id'],
+                        's3Location': ckpt['s3Location'],
+                        'type': ckpt['type'],
+                        'status': ckpt['status'],
+                        'created': ckpt['created'],
+                        'allowed_roles_or_users': ckpt['allowed_roles_or_users'],
+                    })
 
         return checkpoints
 

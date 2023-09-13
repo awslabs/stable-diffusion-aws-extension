@@ -38,11 +38,10 @@ def on_ui_tabs():
                     _, user_setting_form = api_setting_tab()
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
                     user_settings_tab()
-        with gr.Tab(label='Cloud Assets Management', variant='panel'):
+        with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
-                model_upload = model_upload_tab()
-                sagemaker_part = sagemaker_endpoint_tab()
+                model_upload, model_list_dataframe = model_upload_tab()
             with gr.Row(visible=False):
                 with gr.Row(equal_height=True, elem_id="aws_sagemaker_ui_row", visible=False):
                     sm_load_params = gr.Button(value="Load Settings", elem_id="aws_load_params", visible=False)
@@ -51,6 +50,10 @@ def on_ui_tabs():
                                                visible=False)
                     sm_generate_checkpoint = gr.Button(value="Generate Ckpt", elem_id="aws_gen_ckpt", visible=False)
 
+        with gr.Tab(label='Inference Endpoint Management', variant='panel'):
+            with gr.Row():
+                sagemaker_part = sagemaker_endpoint_tab()
+                endpoint_list_df = list_sagemaker_endpoints_tab()
         with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row():
                 dataset_asset = dataset_tab()
@@ -64,12 +67,16 @@ def on_ui_tabs():
             return gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
+                _list_models(req.username, req.username)[0:10], \
+                _list_sagemaker_endpoints(req.username), \
                 req.username
 
         sagemaker_interface.load(ui_tab_setup, [], [
             user_setting_form,
             user_setting,
             sagemaker_part,
+            model_list_dataframe,
+            endpoint_list_df,
             invisible_user_name_for_ui
         ])
 
@@ -275,6 +282,15 @@ def user_settings_tab():
     return user_tab
 
 
+def _list_models(username, user_token):
+    result = api_manager.list_models_on_cloud(username=username, user_token=user_token, types=None, status=None)
+    models = []
+    for model in result:
+        models.append([model['name'], model['type'], ','.join(model['allowed_roles_or_users']),
+                       'In-Use' if model['status'] == 'Active' else 'Disabled'])
+    return models
+
+
 def model_upload_tab():
     with gr.Column() as upload_tab:
         gr.HTML(value="<b>Upload Model to Cloud</b>")
@@ -352,8 +368,6 @@ def model_upload_tab():
                                           outputs=[webui_upload_model_textbox, sd_checkpoints_path,
                                                    textual_inversion_path, lora_path, hypernetwork_path,
                                                    controlnet_model_path, vae_path])
-
-
         with gr.Column(variant="panel"):
             gr.HTML(value="<b>Upload Model to S3 from My Computer</b>")
             gr.HTML(value="Refresh to select the model to upload to S3")
@@ -398,8 +412,38 @@ def model_upload_tab():
                                                 # inputs=[sagemaker_ui.checkpoint_info],
                                                 outputs=[mycomp_upload_model_textbox]
                                                 )
+    with gr.Column():
+        def list_models_prev(paging, rq: gr.Request):
+            if paging == 0:
+                return gr.skip(), gr.skip()
 
-    return upload_tab
+            result = _list_models(rq.username, rq.username)
+            start = paging - 10 if paging - 10 >= 0 else 0
+            end = start + 10
+            return result[start: end], start
+
+        def list_models_next(paging, rq: gr.Request):
+            result = _list_models(rq.username, rq.username)
+            if paging >= len(result):
+                return gr.skip(), gr.skip()
+
+            start = paging + 10 if paging + 10 < len(result) else paging
+            end = start + 10 if start + 10 < len(result) else len(result)
+            return result[start: end], start
+
+        current_page = gr.State(0)
+        gr.HTML(value="<b>Cloud Model List</b>")
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'status'],
+                                     datatype=['str', 'str', 'str', 'str']
+                                     )
+        with gr.Row():
+            model_list_prev_btn = gr.Button(value='Previous')
+            model_list_next_btn = gr.Button(value='Next')
+
+            model_list_prev_btn.click(fn=list_models_prev, inputs=[current_page], outputs=[model_list_df, current_page])
+            model_list_next_btn.click(fn=list_models_next, inputs=[current_page], outputs=[model_list_df, current_page])
+
+    return upload_tab, model_list_df
 
 
 def sagemaker_endpoint_tab():
@@ -494,6 +538,31 @@ def sagemaker_endpoint_tab():
                                                    outputs=[delete_ep_output_textbox])
 
         return sagemaker_tab
+
+
+def _list_sagemaker_endpoints(username):
+    resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
+    endpoints = []
+    for endpoint in resp:
+        endpoints.append([
+            endpoint['EndpointDeploymentJobId'][:4],
+            endpoint['endpoint_name'],
+            ','.join(endpoint['owner_group_or_role']),
+            endpoint['autoscaling'],
+            endpoint['endpoint_status'],
+            endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
+
+        ])
+    return endpoints
+
+
+def list_sagemaker_endpoints_tab():
+    with gr.Column():
+        gr.HTML(value="<b>Sagemaker Endpoints List</b>")
+        model_list_df = gr.Dataframe(headers=['id', 'name', 'owners', 'autoscaling', 'status', 'created time'],
+                                     datatype=['str', 'str', 'str', 'str', 'str', 'str']
+                                     )
+        return model_list_df
 
 
 def dataset_tab():
