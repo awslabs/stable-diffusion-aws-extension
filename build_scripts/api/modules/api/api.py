@@ -15,9 +15,11 @@ import threading
 import json
 from secrets import compare_digest
 import traceback
+import sys
 
-from modules import shared, scripts, pipeline, errors
+from modules import shared, scripts, pipeline, errors, sd_samplers
 from modules.api.mme_utils import checkspace_and_update_models, download_model, models_path
+from modules.api.utils import read_from_s3
 # from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
 # from modules.api import models
 from modules.shared import opts
@@ -109,6 +111,12 @@ def encode_pil_to_base64(image):
 
     return base64.b64encode(bytes_data)
 
+def validate_sampler_name(name):
+    config = sd_samplers.all_samplers_map.get(name, None)
+    if config is None:
+        raise HTTPException(status_code=404, detail="Sampler not found")
+
+    return name
 
 def api_middleware(app: FastAPI):
     rich_available = False
@@ -206,8 +214,16 @@ class Api:
 
     #     raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
 
-    def txt2img_pipeline(self, txt2imgreq: models.StableDiffusionTxt2ImgProcessingAPI):
-        args = vars(txt2imgreq)
+    def txt2img_pipeline(self, payload):
+        txt2imgreq = models.StableDiffusionTxt2ImgProcessingAPI(**payload)
+        populate = txt2imgreq.copy(update={  # Override __init__ params
+            "sampler_name": validate_sampler_name(txt2imgreq.sampler_name or txt2imgreq.sampler_index),
+            "do_not_save_samples": not txt2imgreq.save_images,
+            "do_not_save_grid": not txt2imgreq.save_images,
+        })
+        if populate.sampler_name:
+            populate.sampler_index = None  # prevent a warning later on
+        args = vars(populate)
         args.pop('script_name', None)
         args.pop('script_args', None) # will refeed them to the pipeline directly after initializing them
         args.pop('alwayson_scripts', None)
@@ -243,16 +259,47 @@ class Api:
             else:
                 logger.info(f" : {payload}")
 
-        logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}")
+        # logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}")
+        # logger.info(f"task is {req.task}")
+        # logger.info(f"checkpoint_info is {req.checkpoint_info}")
+        # logger.info(f"models is {req.models}")
+        # logger.info(f"txt2img_payload is: ")
+        # txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
+        # show_slim_dict(txt2img_payload)
+        # logger.info(f"img2img_payload is: ")
+        # img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
+        # show_slim_dict(img2img_payload)
+        # logger.info(f"extra_single_payload is: ")
+        # extra_single_payload = {} if req.extras_single_payload is None else json.loads(
+        #     req.extras_single_payload.json())
+        # show_slim_dict(extra_single_payload)
+        # logger.info(f"extra_batch_payload is: ")
+        # extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
+        #     req.extras_batch_payload.json())
+        # show_slim_dict(extra_batch_payload)
+        # logger.info(f"interrogate_payload is: ")
+        # interrogate_payload = {} if req.interrogate_payload is None else json.loads(
+        #     req.interrogate_payload.json())
+        # show_slim_dict(interrogate_payload)
+
+        
+        print(f'current version: dev')
         logger.info(f"task is {req.task}")
-        logger.info(f"checkpoint_info is {req.checkpoint_info}")
         logger.info(f"models is {req.models}")
-        logger.info(f"txt2img_payload is: ")
-        txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
-        show_slim_dict(txt2img_payload)
-        logger.info(f"img2img_payload is: ")
-        img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
-        show_slim_dict(img2img_payload)
+        payload = {}
+        if req.param_s3:
+            def parse_constant(c: str) -> float:
+                if c == "NaN":
+                    raise ValueError("NaN is not valid JSON")
+
+                if c == 'Infinity':
+                    return sys.float_info.max
+
+                return float(c)
+
+            payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
+            show_slim_dict(payload)
+
         logger.info(f"extra_single_payload is: ")
         extra_single_payload = {} if req.extras_single_payload is None else json.loads(
             req.extras_single_payload.json())
@@ -262,9 +309,9 @@ class Api:
             req.extras_batch_payload.json())
         show_slim_dict(extra_batch_payload)
         logger.info(f"interrogate_payload is: ")
-        interrogate_payload = {} if req.interrogate_payload is None else json.loads(
-            req.interrogate_payload.json())
+        interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
         show_slim_dict(interrogate_payload)
+
         # logger.info(f"db_create_model_payload is: ")
         # logger.info(f"{req.db_create_model_payload}")
         # logger.info(f"merge_checkpoint_payload is: ")
@@ -283,7 +330,7 @@ class Api:
                     # logger.info(json.loads(req.txt2img_payload.json()))
                     # # response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                     # #                             json=json.loads(req.txt2img_payload.json()))
-                    response = self.txt2img_pipeline(req.txt2img_payload)
+                    response = self.txt2img_pipeline(payload)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     return response
