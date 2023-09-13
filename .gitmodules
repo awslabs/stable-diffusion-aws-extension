@@ -8,8 +8,11 @@
 	path = build_scripts/api/repositories/k-diffusion
 	url = https://github.com/crowsonkb/k-diffusion.git
 [submodule "build_scripts/api/repositories/stable-diffusion-stability-ai"]
-    path = build_scripts/api/repositories/stable-diffusion-stability-ai
-    url = https://github.com/Stability-AI/stablediffusion.git
+	path = build_scripts/api/repositories/stable-diffusion-stability-ai
+	url = https://github.com/Stability-AI/stablediffusion.git
 [submodule "build_scripts/api/repositories/CodeFormer"]
 	path = build_scripts/api/repositories/CodeFormer
 	url = https://github.com/sczhou/CodeFormer.git
+[submodule "build_scripts/api/repositories/stablediffusion"]
+	path = build_scripts/api/repositories/stablediffusion
+	url = https://github.com/Stability-AI/stablediffusion.git
