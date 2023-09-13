@@ -65,7 +65,7 @@ Resources:
     Properties:
       InstanceType: c5.2xlarge
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
-      # KeyName: !Ref KeyName
+      KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
