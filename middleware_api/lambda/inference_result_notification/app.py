@@ -228,7 +228,7 @@ def lambda_handler(event, context):
                 print(f"Complete inference parameters {inference_parameters}")
 
             update_inference_job_table(inference_id, 'status', 'succeed')
-            update_inference_job_table(inference_id, 'completeTime', get_curent_time())
+            update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
             update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         except Exception as e:
             print(f"Error occurred: {str(e)}")

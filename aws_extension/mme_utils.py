@@ -3,6 +3,8 @@ import io
 import base64
 from PIL import Image
 from utils import ModelsRef
+import subprocess
+import logging
 
 try:
     import modules.shared as shared
@@ -22,6 +24,9 @@ models_path['embeddings'] = 'embeddings'
 models_path['VAE'] = 'models/VAE'
 disk_path = '/tmp'
 #disk_path = '/'
+TAR_TYPE_FILE = 'application/x-tar'
+
+
 def checkspace_and_update_models(selected_models):
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
@@ -100,11 +105,24 @@ def upload_model(model_type, model_name, model_s3_pos):
 
 def download_and_update(model_type, model_s3_pos):
     #download from s3
+    logging.info(f'./tools/s5cmd cp {model_s3_pos} ./')
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     tar_name = model_s3_pos.split('/')[-1]
-    os.system(f"tar xvf {tar_name}")
-    os.system(f"rm {tar_name}")
-    os.system("df -h")
+    logging.info(tar_name)
+    command = f"file --mime-type -b ./{tar_name}"
+    file_type = subprocess.check_output(command, shell=True).decode('utf-8').strip()
+    logging.info(f"file_type is {file_type}")
+    if file_type == TAR_TYPE_FILE:
+        logging.info("model type is tar")
+        os.system(f"tar xvf {tar_name}")
+        os.system(f"rm {tar_name}")
+        os.system("df -h")
+    else:
+        os.system(f"rm {tar_name}")
+        logging.info(f"model type is origin file type: {file_type}")
+        prefix_name = model_s3_pos.split('.')[0]
+        os.system(f'./tools/s5cmd cp {prefix_name}* ./models/{model_type}/')
+        logging.info("download finished")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()
     if model_type == 'hypernetworks':
