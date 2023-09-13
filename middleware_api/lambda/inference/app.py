@@ -124,12 +124,7 @@ def query_inference_job_list(status: str, task_type: str, start_time: str, end_t
         return ""
 
 
-def sort_by_start_time(item):
-    return item.get("startTime", "")
-
-
 def filter_checkpoint_items(limit, checkpoint, items):
-    items = sorted(items, key=sort_by_start_time, reverse=True)
     if checkpoint:
         filtered_data = []
         for item in items:

@@ -37,7 +37,7 @@ window.onload = function() {
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 let unitMb = 1000* 1024;
-let filButtonClass = 'block gradio-html svelte-90oupt padded hide-container';
+let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
 let filButtonId = 'file-uploader';
 
 const modelTypeMap = {
@@ -57,7 +57,6 @@ function clearFileInput() {
     newFileInput.className = filButtonClass;
     newFileInput.multiple = true;
     newFileInput.style.width = '100%';
-    newFileInput.style.marginTop = '25px';
     newFileInput.onchange = showFileName;
     fileInput.parentNode.replaceChild(newFileInput, fileInput);
 }
@@ -215,11 +214,12 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
+
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
-                // presignedUrls.push(...presignedUrl);
+                presignedUrls.push(...presignedUrl);
                 // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
-                return uploadFileChunks(file, presignedUrl, checkpointId, groupName, url, apiKey);
+                return uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey);
             })).then(results => {
                  console.log(results);
             }).catch(error => {
@@ -316,11 +316,8 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
             };
 
             xhr.upload.onprogress = function (event) {
-                // const percentComplete = (event.loaded / event.total) * 100 / totalChunks + currentChunk/totalChunks;
-                // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
-                const bytesUploaded = currentChunk * chunkSize + event.loaded;
-                const totalBytes = fileSize;
-                const percentComplete = (bytesUploaded / totalBytes) * 100;
+              const percentComplete = (event.loaded / event.total) * 100 / totalChunks;
+              // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
               updatePercentProgress(`${percentComplete.toFixed(2)}%`);
             };
             xhr.send(chunk);

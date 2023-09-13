@@ -840,33 +840,8 @@ def on_ui_tabs():
 
             with gr.Column(variant="panel", scale=1.5):
                 gr.HTML(value="<u><b>Cloud Assets Management</b></u>")
-                with gr.Accordion("Uploaded Models", open=False, visible=False):
-                    with gr.Tab("SD Checkpoints"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("Stable-diffusion"),
-                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
-                                     elem_id="sd_df", every=300)
-                    with gr.Tab("LoRA model"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("Lora"),
-                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
-                                     elem_id="sd_df", every=300)
-                    with gr.Tab("Hypernetwork"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("hypernetworks"),
-                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
-                                     elem_id="hyn_df", every=300)
-                    with gr.Tab("Textual Inversion"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("embeddings"),
-                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
-                                     elem_id="emb_df", every=300)
-                    with gr.Tab("ControlNet model"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("ControlNet"),
-                                     headers=["name", "upload time"], datatype=["str", "str"], col_count=(2, "fixed"),
-                                     elem_id="ctrl_df", every=300)
-                    with gr.Tab("VAE"):
-                        gr.Dataframe(value=sagemaker_ui.get_checkpoints_by_type("VAE"), headers=["name", "upload time"],
-                                     datatype=["str", "str"], col_count=(2, "fixed"), elem_id="vae_df", every=300)
-                gr.HTML(value="<div style='font-weight: bold;margin-bottom:-10px'>Upload Model to S3</div>")
-                with gr.Tab("From WebUI"):
-                # with gr.Accordion("Upload Model to S3 from WebUI", open=False):
+                sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+                with gr.Accordion("Upload Model to S3 from WebUI", open=False):
                     gr.HTML(value="Refresh to select the model to upload to S3")
                     exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
                     root_path = os.getcwd()
@@ -941,8 +916,9 @@ def on_ui_tabs():
                                                   fn=sagemaker_ui.sagemaker_upload_model_s3,
                                                   inputs=[sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path],
                                                   outputs=[test_connection_result, sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path, vae_path])
-                with gr.Tab("From My Computer"):
-                # with gr.Accordion("Upload Model to S3 from My Computer", open=False):
+
+                with gr.Accordion("Upload Model to S3 from My Computer", open=False, visible= False):
+                    gr.HTML(value="Refresh to select the model to upload to S3")
                     with FormRow(elem_id="model_upload_local_form_row_01"):
                         model_type_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_type_ele_id")
                         model_type_hiden_text = gr.Textbox(elem_id="model_type_value_ele_id", visible=False)
@@ -951,8 +927,7 @@ def on_ui_tabs():
                             return model_type
                         model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
                                                     inputs=[model_type_drop_down], outputs=model_type_hiden_text)
-                        file_upload_html_component = gr.HTML('<input type="file" class="block gradio-html svelte-90oupt padded hide-container" id="file-uploader" multiple onchange="showFileName(event)" style="margin-top: 25px;width:100%">')
-                        # file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)" style="width:100%"></div></div>')
+                        file_upload_html_component = gr.HTML('<div class="lg svelte-1ipelgc"><div class="lg svelte-1ipelgc"><input type="file" class="lg secondary gradio-button svelte-1ipelgc" id="file-uploader" multiple onchange="showFileName(event)" style="width:100%"></div></div>')
                     with FormRow(elem_id="model_upload_local_form_row_02"):
                         hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files", value="<div id='hidden_bind_upload_files_html'></div>")
                     with FormRow(elem_id="model_upload_local_form_row_03"):
@@ -965,23 +940,6 @@ def on_ui_tabs():
                                                   # inputs=[sagemaker_ui.checkpoint_info],
                                                   outputs=[upload_label]
                                                   )
-                # with gr.Tab("From URL"):
-                #     with FormRow(elem_id="model_upload_url_form_row_01"):
-                #         model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
-                #     with FormRow(elem_id="model_upload_url_form_row_02"):
-                #         file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
-                #         file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
-                #     with FormRow(elem_id="model_upload_url_form_row_03"):
-                #         file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
-                #     with gr.Row():
-                #         model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                #                                               elem_id="sagemaker_model_update_button_url",
-                #                                               size=(200, 50))
-                #         model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
-                #                                         inputs=[model_type_url_drop_down, file_upload_url_component,
-                #                                                 file_upload_params_component],
-                #                                         outputs=[file_upload_result_component]
-                #                                         )
                 with gr.Blocks(title="Deploy New SageMaker Endpoint", variant='panel'):
                     gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
                     default_table = """
@@ -1013,7 +971,7 @@ def on_ui_tabs():
                         )
                     # with gr.Row(variant='panel', visible=False) as filter_row:
                     with gr.Row(variant='panel', visible=False) as filter_row:
-                        endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name ", label="Specify Endpoint Name", visible=True)
+                        endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custome endpoint name ", label="Specify Endpoint Name", visible=True)
                         instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g5.2xlarge")
                         instance_count_dropdown = gr.Dropdown(label="Max Instance count", choices=["1","2","3","4","5","6"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
                         autoscaling_enabled = gr.Checkbox(
@@ -1313,7 +1271,7 @@ def ui_tabs_callback():
                                             col_count=(4, "fixed"),
                                             value=get_train_job_list,
                                             interactive=False,
-                                            # every=3,
+                                            every=3,
                                             elem_id='training_job_dashboard'
                                             # show_progress=True
                                         )
@@ -1371,8 +1329,8 @@ def ui_tabs_callback():
                                             datatype=["str", "str", "str"],
                                             col_count=(3, "fixed"),
                                             value=get_create_model_job_list,
-                                            interactive=False
-                                            # every=3
+                                            interactive=False,
+                                            every=3
                                             # show_progress=True
                                         )
 

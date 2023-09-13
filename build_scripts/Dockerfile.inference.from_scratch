@@ -8,9 +8,6 @@ RUN apt-get update -y
 RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 
-# install file cmd
-RUN apt-get install -y file
-
 COPY stable-diffusion-webui /opt/ml/code/
 COPY inference/serve /opt/ml/code
 
