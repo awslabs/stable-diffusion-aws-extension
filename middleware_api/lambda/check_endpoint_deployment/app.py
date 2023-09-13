@@ -110,27 +110,22 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
     """
     
     response = client.put_scaling_policy(
-        PolicyName='CPUUtil-ScalingPolicy',
-        ServiceNamespace='sagemaker',
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
-        ScalableDimension='sagemaker:variant:DesiredInstanceCount',
-        PolicyType='TargetTrackingScaling',
+        PolicyName="Invocations-ScalingPolicy",
+        ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
+        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,  # Endpoint name
+        ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
+        PolicyType="TargetTrackingScaling",  # 'StepScaling'|'TargetTrackingScaling'
         TargetTrackingScalingPolicyConfiguration={
-            'TargetValue': 50.0,
-            'CustomizedMetricSpecification':
-            {
-                'MetricName': 'CPUUtilization',
-                'Namespace': '/aws/sagemaker/Endpoints',
-                'Dimensions': [
-                    {'Name': 'EndpointName', 'Value': endpoint_name },
-                    {'Name': 'VariantName','Value': 'prod'}
-                ],
-                'Statistic': 'Average', # Possible - 'Statistic': 'Average'|'Minimum'|'Maximum'|'SampleCount'|'Sum'
-                'Unit': 'Percent'
+            "TargetValue": 5.0,  # The target value for the metric. - here the metric is - SageMakerVariantInvocationsPerInstance
+            "CustomizedMetricSpecification": {
+                "MetricName": "ApproximateBacklogSizePerInstance",
+                "Namespace": "AWS/SageMaker",
+                "Dimensions": [{"Name": "EndpointName", "Value": endpoint_name}],
+                "Statistic": "Average",
             },
-            'ScaleInCooldown': 300,
-            'ScaleOutCooldown': 300
-        }
+            "ScaleInCooldown": 300,  # The cooldown period helps you prevent your Auto Scaling group from launching or terminating
+            "ScaleOutCooldown": 300  # ScaleOutCooldown - The amount of time, in seconds, after a scale out activity completes before another scale out activity can start.
+        },
     )
     
     step_policy_response = client.put_scaling_policy(
