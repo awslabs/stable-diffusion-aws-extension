@@ -804,7 +804,7 @@ def process_result_by_inference_id(inference_id):
                 time.sleep(3)
                 resp = get_inference_job(inference_id)
             if resp['status'] == "failed":
-                infotexts = f"Inference job {inference_id} is failed"
+                infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
                 return image_list, info_text, plaintext_to_html(infotexts)
             elif resp['status'] == "succeed":
                 if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:

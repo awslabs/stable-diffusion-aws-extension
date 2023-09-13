@@ -214,6 +214,9 @@ class SageMakerUI(scripts.Script):
         if not api_param_cls:
             raise NotImplementedError
 
+        if p.__dict__.get('sampler_index') is None:
+            p.__dict__['sampler_index'] = "Euler"
+
         api_param = api_param_cls(**p.__dict__)
         if self.is_img2img:
             api_param.mask = p.image_mask
