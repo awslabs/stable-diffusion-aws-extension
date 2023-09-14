@@ -18,7 +18,7 @@ from modules import paths, shared, modelloader, devices, script_callbacks, sd_va
 # from modules.sd_hijack_inpainting import do_inpainting_hijack
 from modules.timer import Timer
 import tomesd
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline
 from diffusers.models import AutoencoderKL
 
 model_dir = "Stable-diffusion"
@@ -691,9 +691,28 @@ def load_pipeline(checkpoint_info=None):
     timer.record("calculate hash")
 
     shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
-    pipeline_data.sd_pipeline = StableDiffusionPipeline.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
+
+    file_extension = checkpoint_info.filename.rsplit(".", 1)[-1]   
+    from_safetensors = file_extension == "safetensors"
+    if from_safetensors:
+        from safetensors.torch import load_file as safe_load
+        checkpoint = safe_load(checkpoint_info.filename, device="cpu")
+    else:
+        checkpoint = torch.load(checkpoint_info.filename, map_location="cpu")
+    
+    key_name_sd_xl_base = "conditioner.embedders.1.model.transformer.resblocks.9.mlp.c_proj.bias"
+    key_name_sd_xl_refiner = "conditioner.embedders.0.model.transformer.resblocks.9.mlp.c_proj.bias"
+
+    pipeline_class = StableDiffusionPipeline
+    if key_name_sd_xl_base in checkpoint or key_name_sd_xl_refiner in checkpoint:
+        pipeline_class = StableDiffusionXLPipeline
+    
+    
+
+    pipeline_data.sd_pipeline = pipeline_class.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
    
-    # sd_pipeline.enable_xformers_memory_efficient_attention()
+    pipeline_data.sd_pipeline.enable_xformers_memory_efficient_attention()
+    #pipeline_data.sd_pipeline.enable_sequential_cpu_offload()
 
     pipeline_name = str(type(pipeline_data.sd_pipeline)).split('.')[-1][:-2]
 
