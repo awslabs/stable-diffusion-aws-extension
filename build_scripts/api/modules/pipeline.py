@@ -831,6 +831,7 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, p: Stabl
     controlnet_images = None
     ref_image = None
     pipeline_name = shared.sd_pipeline.pipeline_name
+    
     if controlnet_state == True:
         # TODO XY: update pipeline
         # get controled image
@@ -906,7 +907,6 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, p: Stabl
                 else:
                     shared.sd_pipeline = StableDiffusionInpaintPipeline(**p.sd_pipeline.components)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionInpaintPipeline'
-
 
     return controlnet_images, ref_image
 

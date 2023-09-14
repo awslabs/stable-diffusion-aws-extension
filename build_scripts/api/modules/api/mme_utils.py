@@ -5,6 +5,7 @@ from PIL import Image
 from modules.api.utils import ModelsRef
 import subprocess
 import logging
+import sys
 
 try:
     import modules.shared as shared
@@ -130,7 +131,7 @@ def download_and_update(model_type, model_s3_pos):
     if model_type == 'embeddings':
         shared.sd_pipeline.load_textual_inversion(shared.cmd_opts.embeddings_dir)
     if model_type == 'ControlNet':
-        #sys.path.append("extensions/sd-webui-controlnet/scripts/")
+        sys.path.append("extensions/sd-aws-ext/")
         from scripts import global_state
         global_state.update_cn_models()
         #sys.path.remove("extensions/sd-webui-controlnet/scripts/")

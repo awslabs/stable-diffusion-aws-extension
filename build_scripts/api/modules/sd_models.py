@@ -691,63 +691,65 @@ def load_pipeline(checkpoint_info=None):
     timer.record("calculate hash")
 
     shared.opts.data["sd_model_checkpoint"] = checkpoint_info.title
-    sd_pipeline = StableDiffusionPipeline.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
+    pipeline_data.sd_pipeline = StableDiffusionPipeline.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
    
     # sd_pipeline.enable_xformers_memory_efficient_attention()
 
-    pipeline_name = str(type(sd_pipeline)).split('.')[-1][:-2]
+    pipeline_name = str(type(pipeline_data.sd_pipeline)).split('.')[-1][:-2]
 
-    sd_pipeline.sd_model_hash = sd_model_hash
-    sd_pipeline.sd_model_checkpoint = checkpoint_info.filename
-    sd_pipeline.sd_checkpoint_info = checkpoint_info
-    sd_pipeline.pipeline_name = pipeline_name
+    #sd_pipeline.sd_model_hash = sd_model_hash
+    #sd_pipeline.sd_model_checkpoint = checkpoint_info.filename
+    #sd_pipeline.sd_checkpoint_info = checkpoint_info
+    pipeline_data.sd_pipeline.pipeline_name = pipeline_name
     shared.opts.data["sd_checkpoint_hash"] = checkpoint_info.sha256
+    shared.opts.data["sd_model_hash"] = sd_model_hash
+    shared.opts.data["sd_model_checkpoint_path"] = checkpoint_info.filename
+    shared.opts.data["sd_checkpoint_info"] = checkpoint_info
 
-    sd_pipeline.to(shared.device)
+
+    pipeline_data.sd_pipeline.to(shared.device)
 
     timer.record("move model to device")
 
-    pipeline_data.sd_pipeline = sd_pipeline
     pipeline_data.was_loaded_at_least_once = True
     
     embeddings_dir = shared.cmd_opts.embeddings_dir
     try:
-        sd_pipeline.load_textual_inversion(embeddings_dir) 
+        pipeline_data.sd_pipeline.load_textual_inversion(embeddings_dir) 
     except:
         print(f"No embeddings.")
     timer.record("load textual inversion embeddings")
 
     print(f"Model loaded in {timer.summary()}.")
 
-    return sd_pipeline
-
 
 def reload_pipeline_weights(sd_pipeline=None, info=None):
     from modules import devices
     checkpoint_info = info or select_checkpoint()
 
-    if not sd_pipeline:
-        sd_pipeline = pipeline_data.sd_pipeline
+    # if not sd_pipeline:
+    #     sd_pipeline = pipeline_data.sd_pipeline
 
-    if sd_pipeline is None:  # previous model load failed
+    if pipeline_data.sd_pipeline is None:  # previous model load failed
         current_checkpoint_info = None
     else:
-        current_checkpoint_info = sd_pipeline.sd_checkpoint_info
-        if sd_pipeline.sd_model_checkpoint == checkpoint_info.filename:
-            return
+        current_checkpoint_info = shared.opts.data["sd_checkpoint_info"] #sd_pipeline.sd_checkpoint_info
+        if shared.opts.data["sd_model_checkpoint_path"] == checkpoint_info.filename:
+           return
+        #if sd_pipeline.sd_model_checkpoint == checkpoint_info.filename:
+        #    return
 
-        sd_pipeline.to(devices.cpu)
+        pipeline_data.sd_pipeline.to(devices.cpu)
 
     timer = Timer()
-    del sd_pipeline
+    #del pipeline_data.sd_pipeline
+    pipeline_data.sd_pipeline = None
     try:
         load_pipeline(checkpoint_info)
     except Exception:
         print("Failed to load checkpoint, restoring previous")
         load_pipeline(current_checkpoint_info)
 
-    
-    load_pipeline(checkpoint_info)
     timer.record("move model to device")
 
     return pipeline_data.sd_pipeline
