@@ -31,3 +31,5 @@ torch
 torchdiffeq
 torchsde
 transformers==4.25.1
+
+diffusers==0.20.2
