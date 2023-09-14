@@ -15,8 +15,13 @@ if __name__ == "__main__":
             "s3_model_path": args["s3_model_path"],
             "data_tar_list": args["data_tar_list"],
             "class_data_tar_list": args["class_data_tar_list"],
+            "s3_model_path": args["s3_model_path"],
+            "s3_data_path": args["s3_data_path"],
+            "s3_toml_path": args["s3_toml_path"],
         }
     }
     s3_input_path = args["input_location"]
     s3_output_path = "s3://"
-    sagemaker_entrypoint.main(s3_input_path, s3_output_path, training_params)
+    training_type = args["training_type"]
+    if training_type == "kohya":
+        sagemaker_entrypoint.train_by_sd_scripts(s3_input_path, s3_output_path, training_params)

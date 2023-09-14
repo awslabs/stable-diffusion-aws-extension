@@ -16,6 +16,10 @@ import boto3
 from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 
+sys.path.append("sd-scripts")
+import train_network
+import library.train_util as train_util
+
 os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
@@ -160,49 +164,37 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     download_data(data_list, data_tar_list, s3_input_path)
     download_data(class_data_list, class_data_tar_list, s3_input_path)
 
-def prepare_for_training_v2(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list):
+def prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path):
+    toml_bucket_name = get_bucket_name_from_s3_path(s3_toml_path)
+    toml_path = get_path_from_s3_path(s3_toml_path)
+    logger.info(f"Download toml from s3 {toml_bucket_name} {toml_path}")
+    download_file_from_s3(toml_bucket_name, toml_path, "train.toml")
+
+    parser = train_network.setup_parser()
+    args, _ = parser.parse_known_args()
+    args.config_file = "train.toml"
+    args = train_util.read_config_from_file(args, parser)
+
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
-    s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar')
-    logger.info(f"Download src model from s3 {model_bucket_name} {s3_model_path} {model_name}.tar")
-    print(f"Download src model from s3 {model_bucket_name} {s3_model_path} {model_name}.tar")
-    download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar')
+    model_path = get_path_from_s3_path(s3_model_path)
+    logger.info(f"Download src model from s3 {model_bucket_name} {model_path}")
+    if args.pretrained_model_name_or_path is None:
+        args.pretrained_model_name_or_path = "sd-models/v1-5-pruned-emaonly.safetensors"
+    model_dir = os.path.dirname(args.pretrained_model_name_or_path)
+    if len(model_dir) > 0:
+        os.makedirs(model_dir, exist_ok=True)
+    # download_file_from_s3(model_bucket_name, model_path, args.pretrained_model_name_or_path)
 
-    # input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-    input_path = os.path.join(get_path_from_s3_path(s3_input_path), "db_config.tar")
-    logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
-    download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar")
-    download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
-    target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
-    logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
-    # os.system(f"mv {download_db_config_path} {target_db_config_path}")
-    mv(download_db_config_path, target_db_config_path)
-    with open(target_db_config_path) as db_config_file:
-        db_config = json.load(db_config_file)
-    data_list = []
-    class_data_list = []
-    for concept in db_config["concepts_list"]:
-        data_list.append(concept["instance_data_dir"])
-        class_data_list.append(concept["class_data_dir"])
-    # hack_db_config(db_config, db_config_path, model_name, data_tar_list, class_data_tar_list)
-
-    for s3_data_path, local_data_path in zip(data_list, s3_data_path_list):
-        if len(local_data_path) == 0:
-            continue
-        target_dir = local_data_path
-        os.makedirs(target_dir, exist_ok=True)
-        input_bucket_name = get_bucket_name_from_s3_path(s3_data_path)
-        input_path = get_path_from_s3_path(s3_data_path)
-        logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir}")
-        download_folder_from_s3_by_tar(input_bucket_name, input_path, target_dir)
-    for s3_class_data_path, local_class_data_path in zip(class_data_list, s3_class_data_path_list):
-        if len(local_class_data_path) == 0:
-            continue
-        target_dir = local_class_data_path
-        os.makedirs(target_dir, exist_ok=True)
-        input_bucket_name = get_bucket_name_from_s3_path(s3_class_data_path)
-        input_path = get_path_from_s3_path(s3_class_data_path)
-        logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir}")
-        download_folder_from_s3_by_tar(input_bucket_name, input_path, target_dir)
+    data_bucket_name = get_bucket_name_from_s3_path(s3_data_path)
+    data_path = get_path_from_s3_path(s3_data_path)
+    if args.train_data_dir is None:
+        args.train_data_dir = "data"
+    data_dir = os.path.dirname(args.train_data_dir)
+    if len(data_dir) > 0:
+        os.makedirs(data_dir, exist_ok=True)
+    logger.info(f"Download data from s3 {data_bucket_name} {data_path}")
+    download_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
+    return args
 
 def sync_status(job_id, bucket_name, model_dir):
     local_samples_dir = f'models/dreambooth/{model_dir}/samples'
@@ -213,7 +205,7 @@ def sync_status(job_id, bucket_name, model_dir):
                                               f'aigc-webui-test-status/{job_id}/sagemaker_status.pickle'))
     sync_status_thread.start()
 
-def main(s3_input_path, s3_output_path, params):
+def train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, params):
     # import launch
     # launch.prepare_environment()
     params = params["training_params"]
@@ -229,6 +221,20 @@ def main(s3_input_path, s3_output_path, params):
     train(model_name)
     upload_model_to_s3_v2(model_name, s3_output_path, model_type)
 
+def train_by_sd_scripts(s3_input_path, s3_output_path, params):
+    # import launch
+    # launch.prepare_environment()
+    params = params["training_params"]
+    model_name = params["model_name"]
+    model_type = params["model_type"]
+    s3_model_path = params["s3_model_path"]
+    s3_data_path = params["s3_data_path"]
+    s3_toml_path = params["s3_toml_path"]
+    args = prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path)
+    trainer = train_network.NetworkTrainer()
+    trainer.train(args)
+    upload_model_to_s3_v2(model_name, s3_output_path, model_type)
+
 def test():
     model_name = "qiaohu-1-1"
     s3_model_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/model/qiaohu-1-1/066dc5e6-1ed7-470a-ab9e-aa9e01cfe5e4/output"
@@ -242,7 +248,7 @@ def test():
             "class_data_tar_list": [""],
         }
     }
-    main(s3_input_path, s3_output_path, training_params)
+    train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, training_params)
 
 def parse_params(args):
     def decode_base64(base64_message):
@@ -266,6 +272,7 @@ if __name__ == "__main__":
     parser.add_argument("--s3-output-path", type=str)
     args, _ = parser.parse_known_args()
     s3_input_path, s3_output_path, training_params = parse_params(args)
-    main(s3_input_path, s3_output_path, training_params)
+    # train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, training_params)
+    train_by_sd_scripts(s3_input_path, s3_output_path, training_params)
 
     # upload_model_to_s3_v2("test-1-1", "s3://stable-diffusion-aws-extension-991301791329-us-east-1/dreambooth/checkpoint/test-sd-type/test/")
