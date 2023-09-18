@@ -109,7 +109,7 @@ export class UpdateTrainJobApi {
         'kms:Decrypt',
       ],
       resources: ['*'],
-    })); 
+    }));
 
     return sagemakerRole;
   }
