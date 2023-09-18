@@ -290,9 +290,10 @@ def get_train_job_list():
     try:
         url += "trains?types=Stable-diffusion&types=Lora"
         response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-        for trainJob in response['trainJobs']:
-            table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+        if 'trainJobs' in response:
+            response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+            for trainJob in response['trainJobs']:
+                table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
     except requests.exceptions.RequestException as e:
         print(f"exception {e}")
 

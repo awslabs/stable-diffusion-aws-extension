@@ -89,7 +89,7 @@ export class UploadCheckPointApi {
       actions: [
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
-        'logs:PutLogEvents'
+        'logs:PutLogEvents',
       ],
       resources: ['*'],
     }));
