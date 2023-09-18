@@ -9,12 +9,16 @@ import boto3
 import tarfile
 from typing import Any, List, Optional
 import sagemaker
+import tomli
+import tomli_w
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import load_json_from_s3, publish_msg, save_json_to_file 
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
+from common.const import LoraTrainType
+from common import const
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 
@@ -37,9 +41,47 @@ s3 = boto3.client('s3', region_name=region_name)
 @dataclass
 class Event:
     train_type: str
-    model_id: str
+    model_id: Optional[str] = None
     params: dict[str, Any]
     filenames: Optional[List[str]] = None
+    # Valid value: dreambooth, kohya. Default value is dreambooth
+    lora_train_type: Optional[str] = LoraTrainType.DREAM_BOOTH
+
+
+# Function to update and save a TOML file in an S3 bucket
+def update_toml_file_in_s3(bucket_name, file_key, new_file_key, updated_params):
+    try:
+        response = s3.get_object(Bucket=bucket_name, Key=file_key)
+        toml_content = response['Body'].read().decode('utf-8')
+        toml_data = tomli.loads(toml_content)
+
+        # Update parameters in the TOML data
+        for section, params in updated_params.items():
+            for key, value in params.items():
+                toml_data[section][key] = value
+
+        updated_toml_content = tomli_w.dump(toml_data)
+
+        # TODO: Upload the updated TOML content to new S3 path
+        s3.put_object(Bucket=bucket_name, Key=new_file_key, Body=updated_toml_content)
+        logger.info(f"Updated '{file_key}' in '{bucket_name}' successfully.")
+
+    except Exception as e:
+        logger.error(f"An error occurred when updating Kohya toml: {e}")
+
+
+    updated_parameters = {
+        'section1': {
+            'param1': 'new_value1',
+            'param2': 42
+        },
+        'section2': {
+            'param3': True,
+            'param4': 3.14
+        }
+    }
+
+    update_toml_file_in_s3(bucket_name, file_key, new_file_key, updated_parameters)
 
 
 # POST /train
@@ -47,6 +89,44 @@ def create_train_job_api(raw_event, context):
     request_id = context.aws_request_id
     event = Event(**raw_event)
     _type = event.train_type
+    _lora_train_type = event.lora_train_type
+
+    if _lora_train_type.lower() == LoraTrainType.KOHYA:
+        kohya_default_config = load_json_from_s3(bucket_name, 'template/' + const.KOHYA_TOML_FILE_NAME)
+        # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
+        if "config_params" in event.params:
+            kohya_default_config.update(event.params["config_params"])
+        
+        base_key = f'{_lora_train_type.lower()}/train/{request_id}'
+        # Add model parameters into train params
+        # event.params["training_params"]["model_name"] = model.name
+        # event.params["training_params"]["model_type"] = model.model_type
+        # event.params["training_params"]["s3_model_path"] = model.output_s3_location
+
+        # # Upload the merged JSON string to the S3 bucket as a tar file
+        # try:
+        #     if not os.path.exists(tar_file_content):
+        #         os.makedirs(tar_file_content)
+        #     saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
+        #     print(f'file saved to {saved_path}')
+        #     with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
+        #         # Add the contents of 'models' directory to the tar file without including the /tmp itself
+        #         tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
+        #     s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
+        #     logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
+        # except Exception as e:
+        #     raise RuntimeError(f"Error uploading JSON file to S3: {e}")         
+    elif _lora_train_type.lower() == LoraTrainType.DREAM_BOOTH:
+        pass
+    else:
+        raise ValueError(f'Invalid lora train type: {_lora_train_type}, the valid value is kohya and dreambooth.')
+
+
+
+
+
+    if event.model_id is None:
+        raise ValueError('No model_id is specified.')
 
     try:
         model_raw = ddb_service.get_item(table=model_table, key_values={

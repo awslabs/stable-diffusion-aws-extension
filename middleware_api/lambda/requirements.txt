@@ -1,2 +1,4 @@
-sagemaker==2.143.0
+sagemaker==2.186.0
 requests
+tomli==2.0.1
+tomli-w==1.0.0
