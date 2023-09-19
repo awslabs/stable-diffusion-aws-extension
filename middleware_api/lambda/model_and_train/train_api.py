@@ -12,7 +12,7 @@ import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common.util import load_json_from_s3, publish_msg, save_json_to_file 
+from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
@@ -79,7 +79,7 @@ def create_train_job_api(raw_event, context):
             # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
             if "config_params" in event.params:
                 db_config_json.update(event.params["config_params"])
-            
+
             # Add model parameters into train params
             event.params["training_params"]["model_name"] = model.name
             event.params["training_params"]["model_type"] = model.model_type
@@ -98,7 +98,7 @@ def create_train_job_api(raw_event, context):
                 logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
             except Exception as e:
                 raise RuntimeError(f"Error uploading JSON file to S3: {e}")
-        else:    
+        else:
             presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
 
         checkpoint = CheckPoint(
@@ -106,7 +106,8 @@ def create_train_job_api(raw_event, context):
             checkpoint_type=event.train_type,
             s3_location=f's3://{bucket_name}/{base_key}/output',
             checkpoint_status=CheckPointStatus.Initial,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=['*']  # fixme: not in scope yet, need fix later for train process
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         train_input_s3_location = f's3://{bucket_name}/{input_location}'

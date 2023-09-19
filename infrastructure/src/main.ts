@@ -14,10 +14,12 @@ import { Construct } from 'constructs';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
+import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
+import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -89,6 +91,7 @@ export class Middleware extends Stack {
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'model',
       'models',
+      'upload_checkpoint',
       'checkpoint',
       'checkpoints',
       'train',
@@ -97,11 +100,32 @@ export class Middleware extends Stack {
       'datasets',
       'inference',
       'inference-api',
+      'user',
+      'users',
+      'role',
+      'roles',
+      'endpoints',
+      'inferences',
       api_train_path,
     ]);
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
+      commonLayer: commonLayers.commonLayer,
+      multiUserTable: ddbTables.multiUserTable,
+      useExist: useExist,
+    });
 
+    new MultiUsersStack(this, 'multiUserSt', {
+      synthesizer: props.synthesizer,
+      commonLayer: commonLayers.commonLayer,
+      multiUserTable: ddbTables.multiUserTable,
+      routers: restApi.routers,
+      useExist: useExist,
+      passwordKeyAlias: authorizerLambda.passwordKeyAlias,
+      authorizer: authorizerLambda.authorizer,
+    });
+
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
 
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
@@ -114,6 +138,7 @@ export class Middleware extends Stack {
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
+      multiUserTable: ddbTables.multiUserTable,
       commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,

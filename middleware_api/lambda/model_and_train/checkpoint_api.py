@@ -3,20 +3,26 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict
+import urllib.parse
+import concurrent.futures
+import requests
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
 from common_tools import get_base_checkpoint_s3_key, \
-    batch_get_s3_multipart_signed_urls, complete_multipart_upload
+    batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
+from multi_users.utils import get_user_roles, check_user_permissions
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
+checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
+user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
-# GET /checkpoints
+# GET /checkpoints?username=USER_NAME&types=value&status=value
 def list_all_checkpoints_api(event, context):
     _filter = {}
     if 'queryStringParameters' not in event:
@@ -31,6 +37,12 @@ def list_all_checkpoints_api(event, context):
     if 'status' in parameters and len(parameters['status']) > 0:
         _filter['checkpoint_status'] = parameters['status']
 
+    # todo: support multi user fetch later
+    username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+    user_roles = ['*']
+    if username:
+        user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username[0])
+
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:
         return {
@@ -39,22 +51,122 @@ def list_all_checkpoints_api(event, context):
         }
 
     ckpts = []
-
     for r in raw_ckpts:
         ckpt = CheckPoint(**(ddb_service.deserialize(r)))
-        ckpts.append({
-            'id': ckpt.id,
-            's3Location': ckpt.s3_location,
-            'type': ckpt.checkpoint_type,
-            'status': ckpt.checkpoint_status.value,
-            'name': ckpt.checkpoint_names,
-            'created': ckpt.timestamp,
-        })
-
+        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username):
+            ckpts.append({
+                'id': ckpt.id,
+                's3Location': ckpt.s3_location,
+                'type': ckpt.checkpoint_type,
+                'status': ckpt.checkpoint_status.value,
+                'name': ckpt.checkpoint_names,
+                'created': ckpt.timestamp,
+                'allowed_roles_or_users': ckpt.allowed_roles_or_users
+            })
     return {
         'statusCode': 200,
         'checkpoints': ckpts
     }
+
+
+@dataclass
+class UploadCheckPointEvent:
+    checkpointType: str
+    modelUrl: list[str]
+    params: dict[str, Any]
+
+
+def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict):
+    logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
+    filename = ""
+    response = requests.get(url, allow_redirects=False)
+    if response and response.status_code == 307:
+        if response.headers and 'Location' in response.headers:
+            url = response.headers.get('Location')
+    parsed_url = urllib.parse.urlparse(url)
+    filename = os.path.basename(parsed_url.path)
+    logger.info(f"file name is :{filename}")
+    file_names.append(filename)
+    s3_key = f'{base_key}/{filename}'
+    logger.info(f"upload s3 key is :{filename}")
+    multipart_upload[filename] = multipart_upload_from_url(url, bucket_name, s3_key)
+
+
+# 并发上传文件
+def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for file_url in file_urls:
+            futures.append(executor.submit(download_and_upload_models, file_url, base_key, file_names, multipart_upload))
+
+        for future in concurrent.futures.as_completed(futures):
+            future.result()
+
+
+# POST /upload_checkpoint
+def upload_checkpoint_api(raw_event, context):
+    request_id = context.aws_request_id
+    event = UploadCheckPointEvent(**raw_event)
+    _type = event.checkpointType
+    headers = {
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+    }
+    if _type not in checkpoint_type:
+        logger.info(f"type error:{_type}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'error': "please choose the right type from :'Stable-diffusion', 'embeddings', 'Lora', 'hypernetworks', 'Controlnet', 'VAE'"
+        }
+
+    try:
+        base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
+        urls = event.modelUrl
+        file_names = []
+        logger.info(f"start to upload models:{urls}")
+        checkpoint_params = {}
+        if event.params is not None and len(event.params) > 0:
+            checkpoint_params = event.params
+        checkpoint_params['created'] = str(datetime.datetime.now())
+        checkpoint_params['multipart_upload'] = {}
+        concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
+        logger.info("finished upload, prepare to insert item to ddb")
+        user_roles = ['*']
+        if 'creator' in event.params and event.params['creator']:
+            user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+            
+        checkpoint = CheckPoint(
+            id=request_id,
+            checkpoint_type=_type,
+            s3_location=f's3://{bucket_name}/{base_key}',
+            checkpoint_names=file_names,
+            checkpoint_status=CheckPointStatus.Active,
+            params=checkpoint_params,
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=user_roles,
+        )
+        ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+        logger.info("finished insert item to ddb")
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'checkpoint': {
+                'id': request_id,
+                'type': _type,
+                's3_location': checkpoint.s3_location,
+                'status': checkpoint.checkpoint_status.value,
+                'params': checkpoint.params
+            }
+        }
+    except Exception as e:
+        logger.error(e)
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'error': str(e)
+        }
 
 
 @dataclass
@@ -109,6 +221,10 @@ def create_checkpoint_api(raw_event, context):
                 'errorMsg': 'no checkpoint name (file names) detected'
             }
 
+        user_roles = ['*']
+        if 'creator' in event.params and event.params['creator']:
+            user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
@@ -116,7 +232,8 @@ def create_checkpoint_api(raw_event, context):
             checkpoint_names=filenames_only,
             checkpoint_status=CheckPointStatus.Initial,
             params=checkpoint_params,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         return {

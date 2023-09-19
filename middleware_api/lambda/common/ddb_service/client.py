@@ -109,17 +109,56 @@ class DynamoDbUtilsService:
             self.logger.error(f'table {table} keys_values: {key_values}')
             raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
 
-    def query_items(self, table: str, key_values: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
+    def query_items(self, table: str, key_values: Dict[str, Any], filters: Dict[str, Any] = None, limit: int = None, last_evaluated_key=None):
         try:
-            filter_expressions, expression_values = self._get_ddb_filter(key_values)
+            key_expressions, expression_values = self._get_ddb_filter(key_values)
+            if not filters:
+                if limit:
+                    if last_evaluated_key:
+                        resp = self.client.query(
+                            TableName=table,
+                            KeyConditionExpression=key_expressions,
+                            ExpressionAttributeValues=expression_values,
+                            ExclusiveStartKey=last_evaluated_key,
+                            Limit=10
+                        )
+                    else:
+                        resp = self.client.query(
+                            TableName=table,
+                            KeyConditionExpression=key_expressions,
+                            ExpressionAttributeValues=expression_values,
+                            Limit=10
+                        )
+                else:
+                    scan_resp = self.client.query(
+                        TableName=table,
+                        KeyConditionExpression=key_expressions,
+                        ExpressionAttributeValues=expression_values,
+                    )
+                    resp = scan_resp['Items']
+                    while 'LastEvaluatedKey' in scan_resp:
+                        scan_resp = self.client.query(
+                            TableName=table,
+                            KeyConditionExpression=key_expressions,
+                            ExpressionAttributeValues=expression_values,
+                            ExclusiveStartKey=scan_resp['LastEvaluatedKey']
+                        )
+                        resp.extend(scan_resp['Items'])
 
-            resp = self.client.query(
-                TableName=table,
-                KeyConditionExpression=filter_expressions,
-                ExpressionAttributeValues=expression_values,
-            )
+                    # scan the whole table, no LastEvaluatedKey returned
+                    return resp
+            else:
+                filter_expressions, filter_expression_values = self._get_ddb_filter(filters=filters)
+                expression_values.update(filter_expression_values)
+                resp = self.client.query(
+                    TableName=table,
+                    KeyConditionExpression=key_expressions,
+                    FilterExpression=filter_expressions,
+                    ExpressionAttributeValues=expression_values,
+                )
+
             named_ = ScanOutput(**resp)
-            return named_['Items']
+            return named_['Items'], named_['LastEvaluatedKey'] if 'LastEvaluatedKey' in named_ else None
         except ClientError as e:
             self.logger.error(f'table {table} keys_values: {key_values}')
             raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
@@ -130,7 +169,6 @@ class DynamoDbUtilsService:
         expression_values = {}
         for key, val in filters.items():
             if isinstance(val, list):
-                print(key)
                 val_keys = ''
                 i = 0
                 for v in val:
@@ -146,32 +184,71 @@ class DynamoDbUtilsService:
         filter_expressions = ' AND '.join(prepare_filter_expressions)
         return filter_expressions, expression_values
 
-    def scan(self, table: str, filters: Dict[str, Any]) -> List[Dict[str, Dict[str, Any]]]:
-        # expression_values = self._serialize(filters, prefix)
+    def scan(self, table: str, filters: Dict[str, Any] = None, last_evaluated_key=None, limit: int = None):
         if filters is None or len(filters) == 0:
-            resp = self.client.scan(
-                TableName=table
-            )
+            if limit:
+                if last_evaluated_key:
+                    resp = self.client.scan(
+                        TableName=table,
+                        ExclusiveStartKey=last_evaluated_key,
+                        Limit=limit
+                    )
+                else:
+                    resp = self.client.query(
+                        TableName=table,
+                        Limit=limit
+                    )
+            else:
+                scan_resp = self.client.scan(
+                    TableName=table,
+                )
+                resp = scan_resp['Items']
+                while 'LastEvaluatedKey' in scan_resp:
+                    scan_resp = self.client.scan(
+                        TableName=table,
+                        ExclusiveStartKey=scan_resp['LastEvaluatedKey']
+                    )
+                    resp.extend(scan_resp['Items'])
+
+                return resp
         else:
             filter_expressions, expression_values = self._get_ddb_filter(filters)
+            if last_evaluated_key:
+                resp = self.client.scan(
+                    TableName=table,
+                    FilterExpression=filter_expressions,
+                    ExpressionAttributeValues=expression_values,
+                    ExclusiveStartKey=last_evaluated_key,
+                    Limit=limit
+                )
+            elif limit:
+                resp = self.client.scan(
+                    TableName=table,
+                    FilterExpression=filter_expressions,
+                    ExpressionAttributeValues=expression_values,
+                    Limit=limit
+                )
+            else:
+                scan_resp = self.client.scan(
+                    TableName=table,
+                    FilterExpression=filter_expressions,
+                    ExpressionAttributeValues=expression_values
+                )
+                resp = scan_resp['Items']
+                while 'LastEvaluatedKey' in scan_resp:
+                    scan_resp = self.client.scan(
+                        TableName=table,
+                        FilterExpression=filter_expressions,
+                        ExpressionAttributeValues=expression_values,
+                        ExclusiveStartKey=scan_resp['LastEvaluatedKey']
+                    )
+                    resp.extend(scan_resp['Items'])
 
-            resp = self.client.scan(
-                TableName=table,
-                FilterExpression=filter_expressions,
-                ExpressionAttributeValues=expression_values,
-            )
-        self.logger.info('scan response: %s', json.dumps(resp))
+                return resp
+
         named_ = ScanOutput(**resp)
         # FIXME: handle failures
-        return named_['Items']
-
-    # def _get_all(self, table: str) -> List[dict[str, Any]]:
-    #     resp = self.client.scan(TableName=table)
-    #     named_ = ScanOutput(**resp)
-    #     result = []
-    #     for item in named_['Items']:
-    #         result.append(self.deserialize(item))
-    #     return result
+        return named_['Items'], named_['LastEvaluatedKey'] if 'LastEvaluatedKey' in named_ else None
 
     def delete_item(self, table: str, keys: dict[str, Any]):
         keys = self._serialize(keys)
@@ -201,6 +278,8 @@ class DynamoDbUtilsService:
     def _convert(val):
         if val is None:
             return None
+        if isinstance(val, bytes):
+            return {'B': val}
         if isinstance(val, bool):
             return {'BOOL': val}
         elif isinstance(val, list):

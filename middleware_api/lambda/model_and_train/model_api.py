@@ -90,7 +90,8 @@ def create_model_api(raw_event, context):
                 checkpoint_names=filenames_only,
                 checkpoint_status=CheckPointStatus.Initial,
                 params=checkpoint_params,
-                timestamp=timestamp
+                timestamp=timestamp,
+                allowed_roles_or_users=['*'],  # fixme: train process not apply user control yet
             )
             ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
             checkpoint_id = checkpoint.id

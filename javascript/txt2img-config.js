@@ -19,6 +19,7 @@ window.onload = function() {
         for (let selector of selectors) {
             let element = document.querySelector(selector);
             if (element != null) {
+                console.log('click element', element)
                 element.click();
             } else {
                 allElementsFound = false;
@@ -37,7 +38,7 @@ window.onload = function() {
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 let unitMb = 1000* 1024;
-let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
+let filButtonClass = 'block gradio-html svelte-90oupt padded hide-container';
 let filButtonId = 'file-uploader';
 
 const modelTypeMap = {
@@ -57,6 +58,7 @@ function clearFileInput() {
     newFileInput.className = filButtonClass;
     newFileInput.multiple = true;
     newFileInput.style.width = '100%';
+    newFileInput.style.marginTop = '25px';
     newFileInput.onchange = showFileName;
     fileInput.parentNode.replaceChild(newFileInput, fileInput);
 }
@@ -176,7 +178,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
     }
 }
 
-function uploadFileToS3(files, groupName) {
+function uploadFileToS3(files, groupName, username) {
     const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
@@ -198,7 +200,7 @@ function uploadFileToS3(files, groupName) {
     const payload = {
         checkpoint_type: groupName,
         filenames: filenames,
-        params: { message: "placeholder for chkpts upload test" }
+        params: { message: "placeholder for chkpts upload test", "creator": username }
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
@@ -389,11 +391,12 @@ function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName
 }
 function uploadFiles() {
     const uploadPromises = [];
+    const username = document.querySelector('#invisible_user_name_for_ui > label > textarea')['value']
     for (const [groupName, files] of uploadedFilesMap.entries()) {
         // for (const file of files) {
         //     uploadPromises.push(uploadFileToS3(file, groupName));
         // }
-        uploadPromises.push(uploadFileToS3(files, groupName));
+        uploadPromises.push(uploadFileToS3(files, groupName, username));
     }
 
     Promise.all(uploadPromises)

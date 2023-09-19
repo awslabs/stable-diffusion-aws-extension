@@ -1,7 +1,6 @@
 import {
   aws_iam,
   aws_kms,
-  // aws_sns_subscriptions as sns_subscriptions,
   CfnCondition,
   Fn,
   CfnParameter,
