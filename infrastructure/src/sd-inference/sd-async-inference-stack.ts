@@ -84,6 +84,7 @@ export class SDAsyncInferenceStack extends NestedStack {
         router: inferV2Router,
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
+        multiUserTable: props.multiUserTable,
       },
     );
 
