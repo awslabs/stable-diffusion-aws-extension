@@ -92,12 +92,23 @@ def create_train_job_api(raw_event, context):
     _lora_train_type = event.lora_train_type
 
     if _lora_train_type.lower() == LoraTrainType.KOHYA:
-        kohya_default_config = load_json_from_s3(bucket_name, 'template/' + const.KOHYA_TOML_FILE_NAME)
+        kohya_base_key = f'{_lora_train_type.lower()}/train/{request_id}'
+        toml_dest_path = f'{kohya_base_key}/input/{const.KOHYA_TOML_FILE_NAME}'
+        ckpt_output_path = f'{kohya_base_key}/output'
+        toml_template_path = 'template/' + const.KOHYA_TOML_FILE_NAME
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
         if "config_params" in event.params:
-            kohya_default_config.update(event.params["config_params"])
+            updated_parameters = event.params["config_params"]
+            update_toml_file_in_s3(bucket_name, toml_template_path, toml_dest_path, updated_parameters)
+        else:
+            # Copy template file and make no changes as no config parameters are defined
+            s3.copy_object(
+                CopySource={'Bucket': bucket_name, 'Key': toml_template_path},
+                Bucket=bucket_name,
+                Key=toml_dest_path
+            )
         
-        base_key = f'{_lora_train_type.lower()}/train/{request_id}'
+
         # Add model parameters into train params
         # event.params["training_params"]["model_name"] = model.name
         # event.params["training_params"]["model_type"] = model.model_type
