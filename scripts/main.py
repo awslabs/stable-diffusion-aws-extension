@@ -170,7 +170,7 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is inService
         sd_model_on_cloud = args[0]
-        if not sd_model_on_cloud:
+        if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
             return
 
         current_model = sd_models.select_checkpoint()
@@ -258,8 +258,6 @@ class SageMakerUI(scripts.Script):
         p.subseeds = p.all_subseeds
         _prompts, extra_network_data = extra_networks.parse_prompts(p.all_prompts)
 
-        lora_extensions_builtin = importlib.import_module("extensions-builtin.Lora.networks")
-        lora_lookup = lora_extensions_builtin.available_network_aliases
         # load lora
         for key, vals in extra_network_data.items():
             if key == 'lora':
@@ -267,9 +265,12 @@ class SageMakerUI(scripts.Script):
                     if 'Lora' not in models:
                         models['Lora'] = []
 
-                    lora_filename = lora_lookup[val.positional[0]].filename.split(os.path.sep)[-1]
-                    if lora_filename not in models['Lora']:
-                        models['Lora'].append(lora_filename)
+                    lora_filename = val.positional[0]
+                    lora_models_dir = os.path.join("models", "Lora")
+                    for filename in os.listdir(lora_models_dir):
+                        if filename.startswith(lora_filename):
+                            if lora_filename not in models['Lora']:
+                                models['Lora'].append(filename)
             if key == 'hypernet':
                 logger.debug(key, vals)
                 for val in vals:
