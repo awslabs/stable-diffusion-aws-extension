@@ -556,7 +556,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         if not api_gateway_url.endswith('/'):
             api_gateway_url += '/'
         api_key = get_variable_from_json('api_token')
-        logger.info('!!!!!!api_gateway_url', api_gateway_url)
+        logger.info(f'!!!!!!api_gateway_url {api_gateway_url}')
 
         url = str(api_gateway_url) + "checkpoint"
 

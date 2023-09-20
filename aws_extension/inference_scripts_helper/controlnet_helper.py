@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List
 
 
@@ -14,6 +15,10 @@ def controlnet_args(script_name, arg, *_) -> Dict[str, List[str]]:
     if arg.model == 'None':
         return {}
 
-    models.append(f'{arg.model}.pth')
+    cn_models_dir = os.path.join("models", "ControlNet")
+
+    for filename in os.listdir(cn_models_dir):
+        if filename.startswith(arg.model):
+            models.append(filename)
 
     return {'ControlNet': models}

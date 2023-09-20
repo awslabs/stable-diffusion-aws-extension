@@ -188,6 +188,8 @@ class SageMakerUI(scripts.Script):
         if not api_param_cls:
             raise NotImplementedError
 
+        p.sampler_index = p.sampler_name
+
         api_param = api_param_cls(**p.__dict__)
         if self.is_img2img:
             api_param.mask = p.image_mask
@@ -226,7 +228,6 @@ class SageMakerUI(scripts.Script):
                             if val not in models[key]:
                                 models[key].append(val)
 
-        api_param.sampler_index = p.sampler_name
 
         # fixme: not handle batches yet
         # we not support automatic for simplicity because the default is Automatic
