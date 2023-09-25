@@ -20,7 +20,7 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
-MAX_WORKERS = 5
+MAX_WORKERS = 10
 
 
 # GET /checkpoints?username=USER_NAME&types=value&status=value
