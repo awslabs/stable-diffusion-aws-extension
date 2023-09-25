@@ -29,6 +29,7 @@ def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
 
 # IMPORTANT: if config changed, the class need restart to get refreshed
 class CloudAuthLoader:
+    username = None
 
     def __init__(self):
         if not check_config_json_exist():
