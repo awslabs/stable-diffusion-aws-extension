@@ -1,0 +1,11 @@
+{
+  "TableName": "MultiUserTable",
+  "KeySchema": [
+    { "AttributeName": "kind", "KeyType": "HASH" },
+    { "AttributeName": "sort_key", "KeyType": "RANGE" }
+  ],
+  "AttributeDefinitions": [
+    { "AttributeName": "kind", "AttributeType": "S" },
+    { "AttributeName": "sort_key", "AttributeType": "S" }
+  ]
+}

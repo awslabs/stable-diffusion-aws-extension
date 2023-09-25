@@ -14,35 +14,36 @@ headingLevel: 2
 
 <!-- Generator: Widdershins v4.0.1 -->
 
-<h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
+<h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion 亚马逊云科技插件 API</h1>
 
-# Overview
-This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WEBUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
+# 概述
+本文档描述了Stable Diffusion 亚马逊云科技插件解决方案的所有 API。此解决方案包括两个部分，一部分是Stable Diffusion WebUI 扩展，它是基于 Gradio 的客户端，提供用户友好的界面，另一部分是称为中间件的资源部署在 AWS 云上，中间件提供了多个 API 接口，允许Stable Diffusion 亚马逊云科技插件客户端与 AWS 云上的服务进行交互，如 Sagemaker 和 S3，以执行模型更新/训练和推理操作。
 
-In order to support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.
+为了支持不使用Stable Diffusion WebUI的用户，我们提供了本文档，列出了所有的 API 接口，以帮助用户了解如何调用 API 方法进行训练或推理。
+
+在用户[部署](../deployment/deployment.md)解决方案中间件 CloudFormation 后，用户可以在主堆栈的输出部分获取 API URL 和令牌。请参考[此文档](../deployment/deployment.md)。
 
 
-After user [deployed](../deployment/deployment.md) solution middleware cloudformation, user can get the API URL and Token in the output part of the main stack. Please refer to [this document](../deployment/deployment.md)
+**URL示例:**
 
-**Base URLs:**
+* https://API_Gateway_ID.execute-api.AWS_Account_Region.amazonaws.com/prod
 
-* <a href="https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod">https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod</a>
 
-**Authentication**
+**认证**
 
 * API Key (api_key)
-    - Parameter Name: **x-api-key**, in: header. 
+    - API 调用时您需要在标头的**x-api-key**参数中配置此值。
 
-# User Scenarios
-## 1. Deploy a new Endpoint
-![Deploy a new Endpoint](../images/deploy_sagemaker_endpoint.png)
+# 用户场景
+## 1. 部署新的终端节点
 
-Call [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) to create a new sagemaker endpoint, you need to specify two parameters for creating, one is instance_type, candidate values are "ml.g4dn.2xlarge","ml.g4dn.4xlarge","ml.g4dn.8xlarge","ml.g4dn.12xlarge", another is initial_instance_count, candidate values are 1|2|3|4.
+![部署新的终端节点](../images/deploy_sagemaker_endpoint.png)
 
-After calling [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint), you need to call [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs) to list all the endpoint status. Normally it took about more than 10 minutes to make a new Sagemaker endpoint change to inService status. The Sagemaker endpoint can only be used for inference when it is inService status.
+调用 [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) 来创建一个新的 Sagemaker 终端节点，您需要指定两个用于创建的参数，一个是 `instance_type`，可选值为 "ml.g4dn.2xlarge"、"ml.g4dn.4xlarge"、"ml.g4dn.8xlarge"、"ml.g4dn.12xlarge"，另一个是 `initial_instance_count`，可选值为 1|2|3|4。
 
-If the endpoint is in failed status, you can call [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) with parameter jobID, the response will show the reason why endpoint deployment is failed, normally it is caused by AWS account quota limitation.
+在调用 [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) 后，您需要调用 [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs) 来列出所有终端节点的状态。通常需要超过10分钟时间才能使新的 Sagemaker 终端节点更改为 "inService" 状态。Sagemaker 终端节点只能在 "inService" 状态下用于推理。
 
+如果终端节点处于失败状态，您可以调用 [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) 并传递参数 `jobID`，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。
 
 <details>
   <summary>sequence digram raw</summary>
@@ -56,15 +57,16 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
   
 </details>
 
-## 2. Upload a model
+## 2. 上传模型
 
-## 3. Train a model
+## 3. 训练模型
 
-## 4. Do Inference
-![Do Inference](../images/do-inference.png)
-After Sagemaker endpoint is in inService status, you can call [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference).
+## 4. 进行推理
+![进行推理](../images/do-inference.png)
+在 Sagemaker 终端节点处于 "inService" 状态之后，您可以调用 [/inference-api/inference](#inference-l2-api) 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 [/inference-api/inference](#inference-l2-api) 中。
 
-[/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) will return following json structure to client:
+[/inference-api/inference](#inference-l2-api) 将向客户端返回以下 JSON 结构：
+
 ```json
 {
   "inference_id": "XXXXXXX",
@@ -73,7 +75,7 @@ After Sagemaker endpoint is in inService status, you can call [/api/inference/ru
   "output_path": "path_of_prediction_output"
 }
 ```
-Client then can call [/inference/get-inference-job](#inferenceget-inference-job) using the inference_id as parameter to query the inference job status.  If the inference job has finished successfully(status is "succeed"), Client can use [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) to get all inference result images, the images will be returned as S3 presigned url list so client can download. following is am example of get-inference-job-image-output result:
+然后，客户端可以调用 [/inference/get-inference-job](#inferenceget-inference-job)，并将 `inference_id` 作为参数来查询推理作业的状态。如果推理作业成功完成（状态为 "succeed"），客户端可以使用 [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) 来获取所有推理结果图像，这些图像将以 S3 预签名 URL 列表的形式返回，以便客户端下载。以下是一个示例，展示了 `get-inference-job-image-output` 的结果：
 
 ```json
 [
@@ -81,7 +83,8 @@ Client then can call [/inference/get-inference-job](#inferenceget-inference-job)
 ]
 ```
 
-Also Client can call [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) to get all the inference parameters, the response of [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) is an S3 presigned url contains the json format of the parameters, following is an response example:
+此外，客户端还可以调用 [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) 来获取所有推理参数，[/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) 的响应是一个包含参数的 JSON 格式的 S3 预签名 URL，以下是一个响应示例：
+
 
 ```json
 [
@@ -94,7 +97,7 @@ Also Client can call [/inference/get-inference-job-param-output](#inferenceget-i
   
 title Do Inference
 
-Client->Middleware:Call **/api/inference/run-sagemaker-inference**
+Client->Middleware:Call **/inference-api/inference**
 Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
 Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
@@ -110,49 +113,52 @@ Client->Middleware:Call **/inference/get-inference-job-param-output** \n to get 
 Middleware->Client: return the inference parameter in presigned url format
   
 </details>
-# API List 
+# API 列表
 
-| Index | Http Method | API Name                                                                                                | Description |
+| 序号 | HTTP 方法 | API 名称                                                                                                | 描述 |
 |-------|-------------|---------------------------------------------------------------------------------------------------------| --- |
-| 1     | GET         | [/inference/test-connection](#inferencetest-connection)                                                 | Test whether client can connect to api and check the API_TOKEN is correct | | 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
-| 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
-| 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job.               |
-| 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job.                                     |
-| 6     | POST        | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference)                          | Run sagemaker inference using default parameters                                       |
-| 7     | POST        | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | Deploys a SageMaker endpoint.                                                         |
-| 8     | POST        | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | Deletes a SageMaker endpoint.                                                         |
-| 9     | GET         | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | Lists all endpoint deployment jobs.                                                   |
-| 10    | GET         | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | Gets a specific endpoint deployment job.                                              |
-| 11    | GET         | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading.                                          |
-| 12    | GET         | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | Gets the list of textual inversions.                                                                     |
-| 13    | GET         | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | Gets the list of LoRa.                                                                                  |
-| 14    | GET         | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | Gets the list of hypernetworks.                                                                         |
-| 15    | GET         | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | Gets the list of ControlNet models.                                                                     |
-| 16    | POST        | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | Runs a model merge.                                                                                     |
-| 17    | POST        | [/model](#modelpost)                                                                                    | Creates a new model.                                                                                    |
-| 18    | PUT         | [/model](#modelput)                                                                                | Upload the model file                                                                                   |
-| 19    | GET         | [/models](#modelsget)                                                                              | Lists all models.                                                                                       |
-| 20    | GET         | [/checkpoint](#checkpoint)                                                                         | Gets a checkpoint.                                                                                      |
-| 21    | PUT         | [/checkpoint](#checkpointput)                                                                      | Updates a checkpoint.                                                                                   |
-| 22    | GET         | [/checkpoints](#checkpoints)                                                                       | Lists all checkpoints.                                                                                  |
-| 23    | POST        | [/train](#trainpost)                                                                              | Starts a training job.                                                                                  |
-| 24    | PUT         | [/train](#trainput)                                                                                | Updates a training job.                                                                                 |
-| 25    | GET         | [/trains](#trainsget)                                                                              | Lists all training jobs.                                                                                |
-| 26    | POST        | [/dataset](#datasetpost)                                                                          | Creates a new dataset.                                                                                  |
-| 27    | PUT         | [/dataset](#datasetput)                                                                            | Updates a dataset.                                                                                      |
-| 28    | GET         | [/datasets](#datasetsget)                                                                          | Lists all datasets.                                                                                     |
-| 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | Gets data of a specific dataset.                                                                        |
+| 1     | GET         | [/inference/test-connection](#inferencetest-connection)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
+| 2     | GET         | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | 列出所有推理作业。 |
+| 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。 |
+| 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。               |
+| 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | 获取特定推理作业的参数输出。                                     |
+| 6     | POST        | [/inference-api/inference](#inference-l2-api)                          | 使用默认参数运行 SageMaker 推理                                       |
+| 7     | POST        | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                                                         |
+| 8     | POST        | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                                                         |
+| 9     | GET         | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                                                   |
+| 10    | GET         | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | 获取特定终端节点部署作业。                                              |
+| 11    | GET         | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | 生成用于上传的 S3 预签名 URL。                                          |
+| 12    | GET         | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | 获取文本反演列表。                                                                     |
+| 13    | GET         | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | 获取 LoRa 列表。                                                                                  |
+| 14    | GET         | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | 获取超网络列表。                                                                         |
+| 15    | GET         | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | 获取 ControlNet 模型列表。                                                                     |
+| 16    | POST        | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | 运行模型合并。                                                                                     |
+| 17    | POST        | [/model](#modelpost)                                                                                    | 创建新模型。                                                                                    |
+| 18    | PUT         | [/model](#modelput)                                                                                | 上传模型文件。                                                                                   |
+| 19    | GET         | [/models](#modelsget)                                                                              | 列出所有模型。                                                                                       |
+| 20    | GET         | [/checkpoint](#checkpoint)                                                                         | 获取检查点。                                                                                      |
+| 21    | PUT         | [/checkpoint](#checkpointput)                                                                      | 更新检查点。                                                                                   |
+| 22    | GET         | [/checkpoints](#checkpoints)                                                                       | 列出所有检查点。                                                                                  |
+| 23    | POST        | [/train-api/train](#train-api-post)                                                                              | 启动训练作业。                                                                                  |
+| 24    | PUT         | [/train](#trainput)                                                                                | 更新训练作业。                                                                                 |
+| 25    | GET         | [/trains](#trainsget)                                                                              | 列出所有训练作业。                                                                                |
+| 26    | POST        | [/dataset](#datasetpost)                                                                          | 创建新数据集。                                                                                  |
+| 27    | PUT         | [/dataset](#datasetput)                                                                            | 更新数据集。                                                                                      |
+| 28    | GET         | [/datasets](#datasetsget)                                                                          | 列出所有数据集。                                                                                     |
+| 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | 获取特定数据集的数据。                                                                        |
+
+
 
 <br/>
 
 # /inference/test-connection
-## test middleware connection
+## 测试中间件连接状态
 
 <a id="opIdtest_connection_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -167,7 +173,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -192,37 +198,34 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/test-connection`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
-null
+{
+    "message": "Success"
+}
 ```
 
-<h3 id="used-to-let-client-test-connection-responses">Responses</h3>
+<h3 id="used-to-let-client-test-connection-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="used-to-let-client-test-connection-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
 # /inference-api/inference
 
-<a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a>
+文生图，通过文字生成图片
 
-Generate a new image from a text prompt.
+<a id="inference-l2-api"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -238,19 +241,18 @@ body = {
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, json = body)
+r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference", headers = headers, json = body)
 
 print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -260,8 +262,7 @@ const inputBody = '{
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }';
@@ -271,7 +272,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference",
+fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference",
 {
   method: "POST",
   body: inputBody,
@@ -285,9 +286,9 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /api/inference/run-sagemaker-inference`
+`POST /inference-api/inference`
 
-> Body parameter
+> Body
 
 ```json
 {
@@ -297,14 +298,13 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 ```
 
-<h3 id="run-sagemaker-inference-parameters">Parameters</h3>
+<h3 id="inference-api">参数</h3>
 
 > Parameter example
 
@@ -400,9 +400,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
   }
 }
 ```
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -413,9 +413,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 }
 ```
 
-<h3 id="run-sagemaker-inference-responses">Responses</h3>
+<h3 id="inference-api">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
@@ -425,9 +425,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 
 <a id="opIddeploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -447,7 +447,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -476,7 +476,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /inference/deploy-sagemaker-endpoint`
 
-> Body parameter
+> Body参数
 
 ```json
 {
@@ -485,31 +485,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="deploy-sagemaker-endpoint-parameters">Parameters</h3>
+<h3 id="deploy-sagemaker-endpoint-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="deploy-sagemaker-endpoint-responses">Responses</h3>
+<h3 id="deploy-sagemaker-endpoint-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="deploy-sagemaker-endpoint-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -517,9 +512,9 @@ This operation does not require authentication
 
 <a id="opIddelete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -542,7 +537,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -573,7 +568,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /inference/delete-sagemaker-endpoint`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -584,31 +579,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="delete-sagemaker-endpoint-parameters">Parameters</h3>
+<h3 id="delete-sagemaker-endpoint-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="delete-sagemaker-endpoint-responses">Responses</h3>
+<h3 id="delete-sagemaker-endpoint-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="delete-sagemaker-endpoint-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -616,9 +606,9 @@ This operation does not require authentication
 
 <a id="opIdlist_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -633,7 +623,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -658,9 +648,9 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/list-endpoint-deployment-jobs`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 [
@@ -689,17 +679,12 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 ]
 ```
 
-<h3 id="list-endpoint-deployment-jobs-responses">Responses</h3>
+<h3 id="list-endpoint-deployment-jobs-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="list-endpoint-deployment-jobs-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -707,9 +692,9 @@ This operation does not require authentication
 
 <a id="opIdlist_inference_jobs_inference_list_inference_jobs_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -724,7 +709,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -749,9 +734,9 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/list-inference-jobs`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 [
@@ -782,17 +767,13 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 ]
 ```
 
-<h3 id="list-inference-jobs-responses">Responses</h3>
+<h3 id="list-inference-jobs-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="list-inference-jobs-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -800,9 +781,9 @@ This operation does not require authentication
 
 <a id="opIdget_endpoint_deployment_job_inference_get_endpoint_deployment_job_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -819,7 +800,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -844,15 +825,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-endpoint-deployment-job`
 
-<h3 id="get-endpoint-deployment-job-parameters">Parameters</h3>
+<h3 id="get-endpoint-deployment-job-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |jobID|query|string|true|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -865,18 +846,14 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="get-endpoint-deployment-job-responses">Responses</h3>
+<h3 id="get-endpoint-deployment-job-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-endpoint-deployment-job-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -884,9 +861,9 @@ This operation does not require authentication
 
 <a id="opIdget_inference_job_inference_get_inference_job_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -901,7 +878,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -926,15 +903,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-inference-job`
 
-<h3 id="get-inference-job-parameters">Parameters</h3>
+<h3 id="get-inference-job-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |jobID|query|string|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -951,18 +928,14 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="get-inference-job-responses">Responses</h3>
+<h3 id="get-inference-job-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-inference-job-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -970,9 +943,9 @@ This operation does not require authentication
 
 <a id="opIdget_inference_job_image_output_inference_get_inference_job_image_output_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -987,7 +960,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1012,15 +985,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-inference-job-image-output`
 
-<h3 id="get-inference-job-image-output-parameters">Parameters</h3>
+<h3 id="get-inference-job-image-output-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |jobID|query|string|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 [
@@ -1028,26 +1001,24 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 ]
 ```
 
-<h3 id="get-inference-job-image-output-responses">Responses</h3>
+<h3 id="get-inference-job-image-output-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-inference-job-image-output-responseschema">Response Schema</h3>
+<h3 id="get-inference-job-image-output-responseschema">响应结构</h3>
 
-Status Code **200**
+状态码 **200**
 
 *Response Get Inference Job Image Output Inference Get Inference Job Image Output Get*
 
-|Name|Type|Required|Restrictions|Description|
+|名称|类型|是否需要填写|限制|描述|
 |---|---|---|---|---|
 |Response Get Inference Job Image Output Inference Get Inference Job Image Output Get|[string]|false|none|none|
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+
 
 <br/>
 
@@ -1055,9 +1026,9 @@ This operation does not require authentication
 
 <a id="opIdget_inference_job_param_output_inference_get_inference_job_param_output_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1072,7 +1043,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1097,15 +1068,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-inference-job-param-output`
 
-<h3 id="get-inference-job-param-output-parameters">Parameters</h3>
+<h3 id="get-inference-job-param-output-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |jobID|query|string|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 [
@@ -1113,26 +1084,14 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 ]
 ```
 
-<h3 id="get-inference-job-param-output-responses">Responses</h3>
+<h3 id="get-inference-job-param-output-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-inference-job-param-output-responseschema">Response Schema</h3>
 
-Status Code **200**
-
-*Response Get Inference Job Param Output Inference Get Inference Job Param Output Get*
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|Response Get Inference Job Param Output Inference Get Inference Job Param Output Get|[string]|false|none|none|
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1140,9 +1099,9 @@ This operation does not require authentication
 
 <a id="opIdgenerate_s3_presigned_url_for_uploading_inference_generate_s3_presigned_url_for_uploading_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1157,7 +1116,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1182,31 +1141,29 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/generate-s3-presigned-url-for-uploading`
 
-<h3 id="generate-s3-presigned-url-for-uploading-parameters">Parameters</h3>
+<h3 id="generate-s3-presigned-url-for-uploading-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |s3_bucket_name|query|string|false|none|
 |key|query|string|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/config/aigc.json?XXX"
 ```
 
-<h3 id="generate-s3-presigned-url-for-uploading-responses">Responses</h3>
+<h3 id="generate-s3-presigned-url-for-uploading-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|string|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+ 
 
 <br/>
 
@@ -1214,9 +1171,9 @@ This operation does not require authentication
 
 <a id="opIdget_texual_inversion_list_inference_get_texual_inversion_list_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1231,7 +1188,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1256,25 +1213,21 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-texual-inversion-list`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="get-textual-inversion-list-responses">Responses</h3>
+<h3 id="get-textual-inversion-list-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="get-textual-inversion-list-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1282,9 +1235,9 @@ This operation does not require authentication
 
 <a id="opIdget_lora_list_inference_get_lora_list_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1299,7 +1252,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1324,25 +1277,21 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-lora-list`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="get-lora-list-responses">Responses</h3>
+<h3 id="get-lora-list-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="get-lora-list-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1350,9 +1299,9 @@ This operation does not require authentication
 
 <a id="opIdget_hypernetwork_list_inference_get_hypernetwork_list_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1367,7 +1316,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1392,25 +1341,21 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-hypernetwork-list`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="get-hypernetwork-list-responses">Responses</h3>
+<h3 id="get-hypernetwork-list-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="get-hypernetwork-list-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1418,9 +1363,9 @@ This operation does not require authentication
 
 <a id="opIdget_controlnet_model_list_inference_get_controlnet_model_list_get"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1435,7 +1380,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1460,25 +1405,21 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /inference/get-controlnet-model-list`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 null
 ```
 
-<h3 id="get-controlnet-model-list-responses">Responses</h3>
+<h3 id="get-controlnet-model-list-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="get-controlnet-model-list-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1486,9 +1427,9 @@ This operation does not require authentication
 
 <a id="opIdrun_model_merge_inference_run_model_merge_post"></a>
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1503,7 +1444,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1528,9 +1469,9 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /inference/run-model-merge`
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -1540,17 +1481,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="run-model-merge-responses">Responses</h3>
+<h3 id="run-model-merge-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="run-model-merge-responseschema">Response Schema</h3>
 
-<aside class="success">
-This operation does not require authentication
-</aside>
+
+
 
 <h1 id="stable-diffusion-train-and-deploy-api-default">default</h1>
 
@@ -1558,9 +1497,9 @@ This operation does not require authentication
 
 # /model(POST)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1576,7 +1515,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -1623,7 +1562,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /model`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -1650,15 +1589,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-model-parameters">Parameters</h3>
+<h3 id="create-model-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -1680,7 +1619,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -1689,27 +1628,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-model-responses">Responses</h3>
+<h3 id="create-model-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="create-model-responseschema">Response Schema</h3>
+<h3 id="create-model-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /model(PUT)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1754,7 +1692,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -1807,7 +1745,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `PUT /model`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -1840,15 +1778,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-model-parameters">Parameters</h3>
+<h3 id="update-model-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -1863,7 +1801,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -1872,27 +1810,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-model-responses">Responses</h3>
+<h3 id="update-model-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="update-model-responseschema">Response Schema</h3>
+<h3 id="update-model-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /models(GET)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -1907,7 +1844,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -1932,15 +1869,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /models`
 
-<h3 id="list-models-parameters">Parameters</h3>
+<h3 id="list-models-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |types|query|array[string]|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -1956,7 +1893,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -1965,27 +1902,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="list-models-responses">Responses</h3>
+<h3 id="list-models-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="list-models-responseschema">Response Schema</h3>
+<h3 id="list-models-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /checkpoint
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2016,7 +1952,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -2055,7 +1991,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /checkpoint`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -2074,15 +2010,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-checkpoint-parameters">Parameters</h3>
+<h3 id="create-checkpoint-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2104,7 +2040,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2113,27 +2049,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-checkpoint-responses">Responses</h3>
+<h3 id="create-checkpoint-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="create-checkpoint-responseschema">Response Schema</h3>
+<h3 id="create-checkpoint-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /checkpoint(put)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2178,7 +2113,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -2231,7 +2166,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `PUT /checkpoint`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -2264,15 +2199,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-checkpoints-parameters">Parameters</h3>
+<h3 id="update-checkpoints-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2287,7 +2222,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2296,27 +2231,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-checkpoints-responses">Responses</h3>
+<h3 id="update-checkpoints-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="update-checkpoints-responseschema">Response Schema</h3>
+<h3 id="update-checkpoints-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /checkpoints
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2331,7 +2265,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -2356,16 +2290,16 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /checkpoints`
 
-<h3 id="list-checkpoints-parameters">Parameters</h3>
+<h3 id="list-checkpoints-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |status|query|array[string]|false|none|
 |types|query|array[string]|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2386,7 +2320,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2395,27 +2329,27 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="list-checkpoints-responses">Responses</h3>
+<h3 id="list-checkpoints-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="list-checkpoints-responseschema">Response Schema</h3>
+<h3 id="list-checkpoints-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
-# /train(POST)
+# /train-api/train(POST)
 
-### **Code samples :**
+<a id="train-api-post"></a>
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2426,42 +2360,101 @@ headers = {
 }
 
 const inputBody = {
-"train_type": "dreambooth",
-"model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-"params": {
-  "train_params": {
-    "training_instance_type": "ml.g4dn.2xlarge"
-  },
-  "test1": 2
-},
-"filenames": [
-  "training_config.json",
-  "images.tar"
-]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train', headers = headers, json = inputBody)
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train', headers = headers, json = inputBody)
 
 print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -2469,7 +2462,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train',
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train',
 {
   method: 'POST',
   body: inputBody,
@@ -2483,56 +2476,88 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /train`
+`POST /train-api/train`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 ```
 
-<h3 id="create-train-job-parameters">Parameters</h3>
+<h3 id="create-train-job-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
-  "statusCode": 200,
-  "job": {
-    "id": "id",
-    "status": "Initialed",
-    "trainType": "Stable-diffusion",
-    "params": {},
-    "input_location": "s3://S3_Location"
-  },
-  "s3PresignUrl": [
-    {
-      "filename": "s3://S3_Location"
-    }
-  ]
+	"statusCode": 200,
+	"job": {
+		"id": "81f00711-7cc3-4cac-90f3-13934f29524a",
+		"status": "Initial",
+		"trainType": "Stable-diffusion",
+		"params": {
+			"training_params": {
+				...
+			},
+			"config_params": {
+				...
+			}
+		},
+		"input_location": "s3://<your_s3_bucket>/train/<your_model_name>/81f00711-7cc3-4cac-90f3-13934f29524a/input"
+	},
+	"s3PresignUrl": null
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2541,27 +2566,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-train-job-responses">Responses</h3>
+<h3 id="create-train-job-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="create-train-job-responseschema">Response Schema</h3>
+<h3 id="create-train-job-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /train(PUT)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2582,7 +2606,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -2611,7 +2635,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `PUT /train`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -2620,15 +2644,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-train-job-parameters">Parameters</h3>
+<h3 id="update-train-job-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2644,7 +2668,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2653,27 +2677,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-train-job-responses">Responses</h3>
+<h3 id="update-train-job-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="update-train-job-responseschema">Response Schema</h3>
+<h3 id="update-train-job-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /trains(GET)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2688,7 +2711,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -2713,15 +2736,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /trains`
 
-<h3 id="list-train-jobs-parameters">Parameters</h3>
+<h3 id="list-train-jobs-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |types|query|array[string]|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2739,7 +2762,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2748,27 +2771,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="list-train-jobs-responses">Responses</h3>
+<h3 id="list-train-jobs-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="list-train-jobs-responseschema">Response Schema</h3>
+<h3 id="list-train-jobs-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /dataset(POST)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2796,7 +2818,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -2832,7 +2854,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `POST /dataset`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -2848,15 +2870,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-dataset-parameters">Parameters</h3>
+<h3 id="create-dataset-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2870,7 +2892,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2879,27 +2901,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="create-dataset-responses">Responses</h3>
+<h3 id="create-dataset-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="create-dataset-responseschema">Response Schema</h3>
+<h3 id="create-dataset-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /dataset(PUT)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -2920,7 +2941,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 const inputBody = '{
@@ -2949,7 +2970,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `PUT /dataset`
 
-> Body parameter
+> Body 参数
 
 ```json
 {
@@ -2958,15 +2979,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-dataset-parameters">Parameters</h3>
+<h3 id="update-dataset-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |body|body|object|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -2976,7 +2997,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -2985,27 +3006,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="update-dataset-responses">Responses</h3>
+<h3 id="update-dataset-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="update-dataset-responseschema">Response Schema</h3>
+<h3 id="update-dataset-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /datasets(GET)
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -3020,7 +3040,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -3045,15 +3065,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /prod/datasets`
 
-<h3 id="list-datasets-by-dataset-status-parameters">Parameters</h3>
+<h3 id="list-datasets-by-dataset-status-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |dataset_status|query|array[string]|false|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -3069,7 +3089,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -3078,27 +3098,26 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="list-datasets-by-dataset-status-responses">Responses</h3>
+<h3 id="list-datasets-by-dataset-status-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="list-datasets-by-dataset-status-responseschema">Response Schema</h3>
+<h3 id="list-datasets-by-dataset-status-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
 <br/>
 
 # /{dataset_name}/data
 
-### **Code samples :**
+### **示例：**
 
-Python example code:
+Python示例代码：
 
 ```Python
 import requests
@@ -3113,7 +3132,7 @@ print(r.json())
 
 ```
 
-Javascript example code:
+Javascript示例代码：
 
 ```javascript
 
@@ -3138,15 +3157,15 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 `GET /{dataset_name}/data`
 
-<h3 id="list-dataset-items-by-dataset-name-parameters">Parameters</h3>
+<h3 id="list-dataset-items-by-dataset-name-parameters">参数</h3>
 
-|Name|In|Type|Required|Description|
+|名称|位置|数据类型|是否需要填写|描述|
 |---|---|---|---|---|
 |dataset_name|path|string|true|none|
 
-> Example responses
+> 响应示例
 
-> 200 Response
+> 200 响应
 
 ```json
 {
@@ -3164,7 +3183,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-> 500 Response
+> 500 响应
 
 ```json
 {
@@ -3173,112 +3192,17 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 }
 ```
 
-<h3 id="list-dataset-items-by-dataset-name-responses">Responses</h3>
+<h3 id="list-dataset-items-by-dataset-name-responses">响应</h3>
 
-|Status|Meaning|Description|Schema|
+|状态码|含义|描述|结构|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-<h3 id="list-dataset-items-by-dataset-name-responseschema">Response Schema</h3>
+<h3 id="list-dataset-items-by-dataset-name-responseschema">响应结构</h3>
 
 <aside class="warning">
-To perform this operation, you must be authenticated by means of one of the following methods:
-api_key
+要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
-# Schemas
-
-<h2 id="tocS_Empty">Empty</h2>
-<!-- backwards compatibility -->
-<a id="schemaempty"></a>
-<a id="schema_Empty"></a>
-<a id="tocSempty"></a>
-<a id="tocsempty"></a>
-
-```json
-{}
-
-```
-
-Empty Schema
-
-### Properties
-
-*None*
-
-<h2 id="tocS_HTTPValidationError">HTTPValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemahttpvalidationerror"></a>
-<a id="schema_HTTPValidationError"></a>
-<a id="tocShttpvalidationerror"></a>
-<a id="tocshttpvalidationerror"></a>
-
-```json
-{
-  "detail": [
-    {
-      "loc": [
-        "string"
-      ],
-      "msg": "string",
-      "type": "string"
-    }
-  ]
-}
-
-```
-
-HTTPValidationError
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|detail|[[ValidationError](#schemavalidationerror)]|false|none|none|
-
-<h2 id="tocS_ValidationError">ValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemavalidationerror"></a>
-<a id="schema_ValidationError"></a>
-<a id="tocSvalidationerror"></a>
-<a id="tocsvalidationerror"></a>
-
-```json
-{
-  "loc": [
-    "string"
-  ],
-  "msg": "string",
-  "type": "string"
-}
-
-```
-
-ValidationError
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|loc|[anyOf]|true|none|none|
-
-anyOf
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|string|false|none|none|
-
-or
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|integer|false|none|none|
-
-continued
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|msg|string|true|none|none|
-|type|string|true|none|none|
 

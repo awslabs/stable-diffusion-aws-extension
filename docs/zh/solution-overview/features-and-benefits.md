@@ -5,11 +5,11 @@
 
 | **功能**  | **支持版本** |  **注释** |
 | ------------- | ------------- | ------------- |
-| [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.4.0  | |
-| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.4.0  | |
-| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.4.0  | 支持除batch外的所有功能|
+| [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.5.1  | 支持Stable Diffusion XL 1.0|
+| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.5.1  | |
+| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.5.1  | 支持除batch外的所有功能|
 | [LoRa](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.2.1  | |
-| [ControlNet](https://github.com/Mikubill/sd-webui-controlnet){:target="_blank"}  | V1.1.227  | |
+| [ControlNet](https://github.com/Mikubill/sd-webui-controlnet){:target="_blank"}  | V1.1.233  | |
 | [Dreambooth](https://github.com/d8ahazard/sd_dreambooth_extension){:target="_blank"}  | V1.0.14  | |
 | [Image browser](https://github.com/yfszzx/stable-diffusion-webui-images-browser){:target="_blank"}  | Latest  | |
 

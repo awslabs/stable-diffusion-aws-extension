@@ -17,6 +17,7 @@ export interface CreateCheckPointApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -28,6 +29,7 @@ export class CreateCheckPointApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
 
@@ -37,6 +39,7 @@ export class CreateCheckPointApi {
     this.scope = scope;
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
+    this.multiUserTable = props.multiUserTable;
     this.baseId = id;
     this.router = props.router;
     this.src = props.srcRoot;
@@ -62,7 +65,7 @@ export class CreateCheckPointApi {
         'dynamodb:UpdateItem',
         'dynamodb:DeleteItem',
       ],
-      resources: [this.checkpointTable.tableArn],
+      resources: [this.checkpointTable.tableArn, this.multiUserTable.tableArn],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -111,6 +114,7 @@ export class CreateCheckPointApi {
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
