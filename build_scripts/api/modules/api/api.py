@@ -16,10 +16,11 @@ import json
 from secrets import compare_digest
 import traceback
 import sys
+import copy
 
 from modules import shared, scripts, pipeline, errors, sd_samplers
 from modules.api.mme_utils import checkspace_and_update_models, download_model, models_path
-from modules.api.utils import read_from_s3
+from modules.api.utils import read_from_s3, get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
 # from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
 # from modules.api import models
 from modules.shared import opts
@@ -33,6 +34,7 @@ from PIL import PngImagePlugin,Image
 # from modules.sd_models_config import find_checkpoint_config_near_filename
 # from modules.realesrgan_model import get_realesrgan_models
 # from modules import devices
+from modules import sd_models
 # from typing import Dict, List, Any
 import piexif
 import piexif.helper
@@ -41,6 +43,8 @@ from contextlib import closing
 from modules.api import models
 
 import logging
+
+from dreambooth.sd_to_diff import extract_checkpoint
 
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
@@ -357,8 +361,8 @@ class Api:
                 #                             json=json.loads(req.interrogate_payload.json()))
                 # return response.json()
             elif req.task == 'db-create-model':
-                logger.info("db-create-model not implemented!")
-                return 0
+                # logger.info("db-create-model not implemented!")
+                # return 0
                 r"""
                 task: db-create-model
                 db_create_model_payload:
@@ -377,83 +381,96 @@ class Api:
                         :train_unfrozen=False,
                         :is_512=True,
                 """
-                # try:
-                #     db_create_model_payload = json.loads(req.db_create_model_payload)
-                #     job_id = db_create_model_payload["job_id"]
-                #     s3_output_path = db_create_model_payload["s3_output_path"]
-                #     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
-                #     output_path = get_path_from_s3_path(s3_output_path)
-                #     db_create_model_params = db_create_model_payload["param"]["create_model_params"]
-                #     if "ckpt_from_cloud" in db_create_model_payload["param"]:
-                #         ckpt_from_s3 = db_create_model_payload["param"]["ckpt_from_cloud"]
-                #     else:
-                #         ckpt_from_s3 = False
-                #     if not db_create_model_params['from_hub']:
-                #         if ckpt_from_s3:
-                #             s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
-                #             local_model_path = db_create_model_params["ckpt_path"]
-                #             input_path = get_path_from_s3_path(s3_input_path)
-                #             logger.info(f"ckpt from s3 {input_path} {local_model_path}")
-                #         else:
-                #             s3_input_path = db_create_model_payload["s3_input_path"]
-                #             local_model_path = db_create_model_params["ckpt_path"]
-                #             input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
-                #             logger.info(f"ckpt from local {input_path} {local_model_path}")
-                #         input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-                #         logging.info("Check disk usage before download.")
-                #         os.system("df -h")
-                #         logger.info(
-                #             f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
-                #         download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
-                #         # Refresh the ckpt list.
-                #         sd_models.list_models()
-                #         logger.info("Check disk usage after download.")
-                #         os.system("df -h")
-                #     logger.info("Start creating model.")
-                #     # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
-                #     #                         params=db_create_model_params)
-                #     create_model_func_args = copy.deepcopy(db_create_model_params)
-                #     # ckpt_path = create_model_func_args.pop("new_model_src")
-                #     # create_model_func_args["ckpt_path"] = ckpt_path
-                #     local_response = create_model(**create_model_func_args)
-                #     target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
-                #     logging.info(
-                #         f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
-                #     upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
-                #     config_file = os.path.join(target_local_model_dir, "db_config.json")
-                #     with open(config_file, 'r') as openfile:
-                #         config_dict = json.load(openfile)
-                #     message = {
-                #         "response": local_response,
-                #         "config_dict": config_dict
-                #     }
-                #     response = {
-                #         "id": job_id,
-                #         "statusCode": 200,
-                #         "message": message,
-                #         "outputLocation": [f'{s3_output_path}/db_create_model_params["new_model_name"]']
-                #     }
-                #     return response
-                # except Exception as e:
-                #     response = {
-                #         "id": job_id,
-                #         "statusCode": 500,
-                #         "message": traceback.format_exc(),
-                #     }
-                #     logger.error(traceback.format_exc())
-                #     return response
-                # finally:
-                #     # Clean up
-                #     logger.info("Delete src model.")
-                #     delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
-                #     logger.info(delete_src_command)
-                #     os.system(delete_src_command)
-                #     logging.info("Delete tgt model.")
-                #     delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
-                #     logger.info(delete_tgt_command)
-                #     os.system(delete_tgt_command)
-                #     logging.info("Check disk usage after request.")
-                #     os.system("df -h")
+                try:
+                    db_create_model_payload = json.loads(req.db_create_model_payload)
+                    job_id = db_create_model_payload["job_id"]
+                    s3_output_path = db_create_model_payload["s3_output_path"]
+                    output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
+                    output_path = get_path_from_s3_path(s3_output_path)
+                    db_create_model_params = db_create_model_payload["param"]["create_model_params"]
+                    if "ckpt_from_cloud" in db_create_model_payload["param"]:
+                        ckpt_from_s3 = db_create_model_payload["param"]["ckpt_from_cloud"]
+                    else:
+                        ckpt_from_s3 = False
+                    if not db_create_model_params['from_hub']:
+                        if ckpt_from_s3:
+                            s3_input_path = db_create_model_payload["param"]["s3_ckpt_path"]
+                            local_model_path = db_create_model_params["ckpt_path"]
+                            input_path = get_path_from_s3_path(s3_input_path)
+                            logger.info(f"ckpt from s3 {input_path} {local_model_path}")
+                        else:
+                            s3_input_path = db_create_model_payload["s3_input_path"]
+                            local_model_path = db_create_model_params["ckpt_path"]
+                            input_path = os.path.join(get_path_from_s3_path(s3_input_path), local_model_path)
+                            logger.info(f"ckpt from local {input_path} {local_model_path}")
+                        input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
+                        logging.info("Check disk usage before download.")
+                        os.system("df -h")
+                        logger.info(
+                            f"Download src model from s3 {input_bucket_name} {input_path} {local_model_path}")
+                        # download_folder_from_s3_by_tar(input_bucket_name, input_path, local_model_path)
+                        # Refresh the ckpt list.
+                        sd_models.list_models()
+                        logger.info("Check disk usage after download.")
+                        os.system("df -h")
+                    logger.info("Start creating model.")
+                    # local_response = requests.post(url=f'http://0.0.0.0:8080/dreambooth/createModel',
+                    #                         params=db_create_model_params)
+                    new_model_name = db_create_model_params["new_model_name"]
+                    ckpt_path = db_create_model_params["ckpt_path"]
+                    extract_ema = db_create_model_params["extract_ema"]
+                    train_unfrozen = db_create_model_params["train_unfrozen"]
+                    res = 512
+                    model_type = "v1"
+                    # create_model_func_args = copy.deepcopy(db_create_model_params)
+                    # ckpt_path = create_model_func_args.pop("new_model_src")
+                    # create_model_func_args["ckpt_path"] = ckpt_path
+                    # local_response = create_model(**create_model_func_args)
+                    result = extract_checkpoint(
+                            new_model_name=new_model_name,
+                            checkpoint_file=ckpt_path,
+                            extract_ema=extract_ema,
+                            train_unfrozen=train_unfrozen,
+                            image_size=res,
+                            model_type=model_type)
+                    target_local_model_dir = f'models/dreambooth/{db_create_model_params["new_model_name"]}'
+                    logging.info(
+                        f"Upload tgt model to s3 {target_local_model_dir} {output_bucket_name} {output_path}")
+                    upload_folder_to_s3_by_tar(target_local_model_dir, output_bucket_name, output_path)
+                    config_file = os.path.join(target_local_model_dir, "db_config.json")
+                    with open(config_file, 'r') as openfile:
+                        config_dict = json.load(openfile)
+                    message = {
+                        "response": result,
+                        "config_dict": config_dict
+                    }
+                    response = {
+                        "id": job_id,
+                        "statusCode": 200,
+                        "message": message,
+                        "outputLocation": [f'{s3_output_path}/db_create_model_params["new_model_name"]']
+                    }
+                    return response
+                except Exception as e:
+                    response = {
+                        "id": job_id,
+                        "statusCode": 500,
+                        "message": traceback.format_exc(),
+                    }
+                    logger.error(traceback.format_exc())
+                    return response
+                finally:
+                    # Clean up
+                    logger.info("Delete src model.")
+                    delete_src_command = f"rm -rf models/Stable-diffusion/{db_create_model_params['ckpt_path']}"
+                    logger.info(delete_src_command)
+                    os.system(delete_src_command)
+                    logging.info("Delete tgt model.")
+                    delete_tgt_command = f"rm -rf models/dreambooth/{db_create_model_params['new_model_name']}"
+                    logger.info(delete_tgt_command)
+                    os.system(delete_tgt_command)
+                    logging.info("Check disk usage after request.")
+                    os.system("df -h")
             else:
                 raise NotImplementedError
         except Exception as e:

@@ -160,8 +160,10 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
         local_sub_folder_path = os.path.join(local_folder_path, obj_dirname)
         if not os.path.exists(local_sub_folder_path):
             os.makedirs(local_sub_folder_path)
-        bucket.download_file(obj.key, os.path.join(local_sub_folder_path, obj_basename))  # save to same path
-
+        try:
+            bucket.download_file(obj.key, os.path.join(local_sub_folder_path, obj_basename))  # save to same path
+        except Exception as e:
+            print(e)
 
 def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir="."):
     s3_client = boto3.client('s3')
