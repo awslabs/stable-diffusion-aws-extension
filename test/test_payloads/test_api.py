@@ -30,7 +30,7 @@ payload = {
             "task": "txt2img",
             "username": "test",
             "models": used_models,
-            "param_s3": 's3://diffusers-payloads/txt2img_xl.json'
+            "param_s3": 's3://stable-diffusion-aws-extension-aigcbucket-test/model/test-1/txt2img.json'
         }
 
 start_time = time.time()
