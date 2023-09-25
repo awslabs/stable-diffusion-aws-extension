@@ -17,24 +17,24 @@ then
     exit 1
 fi
 
-if [ -d "stable-diffusion-webui" ]; then
+if [ -d "stable-diffusion-aws-extension" ]; then
     echo "Removing existing project..."
-    rm -rf stable-diffusion-webui
+    rm -rf stable-diffusion-aws-extension
 fi
 
 # Sync github repo contents
-cp ../install.sh .
-sh install.sh
-rm install.sh
+cp ../install_extension.sh .
+sh install_extension.sh
+rm install_extension.sh
 
 if [ "$mode" = "" ]
 then
-    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+    cd stable-diffusion-aws-extension
     git checkout master
     git pull
     cd -
 else
-    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+    cd stable-diffusion-aws-extension
     git checkout $mode
     git pull
     if [ -n "$commit_id" ]
