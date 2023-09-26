@@ -45,7 +45,7 @@ def prepare_inference(raw_event, context):
         if _type not in ['txt2img', 'img2img']:
             return {
                 'statusCode': 400,
-                'err': f'task type {event.task_type} should be either txt2img or img2img'
+                'errMsg': f'task type {event.task_type} should be either txt2img or img2img'
             }
 
         # check if endpoint table for endpoint status and existence
@@ -71,7 +71,7 @@ def prepare_inference(raw_event, context):
         if len(ckpts_to_upload) > 0:
             return {
                 'statusCode': 400,
-                'error': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
+                'errMsg': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
             }
 
         # generate param s3 location for upload
