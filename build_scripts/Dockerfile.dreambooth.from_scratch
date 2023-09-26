@@ -10,7 +10,10 @@ RUN apt-get install -y libcairo2-dev
 
 COPY stable-diffusion-webui /opt/ml/code/
 
+
 # install requirements for webui
+RUN pip uninstall opencv-python
+
 RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
     && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
 
