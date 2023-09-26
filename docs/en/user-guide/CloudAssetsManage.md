@@ -6,7 +6,7 @@ To use extra models for inference, you could upload model through steps below in
 
 Method One:
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker**, find session **Cloud Models Management**.
-![Upload Models to S3](../images/Upload-models-old.png)
+![Upload Models to S3](../images/UploadFromWebUI.png)
 2. Select the **from WebUI** tab, which means to upload the model from the models file path where the WebUI service is deployed.
 3. Enter the model path where the WebUI service is deployed under corresponding model text box.
 > **Note**: You can upload multiple kinds of models by entering multiple local model paths in text box.
@@ -15,7 +15,7 @@ Method One:
 
 Method Two:
 1. Within Stable Diffusion WebUI, navigate to solution main tab **Amazon SageMaker** main tab, find session **Cloud Models Management**.
-![Upload Models to S3](../images/Upload-models-new.png)
+![Upload Models to S3](../images/UploadFromComputer.png)
 2. Select the **from Laptop** tab, which means to upload the model from the local path to access the WebUI.
 3. Select the type of model to upload, currently supports six types: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 3. Select the model file to be uploaded locally.
@@ -27,7 +27,7 @@ Method Two:
 Method Three:
 1. Within Stable Diffusion WebUI, navigate to the **Amazon SageMaker** main tab and find session **Cloud Models Management**.
 2. Select the **from URL** tab. This option allows you to upload models to S3 from URLs where the models are downloaded.
-![Upload Models to S3](../images/Upload-models-new.png)
+![Upload Models to S3](../images/UploadFromURL.png)
 3. Choose the type of model you want to upload. Currently, six types are supported: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE.
 4. In the **URL list (Comma-separated in English)** input box, enter the URL list of model downloads, separated by commas.
 5. In the **Models Description (Optional)** input box, provide a JSON-formatted description (optional).

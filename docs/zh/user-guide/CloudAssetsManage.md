@@ -8,7 +8,7 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
 2. 选择from WebUI标签页, 该方式表示从部署WebUI服务的models文件路径上传模型。
-![Upload Models to S3](../images/Upload-models-old.png)
+![Upload Models to S3](../images/UploadFromWebUI.png)
 3. 在对应的模型输入部署WebUI服务的models文件路径地址。
 > **提示**: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。
 4. 点击**Upload Models to Cloud**，启动模型上传。
@@ -20,7 +20,7 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
 2. 选择from My Computer标签页, 该方式表示从访问WebUI的本地路径上传模型。
-![Upload Models to S3](../images/Upload-models-new.png)
+![Upload Models to S3](../images/UploadFromComputer.png)
 3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 4. 本地选择要上传的模型文件。
 > **提示**: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。
@@ -33,7 +33,7 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
 2. 选择from URL标签页, 该方式表示从模型下载的URL地址上传到S3。
-![Upload Models to S3](../images/Upload-models-new.png)
+![Upload Models to S3](../images/UploadFromURL.png)
 3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 4. 在URL list (Comma-separated in English)输入框中填入模型下载的url列表，用英文逗号分隔。
 5. 在Models Description (Optional)输入框中输入json格式的描述（选填）。
