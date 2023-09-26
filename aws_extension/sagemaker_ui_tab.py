@@ -215,7 +215,10 @@ def user_settings_tab():
                 for user in resp['users']:
                     table.append([user['username'], ', '.join(user['roles']), user['creator']])
 
-                return table, resp['last_evaluated_key']
+                if 'last_evaluated_key' in resp:
+                    return table, resp['last_evaluated_key']
+                else:
+                    return table, None
 
             page_zero, token_zero = list_users()
             gr.HTML(value="<b>Users Table</b>")
@@ -295,8 +298,9 @@ def model_upload_tab():
     with gr.Column() as upload_tab:
         gr.HTML(value="<b>Upload Model to Cloud</b>")
         # sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
-        with gr.Column(variant="panel"):
-            gr.HTML(value="<b>Upload Model to S3 from WebUI</b>")
+        # with gr.Column(variant="panel"):
+        with gr.Tab("From WebUI"):
+            # gr.HTML(value="<b>Upload Model to S3 from WebUI</b>")
             gr.HTML(value="Refresh to select the model to upload to S3")
             exts = (".bin", ".pt", ".pth", ".safetensors", ".ckpt")
             root_path = os.getcwd()
@@ -368,9 +372,10 @@ def model_upload_tab():
                                           outputs=[webui_upload_model_textbox, sd_checkpoints_path,
                                                    textual_inversion_path, lora_path, hypernetwork_path,
                                                    controlnet_model_path, vae_path])
-        with gr.Column(variant="panel"):
-            gr.HTML(value="<b>Upload Model to S3 from My Computer</b>")
-            gr.HTML(value="Refresh to select the model to upload to S3")
+        # with gr.Column(variant="panel"):
+        with gr.Tab("From My Computer"):
+            # gr.HTML(value="<b>Upload Model to S3 from My Computer</b>")
+            # gr.HTML(value="Refresh to select the model to upload to S3")
             with FormRow(elem_id="model_upload_local_form_row_01"):
                 model_type_drop_down = gr.Dropdown(label="Model Type",
                                                    choices=["SD Checkpoints", "Textual Inversion", "LoRA model",
@@ -385,17 +390,7 @@ def model_upload_tab():
                 model_type_drop_down.change(fn=change_model_type_value, _js="getModelTypeValue",
                                             inputs=[model_type_drop_down], outputs=model_type_hiden_text)
                 file_upload_html_component = gr.HTML(
-                    """
-                    <div class="lg svelte-1ipelgc">
-                        <div class="lg svelte-1ipelgc">
-                            <input type="file" 
-                                   class="lg secondary gradio-button svelte-1ipelgc" 
-                                   id="file-uploader" 
-                                   multiple onchange="showFileName(event)" style="width:100%" />
-                            </div>
-                        </div>
-                    """
-                )
+                    '<input type="file" class="block gradio-html svelte-90oupt padded hide-container" id="file-uploader" multiple onchange="showFileName(event)" style="margin-top: 25px;width:100%">')
             with FormRow(elem_id="model_upload_local_form_row_02"):
                 hidden_bind_html = gr.HTML(elem_id="hidden_bind_upload_files",
                                            value="<div id='hidden_bind_upload_files_html'></div>")
@@ -411,6 +406,24 @@ def model_upload_tab():
                                                 fn=sagemaker_ui.sagemaker_upload_model_s3_local,
                                                 # inputs=[sagemaker_ui.checkpoint_info],
                                                 outputs=[mycomp_upload_model_textbox]
+                                                )
+
+        with gr.Tab("From URL"):
+            with FormRow(elem_id="model_upload_url_form_row_01"):
+                model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
+            with FormRow(elem_id="model_upload_url_form_row_02"):
+                file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
+                file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
+            with FormRow(elem_id="model_upload_url_form_row_03"):
+                file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
+            with gr.Row():
+                model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
+                                                      elem_id="sagemaker_model_update_button_url",
+                                                      size=(200, 50))
+                model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
+                                                inputs=[model_type_url_drop_down, file_upload_url_component,
+                                                        file_upload_params_component],
+                                                outputs=[file_upload_result_component]
                                                 )
     with gr.Column():
         def list_models_prev(paging, rq: gr.Request):
