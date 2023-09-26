@@ -61,8 +61,10 @@ def on_ui_tabs():
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
             user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
-            logger.debug(f"user roles are: {user['roles']}")
-            admin_visible = Admin_Role in user['roles']
+            admin_visible = False
+            if 'roles' in user:
+                logger.debug(f"user roles are: {user['roles']}")
+                admin_visible = Admin_Role in user['roles']
             # todo: any initial values should from here
             return gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
@@ -210,7 +212,8 @@ def user_settings_tab():
                 resp = api_manager.list_users(limit=limit,
                                               last_evaluated_key=last_evaluated_key,
                                               user_token=cloud_auth_manager.username)
-
+                if not resp['users']:
+                    return [], ''
                 table = []
                 for user in resp['users']:
                     table.append([user['username'], ', '.join(user['roles']), user['creator']])

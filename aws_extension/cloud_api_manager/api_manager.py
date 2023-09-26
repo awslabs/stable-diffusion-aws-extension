@@ -21,6 +21,11 @@ class CloudApiManager:
     # todo: not sure how to get current login user's password from gradio
     # todo: use username only for authorize checking for now only, e.g. user_token = username
     def _get_headers_by_user(self, user_token):
+        if not user_token:
+            return {
+                'x-api-key': self.api_key,
+                'Content-Type': 'application/json',
+            }
         _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
         return {
             'Authorization': f'Bearer {_auth_token}',

@@ -27,7 +27,7 @@ def lambda_handler(event, context):
     else:
         sagemaker_endpoint_name = endpoint_name_from_request
 
-    image_url = INFERENCE_ECR_IMAGE_URL 
+    image_url = INFERENCE_ECR_IMAGE_URL
     model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 
     s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
@@ -62,9 +62,12 @@ def create_model(name, image_url, model_data_url):
             ModelName=name,
             PrimaryContainer={
                 'Image': image_url,
-                'ModelDataUrl': model_data_url
+                'ModelDataUrl': model_data_url,
+                'Environment': {
+                    'EndpointID': 'OUR_ID'
+                },
             },
-            ExecutionRoleArn=EXECUTION_ROLE
+            ExecutionRoleArn=EXECUTION_ROLE,
         )
     except Exception as e:
         print(e)
@@ -90,7 +93,7 @@ def create_endpoint_config(endpoint_config_name, s3_output_path, model_name, ini
                     "S3OutputPath": s3_output_path,
                     "NotificationConfig": {
                         "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                        "ErrorTopic": ASYNC_ERROR_TOPIC 
+                        "ErrorTopic": ASYNC_ERROR_TOPIC
                     }
                 }
             },
