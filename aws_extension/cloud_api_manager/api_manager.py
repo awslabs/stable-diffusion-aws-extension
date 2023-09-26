@@ -15,7 +15,6 @@ encode_type = "utf-8"
 class CloudApiManager:
 
     def __init__(self):
-        self.api_key = utils.get_variable_from_json('api_token')
         self.auth_manger = cloud_auth_manager
 
     # todo: not sure how to get current login user's password from gradio
@@ -23,13 +22,13 @@ class CloudApiManager:
     def _get_headers_by_user(self, user_token):
         if not user_token:
             return {
-                'x-api-key': self.api_key,
+                'x-api-key': self.auth_manger.api_key,
                 'Content-Type': 'application/json',
             }
         _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
         return {
             'Authorization': _auth_token,
-            'x-api-key': self.api_key,
+            'x-api-key': self.auth_manger.api_key,
             'Content-Type': 'application/json',
         }
 
@@ -202,6 +201,9 @@ class CloudApiManager:
             "roles": roles,
             "creator": creator,
         }
+
+        if initial:
+            cloud_auth_manager.refresh()
 
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}user',
                                  json=payload,

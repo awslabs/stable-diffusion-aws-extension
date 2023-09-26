@@ -32,8 +32,26 @@ class CloudAuthLoader:
     username = None
     api_url = None
     api_key = None
+    _auth_token = None
+    _headers = None
+    enableAuth = False
 
     def __init__(self):
+        self.refresh()
+
+    def enable(self):
+        return self.enableAuth
+
+    def create_config(self) -> str:
+        return self._get_users_config_from_api()
+
+    def _get_users_config_from_api(self):
+        raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
+
+    def refresh(self):
         if not check_config_json_exist():
             self.enableAuth = False
             logger.debug('url or username not set')
@@ -54,23 +72,6 @@ class CloudAuthLoader:
             'Authorization': self._auth_token
         }
         self.enableAuth = True
-
-    def enable(self):
-        return self.enableAuth
-
-    def create_config(self) -> str:
-        return self._get_users_config_from_api()
-
-
-
-    def _get_users_config_from_api(self):
-        raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
-        raw_resp.raise_for_status()
-        resp = raw_resp.json()
-        return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
-
-    def clear(self):
-        pass
 
 
 cloud_auth_manager = CloudAuthLoader()

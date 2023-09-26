@@ -550,10 +550,13 @@ def _list_sagemaker_endpoints(username):
     resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
     endpoints = []
     for endpoint in resp:
+        endpoint_roles = ''
+        if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
+            endpoint_roles = ','.join(endpoint['owner_group_or_role'])
         endpoints.append([
             endpoint['EndpointDeploymentJobId'][:4],
             endpoint['endpoint_name'],
-            ','.join(endpoint['owner_group_or_role']),
+            endpoint_roles,
             endpoint['autoscaling'],
             endpoint['endpoint_status'],
             endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
@@ -715,7 +718,7 @@ def dataset_tab():
     return dt
 
 
-def update_connect_config(api_url, api_token, username=None, password=None):
+def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
     # Check if api_url ends with '/', if not append it
     if not api_url.endswith('/'):
         api_url += '/'
@@ -729,13 +732,13 @@ def update_connect_config(api_url, api_token, username=None, password=None):
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
-    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=True, user_token=username):
+    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=initial, user_token=username):
         raise Exception('Initial Setup Failed')
     return "Setting updated"
 
 
 def test_aws_connect_config(api_url, api_token):
-    update_connect_config(api_url, api_token)
+    # update_connect_config(api_url, api_token, initial=False)
     api_url = get_variable_from_json('api_gateway_url')
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
