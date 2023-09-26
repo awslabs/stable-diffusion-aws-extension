@@ -42,6 +42,7 @@ else
         git reset --hard $commit_id
         echo `git rev-parse HEAD`
     fi
+    git submodule update --init --recursive
     cd -
 fi
 
