@@ -1,3 +1,6 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import datetime
 import json
 import logging
@@ -41,15 +44,22 @@ s3 = boto3.client('s3', region_name=region_name)
 @dataclass
 class Event:
     train_type: str
-    model_id: Optional[str] = None
     params: dict[str, Any]
+    model_id: Optional[str] = None
     filenames: Optional[List[str]] = None
     # Valid value: dreambooth, kohya. Default value is dreambooth
     lora_train_type: Optional[str] = LoraTrainType.DREAM_BOOTH
 
 
-# Function to update and save a TOML file in an S3 bucket
-def update_toml_file_in_s3(bucket_name, file_key, new_file_key, updated_params):
+def _update_toml_file_in_s3(bucket_name: str, file_key: str, new_file_key: str, updated_params):
+    """Update and save a TOML file in an S3 bucket
+
+    Args:
+        bucket_name (str): S3 bucket name to save the TOML file
+        file_key (str): TOML template file key
+        new_file_key (str): TOML file with merged parameters
+        updated_params (_type_): parameters to be merged
+    """
     try:
         response = s3.get_object(Bucket=bucket_name, Key=file_key)
         toml_content = response['Body'].read().decode('utf-8')
@@ -57,31 +67,18 @@ def update_toml_file_in_s3(bucket_name, file_key, new_file_key, updated_params):
 
         # Update parameters in the TOML data
         for section, params in updated_params.items():
-            for key, value in params.items():
-                toml_data[section][key] = value
+            if section in toml_data:
+                for key, value in params.items():
+                    toml_data[section][key] = value
+            else:
+                toml_data[section] = params
 
-        updated_toml_content = tomli_w.dump(toml_data)
-
-        # TODO: Upload the updated TOML content to new S3 path
+        updated_toml_content = tomli_w.dumps(toml_data)
         s3.put_object(Bucket=bucket_name, Key=new_file_key, Body=updated_toml_content)
         logger.info(f"Updated '{file_key}' in '{bucket_name}' successfully.")
 
     except Exception as e:
         logger.error(f"An error occurred when updating Kohya toml: {e}")
-
-
-    updated_parameters = {
-        'section1': {
-            'param1': 'new_value1',
-            'param2': 42
-        },
-        'section2': {
-            'param3': True,
-            'param4': 3.14
-        }
-    }
-
-    update_toml_file_in_s3(bucket_name, file_key, new_file_key, updated_parameters)
 
 
 # POST /train
@@ -90,108 +87,97 @@ def create_train_job_api(raw_event, context):
     event = Event(**raw_event)
     _type = event.train_type
     _lora_train_type = event.lora_train_type
-
-    if _lora_train_type.lower() == LoraTrainType.KOHYA:
-        kohya_base_key = f'{_lora_train_type.lower()}/train/{request_id}'
-        toml_dest_path = f'{kohya_base_key}/input/{const.KOHYA_TOML_FILE_NAME}'
-        ckpt_output_path = f'{kohya_base_key}/output'
-        toml_template_path = 'template/' + const.KOHYA_TOML_FILE_NAME
-        # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
-        if "config_params" in event.params:
-            updated_parameters = event.params["config_params"]
-            update_toml_file_in_s3(bucket_name, toml_template_path, toml_dest_path, updated_parameters)
-        else:
-            # Copy template file and make no changes as no config parameters are defined
-            s3.copy_object(
-                CopySource={'Bucket': bucket_name, 'Key': toml_template_path},
-                Bucket=bucket_name,
-                Key=toml_dest_path
-            )
-        
-
-        # Add model parameters into train params
-        # event.params["training_params"]["model_name"] = model.name
-        # event.params["training_params"]["model_type"] = model.model_type
-        # event.params["training_params"]["s3_model_path"] = model.output_s3_location
-
-        # # Upload the merged JSON string to the S3 bucket as a tar file
-        # try:
-        #     if not os.path.exists(tar_file_content):
-        #         os.makedirs(tar_file_content)
-        #     saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
-        #     print(f'file saved to {saved_path}')
-        #     with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
-        #         # Add the contents of 'models' directory to the tar file without including the /tmp itself
-        #         tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
-        #     s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
-        #     logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
-        # except Exception as e:
-        #     raise RuntimeError(f"Error uploading JSON file to S3: {e}")         
-    elif _lora_train_type.lower() == LoraTrainType.DREAM_BOOTH:
-        pass
-    else:
-        raise ValueError(f'Invalid lora train type: {_lora_train_type}, the valid value is kohya and dreambooth.')
-
-
-
-
-
-    if event.model_id is None:
-        raise ValueError('No model_id is specified.')
+    presign_url_map = None
 
     try:
-        model_raw = ddb_service.get_item(table=model_table, key_values={
-            'id': event.model_id
-        })
-        if model_raw is None:
-            return {
-                'statusCode': 500,
-                'error': f'model with id {event.model_id} is not found'
-            }
+        if _lora_train_type.lower() == LoraTrainType.KOHYA.value:
+            # Kohya training
+            base_key = f'{_lora_train_type.lower()}/train/{request_id}'
+            input_location = f'{base_key}/input'
+            toml_dest_path = f'{input_location}/{const.KOHYA_TOML_FILE_NAME}'
+            toml_template_path = 'template/' + const.KOHYA_TOML_FILE_NAME
+            if event.model_id is None:
+                event.model_id = const.KOHYA_MODEL_ID
 
-        model = Model(**model_raw)
-        if model.job_status != CreateModelStatus.Complete:
-            return {
-                'statusCode': 500,
-                'error': f'model {model.id} is in {model.job_status.value} state, not valid to be used for train'
-            }
+            if 'training_params' not in event.params \
+                or 's3_model_path' not in event.params['training_params'] \
+                    or 's3_data_path' not in event.params['training_params']:
+                raise ValueError('Missing train parameters, s3_model_path and s3_data_path should be in training_params')
 
-        base_key = f'{_type}/train/{model.name}/{request_id}'
-        input_location = f'{base_key}/input'
-        presign_url_map = None
-        if event.filenames is None:
-            # Invoked from api, no config file is defined in the parameters
-            json_file_name = 'db_config_cloud.json'
-            tar_file_name = 'db_config.tar'
-            tar_file_content = f'/tmp/models/sagemaker_dreambooth/{model.name}'
-            tar_file_path = f'/tmp/{tar_file_name}'
-
-            db_config_json = load_json_from_s3(bucket_name, 'template/' + json_file_name)
             # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
-            if "config_params" in event.params:
-                db_config_json.update(event.params["config_params"])
+            if 'config_params' in event.params:
+                updated_parameters = event.params['config_params']
+                _update_toml_file_in_s3(bucket_name, toml_template_path, toml_dest_path, updated_parameters)
+            else:
+                # Copy template file and make no changes as no config parameters are defined
+                s3.copy_object(
+                    CopySource={'Bucket': bucket_name, 'Key': toml_template_path},
+                    Bucket=bucket_name,
+                    Key=toml_dest_path
+                )
             
-            # Add model parameters into train params
-            event.params["training_params"]["model_name"] = model.name
-            event.params["training_params"]["model_type"] = model.model_type
-            event.params["training_params"]["s3_model_path"] = model.output_s3_location
+            event.params['s3_toml_path'] = f's3://{bucket_name}/{toml_dest_path}'
+            event.params['s3_data_path'] = event.params['training_params']['s3_data_path']
+            event.params['s3_model_path'] = event.params['training_params']['s3_model_path']
+        elif _lora_train_type.lower() == LoraTrainType.DREAM_BOOTH.value:
+            # DreamBooth training
+            if event.model_id is None:
+                raise ValueError('No model_id is specified.')
 
-            # Upload the merged JSON string to the S3 bucket as a tar file
-            try:
-                if not os.path.exists(tar_file_content):
-                    os.makedirs(tar_file_content)
-                saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
-                print(f'file saved to {saved_path}')
-                with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
-                    # Add the contents of 'models' directory to the tar file without including the /tmp itself
-                    tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
-                s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
-                logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
-            except Exception as e:
-                raise RuntimeError(f"Error uploading JSON file to S3: {e}")
-        else:    
-            presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
+            model_raw = ddb_service.get_item(table=model_table, key_values={
+                'id': event.model_id
+            })
+            if model_raw is None:
+                return {
+                    'statusCode': 500,
+                    'error': f'model with id {event.model_id} is not found'
+                }
 
+            model = Model(**model_raw)
+            if model.job_status != CreateModelStatus.Complete:
+                return {
+                    'statusCode': 500,
+                    'error': f'model {model.id} is in {model.job_status.value} state, not valid to be used for train'
+                }
+
+            base_key = f'{_type}/train/{model.name}/{request_id}'
+            input_location = f'{base_key}/input'
+            if event.filenames is None:
+                # Invoked from api, no config file is defined in the parameters
+                json_file_name = 'db_config_cloud.json'
+                tar_file_name = 'db_config.tar'
+                tar_file_content = f'/tmp/models/sagemaker_dreambooth/{model.name}'
+                tar_file_path = f'/tmp/{tar_file_name}'
+
+                db_config_json = load_json_from_s3(bucket_name, 'template/' + json_file_name)
+                # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
+                if "config_params" in event.params:
+                    db_config_json.update(event.params["config_params"])
+                
+                # Add model parameters into train params
+                event.params["training_params"]["model_name"] = model.name
+                event.params["training_params"]["model_type"] = model.model_type
+                event.params["training_params"]["s3_model_path"] = model.output_s3_location
+
+                # Upload the merged JSON string to the S3 bucket as a tar file
+                try:
+                    if not os.path.exists(tar_file_content):
+                        os.makedirs(tar_file_content)
+                    saved_path = save_json_to_file(db_config_json, tar_file_content, json_file_name)
+                    print(f'file saved to {saved_path}')
+                    with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
+                        # Add the contents of 'models' directory to the tar file without including the /tmp itself
+                        tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
+                    s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
+                    logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
+                except Exception as e:
+                    raise RuntimeError(f"Error uploading JSON file to S3: {e}")
+            else:    
+                presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
+        else:
+            raise ValueError(f'Invalid lora train type: {_lora_train_type}, the valid value is {LoraTrainType.KOHYA.value} and {LoraTrainType.DREAM_BOOTH.value}.')
+
+        event.params['training_type'] = _lora_train_type.lower()
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=event.train_type,
@@ -201,7 +187,7 @@ def create_train_job_api(raw_event, context):
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         train_input_s3_location = f's3://{bucket_name}/{input_location}'
-
+        
         train_job = TrainJob(
             id=request_id,
             model_id=event.model_id,
@@ -227,6 +213,7 @@ def create_train_job_api(raw_event, context):
         }
     except Exception as e:
         logger.error(e)
+
         return {
             'statusCode': 200,
             'error': str(e)
@@ -289,6 +276,87 @@ def update_train_job_api(event, context):
     }
 
 
+# JSON encode hyperparameters
+def _json_encode_hyperparameters(hyperparameters):
+    new_params = {}
+    for k, v in hyperparameters.items():
+        json_v = json.dumps(v, cls=DecimalEncoder)
+        v_bytes = json_v.encode('ascii')
+        base64_bytes = base64.b64encode(v_bytes)
+        base64_v = base64_bytes.decode('ascii')
+        new_params[k] = base64_v
+    return new_params
+
+
+def _trigger_sagemaker_training_job(train_job: TrainJob, ckpt_output_path: str, train_job_name: str):
+    """Trigger SageMaker training job
+
+    Args:
+        train_job (TrainJob): training job metadata
+        ckpt_output_path (str): S3 path to store the trained model file
+        train_job_name (str): training job name
+    """
+    hyperparameters = _json_encode_hyperparameters({
+        "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
+        "params": train_job.params,
+        "s3-input-path": train_job.input_s3_location,
+        "s3-output-path": ckpt_output_path,
+        "training_type": train_job.params['training_type'] # Available value: "dreambooth", "kohya"
+    })
+
+    final_instance_type = instance_type
+    if 'training_params' in train_job.params \
+            and 'training_instance_type' in train_job.params['training_params'] and \
+            train_job.params['training_params']['training_instance_type']:
+        final_instance_type = train_job.params['training_params']['training_instance_type']
+
+    est = sagemaker.estimator.Estimator(
+        image_uri,
+        sagemaker_role_arn,
+        instance_count=1,
+        instance_type=final_instance_type,
+        volume_size=125,
+        base_job_name=f'{train_job_name}',
+        hyperparameters=hyperparameters,
+        job_id=train_job.id,
+    )
+    est.fit(wait=False)
+
+    while not est._current_job_name:
+        time.sleep(1)
+
+    train_job.sagemaker_train_name = est._current_job_name
+    # trigger stepfunction
+    stepfunctions_client = StepFunctionUtilsService(logger=logger)
+    sfn_input = {
+        'train_job_id': train_job.id,
+        'train_job_name': train_job.sagemaker_train_name
+    }
+    sfn_arn = stepfunctions_client.invoke_step_function(training_stepfunction_arn, sfn_input)
+    # todo: use batch update, this is ugly!!!
+    search_key = {'id': train_job.id}
+    ddb_service.update_item(
+        table=train_table,
+        key=search_key,
+        field_name='sagemaker_train_name',
+        value=est._current_job_name
+    )
+    train_job.job_status = TrainJobStatus.Training
+    ddb_service.update_item(
+        table=train_table,
+        key=search_key,
+        field_name='job_status',
+        value=TrainJobStatus.Training.value
+    )
+    train_job.sagemaker_sfn_arn = sfn_arn
+    ddb_service.update_item(
+        table=train_table,
+        key=search_key,
+        field_name='sagemaker_sfn_arn',
+        value=sfn_arn
+    )
+
+
 def _start_train_job(train_job_id: str):
     raw_train_job = ddb_service.get_item(table=train_table, key_values={
         'id': train_job_id
@@ -301,16 +369,20 @@ def _start_train_job(train_job_id: str):
 
     train_job = TrainJob(**raw_train_job)
 
-    model_raw = ddb_service.get_item(table=model_table, key_values={
-        'id': train_job.model_id
-    })
-    if model_raw is None:
-        return {
-            'statusCode': 500,
-            'error': f'model with id {train_job.model_id} is not found'
-        }
+    if train_job.model_id == const.KOHYA_MODEL_ID:
+        train_job_name = train_job.model_id
+    else:
+        model_raw = ddb_service.get_item(table=model_table, key_values={
+            'id': train_job.model_id
+        })
+        if model_raw is None:
+            return {
+                'statusCode': 500,
+                'error': f'model with id {train_job.model_id} is not found'
+            }
 
-    model = Model(**model_raw)
+        model = Model(**model_raw)
+        train_job_name = model.name
 
     raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
         'id': train_job.checkpoint_id
@@ -324,75 +396,7 @@ def _start_train_job(train_job_id: str):
     checkpoint = CheckPoint(**raw_checkpoint)
 
     try:
-        # JSON encode hyperparameters
-        def json_encode_hyperparameters(hyperparameters):
-            new_params = {}
-            for k, v in hyperparameters.items():
-                json_v = json.dumps(v, cls=DecimalEncoder)
-                v_bytes = json_v.encode('ascii')
-                base64_bytes = base64.b64encode(v_bytes)
-                base64_v = base64_bytes.decode('ascii')
-                new_params[k] = base64_v
-            return new_params
-
-        hyperparameters = json_encode_hyperparameters({
-            "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
-            "params": train_job.params,
-            "s3-input-path": train_job.input_s3_location,
-            "s3-output-path": checkpoint.s3_location,
-        })
-
-        final_instance_type = instance_type
-        if 'training_params' in train_job.params \
-                and 'training_instance_type' in train_job.params['training_params'] and \
-                train_job.params['training_params']['training_instance_type']:
-            final_instance_type = train_job.params['training_params']['training_instance_type']
-
-        est = sagemaker.estimator.Estimator(
-            image_uri,
-            sagemaker_role_arn,
-            instance_count=1,
-            instance_type=final_instance_type,
-            volume_size=125,
-            base_job_name=f'{model.name}',
-            hyperparameters=hyperparameters,
-            job_id=train_job.id,
-        )
-        est.fit(wait=False)
-
-        while not est._current_job_name:
-            time.sleep(1)
-
-        train_job.sagemaker_train_name = est._current_job_name
-        # trigger stepfunction
-        stepfunctions_client = StepFunctionUtilsService(logger=logger)
-        sfn_input = {
-            'train_job_id': train_job.id,
-            'train_job_name': train_job.sagemaker_train_name
-        }
-        sfn_arn = stepfunctions_client.invoke_step_function(training_stepfunction_arn, sfn_input)
-        # todo: use batch update, this is ugly!!!
-        search_key = {'id': train_job.id}
-        ddb_service.update_item(
-            table=train_table,
-            key=search_key,
-            field_name='sagemaker_train_name',
-            value=est._current_job_name
-        )
-        train_job.job_status = TrainJobStatus.Training
-        ddb_service.update_item(
-            table=train_table,
-            key=search_key,
-            field_name='job_status',
-            value=TrainJobStatus.Training.value
-        )
-        train_job.sagemaker_sfn_arn = sfn_arn
-        ddb_service.update_item(
-            table=train_table,
-            key=search_key,
-            field_name='sagemaker_sfn_arn',
-            value=sfn_arn
-        )
+        _trigger_sagemaker_training_job(train_job, checkpoint.s3_location, train_job_name)
 
         return {
             'statusCode': 200,
@@ -415,7 +419,6 @@ def _start_train_job(train_job_id: str):
 
 # sfn
 def check_train_job_status(event, context):
-    import boto3
     boto3_sagemaker = boto3.client('sagemaker')
     train_job_name = event['train_job_name']
     train_job_id = event['train_job_id']
