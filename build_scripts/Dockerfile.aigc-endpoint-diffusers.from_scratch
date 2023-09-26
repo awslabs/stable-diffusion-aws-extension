@@ -7,7 +7,8 @@ RUN apt-get update -y
 RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 
-COPY api /opt/ml/code/
+# COPY api /opt/ml/code/
+COPY stable-diffusion-aws-extension/build_scripts/api /opt/ml/code/
 
 # add accelerate
 RUN mkdir -p /root/.cache/huggingface/accelerate
