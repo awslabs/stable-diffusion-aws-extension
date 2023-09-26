@@ -66,7 +66,7 @@ def on_ui_tabs():
                 logger.debug(f"user roles are: {user['roles']}")
                 admin_visible = Admin_Role in user['roles']
             # todo: any initial values should from here
-            return gr.update(visible=admin_visible), \
+            return gr.update(visible=admin_visible or not cloud_auth_manager.api_url), \
                 gr.update(visible=admin_visible), \
                 gr.update(visible=admin_visible), \
                 _list_models(req.username, req.username)[0:10], \
@@ -289,7 +289,10 @@ def _list_models(username, user_token):
     result = api_manager.list_models_on_cloud(username=username, user_token=user_token, types=None, status=None)
     models = []
     for model in result:
-        models.append([model['name'], model['type'], ','.join(model['allowed_roles_or_users']),
+        allowed = ''
+        if model['allowed_roles_or_users']:
+            allowed = ', '.join(model['allowed_roles_or_users'])
+        models.append([model['name'], model['type'], allowed,
                        'In-Use' if model['status'] == 'Active' else 'Disabled'])
     return models
 
@@ -726,6 +729,8 @@ def update_connect_config(api_url, api_token, username=None, password=None):
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
+    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=True, user_token=username):
+        raise Exception('Initial Setup Failed')
     return "Setting updated"
 
 
