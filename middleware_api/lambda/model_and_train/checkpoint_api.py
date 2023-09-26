@@ -20,6 +20,7 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
+MAX_WORKERS = 10
 
 
 # GET /checkpoints?username=USER_NAME&types=value&status=value
@@ -94,7 +95,7 @@ def download_and_upload_models(url: str, base_key: str, file_names: list, multip
 
 # 并发上传文件
 def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = []
         for file_url in file_urls:
             futures.append(executor.submit(download_and_upload_models, file_url, base_key, file_names, multipart_upload))

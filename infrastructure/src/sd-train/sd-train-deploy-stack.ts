@@ -144,13 +144,14 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /upload_checkpoint
-    new UploadCheckPointApi(this, 'aigc-upload-ckpt', {
+    new UploadCheckPointApi(this, 'sdExtn-uploadCkpt', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       router: routers.upload_checkpoint,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      multiUserTable: multiUserTable,
     });
 
 
