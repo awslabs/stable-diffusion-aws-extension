@@ -13,7 +13,10 @@ COPY stable-diffusion-webui /opt/ml/code/
 
 
 # install requirements for webui
-RUN pip uninstall opencv-python
+# patch for opencv 4.7
+# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+RUN pip install trash-cli
+RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
     && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
