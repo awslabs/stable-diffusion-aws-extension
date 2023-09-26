@@ -11,6 +11,7 @@ RUN apt-get install -y libcairo2-dev
 # install file cmd
 RUN apt-get install -y file
 
+RUN mkdir /opt/ml/code/
 COPY inference/serve /opt/ml/code
 
 # add accelerate
