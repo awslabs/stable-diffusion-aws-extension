@@ -29,10 +29,10 @@ class LoraInjectedLinear(nn.Module):
         nn.init.normal_(self.lora_down.weight, std=1 / r)
         nn.init.zeros_(self.lora_up.weight)
 
-    def forward(self, input):
+    def forward(self, input, scale: float = 1.0):
         return (
                 self.linear(input)
-                + self.lora_up(self.dropout(self.lora_down(input))) * self.scale
+                + self.lora_up(self.dropout(self.lora_down(input))) * scale
         )
 
 
