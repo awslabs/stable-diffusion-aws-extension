@@ -16,4 +16,4 @@ RUN pip install -r /opt/ml/code/requirements.txt
 RUN rm /opt/ml/code/requirements.txt
 WORKDIR /opt/ml/code
 ENV TORCHDYNAMO_DISABLE 1
-ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint.py
+ENV SAGEMAKER_PROGRAM sagemaker_entrypoint.py
