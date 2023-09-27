@@ -116,9 +116,7 @@ def create_train_job_api(raw_event, context):
                     Key=toml_dest_path
                 )
             
-            event.params['s3_toml_path'] = f's3://{bucket_name}/{toml_dest_path}'
-            event.params['s3_data_path'] = event.params['training_params']['s3_data_path']
-            event.params['s3_model_path'] = event.params['training_params']['s3_model_path']
+            event.params['training_params']['s3_toml_path'] = f's3://{bucket_name}/{toml_dest_path}'
         elif _lora_train_type.lower() == LoraTrainType.DREAM_BOOTH.value:
             # DreamBooth training
             if event.model_id is None:
@@ -301,7 +299,7 @@ def _trigger_sagemaker_training_job(train_job: TrainJob, ckpt_output_path: str, 
         "params": train_job.params,
         "s3-input-path": train_job.input_s3_location,
         "s3-output-path": ckpt_output_path,
-        "training_type": train_job.params['training_type'] # Available value: "dreambooth", "kohya"
+        "training-type": train_job.params['training_type'] # Available value: "dreambooth", "kohya"
     })
 
     final_instance_type = instance_type
