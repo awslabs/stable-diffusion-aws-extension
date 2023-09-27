@@ -7,7 +7,7 @@ RUN apt-get update -y
 RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 
-COPY job /opt/ml/code/
+COPY stable-diffusion-aws-extension/build_scripts/job /opt/ml/code/
 
 # install requirements for webui
 RUN pip uninstall -y torchvision

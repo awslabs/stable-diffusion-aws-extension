@@ -14,7 +14,7 @@ then
     exit 1
 fi
 
-./build_and_push.sh Dockerfile.agic-endpoint-byoc.from_scratch aigc-endpoint-byoc $mode $tag $commit_id
+./build_and_push.sh Dockerfile.aigc-endpoint-byoc.from_scratch aigc-endpoint-byoc $mode $tag $commit_id
 
 ./build_and_push.sh Dockerfile.aigc-endpoint-diffusers.from_scratch aigc-endpoint-diffusers $mode $tag $commit_id
 
