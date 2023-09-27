@@ -48,7 +48,7 @@ class Event:
     model_id: Optional[str] = None
     filenames: Optional[List[str]] = None
     # Valid value: dreambooth, kohya. Default value is dreambooth
-    lora_train_type: Optional[str] = LoraTrainType.DREAM_BOOTH
+    lora_train_type: Optional[str] = LoraTrainType.DREAM_BOOTH.value
 
 
 def _update_toml_file_in_s3(bucket_name: str, file_key: str, new_file_key: str, updated_params):
