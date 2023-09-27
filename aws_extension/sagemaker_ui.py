@@ -627,7 +627,7 @@ def sagemaker_upload_model_s3_local():
     return log
 
 
-def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
+def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, pr: gradio.Request):
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
@@ -640,9 +640,11 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str):
         params_dict = json.loads(params)
     else:
         params_dict = {}
+
+    params_dict['creator'] = pr.username
     body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
     response = server_request_post('upload_checkpoint', body_params)
-    response_data = response.json();
+    response_data = response.json()
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
     if 'checkpoint' in response_data:
