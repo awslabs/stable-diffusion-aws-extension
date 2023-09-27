@@ -1,9 +1,8 @@
-import json
 import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from inference_v2._types import EndpointDeploymentJob
+from _types import EndpointDeploymentJob
 from multi_users.utils import get_user_roles, check_user_permissions
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -38,6 +37,9 @@ def list_all_sagemaker_endpoints(event, ctx):
     user_roles = []
     if username:
         user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+
+    if 'x-auth' in event and not event['x-auth']['role']:
+        event['x-auth']['role'] = user_roles
 
     for row in scan_rows:
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))

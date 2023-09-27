@@ -20,10 +20,10 @@ class InferenceJob:
 class EndpointDeploymentJob:
     EndpointDeploymentJobId: str
     autoscaling: bool
-    endTime: str
     max_instance_number: str
     startTime: str
     status: str
+    endTime: Optional[str] = None
     endpoint_status: Optional[str] = None
     endpoint_name: Optional[str] = None
     error: Optional[str] = None
