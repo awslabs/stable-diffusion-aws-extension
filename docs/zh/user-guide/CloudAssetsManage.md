@@ -6,9 +6,9 @@
 ### 从原生webUI上传模型至云上
 考虑到用户多样的使用场景，本方式适用于将webUI前端部署在非本地电脑的其他机器上的场景。同于webUI社区原生使用方式，用户需要首先将相关模型上传至部署了webUI前端的机器上，对应webUI项目文件夹下、models子文件夹的对应处，之后即可跟从下面步骤完成模型上传到云上。
 
-1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块。
-2. 选择Upload Model to S3 from WebUI下拉框, 该方式表示从部署WebUI服务的models文件路径上传模型。
-![Upload Models to S3](../images/Upload-models-old.png)
+1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
+2. 选择from WebUI标签页, 该方式表示从部署WebUI服务的models文件路径上传模型。
+![Upload Models to S3](../images/UploadFromWebUI.png)
 3. 在对应的模型输入部署WebUI服务的models文件路径地址。
 > **提示**: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。
 4. 点击**Upload Models to Cloud**，启动模型上传。
@@ -18,15 +18,28 @@
 ### 从本地机器上传模型至云上
 考虑到用户多样的使用场景，本方式适用于将webUI前端部署在本地电脑上的场景。
 
-1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块。
-2. 选择Upload Model to S3 from Laptop, 该方式表示从访问WebUI的本地路径上传模型。
-![Upload Models to S3](../images/Upload-models-new.png)
+1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
+2. 选择from My Computer标签页, 该方式表示从访问WebUI的本地路径上传模型。
+![Upload Models to S3](../images/UploadFromComputer.png)
 3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 4. 本地选择要上传的模型文件。
 > **提示**: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。
 5. 点击**Upload Models to Cloud**，启动模型上传。
 6. 上传会依据文件大小与数量异步分片上传，各分片上传完成后，会在**选择文件**按钮下看到提示。
 
+
+### 从模型下载地址直接上传至云上
+考虑到用户多样的使用场景，本方式适用于直接通过模型下载的URL地址上传到S3的场景。
+
+1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Models Management**模块。
+2. 选择from URL标签页, 该方式表示从模型下载的URL地址上传到S3。
+![Upload Models to S3](../images/UploadFromURL.png)
+3. 选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
+4. 在URL list (Comma-separated in English)输入框中填入模型下载的url列表，用英文逗号分隔。
+5. 在Models Description (Optional)输入框中输入json格式的描述（选填）。
+> **提示**: 您可以多选模型文件，但受制于Lambda内存以及并发线程数的限制，最好选择的文件数不要超过5个，总大小不要超过12g。
+6. 点击**Upload Models to Cloud**，启动模型上传。
+7. 上传请求会在下方**Label**看到提示。
 
 
 ## Amazon SageMaker推理节点管理

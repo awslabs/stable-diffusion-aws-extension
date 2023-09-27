@@ -115,38 +115,38 @@ Middleware->Client: return the inference parameter in presigned url format
 </details>
 # API 列表
 
-| 序号 | HTTP 方法 | API 名称                                                                                                | 描述 |
-|-------|-------------|---------------------------------------------------------------------------------------------------------| --- |
-| 1     | GET         | [/inference/test-connection](#inferencetest-connection)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
-| 2     | GET         | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | 列出所有推理作业。 |
-| 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。 |
-| 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。               |
-| 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | 获取特定推理作业的参数输出。                                     |
-| 6     | POST        | [/inference-api/inference](#inference-l2-api)                          | 使用默认参数运行 SageMaker 推理                                       |
-| 7     | POST        | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                                                         |
-| 8     | POST        | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                                                         |
-| 9     | GET         | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                                                   |
-| 10    | GET         | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | 获取特定终端节点部署作业。                                              |
-| 11    | GET         | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | 生成用于上传的 S3 预签名 URL。                                          |
-| 12    | GET         | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | 获取文本反演列表。                                                                     |
-| 13    | GET         | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | 获取 LoRa 列表。                                                                                  |
-| 14    | GET         | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | 获取超网络列表。                                                                         |
-| 15    | GET         | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | 获取 ControlNet 模型列表。                                                                     |
-| 16    | POST        | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | 运行模型合并。                                                                                     |
-| 17    | POST        | [/model](#modelpost)                                                                                    | 创建新模型。                                                                                    |
-| 18    | PUT         | [/model](#modelput)                                                                                | 上传模型文件。                                                                                   |
-| 19    | GET         | [/models](#modelsget)                                                                              | 列出所有模型。                                                                                       |
-| 20    | GET         | [/checkpoint](#checkpoint)                                                                         | 获取检查点。                                                                                      |
-| 21    | PUT         | [/checkpoint](#checkpointput)                                                                      | 更新检查点。                                                                                   |
-| 22    | GET         | [/checkpoints](#checkpoints)                                                                       | 列出所有检查点。                                                                                  |
-| 23    | POST        | [/train-api/train](#train-api-post)                                                                              | 启动训练作业。                                                                                  |
-| 24    | PUT         | [/train](#trainput)                                                                                | 更新训练作业。                                                                                 |
-| 25    | GET         | [/trains](#trainsget)                                                                              | 列出所有训练作业。                                                                                |
-| 26    | POST        | [/dataset](#datasetpost)                                                                          | 创建新数据集。                                                                                  |
-| 27    | PUT         | [/dataset](#datasetput)                                                                            | 更新数据集。                                                                                      |
-| 28    | GET         | [/datasets](#datasetsget)                                                                          | 列出所有数据集。                                                                                     |
-| 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | 获取特定数据集的数据。                                                                        |
-
+| 序号  | HTTP 方法 | API 名称                                                                                                  | 描述                                  |
+|-----|---------|---------------------------------------------------------------------------------------------------------|-------------------------------------|
+| 1   | GET     | [/inference/test-connection](#inferencetest-connection)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
+| 2   | GET     | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | 列出所有推理作业。                           |
+| 3   | GET     | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。                      |
+| 4   | GET     | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。                      |
+| 5   | GET     | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | 获取特定推理作业的参数输出。                      |
+| 6   | POST    | [/inference-api/inference](#inference-l2-api)                                                           | 使用默认参数运行 SageMaker 推理               |
+| 7   | POST    | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                  |
+| 8   | POST    | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                  |
+| 9   | GET     | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                       |
+| 10  | GET     | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | 获取特定终端节点部署作业。                       |
+| 11  | GET     | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | 生成用于上传的 S3 预签名 URL。                 |
+| 12  | GET     | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | 获取文本反演列表。                           |
+| 13  | GET     | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | 获取 LoRa 列表。                         |
+| 14  | GET     | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | 获取超网络列表。                            |
+| 15  | GET     | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | 获取 ControlNet 模型列表。                 |
+| 16  | POST    | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | 运行模型合并。                             |
+| 17  | POST    | [/model](#modelpost)                                                                                    | 创建新模型。                              |
+| 18  | PUT     | [/model](#modelput)                                                                                     | 上传模型文件。                             |
+| 19  | GET     | [/models](#modelsget)                                                                                   | 列出所有模型。                             |
+| 20  | GET     | [/checkpoint](#checkpoint)                                                                              | 获取检查点。                              |
+| 21  | PUT     | [/checkpoint](#checkpointput)                                                                           | 更新检查点。                              |
+| 22  | GET     | [/checkpoints](#checkpoints)                                                                            | 列出所有检查点。                            |
+| 23  | POST    | [/train-api/train](#train-api-post)                                                                     | 启动训练作业。                             |
+| 24  | PUT     | [/train](#trainput)                                                                                     | 更新训练作业。                             |
+| 25  | GET     | [/trains](#trainsget)                                                                                   | 列出所有训练作业。                           |
+| 26  | POST    | [/dataset](#datasetpost)                                                                                | 创建新数据集。                             |
+| 27  | PUT     | [/dataset](#datasetput)                                                                                 | 更新数据集。                              |
+| 28  | GET     | [/datasets](#datasetsget)                                                                               | 列出所有数据集。                            |
+| 29  | GET     | [/{dataset_name}/data](#dataset_namedata)                                                               | 获取特定数据集的数据。                         |
+| 30  | POST    | [/upload_checkpoint](#upload_checkpointpost)                                                            | 根据模型url直接上传到s3。                   |
 
 
 <br/>
@@ -3200,6 +3200,128 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
 <h3 id="list-dataset-items-by-dataset-name-responseschema">响应结构</h3>
+
+<aside class="warning">
+要执行此操作，需要在请求时添加api_key进行身份验证
+</aside>
+
+<br/>
+
+# /upload_checkpoint
+
+### **示例：**
+
+Python示例代码：
+
+```Python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
+}
+
+const inputBody = {
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/upload_checkpoint', headers = headers, json = inputBody)
+
+print(r.json())
+
+```
+
+Javascript示例代码：
+
+```javascript
+const inputBody = '{
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx/sd_xl_base_1.0.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json',
+  'x-api-key':'API_TOKEN_VALUE'
+};
+
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /upload_checkpoint`
+
+> Body 参数
+
+```json
+
+{
+  // checkpointType 可选项包括："Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+```
+
+<a id="upload-checkpoint-params">参数</a>
+
+|名称|位置|数据类型|是否需要填写|描述|
+|---|---|---|---|---|
+|body|body|object|false|none|
+
+> 响应示例
+
+> 200 响应
+
+```json
+{
+    "statusCode": 200,
+    "checkpoint": {
+        "id": "07dbd061-1df8-463f-bc78-44a41956435c",
+        "type": "Stable-diffusion",
+        "s3_location": "s3://path",
+        "status": "Active",
+        "params": {
+            "message": "description",
+            "created": "2023-09-26 09:02:52.146566",
+            "multipart_upload": {
+                "bubble-gum-kaugummi-v20": null
+            }
+        }
+    }
+}
+```
+
+> 500 响应
+
+```json
+{
+  "statusCode": 500,
+  "error": "error_message"
+}
+```
+
+<h3 id="upload-checkpoint">响应</h3>
+
+|状态码|含义|描述|结构|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
+
+<h3 id="upload-checkpoint-responseschema">响应结构</h3>
 
 <aside class="warning">
 要执行此操作，需要在请求时添加api_key进行身份验证
