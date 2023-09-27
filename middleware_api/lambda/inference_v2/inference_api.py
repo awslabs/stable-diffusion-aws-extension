@@ -35,7 +35,7 @@ class PrepareEvent:
     user_id: Optional[str] = ""
 
 
-# POST /v2/inference
+# POST /inference/v2
 def prepare_inference(raw_event, context):
     request_id = context.aws_request_id
     event = PrepareEvent(**raw_event)

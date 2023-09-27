@@ -540,12 +540,12 @@ def sagemaker_endpoint_tab():
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
                 # todo: this list is not safe
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username),
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username),
                                                                  multiselect=True,
                                                                  label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
                                                  lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username)},
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username)},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',

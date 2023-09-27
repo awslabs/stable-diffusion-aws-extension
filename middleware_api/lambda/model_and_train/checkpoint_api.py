@@ -137,7 +137,7 @@ def upload_checkpoint_api(raw_event, context):
         user_roles = ['*']
         if 'creator' in event.params and event.params['creator']:
             user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
-            
+
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
