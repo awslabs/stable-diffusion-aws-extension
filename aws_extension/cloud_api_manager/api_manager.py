@@ -15,16 +15,20 @@ encode_type = "utf-8"
 class CloudApiManager:
 
     def __init__(self):
-        self.api_key = utils.get_variable_from_json('api_token')
         self.auth_manger = cloud_auth_manager
 
     # todo: not sure how to get current login user's password from gradio
     # todo: use username only for authorize checking for now only, e.g. user_token = username
     def _get_headers_by_user(self, user_token):
+        if not user_token:
+            return {
+                'x-api-key': self.auth_manger.api_key,
+                'Content-Type': 'application/json',
+            }
         _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
         return {
-            'Authorization': f'Bearer {_auth_token}',
-            'x-api-key': self.api_key,
+            'Authorization': _auth_token,
+            'x-api-key': self.auth_manger.api_key,
             'Content-Type': 'application/json',
         }
 
@@ -83,6 +87,9 @@ class CloudApiManager:
 
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
         if self.auth_manger.enableAuth and not user_token:
+            return []
+
+        if not self.auth_manger.api_url:
             return []
 
         response = requests.get(f'{self.auth_manger.api_url}endpoints',
@@ -183,16 +190,20 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         return raw_resp.json()
 
-    def upsert_user(self, username, password, roles, creator, user_token=""):
-        if not self.auth_manger.enableAuth:
+    def upsert_user(self, username, password, roles, creator, initial=False, user_token=""):
+        if not self.auth_manger.enableAuth and not initial:
             return {}
 
         payload = {
+            "initial": initial,
             "username": username,
             "password": password,
             "roles": roles,
             "creator": creator,
         }
+
+        if initial:
+            cloud_auth_manager.refresh()
 
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}user',
                                  json=payload,

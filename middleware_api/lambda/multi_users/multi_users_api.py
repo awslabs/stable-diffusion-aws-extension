@@ -2,10 +2,11 @@ import json
 from dataclasses import dataclass
 import logging
 import os
-from typing import List
+from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
 from multi_users._types import User, PARTITION_KEYS, Role
+from multi_users.roles_api import upsert_role
 from multi_users.utils import KeyEncryptService, check_user_existence
 
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -21,14 +22,51 @@ password_encryptor = KeyEncryptService()
 class UpsertUserEvent:
     username: str
     password: str
-    roles: List[str]
     creator: str
+    initial: Optional[bool] = False
+    roles: Optional[List[str]] = None
 
 
 # POST /user
 def upsert_user(raw_event, ctx):
     print(raw_event)
     event = UpsertUserEvent(**raw_event['body'])
+    if event.initial:
+        rolenames= ['IT Operator', 'Designer']
+
+        ddb_service.put_items(user_table, User(
+            kind=PARTITION_KEYS.user,
+            sort_key=event.username,
+            password=password_encryptor.encrypt(key_id=kms_key_id, text=event.password),
+            roles=[rolenames[0]],
+            creator=event.creator,
+        ).__dict__)
+
+        for rn in rolenames:
+            role_event = {
+                'role_name': rn,
+                'permissions': [
+                    'train:all',
+                    'checkpoint:all',
+                    'inference:all',
+                    'sagemaker_endpoint:all',
+                    'user:all'
+                ],
+                'creator': event.username
+            }
+            resp = upsert_role(role_event, {})
+            if resp['statusCode'] != 200:
+                return resp
+
+        return {
+            'statusCode': 200,
+            'user': {
+                'username': event.username,
+                'roles': [rolenames[0]]
+            },
+            'all_roles': rolenames,
+        }
+
     # todo: need check x-auth
     # check if creator exist
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
