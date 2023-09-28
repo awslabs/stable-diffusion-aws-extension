@@ -1390,7 +1390,19 @@
 <li>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json" target="_blank">Launch solution in AWS Standard Regions</a> to launch the AWS CloudFormation template.</li>
 <li>The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
 <li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
-<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. Under <strong>Parameters</strong>, enter a valid bucket name under <strong>aigcbucketname</strong> for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under <strong>email</strong> for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>sdextensionapikey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>ecrimagetag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>. Select "yes" in <strong>createfromexist</strong>, and enter the S3 bucket used for previous deployment in <strong>existbucket</strong>. Choose <strong>Next</strong>.</li>
+<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. </li>
+<li>
+<p>Under <strong>Parameters</strong>, </p>
+<ul>
+<li><strong>createfromexist</strong>. select yes if you have deployed the solution before and haven't manually delete resources; otherwise select no; </li>
+<li><strong>email</strong>. Enter a correct email address for future notice receiving; </li>
+<li><strong>existbucket</strong>. Enter the S3 bucket name created by original stack if <strong>createfromexist</strong> selects yes, otherwise enter a new valid S3 bucket name;</li>
+<li><strong>sdextensionapikey</strong>. Enter a string of 20 characters that includes a combination of alphanumeric characters, and it will be 09876543210987654321 by default;</li>
+<li><strong>utilscpuinsttype</strong>. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc;</li>
+<li><strong>ecrimagetag</strong>. To select the tag for the ECR image corresponding to the solution, please refer to the field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.</li>
+</ul>
+<p>Choose <strong>Next</strong>.</p>
+</li>
 </ol>
 <p>!!! Important "Notice"
    Please do not change <strong>ecrimagetag</strong> before consulting solution team.</p>

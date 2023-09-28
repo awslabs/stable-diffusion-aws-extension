@@ -1392,8 +1392,18 @@
 <li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击链接<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json" target="_blank">Stable-Diffusion-AWS-Extension.template</a>。</li>
 <li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
 <li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
+<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。</li>
 <li>
-<p>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在<strong>参数</strong>部分，在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>sdextensionapikey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>utilscpuinsttype</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。在<strong>ecrimagetag</strong>字段选择方案对应的ECR镜像的tag(如果无需修改就保持默认值就可以),具体tag的说明请点击这个<a href="../ecr_image_param/">link</a>。在<strong>createfromexist*中选择yes，并在</strong>existbucket<strong>中填入之前部署用的s3桶。*点击</strong>下一步**。</p>
+<p>在<strong>参数</strong>部分</p>
+<ul>
+<li><strong>createfromexist</strong>选择对应的yes，如果您之前部署过本解决方案，并没有手动删除对应资源；反之选择no；</li>
+<li><strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知；</li>
+<li><strong>existbucket</strong>处输入原解决方案创建的S3 bucket名字（如果<strong>createfromexist</strong>选择yes）；请出入一个全新的全局唯一的S3 bucket名字（如果<strong>createfromexist</strong>选择no）；</li>
+<li><strong>sdextensionapikey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"；</li>
+<li><strong>utilscpuinsttype</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作；</li>
+<li><strong>ecrimagetag</strong>字段选择方案对应的ECR镜像的tag(如果无需修改就保持默认值就可以),具体tag的说明请点击这个<a href="../ecr_image_param/">link</a>；
+点击<strong>下一步</strong>。</li>
+</ul>
 <div class="admonition important">
 <p class="admonition-title">Notice</p>
 <p>请不要自行改动<strong>ecrimagetag</strong>。如有需求，请联系解决方案团队。</p>
