@@ -77,11 +77,6 @@ def getInferenceJob(inference_job_id):
         logger.error(f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
         raise
 
-def get_curent_time():
-    # Get the current time
-    now = datetime.now()
-    formatted_time = now.strftime("%Y-%m-%d-%H-%M-%S")
-    return formatted_time
 
 def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # If S3 object_name was not specified, use file_name

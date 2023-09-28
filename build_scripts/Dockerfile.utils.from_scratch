@@ -1,4 +1,4 @@
-FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-cpu-py310-ubuntu20.04-sagemaker
+FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
 
 RUN apt-get update -y
 
@@ -19,6 +19,11 @@ RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linu
 RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
 
 RUN pip install --upgrade pip
+
+# patch for opencv 4.7
+# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+RUN pip install trash-cli
+RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
     && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt

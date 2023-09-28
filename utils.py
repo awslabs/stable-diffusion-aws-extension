@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 import boto3
@@ -16,6 +17,8 @@ import tarfile
 import shutil
 from pathlib import Path
 import psutil
+
+LOGGING_LEVEL = logging.DEBUG
 
 class ModelsRef:
     def __init__(self):
@@ -252,7 +255,9 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
     if not os.path.exists(filename):
         initial_data = {
             "api_gateway_url": "",
-            "api_token": ""
+            "api_token": "",
+            "username": "",
+            "password": ""
         }
         with open(filename, 'w') as json_file:
             json.dump(initial_data, json_file)

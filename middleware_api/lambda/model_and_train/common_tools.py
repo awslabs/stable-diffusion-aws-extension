@@ -16,7 +16,6 @@ from _types import MultipartFileReq, CheckPoint
 
 PART_SIZE=500 * 1024 * 1024
 
-
 def batch_get_s3_multipart_signed_urls(bucket_name, base_key, filenames: [MultipartFileReq]) -> Dict[str, Any]:
     presign_url_map = {}
     for f in filenames:
