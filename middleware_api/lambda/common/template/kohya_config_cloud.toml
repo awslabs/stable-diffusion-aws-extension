@@ -1,7 +1,7 @@
 [model]
 v2 = false
 v_parameterization = false
-pretrained_model_name_or_path = "./sd-models/model.ckpt"
+pretrained_model_name_or_path = "./sd-models/v1-5-pruned-emaonly.safetensor"
 
 [dataset]
 train_data_dir = "./train/input"
@@ -38,10 +38,6 @@ lowram = false
 clip_skip = 2
 mixed_precision = "fp16"
 save_precision = "fp16"
-
-[sample_prompt]
-sample_sampler = "euler_a"
-sample_every_n_epochs = 1
 
 [saving]
 output_name = "output_name"
