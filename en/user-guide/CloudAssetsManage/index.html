@@ -11,14 +11,14 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/CloudAssetsManage/">
       
       
-        <link rel="prev" href="../preparation/">
+        <link rel="prev" href="../multi-user/">
       
       
         <link rel="next" href="../txt2img-guide/">
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.046329b4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.d451bc0e.min.css">
       
       
 
@@ -288,15 +288,20 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
       
-        
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
         
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
         
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -322,14 +327,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_1" >
         
+          
           <label class="md-nav__link" for="__nav_1_1" id="__nav_1_1_label" tabindex="0">
             
   
@@ -424,14 +431,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" >
         
+          
           <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
             
   
@@ -506,14 +515,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4" >
         
+          
           <label class="md-nav__link" for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
             
   
@@ -608,14 +619,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_5" >
         
+          
           <label class="md-nav__link" for="__nav_1_5" id="__nav_1_5_label" tabindex="0">
             
   
@@ -674,6 +687,26 @@
 
               
             
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/deployment_for_existing_users/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Deployment step from existing resource
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -712,14 +745,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
         
+          
           <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
             
   
@@ -749,6 +784,26 @@
   
   <span class="md-ellipsis">
     Preparation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multi-user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configure API and Multiple Users
   </span>
   
 
@@ -948,14 +1003,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
         
+          
           <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
             
   
@@ -1192,9 +1249,9 @@
 <h2 id="upload-model">Upload Model</h2>
 <p>To use extra models for inference, you could upload model through steps below in two ways, and follow steps in <a href="../txt2img-guide/">txt2img</a> or <a href="../img2img-guide/">img2img</a>to inference with extra models as need.</p>
 <p>Method One:
-1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
-<img alt="Upload Models to S3" src="../../images/Upload-models-old.png" />
-2. Select the Upload Model to S3 from WebUI drop-down box, which means to upload the model from the models file path where the WebUI service is deployed.
+1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Models Management</strong>.
+<img alt="Upload Models to S3" src="../../images/UploadFromWebUI.png" />
+2. Select the <strong>from WebUI</strong> tab, which means to upload the model from the models file path where the WebUI service is deployed.
 3. Enter the model path where the WebUI service is deployed under corresponding model text box.</p>
 <blockquote>
 <p><strong>Note</strong>: You can upload multiple kinds of models by entering multiple local model paths in text box.
@@ -1202,15 +1259,27 @@
 5.Message will appear on left right once uploading completes.</p>
 </blockquote>
 <p>Method Two:
-1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong>, find session <strong>Cloud Assets Management</strong>.
-<img alt="Upload Models to S3" src="../../images/Upload-models-new.png" />
-2. Select the Upload Model to S3 from Laptop drop-down box, which means to upload the model from the local path to access the WebUI.
+1. Within Stable Diffusion WebUI, navigate to solution main tab <strong>Amazon SageMaker</strong> main tab, find session <strong>Cloud Models Management</strong>.
+<img alt="Upload Models to S3" src="../../images/UploadFromComputer.png" />
+2. Select the <strong>from Laptop</strong> tab, which means to upload the model from the local path to access the WebUI.
 3. Select the type of model to upload, currently supports six types: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE
 3. Select the model file to be uploaded locally.</p>
 <blockquote>
 <p><strong>Note</strong>: You can select models multiple, but subject to browser restrictions, it is best to select no more than 10 files, and the total size should not exceed 8g.
 4. Click <strong>Upload Models to Cloud</strong> to start uploading process.
 5. The upload will be uploaded in pieces asynchronously based on the file size and quantity. After each piece is uploaded, you will see a prompt under the <strong>Choose File</strong> button</p>
+</blockquote>
+<p>Method Three:
+1. Within Stable Diffusion WebUI, navigate to the <strong>Amazon SageMaker</strong> main tab and find session <strong>Cloud Models Management</strong>.
+2. Select the <strong>from URL</strong> tab. This option allows you to upload models to S3 from URLs where the models are downloaded.
+<img alt="Upload Models to S3" src="../../images/UploadFromURL.png" />
+3. Choose the type of model you want to upload. Currently, six types are supported: SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE.
+4. In the <strong>URL list (Comma-separated in English)</strong> input box, enter the URL list of model downloads, separated by commas.
+5. In the <strong>Models Description (Optional)</strong> input box, provide a JSON-formatted description (optional).</p>
+<blockquote>
+<p><strong>Note</strong>: You can select multiple model files, but it's advisable not to exceed 5 files in your selection, with a total size not exceeding 12 GB, as constrained by Lambda memory and concurrent thread limits.
+6. Click <strong>Upload Models to Cloud</strong> to start the model upload process.
+7. You will see a prompt in the <strong>Label</strong> section below indicating the progress of the upload request.</p>
 </blockquote>
 <h2 id="amazon-sagemaker-endpoint-management">Amazon SageMaker Endpoint Management</h2>
 <h3 id="deploy-new-endpoint">Deploy new endpoint</h3>
@@ -1317,10 +1386,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      <script src="../../assets/javascripts/bundle.726fbb30.min.js"></script>
       
     
   </body>

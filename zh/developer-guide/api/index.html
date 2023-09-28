@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.046329b4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.d451bc0e.min.css">
       
       
 
@@ -290,15 +290,20 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
       
-        
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
         
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
         
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -324,14 +329,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_1" >
         
+          
           <label class="md-nav__link" for="__nav_1_1" id="__nav_1_1_label" tabindex="0">
             
   
@@ -426,14 +433,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" >
         
+          
           <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
             
   
@@ -508,14 +517,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4" >
         
+          
           <label class="md-nav__link" for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
             
   
@@ -610,14 +621,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_5" >
         
+          
           <label class="md-nav__link" for="__nav_1_5" id="__nav_1_5_label" tabindex="0">
             
   
@@ -666,7 +679,27 @@
         
   
   <span class="md-ellipsis">
-    部署步骤
+    新用户部署步骤
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/deployment_for_existing_users/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    更新已有的部署
   </span>
   
 
@@ -712,14 +745,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" >
         
+          
           <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
             
   
@@ -749,6 +784,26 @@
   
   <span class="md-ellipsis">
     准备工作
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-guide/multi-user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    配置API和多用户
   </span>
   
 
@@ -876,14 +931,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" checked>
         
+          
           <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
             
   
@@ -1348,6 +1405,12 @@ Middleware->Client: return the inference parameter in presigned url format
 <td>GET</td>
 <td><a href="#dataset_namedata">/{dataset_name}/data</a></td>
 <td>获取特定数据集的数据。</td>
+</tr>
+<tr>
+<td>30</td>
+<td>POST</td>
+<td><a href="#upload_checkpointpost">/upload_checkpoint</a></td>
+<td>根据模型url直接上传到s3。</td>
 </tr>
 </tbody>
 </table>
@@ -4755,6 +4818,144 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 要执行此操作，需要在请求时添加api_key进行身份验证
 </aside>
 
+<p><br/></p>
+<h1 id="upload_checkpoint">/upload_checkpoint</h1>
+<h3 id="_33"><strong>示例：</strong></h3>
+<p>Python示例代码：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
+<span class="p">}</span>
+
+<span class="n">const</span> <span class="n">inputBody</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s2">&quot;checkpointType&quot;</span><span class="p">:</span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;modelUrl&quot;</span><span class="p">:[</span><span class="s2">&quot;https://huggingface.co/xxx.safetensors&quot;</span><span class="p">,</span><span class="s2">&quot;https://civitai.com/api/download/models/xxx&quot;</span><span class="p">],</span>
+  <span class="s2">&quot;params&quot;</span><span class="p">:{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/upload_checkpoint&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">inputBody</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+</code></pre></div>
+<p>Javascript示例代码：</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">inputBody</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;{</span>
+<span class="s1">  &quot;checkpointType&quot;:&quot;Stable-diffusion&quot;,</span>
+<span class="s1">  &quot;modelUrl&quot;:[&quot;https://huggingface.co/xxx/sd_xl_base_1.0.safetensors&quot;,&quot;https://civitai.com/api/download/models/xxx&quot;],</span>
+<span class="s1">  &quot;params&quot;:{&quot;message&quot;:&quot;description&quot;}</span>
+<span class="s1">}&#39;</span><span class="p">;</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
+<span class="p">};</span>
+
+<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://&lt;Your API Gateway ID&gt;.execute-api.&lt;Your AWS Account Region&gt;.amazonaws.com/{basePath}/dataset&#39;</span><span class="p">,</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nx">inputBody</span><span class="p">,</span>
+<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
+<span class="p">})</span>
+<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
+<span class="p">});</span>
+</code></pre></div>
+<p><code>POST /upload_checkpoint</code></p>
+<blockquote>
+<p>Body 参数</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="c1">// checkpointType 可选项包括：&quot;Stable-diffusion&quot;, &quot;embeddings&quot;, &quot;Lora&quot;, &quot;hypernetworks&quot;, &quot;ControlNet&quot;, &quot;VAE&quot;</span>
+<span class="w">  </span><span class="nt">&quot;checkpointType&quot;</span><span class="p">:</span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;modelUrl&quot;</span><span class="p">:[</span><span class="s2">&quot;https://huggingface.co/xxx.safetensors&quot;</span><span class="p">,</span><span class="s2">&quot;https://civitai.com/api/download/models/xxx&quot;</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;params&quot;</span><span class="p">:{</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a id="upload-checkpoint-params">参数</a></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>位置</th>
+<th>数据类型</th>
+<th>是否需要填写</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>body</td>
+<td>body</td>
+<td>object</td>
+<td>false</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>响应示例</p>
+<p>200 响应</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;statusCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;checkpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;07dbd061-1df8-463f-bc78-44a41956435c&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;s3_location&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;s3://path&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Active&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;created&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-09-26 09:02:52.146566&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="nt">&quot;multipart_upload&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="nt">&quot;bubble-gum-kaugummi-v20&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>500 响应</p>
+</blockquote>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;statusCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error_message&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="upload-checkpoint">响应</h3>
+
+<table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>含义</th>
+<th>描述</th>
+<th>结构</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
+<td>Successful response</td>
+<td>Inline</td>
+</tr>
+<tr>
+<td>500</td>
+<td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td>
+<td>Error response</td>
+<td>Inline</td>
+</tr>
+</tbody>
+</table>
+<h3 id="upload-checkpoint-responseschema">响应结构</h3>
+
+<aside class="warning">
+要执行此操作，需要在请求时添加api_key进行身份验证
+</aside>
+
 
 
 
@@ -4786,10 +4987,10 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      <script src="../../assets/javascripts/bundle.726fbb30.min.js"></script>
       
     
   </body>

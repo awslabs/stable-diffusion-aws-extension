@@ -13,14 +13,14 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/CloudAssetsManage/">
       
       
-        <link rel="prev" href="../preparation/">
+        <link rel="prev" href="../multi-user/">
       
       
         <link rel="next" href="../txt2img-guide/">
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.2, mkdocs-material-9.2.8">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.046329b4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.d451bc0e.min.css">
       
       
 
@@ -290,15 +290,20 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+    
       
-        
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
         
         
         
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
         
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -324,14 +329,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_1" >
         
+          
           <label class="md-nav__link" for="__nav_1_1" id="__nav_1_1_label" tabindex="0">
             
   
@@ -426,14 +433,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3" >
         
+          
           <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
             
   
@@ -508,14 +517,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_4" >
         
+          
           <label class="md-nav__link" for="__nav_1_4" id="__nav_1_4_label" tabindex="0">
             
   
@@ -610,14 +621,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_5" >
         
+          
           <label class="md-nav__link" for="__nav_1_5" id="__nav_1_5_label" tabindex="0">
             
   
@@ -666,7 +679,27 @@
         
   
   <span class="md-ellipsis">
-    部署步骤
+    新用户部署步骤
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/deployment_for_existing_users/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    更新已有的部署
   </span>
   
 
@@ -714,14 +747,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_7" checked>
         
+          
           <label class="md-nav__link" for="__nav_1_7" id="__nav_1_7_label" tabindex="0">
             
   
@@ -751,6 +786,26 @@
   
   <span class="md-ellipsis">
     准备工作
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multi-user/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    配置API和多用户
   </span>
   
 
@@ -829,6 +884,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    从模型下载地址直接上传至云上
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -843,14 +905,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     部署推理节点
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     删除已部署推理节点
   </a>
   
@@ -870,14 +932,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     数据集上传
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     数据集浏览
   </a>
   
@@ -993,14 +1055,16 @@
     
     
     
+    
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_8" >
         
+          
           <label class="md-nav__link" for="__nav_1_8" id="__nav_1_8_label" tabindex="0">
             
   
@@ -1200,6 +1264,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    从模型下载地址直接上传至云上
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1214,14 +1285,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     部署推理节点
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     删除已部署推理节点
   </a>
   
@@ -1241,14 +1312,14 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     数据集上传
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     数据集浏览
   </a>
   
@@ -1285,9 +1356,9 @@
 <h3 id="webui">从原生webUI上传模型至云上</h3>
 <p>考虑到用户多样的使用场景，本方式适用于将webUI前端部署在非本地电脑的其他机器上的场景。同于webUI社区原生使用方式，用户需要首先将相关模型上传至部署了webUI前端的机器上，对应webUI项目文件夹下、models子文件夹的对应处，之后即可跟从下面步骤完成模型上传到云上。</p>
 <ol>
-<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。</li>
-<li>选择Upload Model to S3 from WebUI下拉框, 该方式表示从部署WebUI服务的models文件路径上传模型。
-<img alt="Upload Models to S3" src="../../images/Upload-models-old.png" /></li>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Models Management</strong>模块。</li>
+<li>选择from WebUI标签页, 该方式表示从部署WebUI服务的models文件路径上传模型。
+<img alt="Upload Models to S3" src="../../images/UploadFromWebUI.png" /></li>
 <li>在对应的模型输入部署WebUI服务的models文件路径地址。<blockquote>
 <p><strong>提示</strong>: 您可以通过在文本框中输入多个本地模型路径来上传多种模型。</p>
 </blockquote>
@@ -1298,9 +1369,9 @@
 <h3 id="_2">从本地机器上传模型至云上</h3>
 <p>考虑到用户多样的使用场景，本方式适用于将webUI前端部署在本地电脑上的场景。</p>
 <ol>
-<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块。</li>
-<li>选择Upload Model to S3 from Laptop, 该方式表示从访问WebUI的本地路径上传模型。
-<img alt="Upload Models to S3" src="../../images/Upload-models-new.png" /></li>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Models Management</strong>模块。</li>
+<li>选择from My Computer标签页, 该方式表示从访问WebUI的本地路径上传模型。
+<img alt="Upload Models to S3" src="../../images/UploadFromComputer.png" /></li>
 <li>选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE</li>
 <li>本地选择要上传的模型文件。<blockquote>
 <p><strong>提示</strong>: 您可以多选模型文件，但受制于浏览器限制，最好选择的文件数不要超过10个，总大小不要超过8g。</p>
@@ -1309,8 +1380,23 @@
 <li>点击<strong>Upload Models to Cloud</strong>，启动模型上传。</li>
 <li>上传会依据文件大小与数量异步分片上传，各分片上传完成后，会在<strong>选择文件</strong>按钮下看到提示。</li>
 </ol>
+<h3 id="_3">从模型下载地址直接上传至云上</h3>
+<p>考虑到用户多样的使用场景，本方式适用于直接通过模型下载的URL地址上传到S3的场景。</p>
+<ol>
+<li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Models Management</strong>模块。</li>
+<li>选择from URL标签页, 该方式表示从模型下载的URL地址上传到S3。
+<img alt="Upload Models to S3" src="../../images/UploadFromURL.png" /></li>
+<li>选择要上传的模型类型，目前支持六种：SD Checkpoints, Textual Inversion, LoRA model, ControlNet model, Hypernetwork, VAE</li>
+<li>在URL list (Comma-separated in English)输入框中填入模型下载的url列表，用英文逗号分隔。</li>
+<li>在Models Description (Optional)输入框中输入json格式的描述（选填）。<blockquote>
+<p><strong>提示</strong>: 您可以多选模型文件，但受制于Lambda内存以及并发线程数的限制，最好选择的文件数不要超过5个，总大小不要超过12g。</p>
+</blockquote>
+</li>
+<li>点击<strong>Upload Models to Cloud</strong>，启动模型上传。</li>
+<li>上传请求会在下方<strong>Label</strong>看到提示。</li>
+</ol>
 <h2 id="amazon-sagemaker">Amazon SageMaker推理节点管理</h2>
-<h3 id="_3">部署推理节点</h3>
+<h3 id="_4">部署推理节点</h3>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块的<strong>Deploy New SageMaker Endpoint</strong>区域。</li>
 <li>方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击<strong>Deploy</strong>按钮启动Sagemaker endpoint的部署。</li>
@@ -1353,13 +1439,13 @@
 </li>
 <li>等待大约10分钟，即可看到最新推理节点的状态变成<strong>InService</strong>，表明推理节点部署成功。</li>
 </ol>
-<h3 id="_4">删除已部署推理节点</h3>
+<h3 id="_5">删除已部署推理节点</h3>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，点击<strong>Select Cloud SageMaker Endpoint</strong>列表右侧刷新按钮，刷新下拉列表，选择需要删除的推理节点。</li>
 <li>点击<strong>Delete</strong>，左侧<strong>Label</strong>处会显示提示信息，完成推理节点删除。</li>
 </ol>
 <h2 id="aws">AWS数据集管理</h2>
-<h3 id="_5">数据集上传</h3>
+<h3 id="_6">数据集上传</h3>
 <p>在模型微调等功能中，需要输入一个图片集，用以微调工作。该功能模块助力用户快速上传图片集到云端。</p>
 <ol>
 <li>
@@ -1372,7 +1458,7 @@
 <li>在<strong>Dataset Name</strong>输入该图片文件夹的名字，在<strong>Dataset Description</strong>输入该数据集的描述，点击<strong>Create Dataset</strong>。</li>
 <li>等待几秒，下方的<strong>Create Result</strong>区域显示<strong>Complete Dataset XXXX creation</strong>，即表示该数据集已经成功上传到云上。</li>
 </ol>
-<h3 id="_6">数据集浏览</h3>
+<h3 id="_7">数据集浏览</h3>
 <p>数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。</p>
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，<strong>AWS Dataset Management</strong>区块，<strong>Browse</strong>标签页。</li>
@@ -1411,10 +1497,10 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.dfff1995.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.dff1b7c8.min.js"></script>
+      <script src="../../assets/javascripts/bundle.726fbb30.min.js"></script>
       
     
   </body>
