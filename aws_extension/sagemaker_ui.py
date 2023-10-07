@@ -1112,6 +1112,7 @@ def load_vae_list(username, user_token):
 
     return vae_model_on_cloud
 
+
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui

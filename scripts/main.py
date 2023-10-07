@@ -7,7 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -20,6 +20,7 @@ from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, 
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
+from modules.ui_components import ToolButton
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
@@ -78,6 +79,11 @@ class SageMakerUI(scripts.Script):
     img2img_gallery = None
     img2img_html_info = None
 
+    txt2img_refiner_ckpt_dropdown = None
+    txt2img_refiner_ckpt_refresh_btn = None
+    img2img_refiner_ckpt_dropdown = None
+    img2img_refiner_ckpt_refresh_btn = None
+
     ph = None
 
     def title(self):
@@ -104,6 +110,22 @@ class SageMakerUI(scripts.Script):
         if type(component) is gr.HTML and getattr(component, 'elem_id',
                                                   None) == 'html_info_txt2img' and self.is_txt2img:
             self.txt2img_html_info = component
+
+        if type(component) is gr.Dropdown:
+            elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
+            if getattr(component, 'elem_id', None) == elem_id:
+                if self.is_txt2img:
+                    self.txt2img_refiner_ckpt_dropdown = component
+                if self.is_img2img:
+                    self.img2img_refiner_ckpt_dropdown = component
+
+        if type(component) is ToolButton:
+            elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint_refresh'
+            if getattr(component, 'elem_id', None) == elem_id:
+                if self.is_txt2img:
+                    self.txt2img_refiner_ckpt_refresh_btn = component
+                if self.is_img2img:
+                    self.img2img_refiner_ckpt_refresh_btn = component
 
         async def _update_result():
             if self.inference_queue and not self.inference_queue.empty():
@@ -142,8 +164,11 @@ class SageMakerUI(scripts.Script):
         pass
 
     def ui(self, is_img2img):
-        def _check_generate(model_selected):
-            return f'Generate{" on Cloud" if model_selected and model_selected != None_Option_For_On_Cloud_Model else ""}'
+        def _check_generate(model_selected, pr: gr.Request):
+            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            return f'Generate{" on Cloud" if on_cloud  else ""}', \
+                   gr.update(visible=not on_cloud), \
+                   gr.update(choices=load_model_list(pr.username, pr.username)) if on_cloud else gr.update(choices=sd_models.checkpoint_tiles())
 
         if not is_img2img:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
@@ -151,7 +176,9 @@ class SageMakerUI(scripts.Script):
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
 
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.txt2img_generate_btn])
+                                  outputs=[self.txt2img_generate_btn,
+                                           self.txt2img_refiner_ckpt_refresh_btn,
+                                           self.txt2img_refiner_ckpt_dropdown])
 
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
@@ -160,7 +187,10 @@ class SageMakerUI(scripts.Script):
             secondary_model_name, tertiary_model_name, \
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.img2img_generate_btn])
+                                  outputs=[self.img2img_generate_btn,
+                                           self.img2img_refiner_ckpt_refresh_btn,
+                                           self.img2img_refiner_ckpt_dropdown
+                                           ])
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
