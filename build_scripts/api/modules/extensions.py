@@ -147,7 +147,7 @@ def list_extensions():
         print("*** \"Disable all extensions\" option was set, will only load built-in extensions ***")
 
     extension_paths = []
-    for dirname in [extensions_dir, extensions_builtin_dir]:
+    for dirname in [extensions_dir]:
         if not os.path.isdir(dirname):
             return
 

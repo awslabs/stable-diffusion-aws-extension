@@ -22,16 +22,24 @@ import sys
 #                 'ControlNet': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/ControlNet/checkpoint/custom/cb29abbb-de58-4176-a0d1-5596de627a71', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'control_v11p_sd15_openpose.pth', 'type': 'ControlNet'},
 #                                {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/ControlNet/checkpoint/custom/08fc3b88-5c1f-4b25-8d5c-7d9f54587d05', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'control_v11p_sd15_seg.pth', 'type': 'ControlNet'}]
 #             }
+
 used_models = {
                 'space_free_size': 400000000.0,  # sys.float_info.max
-                'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/588cb29d-95d7-40ed-86c3-b69f94f8d1a1', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_base_1.0.safetensors', 'type': 'Stable-diffusion'}]
+                'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/588cb29d-95d7-40ed-86c3-b69f94f8d1a1', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_base_1.0.safetensors', 'type': 'Stable-diffusion'},
+                                     {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/47563bb8-92e4-4f05-bee5-a43193d8d0f5', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_refiner_1.0.safetensors', 'type': 'Stable-diffusion'}]
             }
+# used_models = {
+#                 'space_free_size': 400000000.0,  # sys.float_info.max
+#                 'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/28efa65c-b862-414c-85b9-747cd09c306e', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'AnythingV5Ink_ink.safetensors', 'type': 'Stable-diffusion'}],
+#                 'ControlNet': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/ControlNet/checkpoint/custom/08fc3b88-5c1f-4b25-8d5c-7d9f54587d05', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'control_v11p_sd15_seg.pth', 'type': 'ControlNet'}]
+#             }
 payload = {
             "task": "txt2img",
             "username": "test",
             "models": used_models,
-            "param_s3": 's3://diffusers-payloads/txt2img_xl.json'
+            "param_s3": 's3://diffusers-payloads/txt2img_with_refiner.json' #_multi_controlnet_new.json' _controlnet_openpose_new.json'
         }
+#'s3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/txt2img/infer_v2/5923a628-b593-4f2a-80d5-682b620afe2c/api_param.json'
 
 start_time = time.time()
 count = 1

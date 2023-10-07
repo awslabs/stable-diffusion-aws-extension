@@ -210,7 +210,7 @@ def get_all_units(script_runner: scripts.ScriptRunner, script_args: List[Any]) -
 
     cn_script = find_cn_script(script_runner)
     if cn_script:
-        return get_all_units_from(script_args[cn_script.args_from:cn_script.args_to])
+        return get_all_units_from(script_args[cn_script.filename])
 
     return []
 

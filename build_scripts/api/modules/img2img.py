@@ -13,7 +13,7 @@ from modules.shared import opts, state
 from modules.images import save_image
 import modules.shared as shared
 import modules.processing as processing
-from modules.ui import plaintext_to_html
+#from modules.ui import plaintext_to_html
 import modules.scripts
 
 
@@ -240,4 +240,5 @@ def img2img(id_task: str, mode: int, prompt: str, negative_prompt: str, prompt_s
     if opts.do_not_show_images:
         processed.images = []
 
-    return processed.images, generation_info_js, plaintext_to_html(processed.info), plaintext_to_html(processed.comments, classname="comments")
+    return processed.images, generation_info_js, None
+#plaintext_to_html(processed.info), plaintext_to_html(processed.comments, classname="comments")

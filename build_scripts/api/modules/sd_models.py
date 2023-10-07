@@ -700,6 +700,7 @@ def load_pipeline(checkpoint_info=None):
     else:
         checkpoint = torch.load(checkpoint_info.filename, map_location="cpu")
     
+    
     key_name_sd_xl_base = "conditioner.embedders.1.model.transformer.resblocks.9.mlp.c_proj.bias"
     key_name_sd_xl_refiner = "conditioner.embedders.0.model.transformer.resblocks.9.mlp.c_proj.bias"
 
@@ -713,8 +714,15 @@ def load_pipeline(checkpoint_info=None):
    
     pipeline_data.sd_pipeline.enable_xformers_memory_efficient_attention()
     #pipeline_data.sd_pipeline.enable_sequential_cpu_offload()
-
+    
     pipeline_name = str(type(pipeline_data.sd_pipeline)).split('.')[-1][:-2]
+
+    # if pipeline_name == "StableDiffusionXLPipeline":
+    #     needs_upcasting = pipeline_data.sd_pipeline.vae.dtype == torch.float16 and pipeline_data.sd_pipeline.vae.config.force_upcast
+    #     if needs_upcasting:
+    #         pipeline_data.sd_pipeline.upcast_vae()
+
+    
 
     #sd_pipeline.sd_model_hash = sd_model_hash
     #sd_pipeline.sd_model_checkpoint = checkpoint_info.filename

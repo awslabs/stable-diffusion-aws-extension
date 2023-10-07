@@ -294,7 +294,7 @@ class Script(scripts.Script, metaclass=(
         devices.torch_gc()
 
     @staticmethod
-    def load_control_model(p, unet, model, lowvram):
+    def load_control_model(p, model, lowvram):
         if model in Script.model_cache:
             logger.info(f"Loading model from cache: {model}")
             return Script.model_cache[model]
@@ -305,7 +305,7 @@ class Script(scripts.Script, metaclass=(
             gc.collect()
             devices.torch_gc()
 
-        model_net = Script.build_control_model(p, unet, model, lowvram)
+        model_net = Script.build_control_model(p, model, lowvram)
 
         if shared.opts.data.get("control_net_model_cache_size", 2) > 0:
             Script.model_cache[model] = model_net
@@ -313,7 +313,7 @@ class Script(scripts.Script, metaclass=(
         return model_net
 
     @staticmethod
-    def build_control_model(p, unet, model, lowvram):
+    def build_control_model(p, model, lowvram):
         if model is None or model == 'None':
             raise RuntimeError(f"You have not selected any ControlNet Model.")
 
@@ -338,72 +338,6 @@ class Script(scripts.Script, metaclass=(
             network.to(p.sd_pipeline.device, dtype=p.sd_pipeline.vae.dtype)
             logger.info(f"Diffusers ControlNet model {model} loaded.")
             return network
-
-        logger.info(f"Loading model: {model}")
-        state_dict = load_state_dict(model_path)
-        network_module = PlugableControlModel
-        network_config = shared.opts.data.get("control_net_model_config", global_state.default_conf)
-        if not os.path.isabs(network_config):
-            network_config = os.path.join(global_state.script_dir, network_config)
-
-        if any([k.startswith("body.") or k == 'style_embedding' for k, v in state_dict.items()]):
-            # adapter model
-            network_module = PlugableAdapter
-            network_config = shared.opts.data.get("control_net_model_adapter_config", global_state.default_conf_adapter)
-            if not os.path.isabs(network_config):
-                network_config = os.path.join(global_state.script_dir, network_config)
-
-        model_path = os.path.abspath(model_path)
-        model_stem = Path(model_path).stem
-        model_dir_name = os.path.dirname(model_path)
-
-        possible_config_filenames = [
-            os.path.join(model_dir_name, model_stem + ".yaml"),
-            os.path.join(global_state.script_dir, 'models', model_stem + ".yaml"),
-            os.path.join(model_dir_name, model_stem.replace('_fp16', '') + ".yaml"),
-            os.path.join(global_state.script_dir, 'models', model_stem.replace('_fp16', '') + ".yaml"),
-            os.path.join(model_dir_name, model_stem.replace('_diff', '') + ".yaml"),
-            os.path.join(global_state.script_dir, 'models', model_stem.replace('_diff', '') + ".yaml"),
-            os.path.join(model_dir_name, model_stem.replace('-fp16', '') + ".yaml"),
-            os.path.join(global_state.script_dir, 'models', model_stem.replace('-fp16', '') + ".yaml"),
-            os.path.join(model_dir_name, model_stem.replace('-diff', '') + ".yaml"),
-            os.path.join(global_state.script_dir, 'models', model_stem.replace('-diff', '') + ".yaml")
-        ]
-
-        override_config = possible_config_filenames[0]
-
-        for possible_config_filename in possible_config_filenames:
-            if os.path.exists(possible_config_filename):
-                override_config = possible_config_filename
-                break
-
-        if 'v11' in model_stem.lower() or 'shuffle' in model_stem.lower():
-            assert os.path.exists(override_config), f'Error: The model config {override_config} is missing. ControlNet 1.1 must have configs.'
-
-        if os.path.exists(override_config):
-            network_config = override_config
-        else:
-            # Note: This error is triggered in unittest, but not caught.
-            # TODO: Replace `print` with `logger.error`.
-            print(f'ERROR: ControlNet cannot find model config [{override_config}] \n'
-                  f'ERROR: ControlNet will use a WRONG config [{network_config}] to load your model. \n'
-                  f'ERROR: The WRONG config may not match your model. The generated results can be bad. \n'
-                  f'ERROR: You are using a ControlNet model [{model_stem}] without correct YAML config file. \n'
-                  f'ERROR: The performance of this model may be worse than your expectation. \n'
-                  f'ERROR: If this model cannot get good results, the reason is that you do not have a YAML file for the model. \n'
-                  f'Solution: Please download YAML file, or ask your model provider to provide [{override_config}] for you to download.\n'
-                  f'Hint: You can take a look at [{os.path.join(global_state.script_dir, "models")}] to find many existing YAML files.\n')
-
-        logger.info(f"Loading config: {network_config}")
-        network = network_module(
-            state_dict=state_dict,
-            config_path=network_config,
-            lowvram=lowvram,
-            base_model=unet,
-        )
-        network.to(p.sd_model.device, dtype=p.sd_model.dtype)
-        logger.info(f"ControlNet model {model} loaded.")
-        return network
 
     @staticmethod
     def get_remote_call(p, attribute, default=None, idx=0, strict=False, force=False):
@@ -714,14 +648,14 @@ class Script(scripts.Script, metaclass=(
         args contains all values returned by components from ui()
         """
         
-        sd_ldm = p.sd_model
-        unet = sd_ldm.model.diffusion_model
+        # sd_ldm = p.sd_model
+        # unet = sd_ldm.model.diffusion_model
 
         setattr(p, 'controlnet_initial_noise_modifier', None)
 
-        if self.latest_network is not None:
-            # always restore (~0.05s)
-            self.latest_network.restore(unet)
+        # if self.latest_network is not None:
+        #     # always restore (~0.05s)
+        #     self.latest_network.restore(unet)
 
         if not batch_hijack.instance.is_batch:
             self.enabled_units = Script.get_enabled_units(p)
@@ -742,7 +676,7 @@ class Script(scripts.Script, metaclass=(
         control_networks = []
 
         # cache stuff
-        if self.latest_model_hash != p.sd_model.sd_model_hash:
+        if self.latest_model_hash != shared.opts.data["sd_model_hash"]:
             Script.clear_control_model_cache()
 
         # unload unused preproc
@@ -751,7 +685,7 @@ class Script(scripts.Script, metaclass=(
             if key not in module_list:
                 self.unloadable.get(key, lambda:None)()
 
-        self.latest_model_hash = p.sd_model.sd_model_hash
+        self.latest_model_hash = shared.opts.data["sd_model_hash"]
         for idx, unit in enumerate(self.enabled_units):
             Script.bound_check_params(unit)
 
@@ -762,9 +696,7 @@ class Script(scripts.Script, metaclass=(
             if unit.module in model_free_preprocessors:
                 model_net = None
             else:
-                model_net = Script.load_control_model(p, unet, unit.model, unit.low_vram)
-                if not hasattr(p, "aws_dus"):
-                    model_net.reset()
+                model_net = Script.load_control_model(p, unit.model, unit.low_vram)
             
             control_networks.append(model_net)
 
@@ -902,37 +834,6 @@ class Script(scripts.Script, metaclass=(
             if 'reference' in unit.module:
                 control_model_type = ControlModelType.AttentionInjection
 
-            if not hasattr(p, "aws_dus"):
-                global_average_pooling = False
-
-                if model_net is not None:
-                    if model_net.config.model.params.get("global_average_pooling", False):
-                        global_average_pooling = True
-
-                preprocessor_dict = dict(
-                    name=unit.module,
-                    preprocessor_resolution=preprocessor_resolution,
-                    threshold_a=unit.threshold_a,
-                    threshold_b=unit.threshold_b
-                )
-
-                forward_param = ControlParams(
-                    control_model=model_net,
-                    preprocessor=preprocessor_dict,
-                    hint_cond=control,
-                    weight=unit.weight,
-                    guidance_stopped=False,
-                    start_guidance_percent=unit.guidance_start,
-                    stop_guidance_percent=unit.guidance_end,
-                    advanced_weighting=None,
-                    control_model_type=control_model_type,
-                    global_average_pooling=global_average_pooling,
-                    hr_hint_cond=hr_control,
-                    soft_injection=control_mode != external_code.ControlMode.BALANCED,
-                    cfg_injection=control_mode == external_code.ControlMode.CONTROL,
-                )
-                forward_params.append(forward_param)
-
             if 'inpaint_only' in unit.module:
                 final_inpaint_feed = hr_control if hr_control is not None else control
                 final_inpaint_feed = final_inpaint_feed.detach().cpu().numpy()
@@ -959,14 +860,8 @@ class Script(scripts.Script, metaclass=(
 
                 post_processors.append(inpaint_only_post_processing)
 
-            if '+lama' in unit.module:
-                forward_param.used_hint_cond_latent = hook.UnetHook.call_vae_using_process(p, control)
-                setattr(p, 'controlnet_initial_noise_modifier', forward_param.used_hint_cond_latent)
             del model_net
 
-        if not hasattr(p, "aws_dus"):
-            self.latest_network = UnetHook(lowvram=any(unit.low_vram for unit in self.enabled_units))
-            self.latest_network.hook(model=unet, sd_ldm=sd_ldm, control_params=forward_params, process=p)
         self.detected_map = detected_maps
         self.post_processors = post_processors
         self.control_networks = control_networks
@@ -999,7 +894,7 @@ class Script(scripts.Script, metaclass=(
                     img = Image.fromarray(np.ascontiguousarray(detect_map.clip(0, 255).astype(np.uint8)).copy())
                     save_image(img, detectmap_dir, module)
 
-        if self.latest_network is None:
+        if self.detected_map is None:
             return
 
         if not batch_hijack.instance.is_batch:
@@ -1018,8 +913,6 @@ class Script(scripts.Script, metaclass=(
                             ])
 
         self.input_image = None
-        self.latest_network.restore(p.sd_model.model.diffusion_model)
-        self.latest_network = None
         self.detected_map.clear()
 
         gc.collect()

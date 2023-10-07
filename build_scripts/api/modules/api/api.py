@@ -181,6 +181,12 @@ def api_middleware(app: FastAPI):
     async def http_exception_handler(request: Request, e: HTTPException):
         return handle_exception(request, e)
 
+def script_name_to_index(name, scripts):
+    try:
+        return [script.title().lower() for script in scripts].index(name.lower())
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Script '{name}' not found") from e
+
 
 class Api:
     def __init__(self, app: FastAPI, queue_lock: Lock):
@@ -214,8 +220,40 @@ class Api:
 
     #     raise HTTPException(status_code=401, detail="Incorrect username or password", headers={"WWW-Authenticate": "Basic"})
 
+    def get_script(self, script_name, script_runner):
+        if script_name is None or script_name == "":
+            return None, None
+
+        script_idx = script_name_to_index(script_name, script_runner.scripts)
+        return script_runner.scripts[script_idx]
+
+    def init_script_args(self, request, script_runner):
+        script_args = {}
+
+        # Now check for always on scripts
+        if request.alwayson_scripts:
+            for alwayson_script_name in request.alwayson_scripts.keys():
+                alwayson_script = self.get_script(alwayson_script_name, script_runner)
+                if alwayson_script is None:
+                    raise HTTPException(status_code=422, detail=f"always on script {alwayson_script_name} not found")
+                # Selectable script in always on script param check
+                if alwayson_script.alwayson is False:
+                    raise HTTPException(status_code=422, detail="Cannot have a selectable script in the always on scripts params")
+                # always on script with no arg should always run so you don't really need to add them to the requests
+                if "args" in request.alwayson_scripts[alwayson_script_name]:
+                    # min between arg length in scriptrunner and arg length in the request
+                    filename = alwayson_script.filename
+                    script_args[filename] = request.alwayson_scripts[alwayson_script_name]["args"]
+                    # for idx in range(0, min((alwayson_script.args_to - alwayson_script.args_from), len(request.alwayson_scripts[alwayson_script_name]["args"]))):
+                    #     script_args[alwayson_script.args_from + idx] = request.alwayson_scripts[alwayson_script_name]["args"][idx]
+        return script_args
+
     def txt2img_pipeline(self, payload):
         txt2imgreq = models.StableDiffusionTxt2ImgProcessingAPI(**payload)
+        script_runner = scripts.scripts_txt2img
+        if not script_runner.scripts:
+            script_runner.initialize_scripts(False)
+        
         populate = txt2imgreq.copy(update={  # Override __init__ params
             "sampler_name": validate_sampler_name(txt2imgreq.sampler_name or txt2imgreq.sampler_index),
             "do_not_save_samples": not txt2imgreq.save_images,
@@ -227,12 +265,76 @@ class Api:
         args.pop('script_name', None)
         args.pop('script_args', None) # will refeed them to the pipeline directly after initializing them
         args.pop('alwayson_scripts', None)
+
+        if 'refiner' in txt2imgreq.alwayson_scripts.keys():
+            refiner_args = txt2imgreq.alwayson_scripts['refiner']['args']
+            args['use_refiner'] = refiner_args[0]
+            args['refiner_checkpoint'] = None
+            args['refiner_switch_at'] = None
+            if args["use_refiner"]:
+                args["refiner_checkpoint"] = refiner_args[1]
+                args["refiner_switch_at"] = refiner_args[2]
+            del txt2imgreq.alwayson_scripts['refiner']
+
+        script_args = self.init_script_args(txt2imgreq, script_runner)
+
+
         send_images = args.pop('send_images', True)
         args.pop('save_images', None)
         with closing(pipeline.StableDiffusionPipelineTxt2Img(sd_model=None, **args)) as p:
+            p.scripts = script_runner
+            p.script_args = script_args
             processed = pipeline.process_images(p)
             b64images = list(map(encode_pil_to_base64, processed.images)) if send_images else []
             return models.TextToImageResponse(images=b64images, parameters=vars(txt2imgreq), info=processed.js())
+    
+    def img2img_pipeline(self, payload):
+        img2imgreq = models.StableDiffusionImg2ImgProcessingAPI(**payload)
+        init_images = img2imgreq.init_images
+        if init_images is None:
+            raise HTTPException(status_code=404, detail="Init image not found")
+
+        mask = img2imgreq.mask
+        if mask:
+            mask = decode_base64_to_image(mask)
+
+        script_runner = scripts.scripts_txt2img
+        if not script_runner.scripts:
+            script_runner.initialize_scripts(True)
+
+        populate = img2imgreq.copy(update={  # Override __init__ params
+            "sampler_name": validate_sampler_name(img2imgreq.sampler_name or img2imgreq.sampler_index),
+            "do_not_save_samples": not img2imgreq.save_images,
+            "do_not_save_grid": not img2imgreq.save_images,
+            "mask": mask,
+        })
+        if populate.sampler_name:
+            populate.sampler_index = None  # prevent a warning later on
+        args = vars(populate)
+        args.pop('script_name', None)
+        args.pop('script_args', None) # will refeed them to the pipeline directly after initializing them
+        args.pop('alwayson_scripts', None)
+        send_images = args.pop('send_images', True)
+        args.pop('save_images', None)
+
+        if 'refiner' in img2imgreq.alwayson_scripts.keys():
+            refiner_args = img2imgreq.alwayson_scripts['refiner']['args']
+            args['use_refiner'] = refiner_args[0]
+            args['refiner_checkpoint'] = None
+            args['refiner_switch_at'] = None
+            if args["use_refiner"]:
+                args["refiner_checkpoint"] = refiner_args[1]
+                args["refiner_switch_at"] = refiner_args[2]
+            del img2imgreq.alwayson_scripts['refiner']
+
+        script_args = self.init_script_args(img2imgreq, script_runner)
+        
+        with closing(pipeline.StableDiffusionPipelineImg2Img(sd_model=None, **args)) as p:
+            p.init_images = [decode_base64_to_image(x) for x in init_images]
+            p.script_args = script_args
+            processed = pipeline.process_images(p)
+            b64images = list(map(encode_pil_to_base64, processed.images)) if send_images else []
+            return models.ImageToImageResponse(images=b64images, parameters=vars(img2imgreq), info=processed.js())
 
     def invocations(self, req: models.InvocationsRequest):
         """
@@ -320,36 +422,19 @@ class Api:
         try:
             if req.task == 'txt2img':
                 with self.queue_lock:
-                    # logger.info(
-                    #     f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
-                    # selected_models = req.models
-                    # checkpoint_info = req.checkpoint_info
                     checkspace_and_update_models(req.models)
-                    # logger.info(
-                    #     f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
-                    # logger.info(json.loads(req.txt2img_payload.json()))
-                    # # response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
-                    # #                             json=json.loads(req.txt2img_payload.json()))
                     response = self.txt2img_pipeline(payload)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     return response
             elif req.task == 'img2img':
-                logger.info("img2img not implemented!")
-                return 0
-                # with self.queue_lock:
-                #     logger.info(
-                #         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
-                #     selected_models = req.models
-                #     checkpoint_info = req.checkpoint_info
-                #     checkspace_and_update_models(selected_models, checkpoint_info)
-                #     logger.info(
-                #         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
-                #     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
-                #                                 json=json.loads(req.img2img_payload.json()))
-                #     logger.info(
-                #         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
-                #     return response.json()
+                with self.queue_lock:
+                    checkspace_and_update_models(req.models)
+                    response = self.img2img_pipeline(payload)
+                    logger.info(
+                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
+                    return response
+                
             elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                 logger.info("interrogate not implemented!")
                 return 0

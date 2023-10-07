@@ -4,7 +4,7 @@ import os
 import sys
 
 from modules import timer
-from modules import sd_models
+from modules import sd_models, extensions
 
 timer.startup_timer.record("start")
 
@@ -262,6 +262,10 @@ def initialize():
     # TODO: do we need keep this for api? Xiujuan
     configure_sigint_handler()
     check_versions()
+
+    extensions.list_extensions()
+    startup_timer.record("list extensions")
+    
     # # TODO: do we need cleanup_models? YX
     # modelloader.cleanup_models()
     # # TODO: do we need opt_onchange? YX
@@ -281,6 +285,10 @@ def initialize():
 
     # initialize_rest(reload_script_modules=False)
     sd_models.list_models()
+
+    # TODO: do we need load scripts? YX
+    with startup_timer.subcategory("load scripts"):
+        modules.scripts.load_scripts()
 
     def load_model():
          """
