@@ -19,6 +19,7 @@ window.onload = function() {
         for (let selector of selectors) {
             let element = document.querySelector(selector);
             if (element != null) {
+                console.log('click element', element)
                 element.click();
             } else {
                 allElementsFound = false;
@@ -36,11 +37,42 @@ window.onload = function() {
 
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
+let unitMb = 1000* 1024;
+let filButtonClass = 'block gradio-html svelte-90oupt padded hide-container';
+let filButtonId = 'file-uploader';
 
-function getModelTypeValue(dropdowm_value){
+const modelTypeMap = {
+    'SD Checkpoints': 'Stable-diffusion',
+    'Textual Inversion': 'embeddings',
+    'LoRA model': 'Lora',
+    'ControlNet model': 'ControlNet',
+    'Hypernetwork': 'hypernetworks',
+    'VAE': 'VAE'
+};
+
+function clearFileInput() {
+    var fileInput = document.getElementById('file-uploader');
+    var newFileInput = document.createElement('input');
+    newFileInput.type = 'file';
+    newFileInput.id = filButtonId;
+    newFileInput.className = filButtonClass;
+    newFileInput.multiple = true;
+    newFileInput.style.width = '100%';
+    newFileInput.style.marginTop = '25px';
+    newFileInput.onchange = showFileName;
+    fileInput.parentNode.replaceChild(newFileInput, fileInput);
+}
+
+function getModelTypeValue(dropdown_value){
     const typeDom = document.getElementById("model_type_value_ele_id");
-    typeDom.value = dropdowm_value
-    return dropdowm_value
+    if (modelTypeMap.hasOwnProperty(dropdown_value)) {
+        typeDom.value = modelTypeMap[dropdown_value];
+    } else {
+        // 如果没有找到匹配的值，你可能需要处理这种情况
+        console.error("Unsupported dropdown value:", dropdown_value);
+    }
+    clearFileInput();
+    return dropdown_value;
 }
 
 function showFileName(event) {
@@ -91,10 +123,10 @@ function showFileName(event) {
         })
         for (let [key, uploadedFile] of map) {
             const fileName = uploadedFile.name;
-            const fileSize = uploadedFile.size;
+            const fileSize = uploadedFile.size/unitMb;
             const fileType = uploadedFile.type;
             const fileItemDiv = document.createElement("tr");
-            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize} bytes | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+            fileItemDiv.innerHTML = `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Name: ${fileName} | Size: ${fileSize.toFixed(2)} MB | Type: ${fileType} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
             const deleteButton = document.createElement("button");
             deleteButton.style.backgroundColor = "#E5E5E5";
             deleteButton.style.border = "1px solid black";
@@ -122,6 +154,17 @@ function showFileName(event) {
     }
 }
 
+
+function updatePercentProgress(progress) {
+    // 根据groupName找到对应的进度条或其他UI元素
+    const progressBar = document.getElementById(`progress-percent`);
+    // const progressDiv = document.createElement(`div`);
+    if (progressBar) {
+        progressBar.innerText = `${progress}`;
+        // progressBar.innerHTML = progressDiv;
+    }
+}
+
 function updateProgress(groupName, fileName, progress, part, total) {
     // 根据groupName找到对应的进度条或其他UI元素
     const progressBar = document.getElementById(`progress-bar`);
@@ -135,7 +178,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
     }
 }
 
-function uploadFileToS3(files, groupName) {
+function uploadFileToS3(files, groupName, username) {
     const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
@@ -157,7 +200,7 @@ function uploadFileToS3(files, groupName) {
     const payload = {
         checkpoint_type: groupName,
         filenames: filenames,
-        params: { message: "placeholder for chkpts upload test" }
+        params: { message: "placeholder for chkpts upload test", "creator": username }
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
@@ -173,12 +216,11 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
-
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
-                presignedUrls.push(...presignedUrl);
+                // presignedUrls.push(...presignedUrl);
                 // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
-                return uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey);
+                return uploadFileChunks(file, presignedUrl, checkpointId, groupName, url, apiKey);
             })).then(results => {
                  console.log(results);
             }).catch(error => {
@@ -199,7 +241,7 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
         const fileSize = file.size;
         const totalChunks = Math.ceil(fileSize / chunkSize);
         if(totalChunks != presignedUrls.length){
-            const errorMessage = "Generated presignedUrls do not match totalChunks";
+            const errorMessage = `Generated presignedUrls do not match totalChunks ${totalChunks} ${presignedUrls.length}`;
             alert(errorMessage);
             reject(new Error(errorMessage));
             return;
@@ -236,37 +278,53 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                 (currentChunk + 1) * chunkSize
             );
             // 使用Fetch API或XMLHttpRequest将当前分片上传到S3的presigned URL
-            fetch(presignedUrls[currentChunk], {
-                method: "PUT",
-                body: chunk,
-            })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Chunk upload failed");
-                    }
-                    const etag = response.headers.get('ETag');
-                    console.log(etag)
-                    const headersObject = {};
-                    response.headers.forEach((value, name) => {
-                      headersObject[name] = value;
-                    });
-                    console.log(headersObject)
-                    parts.push({
-                        ETag: etag,
-                        PartNumber: currentChunk + 1
-                    });
-                    currentChunk++;
-                    const progress = (currentChunk / totalChunks) * 100;
-                    // 更新进度条的宽度或显示上传百分比
-                    updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
-                    uploadNextChunk();
-                })
-                .catch((error) => {
-                    console.error(`Error uploading chunk ${currentChunk}:`, error);
-                    // 处理错误
-                    alert("Error uploading chunk! Upload stop,please refresh your ui and retry");
-                    reject(error);
+                        const xhr = new XMLHttpRequest();
+            xhr.open("PUT", presignedUrls[currentChunk], true);
+            // xhr.setRequestHeader("Content-Type", "application/octet-stream");
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    console.log("Chunk uploaded successfully");
+                    // Proceed to upload the next chunk or finalize the upload process
+                } else {
+                    console.error("Chunk upload failed");
+                    reject();
+                    return;
+                }
+                const headersString = xhr.getAllResponseHeaders();
+                const headersArray = headersString.trim().split("\r\n");
+                const headersObject = {};
+                headersArray.forEach((header) => {
+                    const [name, value] = header.split(": ");
+                    headersObject[name] = value;
                 });
+                const etag = headersObject['etag'];
+                console.log(etag)
+                console.log(headersObject)
+                parts.push({
+                    ETag: etag,
+                    PartNumber: currentChunk + 1
+                });
+                currentChunk++;
+                const progress = (currentChunk / totalChunks) * 100;
+                // 更新进度条的宽度或显示上传百分比
+                updateProgress(groupName, file.name, progress, currentChunk, totalChunks);
+                uploadNextChunk();
+            };
+            xhr.onerror = function () {
+              console.error("Chunk upload failed");
+              reject();
+            };
+
+            xhr.upload.onprogress = function (event) {
+                // const percentComplete = (event.loaded / event.total) * 100 / totalChunks + currentChunk/totalChunks;
+                // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+                const bytesUploaded = currentChunk * chunkSize + event.loaded;
+                const totalBytes = fileSize;
+                const percentComplete = (bytesUploaded / totalBytes) * 100;
+              updatePercentProgress(`${percentComplete.toFixed(2)}%`);
+            };
+            xhr.send(chunk);
         }
     });
 }
@@ -333,11 +391,12 @@ function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName
 }
 function uploadFiles() {
     const uploadPromises = [];
+    const username = document.querySelector('#invisible_user_name_for_ui > label > textarea')['value']
     for (const [groupName, files] of uploadedFilesMap.entries()) {
         // for (const file of files) {
         //     uploadPromises.push(uploadFileToS3(file, groupName));
         // }
-        uploadPromises.push(uploadFileToS3(files, groupName));
+        uploadPromises.push(uploadFileToS3(files, groupName, username));
     }
 
     Promise.all(uploadPromises)

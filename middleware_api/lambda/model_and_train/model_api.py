@@ -90,7 +90,8 @@ def create_model_api(raw_event, context):
                 checkpoint_names=filenames_only,
                 checkpoint_status=CheckPointStatus.Initial,
                 params=checkpoint_params,
-                timestamp=timestamp
+                timestamp=timestamp,
+                allowed_roles_or_users=['*'],  # fixme: train process not apply user control yet
             )
             ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
             checkpoint_id = checkpoint.id
@@ -362,6 +363,7 @@ def _exec(model_job: Model, action: CreateModelStatus):
 def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
     payload = {
         "task": "db-create-model",  # router
+        "param_s3": "",
         "db_create_model_payload": json.dumps({
             "s3_output_path": job.output_s3_location,  # output object
             "s3_input_path": checkpoint.s3_location,

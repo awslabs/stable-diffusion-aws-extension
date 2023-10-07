@@ -14,8 +14,8 @@ then
     exit 1
 fi
 
-./build_and_push.sh Dockerfile.inference.from_scratch aigc-webui-inference $mode $tag $commit_id
+./build_and_push.sh Dockerfile.aigc-endpoint-byoc.from_scratch aigc-endpoint-byoc $mode $tag $commit_id
 
-./build_and_push.sh Dockerfile.utils.from_scratch aigc-webui-utils $mode $tag $commit_id
+./build_and_push.sh Dockerfile.aigc-endpoint-diffusers.from_scratch aigc-endpoint-diffusers $mode $tag $commit_id
 
-./build_and_push.sh Dockerfile.dreambooth.from_scratch aigc-webui-dreambooth-training $mode $tag $commit_id
+./build_and_push.sh Dockerfile.aigc-job.from_scratch aigc-job $mode $tag $commit_id

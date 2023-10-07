@@ -17,7 +17,7 @@ headingLevel: 2
 <h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
 
 # Overview
-This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WEBUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
+This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WebUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
 
 In order to support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.
 
@@ -26,7 +26,8 @@ After user [deployed](../deployment/deployment.md) solution middleware cloudform
 
 **Base URLs:**
 
-* <a href="https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod">https://\<Your API Gateway ID\>.execute-api.\<Your AWS Account Region\>.amazonaws.com/prod</a>
+* https://API_Gateway_ID.execute-api.AWS_Account_Region.amazonaws.com/prod
+
 
 **Authentication**
 
@@ -62,9 +63,9 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 
 ## 4. Do Inference
 ![Do Inference](../images/do-inference.png)
-After Sagemaker endpoint is in inService status, you can call [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference).
+After Sagemaker endpoint is in inService status, you can call [/inference-api/inference](#inference-l2-api) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/inference-api/inference](#inference-l2-api).
 
-[/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference) will return following json structure to client:
+[/inference-api/inference](#inference-l2-api) will return following json structure to client:
 ```json
 {
   "inference_id": "XXXXXXX",
@@ -94,7 +95,7 @@ Also Client can call [/inference/get-inference-job-param-output](#inferenceget-i
   
 title Do Inference
 
-Client->Middleware:Call **/api/inference/run-sagemaker-inference**
+Client->Middleware:Call **/inference-api/inference**
 Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
 Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
@@ -118,7 +119,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
 | 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job.               |
 | 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job.                                     |
-| 6     | POST        | [/api/inference/run-sagemaker-inference](#apiinferencerun-sagemaker-inference)                          | Run sagemaker inference using default parameters                                       |
+| 6     | POST        | [/inference-api/inference](#inference-l2-api)                          | Run sagemaker inference using default parameters                                       |
 | 7     | POST        | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | Deploys a SageMaker endpoint.                                                         |
 | 8     | POST        | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | Deletes a SageMaker endpoint.                                                         |
 | 9     | GET         | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | Lists all endpoint deployment jobs.                                                   |
@@ -135,7 +136,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 20    | GET         | [/checkpoint](#checkpoint)                                                                         | Gets a checkpoint.                                                                                      |
 | 21    | PUT         | [/checkpoint](#checkpointput)                                                                      | Updates a checkpoint.                                                                                   |
 | 22    | GET         | [/checkpoints](#checkpoints)                                                                       | Lists all checkpoints.                                                                                  |
-| 23    | POST        | [/train](#trainpost)                                                                              | Starts a training job.                                                                                  |
+| 23    | POST        | [/train-api/train](#train-api-post)                                                                              | Starts a training job.                                                                                  |
 | 24    | PUT         | [/train](#trainput)                                                                                | Updates a training job.                                                                                 |
 | 25    | GET         | [/trains](#trainsget)                                                                              | Lists all training jobs.                                                                                |
 | 26    | POST        | [/dataset](#datasetpost)                                                                          | Creates a new dataset.                                                                                  |
@@ -197,7 +198,9 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 > 200 Response
 
 ```json
-null
+{
+    "message": "Success"
+}
 ```
 
 <h3 id="used-to-let-client-test-connection-responses">Responses</h3>
@@ -206,19 +209,14 @@ null
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="used-to-let-client-test-connection-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
 # /inference-api/inference
 
-<a id="opIdrun_sagemaker_inference_inference_run_sagemaker_inference_post"></a>
-
 Generate a new image from a text prompt.
+
+<a id="inference-l2-api"></a>
 
 ### **Code samples :**
 
@@ -238,13 +236,12 @@ body = {
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference", headers = headers, json = body)
+r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference", headers = headers, json = body)
 
 print(r.json())
 
@@ -260,8 +257,7 @@ const inputBody = '{
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }';
@@ -271,7 +267,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/api/inference/run-sagemaker-inference",
+fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference",
 {
   method: "POST",
   body: inputBody,
@@ -285,7 +281,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /api/inference/run-sagemaker-inference`
+`POST /inference-api/inference`
 
 > Body parameter
 
@@ -297,14 +293,13 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
       "v1-5-pruned-emaonly.safetensors"
     ]
   },
-  "sagemaker_endpoint": "infer-endpoint-cb821ea",
-  "task_type": "txt2img",
+  "sagemaker_endpoint_name": "infer-endpoint-cb821ea",
   "prompt": "a cute panda",
   "denoising_strength": 0.75
 }
 ```
 
-<h3 id="run-sagemaker-inference-parameters">Parameters</h3>
+<h3 id="inference-api">Parameters</h3>
 
 > Parameter example
 
@@ -413,7 +408,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 }
 ```
 
-<h3 id="run-sagemaker-inference-responses">Responses</h3>
+<h3 id="inference-api">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
@@ -1120,19 +1115,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-inference-job-param-output-responseschema">Response Schema</h3>
 
-Status Code **200**
-
-*Response Get Inference Job Param Output Inference Get Inference Job Param Output Get*
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|Response Get Inference Job Param Output Inference Get Inference Job Param Output Get|[string]|false|none|none|
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -2411,8 +2394,10 @@ api_key
 
 <br/>
 
-# /train(POST)
 
+# /train-api/train(POST)
+
+<a id="train-api-post"></a>
 ### **Code samples :**
 
 Python example code:
@@ -2426,42 +2411,101 @@ headers = {
 }
 
 const inputBody = {
-"train_type": "dreambooth",
-"model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-"params": {
-  "train_params": {
-    "training_instance_type": "ml.g4dn.2xlarge"
-  },
-  "test1": 2
-},
-"filenames": [
-  "training_config.json",
-  "images.tar"
-]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train', headers = headers, json = inputBody)
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train', headers = headers, json = inputBody)
 
 print(r.json())
 
 ```
 
-Javascript example code:
+Javascript example code：
 
 ```javascript
 const inputBody = '{
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -2469,7 +2513,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train',
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train',
 {
   method: 'POST',
   body: inputBody,
@@ -2483,24 +2527,53 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /train`
+`POST /train-api/train`
 
 > Body parameter
 
 ```json
 {
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 ```
 
@@ -2516,19 +2589,22 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```json
 {
-  "statusCode": 200,
-  "job": {
-    "id": "id",
-    "status": "Initialed",
-    "trainType": "Stable-diffusion",
-    "params": {},
-    "input_location": "s3://S3_Location"
-  },
-  "s3PresignUrl": [
-    {
-      "filename": "s3://S3_Location"
-    }
-  ]
+	"statusCode": 200,
+	"job": {
+		"id": "81f00711-7cc3-4cac-90f3-13934f29524a",
+		"status": "Initial",
+		"trainType": "Stable-diffusion",
+		"params": {
+			"training_params": {
+				...
+			},
+			"config_params": {
+				...
+			}
+		},
+		"input_location": "s3://<your_s3_bucket>/train/<your_model_name>/81f00711-7cc3-4cac-90f3-13934f29524a/input"
+	},
+	"s3PresignUrl": null
 }
 ```
 
@@ -2556,6 +2632,9 @@ api_key
 </aside>
 
 <br/>
+
+
+
 
 # /train(PUT)
 
@@ -3186,99 +3265,4 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 To perform this operation, you must be authenticated by means of one of the following methods:
 api_key
 </aside>
-
-# Schemas
-
-<h2 id="tocS_Empty">Empty</h2>
-<!-- backwards compatibility -->
-<a id="schemaempty"></a>
-<a id="schema_Empty"></a>
-<a id="tocSempty"></a>
-<a id="tocsempty"></a>
-
-```json
-{}
-
-```
-
-Empty Schema
-
-### Properties
-
-*None*
-
-<h2 id="tocS_HTTPValidationError">HTTPValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemahttpvalidationerror"></a>
-<a id="schema_HTTPValidationError"></a>
-<a id="tocShttpvalidationerror"></a>
-<a id="tocshttpvalidationerror"></a>
-
-```json
-{
-  "detail": [
-    {
-      "loc": [
-        "string"
-      ],
-      "msg": "string",
-      "type": "string"
-    }
-  ]
-}
-
-```
-
-HTTPValidationError
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|detail|[[ValidationError](#schemavalidationerror)]|false|none|none|
-
-<h2 id="tocS_ValidationError">ValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemavalidationerror"></a>
-<a id="schema_ValidationError"></a>
-<a id="tocSvalidationerror"></a>
-<a id="tocsvalidationerror"></a>
-
-```json
-{
-  "loc": [
-    "string"
-  ],
-  "msg": "string",
-  "type": "string"
-}
-
-```
-
-ValidationError
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|loc|[anyOf]|true|none|none|
-
-anyOf
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|string|false|none|none|
-
-or
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|integer|false|none|none|
-
-continued
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|msg|string|true|none|none|
-|type|string|true|none|none|
 

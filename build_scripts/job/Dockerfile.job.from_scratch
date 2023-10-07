@@ -11,18 +11,9 @@ RUN apt-get install -y libcairo2-dev
 COPY . /opt/ml/code/
 
 # install requirements for webui
-RUN pip install -r /opt/ml/code/requirements.txt
-
-RUN pip install torch==2.0.1
 RUN pip uninstall -y torchvision
-RUN pip install torchvision
-# RUN pip install xformers==0.0.16
-RUN pip install xformers
-RUN pip install tensorflow==2.10
-RUN pip install pydantic
-RUN pip install safetensors
-RUN pip install omegaconf
-
+RUN pip uninstall -y torchaudio
+RUN pip install -r /opt/ml/code/requirements.txt
 RUN rm /opt/ml/code/requirements.txt
 WORKDIR /opt/ml/code
 ENV TORCHDYNAMO_DISABLE 1

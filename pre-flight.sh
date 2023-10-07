@@ -2,11 +2,12 @@
 
 # Usage: ./pre-flight_check.sh -p to do the pre-flight check for WebUI -s to auto sync the repo and plugin to compatible commit id
 
-INITIAL_SUPPORT_COMMIT_ROOT=68f336bd994bed5442ad95bad6b6ad5564a5409a
-INITIAL_SUPPORT_COMMIT_CONTROLNET=efda6ddfd82ebafc6e1150fbb7e1f27163482a82
+INITIAL_SUPPORT_COMMIT_ROOT=5ef669de080814067961f28357256e8fe27544f4
+INITIAL_SUPPORT_COMMIT_CONTROLNET=e67e017731aad05796b9615dc6eadce911298ea1
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
 INITIAL_SUPPORT_COMMIT_REMBG=3d9eedbbf0d585207f97d5b21e42f32c0042df70
-INITIAL_SUPPORT_COMMIT_SAM=5df716be8445e0f358f6e8d4b65a87cc611bfe08
+INITIAL_SUPPORT_COMMIT_SAM=c555c6d9c4e1d14b018e4d2a92acd47765536585
+INITIAL_SUPPORT_COMMIT_TILEDVAE=f9f8073e64f4e682838f255215039ba7884553bf
 
 # built the initial support commit list from option or default value if not provided
 INITIAL_SUPPORT_COMMIT_LIST=(
@@ -20,6 +21,7 @@ REPO_URL_LIST=(
     "https://github.com/d8ahazard/sd_dreambooth_extension.git"
     "https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git"
     "https://github.com/continue-revolution/sd-webui-segment-anything.git"
+    "https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git"
 )
 
 REPO_FOLDER_LIST=(
@@ -27,6 +29,7 @@ REPO_FOLDER_LIST=(
     "sd_dreambooth_extension"
     "stable-diffusion-webui-rembg"
     "sd-webui-segment-anything"
+    "multidiffusion-upscaler-for-automatic1111"
 )
 
 show_help() {
@@ -190,6 +193,11 @@ version_sync() {
     # Go to sd-webui-segment-anything directory and reset to specific commit
     cd sd-webui-segment-anything
     git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
+    cd ..
+
+    # Go to multidiffusion-upscaler-for-automatic1111 directory and reset to specific commit
+    cd multidiffusion-upscaler-for-automatic1111
+    git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
     cd ..
 }
 

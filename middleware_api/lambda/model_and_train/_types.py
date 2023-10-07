@@ -44,6 +44,7 @@ class CheckPoint:
     checkpoint_type: str
     s3_location: str
     checkpoint_status: CheckPointStatus
+    allowed_roles_or_users: list[str]
     version: str = 'v1.0'  # todo: this is for the future
     checkpoint_names: Optional[list[str]] = None  # the actual checkpoint file names
     params: Optional[dict[str, Any]] = None

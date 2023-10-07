@@ -21,7 +21,9 @@ if __name__ == "__main__":
         }
     }
     s3_input_path = args["input_location"]
-    s3_output_path = "s3://"
+    s3_output_path = "s3://sdxl-test-sds3aigcbucket7db76a0b-1qyl2ldtfp5t9/"
     training_type = args["training_type"]
     if training_type == "kohya":
-        sagemaker_entrypoint.train_by_sd_scripts(s3_input_path, s3_output_path, training_params)
+        sagemaker_entrypoint.train_by_kohya_sd_scripts(s3_input_path, s3_output_path, training_params)
+    elif training_type == "dreambooth":
+        sagemaker_entrypoint.train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, training_params)

@@ -13,8 +13,16 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
 import boto3
 
-from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
+from utils import (
+    download_file_from_s3,
+    download_folder_from_s3_by_tar,
+    download_folder_from_s3,
+    upload_file_to_s3,
+    upload_folder_to_s3,
+    upload_folder_to_s3_by_tar,
+    get_bucket_name_from_s3_path,
+    get_path_from_s3_path
+)
 
 sys.path.append("sd-scripts")
 import train_network
@@ -78,15 +86,13 @@ def check_and_upload(local_path, bucket, s3_path):
         else:
             print(f'{local_path} is not exist')
 
-def upload_model_to_s3(model_name, s3_output_path):
+def upload_model_to_s3_for_kohya_sd_scripts(local_model_path, s3_output_path):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
-    local_path = os.path.join("models/Stable-diffusion", model_name)
-    s3_output_path = get_path_from_s3_path(s3_output_path)
-    logger.info(f"Upload check point to s3 {local_path} {output_bucket_name} {s3_output_path}")
-    print(f"Upload check point to s3 {local_path} {output_bucket_name} {s3_output_path}")
-    upload_folder_to_s3_by_tar(local_path, output_bucket_name, s3_output_path)
+    s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
+    logger.info(f"Upload check point to s3 {local_model_path} {output_bucket_name} {s3_output_path}")
+    upload_folder_to_s3(local_model_path, output_bucket_name, s3_output_path)
 
-def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
+def upload_model_to_s3_for_dreambooth_extension(model_name, s3_output_path, model_type):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
     s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
     if model_type == "Stable-diffusion":
@@ -183,7 +189,7 @@ def prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path):
     model_dir = os.path.dirname(args.pretrained_model_name_or_path)
     if len(model_dir) > 0:
         os.makedirs(model_dir, exist_ok=True)
-    # download_file_from_s3(model_bucket_name, model_path, args.pretrained_model_name_or_path)
+    download_file_from_s3(model_bucket_name, model_path, args.pretrained_model_name_or_path)
 
     data_bucket_name = get_bucket_name_from_s3_path(s3_data_path)
     data_path = get_path_from_s3_path(s3_data_path)
@@ -219,9 +225,9 @@ def train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, params):
     prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
-    upload_model_to_s3_v2(model_name, s3_output_path, model_type)
+    upload_model_to_s3_for_dreambooth_extension(model_name, s3_output_path, model_type)
 
-def train_by_sd_scripts(s3_input_path, s3_output_path, params):
+def train_by_kohya_sd_scripts(s3_input_path, s3_output_path, params):
     # import launch
     # launch.prepare_environment()
     params = params["training_params"]
@@ -233,7 +239,7 @@ def train_by_sd_scripts(s3_input_path, s3_output_path, params):
     args = prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path)
     trainer = train_network.NetworkTrainer()
     trainer.train(args)
-    upload_model_to_s3_v2(model_name, s3_output_path, model_type)
+    upload_model_to_s3_for_kohya_sd_scripts(args.output_dir, s3_output_path)
 
 def test():
     model_name = "qiaohu-1-1"
@@ -258,8 +264,9 @@ def parse_params(args):
         return message
     s3_input_path = json.loads(decode_base64(args.s3_input_path))
     s3_output_path = json.loads(decode_base64(args.s3_output_path))
+    training_type = json.loads(decode_base64(args.training_type))
     params = json.loads(decode_base64(args.params))
-    return s3_input_path, s3_output_path, params
+    return s3_input_path, s3_output_path, training_type, params
 
 if __name__ == "__main__":
     # test()
@@ -270,9 +277,11 @@ if __name__ == "__main__":
     parser.add_argument("--params", type=str)
     parser.add_argument("--s3-input-path", type=str)
     parser.add_argument("--s3-output-path", type=str)
+    parser.add_argument("--training-type", type=str)
     args, _ = parser.parse_known_args()
-    s3_input_path, s3_output_path, training_params = parse_params(args)
-    # train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, training_params)
-    train_by_sd_scripts(s3_input_path, s3_output_path, training_params)
-
-    # upload_model_to_s3_v2("test-1-1", "s3://stable-diffusion-aws-extension-991301791329-us-east-1/dreambooth/checkpoint/test-sd-type/test/")
+    s3_input_path, s3_output_path, training_type, training_params = parse_params(args)
+    if training_type == "kohya":
+        train_by_kohya_sd_scripts(s3_input_path, s3_output_path, training_params)
+    elif training_type == "dreambooth":
+        train_by_sd_dreambooth_extension(s3_input_path, s3_output_path, training_params)
+    # upload_model_to_s3("test-1-1", "s3://stable-diffusion-aws-extension-991301791329-us-east-1/dreambooth/checkpoint/test-sd-type/test/")

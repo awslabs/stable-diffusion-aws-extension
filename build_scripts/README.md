@@ -16,30 +16,31 @@ accelerate launch --num_cpu_threads_per_process=6 launch.py --api
 
 # How to build images
 
-### Build public images for aigc-webui-utils which is used for light-weight CPU operations, like create_model in Dreambooth, merge_checkpoint.
+
+### Build public images for aigc endpoint for byoc which is used for GPU operations, like txt2img inference.
 
 ```
-sh build_and_push.sh Dockerfile.utils.from_scratch aigc-webui-utils
-
-```
-
-### Build public images for aigc-webui-inference which is used for GPU operations, like txt2img inference.
-
-```
-sh build_and_push.sh Dockerfile.inference.from_scratch aigc-webui-inference
+sh build_and_push.sh Dockerfile.aigc-endpoint-byoc.from_scratch aigc-endpoint-byoc
 
 ```
 
-### Build public images for aigc-webui-dreambooth-train which is used for training model in Dreambooth.
+### Build public images for aigc endpoint for diffusers which is used for GPU operations, like txt2img inference.
 
 ```
-sh build_and_push.sh Dockerfile.dreambooth.from_scratch aigc-webui-dreambooth-training
+sh build_and_push.sh Dockerfile.aigc-endpoint-diffusers.from_scratch aigc-endpoint-diffusers
+
+```
+
+### Build public images for aigc endpoint which is used for training model
+
+```
+sh build_and_push.sh Dockerfile.aigc-job.from_scratch aigc-job
 
 ```
 
 ### Update public ecr to your private ecr
 
 ```
-sh update_private_ecr.sh aigc-webui-utils|aigc-webui-inference|aigc-webui-dreambooth-training
+sh update_private_ecr.sh aigc-endpoint-byoc|aigc-endpoint-diffusers|aigc-job
 
 ```

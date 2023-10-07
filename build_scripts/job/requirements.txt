@@ -6,10 +6,18 @@ discord-webhook~=1.1.0
 fastapi~=0.94.1
 gitpython~=3.1.31
 lion-pytorch~=0.1.2
+omegaconf
 Pillow==9.5.0
+pydantic
+safetensors
+tensorflow
 tqdm==4.65.0
 tomesd~=0.1.2
+torch==2.0.1
+torchvision
 transformers~=4.30.1  # > 4.26.x causes issues (db extension #1110)
+voluptuous==0.13.1
+xformers
 
 # Tensor
 tensorboard==2.13.0; sys_platform != 'darwin' or platform_machine != 'arm64'

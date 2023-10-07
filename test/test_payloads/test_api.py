@@ -37,7 +37,11 @@ payload = {
             "task": "txt2img",
             "username": "test",
             "models": used_models,
+<<<<<<< HEAD
             "param_s3": 's3://diffusers-payloads/txt2img_with_refiner.json' #_multi_controlnet_new.json' _controlnet_openpose_new.json'
+=======
+            "param_s3": 's3://stable-diffusion-aws-extension-aigcbucket-test/model/test-1/txt2img.json'
+>>>>>>> 9b637aeddcc4254d6ca396dff4c1e32a2d3244d6
         }
 #'s3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/txt2img/infer_v2/5923a628-b593-4f2a-80d5-682b620afe2c/api_param.json'
 
