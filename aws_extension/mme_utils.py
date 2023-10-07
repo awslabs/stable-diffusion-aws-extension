@@ -28,6 +28,7 @@ TAR_TYPE_FILE = 'application/x-tar'
 
 
 def checkspace_and_update_models(selected_models):
+    print(selected_models)
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
     # os.system("df -h")
