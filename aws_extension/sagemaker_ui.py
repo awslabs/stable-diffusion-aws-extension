@@ -19,6 +19,7 @@ import gradio as gr
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 
 from modules import shared, scripts
 from modules.ui import create_refresh_button
@@ -1073,39 +1074,90 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
+def load_inference_job_list(username, usertoken):
+    inference_jobs = [None_Option_For_On_Cloud_Model]
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
+
+    temp_list = []
+    for obj in inferences_jobs_list:
+        if obj.get('completeTime') is None:
+            complete_time = obj.get('startTime')
+        else:
+            complete_time = obj.get('completeTime')
+        status = obj.get('status')
+        task_type = obj.get('taskType', 'txt2img')
+        inference_job_id = obj.get('InferenceJobId')
+        # if filter_checkbox and task_type not in selected_types:
+        #     continue
+        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+    # Sort the list based on completeTime in ascending order
+    sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+    # Append the sorted combined strings to the txt2img_inference_job_ids list
+    for item in sorted_list:
+        inference_jobs.append(item[1])
+
+    return inference_jobs
+
+
+def load_model_list(username, user_token):
+    models_on_cloud = [None_Option_For_On_Cloud_Model]
+    models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token)]))
+    return models_on_cloud
+
+
+def load_vae_list(username, user_token):
+    vae_model_on_cloud = ['Automatic', 'None']
+    if 'sd_vae' in opts.quicksettings_list:
+        vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
+
+    return vae_model_on_cloud
+
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
-
 
     init_refresh_resource_list_from_cloud()
 
     with gr.Blocks() as sagemaker_inference_tab:
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
+        sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
         with gr.Column():
-            sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with gr.Row():
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
+
+                create_refresh_button_by_user(sd_model_on_cloud_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_model_list(username, username)
+                                              }, 'refresh_cloud_model_down')
 
             with gr.Row(visible='sd_vae' in opts.quicksettings_list):
                 sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
                                                        label='SD Vae on Cloud')
 
-            with gr.Row():
+                create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_vae_list(username, username)
+                                              }, 'refresh_cloud_vae_down')
+            with gr.Row(visible=is_img2img):
+                gr.HTML('<br/>')
+
+            with gr.Row(visible=is_img2img):
                 global generate_on_cloud_button_with_js
                 # if not is_img2img:
                 #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
                 global generate_on_cloud_button_with_js_img2img
                 global interrogate_clip_on_cloud_button
                 global interrogate_deep_booru_on_cloud_button
-                if is_img2img:
-                    with gr.Column():
-                        interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",
-                                                                     elem_id="interrogate_clip_on_cloud_button")
-                    with gr.Column():
-                        interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",
-                                                                           elem_id="interrogate_deep_booru_on_cloud_button")
+
+                interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
+                                                             elem_id="interrogate_clip_on_cloud_button")
+                interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
+                                                                   elem_id="interrogate_deep_booru_on_cloud_button")
+            with gr.Row():
+                gr.HTML('<br/>')
 
             with gr.Row():
                 global inference_job_dropdown
@@ -1113,6 +1165,11 @@ def create_ui(is_img2img):
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                      label="Inference Job: Time-Type-Status-Uuid")
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(username, username)
+                                              }, 'refresh_inference_job_down')
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
                 #                                      elem_id="txt2img_inference_job_ids_dropdown"
@@ -1285,47 +1342,24 @@ def create_ui(is_img2img):
             #                                           sagemaker_endpoint_filter,
             #                                           sd_checkpoint_filter, hidden_check_type,
             #                                           inference_job_page],
+            #
             #                                   outputs=inference_job_dropdown)
 
-        def setup_inference_for_plugin(pr: gr.Request):
-            models_on_cloud = [None_Option_For_On_Cloud_Model]
-            models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]))
+                def setup_inference_for_plugin(pr: gr.Request):
+                    models_on_cloud = load_model_list(pr.username, pr.username)
+                    vae_model_on_cloud = load_vae_list(pr.username, pr.username)
+                    inference_jobs = load_inference_job_list(pr.username, pr.username)
 
-            vae_model_on_cloud = ['Automatic', 'None']
-            if 'sd_vae' in opts.quicksettings_list:
-                vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username, types='VAE')]))
+                    return gr.update(choices=models_on_cloud), \
+                        gr.update(choices=inference_jobs), \
+                        gr.update(choices=vae_model_on_cloud)
 
-            inference_jobs = [None_Option_For_On_Cloud_Model]
-            inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(pr.username, pr.username)
-
-            temp_list = []
-            for obj in inferences_jobs_list:
-                if obj.get('completeTime') is None:
-                    complete_time = obj.get('startTime')
-                else:
-                    complete_time = obj.get('completeTime')
-                status = obj.get('status')
-                task_type = obj.get('taskType', 'txt2img')
-                inference_job_id = obj.get('InferenceJobId')
-                # if filter_checkbox and task_type not in selected_types:
-                #     continue
-                temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
-            # Sort the list based on completeTime in ascending order
-            sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
-            # Append the sorted combined strings to the txt2img_inference_job_ids list
-            for item in sorted_list:
-                inference_jobs.append(item[1])
-
-            return gr.update(choices=models_on_cloud), \
-                   gr.update(choices=inference_jobs), \
-                   gr.update(choices=vae_model_on_cloud)
-
-        sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
-                                     outputs=[
-                                         sd_model_on_cloud_dropdown,
-                                         inference_job_dropdown,
-                                         sd_vae_on_cloud_dropdown]
-                                     )
+                sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
+                                             outputs=[
+                                                 sd_model_on_cloud_dropdown,
+                                                 inference_job_dropdown,
+                                                 sd_vae_on_cloud_dropdown]
+                                         )
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
