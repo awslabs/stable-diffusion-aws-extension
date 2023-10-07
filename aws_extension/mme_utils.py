@@ -48,6 +48,7 @@ def checkspace_and_update_models(selected_models):
             if model['model_name'] in local_models:
                 continue
             if model_type == 'VAE' and model['model_name'] in ['Automatic', 'None']:
+                print(f'skip vae download for {model["model_name"]}')
                 continue
             else:
                 st = os.statvfs(disk_path)

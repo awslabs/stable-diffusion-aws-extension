@@ -1289,11 +1289,11 @@ def create_ui(is_img2img):
 
         def setup_inference_for_plugin(pr: gr.Request):
             models_on_cloud = [None_Option_For_On_Cloud_Model]
-            models_on_cloud += [model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]
+            models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]))
 
             vae_model_on_cloud = ['Automatic', 'None']
             if 'sd_vae' in opts.quicksettings_list:
-                vae_model_on_cloud += [model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username, types='VAE')]
+                vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username, types='VAE')]))
 
             inference_jobs = [None_Option_For_On_Cloud_Model]
             inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(pr.username, pr.username)
@@ -1316,9 +1316,9 @@ def create_ui(is_img2img):
             for item in sorted_list:
                 inference_jobs.append(item[1])
 
-            return gr.update(choices=list(set(models_on_cloud))), \
+            return gr.update(choices=models_on_cloud), \
                    gr.update(choices=inference_jobs), \
-                   gr.update(choices=list(set(vae_model_on_cloud)))
+                   gr.update(choices=vae_model_on_cloud)
 
         sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                      outputs=[
