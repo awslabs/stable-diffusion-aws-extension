@@ -22,6 +22,7 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 
 from modules import shared, scripts
 from modules.ui import create_refresh_button
+from modules.shared import opts
 from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton, FormHTML
 from utils import get_variable_from_json
 from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
@@ -1076,6 +1077,7 @@ def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
 
+
     init_refresh_resource_list_from_cloud()
 
     with gr.Blocks() as sagemaker_inference_tab:
@@ -1085,6 +1087,10 @@ def create_ui(is_img2img):
             with gr.Row():
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
+
+            with gr.Row(visible='sd_vae' in opts.quicksettings_list):
+                sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
+                                                       label='SD Vae on Cloud')
 
             with gr.Row():
                 global generate_on_cloud_button_with_js
@@ -1283,7 +1289,12 @@ def create_ui(is_img2img):
 
         def setup_inference_for_plugin(pr: gr.Request):
             models_on_cloud = [None_Option_For_On_Cloud_Model]
-            models_on_cloud += [model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]
+            models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username)]))
+
+            vae_model_on_cloud = ['Automatic', 'None']
+            if 'sd_vae' in opts.quicksettings_list:
+                vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(pr.username, pr.username, types='VAE')]))
+
             inference_jobs = [None_Option_For_On_Cloud_Model]
             inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(pr.username, pr.username)
 
@@ -1304,9 +1315,17 @@ def create_ui(is_img2img):
             # Append the sorted combined strings to the txt2img_inference_job_ids list
             for item in sorted_list:
                 inference_jobs.append(item[1])
-            return gr.update(choices=models_on_cloud), gr.update(choices=inference_jobs)
 
-        sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[], outputs=[sd_model_on_cloud_dropdown, inference_job_dropdown])
+            return gr.update(choices=models_on_cloud), \
+                   gr.update(choices=inference_jobs), \
+                   gr.update(choices=vae_model_on_cloud)
+
+        sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
+                                     outputs=[
+                                         sd_model_on_cloud_dropdown,
+                                         inference_job_dropdown,
+                                         sd_vae_on_cloud_dropdown]
+                                     )
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
@@ -1339,4 +1358,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud
