@@ -12,8 +12,8 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
-from inference_v2._types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
-from model_and_train._types import CheckPoint
+from _types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
+from model_and_train._types import CheckPoint, CheckPointStatus
 from multi_users.utils import get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
@@ -282,6 +282,16 @@ def inference_l2(raw_event, context):
 
 # fixme: this is a very expensive function
 def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoint:
+    if model_type == 'VAE' and ckpt_name in ['None', 'Automatic']:
+        return CheckPoint(
+            id=model_type,
+            checkpoint_names=[ckpt_name],
+            s3_location='None',
+            checkpoint_type=model_type,
+            checkpoint_status=CheckPointStatus.Active,
+            timestamp=0,
+        )
+
     checkpoint_raw = ddb_service.client.scan(
         TableName=checkpoint_table,
         FilterExpression='contains(checkpoint_names, :checkpointName) and checkpoint_type=:model_type and checkpoint_status=:checkpoint_status',

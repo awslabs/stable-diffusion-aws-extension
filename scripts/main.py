@@ -13,7 +13,7 @@ from modules import script_callbacks, sd_models, processing, extra_networks, sha
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
 from modules.processing import Processed
-from modules.shared import cmd_opts
+from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
 
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, postfix
@@ -146,21 +146,22 @@ class SageMakerUI(scripts.Script):
             return f'Generate{" on Cloud" if model_selected and model_selected != None_Option_For_On_Cloud_Model else ""}'
 
         if not is_img2img:
-            model_on_cloud, inference_job_dropdown, primary_model_name, \
+            model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
                 secondary_model_name, tertiary_model_name, \
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
 
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=[self.txt2img_generate_btn])
 
-            return [model_on_cloud, inference_job_dropdown,
+            return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
         else:
-            model_on_cloud, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, \
+            model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            secondary_model_name, tertiary_model_name, \
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=[self.img2img_generate_btn])
-            return [model_on_cloud, inference_job_dropdown,
+            return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
     def before_process(self, p, *args):
@@ -232,8 +233,8 @@ class SageMakerUI(scripts.Script):
         # fixme: not handle batches yet
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        if shared.opts.sd_vae and shared.opts.sd_vae not in ['None', 'Automatic']:
-            models['VAE'] = [shared.opts.sd_vae]
+        if 'sd_vae' in opts.quicksettings_list:
+            models['VAE'] = [args[1]]
 
         from modules.processing import get_fixed_seed
 
