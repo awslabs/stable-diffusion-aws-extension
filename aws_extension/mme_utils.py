@@ -47,6 +47,8 @@ def checkspace_and_update_models(selected_models):
             models_used_count[model_type].add_models_ref(model['model_name'])
             if model['model_name'] in local_models:
                 continue
+            if model_type == 'VAE' and model['model_name'] in ['Automatic', 'None']:
+                continue
             else:
                 st = os.statvfs(disk_path)
                 free = (st.f_bavail * st.f_frsize)
