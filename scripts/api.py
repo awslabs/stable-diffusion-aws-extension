@@ -249,6 +249,17 @@ def sagemaker_api(_, app: FastAPI):
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
                     return response.json()
+                elif req.task == 'extra-single-image':
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-single-image',
+                                             json=payload)
+                    return response.json()
+                elif req.task == 'extra-batch-images':
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-batch-images',
+                                             json=payload)
+                    return response.json()
+                elif req.task == 'rembg':
+                    response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload)
+                    return response.json()
                 elif req.task == 'db-create-model':
                     r"""
                     task: db-create-model
