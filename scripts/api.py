@@ -195,7 +195,7 @@ def sagemaker_api(_, app: FastAPI):
                 logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
                 raise MemoryError
 
-            print(f'current version: dev')
+            print(f'current version: dev - extra generate')
             logger.info(f"task is {req.task}")
             logger.info(f"models is {req.models}")
             payload = {}
