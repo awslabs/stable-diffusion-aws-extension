@@ -161,7 +161,7 @@ def run_inference(event, _):
         models = {
             "space_free_size": 4e10,
             **inference_job.params['used_models'],
-        },
+        }
 
     payload = InvocationsRequest(
         task=inference_job.taskType,
