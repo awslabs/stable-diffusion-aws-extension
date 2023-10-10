@@ -12,6 +12,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
 from multi_users.utils import get_user_roles, check_user_permissions
+import subprocess
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -77,6 +78,18 @@ class UploadCheckPointEvent:
     params: dict[str, Any]
 
 
+def is_url_downloadable_with_wget(url):
+    try:
+        result = subprocess.run(["wget", "--spider", "--quiet", url], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                universal_newlines=True)
+        if result.returncode == 0:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict):
     logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
     filename = ""
@@ -95,14 +108,22 @@ def download_and_upload_models(url: str, base_key: str, file_names: list, multip
 
 # 并发上传文件
 def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
+    cannot_download = []
+    for file_url in file_urls:
+        if not is_url_downloadable_with_wget(file_url):
+            logger.info(f"The URL '{file_url}' is downloadable with wget.")
+            cannot_download.append(file_url)
+    if cannot_download:
+        return cannot_download
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = []
         for file_url in file_urls:
-            futures.append(executor.submit(download_and_upload_models, file_url, base_key, file_names, multipart_upload))
+            futures.append(
+                executor.submit(download_and_upload_models, file_url, base_key, file_names, multipart_upload))
 
         for future in concurrent.futures.as_completed(futures):
             future.result()
-
+    return None
 
 # POST /upload_checkpoint
 def upload_checkpoint_api(raw_event, context):
@@ -132,12 +153,17 @@ def upload_checkpoint_api(raw_event, context):
             checkpoint_params = event.params
         checkpoint_params['created'] = str(datetime.datetime.now())
         checkpoint_params['multipart_upload'] = {}
-        concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
-        logger.info("finished upload, prepare to insert item to ddb")
         user_roles = ['*']
         if 'creator' in event.params and event.params['creator']:
             user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
-
+        cannot_download = concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
+        if cannot_download:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'error': f"contains invalided urls:{cannot_download}"
+            }
+        logger.info("finished upload, prepare to insert item to ddb")
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=_type,
