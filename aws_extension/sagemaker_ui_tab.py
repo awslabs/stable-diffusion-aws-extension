@@ -499,7 +499,7 @@ def sagemaker_endpoint_tab():
                 label="Advanced Endpoint Configuration", value=False, visible=True
             )
             with gr.Row(visible=False) as filter_row:
-                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custome endpoint name ",
+                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
                                                    label="Specify Endpoint Name", visible=True)
                 instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
                                                      elem_id="sagemaker_inference_instance_type_textbox",
