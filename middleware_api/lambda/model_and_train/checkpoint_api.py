@@ -152,7 +152,7 @@ def upload_checkpoint_api(raw_event, context):
             return {
                 'statusCode': 500,
                 'headers': headers,
-                'error': f"contains invalided urls:{cannot_download}"
+                'error': f"contains invalid urls:{cannot_download}"
             }
         logger.info("finished upload, prepare to insert item to ddb")
         checkpoint = CheckPoint(
