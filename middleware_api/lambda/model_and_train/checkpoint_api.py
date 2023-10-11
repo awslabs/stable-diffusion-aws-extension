@@ -88,7 +88,7 @@ def download_and_upload_models(url: str, base_key: str, file_names: list, multip
             url = response.headers.get('Location')
     parsed_url = urllib.parse.urlparse(url)
     filename = os.path.basename(parsed_url.path)
-    if [f for f in os.listdir(filename) if os.path.splitext(f)[1] not in CN_MODEL_EXTS]:
+    if os.path.splitext(filename)[1] not in CN_MODEL_EXTS:
         logger.info(f"download_and_upload_models file error url:{url}, filename:{filename}")
         cannot_download.append(url)
         return
