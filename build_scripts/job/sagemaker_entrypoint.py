@@ -17,6 +17,7 @@ from utils import (
     download_file_from_s3,
     download_folder_from_s3_by_tar,
     download_folder_from_s3,
+    download_sub_folder_from_s3,
     upload_file_to_s3,
     upload_folder_to_s3,
     upload_folder_to_s3_by_tar,
@@ -200,7 +201,8 @@ def prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path):
     if len(data_dir) > 0:
         os.makedirs(data_dir, exist_ok=True)
     logger.info(f"Download data from s3 {data_bucket_name} {data_path}")
-    download_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
+    # download_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
+    download_sub_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
     return args
 
 def sync_status(job_id, bucket_name, model_dir):
@@ -265,7 +267,10 @@ def parse_params(args):
         return message
     s3_input_path = json.loads(decode_base64(args.s3_input_path))
     s3_output_path = json.loads(decode_base64(args.s3_output_path))
-    training_type = json.loads(decode_base64(args.training_type))
+    if args.training_type:
+        training_type = json.loads(decode_base64(args.training_type))
+    else:
+        training_type = "dreambooth"
     params = json.loads(decode_base64(args.params))
     return s3_input_path, s3_output_path, training_type, params
 
