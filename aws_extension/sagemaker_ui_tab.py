@@ -296,8 +296,8 @@ def _list_models(username, user_token):
         allowed = ''
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
-        models.append([model['name'], model['type'], allowed, datetime.datetime.fromtimestamp(model['created']),
-                       'In-Use' if model['status'] == 'Active' else 'Disabled'])
+        models.append([model['name'], model['type'], allowed,
+                       'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -453,7 +453,7 @@ def model_upload_tab():
 
         current_page = gr.State(0)
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'time', 'status'],
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
                                      datatype=['str', 'str', 'str', 'str', 'str']
                                      )
         with gr.Row():
