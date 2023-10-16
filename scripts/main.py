@@ -168,31 +168,35 @@ class SageMakerUI(scripts.Script):
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             return f'Generate{" on Cloud" if on_cloud  else ""}', \
                    gr.update(visible=not on_cloud), \
-                   gr.update(choices=load_model_list(pr.username, pr.username)) if on_cloud else gr.update(choices=sd_models.checkpoint_tiles())
+                   gr.update(choices=load_model_list(pr.username, pr.username)) if on_cloud else gr.update(choices=sd_models.checkpoint_tiles()), \
+                   sagemaker_ui.load_lora_models(pr.username, pr.username)
 
         if not is_img2img:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
                 secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+                modelmerger_merge_on_cloud, lora_model_state = sagemaker_ui.create_ui(is_img2img)
 
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=[self.txt2img_generate_btn,
                                            self.txt2img_refiner_ckpt_refresh_btn,
-                                           self.txt2img_refiner_ckpt_dropdown])
+                                           self.txt2img_refiner_ckpt_dropdown,
+                                           lora_model_state
+                                           ])
 
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
-                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_model_state]
         else:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+                modelmerger_merge_on_cloud, lora_model_state = sagemaker_ui.create_ui(is_img2img)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=[self.img2img_generate_btn,
                                            self.img2img_refiner_ckpt_refresh_btn,
-                                           self.img2img_refiner_ckpt_dropdown
+                                           self.img2img_refiner_ckpt_dropdown,
+                                           lora_model_state
                                            ])
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
-                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_model_state]
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -297,8 +301,7 @@ class SageMakerUI(scripts.Script):
                         models['Lora'] = []
 
                     lora_filename = val.positional[0]
-                    lora_models_dir = os.path.join("models", "Lora")
-                    for filename in os.listdir(lora_models_dir):
+                    for filename in args[-1]:
                         if filename.startswith(lora_filename):
                             if lora_filename not in models['Lora']:
                                 models['Lora'].append(filename)
