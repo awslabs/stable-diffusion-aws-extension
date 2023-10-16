@@ -15,6 +15,7 @@ from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 import modules.ui
 from utils import get_variable_from_json, save_variable_to_json
+import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -295,7 +296,7 @@ def _list_models(username, user_token):
         allowed = ''
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
-        models.append([model['name'], model['type'], allowed, model['created'],
+        models.append([model['name'], model['type'], allowed, datetime.datetime.fromtimestamp(model['created']),
                        'In-Use' if model['status'] == 'Active' else 'Disabled'])
     return models
 
