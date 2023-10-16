@@ -295,7 +295,7 @@ def _list_models(username, user_token):
         allowed = ''
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
-        models.append([model['name'], model['type'], allowed,
+        models.append([model['name'], model['type'], allowed, model['created'],
                        'In-Use' if model['status'] == 'Active' else 'Disabled'])
     return models
 
@@ -452,8 +452,8 @@ def model_upload_tab():
 
         current_page = gr.State(0)
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'status'],
-                                     datatype=['str', 'str', 'str', 'str']
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'time', 'status'],
+                                     datatype=['str', 'str', 'str', 'str', 'str']
                                      )
         with gr.Row():
             model_list_prev_btn = gr.Button(value='Previous')
