@@ -711,15 +711,6 @@ def async_loop_wrapper_with_input(sagemaker_endpoint, type):
     return result
 
 
-def call_txt2img_inference(sagemaker_endpoint):
-    return async_loop_wrapper_with_input(sagemaker_endpoint, 'txt2img')
-
-
-def call_img2img_inference(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
-                           init_img_inpaint, init_mask_inpaint):
-    return async_loop_wrapper_with_input(sagemaker_endpoint, 'img2img')
-
-
 def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
                           init_img_inpaint, init_mask_inpaint):
     return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_clip')
@@ -802,7 +793,7 @@ def process_result_by_inference_id(inference_id):
                 resp = get_inference_job(inference_id)
             if resp['status'] == "failed":
                 infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
-                return image_list, info_text, plaintext_to_html(infotexts)
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
             elif resp['status'] == "succeed":
                 if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
                     prompt_txt = resp['caption']
@@ -830,9 +821,9 @@ def process_result_by_inference_id(inference_id):
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
                     infotexts = info_text
-                return image_list, info_text, plaintext_to_html(infotexts)
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
         else:
-            return image_list, info_text, plaintext_to_html(infotexts)
+            return image_list, info_text, plaintext_to_html(infotexts), infotexts
 
 
 

@@ -71,14 +71,6 @@ class SageMakerUI(scripts.Script):
     refresh_sd_model_checkpoint_btn = None
     setting_sd_model_checkpoint_dropdown = None
 
-    txt2img_generation_info = None
-    txt2img_gallery = None
-    txt2img_html_info = None
-
-    img2img_generation_info = None
-    img2img_gallery = None
-    img2img_html_info = None
-
     txt2img_refiner_ckpt_dropdown = None
     txt2img_refiner_ckpt_refresh_btn = None
     img2img_refiner_ckpt_dropdown = None
@@ -99,18 +91,6 @@ class SageMakerUI(scripts.Script):
             elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
                 self.img2img_generate_btn = component
 
-        if type(component) is gr.Textbox and getattr(component, 'elem_id',
-                                                     None) == 'generation_info_txt2img' and self.is_txt2img:
-            self.txt2img_generation_info = component
-
-        if type(component) is gr.Gallery and getattr(component, 'elem_id',
-                                                     None) == 'txt2img_gallery' and self.is_txt2img:
-            self.txt2img_gallery = component
-
-        if type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                  None) == 'html_info_txt2img' and self.is_txt2img:
-            self.txt2img_html_info = component
-
         if type(component) is gr.Dropdown:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
             if getattr(component, 'elem_id', None) == elem_id:
@@ -126,40 +106,6 @@ class SageMakerUI(scripts.Script):
                     self.txt2img_refiner_ckpt_refresh_btn = component
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_refresh_btn = component
-
-        async def _update_result():
-            if self.inference_queue and not self.inference_queue.empty():
-                inference_id = self.inference_queue.get()
-                self.latest_result = sagemaker_ui.process_result_by_inference_id(inference_id)
-                return self.latest_result
-
-            return gr.skip(), gr.skip(), gr.skip()
-
-        if self.txt2img_html_info and self.txt2img_gallery and self.txt2img_generation_info:
-            self.txt2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.txt2img_gallery, self.txt2img_generation_info, self.txt2img_html_info]
-            )
-
-        if type(component) is gr.Textbox and getattr(component, 'elem_id',
-                                                     None) == 'generation_info_img2img' and self.is_img2img:
-            self.img2img_generation_info = component
-
-        if type(component) is gr.Gallery and getattr(component, 'elem_id',
-                                                     None) == 'img2img_gallery' and self.is_img2img:
-            self.img2img_gallery = component
-
-        if type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                  None) == 'html_info_img2img' and self.is_img2img:
-            self.img2img_html_info = component
-
-        if self.img2img_html_info and self.img2img_gallery and self.img2img_generation_info:
-            self.img2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.img2img_gallery, self.img2img_generation_info, self.img2img_html_info]
-            )
 
         pass
 
@@ -326,6 +272,8 @@ class SageMakerUI(scripts.Script):
 
         err = None
         try:
+            from modules import call_queue
+            call_queue.queue_lock.release()
             inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
@@ -352,14 +300,27 @@ class SageMakerUI(scripts.Script):
                     infotexts=[],
                 )
 
+            image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(inference_id)
+
+            # yield Processed(
+            #     p,
+            #     images_list=image_list,
+            #     seed=0,
+            #     # info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
+            #     info=info_text,
+            #     subseed=0,
+            #     index_of_first_image=0,
+            #     infotexts=info_text,
+            # )
+
             processed = Processed(
                 p,
-                images_list=[],
-                seed=0,
-                info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
-                subseed=0,
+                images_list=image_list,
+                seed=p.all_seeds[0],
+                info=infotexts,
+                subseed=p.all_subseeds[0],
                 index_of_first_image=0,
-                infotexts=[],
+                infotexts=infotexts,
             )
 
             return processed
@@ -367,7 +328,6 @@ class SageMakerUI(scripts.Script):
         default_processing = importlib.import_module("modules.processing")
         self.default_images_inner = default_processing.process_images_inner
         processing.process_images_inner = process_image_inner_hijack
-
     def process(self, p, *args):
         pass
 
@@ -380,3 +340,18 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+
+from modules import call_queue, fifo_lock
+
+
+class ImprovedFiFoLock(fifo_lock.FIFOLock):
+
+    def release(self):
+        if not self._inner_lock.locked() and not self._lock.locked():
+            return
+
+        fifo_lock.FIFOLock.release(self)
+
+
+call_queue.queue_lock = ImprovedFiFoLock()

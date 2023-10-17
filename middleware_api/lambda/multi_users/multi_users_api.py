@@ -195,6 +195,7 @@ def list_user(event, ctx):
     result = []
     for row in scan_rows:
         user = User(**(ddb_service.deserialize(row)))
+        print(f'user {user.sort_key}')
         result.append({
             'username': user.sort_key,
             'roles': user.roles,
