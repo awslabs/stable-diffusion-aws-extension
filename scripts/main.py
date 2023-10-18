@@ -341,17 +341,16 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
 
+if os.environ.get('ON_DOCKER', "false") != "true":
+    from modules import call_queue, fifo_lock
 
-from modules import call_queue, fifo_lock
+    class ImprovedFiFoLock(fifo_lock.FIFOLock):
+
+        def release(self):
+            if not self._inner_lock.locked() and not self._lock.locked():
+                return
+
+            fifo_lock.FIFOLock.release(self)
 
 
-class ImprovedFiFoLock(fifo_lock.FIFOLock):
-
-    def release(self):
-        if not self._inner_lock.locked() and not self._lock.locked():
-            return
-
-        fifo_lock.FIFOLock.release(self)
-
-
-call_queue.queue_lock = ImprovedFiFoLock()
+    call_queue.queue_lock = ImprovedFiFoLock()
