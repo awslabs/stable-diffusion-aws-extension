@@ -1113,6 +1113,12 @@ def load_vae_list(username, user_token):
     return vae_model_on_cloud
 
 
+def load_controlnet_list(username, user_token):
+    vae_model_on_cloud = ['None']
+    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    return vae_model_on_cloud
+
+
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui

@@ -7,7 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -86,6 +86,11 @@ class SageMakerUI(scripts.Script):
 
     ph = None
 
+    txt2img_controlnet_dropdown_batch = {}
+    img2img_controlnet_dropdown_batch = {}
+    txt2img_controlnet_refresh_btn_batch = {}
+    img2img_controlnet_refresh_btn_batch = {}
+
     def title(self):
         return "SageMaker embeddings"
 
@@ -113,20 +118,58 @@ class SageMakerUI(scripts.Script):
 
         if type(component) is gr.Dropdown:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
-            if getattr(component, 'elem_id', None) == elem_id:
+            component_elem_id = getattr(component, 'elem_id', '')
+            max_models = shared.opts.data.get("control_net_unit_count", 10)
+            elem_id_tabname = ("img2img" if self.is_img2img else "txt2img") + "_controlnet"
+            if component_elem_id == elem_id:
                 if self.is_txt2img:
                     self.txt2img_refiner_ckpt_dropdown = component
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_dropdown = component
+            elif self.is_txt2img and component_elem_id and component_elem_id.endswith("_controlnet_model_dropdown"):
+                if max_models > 1:
+                    for i in range(max_models):
+                        tabname = f"ControlNet-{i}"
+                        elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_model_dropdown"
+                        if component_elem_id == elem_id_controlnet:
+                            self.txt2img_controlnet_dropdown_batch[i] = component
+                            break
+                else:
+                    tabname = "ControlNet"
+                    elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_model_dropdown"
+                    if component_elem_id == elem_id_controlnet:
+                        self.txt2img_controlnet_dropdown_batch[0] = component
+            elif self.is_img2img and component_elem_id and component_elem_id.endswith("_controlnet_model_dropdown"):
+                if max_models > 1:
+                    for i in range(max_models):
+                        tabname = f"ControlNet-{i}"
+                        elem_id_controlnet = f'{elem_id_tabname}_{tabname}_controlnet_model_dropdown'
+                        if component_elem_id == elem_id_controlnet:
+                            self.img2img_controlnet_dropdown_batch[i] = component
+                            break
+                else:
+                    tabname = "ControlNet"
+                    elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_model_dropdown"
+                    if component_elem_id == elem_id_controlnet:
+                        self.img2img_controlnet_dropdown_batch[0] = component
 
         if type(component) is ToolButton:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint_refresh'
-            if getattr(component, 'elem_id', None) == elem_id:
+            component_elem_id = getattr(component, 'elem_id', '')
+            if component_elem_id == elem_id:
                 if self.is_txt2img:
                     self.txt2img_refiner_ckpt_refresh_btn = component
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_refresh_btn = component
-
+            # max_models = shared.opts.data.get("control_net_unit_count", 10)
+            # if self.is_txt2img and component_elem_id and component_elem_id.startswith('txt2img_controlnet_ControlNet') \
+            #         and component_elem_id.endswith('_controlnet_refresh_models'):
+            #     logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!is_txt2img_controlnet_model_refresh")
+            #     self.txt2img_controlnet_refresh_btn = component
+            # elif self.is_img2img and component_elem_id and component_elem_id.startswith('img2img_controlnet_ControlNet') \
+            #         and component_elem_id.endswith('_controlnet_refresh_models'):
+            #     logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!is_img2img_controlnet_model_refresh")
+            #     self.img2img_controlnet_refresh_btn = component
         async def _update_result():
             if self.inference_queue and not self.inference_queue.empty():
                 inference_id = self.inference_queue.get()
@@ -166,19 +209,28 @@ class SageMakerUI(scripts.Script):
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
-            return f'Generate{" on Cloud" if on_cloud  else ""}', \
-                   gr.update(visible=not on_cloud), \
-                   gr.update(choices=load_model_list(pr.username, pr.username)) if on_cloud else gr.update(choices=sd_models.checkpoint_tiles())
+            result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
+            if not on_cloud:
+                result.append(gr.update(choices=sd_models.checkpoint_tiles()))
+            else:
+                result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+            max_models = shared.opts.data.get("control_net_unit_count", 10)
+            if max_models > 0:
+                for i in range(max_models):
+                    result.append(gr.update(choices=load_controlnet_list(pr.username, pr.username)))
+
+            return result
 
         if not is_img2img:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
                 secondary_model_name, tertiary_model_name, \
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
-
+            outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
+                       self.txt2img_refiner_ckpt_dropdown]
+            for value in self.txt2img_controlnet_dropdown_batch.values():
+                outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.txt2img_generate_btn,
-                                           self.txt2img_refiner_ckpt_refresh_btn,
-                                           self.txt2img_refiner_ckpt_dropdown])
+                                  outputs=outputs)
 
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
@@ -186,11 +238,12 @@ class SageMakerUI(scripts.Script):
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
                 modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+            outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
+                       self.img2img_refiner_ckpt_dropdown]
+            for value in self.img2img_controlnet_dropdown_batch.values():
+                outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.img2img_generate_btn,
-                                           self.img2img_refiner_ckpt_refresh_btn,
-                                           self.img2img_refiner_ckpt_dropdown
-                                           ])
+                                  outputs=outputs)
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
 
