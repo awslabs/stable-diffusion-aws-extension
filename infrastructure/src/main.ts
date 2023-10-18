@@ -20,6 +20,7 @@ import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -130,7 +131,7 @@ export class Middleware extends Stack {
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
-
+    new LambdaDeployRoleStack(this, useExist);
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
