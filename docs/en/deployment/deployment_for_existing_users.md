@@ -2,7 +2,7 @@ Before you launch the solution, review the architecture, supported regions, and 
 
 **Time to deploy**: Approximately 25 minutes.
 
-## Prerequisition
+## Prerequisites
 
 - The user needs to prepare a computer running a Linux system in advance.
 - Install and configure [aws cli](https://aws.amazon.com/cli/).

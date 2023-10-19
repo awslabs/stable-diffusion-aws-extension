@@ -12,9 +12,9 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 ![Settings 面板](../images/setting-vae.png)
 
     !!! Important "Notice" 
-        The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter **Cloud Assets Management**. The current model list displays options for both local and cloud-based models. For cloud-based inference, it is recommended to select models with the **sagemaker** keyword as a suffix, indicating that they have been uploaded to the cloud for subsequent inference.
+        The model files used in the inference should be uploaded to the cloud before generate, which can be referred to the introduction of chapter **Cloud Assets Management**. The current model list displays options for both local and cloud-based models. For cloud-based inference, it is recommended to select models with the **sagemaker** keyword as a suffix, indicating that they have been uploaded to the cloud for subsequent inference.
 
-3. Select an endpoint for inference. Refresh and select an endpoint from **Select Cloud SageMaker Endpoint** dropdown list that is in the *InService* state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Clound**。
+3. Select an endpoint for inference. Refresh and select an endpoint from **Select Cloud SageMaker Endpoint** dropdown list that is in the *InService* state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Cloud**。
 ![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
@@ -38,4 +38,4 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 
 
 ## Inference Job
-Inference Job displays latest 10 inference job by default, following naming format Time-Type-Status-Uuid. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users customorized infenrence job list.
+Inference Job displays latest 10 inference job by default, following naming format Time-Type-Status-Uuid. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users customized inference job list.

@@ -6,7 +6,7 @@
 ## Controlnet的使用方法
 
 ### 支持多个controlnet同时启用
-1. 点击**Settings**按钮进入设置面板，在左侧一栏选择ControlNet, 右侧面板**Multi ControlNet: Max models amount (requires restart)**处设置ConrolNet数量（1-10）,重新启动webui,Multi ControlNet生效。
+1. 点击**Settings**按钮进入设置面板，在左侧一栏选择ControlNet, 右侧面板**Multi ControlNet: Max models amount (requires restart)**处设置ControlNet数量（1-10）,重新启动webui,Multi ControlNet生效。
 ![Setting-Controlnet](../images/setting-multi-controlnet.png)
 
 2. 重新进入**txt2img**推理界面，ControlNet面板处则出现相同个数的ControlNet Unit，如下图同时启动三个ControlNet。

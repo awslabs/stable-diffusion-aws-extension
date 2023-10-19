@@ -2,7 +2,7 @@ Before you launch the solution, review the architecture, supported regions, and 
 
 **Time to deploy**: Approximately 25 minutes.
 
-## Prerequisition
+## Prerequisites
 Users need to prepare a computer running linux system in advance.
 
 
