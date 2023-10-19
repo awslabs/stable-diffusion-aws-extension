@@ -15,7 +15,7 @@
         选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理。目前模型列表展示本地和云上的模型选项。为了进行云上推理，建议选择有sagemaker关键字为后缀的、表明已经上传到云上的模型进行后续推理。
 
 3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点, 则会触发右上角**Generate**按钮变为**Generate on Clound**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "提示" 
         此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击**Generate on Cloud**开启云上推理功能时会报错。

@@ -11,7 +11,7 @@ You can open the **img2img tab** and use the original region along with the **Am
     !!! Important "Notice" 
         The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter **Cloud Assets Management**
 3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Clound**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
         This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
