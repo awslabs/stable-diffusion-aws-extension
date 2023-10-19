@@ -188,8 +188,9 @@ class SageMakerUI(scripts.Script):
             result.append(sagemaker_ui.load_lora_models(pr.username, pr.username))
             max_models = shared.opts.data.get("control_net_unit_count", 10)
             if max_models > 0:
+                controlnet_models = load_controlnet_list(pr.username, pr.username)
                 for i in range(max_models):
-                    result.append(gr.update(choices=load_controlnet_list(pr.username, pr.username)))
+                    result.append(gr.update(choices=controlnet_models))
             # sync append fresh button
             if max_models > 0:
                 for i in range(max_models):
