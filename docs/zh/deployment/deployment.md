@@ -55,7 +55,7 @@
 1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"}。
 2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
 3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
-4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，在**email**处输入一个正确的电子邮件地址，以便接收将来的通知。在**sdextensionapikey**字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在**utilscpuinsttype**选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。在**ecrImageTag**字段选择方案对应的ECR镜像的tag(如果无需修改就保持默认值就可以),具体tag的说明请点击这个[link](ecr_image_param.md)。在**deployedBefore*中选择no，并在**bucket**中填入新的的s3桶的名字。点击**下一步**。
+4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。在**参数**部分，在**email**处输入一个正确的电子邮件地址，以便接收将来的通知。在**sdExtensionApiKey**字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在**utilsCpuInstType**选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。在**ecrImageTag**字段选择方案对应的ECR镜像的tag(如果无需修改就保持默认值就可以),具体tag的说明请点击这个[link](ecr_image_param.md)。在**deployedBefore*中选择no，并在**bucket**中填入新的的s3桶的名字。点击**下一步**。
 
     !!! Important "Notice" 
         请不要自行改动**ecrImageTag**。如有需求，请联系解决方案团队。

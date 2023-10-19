@@ -37,7 +37,7 @@ export class Middleware extends Stack {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
-    const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
+    const apiKeyParam = new CfnParameter(this, 'sdExtensionApiKey', {
       type: 'String',
       description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
       allowedPattern: '[A-Za-z0-9]+',
@@ -47,7 +47,7 @@ export class Middleware extends Stack {
       default: '09876543210987654321',
     });
 
-    const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
+    const utilInstanceType = new CfnParameter(this, 'utilsCpuInstType', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
       allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
