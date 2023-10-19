@@ -306,13 +306,13 @@ class SageMakerUI(scripts.Script):
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(script.name, arg, _id, script_args)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(script.name, arg, _id, script_args)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args)
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 
@@ -322,7 +322,7 @@ class SageMakerUI(scripts.Script):
                         if key not in models:
                             models[key] = []
                         for val in vals:
-                            if val not in models[key]:
+                            if val not in models[key] and val != None_Option_For_On_Cloud_Model:
                                 models[key].append(val)
 
 
@@ -390,6 +390,7 @@ class SageMakerUI(scripts.Script):
         try:
             from modules import call_queue
             call_queue.queue_lock.release()
+            logger.debug(f"########################{api_param}")
             inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
