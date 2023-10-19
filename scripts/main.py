@@ -175,40 +175,6 @@ class SageMakerUI(scripts.Script):
                     elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
                     if component_elem_id == elem_id_controlnet:
                         self.img2img_controlnet_dropdown_batch[0] = component
-
-        async def _update_result():
-            if self.inference_queue and not self.inference_queue.empty():
-                inference_id = self.inference_queue.get()
-                self.latest_result = sagemaker_ui.process_result_by_inference_id(inference_id)
-                return self.latest_result
-
-            return gr.skip(), gr.skip(), gr.skip()
-
-        if self.txt2img_html_info and self.txt2img_gallery and self.txt2img_generation_info:
-            self.txt2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.txt2img_gallery, self.txt2img_generation_info, self.txt2img_html_info]
-            )
-
-        if type(component) is gr.Textbox and getattr(component, 'elem_id',
-                                                     None) == 'generation_info_img2img' and self.is_img2img:
-            self.img2img_generation_info = component
-
-        if type(component) is gr.Gallery and getattr(component, 'elem_id',
-                                                     None) == 'img2img_gallery' and self.is_img2img:
-            self.img2img_gallery = component
-
-        if type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                  None) == 'html_info_img2img' and self.is_img2img:
-            self.img2img_html_info = component
-
-        if self.img2img_html_info and self.img2img_gallery and self.img2img_generation_info:
-            self.img2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.img2img_gallery, self.img2img_generation_info, self.img2img_html_info]
-            )
         pass
 
     def ui(self, is_img2img):
