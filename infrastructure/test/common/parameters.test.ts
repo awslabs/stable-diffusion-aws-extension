@@ -25,6 +25,18 @@ describe('common parameters test', () => {
     beforeEach(() => {
     });
 
+    test('Should has Parameter sdExtensionApiKey', () => {
+        template.hasParameter('sdExtensionApiKey', {
+            Type: 'String',
+        });
+    });
+
+    test('Should has Parameter utilsCpuInstType', () => {
+        template.hasParameter('utilsCpuInstType', {
+            Type: 'String',
+        });
+    });
+
     test('Should has Parameter deployedBefore', () => {
         template.hasParameter('deployedBefore', {
             Type: 'String',
