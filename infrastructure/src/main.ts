@@ -37,7 +37,7 @@ export class Middleware extends Stack {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
-    const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
+    const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
       description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
       allowedPattern: '[A-Za-z0-9]+',
@@ -47,7 +47,7 @@ export class Middleware extends Stack {
       default: '09876543210987654321',
     });
 
-    const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
+    const utilInstanceType = new CfnParameter(this, 'UtilsCpuInstType', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
       allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
@@ -56,7 +56,7 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
-    const deployedBefore = new CfnParameter(this, 'deployed_before', {
+    const deployedBefore = new CfnParameter(this, 'DeployedBefore', {
       type: 'String',
       description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
       default: 'no',
@@ -65,22 +65,23 @@ export class Middleware extends Stack {
 
     const useExist = deployedBefore.valueAsString;
 
-    const s3BucketName = new CfnParameter(this, 'bucket', {
+    const s3BucketName = new CfnParameter(this, 'Bucket', {
       type: 'String',
       description: 'New bucket name or Existing Bucket name',
       minLength: 3,
       maxLength: 63,
-      allowedPattern: '^[a-z0-9.-]{3,63}$',
+      // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+      allowedPattern: '^(?!.*\\.\\.)(?!xn--)(?!sthree-)(?!.*-s3alias$)(?!.*--ol-s3$)(?!.*\\.$)(?!.*^\\.)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
     });
 
-    const emailParam = new CfnParameter(this, 'email', {
+    const emailParam = new CfnParameter(this, 'Email', {
       type: 'String',
       description: 'Email address to receive notifications',
       allowedPattern: '\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}',
       default: 'example@example.com',
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'ecr_image_tag', {
+    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Public ECR Image tag, example: stable|dev',
       default: ECR_IMAGE_TAG,
