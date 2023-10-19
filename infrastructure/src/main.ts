@@ -20,6 +20,7 @@ import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -77,11 +78,15 @@ export class Middleware extends Stack {
 
     const useExist = createFromExist.valueAsString;
 
-    const s3BucketName = new CfnParameter(this, 'exist_bucket', {
+    const s3BucketName = new CfnParameter(this, 'bucket', {
       type: 'String',
       description: 'New bucket name or Existing Bucket name',
-      minLength: 0,
+      minLength: 3,
+      maxLength: 63,
+      allowedPattern: '^[a-z0-9.-]{3,63}$',
     });
+
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
 
     const ddbTables = new Database(this, 'sd-ddb', useExist);
 
@@ -125,9 +130,8 @@ export class Middleware extends Stack {
       authorizer: authorizerLambda.authorizer,
     });
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
-
+    new LambdaDeployRoleStack(this, useExist);
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
