@@ -98,6 +98,8 @@ class SageMakerUI(scripts.Script):
         return scripts.AlwaysVisible
 
     def after_component(self, component, **kwargs):
+        # controlnet models count
+        max_models = shared.opts.data.get("control_net_unit_count", 10)
         if type(component) is gr.Button:
             if self.is_txt2img and getattr(component, 'elem_id', None) == f'txt2img_generate':
                 self.txt2img_generate_btn = component
@@ -119,7 +121,6 @@ class SageMakerUI(scripts.Script):
         if type(component) is gr.Dropdown:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
             component_elem_id = getattr(component, 'elem_id', '')
-            max_models = shared.opts.data.get("control_net_unit_count", 10)
             elem_id_tabname = ("img2img" if self.is_img2img else "txt2img") + "_controlnet"
             if component_elem_id == elem_id:
                 if self.is_txt2img:
@@ -161,15 +162,40 @@ class SageMakerUI(scripts.Script):
                     self.txt2img_refiner_ckpt_refresh_btn = component
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_refresh_btn = component
-            # max_models = shared.opts.data.get("control_net_unit_count", 10)
-            # if self.is_txt2img and component_elem_id and component_elem_id.startswith('txt2img_controlnet_ControlNet') \
-            #         and component_elem_id.endswith('_controlnet_refresh_models'):
-            #     logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!is_txt2img_controlnet_model_refresh")
-            #     self.txt2img_controlnet_refresh_btn = component
-            # elif self.is_img2img and component_elem_id and component_elem_id.startswith('img2img_controlnet_ControlNet') \
-            #         and component_elem_id.endswith('_controlnet_refresh_models'):
-            #     logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!is_img2img_controlnet_model_refresh")
-            #     self.img2img_controlnet_refresh_btn = component
+
+        # controlnet refresh button type is not webui ToolButton, maybe there is no controlnet, so use str not class
+        if str(type(component)) == "<class 'scripts.controlnet_ui.tool_button.ToolButton'>":
+            component_elem_id = getattr(component, 'elem_id', '')
+            elem_id_tabname = ("img2img" if self.is_img2img else "txt2img") + "_controlnet"
+            if self.is_txt2img and component_elem_id and component_elem_id.endswith('_controlnet_refresh_models'):
+                logger.debug(f" is_txt2img_controlnet_model_refresh {type(component)}")
+                if max_models > 1:
+                    for i in range(max_models):
+                        tabname = f"ControlNet-{i}"
+                        elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
+                        if component_elem_id == elem_id_controlnet:
+                            self.txt2img_controlnet_refresh_btn_batch[i] = component
+                            break
+                else:
+                    tabname = "ControlNet"
+                    elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
+                    if component_elem_id == elem_id_controlnet:
+                        self.txt2img_controlnet_dropdown_batch[0] = component
+            elif self.is_img2img and component_elem_id and component_elem_id.endswith('_controlnet_refresh_models'):
+                logger.debug(f" is_img2img_controlnet_model_refresh {type(component)}")
+                if max_models > 1:
+                    for i in range(max_models):
+                        tabname = f"ControlNet-{i}"
+                        elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
+                        if component_elem_id == elem_id_controlnet:
+                            self.img2img_controlnet_refresh_btn_batch[i] = component
+                            break
+                else:
+                    tabname = "ControlNet"
+                    elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
+                    if component_elem_id == elem_id_controlnet:
+                        self.img2img_controlnet_dropdown_batch[0] = component
+
         async def _update_result():
             if self.inference_queue and not self.inference_queue.empty():
                 inference_id = self.inference_queue.get()
@@ -218,7 +244,10 @@ class SageMakerUI(scripts.Script):
             if max_models > 0:
                 for i in range(max_models):
                     result.append(gr.update(choices=load_controlnet_list(pr.username, pr.username)))
-
+            # sync append fresh button
+            if max_models > 0:
+                for i in range(max_models):
+                    result.append(gr.update(visible=not on_cloud))
             return result
 
         if not is_img2img:
@@ -228,6 +257,8 @@ class SageMakerUI(scripts.Script):
             outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
                        self.txt2img_refiner_ckpt_dropdown]
             for value in self.txt2img_controlnet_dropdown_batch.values():
+                outputs.append(value)
+            for value in self.txt2img_controlnet_refresh_btn_batch.values():
                 outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=outputs)
@@ -241,6 +272,8 @@ class SageMakerUI(scripts.Script):
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
                        self.img2img_refiner_ckpt_dropdown]
             for value in self.img2img_controlnet_dropdown_batch.values():
+                outputs.append(value)
+            for value in self.img2img_controlnet_refresh_btn_batch.values():
                 outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=outputs)
