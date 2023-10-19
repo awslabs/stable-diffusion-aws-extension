@@ -25,26 +25,26 @@ describe('common parameters test', () => {
     beforeEach(() => {
     });
 
-    test('Should has Parameter sdExtensionApiKey', () => {
-        template.hasParameter('sdExtensionApiKey', {
+    test('Should has Parameter SdExtensionApiKey', () => {
+        template.hasParameter('SdExtensionApiKey', {
             Type: 'String',
         });
     });
 
-    test('Should has Parameter utilsCpuInstType', () => {
-        template.hasParameter('utilsCpuInstType', {
+    test('Should has Parameter UtilsCpuInstType', () => {
+        template.hasParameter('UtilsCpuInstType', {
             Type: 'String',
         });
     });
 
-    test('Should has Parameter deployedBefore', () => {
-        template.hasParameter('deployedBefore', {
+    test('Should has Parameter DeployedBefore', () => {
+        template.hasParameter('DeployedBefore', {
             Type: 'String',
         });
     });
 
-    test('Parameter deployedBefore must be `yes` or `no`', () => {
-        const allowedValues = getParameter(template, 'deployedBefore').AllowedValues;
+    test('Parameter DeployedBefore must be `yes` or `no`', () => {
+        const allowedValues = getParameter(template, 'DeployedBefore').AllowedValues;
 
         const validValues = [
             'yes',
@@ -65,27 +65,27 @@ describe('common parameters test', () => {
         }
     });
 
-    test('Should has parameter email', () => {
-        template.hasParameter('email', {
+    test('Should has parameter Email', () => {
+        template.hasParameter('Email', {
             Type: 'String',
         });
     });
 
-    test('Should has parameter ecrImageTag', () => {
-        template.hasParameter('ecrImageTag', {
+    test('Should has parameter EcrImageTag', () => {
+        template.hasParameter('EcrImageTag', {
             Type: 'String',
         });
     });
 
-    test('Should has parameter bucket', () => {
-        template.hasParameter('bucket', {
+    test('Should has parameter Bucket', () => {
+        template.hasParameter('Bucket', {
             Type: 'String',
         });
     });
 
     test('Should check S3 bucket pattern', () => {
 
-        const pattern = getParameter(template, 'bucket').AllowedPattern;
+        const pattern = getParameter(template, 'Bucket').AllowedPattern;
         const regex = new RegExp(`${pattern}`);
 
         // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
