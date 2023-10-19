@@ -56,7 +56,7 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
-    const deployedBefore = new CfnParameter(this, 'deployed_before', {
+    const deployedBefore = new CfnParameter(this, 'deployedBefore', {
       type: 'String',
       description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
       default: 'no',
@@ -70,7 +70,8 @@ export class Middleware extends Stack {
       description: 'New bucket name or Existing Bucket name',
       minLength: 3,
       maxLength: 63,
-      allowedPattern: '^[a-z0-9.-]{3,63}$',
+      // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+      allowedPattern: '^(?!.*\\.\\.)(?!xn--)(?!sthree-)(?!.*-s3alias$)(?!.*--ol-s3$)(?!.*\\.$)(?!.*^\\.)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
     });
 
     const emailParam = new CfnParameter(this, 'email', {
@@ -80,7 +81,7 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'ecr_image_tag', {
+    const ecrImageTagParam = new CfnParameter(this, 'ecrImageTag', {
       type: 'String',
       description: 'Public ECR Image tag, example: stable|dev',
       default: ECR_IMAGE_TAG,
