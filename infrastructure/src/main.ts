@@ -56,6 +56,23 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
+    const deployedBefore = new CfnParameter(this, 'deployed_before', {
+      type: 'String',
+      description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
+      default: 'no',
+      allowedValues: ['yes', 'no'],
+    });
+
+    const useExist = deployedBefore.valueAsString;
+
+    const s3BucketName = new CfnParameter(this, 'bucket', {
+      type: 'String',
+      description: 'New bucket name or Existing Bucket name',
+      minLength: 3,
+      maxLength: 63,
+      allowedPattern: '^[a-z0-9.-]{3,63}$',
+    });
+
     const emailParam = new CfnParameter(this, 'email', {
       type: 'String',
       description: 'Email address to receive notifications',
@@ -69,28 +86,24 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
-    const createFromExist = new CfnParameter(this, 'create_from_exist', {
-      type: 'String',
-      description: 'Create Stack from existing resources',
-      default: 'no',
-      allowedValues: ['yes', 'no'],
-    });
+    // Create resources here
 
-    const useExist = createFromExist.valueAsString;
-
-    const s3BucketName = new CfnParameter(this, 'bucket', {
-      type: 'String',
-      description: 'New bucket name or Existing Bucket name',
-      minLength: 3,
-      maxLength: 63,
-      allowedPattern: '^[a-z0-9.-]{3,63}$',
-    });
+    // The solution currently does not support multi-region deployment, which makes it easy to failure.
+    // Therefore, this resource is prioritized to save time.
+    new LambdaDeployRoleStack(this, useExist);
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
 
     const ddbTables = new Database(this, 'sd-ddb', useExist);
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
+      commonLayer: commonLayers.commonLayer,
+      multiUserTable: ddbTables.multiUserTable,
+      useExist: useExist,
+    });
+
     const api_train_path = 'train-api/train';
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
@@ -114,12 +127,6 @@ export class Middleware extends Stack {
       api_train_path,
     ]);
 
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-      useExist: useExist,
-    });
-
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
@@ -131,7 +138,7 @@ export class Middleware extends Stack {
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
-    new LambdaDeployRoleStack(this, useExist);
+
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
