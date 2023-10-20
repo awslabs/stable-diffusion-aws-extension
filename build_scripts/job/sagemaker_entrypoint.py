@@ -17,6 +17,7 @@ from utils import (
     download_file_from_s3,
     download_folder_from_s3_by_tar,
     download_folder_from_s3,
+    download_sub_folder_from_s3,
     upload_file_to_s3,
     upload_folder_to_s3,
     upload_folder_to_s3_by_tar,
@@ -185,11 +186,12 @@ def prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path):
     model_path = get_path_from_s3_path(s3_model_path)
     logger.info(f"Download src model from s3 {model_bucket_name} {model_path}")
     if args.pretrained_model_name_or_path is None:
-        args.pretrained_model_name_or_path = "sd-models/v1-5-pruned-emaonly.safetensors"
+        args.pretrained_model_name_or_path = "models/Stable-diffusion/v1-5-pruned-emaonly.safetensors"
     model_dir = os.path.dirname(args.pretrained_model_name_or_path)
     if len(model_dir) > 0:
         os.makedirs(model_dir, exist_ok=True)
-    download_file_from_s3(model_bucket_name, model_path, args.pretrained_model_name_or_path)
+    # download_file_from_s3(model_bucket_name, model_path, args.pretrained_model_name_or_path)
+    download_folder_from_s3_by_tar(model_bucket_name, model_path, "model.tar")
 
     data_bucket_name = get_bucket_name_from_s3_path(s3_data_path)
     data_path = get_path_from_s3_path(s3_data_path)
@@ -199,7 +201,8 @@ def prepare_for_sd_scripts(s3_model_path, s3_toml_path, s3_data_path):
     if len(data_dir) > 0:
         os.makedirs(data_dir, exist_ok=True)
     logger.info(f"Download data from s3 {data_bucket_name} {data_path}")
-    download_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
+    # download_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
+    download_sub_folder_from_s3(data_bucket_name, data_path, args.train_data_dir)
     return args
 
 def sync_status(job_id, bucket_name, model_dir):
@@ -231,8 +234,8 @@ def train_by_kohya_sd_scripts(s3_input_path, s3_output_path, params):
     # import launch
     # launch.prepare_environment()
     params = params["training_params"]
-    model_name = params["model_name"]
-    model_type = params["model_type"]
+    # model_name = params["model_name"]
+    # model_type = params["model_type"]
     s3_model_path = params["s3_model_path"]
     s3_data_path = params["s3_data_path"]
     s3_toml_path = params["s3_toml_path"]
@@ -264,7 +267,10 @@ def parse_params(args):
         return message
     s3_input_path = json.loads(decode_base64(args.s3_input_path))
     s3_output_path = json.loads(decode_base64(args.s3_output_path))
-    training_type = json.loads(decode_base64(args.training_type))
+    if args.training_type:
+        training_type = json.loads(decode_base64(args.training_type))
+    else:
+        training_type = "dreambooth"
     params = json.loads(decode_base64(args.params))
     return s3_input_path, s3_output_path, training_type, params
 
