@@ -7,7 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_embeddings_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -26,6 +26,7 @@ dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
+global_username = None
 
 def dummy_function(*args, **kwargs):
     return []
@@ -179,6 +180,9 @@ class SageMakerUI(scripts.Script):
 
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
+            global global_username
+            global_username = pr.username
+
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
@@ -350,8 +354,10 @@ class SageMakerUI(scripts.Script):
         p.setup_conds()
 
         # load all embedding models
-        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
-                                model_hijack.embedding_db.word_embeddings.values()]
+        # models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
+        #                         model_hijack.embedding_db.word_embeddings.values()]
+        global global_username
+        models['embeddings'] = sagemaker_ui.load_embeddings_list(global_username, global_username)
 
         err = None
         try:
