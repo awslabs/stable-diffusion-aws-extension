@@ -2,8 +2,6 @@
 import * as path from 'path';
 import {
   Duration, aws_sns as sns,
-  RemovalPolicy,
-  CfnCondition, Fn,
 } from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -13,6 +11,7 @@ import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepfunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { SnsPublishProps } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
+import {LAMBDA_START_DEPLOY_ROLE_NAME} from "../shared/deploy-role";
 
 
 export interface SagemakerInferenceProps {
@@ -23,17 +22,14 @@ export interface SagemakerInferenceProps {
   endpointDeploymentJobTable: dynamodb.Table;
   userNotifySNS: sns.Topic;
   inference_ecr_url: string;
-  useExist: string;
 }
 
 export class SagemakerInferenceStateMachine {
   public readonly stateMachineArn: string;
   private readonly scope: Construct;
-  private readonly useExist: string;
 
   constructor(scope: Construct, props: SagemakerInferenceProps) {
     this.scope = scope;
-    this.useExist = props.useExist;
     this.stateMachineArn = this.sagemakerStepFunction(
       props.snsTopic,
       props.snsErrorTopic,
@@ -188,25 +184,11 @@ export class SagemakerInferenceStateMachine {
       },
     );
 
-    const shouldCreateSagemakerDeploymentRoleCondition = new CfnCondition(
-      this.scope,
-      'InferenceStack-shouldCreateSmRoleCondition',
-      {
-        expression: Fn.conditionEquals(this.useExist, 'no'),
-      },
+    const lambdaStartDeployRole = <iam.Role>iam.Role.fromRoleName(
+        this.scope,
+        'LambdaStartDeployRole',
+        LAMBDA_START_DEPLOY_ROLE_NAME
     );
-
-    const newLambdaStartDeployRole = new iam.Role(this.scope, 'newLambdaStartDeployRole', {
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal('lambda.amazonaws.com'),
-        new iam.ServicePrincipal('sagemaker.amazonaws.com'),
-      ),
-      roleName: 'LambdaStartDeployRole',
-    });
-    newLambdaStartDeployRole.applyRemovalPolicy(RemovalPolicy.RETAIN);
-    (newLambdaStartDeployRole.node.defaultChild as iam.CfnRole).cfnOptions.condition = shouldCreateSagemakerDeploymentRoleCondition;
-    const lambdaStartDeployRole = <iam.Role> iam.Role.fromRoleName(this.scope, 'LambdaStartDeployRole', 'LambdaStartDeployRole');
-
     lambdaStartDeployRole.addToPolicy(lambdaPolicy);
     lambdaStartDeployRole.addToPolicy(snsStatement);
     lambdaStartDeployRole.addToPolicy(s3Statement);

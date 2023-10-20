@@ -20,6 +20,7 @@ import { Database } from './shared/database';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -36,7 +37,7 @@ export class Middleware extends Stack {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
-    const apiKeyParam = new CfnParameter(this, 'sd-extension-api-key', {
+    const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
       description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
       allowedPattern: '[A-Za-z0-9]+',
@@ -46,7 +47,7 @@ export class Middleware extends Stack {
       default: '09876543210987654321',
     });
 
-    const utilInstanceType = new CfnParameter(this, 'utils-cpu-inst-type', {
+    const utilInstanceType = new CfnParameter(this, 'UtilsCpuInstType', {
       type: 'String',
       description: 'ec2 instance type for operation including ckpt merge, model create etc.',
       allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
@@ -55,41 +56,55 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
-    const emailParam = new CfnParameter(this, 'email', {
+    const deployedBefore = new CfnParameter(this, 'DeployedBefore', {
+      type: 'String',
+      description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
+      default: 'no',
+      allowedValues: ['yes', 'no'],
+    });
+
+    const useExist = deployedBefore.valueAsString;
+
+    const s3BucketName = new CfnParameter(this, 'Bucket', {
+      type: 'String',
+      description: 'New bucket name or Existing Bucket name',
+      minLength: 3,
+      maxLength: 63,
+      // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+      allowedPattern: '^(?!.*\\.\\.)(?!xn--)(?!sthree-)(?!.*-s3alias$)(?!.*--ol-s3$)(?!.*\\.$)(?!.*^\\.)[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$',
+    });
+
+    const emailParam = new CfnParameter(this, 'Email', {
       type: 'String',
       description: 'Email address to receive notifications',
       allowedPattern: '\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}',
       default: 'example@example.com',
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'ecr_image_tag', {
+    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Public ECR Image tag, example: stable|dev',
       default: ECR_IMAGE_TAG,
     });
 
-    const createFromExist = new CfnParameter(this, 'create_from_exist', {
-      type: 'String',
-      description: 'Create Stack from existing resources',
-      default: 'no',
-      allowedValues: ['yes', 'no'],
-    });
+    // Create resources here
 
-    const useExist = createFromExist.valueAsString;
-
-    const s3BucketName = new CfnParameter(this, 'bucket', {
-      type: 'String',
-      description: 'New bucket name or Existing Bucket name',
-      minLength: 3,
-      maxLength: 63,
-      allowedPattern: '^[a-z0-9.-]{3,63}$',
-    });
+    // The solution currently does not support multi-region deployment, which makes it easy to failure.
+    // Therefore, this resource is prioritized to save time.
+    new LambdaDeployRoleStack(this, useExist);
 
     const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
 
     const ddbTables = new Database(this, 'sd-ddb', useExist);
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
+      commonLayer: commonLayers.commonLayer,
+      multiUserTable: ddbTables.multiUserTable,
+      useExist: useExist,
+    });
+
     const api_train_path = 'train-api/train';
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
@@ -112,12 +127,6 @@ export class Middleware extends Stack {
       'inferences',
       api_train_path,
     ]);
-
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-      useExist: useExist,
-    });
 
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,

@@ -20,7 +20,7 @@ export const AIGC_WEBUI_DREAMBOOTH_TRAINING: string = 'public.ecr.aws/aws-gcr-so
 export const ECR_IMAGE_TAG: string = 'dev';
 ```
 
-TAG_NAME is defined by the CloudFormation deployment parameter `ecrimagetag`. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.
+TAG_NAME is defined by the CloudFormation deployment parameter `EcrImageTag`. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.
 
 In most cases, users do not need to modify the ECR tag name. However, if users need to change the tag value, they can modify the default parameter value during the deployment of the solution's CloudFormation stack. Currently, we have two tag values available for users to choose from:
 1. v1.0.0
