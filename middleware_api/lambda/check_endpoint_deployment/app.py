@@ -1,12 +1,14 @@
-import boto3
 import os
 from datetime import datetime
+
+import boto3
 
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 
 sagemaker = boto3.client('sagemaker')
 ddb_client = boto3.resource('dynamodb')
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
+
 
 def lambda_handler(event, context):
     # Parse the input data
@@ -24,26 +26,31 @@ def lambda_handler(event, context):
         if status == 'InService':
             current_time = str(datetime.now())
             event_payload['message'] = 'Deployment completed for endpoint "{}".'.format(name)
-            check_and_enable_autoscaling(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME, {'EndpointDeploymentJobId': endpoint_deployment_job_id}, 'autoscaling', endpoint_name, 'prod')
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endTime', current_time)
-            update_endpoint_job_table(endpoint_deployment_job_id,'status', 'success')
+            check_and_enable_autoscaling(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME,
+                                         {'EndpointDeploymentJobId': endpoint_deployment_job_id}, 'autoscaling',
+                                         endpoint_name, 'prod')
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endTime', current_time)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'status', 'success')
         elif status == 'Creating':
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status) 
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
         elif status == 'Failed':
             failure_reason = endpoint_details['FailureReason']
             event_payload['message'] = 'Deployment failed for endpoint "{}". {}'.format(name, failure_reason)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status)
-            update_endpoint_job_table(endpoint_deployment_job_id,'status', 'failed')
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'status', 'failed')
         elif status == 'RollingBack':
-            event_payload['message'] = 'Deployment failed for endpoint "{}", rolling back to previously deployed version.'.format(name)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id,'endpoint_status', status)
+            event_payload[
+                'message'] = 'Deployment failed for endpoint "{}", rolling back to previously deployed version.'.format(
+                name)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
+            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
     event_payload['status'] = status
     return event_payload
+
 
 def update_endpoint_job_table(endpoint_deployment_job_id, key, value):
     # Update the inference DDB for the job status
@@ -53,7 +60,8 @@ def update_endpoint_job_table(endpoint_deployment_job_id, key, value):
         })
     endpoint_resp = response['Item']
     if not endpoint_resp:
-        raise Exception(f"Failed to get the endpoint deployment job item with endpoint deployment job id: {endpoint_deployment_job_id}")
+        raise Exception(
+            f"Failed to get the endpoint deployment job item with endpoint deployment job id: {endpoint_deployment_job_id}")
 
     response = endpoint_deployment_table.update_item(
         Key={
@@ -64,6 +72,7 @@ def update_endpoint_job_table(endpoint_deployment_job_id, key, value):
         ExpressionAttributeValues={':r': value},
         ReturnValues="UPDATED_NEW"
     )
+
 
 def get_ddb_value(table_name, key, field_name):
     dynamodb = boto3.resource('dynamodb')
@@ -78,6 +87,7 @@ def get_ddb_value(table_name, key, field_name):
         item = response['Item']
         return item.get(field_name, None)
 
+
 def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
     client = boto3.client('application-autoscaling')
 
@@ -91,24 +101,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
     )
 
     # Define scaling policy
-    """
-    response = client.put_scaling_policy(
-        PolicyName='StableDiffusionDefaultScalingPolicy',
-        ServiceNamespace='sagemaker',
-        ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
-        ScalableDimension='sagemaker:variant:DesiredInstanceCount',
-        PolicyType='TargetTrackingScaling',
-        TargetTrackingScalingPolicyConfiguration={
-            'TargetValue': 2.0,
-            'PredefinedMetricSpecification': {
-                'PredefinedMetricType': 'SageMakerVariantInvocationsPerInstance',
-            },
-            'ScaleInCooldown': 300,
-            'ScaleOutCooldown': 300
-        }
-    )
-    """
-    
+
     response = client.put_scaling_policy(
         PolicyName="Invocations-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
@@ -116,18 +109,22 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
         PolicyType="TargetTrackingScaling",  # 'StepScaling'|'TargetTrackingScaling'
         TargetTrackingScalingPolicyConfiguration={
-            "TargetValue": 5.0,  # The target value for the metric. - here the metric is - SageMakerVariantInvocationsPerInstance
+            "TargetValue": 5.0,
+            # The target value for the metric. - here the metric is - SageMakerVariantInvocationsPerInstance
             "CustomizedMetricSpecification": {
                 "MetricName": "ApproximateBacklogSizePerInstance",
                 "Namespace": "AWS/SageMaker",
                 "Dimensions": [{"Name": "EndpointName", "Value": endpoint_name}],
                 "Statistic": "Average",
             },
-            "ScaleInCooldown": 300,  # The cooldown period helps you prevent your Auto Scaling group from launching or terminating
-            "ScaleOutCooldown": 300  # ScaleOutCooldown - The amount of time, in seconds, after a scale out activity completes before another scale out activity can start.
+            "ScaleInCooldown": 1800,
+            # The cooldown period helps you prevent your Auto Scaling group from launching or terminating
+            "ScaleOutCooldown": 300
+            # ScaleOutCooldown - The amount of time, in seconds, after a scale out activity completes before another
+            # scale out activity can start.
         },
     )
-    
+
     step_policy_response = client.put_scaling_policy(
         PolicyName="HasBacklogWithoutCapacity-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the service that provides the resource.
@@ -135,16 +132,18 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
         PolicyType="StepScaling",  # 'StepScaling' or 'TargetTrackingScaling'
         StepScalingPolicyConfiguration={
-            "AdjustmentType": "ChangeInCapacity", # Specifies whether the ScalingAdjustment value in the StepAdjustment property is an absolute number or a percentage of the current capacity. 
-            "MetricAggregationType": "Average", # The aggregation type for the CloudWatch metrics.
-            "Cooldown": 300, # The amount of time, in seconds, to wait for a previous scaling activity to take effect. 
-            "StepAdjustments": # A set of adjustments that enable you to scale based on the size of the alarm breach.
-            [
-                {
-                "MetricIntervalLowerBound": 0,
-                "ScalingAdjustment": 1
-                }
-            ]
+            "AdjustmentType": "ChangeInCapacity",
+            # Specifies whether the ScalingAdjustment value in the StepAdjustment property is an absolute number or a
+            # percentage of the current capacity.
+            "MetricAggregationType": "Average",  # The aggregation type for the CloudWatch metrics.
+            "Cooldown": 1800,  # The amount of time, in seconds, to wait for a previous scaling activity to take effect.
+            "StepAdjustments":  # A set of adjustments that enable you to scale based on the size of the alarm breach.
+                [
+                    {
+                        "MetricIntervalLowerBound": 0,
+                        "ScalingAdjustment": 1
+                    }
+                ]
         },
     )
 
@@ -155,19 +154,20 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
         MetricName='HasBacklogWithoutCapacity',
         Namespace='AWS/SageMaker',
         Statistic='Average',
-        EvaluationPeriods= 2,
-        DatapointsToAlarm= 2,
-        Threshold= 1,
+        EvaluationPeriods=2,
+        DatapointsToAlarm=2,
+        Threshold=1,
         ComparisonOperator='GreaterThanOrEqualToThreshold',
         TreatMissingData='missing',
         Dimensions=[
-            { 'Name':'EndpointName', 'Value': endpoint_name },
+            {'Name': 'EndpointName', 'Value': endpoint_name},
         ],
-        Period= 60,
+        Period=60,
         AlarmActions=[step_policy_response['PolicyARN']]
     )
 
     print(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
+
 
 def check_and_enable_autoscaling(table_name, key, field_name, endpoint_name, variant_name):
     autoscaling_enabled = get_ddb_value(table_name, key, field_name)
@@ -197,5 +197,5 @@ def describe_endpoint(name):
     except Exception as e:
         print(e)
         print('Unable to describe endpoint.')
-        raise(e)
+        raise (e)
     return response
