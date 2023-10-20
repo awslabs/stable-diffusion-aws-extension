@@ -275,16 +275,25 @@ def initialize():
     # modules.sd_models.setup_model()
     # startup_timer.record("setup SD model")
 
-    # # TODO: do we need setup_model for codeformer? YX
-    # codeformer.setup_model(cmd_opts.codeformer_models_path)
-    # startup_timer.record("setup codeformer")
+    from modules import codeformer_model
+    codeformer_model.setup_model(cmd_opts.codeformer_models_path)
+    startup_timer.record("setup codeformer")
 
-    # # TODO: do we need setup_model for gfpgan? YX
-    # gfpgan.setup_model(cmd_opts.gfpgan_models_path)
-    # startup_timer.record("setup gfpgan")
+    from modules import gfpgan_model
+    gfpgan_model.setup_model(cmd_opts.gfpgan_models_path)
+    startup_timer.record("setup gfpgan")
 
     # initialize_rest(reload_script_modules=False)
     sd_models.list_models()
+
+    # TODO: do we need load_upscalers?
+    from modules import modelloader
+    modelloader.load_upscalers()
+    startup_timer.record("load upscalers")
+
+    from modules import sd_vae
+    sd_vae.refresh_vae_list()
+    startup_timer.record("refresh VAE")
 
     # TODO: do we need load scripts? YX
     with startup_timer.subcategory("load scripts"):

@@ -45,6 +45,8 @@ from modules.api import models
 import logging
 
 from dreambooth.sd_to_diff import extract_checkpoint
+from diffusers import AutoPipelineForText2Image
+import torch
 
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
@@ -251,7 +253,40 @@ class Api:
                     # for idx in range(0, min((alwayson_script.args_to - alwayson_script.args_from), len(request.alwayson_scripts[alwayson_script_name]["args"]))):
                     #     script_args[alwayson_script.args_from + idx] = request.alwayson_scripts[alwayson_script_name]["args"][idx]
         return script_args
+    
+    def wuerstchen_pipeline(self, payload):
+        txt2imgreq = models.StableDiffusionTxt2ImgProcessingAPI(**payload)
+        
+        populate = txt2imgreq.copy(update={  # Override __init__ params
+            "sampler_name": validate_sampler_name(txt2imgreq.sampler_name or txt2imgreq.sampler_index),
+            "do_not_save_samples": not txt2imgreq.save_images,
+            "do_not_save_grid": not txt2imgreq.save_images,
+        })
+        if populate.sampler_name:
+            populate.sampler_index = None  # prevent a warning later on
+        args = vars(populate)
+        args.pop('script_name', None)
+        args.pop('script_args', None) # will refeed them to the pipeline directly after initializing them
+        args.pop('alwayson_scripts', None)
 
+        send_images = args.pop('send_images', True)
+        args.pop('save_images', None)
+        if shared.sd_pipeline.pipeline_name != 'wuerstchen':
+            shared.sd_pipeline =  AutoPipelineForText2Image.from_pretrained("warp-diffusion/wuerstchen", torch_dtype=torch.float16).to('cuda')
+            shared.sd_pipeline.pipeline_name = 'wuerstchen'
+            shared.opts.data["sd_model_checkpoint_path"] = 'wuerstchen'
+        output = shared.sd_pipeline(
+            prompt=args['prompt'],
+            negative_prompt=args['negative_prompt'],
+            height=args['height'],
+            width=args['width'],
+            prior_guidance_scale=args['cfg_scale'],
+            decoder_guidance_scale=0.0,
+            ).images
+        
+        b64images = list(map(encode_pil_to_base64, output)) if send_images else []
+        return models.TextToImageResponse(images=b64images, parameters=vars(txt2imgreq))
+    
     def txt2img_pipeline(self, payload):
         txt2imgreq = models.StableDiffusionTxt2ImgProcessingAPI(**payload)
         script_runner = scripts.scripts_txt2img
@@ -364,29 +399,6 @@ class Api:
                     logger.info(f" : {payload}")
             else:
                 logger.info(f" : {payload}")
-
-        # logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}")
-        # logger.info(f"task is {req.task}")
-        # logger.info(f"checkpoint_info is {req.checkpoint_info}")
-        # logger.info(f"models is {req.models}")
-        # logger.info(f"txt2img_payload is: ")
-        # txt2img_payload = {} if req.txt2img_payload is None else json.loads(req.txt2img_payload.json())
-        # show_slim_dict(txt2img_payload)
-        # logger.info(f"img2img_payload is: ")
-        # img2img_payload = {} if req.img2img_payload is None else json.loads(req.img2img_payload.json())
-        # show_slim_dict(img2img_payload)
-        # logger.info(f"extra_single_payload is: ")
-        # extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-        #     req.extras_single_payload.json())
-        # show_slim_dict(extra_single_payload)
-        # logger.info(f"extra_batch_payload is: ")
-        # extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-        #     req.extras_batch_payload.json())
-        # show_slim_dict(extra_batch_payload)
-        # logger.info(f"interrogate_payload is: ")
-        # interrogate_payload = {} if req.interrogate_payload is None else json.loads(
-        #     req.interrogate_payload.json())
-        # show_slim_dict(interrogate_payload)
 
         
         print(f'current version: dev')

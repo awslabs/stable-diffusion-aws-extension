@@ -121,47 +121,6 @@ def load_vae_dict(filename, map_location):
     vae_dict_1 = {k: v for k, v in vae_ckpt.items() if k[0:4] != "loss" and k not in vae_ignore_keys}
     return vae_dict_1
 
-
-# def load_vae(model, vae_file=None, vae_source="from unknown source"):
-#     global vae_dict, loaded_vae_file
-#     # save_settings = False
-
-#     cache_enabled = shared.opts.sd_vae_checkpoint_cache > 0
-
-#     if vae_file:
-#         if cache_enabled and vae_file in checkpoints_loaded:
-#             # use vae checkpoint cache
-#             print(f"Loading VAE weights {vae_source}: cached {get_filename(vae_file)}")
-#             store_base_vae(model)
-#             _load_vae_dict(model, checkpoints_loaded[vae_file])
-#         else:
-#             assert os.path.isfile(vae_file), f"VAE {vae_source} doesn't exist: {vae_file}"
-#             print(f"Loading VAE weights {vae_source}: {vae_file}")
-#             store_base_vae(model)
-
-#             vae_dict_1 = load_vae_dict(vae_file, map_location=shared.weight_load_location)
-#             _load_vae_dict(model, vae_dict_1)
-
-#             if cache_enabled:
-#                 # cache newly loaded vae
-#                 checkpoints_loaded[vae_file] = vae_dict_1.copy()
-
-#         # clean up cache if limit is reached
-#         if cache_enabled:
-#             while len(checkpoints_loaded) > shared.opts.sd_vae_checkpoint_cache + 1: # we need to count the current model
-#                 checkpoints_loaded.popitem(last=False)  # LRU
-
-#         # If vae used is not in dict, update it
-#         # It will be removed on refresh though
-#         vae_opt = get_filename(vae_file)
-#         if vae_opt not in vae_dict:
-#             vae_dict[vae_opt] = vae_file
-
-#     elif loaded_vae_file:
-#         restore_base_vae(model)
-
-#     loaded_vae_file = vae_file
-
 def load_vae(model, vae_file=None, vae_source="from unknown source"):
     global vae_dict, loaded_vae_file
     # save_settings = False
@@ -217,13 +176,15 @@ unspecified = object()
 
 
 def reload_vae_weights(sd_pipeline=None, vae_file=unspecified):
-    from modules import lowvram, devices, sd_hijack
+    from modules import lowvram, devices
+    global loaded_vae_file
 
     if not sd_pipeline:
         sd_pipeline = shared.sd_pipeline
 
-    checkpoint_info = sd_pipeline.sd_checkpoint_info
+    checkpoint_info = shared.opts.data["sd_checkpoint_info"]
     checkpoint_file = checkpoint_info.filename
+
 
     if vae_file == unspecified:
         vae_file, vae_source = resolve_vae(checkpoint_file)
@@ -240,8 +201,9 @@ def reload_vae_weights(sd_pipeline=None, vae_file=unspecified):
 
     from diffusers.models import AutoencoderKL
     import torch
-    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
+    vae = AutoencoderKL.from_single_file(vae_file, torch_dtype=torch.float16).to("cuda")
     sd_pipeline.vae = vae
+    
     if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
         sd_pipeline.to(devices.device)
         

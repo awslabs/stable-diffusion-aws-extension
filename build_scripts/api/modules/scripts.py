@@ -621,7 +621,8 @@ class ScriptRunner:
     def before_hr(self, p):
         for script in self.alwayson_scripts:
             try:
-                script_args = p.script_args[script.args_from:script.args_to]
+                script_filename = script.filename
+                script_args = p.script_args[script_filename]
                 script.before_hr(p, *script_args)
             except Exception:
                 errors.report(f"Error running before_hr: {script.filename}", exc_info=True)

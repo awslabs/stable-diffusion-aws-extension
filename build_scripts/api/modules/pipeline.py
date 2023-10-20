@@ -828,22 +828,25 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts, controlnet_image=controlnet_images, ref_img=ref_img)
             
-            needs_upcasting = False
-            if 'XL' in p.sd_pipeline.pipeline_name:
-                needs_upcasting = p.sd_pipeline.vae.dtype == torch.float16 and p.sd_pipeline.vae.config.force_upcast
+            if not p.enable_hr:
+                needs_upcasting = False
+                if 'XL' in p.sd_pipeline.pipeline_name:
+                    needs_upcasting = p.sd_pipeline.vae.dtype == torch.float16 and p.sd_pipeline.vae.config.force_upcast
+                    if needs_upcasting:
+                        p.sd_pipeline.upcast_vae()
+                        samples_ddim = samples_ddim.to(next(iter(p.sd_pipeline.vae.post_quant_conv.parameters())).dtype)
+                latents = 1 / p.sd_pipeline.vae.config.scaling_factor * samples_ddim
+                image = p.sd_pipeline.vae.decode(latents).sample
+                # # cast back to fp16 if needed
                 if needs_upcasting:
-                    p.sd_pipeline.upcast_vae()
-                    samples_ddim = samples_ddim.to(next(iter(p.sd_pipeline.vae.post_quant_conv.parameters())).dtype)
-            latents = 1 / p.sd_pipeline.vae.config.scaling_factor * samples_ddim
-            image = p.sd_pipeline.vae.decode(latents).sample
-            # # cast back to fp16 if needed
-            if needs_upcasting:
-                p.sd_pipeline.vae.to(dtype=torch.float16)
+                    p.sd_pipeline.vae.to(dtype=torch.float16)
 
-            image = (image / 2 + 0.5).clamp(0, 1)
-            x_samples_ddim = image
+                image = (image / 2 + 0.5).clamp(0, 1)
+                x_samples_ddim = image
 
-            del samples_ddim
+                del samples_ddim
+            else:
+                x_samples_ddim = samples_ddim
 
             # if lowvram.is_enabled(shared.sd_model):
             #     lowvram.send_everything_to_cpu()
@@ -855,9 +858,10 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             for i, x_sample in enumerate(x_samples_ddim):
                 p.batch_index = i
-
-                x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
-                x_sample = x_sample.astype(np.uint8)
+                
+                if not p.enable_hr:
+                    x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
+                    x_sample = x_sample.astype(np.uint8)
 
                 if p.restore_faces:
                     if opts.save and not p.do_not_save_samples and opts.save_images_before_face_restoration:
@@ -1165,105 +1169,26 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
             info = create_infotext(self, self.all_prompts, self.all_seeds, self.all_subseeds, [], iteration=self.iteration, position_in_batch=index)
             images.save_image(image, self.outpath_samples, "", seeds[index], prompts[index], opts.samples_format, info=info, p=self, suffix="-before-highres-fix")
 
-        if latent_scale_mode is not None:
-            for i in range(samples.shape[0]):
-                save_intermediate(samples, i)
-            samples = torch.nn.functional.interpolate(samples, size=(target_height // opt_f, target_width // opt_f), mode=latent_scale_mode["mode"], antialias=latent_scale_mode["antialias"])
-        else:
-            decoded_samples = sd_pipeline.vae.decode(samples).sample
-            lowres_samples = torch.clamp((decoded_samples + 1.0) / 2.0, min=0.0, max=1.0)
+        samples = 1 / self.sd_pipeline.vae.config.scaling_factor * samples
+        decoded_samples = self.sd_pipeline.vae.decode(samples).sample
+        lowres_samples = torch.clamp((decoded_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
-            batch_images = []
-            for i, x_sample in enumerate(lowres_samples):
-                x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
-                x_sample = x_sample.astype(np.uint8)
-                image = Image.fromarray(x_sample)
+        batch_images = []
+        for i, x_sample in enumerate(lowres_samples):
+            x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
+            x_sample = x_sample.astype(np.uint8)
+            image = Image.fromarray(x_sample)
 
-                save_intermediate(image, i)
+            save_intermediate(image, i)
 
-                image = images.resize_image(0, image, target_width, target_height, upscaler_name=self.hr_upscaler)
-                image = np.array(image).astype(np.float32) / 255.0
-                image = np.moveaxis(image, 2, 0)
-                batch_images.append(image)
-
-            decoded_samples = torch.from_numpy(np.array(batch_images))
-            decoded_samples = decoded_samples.to(shared.device)
-            decoded_samples = 2. * decoded_samples - 1.
-
-            samples = sd_pipeline.vae.encode(decoded_samples).latent_dist.sample(generator)
-            samples = sd_pipeline.vae.config.scaling_factor * samples
-
+            image = images.resize_image(0, image, target_width, target_height, upscaler_name=self.hr_upscaler)
+            image = np.array(image)
+            #image = np.array(image).astype(np.float32) / 255.0
+            #image = np.moveaxis(image, 2, 0)
+            batch_images.append(image)
+        samples = batch_images
 
         shared.state.nextjob()
-
-        img2img_sampler_name = self.hr_sampler_name or self.sampler_name
-
-        if self.sampler_name in ['PLMS', 'UniPC']:  # PLMS/UniPC do not support img2img so we just silently switch to DDIM
-            img2img_sampler_name = 'DDIM'
-
-        # update sampler for img2img pipeline
-        sd_pipeline = sd_samplers.update_sampler(img2img_sampler_name, self.sd_pipeline, self.pipeline_name)
-        
-        samples = samples[:, :, self.truncate_y//2:samples.shape[2]-(self.truncate_y+1)//2, self.truncate_x//2:samples.shape[3]-(self.truncate_x+1)//2]
-        num_inference_steps = self.hr_second_pass_steps or self.steps
-        devices.torch_gc()
-        from diffusers import StableDiffusionImg2ImgPipeline, StableDiffusionXLImg2ImgPipeline
-        num_inference_steps = int(float(num_inference_steps) / self.denoising_strength) + 1
-        if 'XL' not in sd_pipeline.pipeline_name:
-           sd_pipeline = StableDiffusionImg2ImgPipeline(**sd_pipeline.components)
-           images = sd_pipeline(
-                prompt = prompt,
-                image = samples,
-                strength = self.denoising_strength,
-                num_inference_steps = num_inference_steps,
-                guidance_scale = guidance_scale,
-                negative_prompt = negative_prompt,
-                num_images_per_prompt= num_images_per_prompt,
-                eta = eta,
-                generator = generator,
-                prompt_embeds = prompt_embeds,
-                negative_prompt_embeds= negative_prompt_embeds,
-                output_type = output_type,
-                return_dict = True,
-                callback = callback,
-                callback_steps = callback_steps,
-                cross_attention_kwargs = cross_attention_kwargs).images[0]
-        else:
-            sd_pipeline = StableDiffusionXLImg2ImgPipeline(**sd_pipeline.components)
-            images = sd_pipeline(
-                prompt = prompt,
-                prompt_2 = prompt_2,
-                image = samples,
-                strength = self.denoising_strength,
-                num_inference_steps = num_inference_steps,
-                denoising_start = denoising_start,
-                denoising_end = denoising_end,
-                guidance_scale = guidance_scale,
-                negative_prompt = negative_prompt,
-                negative_prompt_2 = negative_prompt_2,
-                num_images_per_prompt = num_images_per_prompt,
-                eta = eta,
-                generator = generator,
-                latents = None,
-                prompt_embeds = prompt_embeds,
-                negative_prompt_embeds = negative_prompt_embeds,
-                pooled_prompt_embeds = pooled_prompt_embeds,
-                negative_pooled_prompt_embeds = negative_pooled_prompt_embeds,
-                output_type = output_type,
-                return_dict = True,
-                callback = callback,
-                callback_steps = callback_steps,
-                cross_attention_kwargs = cross_attention_kwargs,
-                guidance_rescale = guidance_rescale,
-                original_size = original_size,
-                crops_coords_top_left = crops_coords_top_left,
-                target_size = target_size,
-                aesthetic_score = aesthetic_score,
-                negative_aesthetic_score = negative_aesthetic_score).images[0]
-
-        if not self.disable_extra_networks:
-            with devices.autocast():
-                extra_networks.activate(self, self.hr_extra_network_data)
 
         if self.scripts is not None:
             self.scripts.before_hr(self)
