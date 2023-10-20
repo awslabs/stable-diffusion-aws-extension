@@ -25,7 +25,7 @@ from modules.ui_components import ToolButton
 dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
-
+CONTROLNET_MODEL_COUNT = 3
 
 def dummy_function(*args, **kwargs):
     return []
@@ -91,7 +91,7 @@ class SageMakerUI(scripts.Script):
 
     def after_component(self, component, **kwargs):
         # controlnet models count
-        max_models = shared.opts.data.get("control_net_unit_count", 10)
+        max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
         if type(component) is gr.Button:
             if self.is_txt2img and getattr(component, 'elem_id', None) == f'txt2img_generate':
                 self.txt2img_generate_btn = component
@@ -186,7 +186,7 @@ class SageMakerUI(scripts.Script):
             else:
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
             result.append(sagemaker_ui.load_lora_models(pr.username, pr.username))
-            max_models = shared.opts.data.get("control_net_unit_count", 10)
+            max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
                 for i in range(max_models):
