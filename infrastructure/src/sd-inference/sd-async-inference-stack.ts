@@ -8,10 +8,11 @@ import {
   RemovalPolicy,
   aws_ecr,
   CustomResource,
-  NestedStack, aws_dynamodb, aws_sns,
+  NestedStack, aws_dynamodb, aws_sns, aws_apigateway,
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
+import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -26,6 +27,8 @@ import { Construct } from 'constructs';
 import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
+import { ListAllSagemakerEndpointsApi, ListAllSageMakerEndpointsApiProps } from './sagemaker-endpoints-listall';
+import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
@@ -42,6 +45,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   routers: {[key: string]: Resource};
   s3_bucket: s3.Bucket;
   training_table: dynamodb.Table;
+  multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
   ecr_image_tag: string;
   sd_inference_job_table: aws_dynamodb.Table;
@@ -49,6 +53,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   useExist: string;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -62,18 +67,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       throw new Error('default_inference_ecr_image is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
-
-    // if (!props?.api_gate_way) {
-    //   throw new Error('api_gate_way is required');
-    // }
-    // const restful_api = <apigw.RestApi>apigw.RestApi.fromRestApiAttributes(
-    //   this,
-    //   'ImportedRestApi',
-    //   {
-    //     restApiId: props.api_gate_way.restApiId,
-    //     rootResourceId: props.api_gate_way.restApiRootResourceId,
-    //   },
-    // );
 
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
@@ -91,6 +84,7 @@ export class SDAsyncInferenceStack extends NestedStack {
         router: inferV2Router,
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
+        multiUserTable: props.multiUserTable,
       },
     );
 
@@ -104,6 +98,33 @@ export class SDAsyncInferenceStack extends NestedStack {
         inferenceJobTable: sd_inference_job_table,
         router: inferV2Router,
         s3Bucket: props.s3_bucket,
+        srcRoot: srcRoot,
+      },
+    );
+
+    new ListAllSagemakerEndpointsApi(
+      this, 'sd-infer-v2-allEndpoints',
+        <ListAllSageMakerEndpointsApiProps>{
+          router: props.routers.endpoints,
+          commonLayer: props.commonLayer,
+          endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
+          httpMethod: 'GET',
+          srcRoot: srcRoot,
+          authorizer: props.authorizer,
+        },
+    );
+
+    new ListAllInferencesApi(
+      this, 'sd-infer-v2-allInferences',
+      {
+        inferenceJobTable: sd_inference_job_table,
+        authorizer: props.authorizer,
+        commonLayer: props.commonLayer,
+        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        multiUserTable: props.multiUserTable,
+        httpMethod: 'GET',
+        router: props.routers.inferences,
         srcRoot: srcRoot,
       },
     );
@@ -275,21 +296,23 @@ export class SDAsyncInferenceStack extends NestedStack {
     const deploy_sagemaker_endpoint = inference.addResource(
       'deploy-sagemaker-endpoint',
     );
-    deploy_sagemaker_endpoint.addMethod('POST', txt2imgIntegration, {
+    deploy_sagemaker_endpoint.addMethod('POST', txt2imgIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: props.authorizer,
     });
 
-    const list_endpoint_deployment_jobs = inference.addResource(
-      'list-endpoint-deployment-jobs',
-    );
-    list_endpoint_deployment_jobs.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
+    // const list_endpoint_deployment_jobs = inference.addResource(
+    //   'list-endpoint-deployment-jobs',
+    // );
+    // list_endpoint_deployment_jobs.addMethod('GET', txt2imgIntegration, {
+    //   apiKeyRequired: true,
+    // });
 
     const delete_deployment_jobs = inference.addResource(
       'delete-sagemaker-endpoint');
-    delete_deployment_jobs.addMethod('POST', txt2imgIntegration, {
+    delete_deployment_jobs.addMethod('POST', txt2imgIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: props.authorizer,
     });
 
     const list_inference_jobs = inference.addResource(

@@ -17,7 +17,7 @@ import tomli_w
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common.util import load_json_from_s3, publish_msg, save_json_to_file 
+from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
 from common.const import LoraTrainType
@@ -181,7 +181,8 @@ def create_train_job_api(raw_event, context):
             checkpoint_type=event.train_type,
             s3_location=f's3://{bucket_name}/{base_key}/output',
             checkpoint_status=CheckPointStatus.Initial,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=['*']  # fixme: not in scope yet, need fix later for train process
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         train_input_s3_location = f's3://{bucket_name}/{input_location}'

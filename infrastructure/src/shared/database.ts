@@ -53,6 +53,16 @@ export class Database {
           type: aws_dynamodb.AttributeType.STRING,
         },
       },
+      MultiUserTable: {
+        partitionKey: {
+          name: 'kind',
+          type: aws_dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'sort_key',
+          type: AttributeType.STRING,
+        },
+      },
     };
 
     const shouldCreateDDBTableCondition = new CfnCondition(
