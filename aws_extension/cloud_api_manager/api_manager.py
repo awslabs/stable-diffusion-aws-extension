@@ -132,7 +132,11 @@ class CloudApiManager:
                         endpoint_status = obj["status"]
 
                     # Skip if status is 'deleted'
-                    if endpoint_status == 'deleted':
+                    if obj["endpoint_status"] == 'deleted':
+                        continue
+
+                    # Compatible with fields used in older versions
+                    if obj["status"] == 'deleted':
                         continue
 
                     if "endTime" in obj:
