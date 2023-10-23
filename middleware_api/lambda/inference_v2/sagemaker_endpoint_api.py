@@ -1,4 +1,4 @@
-import logging
+from aws_lambda_powertools import Logger
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -8,7 +8,7 @@ from multi_users.utils import get_user_roles, check_user_permissions
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
-logger = logging.getLogger(__name__)
+logger = Logger()
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -42,6 +42,10 @@ def list_all_sagemaker_endpoints(event, ctx):
         event['x-auth']['role'] = user_roles
 
     for row in scan_rows:
+        # if status is deleted then skip
+        # todo: will improved this later
+        if 'status' in row and row['status']['S'] == 'deleted':
+            continue
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
         if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
             results.append(endpoint.__dict__)
