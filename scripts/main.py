@@ -7,7 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_embeddings_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -21,15 +21,11 @@ from aws_extension.inference_scripts_helper.scripts_processor import process_arg
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
-from scripts import global_state
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
-global_username = None
-on_cloud = False
-
 
 def dummy_function(*args, **kwargs):
     return []
@@ -182,39 +178,7 @@ class SageMakerUI(scripts.Script):
         pass
 
     def ui(self, is_img2img):
-        def decorator_controlnet_function(func):
-            def wrapper(*args, **kwargs):
-                logger.debug(f"monitoring ：{func.__name__} was invoked")
-                global on_cloud
-                logger.debug(f"on_cloud param is {on_cloud}")
-                if on_cloud:
-                    global global_username
-                    controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
-                    logger.debug(f'controlnet_model_list : {controlnet_model_list}')
-                    original_dict = [('None', None)]
-                    for item in controlnet_model_list:
-                        if item == 'None':
-                            continue
-                        key = item[0]
-                        original_dict.append((key, ''))
-                    from collections import OrderedDict
-                    new_ordered_dict = OrderedDict(original_dict)
-                    logger.debug(f'{new_ordered_dict} new_ordered_dict')
-                    global_state.cn_models = new_ordered_dict
-                    original_result = func(*args, **kwargs)
-                    modified_result = list(original_result)
-                    modified_result[1] = list(new_ordered_dict.keys())
-                    return modified_result
-                else:
-                    original_result = func(*args, **kwargs)
-                    return original_result
-            return wrapper
-        global_state.select_control_type = decorator_controlnet_function(global_state.select_control_type)
-
         def _check_generate(model_selected, pr: gr.Request):
-            global global_username
-            global_username = pr.username
-            global on_cloud
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
@@ -386,10 +350,8 @@ class SageMakerUI(scripts.Script):
         p.setup_conds()
 
         # load all embedding models
-        # models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
-        #                         model_hijack.embedding_db.word_embeddings.values()]
-        global global_username
-        models['embeddings'] = sagemaker_ui.load_embeddings_list(global_username, global_username)
+        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
+                                model_hijack.embedding_db.word_embeddings.values()]
 
         err = None
         try:
