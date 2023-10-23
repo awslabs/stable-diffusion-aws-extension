@@ -182,6 +182,33 @@ class SageMakerUI(scripts.Script):
         pass
 
     def ui(self, is_img2img):
+        def decorator_controlnet_refresh_function(func):
+            def wrapper(*args, **kwargs):
+                logger.debug("update_cn_models was invoked")
+                global on_cloud
+                if on_cloud:
+                    original_result = func(*args, **kwargs)
+                    global global_username
+                    controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
+                    logger.debug(f'controlnet_model_list : {controlnet_model_list}')
+                    original_dict = [('None', None)]
+                    for item in controlnet_model_list:
+                        if item == 'None':
+                            continue
+                        key = item[0]
+                        original_dict.append((key, ''))
+                    from collections import OrderedDict
+                    new_ordered_dict = OrderedDict(original_dict)
+                    logger.debug(f'{new_ordered_dict} new_ordered_dict')
+                    global_state.cn_models = new_ordered_dict
+                    return original_result
+                else:
+                    original_result = func(*args, **kwargs)
+                    return original_result
+                return wrapper
+            return wrapper
+        global_state.update_cn_models = decorator_controlnet_refresh_function(global_state.update_cn_models)
+
         def decorator_controlnet_function(func):
             def wrapper(*args, **kwargs):
                 logger.debug(f"monitoring ：{func.__name__} was invoked")
