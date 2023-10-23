@@ -15,6 +15,7 @@ from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 import modules.ui
 from utils import get_variable_from_json, save_variable_to_json
+import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -296,7 +297,7 @@ def _list_models(username, user_token):
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
         models.append([model['name'], model['type'], allowed,
-                       'In-Use' if model['status'] == 'Active' else 'Disabled'])
+                       'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -452,8 +453,8 @@ def model_upload_tab():
 
         current_page = gr.State(0)
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'status'],
-                                     datatype=['str', 'str', 'str', 'str']
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
+                                     datatype=['str', 'str', 'str', 'str', 'str']
                                      )
         with gr.Row():
             model_list_prev_btn = gr.Button(value='Previous')

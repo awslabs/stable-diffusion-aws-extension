@@ -23,7 +23,7 @@ For users who need explicit IAM permissions for strict account control, we provi
 >**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
 #### **Option 2**: Use AWS CDK(Cloud Development Kit)
-**Prerequisite**
+**Prerequisites**
 To set up the development environment, you will need have AWS account and tools with preferred version below to install from source code:
 - NPM, Node
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
