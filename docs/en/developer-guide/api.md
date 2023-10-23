@@ -2398,6 +2398,10 @@ api_key
 # /train-api/train(POST)
 
 <a id="train-api-post"></a>
+
+The solution support two kinds of training: DreamBooth and Kohya.
+
+## DreamBooth
 ### **Code samples :**
 
 Python example code:
@@ -2576,6 +2580,131 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 	}
 }
 ```
+
+## Kohya
+
+### **Code samples :**
+
+Python example code:
+
+```Python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
+}
+
+const inputBody = {
+	"train_type": "Stable-diffusion",
+  "lora_train_type": "kohya",
+	"params": {
+    "model_name": "test",
+    "training_params": {
+      "training_instance_type": "ml.g5.2xlarge",
+      "model_type": "Lora",
+      "s3_model_path": "s3://<model_path>",
+      "s3_data_path": "s3://<dataset>"
+    },
+    "config_params": { --- Kohya parameters
+      "additional_network": {
+          "network_dim": 16,
+          "network_train_unet_only": true
+      },
+      "optimizer_arguments": {
+          "unet_lr": 1e-4
+      },
+      ...
+    }
+	}
+}
+
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train', headers = headers, json = inputBody)
+
+print(r.json())
+
+```
+
+Javascript example code：
+
+```javascript
+const inputBody = '{
+	"train_type": "Stable-diffusion",
+  "lora_train_type": "kohya",
+	"params": {
+    "model_name": "test",
+    "training_params": {
+      "training_instance_type": "ml.g5.2xlarge",
+      "model_type": "Lora",
+      "s3_model_path": "s3://<model_path>",
+      "s3_data_path": "s3://<dataset>"
+    },
+    "config_params": { --- Kohya parameters
+      "additional_network": {
+          "network_dim": 16,
+          "network_train_unet_only": true
+      },
+      "optimizer_arguments": {
+          "unet_lr": 1e-4
+      },
+      ...
+    }
+	}
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json',
+  'x-api-key':'API_TOKEN_VALUE'
+};
+
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /train-api/train`
+
+> Body parameter
+
+```json
+
+{
+	"train_type": "Stable-diffusion",
+  "lora_train_type": "kohya",
+	"params": {
+    "model_name": "test",
+    "training_params": {
+      "training_instance_type": "ml.g5.2xlarge",
+      "model_type": "Lora",
+      "s3_model_path": "s3://<model_path>",
+      "s3_data_path": "s3://<dataset>"
+    },
+    "config_params": { --- Kohya parameters
+      "additional_network": {
+          "network_dim": 16,
+          "network_train_unet_only": true
+      },
+      "optimizer_arguments": {
+          "unet_lr": 1e-4
+      },
+      ...
+    }
+	}
+}
+
+```
+
+
 
 <h3 id="create-train-job-parameters">Parameters</h3>
 
