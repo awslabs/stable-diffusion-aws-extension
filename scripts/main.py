@@ -255,9 +255,9 @@ class SageMakerUI(scripts.Script):
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
             # sync append fresh button
-            if max_models > 0:
-                for i in range(max_models):
-                    result.append(gr.update(visible=not on_cloud))
+            # if max_models > 0:
+            #     for i in range(max_models):
+            #         result.append(gr.update(visible=not on_cloud))
             return result
 
         if not is_img2img:
@@ -268,8 +268,8 @@ class SageMakerUI(scripts.Script):
                        self.txt2img_refiner_ckpt_dropdown, lora_model_state]
             for value in self.txt2img_controlnet_dropdown_batch.values():
                 outputs.append(value)
-            for value in self.txt2img_controlnet_refresh_btn_batch.values():
-                outputs.append(value)
+            # for value in self.txt2img_controlnet_refresh_btn_batch.values():
+            #     outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=outputs)
 
@@ -283,8 +283,8 @@ class SageMakerUI(scripts.Script):
                        self.img2img_refiner_ckpt_dropdown, lora_model_state]
             for value in self.img2img_controlnet_dropdown_batch.values():
                 outputs.append(value)
-            for value in self.img2img_controlnet_refresh_btn_batch.values():
-                outputs.append(value)
+            # for value in self.img2img_controlnet_refresh_btn_batch.values():
+            #     outputs.append(value)
             model_on_cloud.change(_check_generate, inputs=model_on_cloud,
                                   outputs=outputs)
             return [model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
