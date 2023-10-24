@@ -222,7 +222,7 @@ class SageMakerUI(scripts.Script):
                     for item in controlnet_model_list:
                         if item == 'None':
                             continue
-                        key = item[0]
+                        key = item
                         original_dict.append((key, ''))
                     from collections import OrderedDict
                     new_ordered_dict = OrderedDict(original_dict)
