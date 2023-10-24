@@ -1120,7 +1120,7 @@ def load_controlnet_list(username, user_token):
 
 def load_embeddings_list(username, user_token):
     # vae_model_on_cloud = ['None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+    vae_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
     return vae_model_on_cloud
 
 
