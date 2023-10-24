@@ -27,8 +27,11 @@ dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
-global_username = None
-on_cloud = False
+
+import threading
+local = threading.local()
+# global_username = None
+# on_cloud = False
 
 
 def dummy_function(*args, **kwargs):
@@ -185,10 +188,12 @@ class SageMakerUI(scripts.Script):
         def decorator_controlnet_refresh_function(func):
             def wrapper(*args, **kwargs):
                 logger.debug("update_cn_models was invoked")
-                global on_cloud
+                # global on_cloud
+                on_cloud = local.on_cloud
                 if on_cloud:
                     original_result = func(*args, **kwargs)
-                    global global_username
+                    # global global_username
+                    global_username = local.username
                     controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
                     logger.debug(f'controlnet_model_list : {controlnet_model_list}')
                     original_dict = [('None', None)]
@@ -212,10 +217,12 @@ class SageMakerUI(scripts.Script):
         def decorator_controlnet_function(func):
             def wrapper(*args, **kwargs):
                 logger.debug(f"monitoring ：{func.__name__} was invoked")
-                global on_cloud
+                # global on_cloud
+                on_cloud = local.on_cloud
                 logger.debug(f"on_cloud param is {on_cloud}")
                 if on_cloud:
-                    global global_username
+                    # global global_username
+                    global_username = local.username
                     controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
                     logger.debug(f'controlnet_model_list : {controlnet_model_list}')
                     original_dict = [('None', None)]
@@ -239,10 +246,12 @@ class SageMakerUI(scripts.Script):
         global_state.select_control_type = decorator_controlnet_function(global_state.select_control_type)
 
         def _check_generate(model_selected, pr: gr.Request):
-            global global_username
-            global_username = pr.username
-            global on_cloud
+            # global global_username
+            # global_username = pr.username
+            local.username = pr.username
+            # global on_cloud
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            local.on_cloud = on_cloud
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
@@ -415,7 +424,8 @@ class SageMakerUI(scripts.Script):
         # load all embedding models
         # models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
         #                         model_hijack.embedding_db.word_embeddings.values()]
-        global global_username
+        # global global_username
+        global_username = local.username
         models['embeddings'] = sagemaker_ui.load_embeddings_list(global_username, global_username)
 
         err = None
