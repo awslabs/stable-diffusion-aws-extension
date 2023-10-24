@@ -250,6 +250,7 @@ class SageMakerUI(scripts.Script):
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+            result.append(sagemaker_ui.load_hypernetworks_models(pr.username, pr.username))
             result.append(sagemaker_ui.load_lora_models(pr.username, pr.username))
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
@@ -265,9 +266,9 @@ class SageMakerUI(scripts.Script):
         if not is_img2img:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
                 secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud, lora_model_state = sagemaker_ui.create_ui(is_img2img)
+                modelmerger_merge_on_cloud, hypernetworks_models_state, lora_model_state = sagemaker_ui.create_ui(is_img2img)
             outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
-                       self.txt2img_refiner_ckpt_dropdown, lora_model_state]
+                       self.txt2img_refiner_ckpt_dropdown, hypernetworks_models_state, lora_model_state]
             for value in self.txt2img_controlnet_dropdown_batch.values():
                 outputs.append(value)
             # for value in self.txt2img_controlnet_refresh_btn_batch.values():
@@ -280,9 +281,9 @@ class SageMakerUI(scripts.Script):
         else:
             model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud, lora_model_state = sagemaker_ui.create_ui(is_img2img)
+                modelmerger_merge_on_cloud, hypernetworks_models_state, lora_model_state = sagemaker_ui.create_ui(is_img2img)
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
-                       self.img2img_refiner_ckpt_dropdown, lora_model_state]
+                       self.img2img_refiner_ckpt_dropdown, hypernetworks_models_state, lora_model_state]
             for value in self.img2img_controlnet_dropdown_batch.values():
                 outputs.append(value)
             # for value in self.img2img_controlnet_refresh_btn_batch.values():
@@ -405,9 +406,14 @@ class SageMakerUI(scripts.Script):
                     if 'hypernetworks' not in models:
                         models['hypernetworks'] = []
 
-                    hypernet_filename = shared.hypernetworks[val.positional[0]].split(os.path.sep)[-1]
-                    if hypernet_filename not in models['hypernetworks']:
-                        models['hypernetworks'].append(hypernet_filename)
+                    # hypernet_filename = shared.hypernetworks[val.positional[0]].split(os.path.sep)[-1]
+                    hypernet_filename = val.positional[0]
+                    # if hypernet_filename not in models['hypernetworks']:
+                    #     models['hypernetworks'].append(hypernet_filename)
+                    for filename in args[-2]:
+                        if filename.startswith(hypernet_filename):
+                            if hypernet_filename not in models['hypernetworks']:
+                                models['hypernetworks'].append(filename)
 
         if os.path.exists(cmd_opts.embeddings_dir) and not p.do_not_reload_embeddings:
             model_hijack.embedding_db.load_textual_inversion_embeddings()
