@@ -410,7 +410,7 @@ class SageMakerUI(scripts.Script):
                     hypernet_filename = val.positional[0]
                     # if hypernet_filename not in models['hypernetworks']:
                     #     models['hypernetworks'].append(hypernet_filename)
-                    for filename in args[-2]:
+                    for filename in args[-1]:
                         if filename.startswith(hypernet_filename):
                             if hypernet_filename not in models['hypernetworks']:
                                 models['hypernetworks'].append(filename)
