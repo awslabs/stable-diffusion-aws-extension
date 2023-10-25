@@ -1,4 +1,3 @@
-import threading
 from queue import Queue
 import importlib
 import logging
@@ -267,8 +266,9 @@ class SageMakerUI(scripts.Script):
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
-            result.append(sagemaker_ui.load_hypernetworks_models(pr.username, pr.username))
-            result.append(sagemaker_ui.load_lora_models(pr.username, pr.username))
+            hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
+            lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
+            result.append({"hypernet": hypernet_models, "lora": lora_models})
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
@@ -284,10 +284,10 @@ class SageMakerUI(scripts.Script):
         if not is_img2img:
             self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, hypernetworks_models_state, lora_model_state = sagemaker_ui.create_ui(
+            modelmerger_merge_on_cloud, lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
-                       self.txt2img_refiner_ckpt_dropdown, hypernetworks_models_state, lora_model_state]
+                       self.txt2img_refiner_ckpt_dropdown, lora_and_hypernet_models_state]
             for value in self.controlnet_components['txt2img_controlnet_dropdown_batch']:
                 if value:
                     outputs.append(value)
@@ -301,14 +301,14 @@ class SageMakerUI(scripts.Script):
 
             return [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    lora_model_state]
+                    lora_and_hypernet_models_state]
         else:
             self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, hypernetworks_models_state, lora_model_state = sagemaker_ui.create_ui(
+            modelmerger_merge_on_cloud, lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
-                       self.img2img_refiner_ckpt_dropdown, hypernetworks_models_state, lora_model_state]
+                       self.img2img_refiner_ckpt_dropdown, lora_and_hypernet_models_state]
             for value in self.controlnet_components['img2img_controlnet_dropdown_batch']:
                 if value:
                     outputs.append(value)
@@ -317,11 +317,10 @@ class SageMakerUI(scripts.Script):
                 if value:
                     outputs.append(value)
 
-            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud,
-                                  outputs=outputs)
+            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud, outputs=outputs)
             return [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    lora_model_state]
+                    lora_and_hypernet_models_state]
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -421,29 +420,33 @@ class SageMakerUI(scripts.Script):
         # load lora
         for key, vals in extra_network_data.items():
             if key == 'lora':
+                if not args[-1] or not args[-1]['lora']:
+                    logger.error("please upload lora models!!!!")
+                    continue
                 for val in vals:
                     if 'Lora' not in models:
                         models['Lora'] = []
-
                     lora_filename = val.positional[0]
-                    for filename in args[-1]:
+                    for filename in args[-1]['lora']:
                         if filename.startswith(lora_filename):
                             if lora_filename not in models['Lora']:
                                 models['Lora'].append(filename)
+                    if len(models['Lora']) == 0:
+                        logger.error("please upload matched lora models!!!!")
             if key == 'hypernet':
-                logger.debug(key, vals)
+                if not args[-1] or not args[-1]['hypernet']:
+                    logger.error("please upload hypernetworks models!!!!")
+                    continue
                 for val in vals:
                     if 'hypernetworks' not in models:
                         models['hypernetworks'] = []
-
-                    # hypernet_filename = shared.hypernetworks[val.positional[0]].split(os.path.sep)[-1]
                     hypernet_filename = val.positional[0]
-                    # if hypernet_filename not in models['hypernetworks']:
-                    #     models['hypernetworks'].append(hypernet_filename)
-                    for filename in args[-2]:
+                    for filename in args[-1]['hypernet']:
                         if filename.startswith(hypernet_filename):
                             if hypernet_filename not in models['hypernetworks']:
                                 models['hypernetworks'].append(filename)
+                    if len(models['hypernetworks']) == 0:
+                        logger.error("please upload matched hypernetworks models!!!!")
 
         if os.path.exists(cmd_opts.embeddings_dir) and not p.do_not_reload_embeddings:
             model_hijack.embedding_db.load_textual_inversion_embeddings()
