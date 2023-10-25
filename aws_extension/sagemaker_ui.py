@@ -633,11 +633,11 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
-    url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
-    if re.match(f'^{url_pattern}$', url_list):
+    url_pattern = r'^(https?|ftp)://[^\s/$.?#][^\s]*$'
+    if all(re.match(url_pattern, url) for url in url_list.split(',')):
         url_list = url_list.split(',')
     else:
-        return "Please fill in right url list."
+        return "Please fill in the right URL list."
     if params:
         params_dict = json.loads(params)
     else:
