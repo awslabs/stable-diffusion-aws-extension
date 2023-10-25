@@ -165,7 +165,7 @@ class SageMakerUI(scripts.Script):
                     tabname = "ControlNet"
                     elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
                     if component_elem_id == elem_id_controlnet:
-                        self.txt2img_controlnet_dropdown_batch[0] = component
+                        self.txt2img_controlnet_refresh_btn_batch[0] = component
             elif self.is_img2img and component_elem_id and component_elem_id.endswith('_controlnet_refresh_models'):
                 logger.debug(f" is_img2img_controlnet_model_refresh {type(component)}")
                 if max_models > 1:
@@ -179,7 +179,7 @@ class SageMakerUI(scripts.Script):
                     tabname = "ControlNet"
                     elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_refresh_models"
                     if component_elem_id == elem_id_controlnet:
-                        self.img2img_controlnet_dropdown_batch[0] = component
+                        self.txt2img_controlnet_refresh_btn_batch[0] = component
         pass
 
     def ui(self, is_img2img):
