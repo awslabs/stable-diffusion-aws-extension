@@ -7,8 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, \
-    load_embeddings_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -17,7 +16,7 @@ from modules.processing import Processed
 from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
 
-from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, postfix
+from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
@@ -84,6 +83,14 @@ class SageMakerUI(scripts.Script):
 
     txt2img_model_on_cloud = None
     img2img_model_on_cloud = None
+
+    # todo: we don't need two of them, save one api call
+    txt2img_lora_and_hypernet_models_state = None
+    img2img_lora_and_hypernet_models_state = None
+
+    # controlnet models count
+    max_cn_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
+
     ph = None
 
     controlnet_components = {
@@ -102,8 +109,6 @@ class SageMakerUI(scripts.Script):
         return scripts.AlwaysVisible
 
     def after_component(self, component, **kwargs):
-        # controlnet models count
-        max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
         if type(component) is gr.Button:
             if self.is_txt2img and getattr(component, 'elem_id', None) == f'txt2img_generate':
                 self.txt2img_generate_btn = component
@@ -138,7 +143,10 @@ class SageMakerUI(scripts.Script):
             cn_component_type = 'dropdown'
             cn_elem_id_postfix = 'model_dropdown'
             is_cn_component = True
-        if str(type(component)) == "<class 'scripts.controlnet_ui.tool_button.ToolButton'>"\
+
+        # latest controlnet has changed it's implementation, so we do both here
+        if (str(type(component)) == "<class 'scripts.controlnet_ui.tool_button.ToolButton'>"
+                or str(type(component)) == "<class 'scripts.controlnet_ui.controlnet_ui_group.ToolButton'>") \
                 and component_elem_id and component_elem_id.endswith('_controlnet_refresh_models'):
             cn_component_type = 'refresh_btn'
             cn_elem_id_postfix = 'refresh_models'
@@ -149,113 +157,78 @@ class SageMakerUI(scripts.Script):
             is_cn_component = True
 
         if is_cn_component:
-            if max_models > 1:
-                for i in range(max_models):
+            if self.max_cn_models > 1:
+                for i in range(self.max_cn_models):
                     tabname = f"ControlNet-{i}"
                     elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_{cn_elem_id_postfix}"
                     if component_elem_id == elem_id_controlnet:
-                        self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][i] = component
+                        self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][i] = [component, False]
                         break
             else:
                 tabname = "ControlNet"
                 elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_{cn_elem_id_postfix}"
                 if component_elem_id == elem_id_controlnet:
-                    self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][0] = component
+                    self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][0] = [component, False]
 
-        if self.txt2img_model_on_cloud or self.img2img_model_on_cloud:
-            cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
-            for i in range(max_models):
-                if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
-                        and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i] \
-                        and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
-                        and self.txt2img_model_on_cloud:
+        cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
+        base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
+        cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
 
-                    def _check_cn(model_selected, k, pr: gr.Request):
-                        on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
-                        if not on_cloud:
-                            gr.skip()
-                        controlnet_model_list = sagemaker_ui.load_controlnet_list(pr.username, pr.username)
-                        # logger.debug(f'controlnet_model_list : {controlnet_model_list}')
-                        original_dict = [('None', None)]
-                        for item in controlnet_model_list:
-                            if item == 'None':
-                                continue
-                            key = item
-                            original_dict.append((key, ''))
-                        from collections import OrderedDict
-                        new_ordered_dict = OrderedDict(original_dict)
-                        # logger.debug(f'{new_ordered_dict} new_ordered_dict')
-                        global_state.cn_models = new_ordered_dict
-                        cn_models = global_state.select_control_type(k)
-                        modified_result = list(cn_models)
-                        modified_result[1] = list(new_ordered_dict.keys())
-                        return gr.update(choices=cn_models[1], value=cn_models[3])
+        for i in range(self.max_cn_models):
+            if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
+                    and cn_list \
+                    and base_model_component:
 
-                    self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
-                        .change(fn=_check_cn, inputs=[self.txt2img_model_on_cloud, self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i]],
-                                outputs=[self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i]])
+                def _check_cn(model_state, model_selected, k):
+                    logger.debug('load')
+                    on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+                    if not on_cloud:
+                        return gr.skip()
+                    controlnet_model_list = model_state['controlnet']
+                    # controlnet_model_list = sagemaker_ui.load_controlnet_list(pr.username, pr.username)
+                    original_dict = [('None', None)]
+                    for item in controlnet_model_list:
+                        if item == 'None':
+                            continue
+                        key = item[:item.rfind('.')]
+                        original_dict.append((key, ''))
+                    from collections import OrderedDict
+                    new_ordered_dict = OrderedDict(original_dict)
+                    # logger.debug(f'{new_ordered_dict} new_ordered_dict')
+                    global_state.cn_models = new_ordered_dict
+                    cn_models = global_state.select_control_type(k)
+                    modified_result = list(cn_models)
+                    modified_result[1] = list(new_ordered_dict.keys())
+                    return gr.update(choices=cn_models[1], value=cn_models[3])
+
+                cn_radio_tuple = self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i]
+                if cn_radio_tuple[1]:
+                    continue
+
+                cn_radio_tuple[0] \
+                    .change(fn=_check_cn,
+                            inputs=[
+                                cn_list,
+                                base_model_component,
+                                cn_radio_tuple[0]],
+                            outputs=[
+                                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                            ])
+                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i][0] \
+                    .click(fn=_check_cn,
+                           inputs=[
+                               cn_list,
+                               base_model_component,
+                               cn_radio_tuple[0]],
+                           outputs=[
+                               self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                           ])
+                cn_radio_tuple[1] = True
         pass
 
     def ui(self, is_img2img):
-
-        # def decorator_controlnet_refresh_function(func):
-        #     def wrapper(*args, **kwargs):
-        #         logger.debug(f"update_cn_models was invoked {threading.currentThread().ident}")
-        #         global on_cloud
-        #         if on_cloud:
-        #             original_result = func(*args, **kwargs)
-        #             global global_username
-        #             controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
-        #             # logger.debug(f'controlnet_model_list : {controlnet_model_list}')
-        #             original_dict = [('None', None)]
-        #             for item in controlnet_model_list:
-        #                 if item == 'None':
-        #                     continue
-        #                 key = item
-        #                 original_dict.append((key, ''))
-        #             from collections import OrderedDict
-        #             new_ordered_dict = OrderedDict(original_dict)
-        #             logger.debug(f'{new_ordered_dict} new_ordered_dict')
-        #             global_state.cn_models = new_ordered_dict
-        #             return original_result
-        #         else:
-        #             original_result = func(*args, **kwargs)
-        #             return original_result
-        #     return wrapper
-        #
-        # global_state.update_cn_models = decorator_controlnet_refresh_function(global_state.update_cn_models)
-
-        # def decorator_controlnet_function(func):
-        #     def wrapper(*args, **kwargs):
-        #         logger.debug(f"monitoring ：{func.__name__} was invoked")
-        #         global on_cloud
-        #         logger.debug(f"on_cloud param is {on_cloud}")
-        #         if on_cloud:
-        #             global global_username
-        #             controlnet_model_list = sagemaker_ui.load_controlnet_list(global_username, global_username)
-        #             logger.debug(f'controlnet_model_list : {controlnet_model_list}')
-        #             original_dict = [('None', None)]
-        #             for item in controlnet_model_list:
-        #                 if item == 'None':
-        #                     continue
-        #                 key = item
-        #                 original_dict.append((key, ''))
-        #             from collections import OrderedDict
-        #             new_ordered_dict = OrderedDict(original_dict)
-        #             # logger.debug(f'{new_ordered_dict} new_ordered_dict')
-        #             global_state.cn_models = new_ordered_dict
-        #             original_result = func(*args, **kwargs)
-        #             modified_result = list(original_result)
-        #             modified_result[1] = list(new_ordered_dict.keys())
-        #             return modified_result
-        #         else:
-        #             original_result = func(*args, **kwargs)
-        #             return original_result
-        #
-        #     return wrapper
-        #
-        # global_state.select_control_type = decorator_controlnet_function(global_state.select_control_type)
-
         def _check_generate(model_selected, pr: gr.Request):
             global global_username
             global_username = pr.username
@@ -268,59 +241,51 @@ class SageMakerUI(scripts.Script):
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
             hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
             lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
-            result.append({"hypernet": hypernet_models, "lora": lora_models})
+            controlnet_list = load_controlnet_list(pr.username, pr.username)
+            result.append({"hypernet": hypernet_models, "lora": lora_models, "controlnet": controlnet_list})
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
 
-            # sync append fresh button
-            if max_models > 0:
-                for i in range(max_models):
-                    result.append(gr.update(visible=not on_cloud))
             return result
-
-        if not is_img2img:
-            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
-            secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, lora_and_hypernet_models_state = sagemaker_ui.create_ui(
-                is_img2img)
-            outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
-                       self.txt2img_refiner_ckpt_dropdown, lora_and_hypernet_models_state]
-            for value in self.controlnet_components['txt2img_controlnet_dropdown_batch']:
-                if value:
-                    outputs.append(value)
-
-            for value in self.controlnet_components['txt2img_controlnet_refresh_btn_batch']:
-                if value:
-                    outputs.append(value)
-
-            self.txt2img_model_on_cloud.change(_check_generate, inputs=self.txt2img_model_on_cloud,
-                                  outputs=outputs)
-
-            return [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
-                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    lora_and_hypernet_models_state]
-        else:
+        sagemaker_inputs_components = []
+        if is_img2img:
             self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+            modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
-                       self.img2img_refiner_ckpt_dropdown, lora_and_hypernet_models_state]
+                       self.img2img_refiner_ckpt_dropdown, self.img2img_lora_and_hypernet_models_state]
             for value in self.controlnet_components['img2img_controlnet_dropdown_batch']:
                 if value:
-                    outputs.append(value)
+                    outputs.append(value[0])
 
-            for value in self.controlnet_components['img2img_controlnet_refresh_btn_batch']:
-                if value:
-                    outputs.append(value)
+            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud,
+                                  outputs=outputs)
 
-            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud, outputs=outputs)
-            return [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    lora_and_hypernet_models_state]
+                    self.img2img_lora_and_hypernet_models_state]
+        else:
+            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            secondary_model_name, tertiary_model_name, \
+            modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+                is_img2img)
+            outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
+                       self.txt2img_refiner_ckpt_dropdown, self.txt2img_lora_and_hypernet_models_state]
+            for value in self.controlnet_components['txt2img_controlnet_dropdown_batch']:
+                if value:
+                    outputs.append(value[0])
+
+            self.txt2img_model_on_cloud.change(_check_generate, inputs=self.txt2img_model_on_cloud, outputs=outputs)
+            sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
+                    self.txt2img_lora_and_hypernet_models_state]
+
+        return sagemaker_inputs_components
+
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -453,16 +418,13 @@ class SageMakerUI(scripts.Script):
 
         p.setup_conds()
 
-        # load all embedding models
-        # models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
-        #                         model_hijack.embedding_db.word_embeddings.values()]
         models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user, p.user)
 
         err = None
         try:
             from modules import call_queue
             call_queue.queue_lock.release()
-            logger.debug(f"########################{api_param}")
+            # logger.debug(f"########################{api_param}")
             inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)

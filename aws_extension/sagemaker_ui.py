@@ -1364,9 +1364,14 @@ def create_ui(is_img2img):
                     inference_jobs = load_inference_job_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
+                    controlnet_list = load_controlnet_list(pr.username, pr.username)
+                    lora_hypernets = {
+                        'lora': lora_models_on_cloud,
+                        'hypernet': hypernetworks_models_on_cloud,
+                        'controlnet': controlnet_list,
+                    }
 
-                    return lora_models_on_cloud, \
-                        hypernetworks_models_on_cloud,\
+                    return lora_hypernets, \
                         gr.update(choices=models_on_cloud), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud)
