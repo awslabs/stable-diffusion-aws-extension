@@ -1412,4 +1412,5 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, hypernetworks_models_state, lora_models_state
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+           secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, hypernetworks_models_state, lora_models_state

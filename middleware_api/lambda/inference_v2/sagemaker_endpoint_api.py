@@ -24,14 +24,16 @@ def list_all_sagemaker_endpoints(event, ctx):
     parameters = event['queryStringParameters']
 
     endpoint_deployment_job_id = parameters['endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
-                                                                          parameters['endpointDeploymentJobId'] else None
+                                                                          parameters[
+                                                                              'endpointDeploymentJobId'] else None
     username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
     if endpoint_deployment_job_id:
         scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
-                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id})
+                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
+                                            )
     else:
-        scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+        scan_rows = ddb_service.scan(sagemaker_endpoint_table, )
 
     results = []
     user_roles = []
@@ -53,3 +55,5 @@ def list_all_sagemaker_endpoints(event, ctx):
         'statusCode': 200,
         'endpoints': results
     }
+
+# DELETE /endpoint/{inference_id}
