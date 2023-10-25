@@ -401,7 +401,6 @@ class SageMakerUI(scripts.Script):
                             if lora_filename not in models['Lora']:
                                 models['Lora'].append(filename)
             if key == 'hypernet':
-                logger.debug(key, vals)
                 for val in vals:
                     if 'hypernetworks' not in models:
                         models['hypernetworks'] = []
