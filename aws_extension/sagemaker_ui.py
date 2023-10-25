@@ -1135,8 +1135,7 @@ def create_ui(is_img2img):
         sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
         with gr.Column():
             with gr.Row():
-                lora_models_state = gr.State([])
-                hypernetworks_models_state = gr.State([])
+                lora_models_state = gr.State({})
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
 
@@ -1375,7 +1374,6 @@ def create_ui(is_img2img):
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
                                                  lora_models_state,
-                                                 hypernetworks_models_state,
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
                                                  sd_vae_on_cloud_dropdown]
@@ -1412,4 +1410,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, hypernetworks_models_state, lora_models_state
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_models_state
