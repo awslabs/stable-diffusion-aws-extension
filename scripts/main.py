@@ -4,6 +4,7 @@ import logging
 import gradio as gr
 import os
 
+import requests
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
@@ -31,6 +32,8 @@ CONTROLNET_MODEL_COUNT = 3
 global_username = None
 on_cloud = False
 
+launch_url = None
+global_user_local_param_dict = {}
 
 def dummy_function(*args, **kwargs):
     return []
@@ -61,6 +64,46 @@ except Exception as e:
     get_sd_cloud_models = dummy_function
     get_create_model_job_list = dummy_function
     cloud_create_model = dummy_function
+
+
+def reload_response_template(param_username):
+    def template_response(*args, **kwargs):
+        global global_user_local_param_dict
+        res = shared.GradioTemplateResponseOriginalAWS(*args, **kwargs)
+        # if res.context['request'].url:
+        #     global launch_url
+        #     launch_url = res.context['request'].url
+        #     logger.info(f"global launch url is :{launch_url}")
+        if res.context['request'].app.tokens and res.context['request'].cookies['access-token']:
+            access_token = res.context['request'].cookies['access-token']
+            tokens = res.context['request'].app.tokens
+            if access_token in tokens.keys():
+                username = tokens[access_token]
+                param_username.append(username)
+                logger.debug(f"new refresh username is {username}")
+            logger.debug(f"{res.context['request'].app.tokens}")
+        from modules.ui_gradio_extensions import javascript_html, css_html
+        js = javascript_html()
+        css = css_html()
+        res.body = res.body.replace(b'</head>', f'{js}</head>'.encode("utf8"))
+        res.body = res.body.replace(b'</body>', f'{css}</body>'.encode("utf8"))
+        res.init_headers()
+        return res
+    gr.routes.templates.TemplateResponse = template_response
+
+
+if not hasattr(shared, 'GradioTemplateResponseOriginalAWS'):
+    shared.GradioTemplateResponseOriginalAWS = gr.routes.templates.TemplateResponse
+
+
+def get_current_user(token: str):
+    global launch_url
+    if launch_url:
+        url = f'{launch_url}user'
+        resp = requests.get(url, cookies={'access-token': token, 'access-token-unsecure': token})
+        logger.debug(f'get_current_user url is {url} resp is{resp}')
+        return resp
+    return ""
 
 
 class SageMakerUI(scripts.Script):
@@ -183,11 +226,15 @@ class SageMakerUI(scripts.Script):
         pass
 
     def ui(self, is_img2img):
+        username = []
+        reload_response_template(username)
+        logger.debug(f'username !!!!!!    {username}')
 
         def decorator_controlnet_refresh_function(func):
             def wrapper(*args, **kwargs):
                 logger.debug("update_cn_models was invoked")
                 global on_cloud
+                logger.debug(f'username !!!!!!    {username}')
                 if on_cloud:
                     original_result = func(*args, **kwargs)
                     global global_username
