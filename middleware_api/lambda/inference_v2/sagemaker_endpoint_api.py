@@ -29,7 +29,8 @@ def list_all_sagemaker_endpoints(event, ctx):
 
     if endpoint_deployment_job_id:
         scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
-                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id})
+                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
+                                            )
     else:
         scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
 

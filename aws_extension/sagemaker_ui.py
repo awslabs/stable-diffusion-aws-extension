@@ -1100,6 +1100,10 @@ def load_lora_models(username, user_token):
     return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='Lora')]))
 
 
+def load_hypernetworks_models(username, user_token):
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
+
+
 def load_vae_list(username, user_token):
     vae_model_on_cloud = ['Automatic', 'None']
     if 'sd_vae' in opts.quicksettings_list:
@@ -1114,6 +1118,12 @@ def load_controlnet_list(username, user_token):
     return vae_model_on_cloud
 
 
+def load_embeddings_list(username, user_token):
+    # vae_model_on_cloud = ['None']
+    vae_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+    return vae_model_on_cloud
+
+
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
@@ -1125,7 +1135,7 @@ def create_ui(is_img2img):
         sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
         with gr.Column():
             with gr.Row():
-                lora_models_state = gr.State([])
+                lora_and_hypernet_models_state = gr.State({})
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
 
@@ -1135,7 +1145,7 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
-            with gr.Row(visible='sd_vae' in opts.quicksettings_list):
+            with gr.Row():
                 sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
                                                        label='SD Vae on Cloud')
 
@@ -1353,15 +1363,22 @@ def create_ui(is_img2img):
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
                     inference_jobs = load_inference_job_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
+                    hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
+                    controlnet_list = load_controlnet_list(pr.username, pr.username)
+                    lora_hypernets = {
+                        'lora': lora_models_on_cloud,
+                        'hypernet': hypernetworks_models_on_cloud,
+                        'controlnet': controlnet_list,
+                    }
 
-                    return lora_models_on_cloud, \
+                    return lora_hypernets, \
                         gr.update(choices=models_on_cloud), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud)
 
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
-                                                 lora_models_state,
+                                                 lora_and_hypernet_models_state,
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
                                                  sd_vae_on_cloud_dropdown]
@@ -1398,4 +1415,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_models_state
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state
