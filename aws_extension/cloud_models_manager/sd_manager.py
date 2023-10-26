@@ -22,11 +22,14 @@ class CloudSDModelsManager:
 
     def update_models(self):
         model_list = self._fetch_models_list()
+        try:
+            for model_name in model_list:
+                shutil.copy2(os.path.join(sapi_dir, 'Dummy.safetensors'),
+                             os.path.join(sd_models.model_path,
+                                          '.'.join(model_name.split('.')[:-1]) + f'.{postfix}.safetensors'))
 
-        for model_name in model_list:
-            shutil.copy2(os.path.join(sapi_dir, 'Dummy.safetensors'),
-                         os.path.join(sd_models.model_path, '.'.join(model_name.split('.')[:-1]) + f'.{postfix}.safetensors'))
-
+        except Exception as e:
+            print(f"update_models Error: {e}")
         shared.refresh_checkpoints()
         sd_models.list_models()
 

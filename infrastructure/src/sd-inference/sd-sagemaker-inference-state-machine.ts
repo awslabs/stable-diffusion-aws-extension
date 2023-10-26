@@ -1,6 +1,10 @@
 // Import the required CDK modules
 import * as path from 'path';
-import { Duration, aws_sns as sns } from 'aws-cdk-lib';
+import {
+  Duration, aws_sns as sns,
+  RemovalPolicy,
+  CfnCondition, Fn,
+} from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -19,14 +23,17 @@ export interface SagemakerInferenceProps {
   endpointDeploymentJobTable: dynamodb.Table;
   userNotifySNS: sns.Topic;
   inference_ecr_url: string;
+  useExist: string;
 }
 
 export class SagemakerInferenceStateMachine {
   public readonly stateMachineArn: string;
   private readonly scope: Construct;
+  private readonly useExist: string;
 
   constructor(scope: Construct, props: SagemakerInferenceProps) {
     this.scope = scope;
+    this.useExist = props.useExist;
     this.stateMachineArn = this.sagemakerStepFunction(
       props.snsTopic,
       props.snsErrorTopic,
@@ -181,9 +188,24 @@ export class SagemakerInferenceStateMachine {
       },
     );
 
-    const lambdaStartDeployRole = new iam.Role(this.scope, 'LambdaStartDeployRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+    const shouldCreateSagemakerDeploymentRoleCondition = new CfnCondition(
+      this.scope,
+      'InferenceStack-shouldCreateSmRoleCondition',
+      {
+        expression: Fn.conditionEquals(this.useExist, 'no'),
+      },
+    );
+
+    const newLambdaStartDeployRole = new iam.Role(this.scope, 'newLambdaStartDeployRole', {
+      assumedBy: new iam.CompositePrincipal(
+        new iam.ServicePrincipal('lambda.amazonaws.com'),
+        new iam.ServicePrincipal('sagemaker.amazonaws.com'),
+      ),
+      roleName: 'LambdaStartDeployRole',
     });
+    newLambdaStartDeployRole.applyRemovalPolicy(RemovalPolicy.RETAIN);
+    (newLambdaStartDeployRole.node.defaultChild as iam.CfnRole).cfnOptions.condition = shouldCreateSagemakerDeploymentRoleCondition;
+    const lambdaStartDeployRole = <iam.Role> iam.Role.fromRoleName(this.scope, 'LambdaStartDeployRole', 'LambdaStartDeployRole');
 
     lambdaStartDeployRole.addToPolicy(lambdaPolicy);
     lambdaStartDeployRole.addToPolicy(snsStatement);

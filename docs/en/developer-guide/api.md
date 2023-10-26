@@ -136,14 +136,14 @@ Middleware->Client: return the inference parameter in presigned url format
 | 20    | GET         | [/checkpoint](#checkpoint)                                                                         | Gets a checkpoint.                                                                                      |
 | 21    | PUT         | [/checkpoint](#checkpointput)                                                                      | Updates a checkpoint.                                                                                   |
 | 22    | GET         | [/checkpoints](#checkpoints)                                                                       | Lists all checkpoints.                                                                                  |
-| 23    | POST        | [/train](#trainpost)                                                                              | Starts a training job.                                                                                  |
+| 23    | POST        | [/train-api/train](#train-api-post)                                                                              | Starts a training job.                                                                                  |
 | 24    | PUT         | [/train](#trainput)                                                                                | Updates a training job.                                                                                 |
 | 25    | GET         | [/trains](#trainsget)                                                                              | Lists all training jobs.                                                                                |
 | 26    | POST        | [/dataset](#datasetpost)                                                                          | Creates a new dataset.                                                                                  |
 | 27    | PUT         | [/dataset](#datasetput)                                                                            | Updates a dataset.                                                                                      |
 | 28    | GET         | [/datasets](#datasetsget)                                                                          | Lists all datasets.                                                                                     |
 | 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | Gets data of a specific dataset.                                                                        |
-
+| 30  | POST    | [/upload_checkpoint](#upload_checkpointpost)                                                            | Upload directly to s3 according to the model url.                   |
 <br/>
 
 # /inference/test-connection
@@ -198,7 +198,9 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 > 200 Response
 
 ```json
-null
+{
+    "message": "Success"
+}
 ```
 
 <h3 id="used-to-let-client-test-connection-responses">Responses</h3>
@@ -207,11 +209,6 @@ null
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 
-<h3 id="used-to-let-client-test-connection-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -1118,19 +1115,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
 |422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
 
-<h3 id="get-inference-job-param-output-responseschema">Response Schema</h3>
 
-Status Code **200**
-
-*Response Get Inference Job Param Output Inference Get Inference Job Param Output Get*
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|Response Get Inference Job Param Output Inference Get Inference Job Param Output Get|[string]|false|none|none|
-
-<aside class="success">
-This operation does not require authentication
-</aside>
 
 <br/>
 
@@ -2409,8 +2394,10 @@ api_key
 
 <br/>
 
-# /train(POST)
 
+# /train-api/train(POST)
+
+<a id="train-api-post"></a>
 ### **Code samples :**
 
 Python example code:
@@ -2424,42 +2411,101 @@ headers = {
 }
 
 const inputBody = {
-"train_type": "dreambooth",
-"model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-"params": {
-  "train_params": {
-    "training_instance_type": "ml.g4dn.2xlarge"
-  },
-  "test1": 2
-},
-"filenames": [
-  "training_config.json",
-  "images.tar"
-]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train', headers = headers, json = inputBody)
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train', headers = headers, json = inputBody)
 
 print(r.json())
 
 ```
 
-Javascript example code:
+Javascript example code：
 
 ```javascript
 const inputBody = '{
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -2467,7 +2513,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train',
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train',
 {
   method: 'POST',
   body: inputBody,
@@ -2481,24 +2527,53 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /train`
+`POST /train-api/train`
 
 > Body parameter
 
 ```json
 {
-  "train_type": "dreambooth",
-  "model_id": "36c9d05e-3445-42a6-8be1-d7d054df7b9d",
-  "params": {
-    "train_params": {
-      "training_instance_type": "ml.g4dn.2xlarge"
-    },
-    "test1": 2
-  },
-  "filenames": [
-    "training_config.json",
-    "images.tar"
-  ]
+	"train_type": "Stable-diffusion",
+	"model_id": "7ec754d6-1f68-46ea-9cfe-efeeed0c986c",
+	"params": {
+		"training_params": {
+			"data_tar_list": [
+				"s3://<your_s3_bucket>/dataset/<your_dataset_name>"
+			],
+			"class_data_tar_list": [
+				""
+			],
+			"training_instance_type": "ml.g5.2xlarge"
+		},
+		"config_params": {
+			"concepts_list": [{
+				"class_data_dir": "",
+				"class_guidance_scale": 7.5,
+				"class_infer_steps": 40,
+				"class_negative_prompt": "",
+				"class_prompt": "",
+				"class_token": "",
+				"instance_prompt": "hanportraittest123",
+				"num_class_images_per": 0,
+				"instance_data_dir": "s3://<your_s3_bucket>/dataset/<your_dataset_name>",
+				"instance_token": "",
+				"is_valid": true,
+				"n_save_sample": 1,
+				"sample_seed": -1,
+				"save_guidance_scale": 7.5,
+				"save_infer_steps": 20,
+				"save_sample_negative_prompt": "",
+				"save_sample_prompt": "",
+				"save_sample_template": ""
+			}],
+			"model_dir": "models/dreambooth/<your_model_name>",
+			"model_name": "your_model_name",
+			"pretrained_model_name_or_path": "models/dreambooth/<your_model_name>/working",
+			"num_train_epochs": 100,
+			"use_lora": true,
+			"revision": ""
+		}
+	}
 }
 ```
 
@@ -2514,19 +2589,22 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```json
 {
-  "statusCode": 200,
-  "job": {
-    "id": "id",
-    "status": "Initialed",
-    "trainType": "Stable-diffusion",
-    "params": {},
-    "input_location": "s3://S3_Location"
-  },
-  "s3PresignUrl": [
-    {
-      "filename": "s3://S3_Location"
-    }
-  ]
+	"statusCode": 200,
+	"job": {
+		"id": "81f00711-7cc3-4cac-90f3-13934f29524a",
+		"status": "Initial",
+		"trainType": "Stable-diffusion",
+		"params": {
+			"training_params": {
+				...
+			},
+			"config_params": {
+				...
+			}
+		},
+		"input_location": "s3://<your_s3_bucket>/train/<your_model_name>/81f00711-7cc3-4cac-90f3-13934f29524a/input"
+	},
+	"s3PresignUrl": null
 }
 ```
 
@@ -2554,6 +2632,9 @@ api_key
 </aside>
 
 <br/>
+
+
+
 
 # /train(PUT)
 
@@ -3185,98 +3266,126 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
-# Schemas
 
-<h2 id="tocS_Empty">Empty</h2>
-<!-- backwards compatibility -->
-<a id="schemaempty"></a>
-<a id="schema_Empty"></a>
-<a id="tocSempty"></a>
-<a id="tocsempty"></a>
+<br/>
 
-```json
-{}
+# /upload_checkpoint
+
+### **Code samples :**
+
+Python example code:
+
+```Python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
+}
+
+const inputBody = {
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/upload_checkpoint', headers = headers, json = inputBody)
+
+print(r.json())
 
 ```
 
-Empty Schema
+Javascript example code:
 
-### Properties
+```javascript
+const inputBody = '{
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx/sd_xl_base_1.0.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json',
+  'x-api-key':'API_TOKEN_VALUE'
+};
 
-*None*
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
 
-<h2 id="tocS_HTTPValidationError">HTTPValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemahttpvalidationerror"></a>
-<a id="schema_HTTPValidationError"></a>
-<a id="tocShttpvalidationerror"></a>
-<a id="tocshttpvalidationerror"></a>
+```
+
+`POST /upload_checkpoint`
+
+> Body Parameters
+
+```json
+
+{
+  // checkpointType choices: "Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+```
+
+<a id="upload-checkpoint-params">Parameters</a>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|false|none|
+
+> Example responses
+
+> 200 Response
 
 ```json
 {
-  "detail": [
-    {
-      "loc": [
-        "string"
-      ],
-      "msg": "string",
-      "type": "string"
+    "statusCode": 200,
+    "checkpoint": {
+        "id": "07dbd061-1df8-463f-bc78-44a41956435c",
+        "type": "Stable-diffusion",
+        "s3_location": "s3://path",
+        "status": "Active",
+        "params": {
+            "message": "description",
+            "created": "2023-09-26 09:02:52.146566",
+            "multipart_upload": {
+                "bubble-gum-kaugummi-v20": null
+            }
+        }
     }
-  ]
 }
-
 ```
 
-HTTPValidationError
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|detail|[[ValidationError](#schemavalidationerror)]|false|none|none|
-
-<h2 id="tocS_ValidationError">ValidationError</h2>
-<!-- backwards compatibility -->
-<a id="schemavalidationerror"></a>
-<a id="schema_ValidationError"></a>
-<a id="tocSvalidationerror"></a>
-<a id="tocsvalidationerror"></a>
+> 500 Response
 
 ```json
 {
-  "loc": [
-    "string"
-  ],
-  "msg": "string",
-  "type": "string"
+  "statusCode": 500,
+  "error": "error_message"
 }
-
 ```
 
-ValidationError
+<h3 id="upload-checkpoint">Response</h3>
 
-### Properties
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
 
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|loc|[anyOf]|true|none|none|
+<h3 id="upload-checkpoint-responseschema">Response Schema</h3>
 
-anyOf
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|string|false|none|none|
-
-or
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|» *anonymous*|integer|false|none|none|
-
-continued
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|msg|string|true|none|none|
-|type|string|true|none|none|
-
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+api_key
+</aside>

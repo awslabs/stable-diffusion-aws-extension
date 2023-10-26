@@ -25,7 +25,15 @@ class DatasetApiTest(TestCase):
                     "params": {
                         "description": "this is uploaded for testing"
                     }
-                }
+                },
+                {
+                    "filename": "avatar1.png",
+                    "name": "another_name1",
+                    "type": "png",
+                    "params": {
+                        "description": "this is uploaded for testing"
+                    }
+                },
             ],
             "params": {
                 "creator": "alvindaiyan",

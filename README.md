@@ -3,8 +3,6 @@ This is a WebUI extension to help user migrate existing workload (inference, tra
 
 ## How to get started:
 
->**Notice** : This extension currently only support stable-diffusion-webui running on **Linux** platform, we are still working on support other platforms in the near future.
-
 ### **Part1**: Install the stable-diffusion-webui and extension
 If you have not install the Stable Diffusion WebUI, or the proper version of the extensions this project supports, please refer to [this](./docs/Environment-Preconfiguration.md) step for setup.
 
@@ -93,7 +91,7 @@ Some user existing workflow is shown below that the data scientists had to jump 
 
 Thus we plan to contribute a solution aiming to mitigate above issue and provide a lite, decouple and user friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
 
-## What is the user tuturial
+## What is the user tutorial
 We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
 Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
 ![UIProcess](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/3c6961d0-e1f9-4bee-b370-892978063781)

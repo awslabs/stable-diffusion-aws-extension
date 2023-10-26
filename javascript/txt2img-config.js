@@ -19,6 +19,7 @@ window.onload = function() {
         for (let selector of selectors) {
             let element = document.querySelector(selector);
             if (element != null) {
+                console.log('click element', element)
                 element.click();
             } else {
                 allElementsFound = false;
@@ -37,7 +38,7 @@ window.onload = function() {
 let uploadedFilesMap = new Map();
 let chunkSize = 512 * 1024 * 1024; // 200MB chunk size, you can adjust this as needed.
 let unitMb = 1000* 1024;
-let filButtonClass = 'lg secondary gradio-button svelte-1ipelgc';
+let filButtonClass = 'block gradio-html svelte-90oupt padded hide-container';
 let filButtonId = 'file-uploader';
 
 const modelTypeMap = {
@@ -57,6 +58,7 @@ function clearFileInput() {
     newFileInput.className = filButtonClass;
     newFileInput.multiple = true;
     newFileInput.style.width = '100%';
+    newFileInput.style.marginTop = '25px';
     newFileInput.onchange = showFileName;
     fileInput.parentNode.replaceChild(newFileInput, fileInput);
 }
@@ -176,7 +178,7 @@ function updateProgress(groupName, fileName, progress, part, total) {
     }
 }
 
-function uploadFileToS3(files, groupName) {
+function uploadFileToS3(files, groupName, username) {
     const apiGatewayUrl = document.querySelector("#aws_middleware_api > label > textarea")?
         document.querySelector("#aws_middleware_api > label > textarea")["value"]: "";
     const apiToken = document.querySelector("#aws_middleware_token > label > textarea")?
@@ -198,7 +200,7 @@ function uploadFileToS3(files, groupName) {
     const payload = {
         checkpoint_type: groupName,
         filenames: filenames,
-        params: { message: "placeholder for chkpts upload test" }
+        params: { message: "placeholder for chkpts upload test", "creator": username }
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
@@ -214,12 +216,11 @@ function uploadFileToS3(files, groupName) {
         .then((data) => {
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
-
             Promise.all(fileArrays.map(file => {
                 const presignedUrl = presignedUrlList[file.name];
-                presignedUrls.push(...presignedUrl);
+                // presignedUrls.push(...presignedUrl);
                 // return uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName, url, apiKey);
-                return uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, apiKey);
+                return uploadFileChunks(file, presignedUrl, checkpointId, groupName, url, apiKey);
             })).then(results => {
                  console.log(results);
             }).catch(error => {
@@ -316,8 +317,11 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
             };
 
             xhr.upload.onprogress = function (event) {
-              const percentComplete = (event.loaded / event.total) * 100 / totalChunks;
-              // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+                // const percentComplete = (event.loaded / event.total) * 100 / totalChunks + currentChunk/totalChunks;
+                // console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+                const bytesUploaded = currentChunk * chunkSize + event.loaded;
+                const totalBytes = fileSize;
+                const percentComplete = (bytesUploaded / totalBytes) * 100;
               updatePercentProgress(`${percentComplete.toFixed(2)}%`);
             };
             xhr.send(chunk);
@@ -387,11 +391,12 @@ function uploadFileChunksWithWorker(file, presignedUrls, checkpointId, groupName
 }
 function uploadFiles() {
     const uploadPromises = [];
+    const username = document.querySelector('#invisible_user_name_for_ui > label > textarea')['value']
     for (const [groupName, files] of uploadedFilesMap.entries()) {
         // for (const file of files) {
         //     uploadPromises.push(uploadFileToS3(file, groupName));
         // }
-        uploadPromises.push(uploadFileToS3(files, groupName));
+        uploadPromises.push(uploadFileToS3(files, groupName, username));
     }
 
     Promise.all(uploadPromises)
