@@ -12,8 +12,8 @@
     !!! Important "提示" 
         选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理
 
-3. 选择云上推理所需要的模型。在**Stable Diffusion Checkpoint Used on Cloud**列表选择需要云上推理的模型, 则会触发右上角**Generate**按钮变为**Generate on Clound**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+3. 选择云上推理所需要的模型。点击**Stable Diffusion Checkpoint Used on Cloud**列表选择需要云上推理的模型, 则会触发右上角**Generate**按钮变为**Generate on Cloud**。
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "提示" 
         此项为必选项。

@@ -17,7 +17,7 @@ You can open **Dreambooth** tab, by combining the use with native Dreambooth, th
 
 ## Train Model
 1. Open **Dreambooth** tab, **Model** subtab, **Select From Cloud**.
-2. Fresh and select the model from **Model** dropd down list that need to train.
+2. Fresh and select the model from **Model** drop down list that need to train.
 3. Set corresponding parameters in **Input** session.
     - Set training parameters
         - Checking *Lora* can accelerate the training process.
