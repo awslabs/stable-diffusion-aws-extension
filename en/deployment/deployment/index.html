@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d451bc0e.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.35e1ed30.min.css">
       
       
 
@@ -67,7 +67,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#prerequisition" class="md-skip">
+        <a href="#prerequisites" class="md-skip">
           Skip to content
         </a>
       
@@ -717,8 +717,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#prerequisition" class="md-nav__link">
-    Prerequisition
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
   </a>
   
 </li>
@@ -1208,8 +1208,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#prerequisition" class="md-nav__link">
-    Prerequisition
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
   </a>
   
 </li>
@@ -1284,7 +1284,7 @@
 
 <p>Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.</p>
 <p><strong>Time to deploy</strong>: Approximately 25 minutes.</p>
-<h2 id="prerequisition">Prerequisition</h2>
+<h2 id="prerequisites">Prerequisites</h2>
 <p>Users need to prepare a computer running linux system in advance.</p>
 <h2 id="deployment-overview">Deployment overview</h2>
 <p>Use the following steps to deploy this solution on AWS. </p>
@@ -1339,22 +1339,14 @@
 <ol>
 <li>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json" target="_blank">Launch solution in AWS Standard Regions</a> to launch the AWS CloudFormation template.   </li>
 <li>The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
-<li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
-<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. </li>
 <li>
-<p>Under <strong>Parameters</strong>, </p>
-<ul>
-<li><strong>createfromexist</strong>. select yes if you have deployed the solution before and haven't manually delete resources; otherwise select no; </li>
-<li><strong>email</strong>. Enter a correct email address for future notice receiving; </li>
-<li><strong>existbucket</strong>. Enter the S3 bucket name created by original stack if <strong>createfromexist</strong> selects yes, otherwise enter a new valid S3 bucket name;</li>
-<li><strong>sdextensionapikey</strong>. Enter a string of 20 characters that includes a combination of alphanumeric characters, and it will be 09876543210987654321 by default;</li>
-<li><strong>utilscpuinsttype</strong>. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc;</li>
-<li><strong>ecrimagetag</strong>. To select the tag for the ECR image corresponding to the solution, please refer to the field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.</li>
-</ul>
-<p>Choose <strong>Next</strong>.</p>
+<p>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</p>
+</li>
+<li>
+<p>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. Under <strong>Parameters</strong>, enter a valid bucket name under <strong>aigcbucketname</strong> for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under <strong>email</strong> for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>SdExtensionApiKey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>EcrImageTag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.Choose <strong>Next</strong>.</p>
 <div class="admonition important">
 <p class="admonition-title">Notice</p>
-<p>Please do not change <strong>ecrimagetag</strong> before consulting solution team.</p>
+<p>Please do not change <strong>EcrImageTag</strong> before consulting solution team.</p>
 </div>
 </li>
 <li>
@@ -1440,10 +1432,11 @@ After successful stack creation, you can find relevant information in the **Outp
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.726fbb30.min.js"></script>
+      <script src="../../assets/javascripts/bundle.aecac24b.min.js"></script>
       
     
   </body>

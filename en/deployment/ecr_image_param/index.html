@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.6">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.d451bc0e.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.35e1ed30.min.css">
       
       
 
@@ -1132,7 +1132,7 @@
 </ol>
 <div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">ECR_IMAGE_TAG</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;dev&#39;</span><span class="p">;</span>
 </code></pre></div>
-<p>TAG_NAME is defined by the CloudFormation deployment parameter <code>ecrimagetag</code>. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.</p>
+<p>TAG_NAME is defined by the CloudFormation deployment parameter <code>EcrImageTag</code>. By default, the tag value is dynamically generated during each compilation of the solution's CICD pipeline. For example, 'v1.0.0-46f9d43', where 'v1.0.0' represents the major version tag of the solution, and '46f9d43' is the commit ID of the project on GitHub.</p>
 <p>In most cases, users do not need to modify the ECR tag name. However, if users need to change the tag value, they can modify the default parameter value during the deployment of the solution's CloudFormation stack. Currently, we have two tag values available for users to choose from:
 1. v1.0.0
 2. v1.0.1-COMMITID</p>
@@ -1169,10 +1169,11 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.a264c092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.726fbb30.min.js"></script>
+      <script src="../../assets/javascripts/bundle.aecac24b.min.js"></script>
       
     
   </body>
