@@ -15,7 +15,7 @@
         选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理。目前模型列表展示本地和云上的模型选项。为了进行云上推理，建议选择有sagemaker关键字为后缀的、表明已经上传到云上的模型进行后续推理。
 
 3. 选择云上推理所需要的模型。在**Stable Diffusion Checkpoint Used on Cloud**列表选择需要云上推理的模型, 则会触发右上角**Generate**按钮变为**Generate on Cloud**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "提示" 
         此项为必选项。
