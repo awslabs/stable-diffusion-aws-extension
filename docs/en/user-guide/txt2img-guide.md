@@ -14,11 +14,11 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
     !!! Important "Notice" 
         The model files used in the inference should be uploaded to the cloud before generate, which can be referred to the introduction of chapter **Cloud Assets Management**. The current model list displays options for both local and cloud-based models. For cloud-based inference, it is recommended to select models with the **sagemaker** keyword as a suffix, indicating that they have been uploaded to the cloud for subsequent inference.
 
-3. Select an endpoint for inference. Refresh and select an endpoint from **Select Cloud SageMaker Endpoint** dropdown list that is in the *InService* state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Cloud**。
+3. Select Stable Diffusion checkpoint model that will be used for cloud inference through **Stable Diffusion Checkpoint Used on Cloud**, and the button **Generate** will change to button **Generate on Cloud**.
 ![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
-        This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
+        This field is mandatory. 
 
 4. Finish setting all the parameters, and then click **Generate on Cloud**.
 
