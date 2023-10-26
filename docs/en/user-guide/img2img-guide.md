@@ -10,8 +10,8 @@ You can open the **img2img tab** and use the original region along with the **Am
     
     !!! Important "Notice" 
         The model files used in the inference should be uploaded to the cloud before generate, which can be referred to the introduction of chapter **Cloud Assets Management**
-3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Cloud**。
-![Generate button面板](../images/txt2img-generate-button.png)
+3. Select Stable Diffusion checkpoint model that will be used for cloud inference through **Stable Diffusion Checkpoint Used on Cloud**, and the button **Generate** will change to button **Generate on Cloud**.
+![Gnerate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
         This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.

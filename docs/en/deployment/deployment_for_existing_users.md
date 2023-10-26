@@ -78,8 +78,8 @@ This automated AWS CloudFormation template deploys the solution in the AWS Cloud
    !!! Important "Notice"
    Please do not change **EcrImageTag** before consulting solution team.
 
-5. On the **Configure stack options** page, choose **Next**.
-6. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
+6. On the **Configure stack options** page, choose **Next**.
+7. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
 
 You can view the status of the stack in the AWS CloudFormation Console in the **Status** column. You should receive a CREATE_COMPLETE status in approximately 15 minutes.
 
