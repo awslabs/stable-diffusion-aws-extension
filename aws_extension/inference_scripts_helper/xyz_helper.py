@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 
-def xyz_args(script_name, arg, current_index, args) -> Dict[str, List[str]]:
+def xyz_args(script_name, arg, current_index, args, _) -> Dict[str, List[str]]:
     if script_name != 'x/y/z plot':
         return {}, None
 
