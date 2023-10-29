@@ -112,7 +112,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
                 "Dimensions": [{"Name": "EndpointName", "Value": endpoint_name}],
                 "Statistic": "Average",
             },
-            "ScaleInCooldown": 3600,
+            "ScaleInCooldown": 600,
             # The cooldown period helps you prevent your Auto Scaling group from launching or terminating
             "ScaleOutCooldown": 300
             # ScaleOutCooldown - The amount of time, in seconds, after a scale out activity completes before another
@@ -131,7 +131,7 @@ def enable_autoscaling(endpoint_name, variant_name, low_value, high_value):
             # Specifies whether the ScalingAdjustment value in the StepAdjustment property is an absolute number or a
             # percentage of the current capacity.
             "MetricAggregationType": "Average",  # The aggregation type for the CloudWatch metrics.
-            "Cooldown": 3600,  # The amount of time, in seconds, to wait for a previous scaling activity to take effect.
+            "Cooldown": 600,  # The amount of time, in seconds, to wait for a previous scaling activity to take effect.
             "StepAdjustments":  # A set of adjustments that enable you to scale based on the size of the alarm breach.
                 [
                     {
