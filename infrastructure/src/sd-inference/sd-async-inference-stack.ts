@@ -33,7 +33,7 @@ import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sa
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { DeleteSagemakerEndpointsApi, DeleteSagemakerEndpointsApiProps } from './sagemaker-endpoints-delete';
-import {SagemakerEndpointEvents, SagemakerEndpointEventsProps} from "./sagemaker-endpoints-event";
+import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from './sagemaker-endpoints-event';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
