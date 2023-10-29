@@ -71,5 +71,6 @@ def get_business_status(status):
         "CREATING": EndpointStatus.CREATING.value,
         "DELETED": EndpointStatus.DELETED.value,
         "FAILED": EndpointStatus.FAILED.value,
+        "UPDATING": EndpointStatus.UPDATING.value,
     }
     return switcher.get(status, status)
