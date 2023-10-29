@@ -7,4 +7,5 @@ class EndpointStatus(Enum):
     IN_SERVICE = "InService"
     DELETED = "Deleted"
     FAILED = "Failed"
+    UPDATING = "Updating"
     ROLLING_BACK = "RollingBack"
