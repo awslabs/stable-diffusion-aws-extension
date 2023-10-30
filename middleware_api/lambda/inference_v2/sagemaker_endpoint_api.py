@@ -5,11 +5,8 @@ from _types import EndpointDeploymentJob
 from multi_users.utils import get_user_roles, check_user_permissions
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
-from boto3.dynamodb.conditions import Attr, Key
 from aws_lambda_powertools import Logger
 from _enums import EndpointStatus
-
-import json
 
 logger = Logger(service="sagemaker_endpoint_api", level="INFO")
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -18,8 +15,6 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 sagemaker = boto3.client('sagemaker')
-ddb_client = boto3.resource('dynamodb')
-endpoint_deployment_table = ddb_client.Table(sagemaker_endpoint_table)
 
 
 # GET /endpoints?name=SageMaker_Endpoint_Name&username=&filter=key:value,key:value
