@@ -68,8 +68,10 @@ export class DeleteSagemakerEndpointsApi {
             effect: Effect.ALLOW,
             actions: [
                 'application-autoscaling:DeregisterScalableTarget',
+      ],
+            resources: [
+                `*`,
             ],
-            resources: [`*`],
         }));
 
         newRole.addToPolicy(new PolicyStatement({
@@ -79,7 +81,7 @@ export class DeleteSagemakerEndpointsApi {
                 'logs:CreateLogStream',
                 'logs:PutLogEvents',
             ],
-            resources: ['*'],
+            resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
         }));
 
         return newRole;
