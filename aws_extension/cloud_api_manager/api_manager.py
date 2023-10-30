@@ -74,10 +74,10 @@ class CloudApiManager:
             "delete_endpoint_list": delete_endpoint_list,
         }
 
-        deployment_url = f"{self.auth_manger.api_url}inference/delete-sagemaker-endpoint"
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            response = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             r = response.json()
             logger.debug(f"response for rest api {r}")
             return r
@@ -131,8 +131,8 @@ class CloudApiManager:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
 
-                    # Skip if status is 'deleted'
-                    if endpoint_status == 'deleted':
+                    # Skip if status is 'Deleted'
+                    if endpoint_status == 'Deleted':
                         continue
 
                     # Compatible with fields used in older versions
