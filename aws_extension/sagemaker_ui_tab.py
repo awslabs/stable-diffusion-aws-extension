@@ -187,6 +187,8 @@ def user_settings_tab():
 
             def upsert_user(username, password, user_roles):
                 try:
+                    if not password.trip() or len(password.trip()) < 1:
+                        return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username, password=password,
                                                    roles=user_roles, creator=cloud_auth_manager.username,
                                                    user_token=cloud_auth_manager.username)
