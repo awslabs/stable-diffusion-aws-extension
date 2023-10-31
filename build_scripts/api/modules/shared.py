@@ -84,6 +84,8 @@ os.makedirs(cmd_opts.hypernetwork_dir, exist_ok=True)
 hypernetworks = {}
 loaded_hypernetworks = []
 
+loras = {}
+
 
 def reload_hypernetworks():
     from modules.hypernetworks import hypernetwork
@@ -91,6 +93,20 @@ def reload_hypernetworks():
 
     hypernetworks = hypernetwork.list_hypernetworks(cmd_opts.hypernetwork_dir)
 
+
+def list_loras():
+    import glob
+    for filename in sorted(glob.iglob(os.path.join(cmd_opts.lora_dir, '**/*.pt'), recursive=True), key=str.lower):
+        name = os.path.splitext(os.path.basename(filename))[0]
+        # Prevent a hypothetical "None.pt" from being listed.
+        if name != "None":
+           loras[name] = filename
+    
+    for filename in sorted(glob.iglob(os.path.join(cmd_opts.lora_dir, '**/*.safetensors'), recursive=True), key=str.lower):
+        name = os.path.splitext(os.path.basename(filename))[0]
+        # Prevent a hypothetical "None.pt" from being listed.
+        if name != "None":
+           loras[name] = filename
 
 class State:
     skipped = False

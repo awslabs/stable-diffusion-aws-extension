@@ -4,7 +4,7 @@ import os
 import sys
 
 from modules import timer
-from modules import sd_models, extensions
+from modules import shared, sd_models, extensions
 
 timer.startup_timer.record("start")
 
@@ -285,6 +285,9 @@ def initialize():
 
     # initialize_rest(reload_script_modules=False)
     sd_models.list_models()
+    
+    # initialize lora model list
+    shared.list_loras()
 
     # TODO: do we need load_upscalers?
     from modules import modelloader

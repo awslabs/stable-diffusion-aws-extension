@@ -23,8 +23,6 @@ import modules.images as images
 import modules.styles
 import modules.sd_models as sd_models
 import modules.sd_vae as sd_vae
-#from ldm.data.util import AddMiDaS
-#from ldm.models.diffusion.ddpm import LatentDepth2ImageDiffusion
 from tqdm import tqdm
 
 from einops import repeat, rearrange
@@ -35,12 +33,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 # some of those options should not be changed at all because they would break the model, so I removed them from options.
 opt_C = 4
 opt_f = 8
-# from diffusers import StableDiffusionControlNetPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionControlNetImg2ImgPipeline, StableDiffusionControlNetInpaintPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline
-# from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline
-# from modules.custome_pipeline.stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
-# from modules.custome_pipeline.stable_diffusion_reference import StableDiffusionReferencePipeline
-# from modules.custome_pipeline.stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
-# from modules.custome_pipeline.sd_text2img_k_diffusion import StableDiffusionPipeline_webui
 from diffusers.pipelines.controlnet import MultiControlNetModel
 from modules.pipeline_utils import convert_pipeline
 from modules.pipeline_run import tx2img_pipeline_run, img2img_pipeline_run
@@ -794,9 +786,18 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             p.parse_extra_network_prompts()
 
-            if not p.disable_extra_networks:
-                with devices.autocast():
-                    extra_networks.activate(p, p.extra_network_data)
+
+            for extra_network_name, extra_network_args in p.extra_network_data.items():
+                if extra_network_name == 'lora':
+                    for extra_network_arg in extra_network_args:
+                        lora_filename = extra_network_arg.positional[0]
+                        lora_file_path = shared.loras.get(lora_filename, None)
+                        if lora_file_path is not None:
+                            te_multiplier = float(extra_network_arg.positional[1]) if len(extra_network_arg.positional) > 1 else 1.0
+                            shared.sd_pipeline.load_lora_weights(lora_file_path, lora_scale=te_multiplier)
+                        else:
+                            print(f"lora model not found {lora_filename}")
+                
 
             # if p.scripts is not None:
             #     p.scripts.processe_batch(p, batch_number=n, prompts=p.prompts, seeds=p.seeds, subseeds=p.subseeds)
@@ -936,8 +937,9 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             if opts.grid_save:
                 images.save_image(grid, p.outpath_grids, "grid", p.all_seeds[0], p.all_prompts[0], opts.grid_format, info=infotext(use_main_prompt=True), short_filename=not opts.grid_extended_filename, p=p, grid=True)
 
-    if not p.disable_extra_networks and p.extra_network_data:
-        extra_networks.deactivate(p, p.extra_network_data)
+    for extra_network_name, extra_network_args in p.extra_network_data.items():
+        if extra_network_name == 'lora':
+            shared.sd_pipeline.unload_lora_weights()
 
     devices.torch_gc()
 

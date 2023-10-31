@@ -478,12 +478,17 @@ class DiffuserPipelineData:
 
 pipeline_data = DiffuserPipelineData()
 
+def send_model_to_trash(m):
+    m.to("meta")
+    devices.torch_gc()
+
+
 def load_pipeline(checkpoint_info=None):
     checkpoint_info = checkpoint_info or select_checkpoint()
 
     if pipeline_data.sd_pipeline:
+        send_model_to_trash(pipeline_data.sd_pipeline)
         pipeline_data.sd_pipeline = None
-        gc.collect()
         devices.torch_gc()
 
 
@@ -512,7 +517,9 @@ def load_pipeline(checkpoint_info=None):
     if key_name_sd_xl_base in checkpoint or key_name_sd_xl_refiner in checkpoint:
         pipeline_class = StableDiffusionXLPipeline
     
-    pipeline_data.sd_pipeline = pipeline_class.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, variant="fp16")
+    checkpoint = None
+
+    pipeline_data.sd_pipeline = pipeline_class.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
    
     pipeline_data.sd_pipeline.enable_xformers_memory_efficient_attention()
     #pipeline_data.sd_pipeline.enable_sequential_cpu_offload()
@@ -529,6 +536,7 @@ def load_pipeline(checkpoint_info=None):
 
     pipeline_data.sd_pipeline.to(shared.device)
     timer.record("move model to device")
+
     pipeline_data.was_loaded_at_least_once = True
     
     sd_vae.delete_base_vae()
@@ -536,7 +544,11 @@ def load_pipeline(checkpoint_info=None):
 
     embeddings_dir = shared.cmd_opts.embeddings_dir
     try:
-        pipeline_data.sd_pipeline.load_textual_inversion(embeddings_dir) 
+        embeddings = os.listdir(embeddings_dir)
+        embeddings_path = []
+        for embedding in embeddings:
+            embeddings_path.append(os.path.join(embeddings_dir, embedding))
+        pipeline_data.sd_pipeline.load_textual_inversion(embeddings_path)
     except:
         print(f"No embeddings.")
     timer.record("load textual inversion embeddings")
@@ -561,6 +573,7 @@ def reload_pipeline_weights(sd_pipeline=None, info=None):
         #    return
 
         pipeline_data.sd_pipeline.to(devices.cpu)
+        send_model_to_trash(pipeline_data.sd_pipeline)
 
     timer = Timer()
     #del pipeline_data.sd_pipeline

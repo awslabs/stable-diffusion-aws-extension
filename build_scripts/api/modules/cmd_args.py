@@ -30,6 +30,7 @@ parser.add_argument("--max-batch-count", type=int, default=16, help="maximum bat
 parser.add_argument("--embeddings-dir", type=str, default=os.path.join(data_path, 'embeddings'), help="embeddings directory for textual inversion (default: embeddings)")
 parser.add_argument("--textual-inversion-templates-dir", type=str, default=os.path.join(script_path, 'textual_inversion_templates'), help="directory with textual inversion templates")
 parser.add_argument("--hypernetwork-dir", type=str, default=os.path.join(models_path, 'hypernetworks'), help="hypernetwork directory")
+parser.add_argument("--lora-dir", type=str, default=os.path.join(models_path, 'Lora'), help="lora directory")
 parser.add_argument("--localizations-dir", type=str, default=os.path.join(script_path, 'localizations'), help="localizations directory")
 parser.add_argument("--allow-code", action='store_true', help="allow custom script execution from webui")
 parser.add_argument("--medvram", action='store_true', help="enable stable diffusion model optimizations for sacrificing a little speed for low VRM usage")

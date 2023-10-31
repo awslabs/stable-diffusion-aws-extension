@@ -128,6 +128,8 @@ def download_and_update(model_type, model_s3_pos):
         sd_models.list_models()
     if model_type == 'hypernetworks':
         shared.reload_hypernetworks()
+    if model_type == 'Lora':
+        shared.list_loras()
     if model_type == 'embeddings':
         shared.sd_pipeline.load_textual_inversion(shared.cmd_opts.embeddings_dir)
     if model_type == 'ControlNet':
