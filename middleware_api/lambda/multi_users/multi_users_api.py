@@ -5,7 +5,7 @@ import os
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from multi_users._types import User, PARTITION_KEYS, Role
+from multi_users._types import User, PARTITION_KEYS, Role, Default_Role
 from multi_users.roles_api import upsert_role
 from multi_users.utils import KeyEncryptService, check_user_existence, get_user_roles
 
@@ -32,7 +32,7 @@ def upsert_user(raw_event, ctx):
     print(raw_event)
     event = UpsertUserEvent(**raw_event['body'])
     if event.initial:
-        rolenames= ['IT Operator', 'Designer']
+        rolenames= [Default_Role]
 
         ddb_service.put_items(user_table, User(
             kind=PARTITION_KEYS.user,
