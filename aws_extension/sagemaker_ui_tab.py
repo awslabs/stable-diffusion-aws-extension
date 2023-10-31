@@ -209,7 +209,7 @@ def user_settings_tab():
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
-                    if not password.strip() or len(password.strip()) < 1:
+                    if not password or len(password) < 1:
                         return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username, password=password,
                                                    roles=user_roles, creator=pr.username,

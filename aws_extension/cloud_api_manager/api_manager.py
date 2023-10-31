@@ -215,7 +215,7 @@ class CloudApiManager:
     def upsert_user(self, username, password, roles, creator, initial=False, user_token=""):
         if not self.auth_manger.enableAuth and not initial:
             return {}
-        if not password.strip() or len(password.strip()) < 1:
+        if not password or len(password) < 1:
             raise Exception('password should not be none')
         payload = {
             "initial": initial,
