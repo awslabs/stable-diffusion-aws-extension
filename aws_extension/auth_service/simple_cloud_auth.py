@@ -42,6 +42,19 @@ class CloudAuthLoader:
     def enable(self):
         return self.enableAuth
 
+    def update_gradio_auth(self):
+        from modules import shared
+        user_cred_str = self.create_config()
+        if user_cred_str:
+            for user_password in user_cred_str.split(','):
+                parts = user_password.split(':')
+                user = parts[0]
+                password = parts[1]
+                if not shared.demo.server_app.auth:
+                    shared.demo.server_app.auth = {}
+
+                shared.demo.server_app.auth[user] = password
+
     def create_config(self) -> str:
         return self._get_users_config_from_api()
 
