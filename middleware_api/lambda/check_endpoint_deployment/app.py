@@ -17,6 +17,7 @@ def lambda_handler(event, context):
     stage = event_payload['stage']
     endpoint_deployment_job_id = event_payload['endpoint_deployment_id']
     endpoint_name = event_payload['endpoint_name']
+    status = ""
     if stage == 'Training':
         print("Status check for training not implemented yet!")
     elif stage == 'Deployment':
@@ -30,24 +31,18 @@ def lambda_handler(event, context):
                                          {'EndpointDeploymentJobId': endpoint_deployment_job_id}, 'autoscaling',
                                          endpoint_name, 'prod')
             update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
             update_endpoint_job_table(endpoint_deployment_job_id, 'endTime', current_time)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'status', 'success')
         elif status == 'Creating':
             update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
         elif status == 'Failed':
             failure_reason = endpoint_details['FailureReason']
             event_payload['message'] = 'Deployment failed for endpoint "{}". {}'.format(name, failure_reason)
             update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'status', 'failed')
         elif status == 'RollingBack':
             event_payload[
                 'message'] = 'Deployment failed for endpoint "{}", rolling back to previously deployed version.'.format(
                 name)
             update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_name', endpoint_name)
-            update_endpoint_job_table(endpoint_deployment_job_id, 'endpoint_status', status)
     event_payload['status'] = status
     return event_payload
 
