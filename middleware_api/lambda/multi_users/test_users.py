@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from unittest import TestCase
 
-os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
+os.environ.setdefault('AWS_PROFILE', 'playground')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
 os_key_id = 'alias/sd-extension-password-key'
 os.environ.setdefault('KEY_ID', os_key_id)
@@ -83,15 +83,18 @@ class InferenceApiTest(TestCase):
 
     def test_add_user(self, count):
         from multi_users.multi_users_api import upsert_user
-        event = {
+        event = {'body': {
             'username': f'batman{count}',
             'password': 'password',
-            'roles': ['IT Operator', 'Designer'],
-            'creator': 'alvindaiyan'
-        }
+            'roles': ['IT Operator'],
+            'creator': 'spiderman'
+        }}
         resp = upsert_user(event, {})
         print(resp)
         assert resp['status'] == 200
+
+    def test_add_user_with_no_permission(self):
+        self.test_add_user(0)
 
     def test_batch_add_users(self):
         for i in range(300):
@@ -102,7 +105,7 @@ class InferenceApiTest(TestCase):
         event = {
             'queryStringParameters': {
                 # 'username': 'alvindaiyan',
-                'limit': 10,
+                'limit': 3,
                 'show_password': False,
             }
         }
@@ -130,7 +133,7 @@ class InferenceApiTest(TestCase):
 
     def test_list_username(self):
         from multi_users.multi_users_api import list_user
-        username = 'superman'
+        username = 'admin'
         event = {
             'queryStringParameters': {
                 'show_password': True,
