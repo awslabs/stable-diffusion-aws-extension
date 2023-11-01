@@ -1,5 +1,5 @@
 import {PythonFunction, PythonFunctionProps} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_iam, Duration} from 'aws-cdk-lib'
+import {aws_iam, Duration} from 'aws-cdk-lib'
 import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
@@ -45,6 +45,7 @@ export class SagemakerEndpointEvents {
             actions: [
                 'dynamodb:UpdateItem',
                 'dynamodb:Scan',
+                'dynamodb:GetItem',
             ],
             resources: [
                 this.endpointDeploymentTable.tableArn,
@@ -55,10 +56,17 @@ export class SagemakerEndpointEvents {
         newRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                'sagemaker:DescribeEndpoint',
                 'sagemaker:DeleteEndpoint',
+                'sagemaker:DescribeEndpoint',
+                'sagemaker:DescribeEndpointConfig',
+                'sagemaker:UpdateEndpointWeightsAndCapacities',
+                'cloudwatch:DeleteAlarms',
+                'cloudwatch:DescribeAlarms',
+                'cloudwatch:PutMetricAlarm',
+                'application-autoscaling:PutScalingPolicy',
+                'application-autoscaling:RegisterScalableTarget',
             ],
-            resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
+            resources: [`*`],
         }));
 
         newRole.addToPolicy(new PolicyStatement({
@@ -81,8 +89,8 @@ export class SagemakerEndpointEvents {
             entry: `${this.src}/inference_v2`,
             architecture: Architecture.X86_64,
             runtime: Runtime.PYTHON_3_9,
-            index: 'sagemaker_endpoint_events.py',
-            handler: 'event_handler',
+            index: 'sagemaker_endpoint_api.py',
+            handler: 'sagemaker_endpoint_events',
             timeout: Duration.seconds(900),
             role: this.iamRole(),
             memorySize: 1024,

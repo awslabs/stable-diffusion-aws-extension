@@ -58,7 +58,6 @@ export class DeleteSagemakerEndpointsApi {
         newRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                'sagemaker:DescribeEndpoint',
                 'sagemaker:DeleteEndpoint',
             ],
             resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
