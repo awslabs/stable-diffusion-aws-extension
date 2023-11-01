@@ -17,6 +17,16 @@ then
     exit 1
 fi
 
+# if os is centos, install jq
+if [ -f /etc/redhat-release ]; then
+    sudo yum install -y jq
+fi
+
+# if os is ubuntu, install jq
+if [ -f /etc/lsb-release ]; then
+    sudo apt install -y jq
+fi
+
 # Describe the existing endpoint to get the endpoint configuration name
 ENDPOINT_CONFIG_NAME=$(aws sagemaker describe-endpoint --endpoint-name $ENDPOINT_NAME --query 'EndpointConfigName' --output text)
 echo "Endpoint configuration name: $ENDPOINT_CONFIG_NAME"
