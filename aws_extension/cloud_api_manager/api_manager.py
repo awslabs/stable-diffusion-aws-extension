@@ -132,7 +132,7 @@ class CloudApiManager:
                         endpoint_status = obj["status"]
 
                     # Skip if endpoint_status is not 'InService' and not 'Failed'
-                    if endpoint_status not in ['InService', 'Failed']:
+                    if endpoint_status not in ['InService', 'Failed', 'Updating']:
                         continue
 
                     # Compatible with fields used in older versions

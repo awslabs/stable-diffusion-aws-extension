@@ -222,7 +222,7 @@ def sagemaker_endpoint_events(event, context):
 
         update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
 
-        if business_status != EndpointStatus.DELETING.value and business_status != EndpointStatus.DELETED.value:
+        if business_status in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
             status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
             logger.info(f"Endpoint status: {status}")
             if 'ProductionVariants' in status:
