@@ -231,6 +231,14 @@ def sagemaker_endpoint_events(event, context):
 
         if business_status == EndpointStatus.DELETED.value:
             update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+            endpoint_config_name = event['detail']['EndpointConfigName']
+            model_name = event['detail']['ModelName']
+            # todo need test
+            try:
+                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+                sagemaker.delete_model(ModelName=model_name)
+            except Exception as e:
+                logger.error(f"error deleting endpoint config and model with exception: {e}")
 
         if business_status == EndpointStatus.IN_SERVICE.value:
             current_time = str(datetime.now())
