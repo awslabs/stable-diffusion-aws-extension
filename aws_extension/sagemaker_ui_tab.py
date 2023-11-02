@@ -275,7 +275,8 @@ def user_settings_tab():
                 })
 
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
-                next_page_btn = gr.Button(value="Next Page", variant='primary', visible=(token_zero is not None))
+                # next_page_btn = gr.Button(value="Next Page", variant='primary', visible=(token_zero is not None))
+                next_page_btn = gr.Button(value="Next Page", variant='primary')
 
                 def next_page(table_token_state):
                     user_list, new_token = list_users(last_evaluated_key=table_token_state['current_token'])
@@ -303,7 +304,7 @@ def user_settings_tab():
                 def update_user_table_button_state(token_state):
                     show_previous = True if token_state['previous_token'] else False
                     show_next = True if token_state['current_token'] else False
-                    return gr.update(visible=show_previous), gr.update(visible=show_next)
+                    return gr.update(visible=show_previous), gr.update(visible=True)
 
                 user_table.change(fn=update_user_table_button_state,
                                   inputs=[user_table_state],
