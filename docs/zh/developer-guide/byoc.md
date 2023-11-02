@@ -29,8 +29,8 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 
 # 准备容器镜像
 
-您可自行构建容器镜像（**强烈建议您在更换镜像前验证该镜像是否正常**），验证后将镜像上传到和部署方案相同区域的 [Amazon ECR](https://console.aws.amazon.com/ecr)
-中，详细请阅读 [将 Amazon ECR 与 AWS CLI 结合使用](https://docs.aws.amazon.com/zh_cn/AmazonECR/latest/userguide/getting-started-cli.html)
+您可自行构建容器镜像（**强烈建议您在更换镜像前验证该镜像是否正常**），验证后将镜像上传到和部署方案相同区域的 [Amazon ECR](https://console.aws.amazon.com/ecr){:target="_blank"}
+中，详细请阅读 [将 Amazon ECR 与 AWS CLI 结合使用](https://docs.aws.amazon.com/zh_cn/AmazonECR/latest/userguide/getting-started-cli.html){:target="_blank"}
 ，操作完成后，您将获得一个镜像 URI，如：
 
 ```shell
@@ -43,10 +43,12 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 
 关于执行后续命令，您可以有 2 种选择：
 
-- 直接在 [CloudShell](https://console.aws.amazon.com/cloudshell/home) 中执行 (推荐)
+- 直接在 CloudShell 中执行 (推荐)，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
+    - https://{region}.console.aws.amazon.com/cloudshell/home
 - 在您自己的环境中执行，您需要：
-    - 安装 CURL
-    - 安装并配置 [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html)
+    - 安装 [CURL](https://curl.se/){:target="_blank"}
+    - 安装 [jq](https://jqlang.github.io/jq/){:target="_blank"}
+    - 安装并配置 [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
 
 <br>
 

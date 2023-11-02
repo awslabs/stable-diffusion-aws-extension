@@ -29,7 +29,7 @@ To achieve this capability, follow these steps:
 
 # Build a Container Image
 
-You can build your own container image and upload it to [Amazon ECR](https://console.aws.amazon.com/ecr) in the region where the solution is deployed, please read [Using Amazon ECR with the AWS CLI](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html)
+You can build your own container image and upload it to [Amazon ECR](https://console.aws.amazon.com/ecr){:target="_blank"} in the region where the solution is deployed, please read [Using Amazon ECR with the AWS CLI](https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html){:target="_blank"}
 , after the operation is complete, you will get a ECR URI, such as:
 
 ```shell
@@ -42,10 +42,12 @@ You can build your own container image and upload it to [Amazon ECR](https://con
 
 You have two options for executing subsequent commands:
 
-- On [CloudShell](https://console.aws.amazon.com/cloudshell/home) Middle execution (recommended)
+- On CloudShell (recommended)，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
+    - https://{region}.console.aws.amazon.com/cloudshell/home
 - To execute on your own environment, you need to:
-    - Install CURL
-    - Install and Configure [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html)
+    - Install [CURL](https://curl.se/){:target="_blank"}
+    - Install [jq](https://jqlang.github.io/jq/){:target="_blank"}
+    - Install and Configure [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
 
 <br>
 
