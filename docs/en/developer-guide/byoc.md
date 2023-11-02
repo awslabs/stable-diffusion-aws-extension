@@ -21,7 +21,7 @@ The **Extension for Stable Diffusion on AWS** is extremely flexible. You can rep
 To achieve this capability, follow these steps:
 
 - Step 1: Build a Container Image
-- Step 2: Prepare command execution environment
+- Step 2: Prepare command execution environment and permissions
 - Step 3: **Replace** the specified SageMaker Endpoint model image with your own‘s or **Restore** the default model image
 - Step 4: Verify or diagnose whether the container image is work
 
@@ -36,18 +36,36 @@ You can build your own container image and upload it to [Amazon ECR](https://con
 123456789012.dkr. ecr.cn-northwest-1.amazonaws.com .cn/your-image:latest
 ```
 
+Dockerfile template:
+
+```dockerfile
+# Use base iamge
+FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference
+
+# Set environment variables to non-interactive (this prevents some prompts)
+ENV DEBIAN_FRONTEND=non-interactive
+
+# Install packages in a single RUN step
+RUN apt-get install -y xxxxx && \
+    apt-get clean && \
+    apt-get autoclean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+```
+
 <br>
 
-# Prepare command execution environment
+# Prepare command execution environment and permissions
 
-You have two options for executing subsequent commands:
+There are two ways to execute the following commands:
 
-- On [CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html){:target="_blank"} (recommended)，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
-    - https://{region}.console.aws.amazon.com/cloudshell/home
-- To execute on your own environment, you need to:
+- **Method 1(Recommended)**：On [CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html){:target="_blank"}，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
+    - Login URL: https://{region}.console.aws.amazon.com/cloudshell/home
+    - Please make sure that the account you logged in has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.
+- **Method 2**：To execute on your own environment, you need to:
     - Install [CURL](https://curl.se/){:target="_blank"}
     - Install [jq](https://jqlang.github.io/jq/){:target="_blank"}
     - Install and Configure [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
+    - Please make sure that the account you configured has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.
 
 <br>
 

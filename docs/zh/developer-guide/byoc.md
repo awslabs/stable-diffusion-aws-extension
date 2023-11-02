@@ -21,7 +21,7 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 为了实现这个能力，请按照以下步骤操作：
 
 - 第一步：构建容器镜像
-- 第二步：准备命令执行环境
+- 第二步：准备命令执行环境和权限
 - 第三步：将指定的 SageMaker Endpoint 模型镜像**替换**为您自己的容器镜像或**恢复**为默认镜像
 - 第四步：验证或诊断容器镜像是否正常工作
 
@@ -37,18 +37,36 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 123456789012.dkr.ecr.cn-northwest-1.amazonaws.com.cn/your-image:latest
 ```
 
+Dockerfile 模板如下：
+
+```dockerfile
+# Use base iamge
+FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference
+
+# Set environment variables to non-interactive (this prevents some prompts)
+ENV DEBIAN_FRONTEND=non-interactive
+
+# Install packages in a single RUN step
+RUN apt-get install -y xxxxx && \
+    apt-get clean && \
+    apt-get autoclean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+```
+
 <br>
 
-# 准备命令执行环境
+# 准备命令执行环境和权限
 
-关于执行后续命令，您可以有 2 种选择：
+关于执行后续命令的环境，有两种方式：
 
-- 直接在 [CloudShell](https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html){:target="_blank"} 中执行 (推荐)，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
-    - https://{region}.console.aws.amazon.com/cloudshell/home
-- 在您自己的环境中执行，您需要：
+- **方式一（推荐）**：打开并登陆 [CloudShell](https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html){:target="_blank"} ，在终端初始化完成后执行命令，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
+    - 登录地址：https://{region}.console.aws.amazon.com/cloudshell/home
+    - 请确保您登陆的账户具备足够的权限（比如部署解决方案的权限），否则执行命令会因为权限不足而失败。
+- **方式二**：在您自己的环境中执行，您需要：
     - 安装 [CURL](https://curl.se/){:target="_blank"}
     - 安装 [jq](https://jqlang.github.io/jq/){:target="_blank"}
     - 安装并配置 [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
+    - 请确保您配置的账户具备足够的权限（比如部署解决方案的权限），否则执行命令会因为权限不足而失败。
 
 <br>
 

@@ -159,4 +159,4 @@ echo "Waiting for endpoint to be created..."
 aws sagemaker wait endpoint-in-service \
     --region "$REGION" \
     --endpoint-name "$ENDPOINT_NAME" | jq
-echo "Endpoint recreated successfully!"
+echo "Endpoint $ENDPOINT_NAME image updated to $NEW_IMAGE_URI"
