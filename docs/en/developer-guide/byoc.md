@@ -84,6 +84,12 @@ curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension
 
 <br>
 
+The following figure shows the successful execution of the command:
+
+![UpdateImage](../../zh/images/UpdateImage.png)
+
+<br>
+
 # Restore the default image
 
 To restore the default image, replace the variables in the following command and execute:

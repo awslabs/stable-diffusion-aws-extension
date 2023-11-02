@@ -85,6 +85,12 @@ curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension
 
 <br>
 
+效果如下：
+
+![UpdateImage](../images/UpdateImage.png)
+
+<br>
+
 # 恢复默认镜像
 
 如欲恢复默认镜像，请替换以下命令中的变量，并执行命令，即可恢复到默认镜像：
