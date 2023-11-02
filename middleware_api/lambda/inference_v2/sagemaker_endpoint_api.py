@@ -81,6 +81,12 @@ def delete_sagemaker_endpoints(event, ctx):
                 delete_response = sagemaker.delete_endpoint(EndpointName=endpoint)
                 logger.info(delete_response)
 
+                short_id = endpoint.split('-')[2]
+
+                sagemaker.delete_model(ModelName=f"infer-model-{short_id}")
+
+                sagemaker.delete_endpoint_config(EndpointConfigName=f"infer-config-{short_id}")
+
             except (BotoCoreError, ClientError) as error:
                 if error.response['Error']['Code'] == 'ResourceNotFound':
                     logger.info("Endpoint not found, no need to delete.")
@@ -147,7 +153,7 @@ def sagemaker_endpoint_create_api(event, ctx):
 
         return {
             'statusCode': 200,
-            'message': "Endpoint deployment started",
+            'message': f"Endpoint deployment started: {sagemaker_endpoint_name}",
             'data': raw
         }
     except Exception as e:

@@ -169,6 +169,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               commonLayer: props.commonLayer,
               endpointDeploymentTable: sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
+              inferenceJobTable: sd_inference_job_table,
               httpMethod: 'POST',
               srcRoot: srcRoot,
               authorizer: props.authorizer,

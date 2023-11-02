@@ -1,10 +1,12 @@
 import {PythonFunction, PythonFunctionProps} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_sns as sns, Duration} from 'aws-cdk-lib'
+import {Aws, Duration} from 'aws-cdk-lib'
 import {MethodOptions} from 'aws-cdk-lib/aws-apigateway/lib/method';
-import {Effect, PolicyStatement, Role} from 'aws-cdk-lib/aws-iam';
+import {Effect, PolicyStatement, Role, CompositePrincipal, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {Table} from "aws-cdk-lib/aws-dynamodb";
+import {Bucket} from "aws-cdk-lib/aws-s3";
+import {Topic} from 'aws-cdk-lib/aws-sns';
 import {
     JsonSchemaType,
     JsonSchemaVersion,
@@ -13,8 +15,6 @@ import {
     Resource,
     IAuthorizer
 } from "aws-cdk-lib/aws-apigateway";
-import * as s3 from "aws-cdk-lib/aws-s3";
-import * as iam from "aws-cdk-lib/aws-iam";
 
 
 export interface CreateSagemakerEndpointsApiProps {
@@ -22,14 +22,15 @@ export interface CreateSagemakerEndpointsApiProps {
     httpMethod: string;
     endpointDeploymentTable: Table;
     multiUserTable: Table;
+    inferenceJobTable: Table;
     srcRoot: string;
     inferenceECRUrl: string;
     commonLayer: LayerVersion;
     authorizer: IAuthorizer;
-    s3Bucket: s3.Bucket;
-    userNotifySNS: sns.Topic;
-    inferenceResultTopic: sns.Topic;
-    inferenceResultErrorTopic: sns.Topic;
+    s3Bucket: Bucket;
+    userNotifySNS: Topic;
+    inferenceResultTopic: Topic;
+    inferenceResultErrorTopic: Topic;
 }
 
 export class CreateSagemakerEndpointsApi {
@@ -39,14 +40,15 @@ export class CreateSagemakerEndpointsApi {
     private readonly scope: Construct;
     private readonly endpointDeploymentTable: Table;
     private readonly multiUserTable: Table;
+    private readonly inferenceJobTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
     private readonly inferenceECRUrl: string;
     private readonly authorizer: IAuthorizer;
-    private readonly s3Bucket: s3.Bucket;
-    private readonly userNotifySNS: sns.Topic;
-    private readonly inferenceResultTopic: sns.Topic;
-    private readonly inferenceResultErrorTopic: sns.Topic;
+    private readonly s3Bucket: Bucket;
+    private readonly userNotifySNS: Topic;
+    private readonly inferenceResultTopic: Topic;
+    private readonly inferenceResultErrorTopic: Topic;
 
     constructor(scope: Construct, id: string, props: CreateSagemakerEndpointsApiProps) {
         this.scope = scope;
@@ -54,13 +56,14 @@ export class CreateSagemakerEndpointsApi {
         this.router = props.router;
         this.httpMethod = props.httpMethod;
         this.endpointDeploymentTable = props.endpointDeploymentTable;
+        this.inferenceJobTable = props.inferenceJobTable;
         this.multiUserTable = props.multiUserTable;
         this.authorizer = props.authorizer;
         this.src = props.srcRoot;
         this.layer = props.commonLayer;
         this.s3Bucket = props.s3Bucket;
-        this.userNotifySNS = props.userNotifySNS;
         this.inferenceECRUrl = props.inferenceECRUrl;
+        this.userNotifySNS = props.userNotifySNS;
         this.inferenceResultTopic = props.inferenceResultTopic;
         this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
 
@@ -71,19 +74,41 @@ export class CreateSagemakerEndpointsApi {
 
     private iamRole(): Role {
 
-        const newRole = new Role(this.scope, `${this.baseId}-role`, {
-            assumedBy: new iam.CompositePrincipal(
-                new iam.ServicePrincipal('sagemaker.amazonaws.com'),
-                new iam.ServicePrincipal('lambda.amazonaws.com'),
-            ),
+        const snsStatement = new PolicyStatement({
+            actions: [
+                'sns:Publish',
+                'sns:ListSubscriptionsByTopic',
+                'sns:ListTopics',
+            ],
+            resources: [
+                this.userNotifySNS.topicArn,
+                this.inferenceResultTopic.topicArn,
+                this.inferenceResultErrorTopic.topicArn
+            ],
         });
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
+        const s3Statement = new PolicyStatement({
             actions: [
-                'iam:PassRole',
-                'iam:CreateServiceLinkedRole',
-                'sts:AssumeRole',
+                's3:Get*',
+                's3:List*',
+                's3:PutObject',
+                's3:GetObject',
+            ],
+            resources: [
+                this.s3Bucket.bucketArn,
+                `${this.s3Bucket.bucketArn}/*`,
+                'arn:aws:s3:::*sagemaker*',
+            ],
+        });
+
+        const endpointStatement = new PolicyStatement({
+            actions: [
+                'sagemaker:InvokeEndpoint',
+                'sagemaker:CreateModel',
+                'sagemaker:CreateEndpoint',
+                'sagemaker:CreateEndpointConfig',
+                'sagemaker:DescribeEndpoint',
+                'sagemaker:InvokeEndpointAsync',
                 'ecr:GetAuthorizationToken',
                 'ecr:BatchCheckLayerAvailability',
                 'ecr:GetDownloadUrlForLayer',
@@ -96,53 +121,20 @@ export class CreateSagemakerEndpointsApi {
                 'ecr:UploadLayerPart',
                 'ecr:CompleteLayerUpload',
                 'ecr:PutImage',
-                'sagemaker:CreateModel',
-                'sagemaker:InvokeEndpoint',
-                'sagemaker:CreateEndpoint',
-                'sagemaker:DescribeEndpoint',
-                'sagemaker:InvokeEndpointAsync',
-                'sagemaker:CreateEndpointConfig',
-                'sagemaker:DescribeEndpointConfig',
-                'sagemaker:UpdateEndpointWeightsAndCapacities',
                 'cloudwatch:PutMetricAlarm',
                 'cloudwatch:PutMetricData',
+                'sagemaker:DescribeEndpointConfig',
                 'cloudwatch:DeleteAlarms',
                 'cloudwatch:DescribeAlarms',
+                'sagemaker:UpdateEndpointWeightsAndCapacities',
+                'iam:CreateServiceLinkedRole',
+                'iam:PassRole',
+                'sts:AssumeRole',
             ],
-            resources: [
-                `*`,
-            ],
-        }));
+            resources: ['*'],
+        });
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                's3:Get*',
-                's3:List*',
-                's3:PutObject',
-                's3:GetObject',
-            ],
-            resources: [
-                this.s3Bucket.bucketArn,
-                `${this.s3Bucket.bucketArn}/*`,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'sns:Publish',
-                'sns:ListTopics',
-            ],
-            resources: [
-                this.userNotifySNS.topicArn,
-                this.inferenceResultErrorTopic.topicArn,
-                this.inferenceResultTopic.topicArn,
-            ],
-        }));
-
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
+        const ddbStatement = new PolicyStatement({
             actions: [
                 'dynamodb:Query',
                 'dynamodb:GetItem',
@@ -155,10 +147,19 @@ export class CreateSagemakerEndpointsApi {
             ],
             resources: [
                 this.endpointDeploymentTable.tableArn,
+                this.multiUserTable.tableArn,
+                this.inferenceJobTable.tableArn,
             ],
-        }));
+        });
 
-        newRole.addToPolicy(new PolicyStatement({
+        const newRole = new Role(this.scope, `${this.baseId}-role`, {
+            assumedBy: new CompositePrincipal(
+                new ServicePrincipal('sagemaker.amazonaws.com'),
+                new ServicePrincipal('lambda.amazonaws.com'),
+            ),
+        });
+
+        const logStatement = new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
                 'logs:CreateLogGroup',
@@ -166,7 +167,21 @@ export class CreateSagemakerEndpointsApi {
                 'logs:PutLogEvents',
             ],
             resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-        }));
+        });
+
+        const passStartDeployRole = new PolicyStatement({
+            actions: [
+                'iam:PassRole',
+            ],
+            resources: [`arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/LambdaStartDeployRole`],
+        });
+
+        newRole.addToPolicy(snsStatement);
+        newRole.addToPolicy(s3Statement);
+        newRole.addToPolicy(endpointStatement);
+        newRole.addToPolicy(ddbStatement);
+        newRole.addToPolicy(logStatement);
+        newRole.addToPolicy(passStartDeployRole);
 
         return newRole;
     }
