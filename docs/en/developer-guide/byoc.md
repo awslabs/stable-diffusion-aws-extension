@@ -58,10 +58,11 @@ RUN apt-get install -y xxxxx && \
 
 There are two ways to execute the following commands:
 
-- **Method 1(Recommended)**：On [CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html){:target="_blank"}，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
+**Method 1(Recommended)**：On [CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html){:target="_blank"}，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
     - Login URL: https://{region}.console.aws.amazon.com/cloudshell/home
     - Please make sure that the account you logged in has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.
-- **Method 2**：To execute on your own environment, you need to:
+    - ![CloudShell](../../zh/images/CloudShell.png)
+**Method 2**：To execute on your own environment, you need to:
     - Install [CURL](https://curl.se/){:target="_blank"}
     - Install [jq](https://jqlang.github.io/jq/){:target="_blank"}
     - Install and Configure [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}

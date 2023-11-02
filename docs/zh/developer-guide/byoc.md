@@ -62,6 +62,7 @@ RUN apt-get install -y xxxxx && \
 - **方式一（推荐）**：打开并登陆 [CloudShell](https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html){:target="_blank"} ，在终端初始化完成后执行命令，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
     - 登录地址：https://{region}.console.aws.amazon.com/cloudshell/home
     - 请确保您登陆的账户具备足够的权限（比如部署解决方案的权限），否则执行命令会因为权限不足而失败。
+    - ![CloudShell](../images/CloudShell.png)
 - **方式二**：在您自己的环境中执行，您需要：
     - 安装 [CURL](https://curl.se/){:target="_blank"}
     - 安装 [jq](https://jqlang.github.io/jq/){:target="_blank"}
