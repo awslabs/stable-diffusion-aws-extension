@@ -78,11 +78,11 @@ echo "Model name: $MODEL_NAME"
 # Extract model name and environment
 MODEL_DETAIlS=$(aws sagemaker describe-model --region "$REGION" --model-name "$MODEL_NAME")
 
-ModelImage=$(echo "$MODEL_DETAIlS" | jq -r '.PrimaryContainer.Image')
-if [ "$ModelImage" = "$NEW_IMAGE_URI" ]; then
-    echo "Model Image is already set as $NEW_IMAGE_URI, no need to update"
-    exit 0
-fi
+#ModelImage=$(echo "$MODEL_DETAIlS" | jq -r '.PrimaryContainer.Image')
+#if [ "$ModelImage" = "$NEW_IMAGE_URI" ]; then
+#    echo "Model Image is already set as $NEW_IMAGE_URI, no need to update"
+#    exit 0
+#fi
 
 VARIANT_NAME=$(echo "$CONFIG_DETAILS" | jq -r '.ProductionVariants[0].VariantName')
 echo "Variant name: $VARIANT_NAME"
