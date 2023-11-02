@@ -42,7 +42,7 @@ You can build your own container image and upload it to [Amazon ECR](https://con
 
 You have two options for executing subsequent commands:
 
-- On CloudShell (recommended)，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
+- On [CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html){:target="_blank"} (recommended)，Please replace {region} with the region where the solution is deployed, such as: `us-east-1`
     - https://{region}.console.aws.amazon.com/cloudshell/home
 - To execute on your own environment, you need to:
     - Install [CURL](https://curl.se/){:target="_blank"}

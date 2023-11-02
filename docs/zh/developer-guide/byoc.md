@@ -43,7 +43,7 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 
 关于执行后续命令，您可以有 2 种选择：
 
-- 直接在 CloudShell 中执行 (推荐)，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
+- 直接在 [CloudShell](https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html){:target="_blank"} 中执行 (推荐)，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
     - https://{region}.console.aws.amazon.com/cloudshell/home
 - 在您自己的环境中执行，您需要：
     - 安装 [CURL](https://curl.se/){:target="_blank"}
