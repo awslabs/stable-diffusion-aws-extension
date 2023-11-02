@@ -22,15 +22,15 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 
 - 第一步：构建容器镜像
 - 第二步：准备命令执行环境
-- 第三步：将指定的 SageMaker Endpoint 模型镜像替换为您自己的容器镜像
-- 其他：将指定的 SageMaker Endpoint 模型镜像恢复为默认镜像
+- 第三步：将指定的 SageMaker Endpoint 模型镜像**替换**为您自己的容器镜像或**恢复**为默认镜像
+- 第四步：验证或诊断容器镜像是否正常工作
 
 <br>
 
 # 准备容器镜像
 
-您可自行构建容器镜像，并上传到和部署方案相同区域的 [Amazon ECR](https://console.aws.amazon.com/ecr)
-中，请阅读 [将 Amazon ECR 与 AWS CLI 结合使用](https://docs.aws.amazon.com/zh_cn/AmazonECR/latest/userguide/getting-started-cli.html)
+您可自行构建容器镜像（**强烈建议您在更换镜像前验证该镜像是否正常**），验证后将镜像上传到和部署方案相同区域的 [Amazon ECR](https://console.aws.amazon.com/ecr)
+中，详细请阅读 [将 Amazon ECR 与 AWS CLI 结合使用](https://docs.aws.amazon.com/zh_cn/AmazonECR/latest/userguide/getting-started-cli.html)
 ，操作完成后，您将获得一个镜像 URI，如：
 
 ```shell
@@ -50,7 +50,7 @@ Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，
 
 <br>
 
-# 更新容器镜像
+# 使用自定义容器镜像
 
 准备好镜像后，您只需替换以下命令中的变量，并执行命令，即可完成更换镜像：
 
@@ -73,4 +73,17 @@ curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension
 
 ```shell
 curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh | bash -s {region} {endpoint-name} default
+```
+
+<br>
+
+# 验证或诊断容器镜像
+
+强烈建议您在更换镜像后验证或诊断容器镜像是否正常工作，如需查看日志，您可进入 Endpoint 的日志组查看日志：
+
+- **{region}**：方案部署的区域，如：`us-east-1`
+- **{endpoint-name}**：Endpoint 名称，如：`infer-endpoint-111111`
+
+```shell
+https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups$3FlogGroupNameFilter$3D{endpoint-name}
 ```
