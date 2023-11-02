@@ -32,11 +32,13 @@ fi
 
 # if os is centos, install jq
 if [ -f /etc/redhat-release ]; then
+    echo "Install jq..."
     sudo yum install -y jq
 fi
 
 # if os is ubuntu, install jq
 if [ -f /etc/lsb-release ]; then
+    echo "Install jq..."
     sudo apt install -y jq
 fi
 
@@ -78,7 +80,7 @@ MODEL_DETAIlS=$(aws sagemaker describe-model --region "$REGION" --model-name "$M
 
 ModelImage=$(echo "$MODEL_DETAIlS" | jq -r '.PrimaryContainer.Image')
 if [ "$ModelImage" = "$NEW_IMAGE_URI" ]; then
-    echo "ModelImage is same as NEW_IMAGE_URI, no need to update"
+    echo "Model Image is already set as $NEW_IMAGE_URI, no need to update"
     exit 0
 fi
 
