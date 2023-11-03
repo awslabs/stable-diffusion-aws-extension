@@ -648,24 +648,25 @@ def _list_sagemaker_endpoints(username):
         endpoint_roles = ''
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
-        endpoints.append([
-            endpoint['EndpointDeploymentJobId'][:4],
-            endpoint['endpoint_name'],
-            endpoint_roles,
-            endpoint['autoscaling'],
-            endpoint['endpoint_status'],
-            endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
-
-        ])
+            endpoints.append([
+                endpoint['EndpointDeploymentJobId'][:4],
+                endpoint['endpoint_name'],
+                endpoint_roles,
+                endpoint['autoscaling'],
+                endpoint['endpoint_status'],
+                endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
+                endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
+            ])
     return endpoints
 
 
 def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
-        model_list_df = gr.Dataframe(headers=['id', 'name', 'owners', 'autoscaling', 'status', 'created time'],
-                                     datatype=['str', 'str', 'str', 'str', 'str', 'str']
-                                     )
+        model_list_df = gr.Dataframe(
+            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            )
         return model_list_df
 
 

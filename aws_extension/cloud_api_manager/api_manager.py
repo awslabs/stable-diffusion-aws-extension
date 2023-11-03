@@ -53,13 +53,13 @@ class CloudApiManager:
             'assign_to_roles': user_roles
         }
 
-        deployment_url = f"{self.auth_manger.api_url}inference/deploy-sagemaker-endpoint"
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
             response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             r = response.json()
             logger.debug(f"response for rest api {r}")
-            return "Endpoint deployment started"
+            return r['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to start endpoint deployment with exception: {e}"
