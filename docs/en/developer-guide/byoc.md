@@ -64,7 +64,6 @@ There are two ways to execute the following commands:
     - ![CloudShell](../../zh/images/CloudShell.png)
 **Method 2**：To execute on your own environment, you need to:
     - Install [CURL](https://curl.se/){:target="_blank"}
-    - Install [jq](https://jqlang.github.io/jq/){:target="_blank"}
     - Install and Configure [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
     - Please make sure that the account you configured has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.
 
