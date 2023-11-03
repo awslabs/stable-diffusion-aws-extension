@@ -283,8 +283,11 @@ def load_pipeline(checkpoint_info=None):
 
     pipeline_data.was_loaded_at_least_once = True
     
-    #sd_vae.delete_base_vae()
+    sd_vae.delete_base_vae()
     sd_vae.clear_loaded_vae()
+    vae_file, vae_source = sd_vae.resolve_vae(checkpoint_info.filename)
+    sd_vae.load_vae(pipeline_data.sd_pipeline, vae_file, vae_source)
+    timer.record("load VAE")
 
     embeddings_dir = shared.cmd_opts.embeddings_dir
     try:
@@ -314,8 +317,6 @@ def reload_pipeline_weights(sd_pipeline=None, info=None):
         current_checkpoint_info = shared.opts.data["sd_checkpoint_info"] #sd_pipeline.sd_checkpoint_info
         if shared.opts.data["sd_model_checkpoint_path"] == checkpoint_info.filename:
            return
-        #if sd_pipeline.sd_model_checkpoint == checkpoint_info.filename:
-        #    return
 
         pipeline_data.sd_pipeline.to(devices.cpu)
         send_model_to_trash(pipeline_data.sd_pipeline)

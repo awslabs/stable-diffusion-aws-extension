@@ -655,26 +655,22 @@ def process_images(p: StableDiffusionProcessing) -> Processed:
 
     try:
         # # if no checkpoint override or the override checkpoint can't be found, remove override entry and load opts checkpoint
-        # if sd_models.checkpoint_aliases.get(p.override_settings.get('sd_model_checkpoint')) is None:
-        #     p.override_settings.pop('sd_model_checkpoint', None)
-        #     sd_models.reload_model_weights()
+        if sd_models.checkpoint_aliases.get(p.override_settings.get('sd_model_checkpoint')) is None:
+            p.override_settings.pop('sd_model_checkpoint', None)
+            sd_models.reload_pipeline_weights()
 
-        # for k, v in p.override_settings.items():
-        #     setattr(opts, k, v)
+        for k, v in p.override_settings.items():
+            setattr(opts, k, v)
 
-        #     if k == 'sd_model_checkpoint':
-        #         sd_models.reload_model_weights()
+            if k == 'sd_model_checkpoint':
+                sd_models.reload_pipeline_weights()
 
-        #     if k == 'sd_vae':
-        #         sd_vae.reload_vae_weights()
+            if k == 'sd_vae':
+                sd_vae.reload_vae_weights()
 
         # sd_models.apply_token_merging(p.sd_model, p.get_token_merging_ratio())
 
         res = process_images_inner(p)
-        # pipe = StableDiffusionXLPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", force_download=True, torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
-        # pipe.to("cuda")
-        # prompt = "An astronaut riding a green horse"
-        # images = pipe(prompt=prompt).images[0]
 
     finally:
         #sd_models.apply_token_merging(p.sd_model, 0)

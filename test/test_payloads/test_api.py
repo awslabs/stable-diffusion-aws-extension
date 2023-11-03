@@ -67,10 +67,10 @@ used_models_3['Stable-diffusion'] = [Stable_diffusion_list[1]]
 payload = {
             "task": "txt2img",
             "username": "test",
-            "models": used_models_0,
-            "param_s3": 's3://diffusers-payloads/txt2img_controlnet_openpose_new.json'
+            "models": used_models_3,
+            "param_s3": 's3://diffusers-payloads/txt2img_debug.json'
         }
-
+#txt2img_debug
 
 url = "http://127.0.0.1:8080"
 

@@ -40,7 +40,7 @@ def delete_base_vae():
 
 def restore_base_vae(model):
     global loaded_vae_file
-    if base_vae is not None and checkpoint_info == model.sd_checkpoint_info:
+    if base_vae is not None and checkpoint_info == shared.opts.data["sd_checkpoint_info"]:
         print("Restoring base VAE")
         model.vae = base_vae
         loaded_vae_file = None
@@ -129,16 +129,16 @@ def load_vae(model, vae_file=None, vae_source="from unknown source"):
             # use vae checkpoint cache
             print(f"Loading VAE weights {vae_source}: cached {get_filename(vae_file)}")
             store_base_vae(model)
-            model.vae = checkpoints_loaded[vae_file]
+            model.vae = checkpoints_loaded[vae_file].to('cuda')
         else:
             assert os.path.isfile(vae_file), f"VAE {vae_source} doesn't exist: {vae_file}"
             print(f"Loading VAE weights {vae_source}: {vae_file}")
             store_base_vae(model)
-            model.vae = AutoencoderKL.from_single_file(vae_file, torch_dtype=torch.float16).to(devices.dtype_vae)
-
+            vae = AutoencoderKL.from_single_file(vae_file, torch_dtype=torch.float16).to(devices.dtype_vae)
             if cache_enabled:
                 # cache newly loaded vae
-                checkpoints_loaded[vae_file] = model.vae.copy()
+                checkpoints_loaded[vae_file] = vae.copy()
+            model.vae = vae.to('cuda')
 
         # clean up cache if limit is reached
         if cache_enabled:
@@ -183,17 +183,17 @@ def reload_vae_weights(sd_pipeline=None, vae_file=unspecified):
     if loaded_vae_file == vae_file:
         return
 
-    if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
-        lowvram.send_everything_to_cpu()
-    else:
-        sd_pipeline.to(devices.cpu)
+    # if shared.cmd_opts.lowvram or shared.cmd_opts.medvram:
+    #     lowvram.send_everything_to_cpu()
+    # else:
+    #     sd_pipeline.to(devices.cpu)
 
+    load_vae(sd_pipeline, vae_file, vae_source)
+    #vae = AutoencoderKL.from_single_file(vae_file, torch_dtype=torch.float16).to("cuda")
+    #sd_pipeline.vae = vae
     
-    vae = AutoencoderKL.from_single_file(vae_file, torch_dtype=torch.float16).to("cuda")
-    sd_pipeline.vae = vae
-    
-    if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
-        sd_pipeline.to(devices.device)
+    # if not shared.cmd_opts.lowvram and not shared.cmd_opts.medvram:
+    #     sd_pipeline.to(devices.device)
         
     print("VAE weights loaded.")
 
