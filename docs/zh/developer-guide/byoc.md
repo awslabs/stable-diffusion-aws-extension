@@ -59,18 +59,62 @@ ENTRYPOINT ["python", "/your/serve"]
 
 <br>
 
-# 准备命令执行环境和权限
+# 准备命令执行的权限环境
+
+## 权限
+
+请确保您的账户具备足够的权限，否则执行命令会因为权限不足而失败，请将该示例策略附加到您的 IAM 用户或角色，**注意**替换变量 `{Partition}`，`{Region}`  和 `{Account}` 为您自己的区域和账户：
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StableDiffusionOnAWSExtensionEndpoint",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:DescribeModel",
+        "sagemaker:DescribeEndpoint",
+        "sagemaker:DescribeEndpointConfig",
+        "sagemaker:DeleteModel",
+        "sagemaker:DeleteEndpoint",
+        "sagemaker:DeleteEndpointConfig",
+        "sagemaker:CreateModel",
+        "sagemaker:CreateEndpoint",
+        "sagemaker:CreateEndpointConfig"
+      ],
+      "Resource": [
+        "arn:${Partition}:sagemaker:${Region}:${Account}:model/infer-model-*",
+        "arn:${Partition}:sagemaker:${Region}:${Account}:endpoint/infer-endpoint-*",
+        "arn:${Partition}:sagemaker:${Region}:${Account}:endpoint-config/infer-config-*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:${Partition}:iam::${Account}:role/*createEndpoint*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "application-autoscaling:DeregisterScalableTarget",
+      "Resource": [
+        "arn:${Partition}:application-autoscaling:${Region}:${Account}:scalable-target/*"
+      ]
+    }
+  ]
+}
+```
+
+## 环境
 
 关于执行后续命令的环境，有两种方式：
 
 - **方式一（推荐）**：打开并登陆 [CloudShell](https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html){:target="_blank"} ，在终端初始化完成后执行命令，请将 {region} 更换为您方案部署的区域，如：`us-east-1`
     - 登录地址：https://{region}.console.aws.amazon.com/cloudshell/home
-    - 请确保您登陆的账户具备足够的权限（比如部署解决方案的权限），否则执行命令会因为权限不足而失败。
     - ![CloudShell](../images/CloudShell.png)
 - **方式二**：在您自己的环境中执行，您需要：
     - 安装 [CURL](https://curl.se/){:target="_blank"}
     - 安装并配置 [AWS CLI](https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html){:target="_blank"}
-    - 请确保您配置的账户具备足够的权限（比如部署解决方案的权限），否则执行命令会因为权限不足而失败。
 
 <br>
 

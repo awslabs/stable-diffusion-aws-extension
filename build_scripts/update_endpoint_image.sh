@@ -105,10 +105,22 @@ echo "ModelDataUrl: $MODEL_DATA_URL"
 MODEL_EXECUTION_ROLE_ARN=$(echo "$MODEL_DETAIlS" | jq -r '.ExecutionRoleArn')
 echo "ExecutionRoleArn: $MODEL_EXECUTION_ROLE_ARN"
 
-# Delete the existing endpoint (this will result in downtime)
-aws sagemaker delete-endpoint --region "$REGION" --endpoint-name "$ENDPOINT_NAME" | jq
+echo "Predict whether it can be created successfully..."
+ModelArn=$(aws sagemaker create-model \
+         --region "$REGION" \
+         --model-name "${MODEL_NAME}-test" \
+         --execution-role-arn "$MODEL_EXECUTION_ROLE_ARN" \
+         --primary-container "{
+             \"Image\": \"$NEW_IMAGE_URI\",
+             \"ModelDataUrl\": \"$MODEL_DATA_URL\",
+             \"Environment\": {
+               \"EndpointID\": \"$EndpointID\"
+             }
+           }" | jq -r '.ModelArn')
+aws sagemaker delete-model --region "$REGION" --model-name "$MODEL_NAME-test" | jq
 
 echo "Waiting for endpoint to be deleted..."
+aws sagemaker delete-endpoint --region "$REGION" --endpoint-name "$ENDPOINT_NAME" | jq
 aws sagemaker wait endpoint-deleted --region "$REGION" --endpoint-name "$ENDPOINT_NAME" | jq
 
 echo "Deleting existing model..."

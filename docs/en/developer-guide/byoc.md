@@ -53,11 +53,58 @@ RUN apt-get update -y && \
 
 # Set your entrypoint
 ENTRYPOINT ["python", "/your/serve"]
+
 ```
 
 <br>
 
-# Prepare command execution environment and permissions
+# Prepare permissions and environment
+
+## Permissions
+
+Make sure your account has sufficient permissions; otherwise, executing the command will fail due to insufficient permissions. Please attach this example policy to your IAM user or role, **note** replace the variables `{Partition}`, `{Region}` and `{Account}`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StableDiffusionOnAWSExtensionEndpoint",
+      "Effect": "Allow",
+      "Action": [
+        "sagemaker:DescribeModel",
+        "sagemaker:DescribeEndpoint",
+        "sagemaker:DescribeEndpointConfig",
+        "sagemaker:DeleteModel",
+        "sagemaker:DeleteEndpoint",
+        "sagemaker:DeleteEndpointConfig",
+        "sagemaker:CreateModel",
+        "sagemaker:CreateEndpoint",
+        "sagemaker:CreateEndpointConfig"
+      ],
+      "Resource": [
+        "arn:${Partition}:sagemaker:${Region}:${Account}:model/infer-model-*",
+        "arn:${Partition}:sagemaker:${Region}:${Account}:endpoint/infer-endpoint-*",
+        "arn:${Partition}:sagemaker:${Region}:${Account}:endpoint-config/infer-config-*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:${Partition}:iam::${Account}:role/*createEndpoint*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "application-autoscaling:DeregisterScalableTarget",
+      "Resource": [
+        "arn:${Partition}:application-autoscaling:${Region}:${Account}:scalable-target/*"
+      ]
+    }
+  ]
+}
+```
+
+## Environment
 
 There are two ways to execute the following commands:
 
