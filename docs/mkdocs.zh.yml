@@ -40,6 +40,7 @@ nav:
     - 开发者指南:
         - 源代码: developer-guide/source.md
         - API调用指南: developer-guide/api.md
+        - 自定义容器镜像: developer-guide/byoc.md
     - 故障排除: troubleshooting.md
     - 常见问题解答: faq.md
     - 文档修订信息: revisions.md
