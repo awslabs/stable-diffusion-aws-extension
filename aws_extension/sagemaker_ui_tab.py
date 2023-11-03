@@ -209,6 +209,8 @@ def user_settings_tab():
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
+                    if not password or len(password) < 1:
+                        return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username, password=password,
                                                    roles=user_roles, creator=pr.username,
                                                    user_token=pr.username)
@@ -273,6 +275,7 @@ def user_settings_tab():
                 })
 
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
+                # next_page_btn = gr.Button(value="Next Page", variant='primary', visible=(token_zero is not None))
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
                 def next_page(table_token_state):
@@ -301,7 +304,7 @@ def user_settings_tab():
                 def update_user_table_button_state(token_state):
                     show_previous = True if token_state['previous_token'] else False
                     show_next = True if token_state['current_token'] else False
-                    return gr.update(visible=show_previous), gr.update(visible=show_next)
+                    return gr.update(visible=show_previous), gr.update(visible=True)
 
                 user_table.change(fn=update_user_table_button_state,
                                   inputs=[user_table_state],
