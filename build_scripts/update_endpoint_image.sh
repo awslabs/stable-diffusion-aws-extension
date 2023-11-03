@@ -42,14 +42,6 @@ if [ -f /etc/lsb-release ]; then
     sudo apt install -y jq
 fi
 
-# check solution deployed
-exists=$(aws apigateway get-rest-apis --region "$REGION" --query 'items[?name==`Stable Diffusion Train and Deploy API`].id' --output text)
-if [ -z "$exists" ]
-then
-    echo "Stable Diffusion on AWS not exist"
-    exit 1
-fi
-
 # if NEW_IMAGE_URI=default, use default ECR
 if [ "$NEW_IMAGE_URI" = "default" ]; then
     # get AWS Account ID
