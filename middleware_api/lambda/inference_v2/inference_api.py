@@ -344,7 +344,7 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
-            if endpoint.endpoint_status != 'InService':
+            if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
                 continue
 
             if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):
