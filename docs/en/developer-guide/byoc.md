@@ -96,9 +96,7 @@ Make sure your account has sufficient permissions; otherwise, executing the comm
     {
       "Effect": "Allow",
       "Action": "application-autoscaling:DeregisterScalableTarget",
-      "Resource": [
-        "arn:${Partition}:application-autoscaling:${Region}:${Account}:scalable-target/*"
-      ]
+      "Resource": "*"
     }
   ]
 }

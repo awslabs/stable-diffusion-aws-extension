@@ -97,9 +97,7 @@ ENTRYPOINT ["python", "/your/serve"]
     {
       "Effect": "Allow",
       "Action": "application-autoscaling:DeregisterScalableTarget",
-      "Resource": [
-        "arn:${Partition}:application-autoscaling:${Region}:${Account}:scalable-target/*"
-      ]
+      "Resource": "*"
     }
   ]
 }
