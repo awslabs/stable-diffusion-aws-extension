@@ -39,17 +39,20 @@ You can build your own container image and upload it to [Amazon ECR](https://con
 Dockerfile template:
 
 ```dockerfile
-# Use base iamge
-FROM public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference
+# Use a specific version for reproducibility
+FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 
 # Set environment variables to non-interactive (this prevents some prompts)
 ENV DEBIAN_FRONTEND=non-interactive
 
-# Install packages in a single RUN step
-RUN apt-get install -y xxxxx && \
-    apt-get clean && \
-    apt-get autoclean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+# Install system packages in a single RUN step to reduce image size
+RUN apt-get update -y && \
+    apt-get install -y \
+    your-package \
+    rm -rf /var/lib/apt/lists/*
+
+# Set your entrypoint
+ENTRYPOINT ["python", "/your/serve"]
 ```
 
 <br>
