@@ -21,8 +21,8 @@ def register_extra_network_alias(extra_network, alias):
 
 
 def register_default_extra_networks():
-    from modules.extra_networks_hypernet import ExtraNetworkHypernet
-    register_extra_network(ExtraNetworkHypernet())
+    # from modules.extra_networks_hypernet import ExtraNetworkHypernet
+    # register_extra_network(ExtraNetworkHypernet())
     from modules.extra_networks_lora import ExtraNetworkLora
     register_extra_network(ExtraNetworkLora)
 

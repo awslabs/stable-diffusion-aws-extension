@@ -716,7 +716,7 @@ def read_info_from_image(image: Image.Image) -> tuple[str | None, dict]:
     if items.get("Software", None) == "NovelAI":
         try:
             json_info = json.loads(items["Comment"])
-            sampler = sd_samplers.samplers_map.get(json_info["sampler"], "Euler a")
+            sampler = json_info["sampler"]
 
             geninfo = f"""{items["Description"]}
 Negative prompt: {json_info["uc"]}

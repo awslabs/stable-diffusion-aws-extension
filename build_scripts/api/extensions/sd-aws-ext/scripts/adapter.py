@@ -9,8 +9,8 @@ from omegaconf import OmegaConf
 from copy import deepcopy
 from modules import devices, lowvram, shared, scripts
 cond_cast_unet = getattr(devices, 'cond_cast_unet', lambda x: x)
-from ldm.modules.diffusionmodules.util import timestep_embedding
-from ldm.modules.diffusionmodules.openaimodel import UNetModel
+#from ldm.modules.diffusionmodules.util import timestep_embedding
+#from ldm.modules.diffusionmodules.openaimodel import UNetModel
 
 
 class TorchHijackForUnet:

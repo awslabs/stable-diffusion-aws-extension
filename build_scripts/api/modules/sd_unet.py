@@ -1,5 +1,5 @@
 import torch.nn
-import ldm.modules.diffusionmodules.openaimodel
+# import ldm.modules.diffusionmodules.openaimodel
 
 from modules import script_callbacks, shared, devices
 
@@ -88,5 +88,5 @@ def UNetModel_forward(self, x, timesteps=None, context=None, *args, **kwargs):
     if current_unet is not None:
         return current_unet.forward(x, timesteps, context, *args, **kwargs)
 
-    return ldm.modules.diffusionmodules.openaimodel.copy_of_UNetModel_forward_for_webui(self, x, timesteps, context, *args, **kwargs)
+    return None #ldm.modules.diffusionmodules.openaimodel.copy_of_UNetModel_forward_for_webui(self, x, timesteps, context, *args, **kwargs)
 

@@ -14,7 +14,7 @@ from skimage import exposure
 from typing import Any, Dict, List
 
 # from modules import sd_hijack
-from modules import devices, prompt_parser, masking, sd_samplers, lowvram, generation_parameters_copypaste, extra_networks, sd_vae_approx, scripts, sd_samplers_common, sd_unet, errors
+from modules import devices, prompt_parser, masking, sd_samplers, lowvram, generation_parameters_copypaste, extra_networks, sd_vae_approx, scripts, sd_unet, errors
 from modules.shared import opts, cmd_opts, state
 import modules.shared as shared
 import modules.paths as paths
@@ -608,8 +608,8 @@ def create_infotext(p, all_prompts, all_seeds, all_subseeds, comments=None, iter
     token_merging_ratio_hr = p.get_token_merging_ratio(for_hr=True)
 
     uses_ensd = opts.eta_noise_seed_delta != 0
-    if uses_ensd:
-        uses_ensd = sd_samplers_common.is_sampler_using_eta_noise_seed_delta(p)
+    # if uses_ensd:
+    #     uses_ensd = sd_samplers_common.is_sampler_using_eta_noise_seed_delta(p)
 
     generation_params = {
         "Steps": p.steps,

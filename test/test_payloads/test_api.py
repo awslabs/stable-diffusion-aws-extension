@@ -23,54 +23,80 @@ import sys
 #                                {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/ControlNet/checkpoint/custom/08fc3b88-5c1f-4b25-8d5c-7d9f54587d05', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'control_v11p_sd15_seg.pth', 'type': 'ControlNet'}]
 #             }
 
-used_models = {
-                'space_free_size': 400000000.0,  # sys.float_info.max
-                'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/588cb29d-95d7-40ed-86c3-b69f94f8d1a1', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_base_1.0.safetensors', 'type': 'Stable-diffusion'},
-                                     {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/47563bb8-92e4-4f05-bee5-a43193d8d0f5', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_refiner_1.0.safetensors', 'type': 'Stable-diffusion'}]
-            }
 # used_models = {
 #                 'space_free_size': 400000000.0,  # sys.float_info.max
-#                 'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/28efa65c-b862-414c-85b9-747cd09c306e', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'AnythingV5Ink_ink.safetensors', 'type': 'Stable-diffusion'}],
-#                 'ControlNet': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/ControlNet/checkpoint/custom/08fc3b88-5c1f-4b25-8d5c-7d9f54587d05', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'control_v11p_sd15_seg.pth', 'type': 'ControlNet'}]
+#                 'Stable-diffusion': [{'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/588cb29d-95d7-40ed-86c3-b69f94f8d1a1', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_base_1.0.safetensors', 'type': 'Stable-diffusion'},
+#                                      {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/47563bb8-92e4-4f05-bee5-a43193d8d0f5', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_refiner_1.0.safetensors', 'type': 'Stable-diffusion'}
+#                                      {'s3': 's3://sd-ui-data-bucket-20230928/Stable-diffusion/checkpoint/custom/697cc942-c6ce-452e-bea5-c2c850ce4879', 'id':, '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'epicrealism_naturalSinRC1VAE.safetensors', 'type': 'Stable-diffusion'}]
 #             }
+used_models = {
+                'space_free_size': 400000000.0,  # sys.float_info.max
+              }
+
+Stable_diffusion_list = [{'s3': 's3://sd-ui-data-bucket-20230928/Stable-diffusion/checkpoint/custom/753c7a30-17aa-4d5c-bb16-faaac0643122', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'majicmixRealistic_v7.safetensors', 'type': 'Stable-diffusion'},
+                         {'s3': 's3://sd-ui-data-bucket-20230928/Stable-diffusion/checkpoint/custom/3cfc3a91-e21e-4837-addc-ee74b969280c', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'epicphotogasm_x.safetensors', 'type': 'Stable-diffusion'},
+                         {'s3': 's3://sd-ui-data-bucket-20230928/Stable-diffusion/checkpoint/custom/465f562e-de48-4485-950b-18da59f99a00', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'yayoiMix_v25.safetensors', 'type': 'Stable-diffusion'},
+                         {'s3': 's3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/Stable-diffusion/checkpoint/custom/588cb29d-95d7-40ed-86c3-b69f94f8d1a1', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'sd_xl_base_1.0.safetensors', 'type': 'Stable-diffusion'}]
+
+VAE_list = [{'s3': 's3://sd-ui-data-bucket-20230928/VAE/checkpoint/custom/0aa260b8-e849-42d1-a2cf-70db6e3d5eb8', 'id': '3d3dbd57-e2f1-402e-a239-b4d1542466fe', 'model_name': 'vae-ft-mse-840000-ema-pruned.safetensors', 'type': 'VAE'}]           
+
+used_models_0 = used_models.copy()
+used_models_0['Stable-diffusion'] = [Stable_diffusion_list[1]]
+used_models_0['VAE'] = VAE_list
+used_models_1 = used_models.copy()
+used_models_1['Stable-diffusion'] = [Stable_diffusion_list[1]]
+used_models_1['VAE'] = VAE_list
+used_models_2 = used_models.copy()
+used_models_2['Stable-diffusion'] = [Stable_diffusion_list[2]]
+
+used_models_list = [used_models_0,used_models_1,used_models_2]
+json_list = ['s3://diffusers-payloads/payload_case1.json', 's3://diffusers-payloads/payload_case2.json', 's3://diffusers-payloads/payload_case3.json']
+
 payload = {
             "task": "txt2img",
             "username": "test",
-            "models": used_models,
-<<<<<<< HEAD
-            "param_s3": 's3://diffusers-payloads/txt2img_with_refiner.json' #_multi_controlnet_new.json' _controlnet_openpose_new.json'
-=======
-            "param_s3": 's3://stable-diffusion-aws-extension-aigcbucket-test/model/test-1/txt2img.json'
->>>>>>> 9b637aeddcc4254d6ca396dff4c1e32a2d3244d6
+            "models": used_models_0,
+            "param_s3": 's3://diffusers-payloads/txt2img_controlnet_openpose_new.json'
         }
 #'s3://xl11-sds3aigcbucket7db76a0b-clyjqez4tx3m/txt2img/infer_v2/5923a628-b593-4f2a-80d5-682b620afe2c/api_param.json'
-
+# txt2img_esrgan.json txt2img_hr_civita.json txt2img_hr_NMKD.json
 start_time = time.time()
-count = 1
+used_models_3 = used_models.copy()
+used_models_3['Stable-diffusion'] = [Stable_diffusion_list[1]]
+
+payload = {
+            "task": "txt2img",
+            "username": "test",
+            "models": used_models_0,
+            "param_s3": 's3://diffusers-payloads/txt2img_controlnet_openpose_new.json'
+        }
+
 
 url = "http://127.0.0.1:8080"
 
+response_diffuer = requests.post(url=f'{url}/invocations', json=payload)
+r = response_diffuer.json()
+id = 0
+for image_base64 in r['images']:
+    image = Image.open(io.BytesIO(base64.b64decode(image_base64.split(",",1)[0])))
+    image.save('output_diffuser_case_%d_%d.png'%(15,id))
+    id += 1
 
-for i in range(count):
+exit()
+for i in range(len(json_list)):
+    print('!!!!!!!!', i)
+    payload['models'] = used_models_list[i]
+    payload['param_s3'] = json_list[i]
+    print(payload['models'])
     response_diffuer = requests.post(url=f'{url}/invocations', json=payload)
-
-print(f"diffuser average run time is {(time.time()-start_time)/count}")
+    r = response_diffuer.json()
+    id = 0
+    for image_base64 in r['images']:
+        image = Image.open(io.BytesIO(base64.b64decode(image_base64.split(",",1)[0])))
+        image.save('output_diffuser_case_%d_%d.png'%(i,id))
+        id += 1
+print(f"diffuser average run time is {(time.time()-start_time)/len(json_list)}")
 #print(response_diffuer.json())
 
-r = response_diffuer.json()
 
-id = 0
-for i in r['images']:
-    image = Image.open(io.BytesIO(base64.b64decode(i.split(",",1)[0])))
 
-    # png_payload = {
-    #     "image": "data:image/png;base64," + i
-    # }
-
-    # response2 = requests.post(url=f'{url}/sdapi/v1/png-info', json=png_payload)
-
-    # pnginfo = PngImagePlugin.PngInfo()
-    # pnginfo.add_text("parameters", response2.json().get("info"))
-    # image.save('output_diffuser_%d.png'%id, pnginfo=pnginfo)
-    image.save('output_diffuser_%d.png'%id)
-    id += 1

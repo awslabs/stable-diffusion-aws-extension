@@ -116,25 +116,31 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, extra_ge
     else:
         if request_type == 'StableDiffusionPipelineTxt2Img':
             if 'XL' in pipeline_name:
-                shared.sd_pipeline = StableDiffusionXLPipeline(**shared.sd_pipeline.components)
+                #shared.sd_pipeline = StableDiffusionXLPipeline(**shared.sd_pipeline.components)
+                shared.sd_pipeline = StableDiffusionXLPipeline(vae=shared.sd_pipeline.vae, text_encoder_2=shared.sd_pipeline.text_encoder_2, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, tokenizer_2=shared.sd_pipeline.tokenizer_2, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)
                 shared.sd_pipeline.pipeline_name = 'StableDiffusionXLPipeline'
             else:
-                shared.sd_pipeline = StableDiffusionPipeline(**shared.sd_pipeline.components)
+                #shared.sd_pipeline = StableDiffusionPipeline(**shared.sd_pipeline.components)
+                shared.sd_pipeline = StableDiffusionPipeline(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler, safety_checker=shared.sd_pipeline.safety_checker, feature_extractor=shared.sd_pipeline.feature_extractor)
                 shared.sd_pipeline.pipeline_name = 'StableDiffusionPipeline'
         elif request_type == 'StableDiffusionPipelineImg2Img':  
             if 'XL' in pipeline_name:
                 if image_mask is None:
-                    shared.sd_pipeline = StableDiffusionXLImg2ImgPipeline(**shared.sd_pipeline.components)
+                    #shared.sd_pipeline = StableDiffusionXLImg2ImgPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionXLImg2ImgPipeline(vae=shared.sd_pipeline.vae, text_encoder_2=shared.sd_pipeline.text_encoder_2, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, tokenizer_2=shared.sd_pipeline.tokenizer_2, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionXLImg2ImgPipeline'
                 else:
-                    shared.sd_pipeline = StableDiffusionXLInpaintPipeline(**shared.sd_pipeline.components)
+                    #shared.sd_pipeline = StableDiffusionXLInpaintPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionXLInpaintPipeline(vae=shared.sd_pipeline.vae, text_encoder_2=shared.sd_pipeline.text_encoder_2, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, tokenizer_2=shared.sd_pipeline.tokenizer_2, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionXLInpaintPipeline'
             else:
                 if image_mask is None:
-                    shared.sd_pipeline = StableDiffusionImg2ImgPipeline(**shared.sd_pipeline.components)
+                    #shared.sd_pipeline = StableDiffusionImg2ImgPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionImg2ImgPipeline(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler, safety_checker=shared.sd_pipeline.safety_checker, feature_extractor=shared.sd_pipeline.feature_extractor)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionImg2ImgPipeline'
                 else:
-                    shared.sd_pipeline = StableDiffusionInpaintPipeline(**shared.sd_pipeline.components)
+                    #shared.sd_pipeline = StableDiffusionInpaintPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionInpaintPipeline(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler, safety_checker=shared.sd_pipeline.safety_checker, feature_extractor=shared.sd_pipeline.feature_extractor)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionInpaintPipeline'
 
     return controlnet_images, ref_image

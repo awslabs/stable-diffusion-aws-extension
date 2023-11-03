@@ -33,7 +33,7 @@
       "eta": null,
       "s_min_uncond": 0.0,
       "s_churn": 0.0,
-      "s_tmax": Infinity,
+      "s_tmax": 1.0,
       "s_tmin": 0.0,
       "s_noise": 1.0,
       "override_settings": {},

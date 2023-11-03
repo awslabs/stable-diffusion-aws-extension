@@ -4,7 +4,7 @@ import re
 
 import torch
 from typing import Union
-import network
+from modules import network
 
 from modules import shared, devices, sd_models, errors, scripts
 
@@ -218,10 +218,7 @@ def load_networks(names, te_multipliers=None, unet_multipliers=None, dyn_dims=No
 
             if net is None or os.path.getmtime(network_on_disk.filename) > net.mtime:
                 try:
-                    #net = load_network(name, network_on_disk)
-                    shared.sd_pipeline.unfuse_lora()
-                    shared.sd_pipeline.load_lora_weights(network_on_disk.filename)
-                    shared.sd_pipeline.fuse_lora(lora_scale=te_multipliers)
+                    shared.sd_pipeline.load_lora_weights(network_on_disk.filename, lora_scale=te_multipliers)
 
                     networks_in_memory.pop(name, None)
                     networks_in_memory[name] = net
@@ -245,9 +242,6 @@ def load_networks(names, te_multipliers=None, unet_multipliers=None, dyn_dims=No
 
     if failed_to_load_networks:
         logging.info("Networks not found: " + ", ".join(failed_to_load_networks))
-
-    purge_networks_from_memory()
-
 
 def network_restore_weights_from_backup(self: Union[torch.nn.Conv2d, torch.nn.Linear, torch.nn.GroupNorm, torch.nn.LayerNorm, torch.nn.MultiheadAttention]):
     weights_backup = getattr(self, "network_weights_backup", None)
@@ -485,10 +479,7 @@ def list_available_networks():
     available_network_hash_lookup.clear()
     forbidden_network_aliases.update({"none": 1, "Addams": 1})
 
-    os.makedirs(shared.cmd_opts.lora_dir, exist_ok=True)
-
     candidates = list(shared.walk_files(shared.cmd_opts.lora_dir, allowed_extensions=[".pt", ".ckpt", ".safetensors"]))
-    candidates += list(shared.walk_files(shared.cmd_opts.lyco_dir_backcompat, allowed_extensions=[".pt", ".ckpt", ".safetensors"]))
     for filename in candidates:
         if os.path.isdir(filename):
             continue
@@ -551,5 +542,6 @@ loaded_networks = []
 networks_in_memory = {}
 available_network_hash_lookup = {}
 forbidden_network_aliases = {}
+shared.cmd_opts.lora_dir = './models/Lora'
 
 list_available_networks()

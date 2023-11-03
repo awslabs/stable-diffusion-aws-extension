@@ -11,14 +11,14 @@
     "hr_sampler_name": null,
     "hr_prompt": "",
     "hr_negative_prompt": "",
-    "prompt": "a girl",
+    "prompt": "polaroid photo, night photo, photo of 24 y.o beautiful woman, pale skin, bokeh, motion blur",
     "styles": [],
-    "seed": -1,
+    "seed": 144278541,
     "subseed": -1,
     "subseed_strength": 0.0,
     "seed_resize_from_h": 0,
     "seed_resize_from_w": 0,
-    "sampler_name": "Euler a",
+    "sampler_name": "Heun",
     "batch_size": 1,
     "n_iter": 1,
     "steps": 20,
@@ -29,7 +29,7 @@
     "tiling": false,
     "do_not_save_samples": false,
     "do_not_save_grid": false,
-    "negative_prompt": "",
+    "negative_prompt": "deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime, mutated hands and fingers, deformed, distorted, disfigured, poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, disconnected limbs, mutation, mutated, ugly, disgusting, amputation",
     "eta": null,
     "s_min_uncond": 0.0,
     "s_churn": 0.0,
@@ -39,7 +39,7 @@
     "override_settings": {},
     "override_settings_restore_afterwards": true,
     "script_args": [],
-    "sampler_index": "Euler a",
+    "sampler_index": "DPM++ SDE Karras",
     "script_name": null,
     "send_images": true,
     "save_images": false,
@@ -110,9 +110,6 @@
                     "loopback": false
                 }
             ]
-        },
-        "extra options": {
-            "args": []
         }
     }
 }
