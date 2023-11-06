@@ -6,12 +6,13 @@ You can open the **img2img tab** and use the original region along with the **Am
 ### Standard process for different functional labels in img2img
 
 1. Navigate to tab **img2img**, find panel **Amazon SageMaker Inference**.
-2. Input parameters for inference. The same as local inferance, you could edit parameters in native fields for model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, inference parameters and etc. For functions **img2img**, **sketch**, **inpaint**, **inpaint sketch** and **inpaint upload**, you could upload and modify images in the native way.
+2. Input parameters for inference. The same as local inference, you could edit parameters in native fields for model name (stable diffusion checkpoint, extra networks:Lora, Hypernetworks, Textural Inversion and VAE), prompts, negative prompts, sampling parameters, inference parameters and etc. For functions **img2img**, **sketch**, **inpaint**, **inpaint sketch** and **inpaint upload**, you could upload and modify images in the native way.
     
     !!! Important "Notice" 
-        The model files used in the inferece should be uploaded to the cloud before generate, which can be refrred to the introduction of chapter **Cloud Assets Management**
-3. Select the inference endpoint. Click the refresh button on the right side of **Select Cloud SageMaker Endpoint** to choose an inference endpoint that is in the **InService** state. After select one *InService* endpoint, the button **Generate** will change to button **Generate on Clound**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+
+        The model files used in the inference should be uploaded to the cloud before generate, which can be referred to the introduction of chapter **Cloud Assets Management**
+3. Select Stable Diffusion checkpoint model that will be used for cloud inference through **Stable Diffusion Checkpoint Used on Cloud**, and the button **Generate** will change to button **Generate on Cloud**.
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "Notice" 
         This field is mandatory. If you choose an endpoint that is in any other state or leave it empty, an error will occur when you click **Generate on Cloud** to initiate cloud-based inference.
@@ -58,7 +59,7 @@ You can open the **img2img tab** and use the original region along with the **Am
 ![inpaint_sketch result](../images/inpaint_sketch_result.png)
 
 
-### Inpatnt Upload label
+### Inpaint Upload label
 
 1. Upload original image and mask image to **Inpaint Upload** label and prepare prompts, for example *large eyes*.
 ![inpaint_upload](../images/inpaint_upload_tab.png)

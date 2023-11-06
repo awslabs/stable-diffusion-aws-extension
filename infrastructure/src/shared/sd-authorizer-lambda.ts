@@ -128,6 +128,7 @@ export class AuthorizerLambda {
     });
     return new aws_apigateway.TokenAuthorizer(this.scope, `${this.baseId}-NewRequestAuthorizer`, {
       handler: authFunction,
+      resultsCacheTtl: Duration.millis(0),
       identitySource: 'method.request.header.Authorization',
     });
   }

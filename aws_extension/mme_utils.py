@@ -28,6 +28,7 @@ TAR_TYPE_FILE = 'application/x-tar'
 
 
 def checkspace_and_update_models(selected_models):
+    print(selected_models)
     models_num = len(models_type_list)
     space_free_size = selected_models['space_free_size']
     # os.system("df -h")
@@ -46,6 +47,9 @@ def checkspace_and_update_models(selected_models):
         for model in selected_models_name:
             models_used_count[model_type].add_models_ref(model['model_name'])
             if model['model_name'] in local_models:
+                continue
+            if model_type == 'VAE' and model['model_name'] in ['Automatic', 'None']:
+                print(f'skip vae download for {model["model_name"]}')
                 continue
             else:
                 st = os.statvfs(disk_path)

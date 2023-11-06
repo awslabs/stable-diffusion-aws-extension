@@ -14,11 +14,11 @@
     !!! Important "提示" 
         选择的模型文件需要通过云上资源管理章节介绍的方式进行推理模型上传到云上，才能使用该模型进行云上推理。目前模型列表展示本地和云上的模型选项。为了进行云上推理，建议选择有sagemaker关键字为后缀的、表明已经上传到云上的模型进行后续推理。
 
-3. 选择推理节点。点击**Select Cloud SageMaker Endpoint**右侧的刷新按钮，选择一个处于**InService**状态的推理节点, 则会触发右上角**Generate**按钮变为**Generate on Clound**。
-![Gnerate button面板](../images/txt2img-generate-button.png)
+3. 选择云上推理所需要的模型。在**Stable Diffusion Checkpoint Used on Cloud**列表选择需要云上推理的模型, 则会触发右上角**Generate**按钮变为**Generate on Cloud**。
+![Generate button面板](../images/txt2img-generate-button.png)
 
     !!! Important "提示" 
-        此项为必选项。如果选择处于其他状态的推理节点，或者选择为空，点击**Generate on Cloud**开启云上推理功能时会报错。
+        此项为必选项。
 
 4. 所有参数设置完成后，点击**Generate on Cloud**。
 5. 查看推理结果。刷新**Inference Job**下拉列表，查看最上方的、符合推理提交时间戳的**Inference Job ID**。相关Inference Job列表选择请参考本页尾部的**Inference Job**子章节。txt2img标签页右上方的**Output**区域会显示推理的结果，包括图片，提示词以及推理的参数等。在此基础上，可以点击**Save**或者**Send to img2img**等，进行后续工作流。

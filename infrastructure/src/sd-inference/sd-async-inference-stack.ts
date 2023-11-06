@@ -32,6 +32,8 @@ import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
+import { DeleteSagemakerEndpointsApi, DeleteSagemakerEndpointsApiProps } from './sagemaker-endpoints-delete';
+import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from './sagemaker-endpoints-event';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -115,6 +117,29 @@ export class SDAsyncInferenceStack extends NestedStack {
         },
     );
 
+    new DeleteSagemakerEndpointsApi(
+      this, 'sd-infer-v2-deleteEndpoints',
+        <DeleteSagemakerEndpointsApiProps>{
+          router: props.routers.endpoints,
+          commonLayer: props.commonLayer,
+          endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
+          httpMethod: 'DELETE',
+          srcRoot: srcRoot,
+          authorizer: props.authorizer,
+        },
+    );
+
+    new SagemakerEndpointEvents(
+        this, 'sd-infer-endpoint-events',
+        <SagemakerEndpointEventsProps>{
+            commonLayer: props.commonLayer,
+            endpointDeploymentTable: sd_endpoint_deployment_job_table,
+            multiUserTable: props.multiUserTable,
+            srcRoot: srcRoot,
+        },
+    );
+
     new ListAllInferencesApi(
       this, 'sd-infer-v2-allInferences',
       {
@@ -143,7 +168,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       endpointDeploymentJobTable: sd_endpoint_deployment_job_table,
       userNotifySNS: props.snsTopic,
       inference_ecr_url: inferenceECR_url,
-      useExist: props.useExist,
     });
 
     const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {

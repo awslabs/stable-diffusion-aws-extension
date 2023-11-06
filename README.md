@@ -23,7 +23,7 @@ For users who need explicit IAM permissions for strict account control, we provi
 >**Notice** : We prefer to deploy our solution in *us-east-1* region, the reason is that in other region there is an existing S3 CORS issue which will block user to upload inference config for around 2 hours. That mean user need to wait around 2 hours after deploy the middleware to do the inference job. We will keep monitoring the progress of this issue.
 
 #### **Option 2**: Use AWS CDK(Cloud Development Kit)
-**Prerequisite**
+**Prerequisites**
 To set up the development environment, you will need have AWS account and tools with preferred version below to install from source code:
 - NPM, Node
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_install)
@@ -91,7 +91,7 @@ Some user existing workflow is shown below that the data scientists had to jump 
 
 Thus we plan to contribute a solution aiming to mitigate above issue and provide a lite, decouple and user friendly AWS SageMaker based extension, in response to this growing demand and specific user requirement. We integrate WebUI with AWS SageMaker, a fully managed service that allows users to build, train, and deploy machine learning models in the cloud. This extension will enable users to leverage the power of AWS SageMaker as the backend for model training and inference. With the AWS customized extension in place, Stable Diffusion WebUI will offer its users a more streamlined and cost-effective solution to optimize their existing workflows, including model training/finetune, inference and iteration with fast community pace.
 
-## What is the user tuturial
+## What is the user tutorial
 We have provided a Stable Diffusion WebUI extension and AWS middleware for user, and user will install such extension by importing provided GitHub URL and AWS middleware by launch offered CloudFormation template in AWS console.
 Brief user tutorial will be: User will first install the extension, extra tab will be installed for user to manager AWS credential, building AWS native SD model etc. then user will navigate to original txt2img tab, configure setting like CFG scale, batch count/size etc., then click 'Generate on Cloud' button to get the generated image. Thus providing user another alternative to utilize cloud resource without break existing user experience. Please refer to [user guide](https://awslabs.github.io/stable-diffusion-aws-extension/en/) for more details.
 ![UIProcess](https://github.com/aws-samples/stable-diffusion-aws-extension/assets/23544182/3c6961d0-e1f9-4bee-b370-892978063781)

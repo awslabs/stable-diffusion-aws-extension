@@ -17,18 +17,20 @@ nav:
         - 架构图: architecture-overview/architecture.md
         #- 架构设计思路: architecture-overview/design-considerations.md
         - 架构细节: architecture-overview/architecture-details.md
-    
+
     - 部署前的规划:
         - 安全信息: plan-deployment/security.md
         - 区域支持: plan-deployment/regions.md
         - 配额信息: plan-deployment/quotas.md
     - 部署解决方案:
         - 模板信息: deployment/template.md
-        - 部署步骤: deployment/deployment.md
+        - 新用户部署步骤: deployment/deployment.md
+        - 更新已有的部署: deployment/deployment_for_existing_users.md
     #- 更新解决方案: update.md
     - 卸载解决方案: uninstall.md
-    - 用户指南: 
+    - 用户指南:
         - 准备工作: user-guide/preparation.md
+        - 配置API和多用户: user-guide/multi-user.md
         - 云上资源管理: user-guide/CloudAssetsManage.md
         - txt2img指南: user-guide/txt2img-guide.md
         - img2img指南: user-guide/img2img-guide.md
@@ -39,7 +41,7 @@ nav:
         - 源代码: developer-guide/source.md
         - API调用指南: developer-guide/api.md
     - 故障排除: troubleshooting.md
-    - 常见问题解答: faq.md 
+    - 常见问题解答: faq.md
     - 文档修订信息: revisions.md
     - 声明: notices.md
     #- 贡献人员: contributors.md

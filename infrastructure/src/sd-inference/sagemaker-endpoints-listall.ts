@@ -114,7 +114,7 @@ export class ListAllSagemakerEndpointsApi {
                         '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
                         '        #if($foreach.hasNext),#end\n' +
                         '        #end\n' +
-                        '    }\n' +
+                        '    },\n' +
                         '    "x-auth": {\n' +
                         '        "username": "$context.authorizer.username",\n' +
                         '        "role": "$context.authorizer.role"\n' +

@@ -45,4 +45,9 @@ ENV ON_DOCKER true
 RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
+# patch for opencv 4.7
+# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+RUN pip install trash-cli
+RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
+
 ENTRYPOINT ["python", "/opt/ml/code/serve"]

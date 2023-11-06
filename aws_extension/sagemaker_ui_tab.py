@@ -15,6 +15,7 @@ from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 import modules.ui
 from utils import get_variable_from_json, save_variable_to_json
+import datetime
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -35,9 +36,12 @@ def on_ui_tabs():
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
-                    _, user_setting_form = api_setting_tab()
+                    config_form, disclaimer = api_setting_tab()
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
-                    user_settings_tab()
+                    with gr.Tab(label='User Management'):
+                        user_settings_tab()
+                    with gr.Tab(label='Role Management'):
+                        _, role_form, role_table = role_settings_tab()
         with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
@@ -61,19 +65,33 @@ def on_ui_tabs():
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
             user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
-            logger.debug(f"user roles are: {user['roles']}")
-            admin_visible = Admin_Role in user['roles']
+            admin_visible = False
+            sagemaker_create_visible = False
+            role_management_visible = False
+            if 'roles' in user:
+                logger.debug(f"user roles are: {user['roles']}")
+                # admin_visible = Admin_Role in user['roles']
+                for permission in user['permissions']:
+                    if permission == 'user:all' or permission == 'user:create':
+                        admin_visible = True
+                    if permission == 'sagemaker_endpoint:all' or permission == 'sagemaker_endpoint:create':
+                        sagemaker_create_visible = True
+                    if permission == 'user:all' or permission == 'role:all':
+                        role_management_visible = True
+
             # todo: any initial values should from here
-            return gr.update(visible=admin_visible), \
+            return gr.update(visible=admin_visible or not cloud_auth_manager.api_url), \
                 gr.update(visible=admin_visible), \
-                gr.update(visible=admin_visible), \
+                gr.update(visible=role_management_visible), \
+                gr.update(visible=sagemaker_create_visible), \
                 _list_models(req.username, req.username)[0:10], \
                 _list_sagemaker_endpoints(req.username), \
                 req.username
 
         sagemaker_interface.load(ui_tab_setup, [], [
-            user_setting_form,
+            config_form,
             user_setting,
+            role_form,
             sagemaker_part,
             model_list_dataframe,
             endpoint_list_df,
@@ -84,14 +102,14 @@ def on_ui_tabs():
 
 
 def api_setting_tab():
-    with gr.Blocks() as api_setting:
+    with gr.Column() as api_setting:
         gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
         gr.HTML(value="Enter your API URL & Token to start the connection.")
         global api_gateway_url
         api_gateway_url = get_variable_from_json('api_gateway_url')
         global api_key
         api_key = get_variable_from_json('api_token')
-        with gr.Row():
+        with gr.Row() as api_url_form:
             api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1,
                                          placeholder="Please enter API Url of Middle", label="API Url",
                                          elem_id="aws_middleware_api")
@@ -106,7 +124,7 @@ def api_setting_tab():
             # lambda: {"value": get_variable_from_json('api_gateway_url')}, "refresh_api_gate_way")
             modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url,
                                              lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
-        with gr.Row():
+        with gr.Row() as api_token_form:
             def update_api_key():
                 global api_key
                 api_key = get_variable_from_json('api_token')
@@ -116,31 +134,34 @@ def api_setting_tab():
                                            label="API Token", elem_id="aws_middleware_token")
             modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key},
                                              "refresh_api_token")
-
         username_textbox, password_textbox, user_settings_form = ui_user_settings_tab()
-        global test_connection_result
-        test_connection_result = gr.Label(title="Output")
-        aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
-        aws_connect_button.click(_js="update_auth_settings",
-                                 fn=update_connect_config,
-                                 inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
-                                 outputs=[test_connection_result])
-
-        aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
-        aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
-                              outputs=[test_connection_result])
-
         with gr.Row():
-            with gr.Accordion("Disclaimer", open=False):
-                gr.HTML(
-                    value="""You should perform your own independent assessment, and take measures to ensure 
-                                that you comply with your own specific quality control practices and standards, and the 
-                                local rules, laws, regulations, licenses and terms of use that apply to you, your content, 
-                                and the third-party generative AI service in this web UI. Amazon Web Services has no control
-                                 or authority over the third-party generative AI service in this web UI, and does not make
-                                  any representations or warranties that the third-party generative AI service is secure,
-                                   virus-free, operational, or compatible with your production environment and standards.""")
-    return api_setting, user_settings_form
+            global test_connection_result
+            test_connection_result = gr.Label(title="Output")
+        with gr.Row():
+            aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
+            aws_connect_button.click(_js="update_auth_settings",
+                                     fn=update_connect_config,
+                                     inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
+                                     outputs=[test_connection_result])
+        with gr.Row():
+            aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
+            aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
+                                  outputs=[test_connection_result])
+
+    with gr.Row() as disclaimer_tab:
+        with gr.Accordion("Disclaimer", open=False):
+            gr.HTML(
+                value=
+                """You should perform your own independent assessment, and take measures to ensure 
+                that you comply with your own specific quality control practices and standards, and the 
+                local rules, laws, regulations, licenses and terms of use that apply to you, your content, 
+                and the third-party generative AI service in this web UI. Amazon Web Services has no control
+                or authority over the third-party generative AI service in this web UI, and does not make
+                any representations or warranties that the third-party generative AI service is secure,
+                virus-free, operational, or compatible with your production environment and standards.""")
+
+    return api_setting, disclaimer_tab
 
 
 def ui_user_settings_tab():
@@ -176,17 +197,23 @@ def user_settings_tab():
             gr.HTML(value="<b>Update a User Setting</b>")
             username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
             pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
-            user_roles_dropdown = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                              label="User Role")
+            with gr.Row():
+                user_roles_dropdown = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                                  label="User Role")
+                modules.ui.create_refresh_button(user_roles_dropdown, lambda: roles(cloud_auth_manager.username),
+                                                 lambda: {"choices": roles(cloud_auth_manager.username)},
+                                                 "refresh_create_user_roles")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
             user_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def upsert_user(username, password, user_roles):
+            def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
+                    if not password or len(password) < 1:
+                        return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username, password=password,
-                                                   roles=user_roles, creator=cloud_auth_manager.username,
-                                                   user_token=cloud_auth_manager.username)
+                                                   roles=user_roles, creator=pr.username,
+                                                   user_token=pr.username)
                     if resp:
                         return f'User upsert complete "{username}"'
                 except Exception as e:
@@ -210,7 +237,8 @@ def user_settings_tab():
                 resp = api_manager.list_users(limit=limit,
                                               last_evaluated_key=last_evaluated_key,
                                               user_token=cloud_auth_manager.username)
-
+                if not resp['users']:
+                    return [], ''
                 table = []
                 for user in resp['users']:
                     table.append([user['username'], ', '.join(user['roles']), user['creator']])
@@ -247,6 +275,7 @@ def user_settings_tab():
                 })
 
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
+                # next_page_btn = gr.Button(value="Next Page", variant='primary', visible=(token_zero is not None))
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
                 def next_page(table_token_state):
@@ -275,7 +304,7 @@ def user_settings_tab():
                 def update_user_table_button_state(token_state):
                     show_previous = True if token_state['previous_token'] else False
                     show_next = True if token_state['current_token'] else False
-                    return gr.update(visible=show_previous), gr.update(visible=show_next)
+                    return gr.update(visible=show_previous), gr.update(visible=True)
 
                 user_table.change(fn=update_user_table_button_state,
                                   inputs=[user_table_state],
@@ -285,12 +314,71 @@ def user_settings_tab():
     return user_tab
 
 
+def role_settings_tab():
+    with gr.Column() as ui_role_setting:
+        gr.HTML('<u><b>Manage Roles</b></u>')
+        with gr.Row(variant='panel') as role_tab:
+            with gr.Column(scale=1) as upsert_role_form:
+                gr.HTML(value="<b>Update a Role</b>")
+                rolename_textbox = gr.Textbox(placeholder="Please enter Enter a role name", label="Role name")
+                permissions_dropdown = gr.Dropdown(choices=['user:all',
+                                                            'sagemaker_endpoint:all',
+                                                            'user:create',
+                                                            'role:all',
+                                                            'train:all',
+                                                            'checkpoint:all',
+                                                            'inference:all'
+                                                            ],
+                                                   multiselect=True,
+                                                   label="Role Permissions")
+                upsert_role_button = gr.Button(value="Upsert a Role", variant='primary')
+                role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
+
+                def upsert_role(role_name, permissions):
+                    try:
+                        resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
+                                                       creator=cloud_auth_manager.username,
+                                                       user_token=cloud_auth_manager.username)
+                        if resp:
+                            return f'Role upsert complete "{role_name}"'
+                    except Exception as e:
+                        return f'User upsert failed: {e}'
+
+                upsert_role_button.click(fn=upsert_role,
+                                         inputs=[rolename_textbox, permissions_dropdown],
+                                         outputs=[role_setting_out_textbox]
+                                         )
+
+            def get_roles_table():
+                resp = api_manager.list_roles(user_token=cloud_auth_manager.username)
+                table = []
+                for role in resp['roles']:
+                    table.append([role['role_name'], ', '.join(role['permissions']), role['creator']])
+                return table
+
+            with gr.Column(scale=2) as role_table:
+                gr.HTML(value="<b>Role Table</b>")
+                user_table = gr.Dataframe(
+                    headers=["role name", "permissions", "created by"],
+                    datatype=["str", "str", "str"],
+                    max_rows=10,
+                    interactive=False,
+                    value=get_roles_table()
+                )
+                role_table_refresh_button = gr.Button(value='Refresh Role Table', variant='primary')
+                role_table_refresh_button.click(fn=get_roles_table, inputs=[], outputs=[user_table])
+    return ui_role_setting, upsert_role_form, role_table
+
+
 def _list_models(username, user_token):
     result = api_manager.list_models_on_cloud(username=username, user_token=user_token, types=None, status=None)
     models = []
     for model in result:
-        models.append([model['name'], model['type'], ','.join(model['allowed_roles_or_users']),
-                       'In-Use' if model['status'] == 'Active' else 'Disabled'])
+        allowed = ''
+        if model['allowed_roles_or_users']:
+            allowed = ', '.join(model['allowed_roles_or_users'])
+        models.append([model['name'], model['type'], allowed,
+                       'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -446,8 +534,8 @@ def model_upload_tab():
 
         current_page = gr.State(0)
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user and roles belongs to', 'status'],
-                                     datatype=['str', 'str', 'str', 'str']
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
+                                     datatype=['str', 'str', 'str', 'str', 'str']
                                      )
         with gr.Row():
             model_list_prev_btn = gr.Button(value='Previous')
@@ -493,7 +581,7 @@ def sagemaker_endpoint_tab():
                 label="Advanced Endpoint Configuration", value=False, visible=True
             )
             with gr.Row(visible=False) as filter_row:
-                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custome endpoint name ",
+                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
                                                    label="Specify Endpoint Name", visible=True)
                 instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
                                                      elem_id="sagemaker_inference_instance_type_textbox",
@@ -534,12 +622,12 @@ def sagemaker_endpoint_tab():
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
                 # todo: this list is not safe
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username),
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username),
                                                                  multiselect=True,
                                                                  label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
                                                  lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(cloud_auth_manager.username)},
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username)},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
@@ -557,10 +645,13 @@ def _list_sagemaker_endpoints(username):
     resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
     endpoints = []
     for endpoint in resp:
+        endpoint_roles = ''
+        if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
+            endpoint_roles = ','.join(endpoint['owner_group_or_role'])
         endpoints.append([
             endpoint['EndpointDeploymentJobId'][:4],
             endpoint['endpoint_name'],
-            ','.join(endpoint['owner_group_or_role']),
+            endpoint_roles,
             endpoint['autoscaling'],
             endpoint['endpoint_status'],
             endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
@@ -722,7 +813,7 @@ def dataset_tab():
     return dt
 
 
-def update_connect_config(api_url, api_token, username=None, password=None):
+def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
     # Check if api_url ends with '/', if not append it
     if not api_url.endswith('/'):
         api_url += '/'
@@ -736,11 +827,13 @@ def update_connect_config(api_url, api_token, username=None, password=None):
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
+    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=initial, user_token=username):
+        raise Exception('Initial Setup Failed')
     return "Setting updated"
 
 
 def test_aws_connect_config(api_url, api_token):
-    update_connect_config(api_url, api_token)
+    # update_connect_config(api_url, api_token, initial=False)
     api_url = get_variable_from_json('api_gateway_url')
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):

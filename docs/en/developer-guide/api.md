@@ -143,7 +143,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 27    | PUT         | [/dataset](#datasetput)                                                                            | Updates a dataset.                                                                                      |
 | 28    | GET         | [/datasets](#datasetsget)                                                                          | Lists all datasets.                                                                                     |
 | 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | Gets data of a specific dataset.                                                                        |
-
+| 30  | POST    | [/upload_checkpoint](#upload_checkpointpost)                                                            | Upload directly to s3 according to the model url.                   |
 <br/>
 
 # /inference/test-connection
@@ -3266,3 +3266,126 @@ To perform this operation, you must be authenticated by means of one of the foll
 api_key
 </aside>
 
+
+<br/>
+
+# /upload_checkpoint
+
+### **Code samples :**
+
+Python example code:
+
+```Python
+import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+  'x-api-key': 'API_TOKEN_VALUE'
+}
+
+const inputBody = {
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/upload_checkpoint', headers = headers, json = inputBody)
+
+print(r.json())
+
+```
+
+Javascript example code:
+
+```javascript
+const inputBody = '{
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx/sd_xl_base_1.0.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json',
+  'x-api-key':'API_TOKEN_VALUE'
+};
+
+fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`POST /upload_checkpoint`
+
+> Body Parameters
+
+```json
+
+{
+  // checkpointType choices: "Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"
+  "checkpointType":"Stable-diffusion",
+  "modelUrl":["https://huggingface.co/xxx.safetensors","https://civitai.com/api/download/models/xxx"],
+  "params":{"message":"description"}
+}
+
+```
+
+<a id="upload-checkpoint-params">Parameters</a>
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|body|body|object|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+    "statusCode": 200,
+    "checkpoint": {
+        "id": "07dbd061-1df8-463f-bc78-44a41956435c",
+        "type": "Stable-diffusion",
+        "s3_location": "s3://path",
+        "status": "Active",
+        "params": {
+            "message": "description",
+            "created": "2023-09-26 09:02:52.146566",
+            "multipart_upload": {
+                "bubble-gum-kaugummi-v20": null
+            }
+        }
+    }
+}
+```
+
+> 500 Response
+
+```json
+{
+  "statusCode": 500,
+  "error": "error_message"
+}
+```
+
+<h3 id="upload-checkpoint">Response</h3>
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful response|Inline|
+|500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Error response|Inline|
+
+<h3 id="upload-checkpoint-responseschema">Response Schema</h3>
+
+<aside class="warning">
+To perform this operation, you must be authenticated by means of one of the following methods:
+api_key
+</aside>

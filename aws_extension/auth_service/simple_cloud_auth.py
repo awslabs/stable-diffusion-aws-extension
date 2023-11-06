@@ -30,8 +30,41 @@ def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
 # IMPORTANT: if config changed, the class need restart to get refreshed
 class CloudAuthLoader:
     username = None
+    api_url = None
+    api_key = None
+    _auth_token = None
+    _headers = None
+    enableAuth = False
 
     def __init__(self):
+        self.refresh()
+
+    def enable(self):
+        return self.enableAuth
+
+    def update_gradio_auth(self):
+        from modules import shared
+        user_cred_str = self.create_config()
+        if user_cred_str:
+            for user_password in user_cred_str.split(','):
+                parts = user_password.split(':')
+                user = parts[0]
+                password = parts[1]
+                if not shared.demo.server_app.auth:
+                    shared.demo.server_app.auth = {}
+
+                shared.demo.server_app.auth[user] = password
+
+    def create_config(self) -> str:
+        return self._get_users_config_from_api()
+
+    def _get_users_config_from_api(self):
+        raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
+
+    def refresh(self):
         if not check_config_json_exist():
             self.enableAuth = False
             logger.debug('url or username not set')
@@ -52,23 +85,6 @@ class CloudAuthLoader:
             'Authorization': self._auth_token
         }
         self.enableAuth = True
-
-    def enable(self):
-        return self.enableAuth
-
-    def create_config(self) -> str:
-        return self._get_users_config_from_api()
-
-
-
-    def _get_users_config_from_api(self):
-        raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
-        raw_resp.raise_for_status()
-        resp = raw_resp.json()
-        return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
-
-    def clear(self):
-        pass
 
 
 cloud_auth_manager = CloudAuthLoader()

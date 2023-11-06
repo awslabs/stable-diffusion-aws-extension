@@ -214,10 +214,10 @@ def on_after_component_callback(component, **_kwargs):
         # )
 
 
-def create_refresh_button(refresh_component, refresh_method, refreshed_args, elem_id):
+def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_args, elem_id):
     def refresh(pr: gradio.Request):
         refresh_method(pr.username)
-        args = refreshed_args() if callable(refreshed_args) else refreshed_args
+        args = refreshed_args(pr.username) if callable(refreshed_args) else refreshed_args
 
         for k, v in args.items():
             setattr(refresh_component, k, v)
