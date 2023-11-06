@@ -209,9 +209,11 @@ def user_settings_tab():
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
+                    if not username.rstrip() or len(password.strip()) < 1:
+                        return f'Please trim trailing spaces. Username should not be none.'
                     if not password or len(password) < 1:
                         return f'Password should not be none.'
-                    resp = api_manager.upsert_user(username=username, password=password,
+                    resp = api_manager.upsert_user(username=username.rstrip(), password=password,
                                                    roles=user_roles, creator=pr.username,
                                                    user_token=pr.username)
                     if resp:
