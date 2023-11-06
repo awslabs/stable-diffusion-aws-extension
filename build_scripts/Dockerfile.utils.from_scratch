@@ -32,9 +32,19 @@ WORKDIR /opt/ml/code
 
 ENV ON_DOCKER true
 
+# # install libtcmalloc to solve memory leak for multi model switch 
+# # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
+# RUN apt-get install -y google-perftools
+# ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+
 # install libtcmalloc to solve memory leak for multi model switch 
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-RUN apt-get install -y google-perftools
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+RUN apt-get install -y libtcmalloc-minimal4
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+# patch for opencv 4.7
+# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+RUN pip install trash-cli
+RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 ENTRYPOINT ["python", "/opt/ml/code/serve"]
