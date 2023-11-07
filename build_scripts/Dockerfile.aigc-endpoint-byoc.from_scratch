@@ -50,4 +50,6 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 RUN pip install trash-cli
 RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
+RUN apt-get install file
+
 ENTRYPOINT ["python", "/opt/ml/code/serve"]
