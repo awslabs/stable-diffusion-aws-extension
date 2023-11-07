@@ -21,7 +21,6 @@ RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/t
 
 RUN pip install --upgrade pip
 RUN pip install -r /opt/ml/code/requirements.txt
-RUN pip install -r /opt/ml/code/repositories/k-diffusion/requirements.txt
 
 # RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
 # RUN git clone https://github.com/facebookresearch/xformers.git && cd xformers && git checkout v0.0.20 && \
