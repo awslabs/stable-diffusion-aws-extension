@@ -16,7 +16,7 @@ fi
 
 ./build_and_push_byoc.sh Dockerfile.inference.from_scratch aigc-webui-inference $branch byoc-$tag $commit_id
 
-./build_and_push_diffusers.sh Dockerfile.aig-endpoint-diffusers.from_scratch aigc-webui-inference $branch diffusers-$tag $commit_id
+./build_and_push_diffusers.sh Dockerfile.aigc-endpoint-diffusers.from_scratch aigc-webui-inference $branch diffusers-$tag $commit_id
 
 # ./build_and_push.sh Dockerfile.aigc-endpoint-diffusers.from_scratch aigc-endpoint-diffusers $branch $tag $commit_id
 
