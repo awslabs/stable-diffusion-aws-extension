@@ -41,6 +41,6 @@ ENV ON_DOCKER true
 RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-RUN apt-get install file
+RUN apt-get install -y file
 
 ENTRYPOINT ["python", "/opt/ml/code/serve"]
