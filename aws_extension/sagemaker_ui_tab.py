@@ -175,10 +175,10 @@ def ui_user_settings_tab():
                                              "refresh_username")
         gr.HTML('<b>Password</b>')
         with gr.Row():
-            password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True,
+            password_textbox = gr.Textbox(type='password', interactive=True,
                                           placeholder='Please enter your password', show_label=False)
-            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'),
-                                             lambda: {"value": get_variable_from_json('password')},
+            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('username'),
+                                             lambda: {"placeholder": 'Please reset your password!'},
                                              "refresh_password")
 
     return username_textbox, password_textbox, ui_user_setting
@@ -823,7 +823,6 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
     save_variable_to_json('username', username)
-    save_variable_to_json('password', password)
     global api_gateway_url
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
