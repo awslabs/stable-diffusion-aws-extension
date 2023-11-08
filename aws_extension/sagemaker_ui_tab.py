@@ -828,8 +828,12 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
-    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=initial, user_token=username):
-        raise Exception('Initial Setup Failed')
+    try:
+        if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
+                                       initial=initial, user_token=username):
+            return 'Initial Setup Failed'
+    except Exception as e:
+        return f'User upsert failed: {e}'
     return "Setting updated"
 
 
