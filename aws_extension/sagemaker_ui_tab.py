@@ -177,7 +177,7 @@ def ui_user_settings_tab():
         with gr.Row():
             password_textbox = gr.Textbox(type='password', interactive=True,
                                           placeholder='Please enter your password', show_label=False)
-            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('username'),
+            modules.ui.create_refresh_button(password_textbox, lambda: None,
                                              lambda: {"placeholder": 'Please reset your password!'},
                                              "refresh_password")
 
