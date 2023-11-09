@@ -250,7 +250,8 @@ def load_pipeline(checkpoint_info=None):
         checkpoint = safe_load(checkpoint_info.filename, device="cpu")
     else:
         checkpoint = torch.load(checkpoint_info.filename, map_location="cpu")
-    
+
+    timer.record("recoginition model type to load different pipeline")
     
     key_name_sd_xl_base = "conditioner.embedders.1.model.transformer.resblocks.9.mlp.c_proj.bias"
     key_name_sd_xl_refiner = "conditioner.embedders.0.model.transformer.resblocks.9.mlp.c_proj.bias"
