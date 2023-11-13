@@ -785,12 +785,17 @@ def process_result_by_inference_id(inference_id):
 
     resp = get_inference_job(inference_id)
     if resp is None:
-        return image_list, info_text, plaintext_to_html(infotexts)
+        logger.info(f"get_inference_job resp is null")
+        return image_list, info_text, plaintext_to_html(infotexts), infotexts
     else:
+        logger.debug(f"get_inference_job resp is {resp}")
         if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
-            while resp['status'] == "inprogress":
+            while resp and resp['status'] == "inprogress":
                 time.sleep(3)
                 resp = get_inference_job(inference_id)
+            if resp is None:
+                logger.info(f"get_inference_job resp is null.")
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
             if resp['status'] == "failed":
                 infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -821,6 +826,9 @@ def process_result_by_inference_id(inference_id):
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
                     infotexts = info_text
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
+            else:
+                logger.debug(f"inference job status is {resp['status']}")
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
         else:
             return image_list, info_text, plaintext_to_html(infotexts), infotexts
