@@ -13,7 +13,8 @@ import {
     LambdaIntegration,
     Model,
     Resource,
-    IAuthorizer
+    IAuthorizer,
+    RequestValidator
 } from "aws-cdk-lib/aws-apigateway";
 
 
@@ -214,6 +215,7 @@ export class CreateSagemakerEndpointsApi {
 
         const model = new Model(this.scope, 'CreateEndpointModel', {
             restApi: this.router.api,
+            contentType: 'application/json',
             modelName: 'CreateEndpointModel',
             description: 'Create Endpoint Model',
             schema: {
@@ -221,7 +223,16 @@ export class CreateSagemakerEndpointsApi {
                 title: "createEndpointSchema",
                 type: JsonSchemaType.OBJECT,
                 properties: {
-                    "delete_endpoint_list": {
+                    "instance_type": {
+                        type: JsonSchemaType.STRING,
+                    },
+                    "initial_instance_count": {
+                        type: JsonSchemaType.NUMBER,
+                    },
+                    "autoscaling_enabled": {
+                        type: JsonSchemaType.STRING,
+                    },
+                    "assign_to_roles": {
                         type: JsonSchemaType.ARRAY,
                         items: {
                             type: JsonSchemaType.STRING
@@ -230,12 +241,14 @@ export class CreateSagemakerEndpointsApi {
                         maxItems: 10,
                     }
                 },
-                required: ["delete_endpoint_list"]
-            },
-            contentType: 'application/json'
+                required: [
+                    "instance_type",
+                    "initial_instance_count",
+                    "autoscaling_enabled",
+                    "assign_to_roles",
+                ]
+            }
         });
-
-        console.log(model.modelId);
 
         const integration = new LambdaIntegration(
             lambdaFunction,
@@ -245,16 +258,20 @@ export class CreateSagemakerEndpointsApi {
             },
         );
 
+        const requestValidator = new RequestValidator(this.scope, 'CreateEndpointRequestValidator', {
+            restApi: this.router.api,
+            requestValidatorName: 'CreateEndpointRequestValidator',
+            validateRequestBody: true,
+            validateRequestParameters: false,
+        });
+
         this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
             apiKeyRequired: true,
             authorizer: this.authorizer,
-            // requestValidatorOptions: {
-            //     // requestValidatorName: "create-endpoint-validator",
-            //     validateRequestBody: true,
-            // },
-            // requestModels: {
-            //     'application/json': model,
-            // },
+            requestValidator,
+            requestModels: {
+                'application/json': model,
+            },
             methodResponses: [
                 {
                     statusCode: '200',

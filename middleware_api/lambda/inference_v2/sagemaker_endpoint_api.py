@@ -107,14 +107,14 @@ def sagemaker_endpoint_create_api(event, ctx):
     try:
         endpoint_deployment_id = str(uuid.uuid4())
         shortId = endpoint_deployment_id[:7]
-        endpoint_name_from_request = event["endpoint_name"]
         sagemaker_model_name = f"infer-model-{shortId}"
         sagemaker_endpoint_config = f"infer-config-{shortId}"
 
-        if not endpoint_name_from_request.strip():
-            sagemaker_endpoint_name = f"infer-endpoint-{shortId}"
-        else:
-            sagemaker_endpoint_name = endpoint_name_from_request
+        sagemaker_endpoint_name = f"infer-endpoint-{shortId}"
+
+        # todo may remove
+        if "endpoint_name" in event:
+            sagemaker_endpoint_name = event["endpoint_name"]
 
         image_url = INFERENCE_ECR_IMAGE_URL
 

@@ -11,7 +11,7 @@ import {
     LambdaIntegration,
     Model,
     Resource,
-    IAuthorizer
+    IAuthorizer, RequestValidator
 } from "aws-cdk-lib/aws-apigateway";
 
 export interface DeleteSagemakerEndpointsApiProps {
@@ -73,7 +73,7 @@ export class DeleteSagemakerEndpointsApi {
             effect: Effect.ALLOW,
             actions: [
                 'application-autoscaling:DeregisterScalableTarget',
-      ],
+            ],
             resources: [
                 `*`,
             ],
@@ -141,13 +141,16 @@ export class DeleteSagemakerEndpointsApi {
             },
         );
 
+        const requestValidator = new RequestValidator(this.scope, 'DeleteEndpointRequestValidator', {
+            restApi: this.router.api,
+            requestValidatorName: 'DeleteEndpointRequestValidator',
+            validateRequestBody: true,
+        });
+
         this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
             apiKeyRequired: true,
             authorizer: this.authorizer,
-            requestValidatorOptions: {
-                requestValidatorName: "delete-endpoint-validator",
-                validateRequestBody: true,
-            },
+            requestValidator,
             requestModels: {
                 'application/json': model,
             },
