@@ -223,14 +223,19 @@ export class CreateSagemakerEndpointsApi {
                 title: "createEndpointSchema",
                 type: JsonSchemaType.OBJECT,
                 properties: {
+                    "endpoint_name": {
+                        type: JsonSchemaType.STRING,
+                        minLength: 0,
+                        maxLength: 20,
+                    },
                     "instance_type": {
                         type: JsonSchemaType.STRING,
                     },
                     "initial_instance_count": {
-                        type: JsonSchemaType.NUMBER,
+                        type: JsonSchemaType.STRING,
                     },
                     "autoscaling_enabled": {
-                        type: JsonSchemaType.STRING,
+                        type: JsonSchemaType.BOOLEAN,
                     },
                     "assign_to_roles": {
                         type: JsonSchemaType.ARRAY,
