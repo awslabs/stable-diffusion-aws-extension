@@ -175,10 +175,10 @@ def ui_user_settings_tab():
                                              "refresh_username")
         gr.HTML('<b>Password</b>')
         with gr.Row():
-            password_textbox = gr.Textbox(value=get_variable_from_json('password'), type='password', interactive=True,
+            password_textbox = gr.Textbox(type='password', interactive=True,
                                           placeholder='Please enter your password', show_label=False)
-            modules.ui.create_refresh_button(password_textbox, lambda: get_variable_from_json('password'),
-                                             lambda: {"value": get_variable_from_json('password')},
+            modules.ui.create_refresh_button(password_textbox, lambda: None,
+                                             lambda: {"placeholder": 'Please reset your password!'},
                                              "refresh_password")
 
     return username_textbox, password_textbox, ui_user_setting
@@ -209,9 +209,11 @@ def user_settings_tab():
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
+                    if not username.rstrip() or len(username.rstrip()) < 1:
+                        return f'Please trim trailing spaces. Username should not be none.'
                     if not password or len(password) < 1:
                         return f'Password should not be none.'
-                    resp = api_manager.upsert_user(username=username, password=password,
+                    resp = api_manager.upsert_user(username=username.rstrip(), password=password,
                                                    roles=user_roles, creator=pr.username,
                                                    user_token=pr.username)
                     if resp:
@@ -821,14 +823,17 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
     save_variable_to_json('username', username)
-    save_variable_to_json('password', password)
     global api_gateway_url
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
     api_key = get_variable_from_json('api_token')
     sagemaker_ui.init_refresh_resource_list_from_cloud()
-    if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username, initial=initial, user_token=username):
-        raise Exception('Initial Setup Failed')
+    try:
+        if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
+                                       initial=initial, user_token=username):
+            return 'Initial Setup Failed'
+    except Exception as e:
+        return f'User upsert failed: {e}'
     return "Setting updated"
 
 
