@@ -11,7 +11,7 @@ import {
     LambdaIntegration,
     Model,
     Resource,
-    IAuthorizer
+    IAuthorizer, RequestValidator
 } from "aws-cdk-lib/aws-apigateway";
 
 export interface DeleteSagemakerEndpointsApiProps {
@@ -58,17 +58,22 @@ export class DeleteSagemakerEndpointsApi {
         newRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                'sagemaker:DescribeEndpoint',
+                'sagemaker:DeleteModel',
                 'sagemaker:DeleteEndpoint',
+                'sagemaker:DeleteEndpointConfig',
             ],
-            resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
+            resources: [
+                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:model/infer-model-*`,
+                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/infer-endpoint-*`,
+                `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint-config/infer-config-*`,
+            ],
         }));
 
         newRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
                 'application-autoscaling:DeregisterScalableTarget',
-      ],
+            ],
             resources: [
                 `*`,
             ],
@@ -136,13 +141,16 @@ export class DeleteSagemakerEndpointsApi {
             },
         );
 
+        const requestValidator = new RequestValidator(this.scope, 'DeleteEndpointRequestValidator', {
+            restApi: this.router.api,
+            requestValidatorName: 'DeleteEndpointRequestValidator',
+            validateRequestBody: true,
+        });
+
         this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
             apiKeyRequired: true,
             authorizer: this.authorizer,
-            requestValidatorOptions: {
-                requestValidatorName: "delete-endpoint-validator",
-                validateRequestBody: true,
-            },
+            requestValidator,
             requestModels: {
                 'application/json': model,
             },
