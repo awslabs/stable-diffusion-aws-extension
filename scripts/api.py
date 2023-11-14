@@ -50,11 +50,12 @@ except Exception as e:
 #     logger.info("Exception importing api")
 #     traceback.print_exc()
 
-if os.environ.get("DEBUG_API", False):
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
+
+if os.environ.get("DEBUG_API", False):
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
