@@ -26,6 +26,7 @@ class Model:
     job_status: CreateModelStatus
     output_s3_location: Optional[str] = ''  # output location
     params: Optional[dict[str, Any]] = None
+    allowed_roles_or_users: Optional[list[str]] = None
 
     def __post_init__(self):
         if type(self.job_status) == str:
@@ -73,6 +74,7 @@ class TrainJob:
     sagemaker_train_name: Optional[str] = ''
     sagemaker_sfn_arn: Optional[str] = ''
     params: Optional[dict[str, Any]] = None
+    allowed_roles_or_users: Optional[list[str]] = None
     # { 'model': 'model.tar', 'data1': 'data1.tar' }
     # base s3: s3://bucket/Stable-diffusion/123-123-0123/
 

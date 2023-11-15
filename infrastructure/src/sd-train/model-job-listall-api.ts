@@ -17,8 +17,10 @@ export interface ListAllModelJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   modelTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllModelJobApi {
@@ -27,7 +29,9 @@ export class ListAllModelJobApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly modelTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -37,8 +41,10 @@ export class ListAllModelJobApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.modelTable = props.modelTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.authorizer = props.authorizer;
 
     this.listAllModelJobApi();
   }
@@ -55,7 +61,10 @@ export class ListAllModelJobApi {
         'dynamodb:Scan',
         'dynamodb:Query',
       ],
-      resources: [this.modelTable.tableArn],
+      resources: [
+        this.modelTable.tableArn,
+        this.multiUserTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -84,6 +93,7 @@ export class ListAllModelJobApi {
       memorySize: 1024,
       environment: {
         DYNAMODB_TABLE: this.modelTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -105,6 +115,10 @@ export class ListAllModelJobApi {
               '        #end\n' +
               '        ]#if($foreach.hasNext),#end\n' +
               '      #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -113,6 +127,7 @@ export class ListAllModelJobApi {
     );
     this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.status': true,
         'method.request.querystring.types': true,

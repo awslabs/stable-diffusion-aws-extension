@@ -7,23 +7,29 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
 from modules.processing import Processed
-from modules.shared import cmd_opts
+from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
 
-from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager, postfix
+from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
 from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
+from modules.ui_components import ToolButton
+from scripts import global_state
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
+CONTROLNET_MODEL_COUNT = 3
+
+global_username = None
+on_cloud = False
 
 
 def dummy_function(*args, **kwargs):
@@ -70,15 +76,31 @@ class SageMakerUI(scripts.Script):
     refresh_sd_model_checkpoint_btn = None
     setting_sd_model_checkpoint_dropdown = None
 
-    txt2img_generation_info = None
-    txt2img_gallery = None
-    txt2img_html_info = None
+    txt2img_refiner_ckpt_dropdown = None
+    txt2img_refiner_ckpt_refresh_btn = None
+    img2img_refiner_ckpt_dropdown = None
+    img2img_refiner_ckpt_refresh_btn = None
 
-    img2img_generation_info = None
-    img2img_gallery = None
-    img2img_html_info = None
+    txt2img_model_on_cloud = None
+    img2img_model_on_cloud = None
+
+    # todo: we don't need two of them, save one api call
+    txt2img_lora_and_hypernet_models_state = None
+    img2img_lora_and_hypernet_models_state = None
+
+    # controlnet models count
+    max_cn_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
 
     ph = None
+
+    controlnet_components = {
+        'txt2img_controlnet_dropdown_batch': [None] * 10,
+        'img2img_controlnet_dropdown_batch': [None] * 10,
+        'txt2img_controlnet_refresh_btn_batch': [None] * 10,
+        'img2img_controlnet_refresh_btn_batch': [None] * 10,
+        'txt2img_controlnet_type_filter_radio_batch': [None] * 10,
+        'img2img_controlnet_type_filter_radio_batch': [None] * 10,
+    }
 
     def title(self):
         return "SageMaker embeddings"
@@ -93,75 +115,177 @@ class SageMakerUI(scripts.Script):
             elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
                 self.img2img_generate_btn = component
 
-        if type(component) is gr.Textbox and getattr(component, 'elem_id',
-                                                     None) == 'generation_info_txt2img' and self.is_txt2img:
-            self.txt2img_generation_info = component
+        # refiner models
+        elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
+        if type(component) is gr.Dropdown and getattr(component, 'elem_id', '') == elem_id:
+            if self.is_txt2img:
+                self.txt2img_refiner_ckpt_dropdown = component
+            if self.is_img2img:
+                self.img2img_refiner_ckpt_dropdown = component
 
-        if type(component) is gr.Gallery and getattr(component, 'elem_id',
-                                                     None) == 'txt2img_gallery' and self.is_txt2img:
-            self.txt2img_gallery = component
+        if type(component) is ToolButton:
+            elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint_refresh'
+            component_elem_id = getattr(component, 'elem_id', '')
+            if component_elem_id == elem_id:
+                if self.is_txt2img:
+                    self.txt2img_refiner_ckpt_refresh_btn = component
+                if self.is_img2img:
+                    self.img2img_refiner_ckpt_refresh_btn = component
 
-        if type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                  None) == 'html_info_txt2img' and self.is_txt2img:
-            self.txt2img_html_info = component
+        # controlnet models and refresh button
+        # controlnet refresh button type is not webui ToolButton, maybe there is no controlnet, so use str not class
+        component_elem_id = getattr(component, 'elem_id', '')
+        elem_id_tabname = ("img2img" if self.is_img2img else "txt2img") + "_controlnet"
+        cn_component_type = ''
+        cn_elem_id_postfix = ''
+        is_cn_component = False
+        if type(component) is gr.Dropdown and component_elem_id and component_elem_id.endswith('_controlnet_model_dropdown'):
+            cn_component_type = 'dropdown'
+            cn_elem_id_postfix = 'model_dropdown'
+            is_cn_component = True
 
-        async def _update_result():
-            if self.inference_queue and not self.inference_queue.empty():
-                inference_id = self.inference_queue.get()
-                self.latest_result = sagemaker_ui.process_result_by_inference_id(inference_id)
-                return self.latest_result
+        # latest controlnet has changed it's implementation, so we do both here
+        if (str(type(component)) == "<class 'scripts.controlnet_ui.tool_button.ToolButton'>"
+                or str(type(component)) == "<class 'scripts.controlnet_ui.controlnet_ui_group.ToolButton'>") \
+                and component_elem_id and component_elem_id.endswith('_controlnet_refresh_models'):
+            cn_component_type = 'refresh_btn'
+            cn_elem_id_postfix = 'refresh_models'
+            is_cn_component = True
 
-            return gr.skip(), gr.skip(), gr.skip()
+        if type(component) is gr.Radio and component_elem_id and component_elem_id.endswith('_controlnet_type_filter_radio'):
+            cn_component_type = cn_elem_id_postfix = 'type_filter_radio'
+            is_cn_component = True
 
-        if self.txt2img_html_info and self.txt2img_gallery and self.txt2img_generation_info:
-            self.txt2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.txt2img_gallery, self.txt2img_generation_info, self.txt2img_html_info]
-            )
+        if is_cn_component:
+            if self.max_cn_models > 1:
+                for i in range(self.max_cn_models):
+                    tabname = f"ControlNet-{i}"
+                    elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_{cn_elem_id_postfix}"
+                    if component_elem_id == elem_id_controlnet:
+                        self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][i] = [component, False]
+                        break
+            else:
+                tabname = "ControlNet"
+                elem_id_controlnet = f"{elem_id_tabname}_{tabname}_controlnet_{cn_elem_id_postfix}"
+                if component_elem_id == elem_id_controlnet:
+                    self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][0] = [component, False]
 
-        if type(component) is gr.Textbox and getattr(component, 'elem_id',
-                                                     None) == 'generation_info_img2img' and self.is_img2img:
-            self.img2img_generation_info = component
+        cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
+        base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
+        cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
 
-        if type(component) is gr.Gallery and getattr(component, 'elem_id',
-                                                     None) == 'img2img_gallery' and self.is_img2img:
-            self.img2img_gallery = component
+        for i in range(self.max_cn_models):
+            if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
+                    and cn_list \
+                    and base_model_component:
 
-        if type(component) is gr.HTML and getattr(component, 'elem_id',
-                                                  None) == 'html_info_img2img' and self.is_img2img:
-            self.img2img_html_info = component
+                def _check_cn(model_state, model_selected, k):
+                    logger.debug('load')
+                    on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+                    if not on_cloud:
+                        return gr.skip()
+                    controlnet_model_list = model_state['controlnet']
+                    # controlnet_model_list = sagemaker_ui.load_controlnet_list(pr.username, pr.username)
+                    original_dict = [('None', None)]
+                    for item in controlnet_model_list:
+                        if item == 'None':
+                            continue
+                        key = item[:item.rfind('.')]
+                        original_dict.append((key, ''))
+                    from collections import OrderedDict
+                    new_ordered_dict = OrderedDict(original_dict)
+                    # logger.debug(f'{new_ordered_dict} new_ordered_dict')
+                    global_state.cn_models = new_ordered_dict
+                    cn_models = global_state.select_control_type(k)
+                    modified_result = list(cn_models)
+                    modified_result[1] = list(new_ordered_dict.keys())
+                    return gr.update(choices=cn_models[1], value=cn_models[3])
 
-        if self.img2img_html_info and self.img2img_gallery and self.img2img_generation_info:
-            self.img2img_generation_info.change(
-                fn=lambda: sagemaker_ui.async_loop_wrapper(_update_result),
-                inputs=None,
-                outputs=[self.img2img_gallery, self.img2img_generation_info, self.img2img_html_info]
-            )
+                cn_radio_tuple = self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i]
+                if cn_radio_tuple[1]:
+                    continue
 
+                cn_radio_tuple[0] \
+                    .change(fn=_check_cn,
+                            inputs=[
+                                cn_list,
+                                base_model_component,
+                                cn_radio_tuple[0]],
+                            outputs=[
+                                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                            ])
+                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i][0] \
+                    .click(fn=_check_cn,
+                           inputs=[
+                               cn_list,
+                               base_model_component,
+                               cn_radio_tuple[0]],
+                           outputs=[
+                               self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                           ])
+                cn_radio_tuple[1] = True
         pass
 
     def ui(self, is_img2img):
-        def _check_generate(model_selected):
-            return f'Generate{" on Cloud" if model_selected and model_selected != None_Option_For_On_Cloud_Model else ""}'
+        def _check_generate(model_selected, pr: gr.Request):
+            global global_username
+            global_username = pr.username
+            global on_cloud
+            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
+            if not on_cloud:
+                result.append(gr.update(choices=sd_models.checkpoint_tiles()))
+            else:
+                result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+            hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
+            lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
+            controlnet_list = load_controlnet_list(pr.username, pr.username)
+            result.append({"hypernet": hypernet_models, "lora": lora_models, "controlnet": controlnet_list})
+            max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
+            if max_models > 0:
+                controlnet_models = load_controlnet_list(pr.username, pr.username)
+                for i in range(max_models):
+                    result.append(gr.update(choices=controlnet_models))
 
-        if not is_img2img:
-            model_on_cloud, inference_job_dropdown, primary_model_name, \
-                secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
+            return result
+        sagemaker_inputs_components = []
+        if is_img2img:
+            self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            secondary_model_name, tertiary_model_name, \
+            modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+                is_img2img)
+            outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
+                       self.img2img_refiner_ckpt_dropdown, self.img2img_lora_and_hypernet_models_state]
+            for value in self.controlnet_components['img2img_controlnet_dropdown_batch']:
+                if value:
+                    outputs.append(value[0])
 
-            model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.txt2img_generate_btn])
+            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud,
+                                  outputs=outputs)
 
-            return [model_on_cloud, inference_job_dropdown,
-                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
+                    self.img2img_lora_and_hypernet_models_state]
         else:
-            model_on_cloud, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, \
-                modelmerger_merge_on_cloud = sagemaker_ui.create_ui(is_img2img)
-            model_on_cloud.change(_check_generate, inputs=model_on_cloud,
-                                  outputs=[self.img2img_generate_btn])
-            return [model_on_cloud, inference_job_dropdown,
-                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud]
+            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            secondary_model_name, tertiary_model_name, \
+            modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+                is_img2img)
+            outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
+                       self.txt2img_refiner_ckpt_dropdown, self.txt2img_lora_and_hypernet_models_state]
+            for value in self.controlnet_components['txt2img_controlnet_dropdown_batch']:
+                if value:
+                    outputs.append(value[0])
+
+            self.txt2img_model_on_cloud.change(_check_generate, inputs=self.txt2img_model_on_cloud, outputs=outputs)
+            sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+                    primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
+                    self.txt2img_lora_and_hypernet_models_state]
+
+        return sagemaker_inputs_components
+
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -195,7 +319,8 @@ class SageMakerUI(scripts.Script):
             api_param.mask = p.image_mask
 
         selected_script_index = p.script_args[0] - 1
-        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[selected_script_index].name
+        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[
+            selected_script_index].name
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
@@ -209,13 +334,13 @@ class SageMakerUI(scripts.Script):
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(script.name, arg, _id, script_args)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(script.name, arg, _id, script_args)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 
@@ -225,15 +350,14 @@ class SageMakerUI(scripts.Script):
                         if key not in models:
                             models[key] = []
                         for val in vals:
-                            if val not in models[key]:
+                            if val not in models[key] and val != None_Option_For_On_Cloud_Model:
                                 models[key].append(val)
-
 
         # fixme: not handle batches yet
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        if shared.opts.sd_vae and shared.opts.sd_vae not in ['None', 'Automatic']:
-            models['VAE'] = [shared.opts.sd_vae]
+        if 'sd_vae' in opts.quicksettings_list:
+            models['VAE'] = [args[1]]
 
         from modules.processing import get_fixed_seed
 
@@ -261,37 +385,46 @@ class SageMakerUI(scripts.Script):
         # load lora
         for key, vals in extra_network_data.items():
             if key == 'lora':
+                if not args[-1] or not args[-1]['lora']:
+                    logger.error("please upload lora models!!!!")
+                    continue
                 for val in vals:
                     if 'Lora' not in models:
                         models['Lora'] = []
-
                     lora_filename = val.positional[0]
-                    lora_models_dir = os.path.join("models", "Lora")
-                    for filename in os.listdir(lora_models_dir):
+                    for filename in args[-1]['lora']:
                         if filename.startswith(lora_filename):
                             if lora_filename not in models['Lora']:
                                 models['Lora'].append(filename)
+                    if len(models['Lora']) == 0:
+                        logger.error("please upload matched lora models!!!!")
             if key == 'hypernet':
-                logger.debug(key, vals)
+                if not args[-1] or not args[-1]['hypernet']:
+                    logger.error("please upload hypernetworks models!!!!")
+                    continue
                 for val in vals:
                     if 'hypernetworks' not in models:
                         models['hypernetworks'] = []
-
-                    hypernet_filename = shared.hypernetworks[val.positional[0]].split(os.path.sep)[-1]
-                    if hypernet_filename not in models['hypernetworks']:
-                        models['hypernetworks'].append(hypernet_filename)
+                    hypernet_filename = val.positional[0]
+                    for filename in args[-1]['hypernet']:
+                        if filename.startswith(hypernet_filename):
+                            if hypernet_filename not in models['hypernetworks']:
+                                models['hypernetworks'].append(filename)
+                    if len(models['hypernetworks']) == 0:
+                        logger.error("please upload matched hypernetworks models!!!!")
 
         if os.path.exists(cmd_opts.embeddings_dir) and not p.do_not_reload_embeddings:
             model_hijack.embedding_db.load_textual_inversion_embeddings()
 
         p.setup_conds()
 
-        # load all embedding models
-        models['embeddings'] = [val.filename.split(os.path.sep)[-1] for val in
-                                model_hijack.embedding_db.word_embeddings.values()]
+        models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user, p.user)
 
         err = None
         try:
+            from modules import call_queue
+            call_queue.queue_lock.release()
+            # logger.debug(f"########################{api_param}")
             inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
@@ -312,20 +445,34 @@ class SageMakerUI(scripts.Script):
                     p,
                     images_list=[],
                     seed=0,
-                    info=f"Inference job is failed: { ', '.join(err) if isinstance(err, list) else err}",
+                    info=f"Inference job is failed: {', '.join(err) if isinstance(err, list) else err}",
                     subseed=0,
                     index_of_first_image=0,
                     infotexts=[],
                 )
 
+            image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(
+                inference_id)
+
+            # yield Processed(
+            #     p,
+            #     images_list=image_list,
+            #     seed=0,
+            #     # info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
+            #     info=info_text,
+            #     subseed=0,
+            #     index_of_first_image=0,
+            #     infotexts=info_text,
+            # )
+
             processed = Processed(
                 p,
-                images_list=[],
-                seed=0,
-                info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
-                subseed=0,
+                images_list=image_list,
+                seed=p.all_seeds[0],
+                info=infotexts,
+                subseed=p.all_subseeds[0],
                 index_of_first_image=0,
-                infotexts=[],
+                infotexts=infotexts,
             )
 
             return processed
@@ -346,3 +493,17 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+if os.environ.get('ON_DOCKER', "false") != "true":
+    from modules import call_queue, fifo_lock
+
+    class ImprovedFiFoLock(fifo_lock.FIFOLock):
+
+        def release(self):
+            if not self._inner_lock.locked() and not self._lock.locked():
+                return
+
+            fifo_lock.FIFOLock.release(self)
+
+
+    call_queue.queue_lock = ImprovedFiFoLock()

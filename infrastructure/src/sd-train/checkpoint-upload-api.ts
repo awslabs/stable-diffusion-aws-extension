@@ -92,7 +92,7 @@ export class UploadCheckPointApi {
       actions: [
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
-        'logs:PutLogEvents'
+        'logs:PutLogEvents',
       ],
       resources: ['*'],
     }));
@@ -109,7 +109,7 @@ export class UploadCheckPointApi {
       handler: 'upload_checkpoint_api',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 10240,
+      memorySize: 3008,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,

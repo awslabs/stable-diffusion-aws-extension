@@ -15,7 +15,7 @@ nav:
         - Architecture diagram: architecture-overview/architecture.md
        # - AWS Well-Architected design considerations: architecture-overview/design-considerations.md
         - Architecture details: architecture-overview/architecture-details.md
-    
+
     - Plan your deployment:
         - Security: plan-deployment/security.md
         - Supported regions: plan-deployment/regions.md
@@ -23,10 +23,12 @@ nav:
     - Deploy the solution:
         - AWS CloudFormation template: deployment/template.md
         - Deployment step: deployment/deployment.md
+        - Deployment step from existing resource: deployment/deployment_for_existing_users.md
     #- Update the solution: update.md
     - Uninstall the solution: uninstall.md
-    - Use the solution: 
+    - Use the solution:
         - Preparation: user-guide/preparation.md
+        - Configure API and Multiple Users: user-guide/multi-user.md
         - Cloud Assets Management: user-guide/CloudAssetsManage.md
         - txt2img guide: user-guide/txt2img-guide.md
         - img2img guide: user-guide/img2img-guide.md
@@ -36,8 +38,9 @@ nav:
     - Developer guide:
         - Source code: developer-guide/source.md
         - API Direct Call: developer-guide/api.md
+        - Custom Container: developer-guide/byoc.md
     - Troubleshooting: troubleshooting.md
-    - FAQ: faq.md 
+    - FAQ: faq.md
     - Revisions: revisions.md
     #- Contributors: contributors.md
     - Notices: notices.md

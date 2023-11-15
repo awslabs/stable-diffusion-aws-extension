@@ -50,11 +50,12 @@ except Exception as e:
 #     logger.info("Exception importing api")
 #     traceback.print_exc()
 
-if os.environ.get("DEBUG_API", False):
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
+
+if os.environ.get("DEBUG_API", False):
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
@@ -195,7 +196,7 @@ def sagemaker_api(_, app: FastAPI):
                 logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
                 raise MemoryError
 
-            print(f'current version: dev')
+            print(f'current version: dev - extra generate')
             logger.info(f"task is {req.task}")
             logger.info(f"models is {req.models}")
             payload = {}
@@ -248,6 +249,17 @@ def sagemaker_api(_, app: FastAPI):
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
+                    return response.json()
+                elif req.task == 'extra-single-image':
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-single-image',
+                                             json=payload)
+                    return response.json()
+                elif req.task == 'extra-batch-images':
+                    response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/extra-batch-images',
+                                             json=payload)
+                    return response.json()
+                elif req.task == 'rembg':
+                    response = requests.post(url=f'http://0.0.0.0:8080/rembg', json=payload)
                     return response.json()
                 elif req.task == 'db-create-model':
                     r"""

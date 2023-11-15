@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 from unittest import TestCase
 
-os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
-os.environ.setdefault('S3_BUCKET', 'stable-diffusion-aws-exten-sds3aigcbucket7db76a0b-ns8u1vc8kcce')
+os.environ.setdefault('AWS_PROFILE', 'env')
+os.environ.setdefault('S3_BUCKET', 'your-bucket')
 os.environ.setdefault('DATASET_ITEM_TABLE', 'DatasetItemTable')
 os.environ.setdefault('DATASET_INFO_TABLE', 'DatasetInfoTable')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
@@ -32,27 +32,19 @@ class InferenceApiTest(TestCase):
     def test_prepare_inference(self):
         from inference_api import prepare_inference
         event = {
-            "user_id": "mickey",
-            "task_type": "txt2img",
-            "models": {
-                "Stable-diffusion": [
-                    "v1-5-pruned-emaonly.safetensors"
-                ],
-                "VAE": [
-                    "vae-ft-mse-840000-ema-pruned.ckpt"
-                ],
-                "embeddings": []
+            'user_id': 'admin',
+            'task_type': 'txt2img',
+            'models': {
+                'Stable-diffusion': ['v1-5-pruned-emaonly.safetensors'],
+                'VAE': ['vae-ft-mse-840000-ema-pruned.ckpt'], 'embeddings': []
             },
-            "filters": {
-                "createAt": 1694436281.4273,
-                "creator": "sd-webui"
-            }
+            'filters': {'createAt': 1696657891.055418, 'creator': 'sd-webui'}
         }
 
         _id = str(datetime.now().timestamp())
         resp = prepare_inference(event, MockContext(aws_request_id=_id))
         print(resp)
-        assert resp['status'] == 200
+        assert resp['statusCode'] == 200
         # get the inference job from ddb by job id
 
         from inference_api import inference_table_name, ddb_service
@@ -85,20 +77,17 @@ class InferenceApiTest(TestCase):
     def test_prepare_inference_img2img(self):
         from inference_api import prepare_inference
         event = {
-            'sagemaker_endpoint_id': 'aa98c410-acdd-40fb-b927-b26935e6a777',
-            'task_type': 'img2img',
+            'user_id': 'yuxiaox',
+            'task_type': 'txt2img',
             'models': {
                 'Stable-diffusion': ['AnythingV5Ink_ink.safetensors'],
-                'ControlNet': ['control_v11p_sd15_canny.pth', 'control_v11f1p_sd15_depth.pth']
-            },
-            'filters': {
-                'creator': 'alvindaiyan'
-            }
+                'embeddings': []},
+            'filters': {'createAt': 1695784940.13923, 'creator': 'sd-webui'}
         }
         _id = str(datetime.now().timestamp())
         resp = prepare_inference(event, MockContext(aws_request_id=_id))
         print(resp)
-        assert resp['status'] == 200
+        assert resp['statusCode'] == 200
         # get the inference job from ddb by job id
 
         from inference_api import inference_table_name, ddb_service
@@ -132,7 +121,7 @@ class InferenceApiTest(TestCase):
         from inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
-                'inference_id': '0b7e766a-7874-4008-b01c-57d14b15b11f'
+                'inference_id': '2f5a14ba-44c1-438a-b369-ae1102b2dcab'
             }
         }, {})
         print(resp)
@@ -157,12 +146,12 @@ class InferenceApiTest(TestCase):
     def test_list_all_sagemaker_endpoints(self):
         from inference_v2.sagemaker_endpoint_api import list_all_sagemaker_endpoints
         resp = list_all_sagemaker_endpoints({
-            'queryStringParameters': {},
-            'x-auth': {
-                'role': "IT Operator,Designer"
-            }
+            'queryStringParameters':
+                {
+                    'username': 'spiderman'
+                },
+            'x-auth': {'username': 'spiderman', 'role': ''}}, {})
 
-        }, {})
         print(resp)
 
     def test_list_all_inference_jobs(self):
@@ -174,3 +163,43 @@ class InferenceApiTest(TestCase):
         }, {})
 
         print(resp)
+
+    def test_generate_extra_single(self):
+        self._do_generate_extra('extra-single-image', 'payload_extra_single.json')
+
+    def test_generate_extra_batch(self):
+        self._do_generate_extra('extra-batch-images', 'payload_extra_batch.json')
+
+    def test_generate_rembg(self):
+        self._do_generate_extra('rembg', 'payload_rembg.json')
+
+    def _do_generate_extra(self, _task_type, payload_url):
+        from inference_v2.inference_api import prepare_inference, run_inference
+
+        event = {
+            'user_id': 'admin',
+            'task_type': _task_type,
+            'models': {},
+            'filters': {'createAt': datetime.now().timestamp(), 'creator': 'sd-webui'}
+        }
+        resp = prepare_inference(event, MockContext(aws_request_id=f'{datetime.now().timestamp()}'))
+        print(resp)
+        assert resp['statusCode'] == 200
+
+        def upload_with_put(url, filename):
+            with open(filename, 'rb') as file:
+                import requests
+                response = requests.put(url, data=file)
+                response.raise_for_status()
+
+        upload_with_put(resp['inference']['api_params_s3_upload_url'], payload_url)
+
+        resp = run_inference({
+            'pathStringParameters': {
+                'inference_id': resp['inference']['id']
+            }
+        }, {})
+        print(resp)
+        assert resp['statusCode'] == 200
+
+        print(f"result s3 location: {resp['inference']['output_path']}")

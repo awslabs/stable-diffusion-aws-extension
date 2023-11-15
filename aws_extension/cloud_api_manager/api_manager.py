@@ -50,16 +50,17 @@ class CloudApiManager:
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
-            'assign_to_roles': user_roles
+            'assign_to_roles': user_roles,
+            "creator": user_token,
         }
 
-        deployment_url = f"{self.auth_manger.api_url}inference/deploy-sagemaker-endpoint"
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
             response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             r = response.json()
             logger.debug(f"response for rest api {r}")
-            return "Endpoint deployment started"
+            return r['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to start endpoint deployment with exception: {e}"
@@ -74,10 +75,10 @@ class CloudApiManager:
             "delete_endpoint_list": delete_endpoint_list,
         }
 
-        deployment_url = f"{self.auth_manger.api_url}inference/delete-sagemaker-endpoint"
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            response = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             r = response.json()
             logger.debug(f"response for rest api {r}")
             return r
@@ -131,8 +132,12 @@ class CloudApiManager:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
 
-                    # Skip if status is 'deleted'
-                    if endpoint_status == 'deleted':
+                    # Skip if status is 'Deleted'
+                    if endpoint_status == 'Deleted':
+                        continue
+
+                    # Compatible with fields used in older versions
+                    if obj["status"] == 'deleted':
                         continue
 
                     if "endTime" in obj:
@@ -163,19 +168,18 @@ class CloudApiManager:
                                 },
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
+        logger.debug(raw_resp.json())
+        resp = raw_resp.json()
         return raw_resp.json()['users'][0]
 
-    def list_users(self, limit=10, last_evaluated_key="", user_token=""):
+    def list_users(self, user_token=""):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
             }
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
-                                params={
-                                    'limit': limit,
-                                    'last_evaluated_key': json.dumps(last_evaluated_key)
-                                },
+                                params={},
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()
@@ -190,10 +194,29 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         return raw_resp.json()
 
+    def upsert_role(self, role_name, permissions, creator, user_token=""):
+        if not self.auth_manger.enableAuth:
+            return {}
+
+        payload = {
+            "role_name": role_name,
+            "permissions": permissions,
+            "creator": creator
+        }
+
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}role', json=payload, headers=self._get_headers_by_user(user_token))
+        raw_resp.raise_for_status()
+        resp = raw_resp.json()
+        if resp['statusCode'] != 200:
+            raise Exception(resp['errMsg'])
+
+        return True
+
     def upsert_user(self, username, password, roles, creator, initial=False, user_token=""):
         if not self.auth_manger.enableAuth and not initial:
             return {}
-
+        if not password or len(password) < 1:
+            raise Exception('password should not be none')
         payload = {
             "initial": initial,
             "username": username,
@@ -213,6 +236,8 @@ class CloudApiManager:
         resp = raw_resp.json()
         if resp['statusCode'] != 200:
             raise Exception(resp['errMsg'])
+
+        cloud_auth_manager.update_gradio_auth()
         return True
 
     def delete_user(self, username, user_token=""):
@@ -241,6 +266,9 @@ class CloudApiManager:
         checkpoints = []
         resp = raw_resp.json()
         for ckpt in resp['checkpoints']:
+            if not ckpt or 'name' not in ckpt or not ckpt['name']:
+                continue
+
             for name in ckpt['name']:
                 if name not in checkpoints:
                     checkpoints.append({
@@ -265,6 +293,16 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         resp = raw_resp.json()
         return resp['inferences']
+
+    def get_dataset_items_from_dataset(self, dataset_name, user_token=""):
+        if not self.auth_manger.enableAuth:
+            return []
+
+        raw_response = requests.get(url=f'{self.auth_manger.api_url}dataset/{dataset_name}/data', headers=self._get_headers_by_user(user_token))
+        raw_response.raise_for_status()
+        # todo: the s3 presign url is not ready as content type to img
+        resp = raw_response.json()
+        return resp
 
 
 api_manager = CloudApiManager()

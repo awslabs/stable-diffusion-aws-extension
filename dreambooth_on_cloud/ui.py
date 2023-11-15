@@ -1,5 +1,6 @@
 import gradio as gr
 
+from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.create_model import get_sd_cloud_models, get_create_model_job_list, cloud_create_model
 from dreambooth_on_cloud.train import get_cloud_db_model_name_list, get_train_job_list, wrap_load_model_params
 from modules import script_callbacks
@@ -45,13 +46,13 @@ def ui_tabs_callback():
                                 with gr.Tab('Select From Cloud'):
                                     with gr.Row():
                                         cloud_db_model_name = gr.Dropdown(
-                                            label="Model", choices=sorted(get_cloud_db_model_name_list()),
+                                            label="Model",
                                             elem_id="cloud_db_model_name"
                                         )
-                                        create_refresh_button(
+                                        create_refresh_button_by_user(
                                             cloud_db_model_name,
-                                            get_cloud_db_model_name_list,
-                                            lambda: {"choices": sorted(get_cloud_db_model_name_list())},
+                                            lambda *args: None,
+                                            lambda username: {"choices": sorted(get_cloud_db_model_name_list(username))},
                                             "refresh_db_models",
                                         )
                                     with gr.Row():
@@ -111,24 +112,28 @@ def ui_tabs_callback():
                                         cloud_db_shared_diffusers_path = gr.HTML()
                                     with gr.Row():
                                         gr.HTML(value="<b>Training Jobs Details:<b/>")
-                                    with gr.Row():
+                                    with gr.Column():
                                         training_job_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status", "SageMaker train name"],
                                             datatype=["str", "str", "str", "str"],
                                             col_count=(4, "fixed"),
-                                            value=get_train_job_list,
                                             interactive=False,
-                                            every=3,
                                             elem_id='training_job_dashboard'
-                                            # show_progress=True
                                         )
+                                        train_refresh_btn = gr.Button(
+                                            value="Refresh Train List From Cloud", variant="primary"
+                                        )
+                                        train_refresh_btn.click(fn=get_train_job_list,
+                                                                inputs=[],
+                                                                outputs=[training_job_dashboard])
                                 with gr.Tab('Create From Cloud'):
                                     with gr.Column():
                                         cloud_db_create_model = gr.Button(
                                             value="Create Model From Cloud", variant="primary"
                                         )
                                     cloud_db_new_model_name = gr.Textbox(label="Name",
-                                                                         placeholder="Model names can only contain alphanumeric and -")
+                                                                         placeholder="Model names can only contain"
+                                                                                     " alphanumeric and -")
                                     with gr.Row():
                                         cloud_db_create_from_hub = gr.Checkbox(
                                             label="Create From Hub", value=False, visible=False
@@ -170,16 +175,20 @@ def ui_tabs_callback():
                                                                           elem_id="cloud_db_unfreeze_model_checkbox")
                                     with gr.Row():
                                         gr.HTML(value="<b>Model Creation Jobs Details:<b/>")
-                                    with gr.Row():
+                                    with gr.Column():
                                         createmodel_dashboard = gr.Dataframe(
                                             headers=["id", "model name", "status"],
                                             datatype=["str", "str", "str"],
                                             col_count=(3, "fixed"),
-                                            value=get_create_model_job_list,
-                                            interactive=False,
-                                            every=3
-                                            # show_progress=True
+                                            interactive=False
                                         )
+
+                                        model_refresh_btn = gr.Button(
+                                            value="Refresh Model List From Cloud", variant="primary"
+                                        )
+                                        model_refresh_btn.click(fn=get_create_model_job_list,
+                                                                inputs=[],
+                                                                outputs=[createmodel_dashboard])
 
                                 def toggle_new_rows(create_from):
                                     return gr.update(visible=create_from), gr.update(visible=not create_from)
