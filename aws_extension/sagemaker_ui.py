@@ -1182,9 +1182,9 @@ def create_ui(is_img2img):
                 global interrogate_deep_booru_on_cloud_button
 
                 interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                                                             elem_id="interrogate_clip_on_cloud_button")
+                                                             elem_id="interrogate_clip_on_cloud_button", visible=False)
                 interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                                                                   elem_id="interrogate_deep_booru_on_cloud_button")
+                                                                   elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
             with gr.Row():
                 gr.HTML('<br/>')
 
