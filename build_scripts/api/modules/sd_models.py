@@ -261,6 +261,10 @@ def load_pipeline(checkpoint_info=None):
         pipeline_class = StableDiffusionXLPipeline
     
     checkpoint = None
+    
+    #from diffusers import StableDiffusionInpaintPipeline
+    #pipe_inpaint = StableDiffusionInpaintPipeline.from_single_file('/home/ubuntu/de_webui/stable-diffusion-aws-extension/build_scripts/api/models/Stable-diffusion/majicmixRealistic_v7.safetensors', torch_dtype=torch.float16, variant="fp16").to('cuda')
+
 
     pipeline_data.sd_pipeline = pipeline_class.from_single_file(checkpoint_info.filename, torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
     timer.record("load pipeline from single file")
@@ -277,6 +281,7 @@ def load_pipeline(checkpoint_info=None):
     shared.opts.data["sd_model_hash"] = sd_model_hash
     shared.opts.data["sd_model_checkpoint_path"] = checkpoint_info.filename
     shared.opts.data["sd_checkpoint_info"] = checkpoint_info
+    shared.opts.data["sd_checkpoint_name"] = checkpoint_info.model_name
 
 
     pipeline_data.sd_pipeline.to(shared.device)

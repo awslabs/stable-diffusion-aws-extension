@@ -11,7 +11,7 @@ def tx2img_pipeline_run(pipeline_name, strength, denoising_start,aesthetic_score
                          control_guidance_start, control_guidance_end, guess_mode, prompt, prompt_2, height, width, num_inference_steps,denoising_end,guidance_scale,
                          negative_prompt,negative_prompt_2,num_images_per_prompt,eta,generator,latents,prompt_embeds,negative_prompt_embeds,pooled_prompt_embeds,
                          negative_pooled_prompt_embeds,output_type,callback,callback_steps,cross_attention_kwargs,guidance_rescale,original_size,
-                         crops_coords_top_left,target_size, controlnet_image, ref_img, use_refiner, refiner_checkpoint):
+                         crops_coords_top_left,target_size, controlnet_image, ref_img, inpaint_img, use_refiner, refiner_checkpoint):
     sd_pipeline = shared.sd_pipeline
     # default output: latents
     if pipeline_name == 'StableDiffusionPipeline_webui':
@@ -221,6 +221,28 @@ def tx2img_pipeline_run(pipeline_name, strength, denoising_start,aesthetic_score
             style_fidelity = 0.5,
             reference_attn = True,
             reference_adain = False).images
+    elif pipeline_name == 'StableDiffusionInpaintPipeline':
+            images = sd_pipeline(
+            prompt = prompt,
+            image = inpaint_img[:,:,:3],
+            mask_image = inpaint_img[:,:,3],
+            height = height,
+            width = width,
+            strength = strength,
+            num_inference_steps = num_inference_steps,
+            guidance_scale = guidance_scale,
+            negative_prompt = negative_prompt,
+            num_images_per_prompt= num_images_per_prompt,
+            eta = eta,
+            generator = generator,
+            latents = None,
+            prompt_embeds = prompt_embeds,
+            negative_prompt_embeds= negative_prompt_embeds,
+            output_type = output_type,
+            return_dict = True,
+            callback = callback,
+            callback_steps = callback_steps,
+            cross_attention_kwargs = cross_attention_kwargs).images
 
     if use_refiner:
         refiner_checkpoint_path = os.path.join(os.path.dirname(shared.opts.data["sd_model_checkpoint_path"]), refiner_checkpoint)
@@ -290,7 +312,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
     elif pipeline_name == 'StableDiffusionInpaintPipeline':
             images = sd_pipeline(
             prompt = prompt,
-            image = init_latents,
+            image = init_images,
             mask_image = image_mask,
             height = height,
             width = width,
@@ -345,7 +367,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             images = sd_pipeline(
             prompt = prompt,
             prompt_2 = prompt_2,
-            image = init_latents,
+            image = init_images,
             mask_image = image_mask,
             height = height,
             width = width,
@@ -404,7 +426,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
     elif pipeline_name == 'StableDiffusionControlNetInpaintPipeline':
         images = sd_pipeline(
             prompt = prompt,
-            image = init_latents,
+            image = init_images,
             mask_image = image_mask,
             control_image = controlnet_image,
             height = height,
@@ -469,7 +491,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
         images = sd_pipeline(
             prompt = prompt,
             prompt_2 = prompt_2,
-            image = init_latents,
+            image = init_images,
             mask_image = image_mask,
             control_image = controlnet_image,
             height = height,
@@ -541,4 +563,4 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             aesthetic_score = aesthetic_score,
             negative_aesthetic_score = negative_aesthetic_score).images
 
-    return images[None,:,:,:]
+    return images

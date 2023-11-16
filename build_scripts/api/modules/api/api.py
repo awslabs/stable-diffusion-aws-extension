@@ -369,6 +369,7 @@ class Api:
         
         with closing(pipeline.StableDiffusionPipelineImg2Img(sd_model=None, **args)) as p:
             p.init_images = [decode_base64_to_image(x) for x in init_images]
+            p.scripts = script_runner
             p.script_args = script_args
             processed = pipeline.process_images(p)
             b64images = list(map(encode_pil_to_base64, processed.images)) if send_images else []

@@ -145,7 +145,7 @@ class StableDiffusionProcessing:
         denoising_start: Optional[float] = None,
         denoising_end: Optional[float] = None,
         use_refiner: bool = False,
-        strength: float = 0.3,
+        strength: float = 1.0,
         aesthetic_score: float = 6.0,
         negative_aesthetic_score: float = 2.5,
         controlnet_conditioning_scale: Union[float, List[float]] = 1.0,
@@ -689,7 +689,6 @@ def check_controlnet(p: StableDiffusionProcessing):
     request_type = str(type(p)).split('.')[-1][:-2]
     controlnet_state = False
     valid_script = None
-    
     if p.scripts is not None:
         for script in p.scripts.alwayson_scripts:
             api_info_name = script.filename
@@ -698,10 +697,6 @@ def check_controlnet(p: StableDiffusionProcessing):
                 if enabled_units_len > 0:
                     controlnet_state = True
                     valid_script = script
-                    if len(valid_script.control_networks) == 1:
-                        valid_script.control_networks = valid_script.control_networks[0]
-                    else:
-                        valid_script.control_networks = MultiControlNetModel(valid_script.control_networks)
                 break
     return request_type, controlnet_state, valid_script
 
@@ -782,7 +777,6 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             p.parse_extra_network_prompts()
 
-
             for extra_network_name, extra_network_args in p.extra_network_data.items():
                 if extra_network_name == 'lora':
                     for extra_network_arg in extra_network_args:
@@ -821,11 +815,13 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             # check whether controlnet is needed and then convert pipeline for contronet
             request_type, controlnet_state, controlnet_script = check_controlnet(p)
             image_mask = None if request_type == 'StableDiffusionPipelineTxt2Img' else p.image_mask
-            controlnet_images, ref_img = convert_pipeline(controlnet_state, controlnet_script, request_type, p.extra_generation_params, image_mask=image_mask)
+            controlnet_images, ref_img, inpaint_img = convert_pipeline(controlnet_state, controlnet_script, request_type, p.extra_generation_params, image_mask=image_mask)
 
-            samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts, controlnet_image=controlnet_images, ref_img=ref_img)
+            samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts, controlnet_image=controlnet_images, ref_img=ref_img, inpaint_img=inpaint_img)
             
-            if not p.enable_hr:
+            if request_type == 'StableDiffusionPipelineTxt2Img' and samples_ddim.dtype == 'uint8':
+                x_samples_ddim = samples_ddim
+            else:
                 needs_upcasting = False
                 if 'XL' in p.sd_pipeline.pipeline_name:
                     needs_upcasting = p.sd_pipeline.vae.dtype == torch.float16 and p.sd_pipeline.vae.config.force_upcast
@@ -840,10 +836,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
                 image = (image / 2 + 0.5).clamp(0, 1)
                 x_samples_ddim = image
-
                 del samples_ddim
-            else:
-                x_samples_ddim = samples_ddim
 
             # if lowvram.is_enabled(shared.sd_model):
             #     lowvram.send_everything_to_cpu()
@@ -856,7 +849,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
             for i, x_sample in enumerate(x_samples_ddim):
                 p.batch_index = i
                 
-                if not p.enable_hr:
+                if x_sample.dtype != 'uint8':
                     x_sample = 255. * np.moveaxis(x_sample.cpu().numpy(), 0, 2)
                     x_sample = x_sample.astype(np.uint8)
 
@@ -1083,7 +1076,7 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
     def decode_latents(self):
         return self.sd_pipeline.decode_latents
 
-    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts, controlnet_image=None, ref_img=None):
+    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts, controlnet_image=None, ref_img=None, inpaint_img=None):
         # self.sampler = sd_samplers.create_sampler(self.sampler_name, self.sd_model)
 
         # update sampler
@@ -1145,7 +1138,7 @@ class StableDiffusionPipelineTxt2Img(StableDiffusionProcessing):
                          control_guidance_start, control_guidance_end, guess_mode, prompt, prompt_2, height, width, num_inference_steps,denoising_end,guidance_scale,
                          negative_prompt,negative_prompt_2,num_images_per_prompt,eta,generator,latents,prompt_embeds,negative_prompt_embeds,pooled_prompt_embeds,
                          negative_pooled_prompt_embeds,output_type,callback,callback_steps,cross_attention_kwargs,guidance_rescale,original_size,
-                         crops_coords_top_left,target_size, controlnet_image, ref_img, use_refiner, refiner_checkpoint)
+                         crops_coords_top_left,target_size, controlnet_image, ref_img, inpaint_img, use_refiner, refiner_checkpoint)
 
         if not self.enable_hr:
             return samples
@@ -1336,9 +1329,10 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
                 self.mask_for_overlay = Image.fromarray(np_mask)
 
             self.overlay_images = []
-
+        
+        self.image_mask = image_mask
         latent_mask = self.latent_mask if self.latent_mask is not None else image_mask
-
+        
         add_color_corrections = opts.img2img_color_correction and self.color_corrections is None
         if add_color_corrections:
             self.color_corrections = []
@@ -1438,8 +1432,8 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
 
         # common parameters for sd
         prompt = self.prompt 
-        height = self.width
-        width = self.height
+        height = self.height
+        width = self.width
         num_inference_steps = self.steps
         guidance_scale = self.cfg_scale
         negative_prompt = self.negative_prompt or ""
@@ -1465,7 +1459,7 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
         use_refiner = self.use_refiner
 
         # parameters for refiner
-        strength = self.strength
+        strength = self.denoising_strength
         refiner_checkpoint = self.refiner_checkpoint
         denoising_start = self.denoising_start
         aesthetic_score = self.aesthetic_score
