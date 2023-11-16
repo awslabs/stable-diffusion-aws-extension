@@ -1,11 +1,14 @@
+import logging
 import os
 import uuid
+from dataclasses import dataclass
+
 import boto3
 from datetime import datetime
-from aws_lambda_powertools import Logger
 from botocore.exceptions import BotoCoreError, ClientError
 from common.ddb_service.client import DynamoDbUtilsService
-from multi_users.utils import get_user_roles, check_user_permissions
+from multi_users._types import PARTITION_KEYS, Role
+from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 from _types import EndpointDeploymentJob
 from _enums import EndpointStatus
 
@@ -16,7 +19,8 @@ ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
-logger = Logger(service="sagemaker_endpoint_api", level="INFO")
+# logger = Logger(service="sagemaker_endpoint_api", level="INFO")
+logger = logging.getLogger('inference_v2')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -49,20 +53,34 @@ def list_all_sagemaker_endpoints(event, ctx):
     if username:
         user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
-    if 'x-auth' in event and not event['x-auth']['role']:
-        event['x-auth']['role'] = user_roles
+    if 'x-auth' not in event or not event['x-auth']['username']:
+        return {
+            'statusCode': '400',
+            'error': 'no auth user provided'
+        }
+
+    requestor_name = event['x-auth']['username']
+    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+    requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
+        'kind': PARTITION_KEYS.role,
+        'creator': requestor_name
+    })
+    for requestor_created_roles_row in requestor_created_roles_rows:
+        role = Role(**ddb_service.deserialize(requestor_created_roles_row))
+        user_roles.append(role.sort_key)
 
     for row in scan_rows:
-
         # Compatible with fields used in older data, must be 'deleted'
         if 'status' in row and row['status']['S'] == 'deleted':
             row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
-        if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
+        if 'sagemaker_endpoint' in requestor_permissions and \
+            'list' in requestor_permissions['sagemaker_endpoint'] and \
+            endpoint.owner_group_or_role and \
+            username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
             results.append(endpoint.__dict__)
-        elif 'x-auth' in event and 'IT Operator' in event['x-auth']['role']:
-            # todo: this is not save to do without checking current user roles
+        elif 'sagemaker_endpoint' in requestor_permissions and 'all' in requestor_permissions['sagemaker_endpoint']:
             results.append(endpoint.__dict__)
 
     return {
@@ -71,12 +89,28 @@ def list_all_sagemaker_endpoints(event, ctx):
     }
 
 
+@dataclass
+class DeleteEndpointEvent:
+    delete_endpoint_list: [str]
+    username: str
+
+
 # DELETE /endpoints
-def delete_sagemaker_endpoints(event, ctx):
+def delete_sagemaker_endpoints(raw_event, ctx):
     try:
         # delete sagemaker endpoints in the same loop
-        for endpoint in event['delete_endpoint_list']:
+        event = DeleteEndpointEvent(**raw_event)
 
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
+        if 'sagemaker_endpoint' not in creator_permissions or \
+                'all' not in creator_permissions['sagemaker_endpoint'] or \
+                'create' not in creator_permissions['sagemaker_endpoint']:
+            return {
+                'statusCode': 400,
+                'errMsg': f"User {event.username} has no permission to delete a Sagemaker endpoint",
+            }
+
+        for endpoint in event.delete_endpoint_list:
             try:
                 delete_response = sagemaker.delete_endpoint(EndpointName=endpoint)
                 logger.info(delete_response)
@@ -99,10 +133,21 @@ def delete_sagemaker_endpoints(event, ctx):
         return f"error deleting sagemaker endpoint with exception: {e}"
 
 
+@dataclass
+class CreateEndpointEvent:
+    endpoint_name: str
+    instance_type: str
+    initial_instance_count: str
+    autoscaling_enabled: bool
+    assign_to_roles: [str]
+    creator: str
+
+
 # POST /endpoints
-def sagemaker_endpoint_create_api(event, ctx):
-    logger.info(f"Received event: {event}")
+def sagemaker_endpoint_create_api(raw_event, ctx):
+    logger.info(f"Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")
+    event = CreateEndpointEvent(**raw_event)
 
     try:
         endpoint_deployment_id = str(uuid.uuid4())
@@ -111,8 +156,8 @@ def sagemaker_endpoint_create_api(event, ctx):
         sagemaker_endpoint_config = f"infer-config-{short_id}"
         sagemaker_endpoint_name = f"infer-endpoint-{short_id}"
 
-        if "endpoint_name" in event and len(event["endpoint_name"]) >= 1:
-            sagemaker_endpoint_name = f'infer-endpoint-{event["endpoint_name"]}'
+        if event.endpoint_name:
+            sagemaker_endpoint_name = f'infer-endpoint-{event.endpoint_name}'
 
         image_url = INFERENCE_ECR_IMAGE_URL
 
@@ -120,13 +165,13 @@ def sagemaker_endpoint_create_api(event, ctx):
 
         s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
 
-        initial_instance_count = int(event.get("initial_instance_count", 1))
-        instance_type = event["instance_type"]
+        initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
+        instance_type = event.instance_type
 
-        create_model(sagemaker_model_name, image_url, model_data_url)
+        _create_sagemaker_model(sagemaker_model_name, image_url, model_data_url)
 
-        create_endpoint_config(sagemaker_endpoint_config, s3_output_path, sagemaker_model_name, initial_instance_count,
-                               instance_type)
+        _create_sagemaker_endpoint_config(sagemaker_endpoint_config, s3_output_path, sagemaker_model_name,
+                                          initial_instance_count, instance_type)
 
         logger.info('Creating new model endpoint...')
         response = sagemaker.create_endpoint(
@@ -136,23 +181,44 @@ def sagemaker_endpoint_create_api(event, ctx):
         logger.info(f"Successfully created endpoint: {response}")
 
         current_time = str(datetime.now())
-        raw = {
-            'EndpointDeploymentJobId': endpoint_deployment_id,
-            'endpoint_name': sagemaker_endpoint_name,
-            'startTime': current_time,
-            'endpoint_status': EndpointStatus.CREATING.value,
-            'max_instance_number': event['initial_instance_count'],
-            'autoscaling': event['autoscaling_enabled'],
-            'owner_group_or_role': event['assign_to_roles'],
-            'current_instance_count': "0",
-        }
-        ddb_service.put_items(table=sagemaker_endpoint_table, entries=raw)
-        logger.info(f"Successfully created endpoint deployment: {raw}")
+
+        # check if roles has already linked to an endpoint?
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
+        if 'sagemaker_endpoint' not in creator_permissions or \
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
+            return {
+                'statusCode': 400,
+                'errMsg': f"Creator {event.creator} has no permission to create Sagemaker",
+            }
+
+        endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+        for endpoint_row in endpoint_rows:
+            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            if endpoint.endpoint_status == 'InService' and endpoint.status != 'deleted':
+                for role in event.assign_to_roles:
+                    if role in endpoint.owner_group_or_role:
+                        return {
+                            'statusCode': 400,
+                            'errMsg': f"role [{role}] has a valid endpoint already, not allow to have another one",
+                        }
+
+        raw = EndpointDeploymentJob(
+            EndpointDeploymentJobId=endpoint_deployment_id,
+            endpoint_name=sagemaker_endpoint_name,
+            startTime=current_time,
+            endpoint_status=EndpointStatus.CREATING.value,
+            max_instance_number=event.initial_instance_count,
+            autoscaling=event.autoscaling_enabled,
+            owner_group_or_role=event.assign_to_roles,
+            current_instance_count="0",
+        )
+        ddb_service.put_items(table=sagemaker_endpoint_table, entries=raw.__dict__)
+        logger.info(f"Successfully created endpoint deployment: {raw.__dict__}")
 
         return {
             'statusCode': 200,
             'message': f"Endpoint deployment started: {sagemaker_endpoint_name}",
-            'data': raw
+            'data': raw.__dict__
         }
     except Exception as e:
         logger.error(e)
@@ -162,56 +228,7 @@ def sagemaker_endpoint_create_api(event, ctx):
         }
 
 
-def create_model(name, image_url, model_data_url):
-    PrimaryContainer = {
-        'Image': image_url,
-        'ModelDataUrl': model_data_url,
-        'Environment': {
-            'EndpointID': 'OUR_ID'
-        },
-    }
-
-    logger.info(f"Creating model resource PrimaryContainer: {PrimaryContainer}")
-
-    response = sagemaker.create_model(
-        ModelName=name,
-        PrimaryContainer=PrimaryContainer,
-        ExecutionRoleArn=os.environ.get("EXECUTION_ROLE_ARN"),
-    )
-    logger.info(f"Successfully created model resource: {response}")
-
-
-def create_endpoint_config(endpoint_config_name, s3_output_path, model_name, initial_instance_count, instance_type):
-    AsyncInferenceConfig = {
-        "OutputConfig": {
-            "S3OutputPath": s3_output_path,
-            "NotificationConfig": {
-                "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                "ErrorTopic": ASYNC_ERROR_TOPIC
-            }
-        }
-    }
-
-    ProductionVariants = [
-        {
-            'VariantName': 'prod',
-            'ModelName': model_name,
-            'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type
-        }
-    ]
-
-    logger.info(f"Creating endpoint configuration AsyncInferenceConfig: {AsyncInferenceConfig}")
-    logger.info(f"Creating endpoint configuration ProductionVariants: {ProductionVariants}")
-
-    response = sagemaker.create_endpoint_config(
-        EndpointConfigName=endpoint_config_name,
-        AsyncInferenceConfig=AsyncInferenceConfig,
-        ProductionVariants=ProductionVariants
-    )
-    logger.info(f"Successfully created endpoint configuration: {response}")
-
-
+# lambda: handle sagemaker events
 def sagemaker_endpoint_events(event, context):
     logger.info(event)
     endpoint_name = event['detail']['EndpointName']
@@ -255,6 +272,56 @@ def sagemaker_endpoint_events(event, context):
         logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
 
     return {'statusCode': 200}
+
+
+def _create_sagemaker_model(name, image_url, model_data_url):
+    primary_container = {
+        'Image': image_url,
+        'ModelDataUrl': model_data_url,
+        'Environment': {
+            'EndpointID': 'OUR_ID'
+        },
+    }
+
+    logger.info(f"Creating model resource PrimaryContainer: {primary_container}")
+
+    response = sagemaker.create_model(
+        ModelName=name,
+        PrimaryContainer=primary_container,
+        ExecutionRoleArn=os.environ.get("EXECUTION_ROLE_ARN"),
+    )
+    logger.info(f"Successfully created model resource: {response}")
+
+
+def _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name, initial_instance_count, instance_type):
+    async_inference_config = {
+        "OutputConfig": {
+            "S3OutputPath": s3_output_path,
+            "NotificationConfig": {
+                "SuccessTopic": ASYNC_SUCCESS_TOPIC,
+                "ErrorTopic": ASYNC_ERROR_TOPIC
+            }
+        }
+    }
+
+    production_variants = [
+        {
+            'VariantName': 'prod',
+            'ModelName': model_name,
+            'InitialInstanceCount': initial_instance_count,
+            'InstanceType': instance_type
+        }
+    ]
+
+    logger.info(f"Creating endpoint configuration AsyncInferenceConfig: {async_inference_config}")
+    logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
+
+    response = sagemaker.create_endpoint_config(
+        EndpointConfigName=endpoint_config_name,
+        AsyncInferenceConfig=async_inference_config,
+        ProductionVariants=production_variants
+    )
+    logger.info(f"Successfully created endpoint configuration: {response}")
 
 
 def check_and_enable_autoscaling(item, variant_name):

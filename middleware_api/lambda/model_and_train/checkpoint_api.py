@@ -11,7 +11,8 @@ from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
 from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
-from multi_users.utils import get_user_roles, check_user_permissions
+from multi_users._types import PARTITION_KEYS, Role
+from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -20,6 +21,7 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger('boto3')
+logger.setLevel(logging.DEBUG)
 ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 
@@ -45,6 +47,22 @@ def list_all_checkpoints_api(event, context):
     if username:
         user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username[0])
 
+    if 'x-auth' not in event or not event['x-auth']['username']:
+        return {
+            'statusCode': '400',
+            'error': 'no auth user provided'
+        }
+
+    requestor_name = event['x-auth']['username']
+    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+    requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
+        'kind': PARTITION_KEYS.role,
+        'creator': requestor_name
+    })
+    for requestor_created_roles_row in requestor_created_roles_rows:
+        role = Role(**ddb_service.deserialize(requestor_created_roles_row))
+        user_roles.append(role.sort_key)
+
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:
         return {
@@ -55,7 +73,9 @@ def list_all_checkpoints_api(event, context):
     ckpts = []
     for r in raw_ckpts:
         ckpt = CheckPoint(**(ddb_service.deserialize(r)))
-        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username):
+        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
+            'user' in requestor_permissions and 'all' in requestor_permissions['user']
+        ):
             ckpts.append({
                 'id': ckpt.id,
                 's3Location': ckpt.s3_location,
@@ -130,7 +150,8 @@ def upload_checkpoint_api(raw_event, context):
         return {
             'statusCode': 500,
             'headers': headers,
-            'error': "please choose the right type from :'Stable-diffusion', 'embeddings', 'Lora', 'hypernetworks', 'Controlnet', 'VAE'"
+            'error': "please choose the right type from :"
+                     "'Stable-diffusion', 'embeddings', 'Lora', 'hypernetworks', 'Controlnet', 'VAE'"
         }
 
     try:
@@ -143,9 +164,21 @@ def upload_checkpoint_api(raw_event, context):
             checkpoint_params = event.params
         checkpoint_params['created'] = str(datetime.datetime.now())
         checkpoint_params['multipart_upload'] = {}
+
         user_roles = ['*']
+        creator_permissions = {}
         if 'creator' in event.params and event.params['creator']:
             user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+            creator_permissions = get_permissions_by_username(ddb_service, user_table, event.params['creator'])
+
+        if 'checkpoint' not in creator_permissions or \
+                ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'error': f"user has no permissions to create a model"
+            }
+
         cannot_download = concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
         if cannot_download:
             return {
@@ -239,8 +272,18 @@ def create_checkpoint_api(raw_event, context):
             }
 
         user_roles = ['*']
+        creator_permissions = {}
         if 'creator' in event.params and event.params['creator']:
             user_roles = get_user_roles(ddb_service, user_table, event.params['creator'])
+            creator_permissions = get_permissions_by_username(ddb_service, user_table, event.params['creator'])
+
+        if 'checkpoint' not in creator_permissions or \
+                ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'error': f"user has no permissions to create a model"
+            }
 
         checkpoint = CheckPoint(
             id=request_id,
