@@ -1174,7 +1174,7 @@ def create_ui(is_img2img):
                                               }, 'refresh_cloud_vae_down')
 
             with gr.Row():
-                user_role_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
+                user_role_on_cloud_dropdown = gr.Dropdown(choices=[],
                                                           label='select a role for generating image on Cloud')
 
                 create_refresh_button_by_user(user_role_on_cloud_dropdown,

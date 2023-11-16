@@ -23,7 +23,7 @@ export class CreateDiffuserEcrImage {
       resourceType: 'Custom::AIGCSolutionECRLambda',
       properties: {
         SrcImage: `docker://${props.srcImage}`,
-        DestImage: `docker://${props.dockerRepo.repositoryUri}:latest`,
+        DestImage: `docker://${props.dockerRepo.repositoryUri}:default`,
         RepositoryName: `${props.dockerRepo.repositoryName}`,
       },
     });

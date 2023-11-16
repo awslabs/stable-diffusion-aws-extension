@@ -24,11 +24,11 @@ def upsert_role(raw_event, ctx):
     event = UpsertRoleEvent(**raw_event)
 
     # check if creator exist
-    if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
-        return {
-            'statusCode': 400,
-            'errMsg': f'creator {event.creator} not exist'
-        }
+    # if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
+    #     return {
+    #         'statusCode': 400,
+    #         'errMsg': f'creator {event.creator} not exist'
+    #     }
 
     if not ctx or 'from_sd_local' not in vars(ctx):
         # should check the creator permission contains role:all
