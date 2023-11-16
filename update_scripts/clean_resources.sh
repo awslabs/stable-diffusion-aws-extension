@@ -55,7 +55,7 @@ if [[ "$aliases" == *"$required_alias"* ]]; then
     ddb_alias_command_output=$(aws kms delete-alias --alias-name  "$required_alias" --output text 2>&1)
     ddb_alias_command_exit_code=$?
     if [[ "$ddb_alias_command_exit_code" -eq 0 ]]; then
-      print_ok "key alias ${required_alias} is ready to be deleted"
+      print_ok "key alias ${required_alias} is deleted"
     fi
 fi
 
@@ -67,7 +67,7 @@ if [[ "$exist_role_exit_code" -eq 0 ]]; then
     delete_role_command_output=$(aws iam delete-role --role-name  "LambdaStartDeployRole" --output text 2>&1)
     delete_role_command_exit_code=$?
     if [[ "$delete_role_command_exit_code" -eq 0 ]]; then
-      print_info "iam role ${exist_role} ready to be deleted"
+      print_info "iam role ${exist_role} is deleted"
     fi
 
 fi

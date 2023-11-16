@@ -15,7 +15,7 @@ export class DiffuserEndpointStack extends NestedStack {
     super(scope, id, props);
 
     new CreateDiffuserEcrImage(this, id, {
-      srcImage: `${AIGC_WEBUI_INFERENCE_DIFFUSER}:${props.diffUserImageTag}`,
+      srcImage: `${AIGC_WEBUI_INFERENCE_DIFFUSER}${props.diffUserImageTag}`,
       targetRepositoryName: props.targetRepositoryName,
       dockerRepo: props.dockerRepo,
     });
