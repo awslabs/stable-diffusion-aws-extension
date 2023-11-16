@@ -13,12 +13,12 @@ export class CreateDiffuserEcrImage {
   public readonly customJob: CustomResource;
 
   constructor(scope: Construct, id: string, props: CreateDiffuserEcrImageProps) {
-    this.ecrDeployment = new ECRDeployment(scope, `${id}-diffuser-ecrDeploy`, {
+    this.ecrDeployment = new ECRDeployment(scope, `${id}-du-ep`, {
       src: new DockerImageName(props.srcImage),
       dest: new DockerImageName(`${props.dockerRepo.repositoryUri}:default`),
     });
 
-    this.customJob = new CustomResource(scope, `${id}-diffuser-crCopImage`, {
+    this.customJob = new CustomResource(scope, `${id}-duImage`, {
       serviceToken: this.ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
       properties: {

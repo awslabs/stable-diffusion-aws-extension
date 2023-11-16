@@ -1,4 +1,4 @@
-import {aws_ecr, NestedStack, StackProps} from 'aws-cdk-lib';
+import { aws_ecr, NestedStack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { CreateDiffuserEcrImage } from './diffuser-ecr-image';
 import { AIGC_WEBUI_INFERENCE_DIFFUSER } from '../common/dockerImages';
@@ -14,7 +14,7 @@ export class DiffuserEndpointStack extends NestedStack {
   constructor(scope: Construct, id: string, props: DiffuserEndpointStackProps) {
     super(scope, id, props);
 
-    new CreateDiffuserEcrImage(scope, id, {
+    new CreateDiffuserEcrImage(this, id, {
       srcImage: `${AIGC_WEBUI_INFERENCE_DIFFUSER}:${props.diffUserImageTag}`,
       targetRepositoryName: props.targetRepositoryName,
       dockerRepo: props.dockerRepo,
