@@ -12,15 +12,16 @@ import {
 } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
+import { DiffuserEndpointStack, DiffuserEndpointStackProps } from './sd-diffuser/diffuser-endpoint-stack';
 import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
-import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -139,8 +140,8 @@ export class Middleware extends Stack {
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
-
-    new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
+    const inferenceEcrRepositoryUrl: string = 'stable-diffusion-aws-extension/aigc-webui-inference';
+    const inferenceStack = new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
       s3_bucket: s3BucketStore.s3Bucket,
@@ -157,7 +158,16 @@ export class Middleware extends Stack {
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
       useExist: useExist,
+      inferenceEcrRepositoryUrl: inferenceEcrRepositoryUrl,
     });
+
+    const diffuserStack = new DiffuserEndpointStack(this, 'DiffuserEcrPrepare', <DiffuserEndpointStackProps>{
+      diffUserImageTag: 'latest', // todo: need to wait for pipeline
+      targetRepositoryName: inferenceEcrRepositoryUrl,
+      dockerRepo: inferenceStack.dockerRepo,
+    });
+
+    diffuserStack.node.addDependency(inferenceStack);
 
     new SdTrainDeployStack(this, 'SdDBTrainStack', {
       commonLayer: commonLayers.commonLayer,

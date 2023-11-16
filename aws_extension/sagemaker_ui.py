@@ -1172,21 +1172,31 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_vae_list(username, username)
                                               }, 'refresh_cloud_vae_down')
+
+            with gr.Row():
+                user_role_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
+                                                          label='select a role for generating image on Cloud')
+
+                create_refresh_button_by_user(user_role_on_cloud_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': api_manager.get_user_by_username(
+                                                      username=username,
+                                                      user_token=username
+                                                  )['roles']
+                                              }, 'refresh_cloud_infer_role_down')
+
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
-            with gr.Row(visible=is_img2img):
-                global generate_on_cloud_button_with_js
-                # if not is_img2img:
-                #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
-                global generate_on_cloud_button_with_js_img2img
-                global interrogate_clip_on_cloud_button
-                global interrogate_deep_booru_on_cloud_button
-
-                interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                                                             elem_id="interrogate_clip_on_cloud_button", visible=False)
-                interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                                                                   elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
+            # with gr.Row(visible=is_img2img):
+                # global interrogate_clip_on_cloud_button
+                # global interrogate_deep_booru_on_cloud_button
+                #
+                # interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
+                #                                              elem_id="interrogate_clip_on_cloud_button", visible=False)
+                # interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
+                #                                                    elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
             with gr.Row():
                 gr.HTML('<br/>')
 
@@ -1430,4 +1440,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state, user_role_on_cloud_dropdown

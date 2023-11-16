@@ -614,24 +614,33 @@ def sagemaker_endpoint_tab():
                     },
                     'refresh_sagemaker_user_roles'
                 )
+
+            endpoint_image_tag = gr.Dropdown(choices=['latest', 'default'], multiselect=False, allow_custom_value=True,
+                                             value='latest',
+                                             label="The image running on Sagemaker Endpoint: choose latest if not sure")
+
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, pr: gr.Request):
+            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, image_tag, pr: gr.Request):
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
-                                                    user_token=pr.username
+                                                    user_token=pr.username,
+                                                    image_tag=image_tag,
                                                     )
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
-                                          inputs=[endpoint_name_textbox, instance_type_dropdown,
-                                                  instance_count_dropdown, autoscaling_enabled, user_roles],
+                                          inputs=[endpoint_name_textbox,
+                                                  instance_type_dropdown,
+                                                  instance_count_dropdown,
+                                                  autoscaling_enabled,
+                                                  user_roles,
+                                                  endpoint_image_tag],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
-
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
@@ -685,6 +694,7 @@ def _list_sagemaker_endpoints(username):
                 endpoint['endpoint_status'],
                 endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
                 endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
+                endpoint['endpoint_ecr_tag']
             ])
     return endpoints
 
@@ -693,8 +703,8 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time', 'image'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str', 'str']
             )
 
         def list_ep_prev(paging, rq: gr.Request):

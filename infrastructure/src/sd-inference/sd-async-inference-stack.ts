@@ -57,9 +57,13 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   useExist: string;
   authorizer: aws_apigateway.IAuthorizer;
+  inferenceEcrRepositoryUrl: string;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
+  public readonly inferenceEcrRepositoryUrl: string;
+  public readonly dockerRepo: aws_ecr.Repository;
+
   constructor(
     scope: Construct,
     id: string,
@@ -70,9 +74,9 @@ export class SDAsyncInferenceStack extends NestedStack {
       throw new Error('default_inference_ecr_image is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
-
-    const inferenceECR_url = this.createInferenceECR(srcImg);
-
+    this.inferenceEcrRepositoryUrl=props.inferenceEcrRepositoryUrl;
+    this.dockerRepo = this.createInferenceECR(srcImg);
+    const inferenceECR_url = this.dockerRepo.repositoryUri;
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
     const inference = props.routers.inference;
@@ -520,12 +524,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
   }
 
-  private createInferenceECR(srcImg: string) {
+  private createInferenceECR(srcImg: string): aws_ecr.Repository {
     const dockerRepo = new aws_ecr.Repository(
       this,
       'aigc-webui-inference-repo',
       {
-        repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
+        repositoryName: this.inferenceEcrRepositoryUrl,
         removalPolicy: RemovalPolicy.DESTROY,
       },
     );
@@ -556,7 +560,7 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     customJob.node.addDependency(ecrDeployment);
 
-    return dockerRepo.repositoryUri;
+    return dockerRepo;
   }
 
   private uploadModelToS3(s3_bucket: s3.Bucket) {

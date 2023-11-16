@@ -248,6 +248,9 @@ export class CreateSagemakerEndpointsApi {
           creator: {
             type: JsonSchemaType.STRING,
           },
+          image_tag: {
+            type: JsonSchemaType.STRING,
+          },
         },
         required: [
           'instance_type',

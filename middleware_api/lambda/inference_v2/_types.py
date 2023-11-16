@@ -29,6 +29,7 @@ class EndpointDeploymentJob:
     endpoint_name: Optional[str] = None
     error: Optional[str] = None
     owner_group_or_role: Optional[List[str]] = None
+    endpoint_ecr_tag: Optional[str] = "latest"
 
 
 # a copy of aws_extensions.models.InvocationsRequest
