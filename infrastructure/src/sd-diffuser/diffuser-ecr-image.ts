@@ -1,4 +1,4 @@
-import { aws_ecr, CustomResource, RemovalPolicy } from 'aws-cdk-lib';
+import { aws_ecr, CustomResource } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 
