@@ -1376,6 +1376,8 @@ def create_ui(is_img2img):
                         'lora': lora_models_on_cloud,
                         'hypernet': hypernetworks_models_on_cloud,
                         'controlnet': controlnet_list,
+                        'vae': vae_model_on_cloud,
+                        'sd': models_on_cloud,
                     }
 
                     return lora_hypernets, \

@@ -28,8 +28,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
 
-global_username = None
-on_cloud = False
+XYZ_CHECKPOINT_INDEX = 11
+XYZ_REFINER_CHECKPOINT_INDEX = 35
+XYZ_VAE_INDEX = 27
+XYZ_CONTROLNET_INDEX = 39
 
 
 def dummy_function(*args, **kwargs):
@@ -91,6 +93,26 @@ class SageMakerUI(scripts.Script):
     # controlnet models count
     max_cn_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
 
+    xyz_components = {
+        'txt2img_xyz_type_x_dropdown': None,
+        'txt2img_xyz_type_y_dropdown': None,
+        'txt2img_xyz_type_z_dropdown': None,
+        'img2img_xyz_type_x_dropdown': None,
+        'img2img_xyz_type_y_dropdown': None,
+        'img2img_xyz_type_z_dropdown': None,
+        'txt2img_xyz_value_x_dropdown': None,
+        'txt2img_xyz_value_y_dropdown': None,
+        'txt2img_xyz_value_z_dropdown': None,
+        'img2img_xyz_value_x_dropdown': None,
+        'img2img_xyz_value_y_dropdown': None,
+        'img2img_xyz_value_z_dropdown': None,
+        'xyz_grid_fill_x_tool_button': None,
+        'xyz_grid_fill_y_tool_button': None,
+        'xyz_grid_fill_z_tool_button': None,
+    }
+
+    xyz_set_components = {}
+
     ph = None
 
     controlnet_components = {
@@ -116,16 +138,96 @@ class SageMakerUI(scripts.Script):
                 self.img2img_generate_btn = component
 
         # refiner models
-        elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint'
-        if type(component) is gr.Dropdown and getattr(component, 'elem_id', '') == elem_id:
-            if self.is_txt2img:
-                self.txt2img_refiner_ckpt_dropdown = component
-            if self.is_img2img:
-                self.img2img_refiner_ckpt_dropdown = component
+        def decorator_xyz_type_update_function(func, change, choices):
+            def wrapper(*args, **kwargs):
+                if change and not getattr(func, "_decorated", False):
+                    setattr(func, "_decorated", True)
+                    new_choices = choices
+                    logger.debug("decorator_xyz_type_update_function was invoked")
+                    original_result = func(choices=new_choices)
+                    # original_result = comp.change(fn=new_fn, inputs=new_inputs, outputs=new_outputs)
+                    return original_result
+                else:
+                    original_result = func(*args, **kwargs)
+                    return original_result
+
+            return wrapper
+
+        def _change_xyz_models(model_selected, model_state, xyz_type_component):
+            print(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
+            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            if not on_cloud:
+                return gr.skip()
+            #
+            if xyz_type_component == XYZ_CHECKPOINT_INDEX or xyz_type_component == XYZ_REFINER_CHECKPOINT_INDEX:
+                sd_model_list = model_state['sd']
+                print(f"sd processed {sd_model_list}")
+                gr.update = decorator_xyz_type_update_function(gr.update, True, sd_model_list)
+                return decorator_xyz_type_update_function(gr.update, True, sd_model_list)
+            elif xyz_type_component == XYZ_VAE_INDEX:
+                vae_model_list = model_state['vae']
+                print(f"vae processed {vae_model_list}")
+                gr.update = decorator_xyz_type_update_function(gr.update, True, vae_model_list)
+                return decorator_xyz_type_update_function(gr.update, True, vae_model_list)
+            elif xyz_type_component == XYZ_CONTROLNET_INDEX:
+                controlnet_model_list = model_state['controlnet']
+                print(f"controlnet processed {controlnet_model_list}")
+                gr.update = decorator_xyz_type_update_function(gr.update, True, controlnet_model_list)
+                return decorator_xyz_type_update_function(gr.update, True, controlnet_model_list)
+
+        base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
+        cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
+        component_elem_id = getattr(component, 'elem_id', '')
+        type_pre_str = ('txt2img' if self.is_txt2img else 'img2img')
+        if type(component) is gr.Dropdown:
+            # refiner models
+            if component_elem_id == f'{type_pre_str}_checkpoint':
+                if self.is_txt2img:
+                    self.txt2img_refiner_ckpt_dropdown = component
+                if self.is_img2img:
+                    self.img2img_refiner_ckpt_dropdown = component
+            # xyz-grid type
+            elif component_elem_id == f'script_{type_pre_str}_xyz_plot_x_type':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_type_x_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_type_x_dropdown'] = component
+            elif component_elem_id == f'script_{type_pre_str}_xyz_plot_y_type':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_type_y_dropdown'] = component
+            elif component_elem_id == f'script_{type_pre_str}_xyz_plot_z_type':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_type_z_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_type_z_dropdown'] = component
+            elif getattr(component, 'label', '') == 'X values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_x_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_x_dropdown'] = component
+            elif getattr(component, 'label', '') == 'Y values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_y_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_y_dropdown'] = component
+            elif getattr(component, 'label', '') == 'Z values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_z_dropdown'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_z_dropdown'] = component
+
+        if type(component) is gr.Button:
+            if component_elem_id == 'xyz_grid_fill_x_tool_button':
+                self.xyz_components['xyz_grid_fill_x_tool_button'] = component
+            elif component_elem_id == 'xyz_grid_fill_y_tool_button':
+                self.xyz_components['xyz_grid_fill_y_tool_button'] = component
+            elif component_elem_id == 'xyz_grid_fill_z_tool_button':
+                self.xyz_components['xyz_grid_fill_z_tool_button'] = component
 
         if type(component) is ToolButton:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint_refresh'
-            component_elem_id = getattr(component, 'elem_id', '')
             if component_elem_id == elem_id:
                 if self.is_txt2img:
                     self.txt2img_refiner_ckpt_refresh_btn = component
@@ -134,7 +236,7 @@ class SageMakerUI(scripts.Script):
 
         # controlnet models and refresh button
         # controlnet refresh button type is not webui ToolButton, maybe there is no controlnet, so use str not class
-        component_elem_id = getattr(component, 'elem_id', '')
+
         elem_id_tabname = ("img2img" if self.is_img2img else "txt2img") + "_controlnet"
         cn_component_type = ''
         cn_elem_id_postfix = ''
@@ -171,8 +273,29 @@ class SageMakerUI(scripts.Script):
                     self.controlnet_components[f'{elem_id_tabname}_{cn_component_type}_batch'][0] = [component, False]
 
         cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
-        base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
-        cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
+
+
+        if cn_list and base_model_component:
+            if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown']:
+                self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_x_dropdown']])
+                # self.xyz_components['txt2img_xyz_type_x_dropdown'].change = decorator_xyz_type_update_function(self.xyz_components['txt2img_xyz_type_x_dropdown'].change, True, fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_x_dropdown']])
+                self.xyz_set_components['txt2img_xyz_type_x_dropdown'] = True
+            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown']:
+                self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_y_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_y_dropdown']])
+                self.xyz_set_components['txt2img_xyz_type_y_dropdown'] = True
+            if 'txt2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_z_dropdown'] and self.xyz_components['txt2img_xyz_value_z_dropdown']:
+                self.xyz_components['txt2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[ base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_z_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_z_dropdown']])
+                self.xyz_set_components['txt2img_xyz_type_z_dropdown'] = True
+            if 'img2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_dropdown']:
+                self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_x_dropdown']])
+                self.xyz_set_components['img2img_xyz_type_x_dropdown'] = True
+            if 'img2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_y_dropdown'] and self.xyz_components['img2img_xyz_value_y_dropdown']:
+                self.xyz_components['img2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models,inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_y_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_y_dropdown']])
+                self.xyz_set_components['img2img_xyz_type_y_dropdown'] = True
+            if 'img2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_z_dropdown'] and self.xyz_components['img2img_xyz_value_z_dropdown']:
+                self.xyz_components['img2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_z_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_z_dropdown']])
+                self.xyz_set_components['img2img_xyz_type_z_dropdown'] = True
+
 
         for i in range(self.max_cn_models):
             if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
@@ -230,19 +353,18 @@ class SageMakerUI(scripts.Script):
 
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
-            global global_username
-            global_username = pr.username
-            global on_cloud
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+            sd_models = sagemaker_ui.load_model_list(pr.username, pr.username)
+            vae_models = sagemaker_ui.load_vae_list(pr.username, pr.username)
             hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
             lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
             controlnet_list = load_controlnet_list(pr.username, pr.username)
-            result.append({"hypernet": hypernet_models, "lora": lora_models, "controlnet": controlnet_list})
+            result.append({"sd": sd_models, "vae": vae_models, "hypernet": hypernet_models, "lora": lora_models, "controlnet": controlnet_list})
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
