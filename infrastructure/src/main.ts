@@ -162,7 +162,7 @@ export class Middleware extends Stack {
     });
 
     const diffuserStack = new DiffuserEndpointStack(this, 'DiffuserEcr', <DiffuserEndpointStackProps>{
-      diffUserImageTag: 'latest', // todo: need to wait for pipeline
+      diffUserImageTag: 'diffusers-dev',
       targetRepositoryName: inferenceEcrRepositoryUrl,
       dockerRepo: inferenceStack.dockerRepo,
     });
