@@ -153,3 +153,27 @@ def get_bucket_and_key(s3uri):
         bucket = s3uri[5 : pos]
         key = s3uri[pos + 1 : ]
         return bucket, key
+
+def payload_filter(payload):
+    ## filter non-support extensions
+    always_keys = payload['alwayson_scripts'].keys()
+    #controlnet_spports_type=['control_v11e_sd15ip2p', 'control_v11e_sd15shuffle']
+    #controlnet_type_unspport = ['recolor', 'revision', '']
+    controlnet_support_type_list = ['control_v11p_sd15_canny', 'control_v11p_sd15_tile', 'control_v11p_sd15_depth', 'control_v11p_sd15_inpaint', 'control_v11p_sd15_lineart', 'control_v11p_sd15_mlsd', 'control_v11p_sd15_normalbae', 'control_v11p_sd15_openpose','control_v11p_sd15_scribble', 'control_v11p_sd15_seg','control_v11p_sd15_softedge', 'control_v11p_sd15_lineart_anime']
+    for always_key in always_keys:
+        if always_key != 'refiner' or always_key != 'controlnet':
+            del payload['alwayson_scripts'][always_key]
+        elif always_key == 'controlnet':
+            controlnet_args = []
+            for unit_control in payload['alwayson_scripts']['controlnet']['args']:
+                if unit_control['enabled'] == 'True' and unit_control['model'] in controlnet_support_type_list:
+                    controlnet_args.append(unit_control)
+    
+
+
+    if 'enable_hr' in payload.keys():
+        if payload['enable_hr'] == 'true':
+            if 'Latent' in payload['hr_upscaler'] or 'Lanczos' in payload['hr_upscaler'] or 'Nearest' in payload['hr_upscaler']:
+                payload['hr_upscaler'] = 'R-ESRGAN 4x+'
+    
+    return payload

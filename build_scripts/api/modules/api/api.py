@@ -19,7 +19,7 @@ import sys
 import copy
 
 from modules import shared, scripts, pipeline, errors, sd_samplers
-from modules.api.mme_utils import checkspace_and_update_models, download_model, models_path
+from modules.api.mme_utils import checkspace_and_update_models, payload_filter, download_model, models_path
 from modules.api.utils import read_from_s3, get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
 # from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
 # from modules.api import models
@@ -430,6 +430,7 @@ class Api:
         interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
         show_slim_dict(interrogate_payload)
 
+        payload = payload_filter(payload)
         try:
             if req.task == 'txt2img':
                 with self.queue_lock:
