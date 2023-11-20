@@ -65,8 +65,8 @@ export class ListAllTrainJobsApi {
         'dynamodb:Query',
       ],
       resources: [
-         this.trainTable.tableArn,
-         this.multiUserTable.tableArn,
+        this.trainTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
