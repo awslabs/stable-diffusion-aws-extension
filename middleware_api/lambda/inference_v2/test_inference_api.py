@@ -203,3 +203,14 @@ class InferenceApiTest(TestCase):
         assert resp['statusCode'] == 200
 
         print(f"result s3 location: {resp['inference']['output_path']}")
+
+
+    def test_delete_endpoint(self):
+        from inference_v2.sagemaker_endpoint_api import delete_sagemaker_endpoints
+        resp = delete_sagemaker_endpoints({
+            "delete_endpoint_list": [
+                "infer-endpoint-dc-endpoint"
+            ],
+            "username": "admin",
+        }, {})
+        print(resp)

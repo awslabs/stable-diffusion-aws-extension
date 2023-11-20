@@ -660,8 +660,11 @@ def sagemaker_endpoint_tab():
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
                                                          elem_id="sagemaker_endpoint_delete_button")
             delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
-            sagemaker_endpoint_delete_button.click(api_manager.sagemaker_endpoint_delete,
-                                                   _js="delete_sagemaker_endpoint",
+
+            def _endpoint_delete(endpoints, pr: gr.Request):
+                return api_manager.sagemaker_endpoint_delete(delete_endpoint_list=endpoints, user_token=pr.username)
+
+            sagemaker_endpoint_delete_button.click(_endpoint_delete,
                                                    inputs=[sagemaker_endpoint_delete_dropdown],
                                                    outputs=[delete_ep_output_textbox])
 
