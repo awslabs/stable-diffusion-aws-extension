@@ -33,6 +33,8 @@ After user [deployed](../deployment/deployment.md) solution middleware cloudform
 
 * API Key (api_key)
     - Parameter Name: **x-api-key**, in: header. 
+* Authorization
+    - Use Bearer Token in headers
 
 # User Scenarios
 ## 1. Deploy a new Endpoint
@@ -416,7 +418,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 
 <br/>
 
-# /endpoints
+# /endpoints(POST)
+
+Create SageMaker Endpoint
 
 <a id="opIddeploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post"></a>
 
@@ -508,7 +512,9 @@ This operation does not require authentication
 
 <br/>
 
-# /endpoints
+# /endpoints(DELETE)
+
+Delete Endpoints
 
 <a id="opIddelete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post"></a>
 
@@ -590,7 +596,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints'
 > 200 Response
 
 ```json
-null
+Endpoint deleted
 ```
 
 <h3 id="delete-sagemaker-endpoint-responses">Responses</h3>
@@ -607,7 +613,9 @@ This operation does not require authentication
 
 <br/>
 
-# /endpoints
+# /endpoints(GET)
+
+List Endpoints
 
 <a id="opIdlist_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get"></a>
 

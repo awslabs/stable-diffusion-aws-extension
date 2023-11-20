@@ -33,6 +33,8 @@ headingLevel: 2
 
 * API Key (api_key)
     - API 调用时您需要在标头的**x-api-key**参数中配置此值。
+* Authorization
+  - 在 headers 中使用 Bearer Token
 
 # 用户场景
 ## 1. 部署新的终端节点
@@ -421,7 +423,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 
 <br/>
 
-# /endpoints
+# /endpoints(POST)
+
+创建 SageMaker 节点
 
 <a id="opIddeploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post"></a>
 
@@ -508,7 +512,9 @@ null
 
 <br/>
 
-# /endpoints
+# /endpoints(DELETE)
+
+删除 Endpoints
 
 <a id="opIddelete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post"></a>
 
@@ -590,7 +596,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints'
 > 200 响应
 
 ```json
-null
+Endpoint deleted
 ```
 
 <h3 id="delete-sagemaker-endpoint-responses">响应</h3>
@@ -602,7 +608,9 @@ null
 
 <br/>
 
-# /endpoints
+# /endpoints(GET)
+
+列出所有终端节点部署作业
 
 <a id="opIdlist_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get"></a>
 
@@ -2248,6 +2256,8 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint
 
 # /checkpoints
 
+列出所有检查点
+
 ### **示例：**
 
 Python示例代码：
@@ -2788,6 +2798,8 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/trains',
 
 # /dataset(POST)
 
+创建新数据集
+
 ### **示例：**
 
 Python示例代码：
@@ -3022,6 +3034,8 @@ fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePat
 <br/>
 
 # /datasets(GET)
+
+列出所有数据集
 
 ### **示例：**
 
