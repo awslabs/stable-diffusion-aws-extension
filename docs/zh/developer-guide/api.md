@@ -26,7 +26,7 @@ headingLevel: 2
 
 **URL示例:**
 
-* https://API_Gateway_ID.execute-api.AWS_Account_Region.amazonaws.com/prod
+* https://{api_id}.execute-api.{region}.amazonaws.com/prod
 
 
 **认证**
@@ -39,9 +39,9 @@ headingLevel: 2
 
 ![部署新的终端节点](../images/deploy_sagemaker_endpoint.png)
 
-调用 [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) 来创建一个新的 Sagemaker 终端节点，您需要指定两个用于创建的参数，一个是 `instance_type`，可选值为 "ml.g4dn.2xlarge"、"ml.g4dn.4xlarge"、"ml.g4dn.8xlarge"、"ml.g4dn.12xlarge"，另一个是 `initial_instance_count`，可选值为 1|2|3|4。
+调用 [/endpoints](#inferencedeploy-sagemaker-endpoint) 来创建一个新的 Sagemaker 终端节点，您需要指定两个用于创建的参数，一个是 `instance_type`，可选值为 "ml.g4dn.2xlarge"、"ml.g4dn.4xlarge"、"ml.g4dn.8xlarge"、"ml.g4dn.12xlarge"，另一个是 `initial_instance_count`，可选值为 1|2|3|4|5|6。
 
-在调用 [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint) 后，您需要调用 [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs) 来列出所有终端节点的状态。通常需要超过10分钟时间才能使新的 Sagemaker 终端节点更改为 "inService" 状态。Sagemaker 终端节点只能在 "inService" 状态下用于推理。
+在调用 [/endpoints](#inferencedeploy-sagemaker-endpoint) 后，您需要调用 [/endpoints](#inferencelist-endpoint-deployment-jobs) 来列出所有终端节点的状态。通常需要超过10分钟时间才能使新的 Sagemaker 终端节点更改为 "InService" 状态。Sagemaker 终端节点只能在 "InService" 状态下用于推理。
 
 如果终端节点处于失败状态，您可以调用 [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) 并传递参数 `jobID`，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。
 
@@ -50,10 +50,10 @@ headingLevel: 2
   
   title Create a Sagemaker Endpoint
 
-Client->Middleware:Call /inference/deploy-sagemaker-endpoint
+Client->Middleware:Call /endpoints
 Middleware->Middleware: Start a workflow to configure sagemaker endpoint \n based on uer request configuration
-Client->Middleware:Call /inference/list-endpoint-deployment-jobs \n to list all the endpoint creation job list
-Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'inService' state.
+Client->Middleware:Call /endpoints \n to list all the endpoint creation job list
+Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'InService' state.
   
 </details>
 
@@ -63,9 +63,9 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 
 ## 4. 进行推理
 ![进行推理](../images/do-inference.png)
-在 Sagemaker 终端节点处于 "inService" 状态之后，您可以调用 [/inference-api/inference](#inference-l2-api) 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 [/inference-api/inference](#inference-l2-api) 中。
+在 Sagemaker 终端节点处于 "InService" 状态之后，您可以调用 [/inference/v2](#inference-l2-api) 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 [/inference/v2](#inference-l2-api) 中。
 
-[/inference-api/inference](#inference-l2-api) 将向客户端返回以下 JSON 结构：
+[/inference/v2](#inference-l2-api) 将向客户端返回以下 JSON 结构：
 
 ```json
 {
@@ -97,8 +97,8 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
   
 title Do Inference
 
-Client->Middleware:Call **/inference-api/inference**
-Middleware->Middleware: Start a async inference job \n on configure sagemaker endpoint \n based on uer request configuration
+Client->Middleware:Call **/inference/v2**
+Middleware->Middleware: Start an async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
 Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
 Middleware->Client: return inference_id and the job status(inprocess | succeed | failure)
@@ -122,10 +122,10 @@ Middleware->Client: return the inference parameter in presigned url format
 | 3   | GET     | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。                      |
 | 4   | GET     | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。                      |
 | 5   | GET     | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | 获取特定推理作业的参数输出。                      |
-| 6   | POST    | [/inference-api/inference](#inference-l2-api)                                                           | 使用默认参数运行 SageMaker 推理               |
-| 7   | POST    | [/inference/deploy-sagemaker-endpoint](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                  |
-| 8   | POST    | [/inference/delete-sagemaker-endpoint](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                  |
-| 9   | GET     | [/inference/list-endpoint-deployment-jobs](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                       |
+| 6   | POST    | [/inference/v2](#inference-l2-api)                                                                      | 使用默认参数运行 SageMaker 推理               |
+| 7   | POST    | [/endpoints](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                  |
+| 8   | DELETE  | [/endpoints](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                  |
+| 9   | GET     | [/endpoints](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                       |
 | 10  | GET     | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | 获取特定终端节点部署作业。                       |
 | 11  | GET     | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | 生成用于上传的 S3 预签名 URL。                 |
 | 12  | GET     | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | 获取文本反演列表。                           |
@@ -139,7 +139,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 20  | GET     | [/checkpoint](#checkpoint)                                                                              | 获取检查点。                              |
 | 21  | PUT     | [/checkpoint](#checkpointput)                                                                           | 更新检查点。                              |
 | 22  | GET     | [/checkpoints](#checkpoints)                                                                            | 列出所有检查点。                            |
-| 23  | POST    | [/train-api/train](#train-api-post)                                                                     | 启动训练作业。                             |
+| 23  | PUT     | [/inference/v2/{id}/run](#train-api-post)                                                                     | 启动训练作业。                             |
 | 24  | PUT     | [/train](#trainput)                                                                                     | 更新训练作业。                             |
 | 25  | GET     | [/trains](#trainsget)                                                                                   | 列出所有训练作业。                           |
 | 26  | POST    | [/dataset](#datasetpost)                                                                                | 创建新数据集。                             |
@@ -167,7 +167,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/test-connection', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection', headers = headers)
 
 print(r.json())
 
@@ -182,7 +182,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/test-connection',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection',
 {
   method: 'GET',
 
@@ -217,7 +217,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 <br/>
 
-# /inference-api/inference
+# /inference/v2
 
 文生图，通过文字生成图片
 
@@ -246,7 +246,7 @@ body = {
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference", headers = headers, json = body)
+r = requests.post("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2", headers = headers, json = body)
 
 print(r.json())
 
@@ -272,7 +272,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference-api/inference",
+fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2",
 {
   method: "POST",
   body: inputBody,
@@ -286,7 +286,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /inference-api/inference`
+`POST /inference/v2`
 
 > Body
 
@@ -309,7 +309,7 @@ fetch("https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 > Parameter example
 
 Below JSON shows the parameters with default value. 
-sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, other parameters are optional.
+sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, other parameters are optional.
 
 ```json
 {
@@ -421,7 +421,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-diffusion are mandatory, o
 
 <br/>
 
-# /inference/deploy-sagemaker-endpoint
+# /endpoints
 
 <a id="opIddeploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post"></a>
 
@@ -438,10 +438,10 @@ headers = {
 }
 inputBody = {
 	"instance_type": "ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge",
-	"initial_instance_count": "1|2|3|4"
+	"initial_instance_count": "1|2|3|4|5|6"
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/deploy-sagemaker-endpoint', headers = headers, json = inputBody)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -452,7 +452,7 @@ Javascript示例代码：
 ```javascript
 const inputBody = '{
   "instance_type": "ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge",
-  "initial_instance_count": "1|2|3|4"
+  "initial_instance_count": "1|2|3|4|5|6"
 }';
 const headers = {
   'Content-Type':'application/json',
@@ -460,7 +460,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/deploy-sagemaker-endpoint',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints',
 {
   method: 'POST',
   body: inputBody,
@@ -474,14 +474,14 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /inference/deploy-sagemaker-endpoint`
+`POST /endpoints`
 
 > Body参数
 
 ```json
 {
   "instance_type": "ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge",
-  "initial_instance_count": "1|2|3|4"
+  "initial_instance_count": "1|2|3|4|5|6"
 }
 ```
 
@@ -508,7 +508,7 @@ null
 
 <br/>
 
-# /inference/delete-sagemaker-endpoint
+# /endpoints
 
 <a id="opIddelete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post"></a>
 
@@ -531,7 +531,7 @@ inputBody = {
 ]
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/delete-sagemaker-endpoint', headers = headers, json = inputBody)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -552,7 +552,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/delete-sagemaker-endpoint',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints',
 {
   method: 'POST',
   body: inputBody,
@@ -566,7 +566,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /inference/delete-sagemaker-endpoint`
+`POST /endpoints`
 
 > Body 参数
 
@@ -602,7 +602,7 @@ null
 
 <br/>
 
-# /inference/list-endpoint-deployment-jobs
+# /endpoints
 
 <a id="opIdlist_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get"></a>
 
@@ -617,7 +617,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-endpoint-deployment-jobs', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints', headers = headers)
 
 print(r.json())
 
@@ -632,7 +632,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-endpoint-deployment-jobs',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints',
 {
   method: 'GET',
 
@@ -646,7 +646,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`GET /inference/list-endpoint-deployment-jobs`
+`GET /endpoints`
 
 > 响应示例
 
@@ -703,7 +703,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-inference-jobs', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs', headers = headers)
 
 print(r.json())
 
@@ -718,7 +718,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/list-inference-jobs',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs',
 {
   method: 'GET',
 
@@ -792,7 +792,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job', params={
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job', params={
   'jobID': 'string'
 }, headers = headers)
 
@@ -809,7 +809,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string',
 {
   method: 'GET',
 
@@ -872,7 +872,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job', headers = headers)
 
 print(r.json())
 
@@ -887,7 +887,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job',
 {
   method: 'GET',
 
@@ -954,7 +954,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-image-output', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-image-output', headers = headers)
 
 print(r.json())
 
@@ -969,7 +969,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-image-output',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-image-output',
 {
   method: 'GET',
 
@@ -1037,7 +1037,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-param-output', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-param-output', headers = headers)
 
 print(r.json())
 
@@ -1052,7 +1052,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-inference-job-param-output',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-param-output',
 {
   method: 'GET',
 
@@ -1110,7 +1110,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading', headers = headers)
 
 print(r.json())
 
@@ -1125,7 +1125,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/generate-s3-presigned-url-for-uploading',
 {
   method: 'GET',
 
@@ -1182,7 +1182,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-texual-inversion-list', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-texual-inversion-list', headers = headers)
 
 print(r.json())
 
@@ -1197,7 +1197,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-texual-inversion-list',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-texual-inversion-list',
 {
   method: 'GET',
 
@@ -1246,7 +1246,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-lora-list', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-lora-list', headers = headers)
 
 print(r.json())
 
@@ -1261,7 +1261,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-lora-list',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-lora-list',
 {
   method: 'GET',
 
@@ -1310,7 +1310,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-hypernetwork-list', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-hypernetwork-list', headers = headers)
 
 print(r.json())
 
@@ -1325,7 +1325,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-hypernetwork-list',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-hypernetwork-list',
 {
   method: 'GET',
 
@@ -1374,7 +1374,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-controlnet-model-list', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-controlnet-model-list', headers = headers)
 
 print(r.json())
 
@@ -1389,7 +1389,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/get-controlnet-model-list',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-controlnet-model-list',
 {
   method: 'GET',
 
@@ -1438,7 +1438,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-model-merge', headers = headers)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/run-model-merge', headers = headers)
 
 print(r.json())
 
@@ -1453,7 +1453,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/run-model-merge',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/run-model-merge',
 {
   method: 'POST',
 
@@ -1509,7 +1509,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/model', headers = headers)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model', headers = headers)
 
 print(r.json())
 
@@ -1546,7 +1546,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/model',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 {
   method: 'POST',
   body: inputBody,
@@ -1686,7 +1686,7 @@ inputBody = {
 }
 }
 
-r = requests.put('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/model', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -1729,7 +1729,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/model',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 {
   method: 'PUT',
   body: inputBody,
@@ -1838,7 +1838,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/models', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/models', headers = headers)
 
 print(r.json())
 
@@ -1853,7 +1853,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/models',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/models',
 {
   method: 'GET',
 
@@ -1946,7 +1946,7 @@ inputBody = {
 }
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoint', headers = headers, json = inputBody)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -1975,7 +1975,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoint',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint',
 {
   method: 'POST',
   body: inputBody,
@@ -2107,7 +2107,7 @@ inputBody = {
 }
 }
 
-r = requests.put('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoint', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2150,7 +2150,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoint',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint',
 {
   method: 'PUT',
   body: inputBody,
@@ -2259,7 +2259,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoints', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoints', headers = headers)
 
 print(r.json())
 
@@ -2274,7 +2274,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/checkpoints',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoints',
 {
   method: 'GET',
 
@@ -2344,7 +2344,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 <br/>
 
-# /train-api/train(POST)
+# /inference/v2/{id}/run(PUT)
 
 <a id="train-api-post"></a>
 ### **示例：**
@@ -2404,7 +2404,7 @@ const inputBody = {
 }
 
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2/{id}/run', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2462,7 +2462,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train-api/train',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2/{id}/run',
 {
   method: 'POST',
   body: inputBody,
@@ -2476,7 +2476,7 @@ fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazo
 
 ```
 
-`POST /train-api/train`
+`PUT /inference/v2/{id}/run`
 
 > Body 参数
 
@@ -2600,7 +2600,7 @@ inputBody = {
 "status": "Training"
 }
 
-r = requests.put('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/train', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2619,7 +2619,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/train',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/train',
 {
   method: 'PUT',
   body: inputBody,
@@ -2705,7 +2705,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/trains', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/trains', headers = headers)
 
 print(r.json())
 
@@ -2720,7 +2720,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/trains',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/trains',
 {
   method: 'GET',
 
@@ -2812,7 +2812,7 @@ const inputBody = {
 "params": {}
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset', headers = headers, json = inputBody)
+r = requests.post('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/dataset', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2838,7 +2838,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/dataset',
 {
   method: 'POST',
   body: inputBody,
@@ -2935,7 +2935,7 @@ inputBody = {
 "status": "Enabled"
 }
 
-r = requests.put('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset', headers = headers, json = inputBody)
+r = requests.put('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/dataset', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2954,7 +2954,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/dataset',
 {
   method: 'PUT',
   body: inputBody,
@@ -3034,7 +3034,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/datasets', headers = headers)
+r = requests.get('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/datasets', headers = headers)
 
 print(r.json())
 
@@ -3049,7 +3049,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/prod/datasets',
+fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/prod/datasets',
 {
   method: 'GET',
 
@@ -3126,7 +3126,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/{dataset_name}/data', headers = headers)
+r = requests.get('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/{dataset_name}/data', headers = headers)
 
 print(r.json())
 
@@ -3141,7 +3141,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/{dataset_name}/data',
+fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/{dataset_name}/data',
 {
   method: 'GET',
 
@@ -3227,7 +3227,7 @@ const inputBody = {
   "params":{"message":"description"}
 }
 
-r = requests.post('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/upload_checkpoint', headers = headers, json = inputBody)
+r = requests.post('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/upload_checkpoint', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -3247,7 +3247,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/dataset',
+fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePath}/dataset',
 {
   method: 'POST',
   body: inputBody,
