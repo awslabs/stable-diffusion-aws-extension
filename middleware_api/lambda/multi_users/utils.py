@@ -67,7 +67,7 @@ def get_user_by_username(ddb_service, user_table, username):
     if not user_raw or len(user_raw) == 0:
         return None
 
-    return User(**(ddb_service.deserialize(user_raw)))
+    return User(**(ddb_service.deserialize(user_raw[0])))
 
 
 def get_user_roles(ddb_service, user_table_name, username):
