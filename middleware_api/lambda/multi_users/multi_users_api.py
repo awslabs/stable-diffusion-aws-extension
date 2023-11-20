@@ -280,8 +280,8 @@ def list_user(event, ctx):
         user_resp['permissions'] = list(user_resp['permissions'])
         user_resp['permissions'].sort()
 
-        # only show user to requestor if requestor has 'user:all' permission
-        # or requestor has 'user:list' permission and the user is created by the requestor
+        # only show user to requester if requester has 'user:all' permission
+        # or requester has 'user:list' permission and the user is created by the requester
         if 'user' in requestor_permissions and ('all' in requestor_permissions['user'] or
                                                 ('list' in requestor_permissions['user'] and
                                                  user.creator == requestor_name)):
