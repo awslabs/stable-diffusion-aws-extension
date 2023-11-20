@@ -1124,7 +1124,6 @@ def load_hypernetworks_models(username, user_token):
 def load_vae_list(username, user_token):
     vae_model_on_cloud = ['Automatic', 'None']
     vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
-
     return vae_model_on_cloud
 
 

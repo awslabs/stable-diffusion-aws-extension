@@ -54,9 +54,14 @@ def upsert_user(raw_event, ctx):
                 ],
                 'creator': event.username
             }
-            resp = upsert_role(role_event, {
-                'from_sd_local': True
-            })
+
+            @dataclass
+            class MockContext:
+                aws_request_id: str
+                from_sd_local: bool
+
+            resp = upsert_role(role_event, MockContext(aws_request_id='', from_sd_local=True))
+
             if resp['statusCode'] != 200:
                 return resp
 
