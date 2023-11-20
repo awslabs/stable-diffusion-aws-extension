@@ -5,7 +5,6 @@ import time
 import datetime
 import uvicorn
 from threading import Lock
-from io import BytesIO
 from fastapi import APIRouter, Depends, FastAPI, Request, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.exceptions import HTTPException
@@ -17,18 +16,18 @@ from secrets import compare_digest
 import traceback
 import sys
 import copy
-
-from modules import shared, scripts, pipeline, errors, sd_samplers
-from modules.api.mme_utils import checkspace_and_update_models, payload_filter, download_model, models_path
+from modules.api.mme_utils import decode_base64_to_image, encode_pil_to_base64
+from modules import shared, scripts, pipeline, errors # , sd_samplers
+from modules.api.mme_utils import checkspace_and_update_models, payload_filter#, download_model, models_path
 from modules.api.utils import read_from_s3, get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
 # from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
 # from modules.api import models
-from modules.shared import opts
+# from modules.shared import opts
 # from modules.processing import StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img, process_images
 # from modules.textual_inversion.textual_inversion import create_embedding, train_embedding
 # from modules.textual_inversion.preprocess import preprocess
 # from modules.hypernetworks.hypernetwork import create_hypernetwork, train_hypernetwork
-from PIL import PngImagePlugin,Image
+# from PIL import PngImagePlugin,Image
 # from modules.sd_models import checkpoints_list, unload_model_weights, reload_model_weights, checkpoint_aliases
 # from modules.sd_vae import vae_dict
 # from modules.sd_models_config import find_checkpoint_config_near_filename
@@ -36,8 +35,8 @@ from PIL import PngImagePlugin,Image
 # from modules import devices
 from modules import sd_models
 # from typing import Dict, List, Any
-import piexif
-import piexif.helper
+# import piexif
+# import piexif.helper
 from contextlib import closing
 
 from modules.api import models
@@ -46,82 +45,13 @@ import logging
 from dreambooth.sd_to_diff import extract_checkpoint
 from diffusers import AutoPipelineForText2Image
 import torch
+from lcm_processing import lcm_pipeline, lcm_lora_pipeline
 
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
-
-# def script_name_to_index(name, scripts):
-#     try:
-#         return [script.title().lower() for script in scripts].index(name.lower())
-#     except Exception as e:
-#         raise HTTPException(status_code=422, detail=f"Script '{name}' not found") from e
-
-
-# def validate_sampler_name(name):
-#     config = sd_samplers.all_samplers_map.get(name, None)
-#     if config is None:
-#         raise HTTPException(status_code=404, detail="Sampler not found")
-
-#     return name
-
-
-# def setUpscalers(req: dict):
-#     reqDict = vars(req)
-#     reqDict['extras_upscaler_1'] = reqDict.pop('upscaler_1', None)
-#     reqDict['extras_upscaler_2'] = reqDict.pop('upscaler_2', None)
-#     return reqDict
-
-
-def decode_base64_to_image(encoding):
-    if encoding.startswith("data:image/"):
-        encoding = encoding.split(";")[1].split(",")[1]
-    try:
-        image = Image.open(BytesIO(base64.b64decode(encoding)))
-        return image
-    except Exception as e:
-        raise HTTPException(status_code=500, detail="Invalid encoded image") from e
-
-
-def encode_pil_to_base64(image):
-    with io.BytesIO() as output_bytes:
-
-        if opts.samples_format.lower() == 'png':
-            use_metadata = False
-            metadata = PngImagePlugin.PngInfo()
-            for key, value in image.info.items():
-                if isinstance(key, str) and isinstance(value, str):
-                    metadata.add_text(key, value)
-                    use_metadata = True
-            image.save(output_bytes, format="PNG", pnginfo=(metadata if use_metadata else None), quality=opts.jpeg_quality)
-
-        elif opts.samples_format.lower() in ("jpg", "jpeg", "webp"):
-            if image.mode == "RGBA":
-                image = image.convert("RGB")
-            parameters = image.info.get('parameters', None)
-            exif_bytes = piexif.dump({
-                "Exif": { piexif.ExifIFD.UserComment: piexif.helper.UserComment.dump(parameters or "", encoding="unicode") }
-            })
-            if opts.samples_format.lower() in ("jpg", "jpeg"):
-                image.save(output_bytes, format="JPEG", exif = exif_bytes, quality=opts.jpeg_quality)
-            else:
-                image.save(output_bytes, format="WEBP", exif = exif_bytes, quality=opts.jpeg_quality)
-
-        else:
-            raise HTTPException(status_code=500, detail="Invalid image format")
-
-        bytes_data = output_bytes.getvalue()
-
-    return base64.b64encode(bytes_data)
-
-# def validate_sampler_name(name):
-#     config = sd_samplers.all_samplers_map.get(name, None)
-#     if config is None:
-#         raise HTTPException(status_code=404, detail="Sampler not found")
-
-#     return name
 
 def api_middleware(app: FastAPI):
     rich_available = False
@@ -284,7 +214,7 @@ class Api:
             ).images
         
         b64images = list(map(encode_pil_to_base64, output)) if send_images else []
-        return models.TextToImageResponse(images=b64images, parameters=vars(txt2imgreq))
+        return models.TextToImageResponse(images=b64images, parameters=vars(txt2imgreq)) 
     
     def txt2img_pipeline(self, payload):
         txt2imgreq = models.StableDiffusionTxt2ImgProcessingAPI(**payload)
@@ -449,6 +379,18 @@ class Api:
             elif req.task == 'wuerstchen':
                 with self.queue_lock:
                     response = self.wuerstchen_pipeline(payload)
+                    logger.info(
+                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
+                    return response
+            elif req.task == 'lcm_pipeline':
+                with self.queue_lock:
+                    response = lcm_pipeline(payload, req.models)
+                    logger.info(
+                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
+                    return response
+            elif req.task == 'lcm_img2img':
+                with self.queue_lock:
+                    response = lcm_lora_pipeline(payload, req.models)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response
