@@ -819,7 +819,7 @@ def process_images_inner(p: StableDiffusionProcessing) -> Processed:
 
             samples_ddim = p.sample(conditioning=p.c, unconditional_conditioning=p.uc, seeds=p.seeds, subseeds=p.subseeds, subseed_strength=p.subseed_strength, prompts=p.prompts, controlnet_image=controlnet_images, ref_img=ref_img, inpaint_img=inpaint_img)
             
-            if request_type == 'StableDiffusionPipelineTxt2Img' and samples_ddim.dtype == 'uint8':
+            if request_type == 'StableDiffusionPipelineTxt2Img' and samples_ddim[0].dtype == 'uint8':
                 x_samples_ddim = samples_ddim
             else:
                 needs_upcasting = False

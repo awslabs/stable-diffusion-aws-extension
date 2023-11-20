@@ -45,7 +45,7 @@ import logging
 from dreambooth.sd_to_diff import extract_checkpoint
 from diffusers import AutoPipelineForText2Image
 import torch
-from lcm_processing import lcm_pipeline, lcm_lora_pipeline
+from modules.api.lcm_processing import lcm_pipeline, lcm_lora_pipeline
 
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
