@@ -1,3 +1,4 @@
+import base64
 import re
 import json
 import requests
@@ -6,10 +7,9 @@ import gradio as gr
 import os
 import sys
 import logging
-import shutil
 from utils import upload_file_to_s3_by_presign_url
 from utils import get_variable_from_json
-from utils import tar, cp
+from utils import tar
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ try:
     from dreambooth import shared as dreambooth_shared
     # from extensions.sd_dreambooth_extension.scripts.main import get_sd_models
     from dreambooth.ui_functions import load_model_params
-    from dreambooth.dataclasses.db_config import save_config, from_file
+    from dreambooth.dataclasses.db_config import save_config, from_file, Concept
 except Exception as e:
     logging.warning("[train]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
     dreambooth_available = False
@@ -33,10 +33,12 @@ except Exception as e:
     load_model_params = dummy_function
     save_config = dummy_function
     from_file = dummy_function
+    Concept = dummy_function
 
 base_model_folder = "models/sagemaker_dreambooth/"
 
-def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
+
+def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
         if api_gateway_url is None:
@@ -48,7 +50,11 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
         if status:
             url = f"{url}status={status}&"
         url = url.strip("&")
-        response = requests.get(url=url, headers={'x-api-key': get_variable_from_json('api_token')}).json()
+        encode_type = "utf-8"
+        response = requests.get(url=url, headers={
+            'x-api-key': get_variable_from_json('api_token'),
+            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+        }).json()
         model_list = []
         if "models" not in response:
             return []
@@ -74,13 +80,15 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete"):
         print(e)
         return []
 
-def get_cloud_db_model_name_list():
-    model_list = get_cloud_db_models()
+
+def get_cloud_db_model_name_list(username):
+    model_list = get_cloud_db_models(username=username)
     if model_list is None:
         model_name_list = []
     else:
         model_name_list = [model['model_name'] for model in model_list]
     return model_name_list
+
 
 def hack_db_config(db_config, db_config_file_path, model_name, data_list, class_data_list, local_model_name):
     for k in db_config:
@@ -97,6 +105,7 @@ def hack_db_config(db_config, db_config_file_path, model_name, data_list, class_
     with open(db_config_file_path, "w") as db_config_file_w:
         json.dump(db_config, db_config_file_w)
 
+
 def async_prepare_for_training_on_sagemaker(
         model_id: str,
         model_name: str,
@@ -105,7 +114,8 @@ def async_prepare_for_training_on_sagemaker(
         class_data_path_list: list,
         db_config_path: str,
         model_type: str,
-        training_instance_type: str
+        training_instance_type: str,
+        creator: str
 ):
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -161,16 +171,20 @@ def async_prepare_for_training_on_sagemaker(
                 "s3_class_data_path_list": new_class_data_list,
                 "training_instance_type": training_instance_type
             }
-        }
+        },
+        'creator': creator,
     }
     print("Post request for upload s3 presign url.")
-    response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+    response = requests.post(url=url, json=payload, headers={
+        'x-api-key': api_key
+    })
     response.raise_for_status()
     json_response = response.json()
     print(json_response)
     for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
+
 
 def wrap_load_model_params(model_name):
     origin_model_path = dreambooth_shared.dreambooth_models_path
@@ -179,9 +193,11 @@ def wrap_load_model_params(model_name):
     setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
     return resp
 
+
 def wrap_get_local_config(model_name):
     config = from_file(model_name)
     return config
+
 
 def wrap_get_cloud_config(model_name):
     origin_model_path = dreambooth_shared.dreambooth_models_path
@@ -190,17 +206,20 @@ def wrap_get_cloud_config(model_name):
     setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
     return config
 
+
 def wrap_save_config(model_name):
     origin_model_path = dreambooth_shared.dreambooth_models_path
     setattr(dreambooth_shared, 'dreambooth_models_path', base_model_folder)
     save_config(model_name)
     setattr(dreambooth_shared, 'dreambooth_models_path', origin_model_path)
 
+
 def cloud_train(
         local_model_name: str,
         train_model_name: str,
         db_use_txt2img=False,
-        training_instance_type: str= ""
+        training_instance_type: str= "",
+        creator: str = ""
 ):
     integral_check = False
     job_id = ""
@@ -226,7 +245,7 @@ def cloud_train(
             local_class_data_path_list.append(concept["class_data_dir"])
             data_path_list.append(concept["instance_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
             class_data_path_list.append(concept["class_data_dir"].replace("s3://", "").replace("/", "-").strip("-"))
-        model_list = get_cloud_db_models()
+        model_list = get_cloud_db_models(username=creator)
         new_db_config_path = os.path.join(base_model_folder, f"{train_model_name}/db_config_cloud.json")
         print(f"hack config from {local_model_name} to {new_db_config_path}")
         hack_db_config(config, new_db_config_path, train_model_name, data_path_list, class_data_path_list, local_model_name)
@@ -246,7 +265,7 @@ def cloud_train(
 
         response = async_prepare_for_training_on_sagemaker(
             model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
-            new_db_config_path, model_type, training_instance_type)
+            new_db_config_path, model_type, training_instance_type, creator)
         job_id = response["job"]["id"]
 
         payload = {
@@ -270,15 +289,27 @@ def cloud_train(
                 response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
                 print(f'training job failed but updated the job status {response.json()}')
 
-def async_cloud_train(*args):
+
+def async_cloud_train(db_model_name,
+                      cloud_db_model_name,
+                      db_use_txt2img,
+                      cloud_train_instance_type,
+                      pr: gr.Request
+                      ):
     upload_thread = threading.Thread(target=cloud_train,
-                                     args=args)
+                                     args=(db_model_name,
+                                           cloud_db_model_name,
+                                           db_use_txt2img,
+                                           cloud_train_instance_type,
+                                           pr.username
+                                           ))
     upload_thread.start()
-    train_job_list = get_train_job_list()
-    train_job_list.insert(0, ['', args[0], 'Initialed at Local', ''])
+    train_job_list = get_train_job_list(pr)
+    train_job_list.insert(0, ['', db_model_name, 'Initialed at Local', ''])
     return train_job_list
 
-def get_train_job_list():
+
+def get_train_job_list(pr: gr.Request):
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -289,9 +320,13 @@ def get_train_job_list():
     table = []
     try:
         url += "trains?types=Stable-diffusion&types=Lora"
-        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
+        encode_type = "utf-8"
+        response = requests.get(url=url, headers={
+            'x-api-key': api_key,
+            'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}',
+        }).json()
         if 'trainJobs' in response:
-            response['trainJobs'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+            response['trainJobs'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
             for trainJob in response['trainJobs']:
                 table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
     except requests.exceptions.RequestException as e:
@@ -299,7 +334,8 @@ def get_train_job_list():
 
     return table
 
-def get_sorted_cloud_dataset():
+
+def get_sorted_cloud_dataset(username):
     url = get_variable_from_json('api_gateway_url') + 'datasets?dataset_status=Enabled'
     api_key = get_variable_from_json('api_token')
     if not url or not api_key:
@@ -307,14 +343,19 @@ def get_sorted_cloud_dataset():
         return []
 
     try:
-        raw_response = requests.get(url=url, headers={'x-api-key': api_key})
+        encode_type = "utf-8"
+        raw_response = requests.get(url=url, headers={
+            'x-api-key': api_key,
+            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+        })
         raw_response.raise_for_status()
         response = raw_response.json()
-        response['datasets'].sort(key=lambda t:t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
+        response['datasets'].sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
         return response['datasets']
     except Exception as e:
         print(f"exception {e}")
         return []
+
 
 def wrap_load_params(self, params_dict):
     for key, value in params_dict.items():
@@ -328,5 +369,5 @@ def wrap_load_params(self, params_dict):
         if not self.is_valid:
             print(f"Invalid Dataset Directory: {self.instance_data_dir}")
 
-from dreambooth.dataclasses.db_concept import Concept
+
 Concept.load_params = wrap_load_params

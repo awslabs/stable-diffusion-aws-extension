@@ -22,13 +22,13 @@ class EndpointDeploymentJob:
     autoscaling: bool
     max_instance_number: str
     startTime: str
-    status: str
+    status: str = None # deprecated, but cant remove, avoid unexpected keyword argument
+    current_instance_count: str = None
     endTime: Optional[str] = None
     endpoint_status: Optional[str] = None
     endpoint_name: Optional[str] = None
     error: Optional[str] = None
     owner_group_or_role: Optional[List[str]] = None
-
 
 
 # a copy of aws_extensions.models.InvocationsRequest
