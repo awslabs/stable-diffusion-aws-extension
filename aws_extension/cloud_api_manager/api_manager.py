@@ -73,6 +73,7 @@ class CloudApiManager:
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
             "delete_endpoint_list": delete_endpoint_list,
+            "username": user_token,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"

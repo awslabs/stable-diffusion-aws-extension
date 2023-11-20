@@ -54,7 +54,7 @@ def upsert_user(raw_event, ctx):
                 ],
                 'creator': event.username
             }
-            
+
             @dataclass
             class MockContext:
                 aws_request_id: str
