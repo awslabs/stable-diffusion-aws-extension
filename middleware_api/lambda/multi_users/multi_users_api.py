@@ -235,8 +235,8 @@ def list_user(event, ctx):
             'error': 'no auth provided'
         }
 
-    requestor_name = event['x-auth']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+    requester_name = event['x-auth']['username']
+    requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     if not username:
         result = ddb_service.query_items(user_table,
                                          key_values={'kind': PARTITION_KEYS.user})
@@ -250,7 +250,7 @@ def list_user(event, ctx):
             'sort_key': username
         })
 
-    # generally speaking, the roles number are limited, so it's okay to load them into memory to process
+    # generally speaking, the number of roles is limited, so it's okay to load them into memory to process
     role_rows = ddb_service.query_items(user_table, key_values={
         'kind': PARTITION_KEYS.role
     })
@@ -279,13 +279,13 @@ def list_user(event, ctx):
         user_resp['permissions'] = list(user_resp['permissions'])
         user_resp['permissions'].sort()
 
-        # only show user to requestor if requestor has 'user:all' permission
-        # or requestor has 'user:list' permission and the user is created by the requestor
-        if 'user' in requestor_permissions and ('all' in requestor_permissions['user'] or
-                                                ('list' in requestor_permissions['user'] and
-                                                 user.creator == requestor_name)):
+        # only show user to requester if requester has 'user:all' permission
+        # or requester has 'user:list' permission and the user is created by the requestor
+        if 'user' in requester_permissions and ('all' in requester_permissions['user'] or
+                                                ('list' in requester_permissions['user'] and
+                                                 user.creator == requester_name)):
             result.append(user_resp)
-        elif user.sort_key == requestor_name:
+        elif user.sort_key == requester_name:
             result.append(user_resp)
 
     return {
