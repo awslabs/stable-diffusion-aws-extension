@@ -1,4 +1,5 @@
 from modules.api.models import *
+from typing import Optional, Any, List
 
 class InvocationsRequest(BaseModel):
     task: str
@@ -6,6 +7,8 @@ class InvocationsRequest(BaseModel):
     # checkpoint_info:Optional[dict]
     param_s3: str
     models: Optional[dict]
+    # sync files from s3 to local
+    sync_files: Optional[List[Any]] = None
     # txt2img_payload: Optional[StableDiffusionTxt2ImgProcessingAPI]
     # img2img_payload: Optional[StableDiffusionImg2ImgProcessingAPI]
     extras_single_payload: Optional[ExtrasSingleImageRequest]

@@ -33,6 +33,7 @@ class PrepareEvent:
     filters: dict[str, Any]
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
+    sync_files: Optional[List[Any]] = None
 
 
 # POST /inference/v2
@@ -71,6 +72,7 @@ def prepare_inference(raw_event, context):
                 'input_body_presign_url': presign_url,
                 'sagemaker_inference_endpoint_id': endpoint_id,
                 'sagemaker_inference_endpoint_name': endpoint_name,
+                'sync_files': event.sync_files,
             },
         )
         resp = {
@@ -167,6 +169,7 @@ def run_inference(event, _):
         task=inference_job.taskType,
         username="test",
         models=models,
+        sync_files=inference_job.params['sync_files'],
         param_s3=inference_job.params['input_body_s3']
     )
 

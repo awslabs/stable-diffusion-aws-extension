@@ -38,3 +38,4 @@ class InvocationsRequest:
     username: Optional[str]
     param_s3: str
     models: Optional[dict]
+    sync_files: Optional[List[Any]] = None

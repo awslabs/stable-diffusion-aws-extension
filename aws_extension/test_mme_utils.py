@@ -36,3 +36,14 @@ class MmeUtilsTest(TestCase):
         from mme_utils import checkspace_and_update_models
 
         checkspace_and_update_models(selected_models)
+
+    def test_checkspace_and_sync_files(self):
+        sync_files = [
+            {
+                "s3_file": "s3://xxxx/test.txt",
+                "local_file": "/tmp/test.txt",
+            }
+        ]
+        from mme_utils import checkspace_and_sync_files
+
+        checkspace_and_sync_files(sync_files)

@@ -1,3 +1,4 @@
+import hashlib
 import os
 import io
 import base64
@@ -5,6 +6,7 @@ from PIL import Image
 from utils import ModelsRef
 import subprocess
 import logging
+import boto3
 
 try:
     import modules.shared as shared
@@ -26,6 +28,37 @@ disk_path = '/tmp'
 #disk_path = '/'
 TAR_TYPE_FILE = 'application/x-tar'
 
+# Create an S3 client
+s3_client = boto3.client('s3')
+
+
+def checkspace_and_sync_files(sync_files):
+    if sync_files is None:
+        return
+    print(sync_files)
+    for sync_file in sync_files:
+        local_file = sync_file['local_file']
+        s3_file = sync_file['s3_file']
+        if not s3_file.startswith('s3://'):
+            raise Exception(f's3_file {s3_file} not startswith s3://')
+        # if local_file file does not exist, download it from s3
+        if not os.path.exists(local_file):
+            print(f'local_path {local_file} not exist, download from s3')
+            os.system(f'./tools/s5cmd cp {s3_file} {local_file}')
+        else:
+            bucket_name = s3_file.split('/')[2]
+            key_name = s3_file.split('/')[3]
+            head_object = s3_client.head_object(Bucket=bucket_name, Key=key_name)
+            # ETag is in double quotes, so we remove them
+            s3_file_etag = head_object['ETag'].strip('"')
+            # todo will check space and added limit
+            # content_length = head_object['ContentLength']
+            local_file_etag = hashlib.md5(open(local_file, 'rb').read()).hexdigest()
+            if local_file_etag != s3_file_etag:
+                print(f'local_path {local_file} etag not match, download from s3')
+                os.system(f'./tools/s5cmd cp {s3_file} {local_file}')
+            else:
+                print(f'local_path {local_file} etag match, skip download')
 
 def checkspace_and_update_models(selected_models):
     print(selected_models)

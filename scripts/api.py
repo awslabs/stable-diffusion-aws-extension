@@ -13,7 +13,7 @@ from modules import sd_models
 import modules.extras
 import sys
 from aws_extension.models import InvocationsRequest
-from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path
+from aws_extension.mme_utils import checkspace_and_update_models, download_model, models_path, checkspace_and_sync_files
 import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, \
     upload_folder_to_s3_by_tar, read_from_s3
@@ -230,6 +230,9 @@ def sagemaker_api(_, app: FastAPI):
             # logger.info(f"{req.merge_checkpoint_payload}")
             # logger.info(f"json is {json.loads(req.json())}")
             try:
+
+                checkspace_and_sync_files(req.sync_files)
+
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
                     checkspace_and_update_models(req.models)
