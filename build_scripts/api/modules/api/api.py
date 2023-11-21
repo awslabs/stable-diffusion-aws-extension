@@ -388,8 +388,11 @@ class Api:
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response
-            elif req.task == 'lcm_img2img':
+            elif req.task == 'lcm_lora_pipeline':
                 with self.queue_lock:
+                    sd_model_update_dict={}
+                    sd_model_update_dict['Stable-diffusion'] = req.models['Stable-diffusion']
+                    checkspace_and_update_models(sd_model_update_dict)
                     response = lcm_lora_pipeline(payload, req.models)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
