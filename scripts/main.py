@@ -22,6 +22,9 @@ from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
 from scripts import global_state
+from io import StringIO
+import csv
+from itertools import chain
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
@@ -106,9 +109,17 @@ class SageMakerUI(scripts.Script):
         'img2img_xyz_value_x_dropdown': None,
         'img2img_xyz_value_y_dropdown': None,
         'img2img_xyz_value_z_dropdown': None,
+        'txt2img_xyz_value_x_textbox': None,
+        'txt2img_xyz_value_y_textbox': None,
+        'txt2img_xyz_value_z_textbox': None,
+        'img2img_xyz_value_x_textbox': None,
+        'img2img_xyz_value_y_textbox': None,
+        'img2img_xyz_value_z_textbox': None,
         'xyz_grid_fill_x_tool_button': None,
         'xyz_grid_fill_y_tool_button': None,
         'xyz_grid_fill_z_tool_button': None,
+        'txt2img_xyz_csv_mode': None,
+        'img2img_xyz_csv_mode': None
     }
 
     xyz_set_components = {}
@@ -138,42 +149,59 @@ class SageMakerUI(scripts.Script):
                 self.img2img_generate_btn = component
 
         # refiner models
-        def decorator_xyz_type_update_function(func, change, choices):
-            def wrapper(*args, **kwargs):
-                if change and not getattr(func, "_decorated", False):
-                    setattr(func, "_decorated", True)
-                    new_choices = choices
-                    logger.debug("decorator_xyz_type_update_function was invoked")
-                    original_result = func(choices=new_choices)
-                    # original_result = comp.change(fn=new_fn, inputs=new_inputs, outputs=new_outputs)
-                    return original_result
-                else:
-                    original_result = func(*args, **kwargs)
-                    return original_result
+        def list_to_csv_string(data_list):
+            with StringIO() as o:
+                csv.writer(o).writerow(data_list)
+                return o.getvalue().strip()
 
-            return wrapper
+        def csv_string_to_list_strip(data_str):
+            return list(map(str.strip, chain.from_iterable(csv.reader(StringIO(data_str)))))
 
-        def _change_xyz_models(model_selected, model_state, xyz_type_component):
+        def _change_xyz_models(model_selected, model_state, xyz_type_component, axis_values_dropdown, axis_values,
+                               csv_mode):
             print(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             if not on_cloud:
                 return gr.skip()
-            #
+            choices = None
+            has_choices = choices is not None
             if xyz_type_component == XYZ_CHECKPOINT_INDEX or xyz_type_component == XYZ_REFINER_CHECKPOINT_INDEX:
                 sd_model_list = model_state['sd']
                 print(f"sd processed {sd_model_list}")
-                gr.update = decorator_xyz_type_update_function(gr.update, True, sd_model_list)
-                return decorator_xyz_type_update_function(gr.update, True, sd_model_list)
+                choices = sd_model_list
+                has_choices = choices is not None
+                # gr.update = decorator_xyz_type_update_function(gr.update, axis_values_dropdown, True, sd_model_list)
+                # return decorator_xyz_type_update_function(gr.update, xyz_value_component, True, sd_model_list)
             elif xyz_type_component == XYZ_VAE_INDEX:
                 vae_model_list = model_state['vae']
                 print(f"vae processed {vae_model_list}")
-                gr.update = decorator_xyz_type_update_function(gr.update, True, vae_model_list)
-                return decorator_xyz_type_update_function(gr.update, True, vae_model_list)
+                choices = vae_model_list
+                has_choices = choices is not None
+                # gr.update = decorator_xyz_type_update_function(gr.update, axis_values_dropdown, True, vae_model_list)
+                # return decorator_xyz_type_update_function(gr.update, xyz_value_component, True, vae_model_list)
             elif xyz_type_component == XYZ_CONTROLNET_INDEX:
                 controlnet_model_list = model_state['controlnet']
                 print(f"controlnet processed {controlnet_model_list}")
-                gr.update = decorator_xyz_type_update_function(gr.update, True, controlnet_model_list)
-                return decorator_xyz_type_update_function(gr.update, True, controlnet_model_list)
+                choices = controlnet_model_list
+                has_choices = choices is not None
+                # gr.update = decorator_xyz_type_update_function(gr.update, axis_values_dropdown, True, controlnet_model_list)
+                # return decorator_xyz_type_update_function(gr.update, xyz_value_component, True, controlnet_model_list)
+            # cece
+            if has_choices:
+                if csv_mode:
+                    if axis_values_dropdown:
+                        axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
+                        axis_values_dropdown = []
+                else:
+                    if axis_values:
+                        axis_values_dropdown = list(
+                            filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
+                        axis_values = ""
+
+            return (gr.Button.update(visible=has_choices),
+                    gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
+                    gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode,
+                              value=axis_values_dropdown))
 
         base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
         cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
@@ -218,13 +246,22 @@ class SageMakerUI(scripts.Script):
                 else:
                     self.xyz_components['img2img_xyz_value_z_dropdown'] = component
 
-        if type(component) is gr.Button:
-            if component_elem_id == 'xyz_grid_fill_x_tool_button':
-                self.xyz_components['xyz_grid_fill_x_tool_button'] = component
-            elif component_elem_id == 'xyz_grid_fill_y_tool_button':
-                self.xyz_components['xyz_grid_fill_y_tool_button'] = component
-            elif component_elem_id == 'xyz_grid_fill_z_tool_button':
-                self.xyz_components['xyz_grid_fill_z_tool_button'] = component
+        if type(component) is gr.Textbox:
+            if component_elem_id == f'script_{type_pre_str}_xyz_plot_x_values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_x_textbox'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_x_textbox'] = component
+            elif component_elem_id == f'script_{type_pre_str}_xyz_plot_y_values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_y_textbox'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_y_textbox'] = component
+            elif component_elem_id == f'script_{type_pre_str}_xyz_plot_z_values':
+                if self.is_txt2img:
+                    self.xyz_components['txt2img_xyz_value_z_textbox'] = component
+                else:
+                    self.xyz_components['img2img_xyz_value_z_textbox'] = component
 
         if type(component) is ToolButton:
             elem_id = ('txt2img_' if self.is_txt2img else 'img2img_') + 'checkpoint_refresh'
@@ -233,6 +270,19 @@ class SageMakerUI(scripts.Script):
                     self.txt2img_refiner_ckpt_refresh_btn = component
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_refresh_btn = component
+            elif component_elem_id == 'xyz_grid_fill_x_tool_button':
+                self.xyz_components['xyz_grid_fill_x_tool_button'] = component
+            elif component_elem_id == 'xyz_grid_fill_y_tool_button':
+                self.xyz_components['xyz_grid_fill_y_tool_button'] = component
+            elif component_elem_id == 'xyz_grid_fill_z_tool_button':
+                self.xyz_components['xyz_grid_fill_z_tool_button'] = component
+
+        if type(component) is gr.Checkbox and getattr(component, 'elem_id',
+                                                      '') == f'script_{type_pre_str}_xyz_plot_csv_mode':
+            if self.is_txt2img:
+                self.xyz_components['txt2img_xyz_csv_mode'] = component
+            else:
+                self.xyz_components['img2img_xyz_csv_mode'] = component
 
         # controlnet models and refresh button
         # controlnet refresh button type is not webui ToolButton, maybe there is no controlnet, so use str not class
@@ -276,24 +326,23 @@ class SageMakerUI(scripts.Script):
 
 
         if cn_list and base_model_component:
-            if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown']:
-                self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_x_dropdown']])
-                # self.xyz_components['txt2img_xyz_type_x_dropdown'].change = decorator_xyz_type_update_function(self.xyz_components['txt2img_xyz_type_x_dropdown'].change, True, fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_x_dropdown']])
+            if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
+                self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_x_dropdown'], self.xyz_components['txt2img_xyz_value_x_dropdown'], self.xyz_components['txt2img_xyz_value_x_textbox'], self.xyz_components['txt2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'], self.xyz_components['txt2img_xyz_value_x_textbox'], self.xyz_components['txt2img_xyz_value_x_dropdown']])
                 self.xyz_set_components['txt2img_xyz_type_x_dropdown'] = True
-            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown']:
-                self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_y_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_y_dropdown']])
+            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
+                self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_y_dropdown'], self.xyz_components['txt2img_xyz_value_y_dropdown'], self.xyz_components['txt2img_xyz_value_y_textbox'], self.xyz_components['txt2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_y_tool_button'], self.xyz_components['txt2img_xyz_value_y_textbox'], self.xyz_components['txt2img_xyz_value_y_dropdown']])
                 self.xyz_set_components['txt2img_xyz_type_y_dropdown'] = True
-            if 'txt2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_z_dropdown'] and self.xyz_components['txt2img_xyz_value_z_dropdown']:
-                self.xyz_components['txt2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[ base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_z_dropdown']], outputs=[self.xyz_components['txt2img_xyz_value_z_dropdown']])
+            if 'txt2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['txt2img_xyz_type_z_dropdown'] and self.xyz_components['txt2img_xyz_value_z_dropdown'] and self.xyz_components['txt2img_xyz_value_z_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_z_tool_button']:
+                self.xyz_components['txt2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['txt2img_xyz_type_z_dropdown'], self.xyz_components['txt2img_xyz_value_z_dropdown'], self.xyz_components['txt2img_xyz_value_z_textbox'], self.xyz_components['txt2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_z_tool_button'], self.xyz_components['txt2img_xyz_value_z_textbox'], self.xyz_components['txt2img_xyz_value_z_dropdown']])
                 self.xyz_set_components['txt2img_xyz_type_z_dropdown'] = True
-            if 'img2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_dropdown']:
-                self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_x_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_x_dropdown']])
+            if 'img2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_textbox'] and self.xyz_components['img2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
+                self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_x_dropdown'], self.xyz_components['img2img_xyz_value_x_dropdown'], self.xyz_components['img2img_xyz_value_x_textbox'], self.xyz_components['img2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'], self.xyz_components['img2img_xyz_value_x_textbox'], self.xyz_components['img2img_xyz_value_x_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_x_dropdown'] = True
-            if 'img2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_y_dropdown'] and self.xyz_components['img2img_xyz_value_y_dropdown']:
-                self.xyz_components['img2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models,inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_y_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_y_dropdown']])
+            if 'img2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_y_dropdown'] and self.xyz_components['img2img_xyz_value_y_dropdown'] and self.xyz_components['img2img_xyz_value_y_textbox'] and self.xyz_components['img2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
+                self.xyz_components['img2img_xyz_type_y_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_y_dropdown'], self.xyz_components['img2img_xyz_value_y_dropdown'], self.xyz_components['img2img_xyz_value_y_textbox'], self.xyz_components['img2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_y_tool_button'], self.xyz_components['img2img_xyz_value_y_textbox'], self.xyz_components['img2img_xyz_value_y_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_y_dropdown'] = True
-            if 'img2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_z_dropdown'] and self.xyz_components['img2img_xyz_value_z_dropdown']:
-                self.xyz_components['img2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_z_dropdown']], outputs=[self.xyz_components['img2img_xyz_value_z_dropdown']])
+            if 'img2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components['img2img_xyz_type_z_dropdown'] and self.xyz_components['img2img_xyz_value_z_dropdown'] and self.xyz_components['img2img_xyz_value_z_textbox'] and self.xyz_components['img2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_z_tool_button']:
+                self.xyz_components['img2img_xyz_type_z_dropdown'].change(fn=_change_xyz_models, inputs=[base_model_component, cn_list, self.xyz_components['img2img_xyz_type_z_dropdown'], self.xyz_components['img2img_xyz_value_z_dropdown'], self.xyz_components['img2img_xyz_value_z_textbox'], self.xyz_components['img2img_xyz_csv_mode']], outputs=[self.xyz_components['xyz_grid_fill_z_tool_button'], self.xyz_components['img2img_xyz_value_z_textbox'], self.xyz_components['img2img_xyz_value_z_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_z_dropdown'] = True
 
 
