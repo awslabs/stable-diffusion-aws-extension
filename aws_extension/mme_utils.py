@@ -1,4 +1,5 @@
 import hashlib
+import boto3
 import os
 import io
 import base64
@@ -6,7 +7,6 @@ from PIL import Image
 from utils import ModelsRef
 import subprocess
 import logging
-import boto3
 
 try:
     import modules.shared as shared
