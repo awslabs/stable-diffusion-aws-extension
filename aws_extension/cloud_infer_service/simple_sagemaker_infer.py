@@ -37,12 +37,6 @@ class SimpleSagemakerInfer(InferManager):
                 'createAt': datetime.now().timestamp(),
                 'creator': 'sd-webui'
             },
-            'sync_files': [
-                    {
-                        "s3_file": "s3://elonniu/test.txt",
-                        "local_file": "/tmp/test.txt",
-                    }
-                ]
         }
         logger.debug(payload)
         inference_id = None
