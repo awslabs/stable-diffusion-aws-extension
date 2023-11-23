@@ -33,7 +33,11 @@ Before attempting to access the webUI link in your browser, please ensure that t
 
 **Q: How can I update the solution?**
 
-Currently, it is recommended that users avoid frequently updating solutions by deploying stacks through CloudFormation. If updates are necessary, it is advised to uninstall the existing solution stack and then deploy a new stack based on the CloudFormation template.
+Currently, it is recommended that users avoid frequently updating solutions by deploying stacks through CloudFormation. If updates are necessary, it is advised to uninstall the existing solution stack and then deploy a new stack based on the CloudFormation template. For all the future deployments using CloudFormation, in the 'Bucket' field, enter the S3 bucket name used in the previous deployment, and choose 'yes' for 'DeployedBefore' to ensure a successful redeployment of CloudFormation.
+
+**Q: How can I change the login user on the same computer?**
+
+You can switch to another user account by opening a new incognito browser window and logging in with the alternate user credentials.
 
 
 
