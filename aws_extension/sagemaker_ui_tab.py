@@ -632,7 +632,6 @@ def sagemaker_endpoint_tab():
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
-
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
                 return gr.update(visible=True)

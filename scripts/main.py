@@ -22,14 +22,12 @@ from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
 from scripts import global_state
+from scripts.xyz_grid import do_nothing, format_nothing, list_to_csv_string, csv_string_to_list_strip
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
-
-global_username = None
-on_cloud = False
 
 
 def dummy_function(*args, **kwargs):
@@ -226,13 +224,75 @@ class SageMakerUI(scripts.Script):
                                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
                            ])
                 cn_radio_tuple[1] = True
+
+        # xyz components:
+        if type(component) == ToolButton \
+                and getattr(component, 'elem_id', None) == 'xyz_grid_fill_x_tool_button':
+            current_axis_options = [x for x in xyz_options if type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
+            original_click = component.click
+
+            def _click_event(fn, inputs, **kwarg):
+                if len(inputs) != 2:
+                    logger.error("there is an update of xyz")
+                    return original_click(fn=fn, inputs=inputs, **kwarg)
+
+                def wrapper(axis_type, csv_mode, pr: gr.Request):
+                    axis = current_axis_options[axis_type]
+                    # _ = fn(axis_type, csv_mode)
+                    if axis in sagemaker_xyz_extensions:
+                        return gr.update(), axis.choices(pr.username)
+
+                    if axis.choices:
+                        if csv_mode:
+                            return list_to_csv_string(axis.choices()), gr.update()
+                        else:
+                            return gr.update(), axis.choices()
+                    else:
+                        return gr.update(), gr.update()
+
+                original_click(fn=wrapper, inputs=inputs, **kwarg)
+
+            component.click = _click_event
+
+        if type(component) == gr.Dropdown \
+                and kwargs['label'] == 'X type':
+            current_axis_options = [x for x in xyz_options if type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
+            original_change = component.change
+
+            def _proxy_change(fn, inputs, **kwarg):
+                inputs.append(self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud)
+
+                def wrapper(axis_type, axis_values, axis_values_dropdown, csv_mode, cloud_models, pr: gr.Request):
+                    option = current_axis_options[axis_type]
+                    choices = current_axis_options[axis_type].choices
+                    has_choices = choices is not None
+
+                    if has_choices:
+                        if option in sagemaker_xyz_extensions and cloud_models != None_Option_For_On_Cloud_Model:
+                            choices = choices(pr.username)
+                        else:
+                            choices = choices()
+
+                        if csv_mode:
+                            if axis_values_dropdown:
+                                axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
+                                axis_values_dropdown = []
+                        else:
+                            if axis_values:
+                                axis_values_dropdown = list(filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
+                                axis_values = ""
+
+                    return (gr.Button.update(visible=has_choices), gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
+                            gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode, value=axis_values_dropdown))
+
+                original_change(fn=wrapper, inputs=inputs, **kwarg)
+
+            component.change = _proxy_change
+
         pass
 
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
-            global global_username
-            global_username = pr.username
-            global on_cloud
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
@@ -287,6 +347,42 @@ class SageMakerUI(scripts.Script):
         return sagemaker_inputs_components
 
 
+    original_selectable_scripts = {
+        'original_txt2img_selectable_scripts': None,
+        'original_img2img_selectable_scripts': None
+    }
+
+    def setup(self, p, *args):
+        on_docker = os.environ.get('ON_DOCKER', "false")
+        if on_docker == "true":
+            return
+
+        cache_name = f'original_{"txt2img" if self.is_img2img else "img2img"}_selectable_scripts'
+
+        # check if endpoint is inService
+        sd_model_on_cloud = args[0]
+        if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
+            if self.is_txt2img:
+                scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
+
+            if self.is_img2img:
+                scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
+            return
+
+        if self.is_txt2img:
+            if not self.original_selectable_scripts[cache_name]:
+                self.original_selectable_scripts[cache_name] = scripts.scripts_txt2img.selectable_scripts
+
+            selectable_scripts_size = len(scripts.scripts_txt2img.selectable_scripts)
+            scripts.scripts_txt2img.selectable_scripts = [None] * selectable_scripts_size
+
+        if self.is_img2img:
+            if not self.original_selectable_scripts[cache_name]:
+                self.original_selectable_scripts[cache_name] = scripts.scripts_img2img.selectable_scripts
+
+            selectable_scripts_size = len(scripts.scripts_img2img.selectable_scripts)
+            scripts.scripts_img2img.selectable_scripts = [None] * selectable_scripts_size
+
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
         if on_docker == "true":
@@ -319,8 +415,9 @@ class SageMakerUI(scripts.Script):
             api_param.mask = p.image_mask
 
         selected_script_index = p.script_args[0] - 1
-        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[
-            selected_script_index].name
+        scripts_cache_name = f'original_{"txt2img" if self.is_img2img else "img2img"}_selectable_scripts'
+        selected_script_name = None if selected_script_index < 0 else \
+            self.original_selectable_scripts[scripts_cache_name][selected_script_index].name
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
@@ -507,3 +604,49 @@ if os.environ.get('ON_DOCKER', "false") != "true":
 
 
     call_queue.queue_lock = ImprovedFiFoLock()
+
+
+# shared.demo.server_app.auth
+# AxisOption("Checkpoint name", str, )),
+
+def _list_models(origin_fn, cloud_fn):
+    def wrapper(*args):
+        if len(args) == 0:
+            return origin_fn()
+
+        username = args[0]
+        return cloud_fn(username)
+
+    return wrapper
+
+
+def _list_cloud_sd_models(username):
+    from aws_extension.cloud_api_manager.api_manager import api_manager
+    models = api_manager.list_models_on_cloud(username=username, user_token=username)
+    return list(set([model['name'] for model in models]))
+
+
+def find_module(module_names):
+    if isinstance(module_names, str):
+        module_names = [s.strip() for s in module_names.split(",")]
+    for data in scripts.scripts_data:
+        if data.script_class.__module__ in module_names and hasattr(data, "module"):
+            return data.module
+    return None
+
+
+xyz_grid = find_module("xyz_grid.py, xy_grid.py")
+txt2img_xyz_index = 0
+xyz_options = None
+
+sagemaker_xyz_extensions = []
+
+if xyz_grid:
+    sd_models_xyz_option = xyz_grid.axis_options[13]
+    sd_models_xyz_option.choices = _list_models(origin_fn=sd_models_xyz_option.choices, cloud_fn=_list_cloud_sd_models)
+    sd_models_xyz_option.confirm = lambda *args: ""
+    sd_models_xyz_option.format_value = format_nothing
+    sd_models_xyz_option.apply = lambda x: x
+    sagemaker_xyz_extensions.append(sd_models_xyz_option)
+    xyz_options = xyz_grid.axis_options
+
