@@ -169,10 +169,10 @@ class SageMakerUI(scripts.Script):
 
         def change_decorator(original_change, fn, inputs, outputs):
             def wrapper(*args, **kwargs):
-                print("Executing extra logic before original change method")
+                logger.info("Executing extra logic before original change method")
                 kwargs['fn'] = fn
                 result = original_change(*args, **kwargs)
-                print("Executing extra logic after original change method")
+                logger.info("Executing extra logic after original change method")
                 return result
 
             return wrapper
@@ -180,7 +180,7 @@ class SageMakerUI(scripts.Script):
         def select_axis(xyz_type_component, axis_values, axis_values_dropdown, csv_mode, model_selected, model_state):
             if not model_selected or not model_state:
                 return gr.skip(), gr.skip(), gr.skip()
-            print(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
+            logger.info(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             axis_options = shared.axis_options_aws
             from scripts.xyz_grid import AxisOption
@@ -196,17 +196,17 @@ class SageMakerUI(scripts.Script):
                     or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX \
                     or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX:
                 sd_model_list = model_state['sd']
-                print(f"sd processed {sd_model_list}")
+                logger.info(f"sd processed {sd_model_list}")
                 choices = sd_model_list
                 has_choices = choices is not None
             elif xyz_type_component == TXT_XYZ_VAE_INDEX or xyz_type_component == IMG_XYZ_VAE_INDEX:
                 vae_model_list = model_state['vae']
-                print(f"vae processed {vae_model_list}")
+                logger.info(f"vae processed {vae_model_list}")
                 choices = vae_model_list
                 has_choices = choices is not None
             elif xyz_type_component == TXT_XYZ_CONTROLNET_INDEX or xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
                 controlnet_model_list = model_state['controlnet']
-                print(f"controlnet processed {controlnet_model_list}")
+                logger.info(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
                 has_choices = choices is not None
             else:
@@ -244,15 +244,15 @@ class SageMakerUI(scripts.Script):
                         or axis_type == TXT_XYZ_REFINER_CHECKPOINT_INDEX \
                         or axis_type == IMG_XYZ_REFINER_CHECKPOINT_INDEX:
                     sd_model_list = model_state['sd']
-                    print(f"sd processed {sd_model_list}")
+                    logger.info(f"sd processed {sd_model_list}")
                     choices = sd_model_list
                 elif axis_type == TXT_XYZ_VAE_INDEX or axis_type == IMG_XYZ_VAE_INDEX:
                     vae_model_list = model_state['vae']
-                    print(f"vae processed {vae_model_list}")
+                    logger.info(f"vae processed {vae_model_list}")
                     choices = vae_model_list
                 elif axis_type == TXT_XYZ_CONTROLNET_INDEX or axis_type == IMG_XYZ_CONTROLNET_INDEX:
                     controlnet_model_list = model_state['controlnet']
-                    print(f"controlnet processed {controlnet_model_list}")
+                    logger.info(f"controlnet processed {controlnet_model_list}")
                     choices = controlnet_model_list
                 if csv_mode:
                     return list_to_csv_string(choices), gr.update()
