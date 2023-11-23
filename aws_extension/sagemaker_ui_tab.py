@@ -683,7 +683,6 @@ def _list_sagemaker_endpoints(username):
                 endpoint_roles,
                 endpoint['autoscaling'],
                 endpoint['endpoint_status'],
-                endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
                 endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
             ])
     return endpoints
@@ -693,8 +692,8 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'created time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str']
             )
 
         def list_ep_prev(paging, rq: gr.Request):
