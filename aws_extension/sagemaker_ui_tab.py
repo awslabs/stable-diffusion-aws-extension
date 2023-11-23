@@ -683,7 +683,8 @@ def _list_sagemaker_endpoints(username):
                 endpoint_roles,
                 endpoint['autoscaling'],
                 endpoint['endpoint_status'],
-                endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
+                # compatible with old endpoint, just once for each item
+                endpoint['current_instance_count'] if 'current_instance_count' in endpoint else "0",
                 endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
             ])
     return endpoints
