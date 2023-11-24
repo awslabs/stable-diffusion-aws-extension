@@ -17,9 +17,11 @@ export interface ListAllTrainJobsApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   trainTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllTrainJobsApi {
@@ -28,8 +30,10 @@ export class ListAllTrainJobsApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly trainTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -39,9 +43,11 @@ export class ListAllTrainJobsApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.trainTable = props.trainTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.authorizer = props.authorizer;
 
     this.listAllTrainJobsApi();
   }
@@ -58,7 +64,10 @@ export class ListAllTrainJobsApi {
         'dynamodb:Scan',
         'dynamodb:Query',
       ],
-      resources: [this.trainTable.tableArn],
+      resources: [
+         this.trainTable.tableArn,
+         this.multiUserTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -88,6 +97,7 @@ export class ListAllTrainJobsApi {
       environment: {
         TRAIN_TABLE: this.trainTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -110,6 +120,10 @@ export class ListAllTrainJobsApi {
               '        #end\n' +
               '        ]#if($foreach.hasNext),#end\n' +
               '      #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -118,6 +132,7 @@ export class ListAllTrainJobsApi {
     );
     this.router.addMethod(this.httpMethod, listTrainJobsIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.status': true,
         'method.request.querystring.types': true,

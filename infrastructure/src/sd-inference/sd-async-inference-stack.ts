@@ -27,14 +27,14 @@ import { Construct } from 'constructs';
 import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
+import { CreateSagemakerEndpointsApi, CreateSagemakerEndpointsApiProps } from './sagemaker-endpoints-create';
+import { DeleteSagemakerEndpointsApi, DeleteSagemakerEndpointsApiProps } from './sagemaker-endpoints-delete';
+import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from './sagemaker-endpoints-event';
 import { ListAllSagemakerEndpointsApi, ListAllSageMakerEndpointsApiProps } from './sagemaker-endpoints-listall';
 import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
-import { DeleteSagemakerEndpointsApi, DeleteSagemakerEndpointsApiProps } from './sagemaker-endpoints-delete';
-import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from './sagemaker-endpoints-event';
-import { CreateSagemakerEndpointsApi, CreateSagemakerEndpointsApiProps } from './sagemaker-endpoints-create';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -134,12 +134,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new SagemakerEndpointEvents(
-        this, 'sd-infer-endpoint-events',
+      this, 'sd-infer-endpoint-events',
         <SagemakerEndpointEventsProps>{
-            commonLayer: props.commonLayer,
-            endpointDeploymentTable: sd_endpoint_deployment_job_table,
-            multiUserTable: props.multiUserTable,
-            srcRoot: srcRoot,
+          commonLayer: props.commonLayer,
+          endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
+          srcRoot: srcRoot,
         },
     );
 
@@ -162,24 +162,24 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
 
-      new CreateSagemakerEndpointsApi(
-          this, 'sd-infer-v2-createEndpoint',
+    new CreateSagemakerEndpointsApi(
+      this, 'sd-infer-v2-createEndpoint',
           <CreateSagemakerEndpointsApiProps>{
-              router: props.routers.endpoints,
-              commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
-              multiUserTable: props.multiUserTable,
-              inferenceJobTable: sd_inference_job_table,
-              httpMethod: 'POST',
-              srcRoot: srcRoot,
-              authorizer: props.authorizer,
-              s3Bucket: props.s3_bucket,
-              userNotifySNS: props.snsTopic,
-              inferenceECRUrl: inferenceECR_url,
-              inferenceResultTopic: inference_result_topic,
-              inferenceResultErrorTopic: inference_result_error_topic,
+            router: props.routers.endpoints,
+            commonLayer: props.commonLayer,
+            endpointDeploymentTable: sd_endpoint_deployment_job_table,
+            multiUserTable: props.multiUserTable,
+            inferenceJobTable: sd_inference_job_table,
+            httpMethod: 'POST',
+            srcRoot: srcRoot,
+            authorizer: props.authorizer,
+            s3Bucket: props.s3_bucket,
+            userNotifySNS: props.snsTopic,
+            inferenceECRUrl: inferenceECR_url,
+            inferenceResultTopic: inference_result_topic,
+            inferenceResultErrorTopic: inference_result_error_topic,
           },
-      );
+    );
 
     const stepFunctionStack = new SagemakerInferenceStateMachine(this, <SagemakerInferenceProps>{
       snsTopic: inference_result_topic,

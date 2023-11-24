@@ -383,7 +383,7 @@ def download_images(image_urls: list, local_directory: str):
     return image_list
 
 
-def get_model_list_by_type(model_type):
+def get_model_list_by_type(model_type, username=""):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
@@ -403,7 +403,11 @@ def get_model_list_by_type(model_type):
         url += f"&types={model_type}"
 
     try:
-        response = requests.get(url=url, headers={'x-api-key': api_key})
+        encode_type = "utf-8"
+        response = requests.get(url=url, headers={
+            'x-api-key': api_key,
+            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+        })
         response.raise_for_status()
         json_response = response.json()
 
@@ -458,11 +462,11 @@ def get_checkpoints_by_type(model_type):
         checkpoint_list = list(checkpoint_dict.values())
         return checkpoint_list
     except Exception as e:
-        logging.error(f"Error fetching model list: {e}")
+        logging.error(f"Error fetching checkpoints list: {e}")
         return []
 
 
-def update_sd_checkpoints():
+def update_sd_checkpoints(username):
     model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
 
@@ -487,13 +491,18 @@ def get_controlnet_model_list():
     return get_model_list_by_type(model_type)
 
 
-def refresh_all_models():
+def refresh_all_models(username):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
+    encode_type = "utf-8"
+
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
-            response = requests.get(url=url, headers={'x-api-key': api_key})
+            response = requests.get(url=url, headers={
+                'x-api-key': api_key,
+                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+            })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")
             checkpoint_info[rp] = {}
@@ -521,7 +530,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                    vae_path]
 
     logger.info(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
-    refresh_all_models()
+    refresh_all_models(pr.username)
 
     for lp, rp in zip(local_paths, checkpoint_type):
         if lp == "" or not lp:
@@ -620,7 +629,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             logger.error(f"fail to upload model {lp}, error: {e}")
 
     logger.debug(f"Refresh checkpoints after upload...")
-    refresh_all_models()
+    refresh_all_models(pr.username)
     return log, None, None, None, None, None, None
 
 
@@ -1038,16 +1047,16 @@ def display_inference_result(inference_id: str):
     return image_list, info_text, plaintext_to_html(infotexts)
 
 
-def init_refresh_resource_list_from_cloud():
+def init_refresh_resource_list_from_cloud(username):
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         if not cloud_auth_manager.enableAuth:
             # api_manager.list_all_sagemaker_endpoints()
-            refresh_all_models()
-            get_texual_inversion_list()
-            get_lora_list()
-            get_hypernetwork_list()
-            get_controlnet_model_list()
+            refresh_all_models(username)
+            # get_texual_inversion_list()
+            # get_lora_list()
+            # get_hypernetwork_list()
+            # get_controlnet_model_list()
             # get_inference_job_list()
         else:
             logger.debug('auth enabled, not preload load any model')
@@ -1113,7 +1122,7 @@ def load_hypernetworks_models(username, user_token):
 
 
 def load_vae_list(username, user_token):
-    vae_model_on_cloud = ['Automatic', 'None']    
+    vae_model_on_cloud = ['Automatic', 'None']
     vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
 
     return vae_model_on_cloud
@@ -1135,7 +1144,7 @@ def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
 
-    init_refresh_resource_list_from_cloud()
+    # init_refresh_resource_list_from_cloud()
 
     with gr.Blocks() as sagemaker_inference_tab:
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
@@ -1173,9 +1182,9 @@ def create_ui(is_img2img):
                 global interrogate_deep_booru_on_cloud_button
 
                 interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                                                             elem_id="interrogate_clip_on_cloud_button")
+                                                             elem_id="interrogate_clip_on_cloud_button", visible=False)
                 interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                                                                   elem_id="interrogate_deep_booru_on_cloud_button")
+                                                                   elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
             with gr.Row():
                 gr.HTML('<br/>')
 
@@ -1397,27 +1406,24 @@ def create_ui(is_img2img):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
                 global primary_model_name
-                primary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                 elem_id="modelmerger_primary_model_name_in_the_cloud",
+                primary_model_name = gr.Dropdown(elem_id="modelmerger_primary_model_name_in_the_cloud",
                                                  label="Primary model (A) in the cloud")
-                create_refresh_button(primary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(primary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_A_in_the_cloud")
 
                 global secondary_model_name
-                secondary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                   elem_id="modelmerger_secondary_model_name_in_the_cloud",
+                secondary_model_name = gr.Dropdown(elem_id="modelmerger_secondary_model_name_in_the_cloud",
                                                    label="Secondary model (B) in the cloud")
-                create_refresh_button(secondary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(secondary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_B_in_the_cloud")
 
                 global tertiary_model_name
-                tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                  elem_id="modelmerger_tertiary_model_name_in_the_cloud",
+                tertiary_model_name = gr.Dropdown(elem_id="modelmerger_tertiary_model_name_in_the_cloud",
                                                   label="Tertiary model (C) in the cloud")
-                create_refresh_button(tertiary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(tertiary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_C_in_the_cloud")
             with gr.Row():
                 global modelmerger_merge_on_cloud

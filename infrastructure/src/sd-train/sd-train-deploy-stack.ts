@@ -1,5 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  aws_apigateway,
   aws_s3,
   aws_sns,
   NestedStack,
@@ -9,8 +10,8 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
-import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UploadCheckPointApi } from './checkpoint-upload-api';
+import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
 import { ListAllCheckPointsApi } from './chekpoints-listall-api';
 import { CreateDatasetApi } from './dataset-create-api';
@@ -36,6 +37,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -57,6 +59,9 @@ export class SdTrainDeployStack extends NestedStack {
     const commonLayer = props.commonLayer;
     const routers = props.routers;
 
+    const checkPointTable = props.database.checkpointTable;
+    const multiUserTable = props.database.multiUserTable;
+
     // GET /trains
     new ListAllTrainJobsApi(this, 'sdExtn-trains', {
       commonLayer: commonLayer,
@@ -65,9 +70,10 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
+      multiUserTable: multiUserTable,
+      authorizer: props.authorizer,
     });
-    const checkPointTable = props.database.checkpointTable;
-    const multiUserTable = props.database.multiUserTable;
+
     // POST /train
     new CreateTrainJobApi(this, 'sdExtn-createTrain', {
       checkpointTable: checkPointTable,
@@ -78,6 +84,7 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
+      multiUserTable: multiUserTable,
     });
 
     // PUT /train
@@ -103,6 +110,7 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       httpMethod: 'POST',
       checkpointTable: checkPointTable,
+      multiUserTable: multiUserTable,
     });
 
     // GET /models
@@ -110,8 +118,10 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
+      multiUserTable: multiUserTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
+      authorizer: props.authorizer,
     });
 
     // PUT /model
@@ -141,6 +151,7 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
+      authorizer: props.authorizer,
     });
 
     // POST /upload_checkpoint
@@ -185,6 +196,7 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.dataset,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      multiUserTable: multiUserTable,
     });
 
     // PUT /dataset
@@ -206,6 +218,8 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      authorizer: props.authorizer,
+      multiUserTable: multiUserTable,
     });
 
     // GET /dataset/{dataset_name}/data
@@ -213,10 +227,12 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,
+      multiUserTable: multiUserTable,
       httpMethod: 'GET',
       router: routers.dataset,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      authorizer: props.authorizer,
     });
   }
 }

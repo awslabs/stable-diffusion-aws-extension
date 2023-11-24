@@ -17,6 +17,7 @@ class DatasetItem:
     type: str             # data type
     data_status: DataStatus
     params: Optional[dict[str, Any]] = None
+    allowed_roles_or_users: Optional[list[str]] = None
 
     def __post_init__(self):
         if type(self.data_status) == str:
@@ -38,6 +39,8 @@ class DatasetInfo:
     timestamp: float
     dataset_status: DatasetStatus
     params: Optional[dict[str, Any]] = None
+    allowed_roles_or_users: Optional[list[str]] = None
+
 
     def __post_init__(self):
         if type(self.dataset_status) == str:

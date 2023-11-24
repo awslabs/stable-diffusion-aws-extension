@@ -155,6 +155,7 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
+      authorizer: authorizerLambda.authorizer,
       useExist: useExist,
     });
 
@@ -170,6 +171,7 @@ export class Middleware extends Stack {
       snsTopic: snsTopics.snsTopic,
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
+      authorizer: authorizerLambda.authorizer,
     });
 
     // Adding Outputs for apiGateway and s3Bucket

@@ -10,6 +10,7 @@ from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
 
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
@@ -26,6 +27,27 @@ async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarg
 test_connection_result = None
 api_gateway_url = None
 api_key = None
+user_table_size = 10
+
+all_resources = [
+    'user',
+    'sagemaker_endpoint',
+    'role',
+    'train',
+    'checkpoint',
+    'inference',
+]
+
+all_actions = [
+    'all',
+    'create',
+    'list'
+]
+
+all_permissions = []
+for resource in all_resources:
+    for action in all_actions:
+        all_permissions.append(f'{resource}:{action}')
 
 
 def on_ui_tabs():
@@ -36,10 +58,10 @@ def on_ui_tabs():
         with gr.Tab(label='API and User Settings'):
             with gr.Row():
                 with gr.Column(variant="panel", scale=1):
-                    config_form, disclaimer = api_setting_tab()
+                    config_form, disclaimer, whoami_label = api_setting_tab()
                 with gr.Column(variant="panel", scale=2, visible=False) as user_setting:
                     with gr.Tab(label='User Management'):
-                        user_settings_tab()
+                        _, user_table, user_role_dropdown = user_settings_tab()
                     with gr.Tab(label='Role Management'):
                         _, role_form, role_table = role_settings_tab()
         with gr.Tab(label='Cloud Models Management', variant='panel'):
@@ -76,7 +98,7 @@ def on_ui_tabs():
                         admin_visible = True
                     if permission == 'sagemaker_endpoint:all' or permission == 'sagemaker_endpoint:create':
                         sagemaker_create_visible = True
-                    if permission == 'user:all' or permission == 'role:all':
+                    if permission == 'user:all' or permission == 'role:all' or permission == 'role:create':
                         role_management_visible = True
 
             # todo: any initial values should from here
@@ -86,7 +108,11 @@ def on_ui_tabs():
                 gr.update(visible=sagemaker_create_visible), \
                 _list_models(req.username, req.username)[0:10], \
                 _list_sagemaker_endpoints(req.username), \
-                req.username
+                req.username, \
+                _list_users(req.username)[:user_table_size], \
+                _get_roles_table(req.username)[:10], \
+                gr.update(choices=roles(req.username)), \
+                f'Welcome, {req.username}'
 
         sagemaker_interface.load(ui_tab_setup, [], [
             config_form,
@@ -95,7 +121,11 @@ def on_ui_tabs():
             sagemaker_part,
             model_list_dataframe,
             endpoint_list_df,
-            invisible_user_name_for_ui
+            invisible_user_name_for_ui,
+            user_table,
+            role_table,
+            user_role_dropdown,
+            whoami_label
         ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
@@ -161,7 +191,9 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    return api_setting, disclaimer_tab
+    with gr.Row():
+        whoami_label = gr.Label(label='whoami')
+    return api_setting, disclaimer_tab, whoami_label
 
 
 def ui_user_settings_tab():
@@ -198,11 +230,11 @@ def user_settings_tab():
             username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
             pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
             with gr.Row():
-                user_roles_dropdown = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                                  label="User Role")
-                modules.ui.create_refresh_button(user_roles_dropdown, lambda: roles(cloud_auth_manager.username),
-                                                 lambda: {"choices": roles(cloud_auth_manager.username)},
-                                                 "refresh_create_user_roles")
+                user_roles_dropdown = gr.Dropdown(multiselect=True, label="User Role")
+                create_refresh_button_by_user(user_roles_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {"choices": roles(username)},
+                                              "refresh_create_user_roles")
             upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
             user_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
@@ -235,28 +267,11 @@ def user_settings_tab():
             delete_user_button.click(fn=delete_user, inputs=[username_textbox], outputs=[user_setting_out_textbox])
             # todo: need reload the user table
         with gr.Column(scale=2):
-            def list_users(limit=10, last_evaluated_key=""):
-                resp = api_manager.list_users(limit=limit,
-                                              last_evaluated_key=last_evaluated_key,
-                                              user_token=cloud_auth_manager.username)
-                if not resp['users']:
-                    return [], ''
-                table = []
-                for user in resp['users']:
-                    table.append([user['username'], ', '.join(user['roles']), user['creator']])
-
-                if 'last_evaluated_key' in resp:
-                    return table, resp['last_evaluated_key']
-                else:
-                    return table, None
-
-            page_zero, token_zero = list_users()
             gr.HTML(value="<b>Users Table</b>")
             user_table = gr.Dataframe(
                 headers=["name", "role", "created by"],
                 datatype=["str", "str", "str"],
-                max_rows=10,
-                value=page_zero
+                max_rows=user_table_size,
             )
 
             def choose_user(evt: gr.SelectData):
@@ -270,50 +285,33 @@ def user_settings_tab():
             user_table.select(fn=choose_user, inputs=[], outputs=[username_textbox, pwd_textbox, user_roles_dropdown])
 
             with gr.Row():
-                user_table_state = gr.State(value={
-                    'previous_lookup': {},
-                    'previous_token': '',
-                    'current_token': token_zero,
-                })
-
+                current_page = gr.State(0)
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
-                # next_page_btn = gr.Button(value="Next Page", variant='primary', visible=(token_zero is not None))
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
-                def next_page(table_token_state):
-                    user_list, new_token = list_users(last_evaluated_key=table_token_state['current_token'])
-                    table_token_state['previous_lookup'][json.dumps(table_token_state['current_token'])] = \
-                        table_token_state['previous_token']
-                    table_token_state['previous_token'] = table_token_state['current_token']
-                    table_token_state['current_token'] = new_token
-                    return user_list, table_token_state
+                def list_users_prev(paging, rq: gr.Request):
+                    if paging == 0:
+                        return gr.skip(), gr.skip()
 
-                next_page_btn.click(fn=next_page, inputs=[user_table_state], outputs=[user_table, user_table_state])
+                    result = _list_users(rq.username)
+                    start = paging - user_table_size if paging - user_table_size >= 0 else 0
+                    end = start + user_table_size
+                    return result[start: end], start
 
-                def previous_page(table_token_state):
-                    search_token = None
-                    if json.dumps(table_token_state['previous_token']) in table_token_state['previous_lookup']:
-                        search_token = table_token_state['previous_lookup'][
-                            json.dumps(table_token_state['previous_token'])]
-                    user_list, new_token = list_users(last_evaluated_key=search_token)
-                    table_token_state['previous_token'] = search_token
-                    table_token_state['current_token'] = new_token
-                    return user_list, table_token_state
+                def list_users_next(paging, rq: gr.Request):
+                    result = _list_users(rq.username)
+                    if paging >= len(result):
+                        return gr.skip(), gr.skip()
 
-                previous_page_btn.click(fn=previous_page, inputs=[user_table_state],
-                                        outputs=[user_table, user_table_state])
+                    start = paging + user_table_size if paging + user_table_size < len(result) else paging
+                    end = start + user_table_size if start + user_table_size < len(result) else len(result)
+                    return result[start: end], start
 
-                def update_user_table_button_state(token_state):
-                    show_previous = True if token_state['previous_token'] else False
-                    show_next = True if token_state['current_token'] else False
-                    return gr.update(visible=show_previous), gr.update(visible=True)
+                next_page_btn.click(fn=list_users_next, inputs=[current_page], outputs=[user_table, current_page])
+                previous_page_btn.click(fn=list_users_prev, inputs=[current_page],
+                                        outputs=[user_table, current_page])
 
-                user_table.change(fn=update_user_table_button_state,
-                                  inputs=[user_table_state],
-                                  outputs=[previous_page_btn, next_page_btn]
-                                  )
-
-    return user_tab
+    return user_tab, user_table, user_roles_dropdown
 
 
 def role_settings_tab():
@@ -323,23 +321,16 @@ def role_settings_tab():
             with gr.Column(scale=1) as upsert_role_form:
                 gr.HTML(value="<b>Update a Role</b>")
                 rolename_textbox = gr.Textbox(placeholder="Please enter Enter a role name", label="Role name")
-                permissions_dropdown = gr.Dropdown(choices=['user:all',
-                                                            'sagemaker_endpoint:all',
-                                                            'user:create',
-                                                            'role:all',
-                                                            'train:all',
-                                                            'checkpoint:all',
-                                                            'inference:all'
-                                                            ],
+                permissions_dropdown = gr.Dropdown(choices=all_permissions,
                                                    multiselect=True,
                                                    label="Role Permissions")
                 upsert_role_button = gr.Button(value="Upsert a Role", variant='primary')
                 role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
-                def upsert_role(role_name, permissions):
+                def upsert_role(role_name, permissions, pr: gr.Request):
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
-                                                       creator=cloud_auth_manager.username,
+                                                       creator=pr.username,
                                                        user_token=cloud_auth_manager.username)
                         if resp:
                             return f'Role upsert complete "{role_name}"'
@@ -351,24 +342,21 @@ def role_settings_tab():
                                          outputs=[role_setting_out_textbox]
                                          )
 
-            def get_roles_table():
-                resp = api_manager.list_roles(user_token=cloud_auth_manager.username)
-                table = []
-                for role in resp['roles']:
-                    table.append([role['role_name'], ', '.join(role['permissions']), role['creator']])
-                return table
-
-            with gr.Column(scale=2) as role_table:
+            with gr.Column(scale=2):
                 gr.HTML(value="<b>Role Table</b>")
-                user_table = gr.Dataframe(
+                role_table = gr.Dataframe(
                     headers=["role name", "permissions", "created by"],
                     datatype=["str", "str", "str"],
                     max_rows=10,
                     interactive=False,
-                    value=get_roles_table()
                 )
+
+                def refresh_roles(pr: gr.Request):
+                    return _get_roles_table(pr.username)
+
                 role_table_refresh_button = gr.Button(value='Refresh Role Table', variant='primary')
-                role_table_refresh_button.click(fn=get_roles_table, inputs=[], outputs=[user_table])
+                role_table_refresh_button.click(fn=refresh_roles, inputs=[], outputs=[role_table])
+
     return ui_role_setting, upsert_role_form, role_table
 
 
@@ -382,6 +370,26 @@ def _list_models(username, user_token):
         models.append([model['name'], model['type'], allowed,
                        'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
     return models
+
+
+def _get_roles_table(username):
+    resp = api_manager.list_roles(user_token=username)
+    table = []
+    for role in resp['roles']:
+        table.append([role['role_name'], ', '.join(role['permissions']), role['creator']])
+    return table
+
+
+def _list_users(username):
+    resp = api_manager.list_users(user_token=username)
+    if not resp['users']:
+        return []
+
+    table = []
+    for user in resp['users']:
+        table.append([user['username'], ', '.join(user['roles']), user['creator']])
+
+    return table
 
 
 def model_upload_tab():
@@ -555,24 +563,24 @@ def sagemaker_endpoint_tab():
 
         with gr.Column(variant="panel"):
             default_table = """
-<table style="width:100%; border: 1px solid black; border-collapse: collapse;">
-  <tr>
-    <th style="border: 1px solid grey; padding: 15px; text-align: left; background-color: #f2f2f2;" colspan="2">Default SageMaker Endpoint Config</th>
-  </tr>
-  <tr>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
-  </tr>
-  <tr>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
-  </tr>
-  <tr>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
-    <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
-  </tr>
-
-</table>
+                        <table style="width:100%; border: 1px solid black; border-collapse: collapse;">
+                          <tr>
+                            <th style="border: 1px solid grey; padding: 15px; text-align: left; background-color: #f2f2f2;" colspan="2">Default SageMaker Endpoint Config</th>
+                          </tr>
+                          <tr>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
+                          </tr>
+                          <tr>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
+                          </tr>
+                          <tr>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
+                          </tr>
+                        
+                        </table>
                     """
             gr.HTML(value=default_table)
             # instance_type_dropdown =
@@ -595,14 +603,31 @@ def sagemaker_endpoint_tab():
                 autoscaling_enabled = gr.Checkbox(
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
-
-            user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                     label="User Role")
+            with gr.Row():
+                user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                         label="User Role")
+                create_refresh_button_by_user(
+                    user_roles,
+                    lambda *args: None,
+                    lambda username: {
+                        'choices': roles(username)
+                    },
+                    'refresh_sagemaker_user_roles'
+                )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_buttion")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
-            sagemaker_deploy_button.click(api_manager.sagemaker_deploy,
-                                          _js="deploy_endpoint",
+
+            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, pr: gr.Request):
+                return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
+                                                    instance_type=instance_type,
+                                                    initial_instance_count=scale_count,
+                                                    autoscaling_enabled=autoscale,
+                                                    user_roles=target_user_roles,
+                                                    user_token=pr.username
+                                                    )
+
+            sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
@@ -647,7 +672,6 @@ def _list_sagemaker_endpoints(username):
     resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
     endpoints = []
     for endpoint in resp:
-        endpoint_roles = ''
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
@@ -669,6 +693,33 @@ def list_sagemaker_endpoints_tab():
             headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
             datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
             )
+
+        def list_ep_prev(paging, rq: gr.Request):
+            if paging == 0:
+                return gr.skip(), gr.skip()
+
+            result = _list_sagemaker_endpoints(rq.username)
+            start = paging - 10 if paging - 10 >= 0 else 0
+            end = start + 10
+            return result[start: end], start
+
+        def list_ep_next(paging, rq: gr.Request):
+            result = _list_sagemaker_endpoints(rq.username)
+            if paging >= len(result):
+                return gr.skip(), gr.skip()
+
+            start = paging + 10 if paging + 10 < len(result) else paging
+            end = start + 10 if start + 10 < len(result) else len(result)
+            return result[start: end], start
+
+        current_page = gr.State(0)
+
+        with gr.Row():
+            ep_list_prev_btn = gr.Button(value='Previous')
+            ep_list_next_btn = gr.Button(value='Next')
+
+        ep_list_next_btn.click(fn=list_ep_next, inputs=[current_page], outputs=[model_list_df, current_page])
+        ep_list_prev_btn.click(fn=list_ep_prev, inputs=[current_page], outputs=[model_list_df, current_page])
         return model_list_df
 
 
@@ -686,7 +737,7 @@ def dataset_tab():
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
-            def create_dataset(files, dataset_name, dataset_desc):
+            def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
                 logger.debug(dataset_name)
                 dataset_content = []
                 file_path_lookup = {}
@@ -707,7 +758,8 @@ def dataset_tab():
                     "content": dataset_content,
                     "params": {
                         "description": dataset_desc
-                    }
+                    },
+                    "creator": pr.username
                 }
 
                 url = get_variable_from_json('api_gateway_url') + '/dataset'
@@ -761,31 +813,18 @@ def dataset_tab():
             gr.HTML(value="<u><b>Browse a Dataset</b></u>")
 
             with gr.Row():
-                global cloud_datasets
-                cloud_datasets = get_sorted_cloud_dataset()
-
                 cloud_dataset_name = gr.Dropdown(
                     label="Dataset From Cloud",
-                    choices=[d['datasetName'] for d in cloud_datasets],
                     elem_id="cloud_dataset_dropdown",
-                    type="index",
-                    info="select datasets from cloud"
+                    info="choose datasets from cloud"
                 )
 
-                def refresh_datasets():
-                    global cloud_datasets
-                    cloud_datasets = get_sorted_cloud_dataset()
-                    return cloud_datasets
-
-                def refresh_datasets_dropdown():
-                    global cloud_datasets
-                    cloud_datasets = get_sorted_cloud_dataset()
-                    return {"choices": [d['datasetName'] for d in cloud_datasets]}
-
-                create_refresh_button(
+                create_refresh_button_by_user(
                     cloud_dataset_name,
-                    refresh_datasets,
-                    refresh_datasets_dropdown,
+                    lambda *args: None,
+                    lambda username: {
+                        'choices': [ds['datasetName'] for ds in get_sorted_cloud_dataset(username)]
+                    },
                     "refresh_cloud_dataset",
                 )
             with gr.Row():
@@ -798,17 +837,11 @@ def dataset_tab():
                     label="Dataset images", show_label=False, elem_id="gallery",
                 ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
 
-                def get_results_from_datasets(dataset_idx):
-                    ds = cloud_datasets[dataset_idx]
-
-                    url = f"{get_variable_from_json('api_gateway_url')}/dataset/{ds['datasetName']}/data"
-                    api_key = get_variable_from_json('api_token')
-                    raw_response = requests.get(url=url, headers={'x-api-key': api_key})
-                    raw_response.raise_for_status()
-                    # todo: the s3 presign url is not ready as content type to img
+                def get_results_from_datasets(dataset_name, pr: gr.Request):
+                    resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)
                     dataset_items = [(item['preview_url'], item['key']) for item in
-                                     raw_response.json()['data']]
-                    return ds['s3'], ds['description'], dataset_items
+                                     resp['data']]
+                    return resp['s3'], resp['description'], dataset_items
 
                 cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name],
                                           outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
@@ -828,7 +861,7 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     api_gateway_url = get_variable_from_json('api_gateway_url')
     global api_key
     api_key = get_variable_from_json('api_token')
-    sagemaker_ui.init_refresh_resource_list_from_cloud()
+    sagemaker_ui.init_refresh_resource_list_from_cloud(username)
     try:
         if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
                                        initial=initial, user_token=username):

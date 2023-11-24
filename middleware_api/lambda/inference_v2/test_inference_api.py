@@ -148,9 +148,9 @@ class InferenceApiTest(TestCase):
         resp = list_all_sagemaker_endpoints({
             'queryStringParameters':
                 {
-                    'username': 'admin'
+                    'username': 'spiderman'
                 },
-            'x-auth': {'username': '', 'role': ''}}, {})
+            'x-auth': {'username': 'spiderman', 'role': ''}}, {})
 
         print(resp)
 

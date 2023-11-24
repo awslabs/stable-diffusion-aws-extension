@@ -105,6 +105,10 @@ export class UserDeleteApi {
               '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
               '        #if($foreach.hasNext),#end\n' +
               '        #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
