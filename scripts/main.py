@@ -191,20 +191,34 @@ class SageMakerUI(scripts.Script):
             if not on_cloud:
                 if has_choices:
                     choices = choices()
-            elif xyz_type_component == TXT_XYZ_CHECKPOINT_INDEX \
-                    or xyz_type_component == IMG_XYZ_CHECKPOINT_INDEX \
-                    or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX \
-                    or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX:
+            elif self.is_txt2img and (xyz_type_component == TXT_XYZ_CHECKPOINT_INDEX
+                                      or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
                 sd_model_list = model_state['sd']
                 logger.info(f"sd processed {sd_model_list}")
                 choices = sd_model_list
                 has_choices = choices is not None
-            elif xyz_type_component == TXT_XYZ_VAE_INDEX or xyz_type_component == IMG_XYZ_VAE_INDEX:
+            elif not self.is_txt2img and (xyz_type_component == IMG_XYZ_CHECKPOINT_INDEX
+                                          or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
+                sd_model_list = model_state['sd']
+                logger.info(f"sd processed {sd_model_list}")
+                choices = sd_model_list
+                has_choices = choices is not None
+            elif self.is_txt2img and xyz_type_component == TXT_XYZ_VAE_INDEX:
                 vae_model_list = model_state['vae']
                 logger.info(f"vae processed {vae_model_list}")
                 choices = vae_model_list
                 has_choices = choices is not None
-            elif xyz_type_component == TXT_XYZ_CONTROLNET_INDEX or xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
+            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_VAE_INDEX:
+                vae_model_list = model_state['vae']
+                logger.info(f"vae processed {vae_model_list}")
+                choices = vae_model_list
+                has_choices = choices is not None
+            elif self.is_txt2img and xyz_type_component == TXT_XYZ_CONTROLNET_INDEX:
+                controlnet_model_list = model_state['controlnet']
+                logger.info(f"controlnet processed {controlnet_model_list}")
+                choices = controlnet_model_list
+                has_choices = choices is not None
+            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
                 controlnet_model_list = model_state['controlnet']
                 logger.info(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
@@ -239,18 +253,29 @@ class SageMakerUI(scripts.Script):
             if choices:
                 if not on_cloud:
                     choices = choices()
-                elif axis_type == TXT_XYZ_CHECKPOINT_INDEX \
-                        or axis_type == IMG_XYZ_CHECKPOINT_INDEX \
-                        or axis_type == TXT_XYZ_REFINER_CHECKPOINT_INDEX \
-                        or axis_type == IMG_XYZ_REFINER_CHECKPOINT_INDEX:
+                elif self.is_txt2img and (axis_type == TXT_XYZ_CHECKPOINT_INDEX
+                                         or axis_type == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
                     sd_model_list = model_state['sd']
                     logger.info(f"sd processed {sd_model_list}")
                     choices = sd_model_list
-                elif axis_type == TXT_XYZ_VAE_INDEX or axis_type == IMG_XYZ_VAE_INDEX:
+                elif not self.is_txt2img and (axis_type == IMG_XYZ_CHECKPOINT_INDEX
+                                     or axis_type == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
+                    sd_model_list = model_state['sd']
+                    logger.info(f"sd processed {sd_model_list}")
+                    choices = sd_model_list
+                elif self.is_txt2img and axis_type == TXT_XYZ_VAE_INDEX:
                     vae_model_list = model_state['vae']
                     logger.info(f"vae processed {vae_model_list}")
                     choices = vae_model_list
-                elif axis_type == TXT_XYZ_CONTROLNET_INDEX or axis_type == IMG_XYZ_CONTROLNET_INDEX:
+                elif not self.is_txt2img and axis_type == IMG_XYZ_VAE_INDEX:
+                    vae_model_list = model_state['vae']
+                    logger.info(f"vae processed {vae_model_list}")
+                    choices = vae_model_list
+                elif self.is_txt2img and axis_type == TXT_XYZ_CONTROLNET_INDEX or axis_type == IMG_XYZ_CONTROLNET_INDEX:
+                    controlnet_model_list = model_state['controlnet']
+                    logger.info(f"controlnet processed {controlnet_model_list}")
+                    choices = controlnet_model_list
+                elif not self.is_txt2img and axis_type == IMG_XYZ_CONTROLNET_INDEX:
                     controlnet_model_list = model_state['controlnet']
                     logger.info(f"controlnet processed {controlnet_model_list}")
                     choices = controlnet_model_list
@@ -329,17 +354,17 @@ class SageMakerUI(scripts.Script):
                 if self.is_img2img:
                     self.img2img_refiner_ckpt_refresh_btn = component
             elif component_elem_id == 'xyz_grid_fill_x_tool_button':
-                if 'xyz_grid_fill_x_tool_button' not in self.xyz_components:
+                if self.is_txt2img:
                     self.xyz_components['xyz_grid_fill_x_tool_button'] = component
                 else:
                     self.xyz_components['img_xyz_grid_fill_x_tool_button'] = component
             elif component_elem_id == 'xyz_grid_fill_y_tool_button':
-                if 'xyz_grid_fill_y_tool_button' not in self.xyz_components:
+                if self.is_txt2img:
                     self.xyz_components['xyz_grid_fill_y_tool_button'] = component
                 else:
                     self.xyz_components['img_xyz_grid_fill_y_tool_button'] = component
             elif component_elem_id == 'xyz_grid_fill_z_tool_button':
-                if 'xyz_grid_fill_z_tool_button' not in self.xyz_components:
+                if self.is_txt2img:
                     self.xyz_components['xyz_grid_fill_z_tool_button'] = component
                 else:
                     self.xyz_components['img_xyz_grid_fill_z_tool_button'] = component
