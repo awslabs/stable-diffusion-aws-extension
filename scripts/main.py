@@ -286,6 +286,14 @@ class SageMakerUI(scripts.Script):
             else:
                 return gr.update(), gr.update()
 
+        def change_choice_mode(csv_mode, x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown, z_type, z_values, z_values_dropdown, model_selected, model_state):
+            if not model_selected or not model_state:
+                return gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip()
+            _fill_x_button, _x_values, _x_values_dropdown = select_axis(x_type, x_values, x_values_dropdown, csv_mode, model_selected, model_state)
+            _fill_y_button, _y_values, _y_values_dropdown = select_axis(y_type, y_values, y_values_dropdown, csv_mode, model_selected, model_state)
+            _fill_z_button, _z_values, _z_values_dropdown = select_axis(z_type, z_values, z_values_dropdown, csv_mode, model_selected, model_state)
+            return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
+
         base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
         cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
         component_elem_id = getattr(component, 'elem_id', '')
@@ -421,6 +429,15 @@ class SageMakerUI(scripts.Script):
                 'txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and \
                     self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components[
                 'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
+
+                self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
+                    self.xyz_components['txt2img_xyz_type_x_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_x_textbox'],
+                    self.xyz_components['txt2img_xyz_value_x_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
+                                                             self.xyz_components['txt2img_xyz_value_x_textbox'],
+                                                             self.xyz_components['txt2img_xyz_value_x_dropdown']])
+
                 self.xyz_components['txt2img_xyz_type_x_dropdown'].change = change_decorator(
                     self.xyz_components['txt2img_xyz_type_x_dropdown'].change, fn=select_axis,
                     inputs=[self.xyz_components['txt2img_xyz_type_x_dropdown'],
@@ -430,13 +447,15 @@ class SageMakerUI(scripts.Script):
                     outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
                              self.xyz_components['txt2img_xyz_value_x_textbox'],
                              self.xyz_components['txt2img_xyz_value_x_dropdown']])
-                self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
-                    self.xyz_components['txt2img_xyz_type_x_dropdown'],
-                    self.xyz_components['txt2img_xyz_value_x_textbox'],
-                    self.xyz_components['txt2img_xyz_value_x_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
-                                                             self.xyz_components['txt2img_xyz_value_x_textbox'],
-                                                             self.xyz_components['txt2img_xyz_value_x_dropdown']])
+
+                self.xyz_components['xyz_grid_fill_x_tool_button'].click(fn=fill, inputs=[
+                    self.xyz_components['txt2img_xyz_type_x_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list],
+                                                                         outputs=[self.xyz_components[
+                                                                                      'txt2img_xyz_value_x_textbox'],
+                                                                                  self.xyz_components[
+                                                                                      'txt2img_xyz_value_x_dropdown']])
+
                 self.xyz_components['xyz_grid_fill_x_tool_button'].click = change_decorator(
                     self.xyz_components['xyz_grid_fill_x_tool_button'].click, fn=fill, inputs=[
                         self.xyz_components['txt2img_xyz_type_x_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
@@ -445,18 +464,62 @@ class SageMakerUI(scripts.Script):
                                  'txt2img_xyz_value_x_textbox'],
                              self.xyz_components[
                                  'txt2img_xyz_value_x_dropdown']])
-                self.xyz_components['xyz_grid_fill_x_tool_button'].click(fn=fill, inputs=[
-                    self.xyz_components['txt2img_xyz_type_x_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list],
-                                                                         outputs=[self.xyz_components[
-                                                                                      'txt2img_xyz_value_x_textbox'],
-                                                                                  self.xyz_components[
-                                                                                      'txt2img_xyz_value_x_dropdown']])
+
+                self.xyz_components['txt2img_xyz_csv_mode'].change(fn=change_choice_mode, inputs=[
+                    self.xyz_components['txt2img_xyz_csv_mode'], self.xyz_components['txt2img_xyz_type_x_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_x_textbox'],
+                    self.xyz_components['txt2img_xyz_value_x_dropdown'],
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_y_textbox'],
+                    self.xyz_components['txt2img_xyz_value_y_dropdown'],
+                    self.xyz_components['txt2img_xyz_type_z_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_z_textbox'],
+                    self.xyz_components['txt2img_xyz_value_z_dropdown'], base_model_component, cn_list
+                ], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
+                            self.xyz_components['txt2img_xyz_value_x_textbox'],
+                            self.xyz_components['txt2img_xyz_value_x_dropdown'],
+                            self.xyz_components['xyz_grid_fill_y_tool_button'],
+                            self.xyz_components['txt2img_xyz_value_y_textbox'],
+                            self.xyz_components['txt2img_xyz_value_y_dropdown'],
+                            self.xyz_components['xyz_grid_fill_z_tool_button'],
+                            self.xyz_components['txt2img_xyz_value_z_textbox'],
+                            self.xyz_components['txt2img_xyz_value_z_dropdown']])
+
+                self.xyz_components['txt2img_xyz_csv_mode'].change = change_decorator(
+                    self.xyz_components['txt2img_xyz_csv_mode'].change, fn=change_choice_mode, inputs=[
+                        self.xyz_components['txt2img_xyz_csv_mode'], self.xyz_components['txt2img_xyz_type_x_dropdown'],
+                        self.xyz_components['txt2img_xyz_value_x_textbox'],
+                        self.xyz_components['txt2img_xyz_value_x_dropdown'],
+                        self.xyz_components['txt2img_xyz_type_y_dropdown'],
+                        self.xyz_components['txt2img_xyz_value_y_textbox'],
+                        self.xyz_components['txt2img_xyz_value_y_dropdown'],
+                        self.xyz_components['txt2img_xyz_type_z_dropdown'],
+                        self.xyz_components['txt2img_xyz_value_z_textbox'],
+                        self.xyz_components['txt2img_xyz_value_z_dropdown'], base_model_component, cn_list
+                    ], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
+                                self.xyz_components['txt2img_xyz_value_x_textbox'],
+                                self.xyz_components['txt2img_xyz_value_x_dropdown'],
+                                self.xyz_components['xyz_grid_fill_y_tool_button'],
+                                self.xyz_components['txt2img_xyz_value_y_textbox'],
+                                self.xyz_components['txt2img_xyz_value_y_dropdown'],
+                                self.xyz_components['xyz_grid_fill_z_tool_button'],
+                                self.xyz_components['txt2img_xyz_value_z_textbox'],
+                                self.xyz_components['txt2img_xyz_value_z_dropdown']])
+
                 self.xyz_set_components['txt2img_xyz_type_x_dropdown'] = True
             if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
                     self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components[
                 'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
+
+                self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=select_axis, inputs=[
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_y_textbox'],
+                    self.xyz_components['txt2img_xyz_value_y_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_y_tool_button'],
+                                                             self.xyz_components['txt2img_xyz_value_y_textbox'],
+                                                             self.xyz_components['txt2img_xyz_value_y_dropdown']])
+
                 self.xyz_components['txt2img_xyz_type_y_dropdown'].change = change_decorator(
                     self.xyz_components['txt2img_xyz_type_y_dropdown'].change, fn=select_axis,
                     inputs=[self.xyz_components['txt2img_xyz_type_y_dropdown'],
@@ -466,13 +529,15 @@ class SageMakerUI(scripts.Script):
                     outputs=[self.xyz_components['xyz_grid_fill_y_tool_button'],
                              self.xyz_components['txt2img_xyz_value_y_textbox'],
                              self.xyz_components['txt2img_xyz_value_y_dropdown']])
-                self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=select_axis, inputs=[
-                    self.xyz_components['txt2img_xyz_type_y_dropdown'],
-                    self.xyz_components['txt2img_xyz_value_y_textbox'],
-                    self.xyz_components['txt2img_xyz_value_y_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_y_tool_button'],
-                                                             self.xyz_components['txt2img_xyz_value_y_textbox'],
-                                                             self.xyz_components['txt2img_xyz_value_y_dropdown']])
+
+                self.xyz_components['xyz_grid_fill_y_tool_button'].click(fn=fill, inputs=[
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list],
+                                                                         outputs=[self.xyz_components[
+                                                                                      'txt2img_xyz_value_y_textbox'],
+                                                                                  self.xyz_components[
+                                                                                      'txt2img_xyz_value_y_dropdown']])
+
                 self.xyz_components['xyz_grid_fill_y_tool_button'].click = change_decorator(
                     self.xyz_components['xyz_grid_fill_y_tool_button'].click, fn=fill, inputs=[
                         self.xyz_components['txt2img_xyz_type_y_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
@@ -481,18 +546,20 @@ class SageMakerUI(scripts.Script):
                                  'txt2img_xyz_value_y_textbox'],
                              self.xyz_components[
                                  'txt2img_xyz_value_y_dropdown']])
-                self.xyz_components['xyz_grid_fill_y_tool_button'].click(fn=fill, inputs=[
-                    self.xyz_components['txt2img_xyz_type_y_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list],
-                                                                         outputs=[self.xyz_components[
-                                                                                      'txt2img_xyz_value_y_textbox'],
-                                                                                  self.xyz_components[
-                                                                                      'txt2img_xyz_value_y_dropdown']])
+
                 self.xyz_set_components['txt2img_xyz_type_y_dropdown'] = True
             if 'txt2img_xyz_type_z_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_z_dropdown'] and self.xyz_components['txt2img_xyz_value_z_dropdown'] and \
                     self.xyz_components['txt2img_xyz_value_z_textbox'] and self.xyz_components[
                 'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_z_tool_button']:
+                self.xyz_components['txt2img_xyz_type_z_dropdown'].change(fn=select_axis, inputs=[
+                    self.xyz_components['txt2img_xyz_type_z_dropdown'],
+                    self.xyz_components['txt2img_xyz_value_z_textbox'],
+                    self.xyz_components['txt2img_xyz_value_z_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_z_tool_button'],
+                                                             self.xyz_components['txt2img_xyz_value_z_textbox'],
+                                                             self.xyz_components['txt2img_xyz_value_z_dropdown']])
+
                 self.xyz_components['txt2img_xyz_type_z_dropdown'].change = change_decorator(
                     self.xyz_components['txt2img_xyz_type_z_dropdown'].change, fn=select_axis,
                     inputs=[self.xyz_components['txt2img_xyz_type_z_dropdown'],
@@ -502,13 +569,15 @@ class SageMakerUI(scripts.Script):
                     outputs=[self.xyz_components['xyz_grid_fill_z_tool_button'],
                              self.xyz_components['txt2img_xyz_value_z_textbox'],
                              self.xyz_components['txt2img_xyz_value_z_dropdown']])
-                self.xyz_components['txt2img_xyz_type_z_dropdown'].change(fn=select_axis, inputs=[
-                    self.xyz_components['txt2img_xyz_type_z_dropdown'],
-                    self.xyz_components['txt2img_xyz_value_z_textbox'],
-                    self.xyz_components['txt2img_xyz_value_z_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_z_tool_button'],
-                                                             self.xyz_components['txt2img_xyz_value_z_textbox'],
-                                                             self.xyz_components['txt2img_xyz_value_z_dropdown']])
+
+                self.xyz_components['xyz_grid_fill_z_tool_button'].click(fn=fill, inputs=[
+                    self.xyz_components['txt2img_xyz_type_z_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
+                    base_model_component, cn_list],
+                                                                         outputs=[self.xyz_components[
+                                                                                      'txt2img_xyz_value_z_textbox'],
+                                                                                  self.xyz_components[
+                                                                                      'txt2img_xyz_value_z_dropdown']])
+
                 self.xyz_components['xyz_grid_fill_z_tool_button'].click = change_decorator(
                     self.xyz_components['xyz_grid_fill_z_tool_button'].click, fn=fill, inputs=[
                         self.xyz_components['txt2img_xyz_type_z_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
@@ -517,18 +586,21 @@ class SageMakerUI(scripts.Script):
                                  'txt2img_xyz_value_z_textbox'],
                              self.xyz_components[
                                  'txt2img_xyz_value_z_dropdown']])
-                self.xyz_components['xyz_grid_fill_z_tool_button'].click(fn=fill, inputs=[
-                    self.xyz_components['txt2img_xyz_type_z_dropdown'], self.xyz_components['txt2img_xyz_csv_mode'],
-                    base_model_component, cn_list],
-                                                                         outputs=[self.xyz_components[
-                                                                                      'txt2img_xyz_value_z_textbox'],
-                                                                                  self.xyz_components[
-                                                                                      'txt2img_xyz_value_z_dropdown']])
+
                 self.xyz_set_components['txt2img_xyz_type_z_dropdown'] = True
             if 'img2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'img2img_xyz_type_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_dropdown'] and \
                     self.xyz_components['img2img_xyz_value_x_textbox'] and self.xyz_components[
                 'img2img_xyz_csv_mode'] and self.xyz_components['img_xyz_grid_fill_x_tool_button']:
+
+                self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
+                    self.xyz_components['img2img_xyz_type_x_dropdown'],
+                    self.xyz_components['img2img_xyz_value_x_textbox'],
+                    self.xyz_components['img2img_xyz_value_x_dropdown'], self.xyz_components['img2img_xyz_csv_mode'],
+                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
+                                                             self.xyz_components['img2img_xyz_value_x_textbox'],
+                                                             self.xyz_components['img2img_xyz_value_x_dropdown']])
+
                 self.xyz_components['img2img_xyz_type_x_dropdown'].change = change_decorator(
                     self.xyz_components['img2img_xyz_type_x_dropdown'].change, fn=select_axis,
                     inputs=[self.xyz_components['img2img_xyz_type_x_dropdown'],
@@ -538,13 +610,15 @@ class SageMakerUI(scripts.Script):
                     outputs=[self.xyz_components['img_xyz_grid_fill_x_tool_button'],
                              self.xyz_components['img2img_xyz_value_x_textbox'],
                              self.xyz_components['img2img_xyz_value_x_dropdown']])
-                self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
-                    self.xyz_components['img2img_xyz_type_x_dropdown'],
-                    self.xyz_components['img2img_xyz_value_x_textbox'],
-                    self.xyz_components['img2img_xyz_value_x_dropdown'], self.xyz_components['img2img_xyz_csv_mode'],
-                    base_model_component, cn_list], outputs=[self.xyz_components['xyz_grid_fill_x_tool_button'],
-                                                             self.xyz_components['img2img_xyz_value_x_textbox'],
-                                                             self.xyz_components['img2img_xyz_value_x_dropdown']])
+
+                self.xyz_components['img_xyz_grid_fill_x_tool_button'].click(fn=fill, inputs=[
+                    self.xyz_components['img2img_xyz_type_x_dropdown'], self.xyz_components['img2img_xyz_csv_mode'],
+                    base_model_component, cn_list],
+                                                                             outputs=[self.xyz_components[
+                                                                                          'img2img_xyz_value_x_textbox'],
+                                                                                      self.xyz_components[
+                                                                                          'img2img_xyz_value_x_dropdown']])
+
                 self.xyz_components['img_xyz_grid_fill_x_tool_button'].click = change_decorator(
                     self.xyz_components['img_xyz_grid_fill_x_tool_button'].click, fn=fill, inputs=[
                         self.xyz_components['img2img_xyz_type_x_dropdown'], self.xyz_components['img2img_xyz_csv_mode'],
@@ -553,13 +627,48 @@ class SageMakerUI(scripts.Script):
                                  'img2img_xyz_value_x_textbox'],
                              self.xyz_components[
                                  'img2img_xyz_value_x_dropdown']])
-                self.xyz_components['img_xyz_grid_fill_x_tool_button'].click(fn=fill, inputs=[
-                    self.xyz_components['img2img_xyz_type_x_dropdown'], self.xyz_components['img2img_xyz_csv_mode'],
-                    base_model_component, cn_list],
-                                                                             outputs=[self.xyz_components[
-                                                                                          'img2img_xyz_value_x_textbox'],
-                                                                                      self.xyz_components[
-                                                                                          'img2img_xyz_value_x_dropdown']])
+
+                self.xyz_components['img2img_xyz_csv_mode'].change(fn=change_choice_mode, inputs=[
+                    self.xyz_components['img2img_xyz_csv_mode'], self.xyz_components['img2img_xyz_type_x_dropdown'],
+                    self.xyz_components['img2img_xyz_value_x_textbox'],
+                    self.xyz_components['img2img_xyz_value_x_dropdown'],
+                    self.xyz_components['img2img_xyz_type_y_dropdown'],
+                    self.xyz_components['img2img_xyz_value_y_textbox'],
+                    self.xyz_components['img2img_xyz_value_y_dropdown'],
+                    self.xyz_components['img2img_xyz_type_z_dropdown'],
+                    self.xyz_components['img2img_xyz_value_z_textbox'],
+                    self.xyz_components['img2img_xyz_value_z_dropdown'], base_model_component, cn_list
+                ], outputs=[self.xyz_components['img_xyz_grid_fill_x_tool_button'],
+                            self.xyz_components['img2img_xyz_value_x_textbox'],
+                            self.xyz_components['img2img_xyz_value_x_dropdown'],
+                            self.xyz_components['img_xyz_grid_fill_y_tool_button'],
+                            self.xyz_components['img2img_xyz_value_y_textbox'],
+                            self.xyz_components['img2img_xyz_value_y_dropdown'],
+                            self.xyz_components['img_xyz_grid_fill_z_tool_button'],
+                            self.xyz_components['img2img_xyz_value_z_textbox'],
+                            self.xyz_components['img2img_xyz_value_z_dropdown']])
+
+                self.xyz_components['img2img_xyz_csv_mode'].change = change_decorator(
+                    self.xyz_components['img2img_xyz_csv_mode'].change, fn=change_choice_mode, inputs=[
+                        self.xyz_components['img2img_xyz_csv_mode'], self.xyz_components['img2img_xyz_type_x_dropdown'],
+                        self.xyz_components['img2img_xyz_value_x_textbox'],
+                        self.xyz_components['img2img_xyz_value_x_dropdown'],
+                        self.xyz_components['img2img_xyz_type_y_dropdown'],
+                        self.xyz_components['img2img_xyz_value_y_textbox'],
+                        self.xyz_components['img2img_xyz_value_y_dropdown'],
+                        self.xyz_components['img2img_xyz_type_z_dropdown'],
+                        self.xyz_components['img2img_xyz_value_z_textbox'],
+                        self.xyz_components['img2img_xyz_value_z_dropdown'], base_model_component, cn_list
+                    ], outputs=[self.xyz_components['img_xyz_grid_fill_x_tool_button'],
+                                self.xyz_components['img2img_xyz_value_x_textbox'],
+                                self.xyz_components['img2img_xyz_value_x_dropdown'],
+                                self.xyz_components['img_xyz_grid_fill_y_tool_button'],
+                                self.xyz_components['img2img_xyz_value_y_textbox'],
+                                self.xyz_components['img2img_xyz_value_y_dropdown'],
+                                self.xyz_components['img_xyz_grid_fill_z_tool_button'],
+                                self.xyz_components['img2img_xyz_value_z_textbox'],
+                                self.xyz_components['img2img_xyz_value_z_dropdown']])
+
                 self.xyz_set_components['img2img_xyz_type_x_dropdown'] = True
             if 'img2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'img2img_xyz_type_y_dropdown'] and self.xyz_components['img2img_xyz_value_y_dropdown'] and \
