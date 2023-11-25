@@ -18,6 +18,7 @@ export interface CreateDatasetApiProps {
   httpMethod: string;
   datasetItemTable: aws_dynamodb.Table;
   datasetInfoTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -29,6 +30,7 @@ export class CreateDatasetApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly datasetItemTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly datasetInfoTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
@@ -45,6 +47,7 @@ export class CreateDatasetApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.multiUserTable = props.multiUserTable;
 
     this.createDatasetApi();
   }
@@ -68,6 +71,7 @@ export class CreateDatasetApi {
       resources: [
         this.datasetItemTable.tableArn,
         this.datasetInfoTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
@@ -117,6 +121,7 @@ export class CreateDatasetApi {
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
       },
       layers: [this.layer],

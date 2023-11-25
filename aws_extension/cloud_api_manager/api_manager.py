@@ -50,16 +50,17 @@ class CloudApiManager:
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
-            'assign_to_roles': user_roles
+            'assign_to_roles': user_roles,
+            "creator": user_token,
         }
 
-        deployment_url = f"{self.auth_manger.api_url}inference/deploy-sagemaker-endpoint"
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
             response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             r = response.json()
             logger.debug(f"response for rest api {r}")
-            return "Endpoint deployment started"
+            return r['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to start endpoint deployment with exception: {e}"
@@ -72,6 +73,7 @@ class CloudApiManager:
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
             "delete_endpoint_list": delete_endpoint_list,
+            "username": user_token,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
@@ -167,19 +169,18 @@ class CloudApiManager:
                                 },
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
+        logger.debug(raw_resp.json())
+        resp = raw_resp.json()
         return raw_resp.json()['users'][0]
 
-    def list_users(self, limit=10, last_evaluated_key="", user_token=""):
+    def list_users(self, user_token=""):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
             }
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
-                                params={
-                                    'limit': limit,
-                                    'last_evaluated_key': json.dumps(last_evaluated_key)
-                                },
+                                params={},
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         return raw_resp.json()
@@ -266,6 +267,9 @@ class CloudApiManager:
         checkpoints = []
         resp = raw_resp.json()
         for ckpt in resp['checkpoints']:
+            if not ckpt or 'name' not in ckpt or not ckpt['name']:
+                continue
+
             for name in ckpt['name']:
                 if name not in checkpoints:
                     checkpoints.append({
@@ -290,6 +294,16 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         resp = raw_resp.json()
         return resp['inferences']
+
+    def get_dataset_items_from_dataset(self, dataset_name, user_token=""):
+        if not self.auth_manger.enableAuth:
+            return []
+
+        raw_response = requests.get(url=f'{self.auth_manger.api_url}dataset/{dataset_name}/data', headers=self._get_headers_by_user(user_token))
+        raw_response.raise_for_status()
+        # todo: the s3 presign url is not ready as content type to img
+        resp = raw_response.json()
+        return resp
 
 
 api_manager = CloudApiManager()

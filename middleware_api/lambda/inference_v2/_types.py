@@ -22,7 +22,8 @@ class EndpointDeploymentJob:
     autoscaling: bool
     max_instance_number: str
     startTime: str
-    status: str = None # deprecated, but cant remove, avoid unexpected keyword argument
+    status: str = None # deprecated, but can't remove, avoid unexpected keyword argument
+    current_instance_count: str = None
     endTime: Optional[str] = None
     endpoint_status: Optional[str] = None
     endpoint_name: Optional[str] = None

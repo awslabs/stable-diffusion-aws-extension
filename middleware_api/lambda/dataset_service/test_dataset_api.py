@@ -9,6 +9,7 @@ os.environ.setdefault('DATASET_INFO_TABLE', 'DatasetInfoTable')
 os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
+os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
 
 
 class DatasetApiTest(TestCase):
@@ -62,23 +63,28 @@ class DatasetApiTest(TestCase):
         resp = update_dataset_status(input, {})
         print(resp)
 
-
     def test_get_dataset_item(self):
         from dataset_api import list_data_by_dataset
         resp = list_data_by_dataset({
             "pathStringParameters": {
-                "dataset_name": "demo-001"
+                "dataset_name": "teesttraining"
+            },
+            'x-auth': {
+                'username': 'xman',
+                'role': []
             }
         }, {})
         print(resp)
 
-
-    def test_python(self):
-        def add(a, b, c):
-            global args
-            args = locals()
-            return a+b+c
-
-        print(add(1, 2, 3))
-        print(args)
-        print(add(**args))
+    def test_list_datasets_api(self):
+        from dataset_api import list_datasets_api
+        resp = list_datasets_api({
+            "queryStringParameters": {
+                'dataset_status': 'Enabled'
+            },
+            'x-auth': {
+                'username': 'xman',
+                'role': []
+            }
+        }, {})
+        print(resp)
