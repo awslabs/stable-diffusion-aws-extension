@@ -388,7 +388,7 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
-        # check if endpoint is inService
+        # check if endpoint is InService
         sd_model_on_cloud = args[0]
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
             return
