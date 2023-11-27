@@ -12,7 +12,6 @@ import {
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
-import * as iam from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
@@ -155,7 +154,7 @@ export class CreateSagemakerEndpointsApi {
       ],
     });
 
-    const lambdaStartDeployRole = <iam.Role>iam.Role.fromRoleName(
+    const lambdaStartDeployRole = <Role>Role.fromRoleName(
       this.scope,
       'createSagemakerEpRole',
       LAMBDA_START_DEPLOY_ROLE_NAME,
