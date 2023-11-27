@@ -798,6 +798,9 @@ def process_result_by_inference_id(inference_id):
         return image_list, info_text, plaintext_to_html(infotexts), infotexts
     else:
         logger.debug(f"get_inference_job resp is {resp}")
+        if 'taskType' not in resp:
+            raise Exception(resp)
+
         if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
             while resp and resp['status'] == "inprogress":
                 time.sleep(3)
