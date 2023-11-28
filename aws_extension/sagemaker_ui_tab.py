@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
-                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.12xlarge"]
+                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
 
 test_connection_result = None
 api_gateway_url = None
