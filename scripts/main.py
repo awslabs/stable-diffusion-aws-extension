@@ -227,7 +227,9 @@ class SageMakerUI(scripts.Script):
 
         # xyz components:
         if type(component) == ToolButton \
-                and getattr(component, 'elem_id', None) == 'xyz_grid_fill_x_tool_button':
+                and (getattr(component, 'elem_id', None) == 'xyz_grid_fill_x_tool_button'
+                     or getattr(component, 'elem_id', None) == 'xyz_grid_fill_y_tool_button'
+                     or getattr(component, 'elem_id', None) == 'xyz_grid_fill_z_tool_button'):
             current_axis_options = [x for x in xyz_options if type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
             original_click = component.click
 
@@ -255,7 +257,9 @@ class SageMakerUI(scripts.Script):
             component.click = _click_event
 
         if type(component) == gr.Dropdown \
-                and kwargs['label'] == 'X type':
+                and (kwargs['label'] == 'X type'
+                     or kwargs['label'] == 'Y type'
+                     or kwargs['label'] == 'Z type'):
             current_axis_options = [x for x in xyz_options if type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
             original_change = component.change
 
@@ -623,6 +627,20 @@ def _list_cloud_sd_models(username):
     return list(set([model['name'] for model in models]))
 
 
+def _list_cloud_vae_models(username):
+    from aws_extension.cloud_api_manager.api_manager import api_manager
+    vae_model_on_cloud = ['None']
+    vae_model_on_cloud += list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, username, types='VAE')]))
+    return vae_model_on_cloud
+
+
+def _list_cloud_refiner_models(username):
+    sd_model_on_cloud = ['None']
+    sd_model_on_cloud += _list_cloud_sd_models(username)
+    return sd_model_on_cloud
+
+
 def find_module(module_names):
     if isinstance(module_names, str):
         module_names = [s.strip() for s in module_names.split(",")]
@@ -645,5 +663,20 @@ if xyz_grid:
     sd_models_xyz_option.format_value = format_nothing
     sd_models_xyz_option.apply = lambda x: x
     sagemaker_xyz_extensions.append(sd_models_xyz_option)
+
+    vae_models_xyz_option = xyz_grid.axis_options[30]
+    vae_models_xyz_option.choices = _list_models(origin_fn=vae_models_xyz_option.choices, cloud_fn=_list_cloud_vae_models)
+    vae_models_xyz_option.confirm = lambda *args: ""
+    vae_models_xyz_option.format_value = format_nothing
+    vae_models_xyz_option.apply = lambda x: x
+    sagemaker_xyz_extensions.append(vae_models_xyz_option)
+
+    refiner_models_xyz_option = xyz_grid.axis_options[38]
+    refiner_models_xyz_option.choices = _list_models(origin_fn=refiner_models_xyz_option.choices, cloud_fn=_list_cloud_refiner_models)
+    refiner_models_xyz_option.confirm = lambda *args: ""
+    refiner_models_xyz_option.format_value = format_nothing
+    refiner_models_xyz_option.apply = lambda x: x
+    sagemaker_xyz_extensions.append(refiner_models_xyz_option)
+
     xyz_options = xyz_grid.axis_options
 
