@@ -606,9 +606,6 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     call_queue.queue_lock = ImprovedFiFoLock()
 
 
-# shared.demo.server_app.auth
-# AxisOption("Checkpoint name", str, )),
-
 def _list_models(origin_fn, cloud_fn):
     def wrapper(*args):
         if len(args) == 0:

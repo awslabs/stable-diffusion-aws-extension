@@ -16,7 +16,6 @@ from urllib.parse import urljoin
 
 import gradio as gr
 
-
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api_manager import api_manager
