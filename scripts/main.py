@@ -256,6 +256,32 @@ class SageMakerUI(scripts.Script):
 
             component.click = _click_event
 
+        def select_axis_detector(axis_type, axis_values, axis_values_dropdown, csv_mode, cloud_models, pr: gr.Request):
+            option = current_axis_options[axis_type]
+            choices = current_axis_options[axis_type].choices
+            has_choices = choices is not None
+
+            if has_choices:
+                if option in sagemaker_xyz_extensions and cloud_models != None_Option_For_On_Cloud_Model:
+                    choices = choices(pr.username)
+                else:
+                    choices = choices()
+
+                if csv_mode:
+                    if axis_values_dropdown:
+                        axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
+                        axis_values_dropdown = []
+                else:
+                    if axis_values:
+                        axis_values_dropdown = list(
+                            filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
+                        axis_values = ""
+
+            return (gr.Button.update(visible=has_choices),
+                    gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
+                    gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode,
+                              value=axis_values_dropdown))
+
         if type(component) == gr.Dropdown \
                 and (kwargs['label'] == 'X type'
                      or kwargs['label'] == 'Y type'
@@ -266,32 +292,31 @@ class SageMakerUI(scripts.Script):
             def _proxy_change(fn, inputs, **kwarg):
                 inputs.append(self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud)
 
-                def wrapper(axis_type, axis_values, axis_values_dropdown, csv_mode, cloud_models, pr: gr.Request):
-                    option = current_axis_options[axis_type]
-                    choices = current_axis_options[axis_type].choices
-                    has_choices = choices is not None
+                original_change(fn=select_axis_detector, inputs=inputs, **kwarg)
 
-                    if has_choices:
-                        if option in sagemaker_xyz_extensions and cloud_models != None_Option_For_On_Cloud_Model:
-                            choices = choices(pr.username)
-                        else:
-                            choices = choices()
+            component.change = _proxy_change
 
-                        if csv_mode:
-                            if axis_values_dropdown:
-                                axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
-                                axis_values_dropdown = []
-                        else:
-                            if axis_values:
-                                axis_values_dropdown = list(filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
-                                axis_values = ""
+        type_pre_str = ('txt2img' if self.is_txt2img else 'img2img')
+        if type(component) == gr.Checkbox and getattr(component, 'elem_id',
+                                                      '') == f'script_{type_pre_str}_xyz_plot_csv_mode':
+            original_change = component.change
 
-                    return (gr.Button.update(visible=has_choices), gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
-                            gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode, value=axis_values_dropdown))
+            def _proxy_change(fn, inputs, **kwarg):
+                def wrapper(csv_mode, x_type, x_values, x_values_dropdown, y_type, y_values,
+                            y_values_dropdown, z_type, z_values, z_values_dropdown):
+                    _fill_x_button, _x_values, _x_values_dropdown = select_axis_detector(x_type, x_values,
+                                                                                         x_values_dropdown, csv_mode)
+                    _fill_y_button, _y_values, _y_values_dropdown = select_axis_detector(y_type, y_values,
+                                                                                         y_values_dropdown, csv_mode)
+                    _fill_z_button, _z_values, _z_values_dropdown = select_axis_detector(z_type, z_values,
+                                                                                         z_values_dropdown, csv_mode)
+                    return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, \
+                        _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
 
                 original_change(fn=wrapper, inputs=inputs, **kwarg)
 
             component.change = _proxy_change
+
 
         pass
 
@@ -665,14 +690,16 @@ if xyz_grid:
     sagemaker_xyz_extensions.append(sd_models_xyz_option)
 
     vae_models_xyz_option = xyz_grid.axis_options[30]
-    vae_models_xyz_option.choices = _list_models(origin_fn=vae_models_xyz_option.choices, cloud_fn=_list_cloud_vae_models)
+    vae_models_xyz_option.choices = _list_models(origin_fn=vae_models_xyz_option.choices,
+                                                 cloud_fn=_list_cloud_vae_models)
     vae_models_xyz_option.confirm = lambda *args: ""
     vae_models_xyz_option.format_value = format_nothing
     vae_models_xyz_option.apply = lambda x: x
     sagemaker_xyz_extensions.append(vae_models_xyz_option)
 
     refiner_models_xyz_option = xyz_grid.axis_options[38]
-    refiner_models_xyz_option.choices = _list_models(origin_fn=refiner_models_xyz_option.choices, cloud_fn=_list_cloud_refiner_models)
+    refiner_models_xyz_option.choices = _list_models(origin_fn=refiner_models_xyz_option.choices,
+                                                     cloud_fn=_list_cloud_refiner_models)
     refiner_models_xyz_option.confirm = lambda *args: ""
     refiner_models_xyz_option.format_value = format_nothing
     refiner_models_xyz_option.apply = lambda x: x
