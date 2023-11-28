@@ -34,21 +34,6 @@ except Exception as e:
     logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
     dreambooth_available = False
     create_model = dummy_function
-# try:
-#     from dreambooth import shared
-#     from dreambooth.dataclasses.db_concept import Concept
-#     from dreambooth.dataclasses.db_config import from_file, DreamboothConfig
-#     from dreambooth.diff_to_sd import compile_checkpoint
-#     from dreambooth.secret import get_secret
-#     from dreambooth.shared import DreamState
-#     from dreambooth.ui_functions import create_model, generate_samples, \
-#         start_training
-#     from dreambooth.utils.gen_utils import generate_classifiers
-#     from dreambooth.utils.image_utils import get_images
-#     from dreambooth.utils.model_utils import get_db_models, get_lora_models
-# except:
-#     logger.info("Exception importing api")
-#     traceback.print_exc()
 
 logger = logging.getLogger(__name__)
 
