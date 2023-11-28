@@ -238,10 +238,12 @@ class SageMakerUI(scripts.Script):
                     logger.error("there is an update of xyz")
                     return original_click(fn=fn, inputs=inputs, **kwarg)
 
-                def wrapper(axis_type, csv_mode, pr: gr.Request):
+                inputs.append(self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud)
+
+                def wrapper(axis_type, csv_mode, cloud_models, pr: gr.Request):
                     axis = current_axis_options[axis_type]
                     # _ = fn(axis_type, csv_mode)
-                    if axis in sagemaker_xyz_extensions:
+                    if axis in sagemaker_xyz_extensions and cloud_models != None_Option_For_On_Cloud_Model:
                         return gr.update(), axis.choices(pr.username)
 
                     if axis.choices:
@@ -256,7 +258,10 @@ class SageMakerUI(scripts.Script):
 
             component.click = _click_event
 
-        def select_axis_detector(axis_type, axis_values, axis_values_dropdown, csv_mode, cloud_models, pr: gr.Request):
+        def select_axis_detector(axis_type, axis_values, axis_values_dropdown, csv_mode, cloud_models,
+                                 pr: gr.Request):
+            current_axis_options = [x for x in xyz_options if
+                                    type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
             option = current_axis_options[axis_type]
             choices = current_axis_options[axis_type].choices
             has_choices = choices is not None
@@ -269,7 +274,8 @@ class SageMakerUI(scripts.Script):
 
                 if csv_mode:
                     if axis_values_dropdown:
-                        axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
+                        axis_values = list_to_csv_string(
+                            list(filter(lambda x: x in choices, axis_values_dropdown)))
                         axis_values_dropdown = []
                 else:
                     if axis_values:
@@ -286,7 +292,6 @@ class SageMakerUI(scripts.Script):
                 and (kwargs['label'] == 'X type'
                      or kwargs['label'] == 'Y type'
                      or kwargs['label'] == 'Z type'):
-            current_axis_options = [x for x in xyz_options if type(x) == xyz_grid.AxisOption or x.is_img2img == self.is_img2img]
             original_change = component.change
 
             def _proxy_change(fn, inputs, **kwarg):
@@ -303,20 +308,23 @@ class SageMakerUI(scripts.Script):
 
             def _proxy_change(fn, inputs, **kwarg):
                 def wrapper(csv_mode, x_type, x_values, x_values_dropdown, y_type, y_values,
-                            y_values_dropdown, z_type, z_values, z_values_dropdown):
+                            y_values_dropdown, z_type, z_values, z_values_dropdown, pr: gr.Request):
+                    cloud_models = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
                     _fill_x_button, _x_values, _x_values_dropdown = select_axis_detector(x_type, x_values,
-                                                                                         x_values_dropdown, csv_mode)
+                                                                                         x_values_dropdown, csv_mode,
+                                                                                         cloud_models, pr)
                     _fill_y_button, _y_values, _y_values_dropdown = select_axis_detector(y_type, y_values,
-                                                                                         y_values_dropdown, csv_mode)
+                                                                                         y_values_dropdown, csv_mode,
+                                                                                         cloud_models, pr)
                     _fill_z_button, _z_values, _z_values_dropdown = select_axis_detector(z_type, z_values,
-                                                                                         z_values_dropdown, csv_mode)
+                                                                                         z_values_dropdown, csv_mode,
+                                                                                         cloud_models, pr)
                     return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, \
                         _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
 
                 original_change(fn=wrapper, inputs=inputs, **kwarg)
 
             component.change = _proxy_change
-
 
         pass
 
@@ -666,6 +674,14 @@ def _list_cloud_refiner_models(username):
     return sd_model_on_cloud
 
 
+def _list_cloud_controlnet_models(username):
+    from aws_extension.cloud_api_manager.api_manager import api_manager
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
+    return controlnet_model_on_cloud
+
+
 def find_module(module_names):
     if isinstance(module_names, str):
         module_names = [s.strip() for s in module_names.split(",")]
@@ -704,6 +720,14 @@ if xyz_grid:
     refiner_models_xyz_option.format_value = format_nothing
     refiner_models_xyz_option.apply = lambda x: x
     sagemaker_xyz_extensions.append(refiner_models_xyz_option)
+
+    controlnet_models_xyz_option = xyz_grid.axis_options[42]
+    controlnet_models_xyz_option.choices = _list_models(origin_fn=controlnet_models_xyz_option.choices,
+                                                        cloud_fn=_list_cloud_controlnet_models)
+    controlnet_models_xyz_option.confirm = lambda *args: ""
+    controlnet_models_xyz_option.format_value = format_nothing
+    controlnet_models_xyz_option.apply = lambda x: x
+    sagemaker_xyz_extensions.append(controlnet_models_xyz_option)
 
     xyz_options = xyz_grid.axis_options
 
