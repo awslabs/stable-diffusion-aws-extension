@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
-                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.12xlarge"]
+                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
 
 test_connection_result = None
 api_gateway_url = None
@@ -660,8 +660,11 @@ def sagemaker_endpoint_tab():
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
                                                          elem_id="sagemaker_endpoint_delete_button")
             delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
-            sagemaker_endpoint_delete_button.click(api_manager.sagemaker_endpoint_delete,
-                                                   _js="delete_sagemaker_endpoint",
+
+            def _endpoint_delete(endpoints, pr: gr.Request):
+                return api_manager.sagemaker_endpoint_delete(delete_endpoint_list=endpoints, user_token=pr.username)
+
+            sagemaker_endpoint_delete_button.click(_endpoint_delete,
                                                    inputs=[sagemaker_endpoint_delete_dropdown],
                                                    outputs=[delete_ep_output_textbox])
 

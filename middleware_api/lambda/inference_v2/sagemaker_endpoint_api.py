@@ -103,8 +103,7 @@ def delete_sagemaker_endpoints(raw_event, ctx):
 
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
         if 'sagemaker_endpoint' not in creator_permissions or \
-                'all' not in creator_permissions['sagemaker_endpoint'] or \
-                'create' not in creator_permissions['sagemaker_endpoint']:
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
             return {
                 'statusCode': 400,
                 'errMsg': f"User {event.username} has no permission to delete a Sagemaker endpoint",

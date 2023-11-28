@@ -71,6 +71,23 @@ export class DeleteSagemakerEndpointsApi {
     }));
 
     newRole.addToPolicy(new PolicyStatement({
+      actions: [
+        'dynamodb:Query',
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Describe*',
+        'dynamodb:List*',
+        'dynamodb:Scan',
+      ],
+      resources: [
+        this.endpointDeploymentTable.tableArn,
+        this.multiUserTable.tableArn,
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
         'application-autoscaling:DeregisterScalableTarget',
