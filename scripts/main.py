@@ -468,13 +468,13 @@ class SageMakerUI(scripts.Script):
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 
@@ -677,8 +677,11 @@ def _list_cloud_refiner_models(username):
 def _list_cloud_controlnet_models(username):
     from aws_extension.cloud_api_manager.api_manager import api_manager
     controlnet_model_on_cloud = ['None']
+    # controlnet_model_on_cloud += list(
+    #     set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
     controlnet_model_on_cloud += list(
-        set([model['name'] for model in api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
+        set([model['name'] for model in
+             api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 

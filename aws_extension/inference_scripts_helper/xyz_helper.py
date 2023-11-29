@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 
-def xyz_args(script_name, arg, current_index, args, _):
+def xyz_args(script_name, arg, current_index, args, _, is_txt2img):
     if script_name != 'x/y/z plot':
         return {}, None
 
@@ -12,7 +12,23 @@ def xyz_args(script_name, arg, current_index, args, _):
     # ref: xyz_grid.py#L244
     if current_index - 2 < 0:
         return {}, None
-    if args[current_index - 2] == 11:
+
+    if is_txt2img and (args[current_index - 2] == 11 or args[current_index - 2] == 35):
         return {'Stable-diffusion': arg}, None
+
+    elif is_txt2img and (args[current_index - 2] == 39):
+        return {'ControlNet': arg}, None
+
+    elif is_txt2img and (args[current_index - 2] == 27):
+        return {'VAE': arg}, None
+
+    elif not is_txt2img and (args[current_index - 2] == 10 or args[current_index - 2] == 34):
+        return {'Stable-diffusion': arg}, None
+
+    elif not is_txt2img and (args[current_index - 2] == 38):
+        return {'ControlNet': arg}, None
+
+    elif not is_txt2img and (args[current_index - 2] == 26):
+        return {'VAE': arg}, None
 
     return {}, None
