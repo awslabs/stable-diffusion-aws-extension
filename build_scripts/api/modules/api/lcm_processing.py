@@ -1,11 +1,9 @@
 from modules import shared
 from modules.api import models
 from diffusers import DiffusionPipeline, UNet2DConditionModel, LCMScheduler, StableDiffusionXLControlNetPipeline, StableDiffusionControlNetPipeline, StableDiffusionInpaintPipeline
-from PIL import Image
 import torch
 from modules.api.mme_utils import encode_pil_to_base64, decode_base64_to_image
-from fastapi.exceptions import HTTPException
-from diffusers import AutoPipelineForInpainting, AutoPipelineForText2Image, AutoPipelineForImage2Image, ControlNetModel, StableDiffusionXLPipeline, StableDiffusionPipeline, StableDiffusionXLImg2imgPipeline
+from diffusers import AutoPipelineForInpainting, AutoPipelineForText2Image, AutoPipelineForImage2Image, ControlNetModel, StableDiffusionXLPipeline, StableDiffusionPipeline
 from diffusers.pipelines.controlnet import MultiControlNetModel
 from diffusers import StableDiffusionXLControlNetInpaintPipeline, StableDiffusionControlNetInpaintPipeline
 from modules.paths_internal import models_path
