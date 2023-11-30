@@ -12,40 +12,74 @@ sys.path.append("../../../middleware_api/lambda/inference")
 from parse.parameter_parser import json_convert_to_payload
 start_time = time.time()
 
-url = "http://127.0.0.1:8082"
-
-aigc_json_file = "../json_files/txt2img_test.json"
-f = open(aigc_json_file)
-aigc_params = json.load(f)
-checkpoint_info = {'Stable-diffusion': {'v1-5-pruned-emaonly.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/icon/062b8574-8380-49d3-a8c4-7d5cf8100bd8/v1-5-pruned-emaonly.safetensors', 'darkSushiMixMix_225D.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/b163f4da-2219-4d8e-9cea-6af34662a11b/darkSushiMixMix_225D.safetensors', 'dreamshaper_7.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/e0fb5452-ecdf-41bf-8c45-1b63383ae6bc/dreamshaper_7.safetensors', 'v2-1_768-ema-pruned.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/3e5f67ca-4f35-40fb-a513-d81f3aea75fe/v2-1_768-ema-pruned.safetensors', 'sd-v1-5-inpainting.ckpt': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/c05338af-98a2-424d-b8cb-33e808a2b007/sd-v1-5-inpainting.ckpt', 'sd_xl_refiner_1.0.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/18d6b6fa-e8c1-4d66-b14f-c4786271a7ba/sd_xl_refiner_1.0.safetensors', 'sd_xl_base_0.9.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/39b16a9a-2c72-4370-9075-d62606bef914/sd_xl_base_0.9.safetensors', 'sd_xl_base_1.0.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Stable-diffusion/checkpoint/custom/7b24f656-c14c-47a7-9493-5b80652e44ec/sd_xl_base_1.0.safetensors'}, 'embeddings': {'corneo_marin_kitagawa.pt': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/embeddings/checkpoint/custom/f2477fd1-dcb1-4184-ae40-7aca77454b57/corneo_marin_kitagawa.pt'}, 'Lora': {'hanfu_v30Song.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/Lora/checkpoint/custom/86bac5b3-e30b-4de7-b33a-608ae3d7ced2/hanfu_v30Song.safetensors'}, 'hypernetworks': {'LuisapKawaii_v1.pt': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/hypernetworks/checkpoint/custom/12716ec7-6846-4c61-96d8-b6cdfb2bfbaf/LuisapKawaii_v1.pt'}, 'ControlNet': {'control_v11p_sd15_inpaint.pth': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-1dga2v0104mc2/ControlNet/checkpoint/custom/3e48115f-fb0c-4966-828d-384f80ea397c/control_v11p_sd15_inpaint.pth'}, 'sagemaker_endpoint': 'infer-endpoint-1574a8b', 'task_type': 'txt2img'}
-
+url = "http://127.0.0.1:8080"
+checkpoint_info = {'Stable-diffusion': {'v2-1_768-ema-pruned.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/13896019-1ba4-478a-a5ec-b7e143e840ca/v2-1_768-ema-pruned.safetensors', 'meinamix_meinaV10.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/491803b4-8293-4604-b879-7b1d3fa8f1df/meinamix_meinaV10.safetensors', 'cheeseDaddys_41.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/6fc2a447-a2d6-427c-b520-fef0f4c5ce85/cheeseDaddys_41.safetensors', 'AnythingV5Ink_ink.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/1a0227fc-5bb0-436b-aa87-80d487a536b3/AnythingV5Ink_ink.safetensors', 'camelliamix25DV2_v2.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/2f5063ee-e2ac-40be-b48e-8762dfdc25eb/camelliamix25DV2_v2.safetensors', 'sd-v1-5-inpainting.ckpt': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/822a6754-87e7-495b-b71a-543cf78cefb2/sd-v1-5-inpainting.ckpt', 'yangk-style_2160_lora.safetensors': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/Stable-diffusion/checkpoint/custom/7a8ad4b0-0159-4c0d-a5b9-a6692f90902a/yangk-style_2160_lora.safetensors'}, 'embeddings': {}, 'Lora': {}, 'hypernetworks': {}, 'ControlNet': {'control_v11p_sd15_canny.pth': 's3://stable-diffusion-aws-extension-aigcbucketa457cb49-xfyck6nj4vlo/ControlNet/checkpoint/custom/a20edd04-535c-4d85-842b-95c3c743d819/control_v11p_sd15_canny.pth'}, 'sagemaker_endpoint': 'infer-endpoint-5d9775d', 'task_type': 'txt2img'}
 task_type = 'txt2img'
 print(f"Task Type: {task_type}")
-payload = json_convert_to_payload(aigc_params, checkpoint_info, task_type)
 
 model_list = []
 model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
 model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
 model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
-
+model_list.append("v1-5-pruned-emaonly.safetensors")
+model_list.append("v1-5-pruned-emaonly.safetensors")
+model_list.append("v1-5-pruned-emaonly.safetensors")
+model_list.append("v1-5-pruned-emaonly.safetensors")
+model_list.append("v1-5-pruned-emaonly.safetensors")
+# model_list.append("yangk-style_2160_lora.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("meinamix_meinaV10.safetensors")
+# model_list.append("cheeseDaddys_41.safetensors")
+# model_list.append("camelliamix25DV2_v2.safetensors")
+# model_list.append("AnythingV5Ink_ink.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
+# model_list.append("v1-5-pruned-emaonly.safetensors")
+# model_list.append("yangk-style_2160_lora.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("meinamix_meinaV10.safetensors")
+# model_list.append("cheeseDaddys_41.safetensors")
+# model_list.append("camelliamix25DV2_v2.safetensors")
+# model_list.append("AnythingV5Ink_ink.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
+# model_list.append("v1-5-pruned-emaonly.safetensors")
+# model_list.append("yangk-style_2160_lora.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("meinamix_meinaV10.safetensors")
+# model_list.append("cheeseDaddys_41.safetensors")
+# model_list.append("camelliamix25DV2_v2.safetensors")
+# model_list.append("AnythingV5Ink_ink.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
 import psutil
 # import gc
 
 for model in model_list:
-    payload["models"]["Stable-diffusion"]= [model]
-    response = requests.post(url=f'{url}/invocations', json=payload)
+
+    # aigc_json_file = "../json_files/api_param.json"
+    # f = open(aigc_json_file)
+    # aigc_params = json.load(f)
+    # payload = json_convert_to_payload(aigc_params, checkpoint_info, task_type)
+
+    # payload["models"]["Stable-diffusion"]= [model]
+    # response = requests.post(url=f'{url}/invocations', json=payload)
+    # response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=payload)
+
+    with open('../json_files/api_param.json', 'r') as f:
+
+        def parse_constant(c: str) -> float:
+            if c == "NaN":
+                raise ValueError("NaN is not valid JSON")
+
+            if c == 'Infinity':
+                return sys.float_info.max
+
+            return float(c)
+
+        data = json.loads(f.read(), parse_constant=parse_constant)
+
+        print(data["prompt"])
+
+        response = requests.post(url=f'{url}/sdapi/v1/txt2img', json=data)
+        # response = requests.post(url=f'http://ec2-3-86-167-241.compute-1.amazonaws.com:7860/sdapi/v1/txt2img', json=data)
 
     print(f'Model {model} RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
 
