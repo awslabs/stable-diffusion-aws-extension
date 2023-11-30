@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 from copy import copy
 from itertools import permutations, chain
@@ -663,16 +664,14 @@ if xyz_grid:
     controlnet_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=controlnet_models_xyz_option.apply, cloud_fn=apply_controlnet)
 
 
-# xyz_grid_support = find_module("xyz_grid_support.py")
-#
-# if xyz_grid_support:
-#     def origin_detector(func):
-#         def wrapper(*args, **kwargs):
-#             try:
-#                 return func(*args, **kwargs)
-#             except Exception as e:
-#                 return True
-#
-#         return wrapper
-#
-#     xyz_grid_support.is_all_included = origin_detector
+xyz_grid_support = find_module("xyz_grid_support.py")
+if xyz_grid_support:
+    def origin_detector(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                logging.error("e")
+                return True
+        return wrapper
+    xyz_grid_support.is_all_included = origin_detector
