@@ -60,36 +60,6 @@ def upsert_role(raw_event, ctx):
                                   f'to create role with permission: [{permission_str}]'
                     }
 
-    if not ctx or 'from_sd_local' not in vars(ctx):
-        # should check the creator permission contains role:all
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'role' not in creator_permissions or \
-                ('all' not in creator_permissions['role'] and 'create' not in creator_permissions['role']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'creator {event.creator} not have permission to create role'
-            }
-
-        if 'all' not in creator_permissions['role']:
-            target_role = _get_role_by_name(event.role_name)
-            if target_role and target_role.creator != event.creator:
-                return {
-                    'statusCode': 400,
-                    'errMsg': f'creator {event.creator} not have permission to update role {target_role.sort_key}'
-                }
-
-            for permission_str in event.permissions:
-                permission_parts = permission_str.split(':')
-                resource = permission_parts[0]
-                action = permission_parts[1]
-                if resource not in creator_permissions or \
-                        ('all' not in creator_permissions[resource] and action not in creator_permissions[resource]):
-                    return {
-                        'statusCode': 400,
-                        'errMsg': f'creator {event.creator} have not permission '
-                                  f'to create role with permission: [{permission_str}]'
-                    }
-
     ddb_service.put_items(user_table, Role(
         kind=PARTITION_KEYS.role,
         sort_key=event.role_name,
