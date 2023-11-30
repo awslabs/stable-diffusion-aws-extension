@@ -88,6 +88,10 @@ def apply_controlnet(p, x, xs):
     setattr(p, 'control_net_model', x)
 
 
+def apply_refiner(p, x, xs):
+    setattr(p, 'refiner_checkpoint', x)
+
+
 def confirm_checkpoints(p, xs):
     for x in xs:
         if modules.sd_models.get_closet_checkpoint_match(x) is None:
@@ -636,8 +640,6 @@ def apply_checkpoint_detector(origin_fn, cloud_fn):
 
 
 xyz_grid = find_module("xyz_grid.py, xy_grid.py")
-txt2img_xyz_index = 0
-xyz_options = None
 
 if xyz_grid:
     sd_models_xyz_option = xyz_grid.axis_options[13]
@@ -648,17 +650,29 @@ if xyz_grid:
     vae_models_xyz_option = xyz_grid.axis_options[30]
     vae_models_xyz_option.confirm = lambda *args: ""
     vae_models_xyz_option.format_value = format_nothing
-    vae_models_xyz_option.apply = lambda x: x
+    vae_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=vae_models_xyz_option.apply, cloud_fn=apply_vae)
 
     refiner_models_xyz_option = xyz_grid.axis_options[38]
     refiner_models_xyz_option.confirm = lambda *args: ""
     refiner_models_xyz_option.format_value = format_nothing
-    refiner_models_xyz_option.apply = lambda x: x
+    refiner_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=refiner_models_xyz_option.apply, cloud_fn=apply_refiner)
 
     controlnet_models_xyz_option = xyz_grid.axis_options[42]
     controlnet_models_xyz_option.confirm = lambda *args: ""
     controlnet_models_xyz_option.format_value = format_nothing
     controlnet_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=controlnet_models_xyz_option.apply, cloud_fn=apply_controlnet)
 
-    xyz_options = xyz_grid.axis_options
 
+# xyz_grid_support = find_module("xyz_grid_support.py")
+#
+# if xyz_grid_support:
+#     def origin_detector(func):
+#         def wrapper(*args, **kwargs):
+#             try:
+#                 return func(*args, **kwargs)
+#             except Exception as e:
+#                 return True
+#
+#         return wrapper
+#
+#     xyz_grid_support.is_all_included = origin_detector
