@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 
-def xyz_args(script_name, arg, current_index, args, _, is_txt2img):
+def xyz_args(script_name, arg, current_index, args, cache, is_txt2img):
     if script_name != 'x/y/z plot':
         return {}, None
 
@@ -17,7 +17,12 @@ def xyz_args(script_name, arg, current_index, args, _, is_txt2img):
         return {'Stable-diffusion': arg}, None
 
     elif is_txt2img and (args[current_index - 2] == 39):
-        return {'ControlNet': arg}, None
+        models = []
+        for filename in cache['controlnet']:
+            for model_without_type in arg:
+                if filename.startswith(model_without_type):
+                    models.append(filename)
+        return {'ControlNet': models}, None
 
     elif is_txt2img and (args[current_index - 2] == 27):
         return {'VAE': arg}, None
@@ -26,7 +31,12 @@ def xyz_args(script_name, arg, current_index, args, _, is_txt2img):
         return {'Stable-diffusion': arg}, None
 
     elif not is_txt2img and (args[current_index - 2] == 38):
-        return {'ControlNet': arg}, None
+        models = []
+        for filename in cache['controlnet']:
+            for model_without_type in arg:
+                if filename.startswith(model_without_type):
+                    models.append(filename)
+        return {'ControlNet': models}, None
 
     elif not is_txt2img and (args[current_index - 2] == 26):
         return {'VAE': arg}, None

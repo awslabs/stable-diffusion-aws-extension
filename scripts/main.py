@@ -677,11 +677,11 @@ def _list_cloud_refiner_models(username):
 def _list_cloud_controlnet_models(username):
     from aws_extension.cloud_api_manager.api_manager import api_manager
     controlnet_model_on_cloud = ['None']
-    # controlnet_model_on_cloud += list(
-    #     set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
     controlnet_model_on_cloud += list(
-        set([model['name'] for model in
-             api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
+        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
+    # controlnet_model_on_cloud += list(
+    #     set([model['name'] for model in
+    #          api_manager.list_models_on_cloud(username, username, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 
