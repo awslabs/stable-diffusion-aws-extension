@@ -141,7 +141,6 @@ class CreateEndpointEvent:
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
-    image_tag: Optional[str] = 'latest'
 
 
 # POST /endpoints
@@ -160,7 +159,7 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         if event.endpoint_name:
             sagemaker_endpoint_name = f'infer-endpoint-{event.endpoint_name}'
 
-        image_url = f'{INFERENCE_ECR_IMAGE_URL}:{event.image_tag}'
+        image_url = INFERENCE_ECR_IMAGE_URL
 
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 
@@ -212,7 +211,6 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
             current_instance_count="0",
-            endpoint_ecr_tag=event.image_tag,
         )
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=raw.__dict__)
         logger.info(f"Successfully created endpoint deployment: {raw.__dict__}")
