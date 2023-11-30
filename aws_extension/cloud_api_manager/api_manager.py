@@ -33,7 +33,7 @@ class CloudApiManager:
         }
 
     def sagemaker_deploy(self, endpoint_name, instance_type, initial_instance_count=1,
-                         autoscaling_enabled=True, user_roles=None, user_token=""):
+                         autoscaling_enabled=True, user_roles=None, user_token="", image_tag='latest'):
         """ Create SageMaker endpoint for GPU inference.
         Args:
             instance_type (string): the ML compute instance type.
@@ -52,6 +52,7 @@ class CloudApiManager:
             "autoscaling_enabled": autoscaling_enabled,
             'assign_to_roles': user_roles,
             "creator": user_token,
+            "image_tag": image_tag,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
@@ -170,7 +171,6 @@ class CloudApiManager:
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         logger.debug(raw_resp.json())
-        resp = raw_resp.json()
         return raw_resp.json()['users'][0]
 
     def list_users(self, user_token=""):

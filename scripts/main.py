@@ -254,7 +254,7 @@ class SageMakerUI(scripts.Script):
         if is_img2img:
             self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+            modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state, infer_role = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
                        self.img2img_refiner_ckpt_dropdown, self.img2img_lora_and_hypernet_models_state]
@@ -267,11 +267,11 @@ class SageMakerUI(scripts.Script):
 
             sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    self.img2img_lora_and_hypernet_models_state]
+                    self.img2img_lora_and_hypernet_models_state, infer_role]
         else:
             self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
-            modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
+            modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state, infer_role = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
                        self.txt2img_refiner_ckpt_dropdown, self.txt2img_lora_and_hypernet_models_state]
@@ -282,10 +282,9 @@ class SageMakerUI(scripts.Script):
             self.txt2img_model_on_cloud.change(_check_generate, inputs=self.txt2img_model_on_cloud, outputs=outputs)
             sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
-                    self.txt2img_lora_and_hypernet_models_state]
+                    self.txt2img_lora_and_hypernet_models_state, infer_role]
 
         return sagemaker_inputs_components
-
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -294,6 +293,7 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is InService
         sd_model_on_cloud = args[0]
+        inference_role = args[-1]
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
             return
 
@@ -425,7 +425,8 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
-            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
+            inference_id = self.infer_manager.run(p.user, inference_role, models, api_param,
+                                                  self.is_txt2img)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
         except Exception as e:
