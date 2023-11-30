@@ -630,3 +630,5 @@ for x in axis_options_aws:
             shared.axis_options_aws.append(converted_obj)
         except Exception as e:
             print(f"Failed to convert object: {x}. Error: {e}")
+
+xyz_grid.axis_options = shared.axis_options_aws

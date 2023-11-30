@@ -22,9 +22,7 @@ from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
 from scripts import global_state
-from io import StringIO
-import csv
-from itertools import chain
+from scripts.xyz_grid import do_nothing, format_nothing, list_to_csv_string, csv_string_to_list_strip
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
@@ -159,14 +157,6 @@ class SageMakerUI(scripts.Script):
                 self.img2img_generate_btn = component
 
         # refiner models
-        def list_to_csv_string(data_list):
-            with StringIO() as o:
-                csv.writer(o).writerow(data_list)
-                return o.getvalue().strip()
-
-        def csv_string_to_list_strip(data_str):
-            return list(map(str.strip, chain.from_iterable(csv.reader(StringIO(data_str)))))
-
         def change_decorator(original_change, fn, inputs, outputs):
             def wrapper(*args, **kwargs):
                 logger.info("Executing extra logic before original change method")
@@ -855,7 +845,6 @@ class SageMakerUI(scripts.Script):
                     self.txt2img_lora_and_hypernet_models_state]
 
         return sagemaker_inputs_components
-
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")

@@ -383,6 +383,34 @@ def download_images(image_urls: list, local_directory: str):
     return image_list
 
 
+def download_images_to_json(image_urls: list):
+    results = []
+    for url in image_urls:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            json_resp = response.json()
+            results.append(json_resp['info'])
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error downloading image {url}: {e}")
+    return results
+
+
+def download_images_to_pil(image_urls: list):
+    image_list = []
+    for url in image_urls:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            from PIL import Image
+            import io
+            pil_image = Image.open(io.BytesIO(response.content))
+            image_list.append(pil_image)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error downloading image {url}: {e}")
+    return image_list
+
+
 def get_model_list_by_type(model_type, username=""):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -819,21 +847,13 @@ def process_result_by_inference_id(inference_id):
                 images = get_inference_job_image_output(inference_id.strip())
                 inference_param_json_list = get_inference_job_param_output(inference_id)
                 # todo: these not need anymore
-                if resp['taskType'] == "txt2img":
-                    image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                    json_list = download_images(inference_param_json_list,
-                                                f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                    json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                elif resp['taskType'] == "img2img":
-                    image_list = download_images(images, f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                    json_list = download_images(inference_param_json_list,
-                                                f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                    json_file = f"outputs/img2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                if os.path.isfile(json_file):
-                    with open(json_file) as f:
-                        log_file = json.load(f)
-                        info_text = log_file["info"]
-                        infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                if resp['taskType'] in ['txt2img', 'img2img']:
+                    image_list = download_images_to_pil(images)
+                    json_file = download_images_to_json(inference_param_json_list)[0]
+
+                if json_file:
+                    info_text = json_file
+                    infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
                 else:
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
