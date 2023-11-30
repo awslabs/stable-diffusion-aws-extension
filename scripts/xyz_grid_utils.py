@@ -77,10 +77,15 @@ def confirm_samplers(p, xs):
 
 
 def apply_checkpoint(p, x, xs):
-    info = modules.sd_models.get_closet_checkpoint_match(x)
-    if info is None:
-        raise RuntimeError(f"Unknown checkpoint: {x}")
-    p.override_settings['sd_model_checkpoint'] = info.name
+    # info = modules.sd_models.get_closet_checkpoint_match(x)
+    # if info is None:
+    #     raise RuntimeError(f"Unknown checkpoint: {x}")
+    p.override_settings['sd_model_checkpoint'] = x
+
+
+def apply_controlnet(p, x, xs):
+    shared.opts.data["control_net_allow_script_control"] = True
+    setattr(p, 'control_net_model', x)
 
 
 def confirm_checkpoints(p, xs):
@@ -540,27 +545,6 @@ def confirm(func_or_str):
     return confirm_
 
 
-# class AxisOption:
-#     def __init__(self, label, type, apply, format_value=format_value_add_label, confirm=None, cost=0.0, choices=None):
-#         self.label = label
-#         self.type = type
-#         self.apply = apply
-#         self.format_value = format_value
-#         self.confirm = confirm
-#         self.cost = cost
-#         self.choices = choices
-#
-#
-# class AxisOptionImg2Img(AxisOption):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.is_img2img = True
-#
-#
-# class AxisOptionTxt2Img(AxisOption):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.is_img2img = False
 from scripts.xyz_grid import AxisOption, AxisOptionTxt2Img, AxisOptionImg2Img
 
 axis_options_aws = [
@@ -631,4 +615,50 @@ for x in axis_options_aws:
         except Exception as e:
             print(f"Failed to convert object: {x}. Error: {e}")
 
-xyz_grid.axis_options = shared.axis_options_aws
+
+def find_module(module_names):
+    if isinstance(module_names, str):
+        module_names = [s.strip() for s in module_names.split(",")]
+    for data in scripts.scripts_data:
+        if data.script_class.__module__ in module_names and hasattr(data, "module"):
+            return data.module
+    return None
+
+
+def apply_checkpoint_detector(origin_fn, cloud_fn):
+    def wrapper(*args):
+        try:
+            return cloud_fn(*args)
+        except Exception as e:
+            return origin_fn(*args)
+
+    return wrapper
+
+
+xyz_grid = find_module("xyz_grid.py, xy_grid.py")
+txt2img_xyz_index = 0
+xyz_options = None
+
+if xyz_grid:
+    sd_models_xyz_option = xyz_grid.axis_options[13]
+    sd_models_xyz_option.confirm = lambda *args: ""
+    sd_models_xyz_option.format_value = format_nothing
+    sd_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=sd_models_xyz_option.apply, cloud_fn=apply_checkpoint)
+
+    vae_models_xyz_option = xyz_grid.axis_options[30]
+    vae_models_xyz_option.confirm = lambda *args: ""
+    vae_models_xyz_option.format_value = format_nothing
+    vae_models_xyz_option.apply = lambda x: x
+
+    refiner_models_xyz_option = xyz_grid.axis_options[38]
+    refiner_models_xyz_option.confirm = lambda *args: ""
+    refiner_models_xyz_option.format_value = format_nothing
+    refiner_models_xyz_option.apply = lambda x: x
+
+    controlnet_models_xyz_option = xyz_grid.axis_options[42]
+    controlnet_models_xyz_option.confirm = lambda *args: ""
+    controlnet_models_xyz_option.format_value = format_nothing
+    controlnet_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=controlnet_models_xyz_option.apply, cloud_fn=apply_controlnet)
+
+    xyz_options = xyz_grid.axis_options
+

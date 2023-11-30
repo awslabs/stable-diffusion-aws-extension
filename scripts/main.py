@@ -7,7 +7,7 @@ import os
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_xyz_controlnet_list
 from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
@@ -204,12 +204,12 @@ class SageMakerUI(scripts.Script):
                 choices = vae_model_list
                 has_choices = choices is not None
             elif self.is_txt2img and xyz_type_component == TXT_XYZ_CONTROLNET_INDEX:
-                controlnet_model_list = model_state['controlnet']
+                controlnet_model_list = model_state['controlnet_xyz']
                 logger.info(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
                 has_choices = choices is not None
             elif not self.is_txt2img and xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
-                controlnet_model_list = model_state['controlnet']
+                controlnet_model_list = model_state['controlnet_xyz']
                 logger.info(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
                 has_choices = choices is not None
@@ -800,8 +800,9 @@ class SageMakerUI(scripts.Script):
             hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
             lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
             controlnet_list = load_controlnet_list(pr.username, pr.username)
+            controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
             result.append({"sd": sd_model_list, "vae": vae_models, "hypernet": hypernet_models, "lora": lora_models,
-                           "controlnet": controlnet_list})
+                           "controlnet": controlnet_list, 'controlnet_xyz': controlnet_xyz_list})
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
@@ -893,13 +894,13 @@ class SageMakerUI(scripts.Script):
                 api_param.alwayson_scripts[script.name] = {}
                 api_param.alwayson_scripts[script.name]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
                     api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1])
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
                     api_param.script_args.append(parsed_args)
 

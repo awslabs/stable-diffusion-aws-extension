@@ -1151,9 +1151,16 @@ def load_vae_list(username, user_token):
 
 
 def load_controlnet_list(username, user_token):
-    vae_model_on_cloud = ['None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
-    return vae_model_on_cloud
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    return controlnet_model_on_cloud
+
+
+def load_xyz_controlnet_list(username, user_token):
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(
+        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    return controlnet_model_on_cloud
 
 
 def load_embeddings_list(username, user_token):
@@ -1403,10 +1410,12 @@ def create_ui(is_img2img):
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
                     controlnet_list = load_controlnet_list(pr.username, pr.username)
+                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
                     lora_hypernets = {
                         'lora': lora_models_on_cloud,
                         'hypernet': hypernetworks_models_on_cloud,
                         'controlnet': controlnet_list,
+                        'controlnet_xyz': controlnet_xyz_list,
                         'vae': vae_model_on_cloud,
                         'sd': models_on_cloud,
                     }
