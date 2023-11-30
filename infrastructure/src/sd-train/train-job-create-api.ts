@@ -18,6 +18,7 @@ export interface CreateTrainJobApiProps{
   httpMethod: string;
   modelTable: aws_dynamodb.Table;
   trainTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
@@ -36,12 +37,14 @@ export class CreateTrainJobApi {
   private readonly router: aws_apigateway.Resource[];
   private readonly trainTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: CreateTrainJobApiProps) {
     this.id = id;
     this.scope = scope;
     this.srcRoot = props.srcRoot;
     this.checkpointTable = props.checkpointTable;
+    this.multiUserTable = props.multiUserTable;
     this.modelTable = props.modelTable;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -72,6 +75,7 @@ export class CreateTrainJobApi {
         this.modelTable.tableArn,
         this.trainTable.tableArn,
         this.checkpointTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
@@ -120,6 +124,7 @@ export class CreateTrainJobApi {
         TRAIN_TABLE: this.trainTable.tableName,
         MODEL_TABLE: this.modelTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });

@@ -11,7 +11,7 @@ import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
 import * as stepfunctionsTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { SnsPublishProps } from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import { Construct } from 'constructs';
-import {LAMBDA_START_DEPLOY_ROLE_NAME} from "../shared/deploy-role";
+import { LAMBDA_START_DEPLOY_ROLE_NAME } from '../shared/deploy-role';
 
 
 export interface SagemakerInferenceProps {
@@ -185,9 +185,9 @@ export class SagemakerInferenceStateMachine {
     );
 
     const lambdaStartDeployRole = <iam.Role>iam.Role.fromRoleName(
-        this.scope,
-        'LambdaStartDeployRole',
-        LAMBDA_START_DEPLOY_ROLE_NAME
+      this.scope,
+      'LambdaStartDeployRole',
+      LAMBDA_START_DEPLOY_ROLE_NAME,
     );
     lambdaStartDeployRole.addToPolicy(lambdaPolicy);
     lambdaStartDeployRole.addToPolicy(snsStatement);

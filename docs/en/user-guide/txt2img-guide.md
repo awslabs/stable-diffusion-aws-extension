@@ -37,5 +37,11 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 
 
 
+### Inference Using Extra Model(s) like Lora
+1. Please follow the native version of WebUI, and upload a copy of the required model (including Textual Inversion, Hypernetworks, Checkpoints or Lora models) to local machine.
+2. Upload corresponding models to the cloud, following [Upload Models](../CloudAssetsManage/).
+3. Select the required model, adjust the weights of the model in prompts field, and click **Generate on Cloud** to inference images.
+
+
 ## Inference Job
 Inference Job displays latest 10 inference job by default, following naming format Time-Type-Status-Uuid. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users customized inference job list.

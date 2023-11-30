@@ -19,6 +19,7 @@ export interface CreateModelJobApiProps {
   httpMethod: string;
   modelTable: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
@@ -31,6 +32,7 @@ export class CreateModelJobApi {
   private readonly scope: Construct;
   private readonly modelTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly layer: aws_lambda.LayerVersion;
 
@@ -46,6 +48,7 @@ export class CreateModelJobApi {
     this.s3Bucket = props.s3Bucket;
     this.layer = props.commonLayer;
     this.checkpointTable = props.checkpointTable;
+    this.multiUserTable = props.multiUserTable;
 
     this.createModelJobApi();
   }
@@ -66,7 +69,11 @@ export class CreateModelJobApi {
         'dynamodb:UpdateItem',
         'dynamodb:DeleteItem',
       ],
-      resources: [this.modelTable.tableArn, this.checkpointTable.tableArn],
+      resources: [
+        this.modelTable.tableArn,
+        this.checkpointTable.tableArn,
+        this.multiUserTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -109,6 +116,7 @@ export class CreateModelJobApi {
         DYNAMODB_TABLE: this.modelTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });

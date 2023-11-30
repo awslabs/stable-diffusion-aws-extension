@@ -4,7 +4,7 @@ info:
   description: "This service is used to train and deploy Stable Diffusion models."
   version: "2023-07-05"
 servers:
-  - url: "https://<Your API Gateway ID>.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}"
+  - url: "https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}"
     variables:
       basePath:
         default: "prod"
@@ -667,7 +667,7 @@ paths:
                     output_path: path_of_prediction_output
 
 
-  /inference/deploy-sagemaker-endpoint:
+  /endpoints:
     post:
       summary: Deploy Sagemaker Endpoint
       operationId: deploy_sagemaker_endpoint_inference_deploy_sagemaker_endpoint_post
@@ -678,14 +678,14 @@ paths:
               type: object
               example:
                  instance_type: ml.g4dn.xlarge | ml.g4dn.2xlarge | ml.g4dn.4xlarge
-                 initial_instance_count: 1|2|3|4
+                 initial_instance_count: 1|2|3|4|5|6
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema: {}
-  /inference/delete-sagemaker-endpoint:
+  /endpoints:
     post:
       summary: Delete Sagemaker Endpoint
       operationId: delete_sagemaker_endpoint_inference_delete_sagemaker_endpoint_post
@@ -702,7 +702,7 @@ paths:
           content:
             application/json:
               schema: {}
-  /inference/list-endpoint-deployment-jobs:
+  /endpoints:
     get:
       summary: List Endpoint Deployment Jobs
       operationId: list_endpoint_deployment_jobs_inference_list_endpoint_deployment_jobs_get
@@ -711,13 +711,13 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: 
+              schema:
                 type: object
                 example:
                   - EndpointDeploymentJobId: e0f9ccfd-8d14-4e77-9e75-b340e1ef23c8
                     startTime: '2023-07-04 08:00:35.171309'
                     endTime: '2023-07-04 08:00:37.158519'
-                    error: '' 
+                    error: ''
                     status: failed
                   - EndpointDeploymentJobId: 1bd447d2-e561-4cb3-965d-2707b30aea81
                     startTime: '2023-07-04 08:00:22.435828'
@@ -776,7 +776,7 @@ paths:
           description: Successful Response
           content:
             application/json:
-              schema: 
+              schema:
                 type: object
                 example:
                  EndpointDeploymentJobId: cb821ea9-e9d1-4bae-98f8-c20ecadf11e0
@@ -973,7 +973,7 @@ paths:
                example:
                 primary_model_name : primary_model_name,
                 secondary_model_name : secondary_model_name,
-                tertiary_model_name : teritary_model_name 
+                tertiary_model_name : teritary_model_name
   # Inference End
 
 components:

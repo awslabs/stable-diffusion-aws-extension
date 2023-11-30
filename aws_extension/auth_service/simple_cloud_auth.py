@@ -21,8 +21,7 @@ def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
             data = json.load(json_file)
             return ('api_gateway_url' in data and data['api_gateway_url']) and \
                    ('api_token' in data and data['api_token']) and \
-                   ('username' in data and data['username']) and \
-                   ('password' in data and data['password'])
+                   ('username' in data and data['username'])
 
     return False
 
