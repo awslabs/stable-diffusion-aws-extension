@@ -19,6 +19,7 @@ export interface ListAllRolesApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllRolesApi {
@@ -29,6 +30,7 @@ export class ListAllRolesApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   constructor(scope: Construct, id: string, props: ListAllRolesApiProps) {
     this.scope = scope;
@@ -38,6 +40,7 @@ export class ListAllRolesApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.authorizer = props.authorizer;
 
     this.listAllRolesApi();
   }
@@ -104,6 +107,10 @@ export class ListAllRolesApi {
                         '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
                         '        #if($foreach.hasNext),#end\n' +
                         '        #end\n' +
+                        '    },\n' +
+                        '    "x-auth": {\n' +
+                        '        "username": "$context.authorizer.username",\n' +
+                        '        "role": "$context.authorizer.role"\n' +
                         '    }\n' +
                         '}',
         },
@@ -112,6 +119,7 @@ export class ListAllRolesApi {
     );
     this.router.addMethod(this.httpMethod, listRolesIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.last_evaluated_key': false,
         'method.request.querystring.limit': false,

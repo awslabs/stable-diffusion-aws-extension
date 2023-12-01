@@ -1,4 +1,5 @@
 #import sagemaker
+import base64
 import re
 import math
 import threading
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 job_link_list = []
 ckpt_dict = {}
 base_model_folder = "models/sagemaker_dreambooth/"
+
 
 def get_cloud_ckpts():
     global ckpt_dict
@@ -55,6 +57,7 @@ def get_sd_cloud_models():
     names += get_cloud_ckpt_name_list()
     return names
 
+
 def async_create_model_on_sagemaker(
         new_model_name: str,
         ckpt_path: str,
@@ -65,8 +68,10 @@ def async_create_model_on_sagemaker(
         extract_ema=False,
         train_unfrozen=False,
         is_512=True,
+        creator=""
 ):
     params = copy.deepcopy(locals())
+    del params['creator']
     integral_check = False
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -102,8 +107,9 @@ def async_create_model_on_sagemaker(
                 "params": {
                     "ckpt_from_cloud": True,
                     "s3_ckpt_path": f'{ckpt_dict[ckpt_key]["s3Location"]}/{ckpt_name_list[0]}',
-                    "create_model_params": params
-                }
+                    "create_model_params": params,
+                },
+                "creator": creator,
             }
             print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
@@ -134,7 +140,8 @@ def async_create_model_on_sagemaker(
                     "filename": local_tar_path,
                     "parts_number": parts_number
                 }],
-                "params": {"create_model_params": params}
+                "params": {"create_model_params": params},
+                "creator": creator,
             }
             print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
@@ -185,35 +192,37 @@ def async_create_model_on_sagemaker(
                 gr.Error(f'model {new_model_name} not created, please try again')
 
 
-
-
 local_job_cache = {
     'create_model': {},
 }
+
 
 def cloud_create_model(
         new_model_name: str,
         ckpt_path: str,
         shared_src: str,
-        from_hub=False,
-        new_model_url="",
-        new_model_token="",
-        extract_ema=False,
-        train_unfrozen=False,
-        is_512=True,
+        from_hub,
+        new_model_url,
+        new_model_token,
+        extract_ema,
+        train_unfrozen,
+        is_512,
+        pr: gr.Request
 ):
+
     upload_thread = threading.Thread(target=async_create_model_on_sagemaker,
-                                     args=(new_model_name, ckpt_path, shared_src, from_hub, new_model_url, new_model_token, extract_ema, train_unfrozen, is_512))
+                                     args=(new_model_name, ckpt_path, shared_src, from_hub, new_model_url, new_model_token, extract_ema, train_unfrozen, is_512, pr.username))
     upload_thread.start()
 
-    dashboard_list = get_create_model_job_list()
+    dashboard_list = get_create_model_job_list(pr)
     dashboard_list.insert(0, ['', new_model_name, 'Initialed at Local'])
     global local_job_cache
     local_job_cache[new_model_name]='created'
 
     return dashboard_list
 
-def get_create_model_job_list():
+
+def get_create_model_job_list(pr: gr.Request):
     # Start creating model on cloud.
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
@@ -225,8 +234,13 @@ def get_create_model_job_list():
     dashboard_list = []
     try:
         url += "models?types=Stable-diffusion"
-        response = requests.get(url=url, headers={'x-api-key': api_key}).json()
-        response['models'].sort(key=lambda t:t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+        encode_type = "utf-8"
+        response = requests.get(url=url, headers={
+            'x-api-key': api_key,
+            'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}'
+        }).json()
+
+        response['models'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
         for model in response['models']:
             if model['model_name'] in local_job_cache['create_model']:
                 del local_job_cache['create_model'][model['model_name']]
@@ -234,7 +248,7 @@ def get_create_model_job_list():
             dashboard_list.append([model['id'][:6], model['model_name'], model["status"]])
 
         if local_job_cache is not None and len(local_job_cache['create_model']) > 0:
-            dashboard_list = [ ['', item, 'Initialed at Local'] for item in local_job_cache['create_model']] +  dashboard_list
+            dashboard_list = [['', item, 'Initialed at Local'] for item in local_job_cache['create_model']] + dashboard_list
     except Exception as e:
         print(f"exception {e}")
         return []

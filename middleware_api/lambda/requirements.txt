@@ -1,3 +1,2 @@
 sagemaker==2.143.0
 requests
-aws-lambda-powertools

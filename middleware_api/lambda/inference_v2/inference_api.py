@@ -33,6 +33,7 @@ class PrepareEvent:
     filters: dict[str, Any]
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
+    role: Optional[str] = None
 
 
 # POST /inference/v2
@@ -52,7 +53,7 @@ def prepare_inference(raw_event, context):
             }
 
         # check if endpoint table for endpoint status and existence
-        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
+        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id, event.role)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
 
@@ -324,7 +325,7 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
-def _schedule_inference_endpoint(endpoint_name, user_id):
+def _schedule_inference_endpoint(endpoint_name, user_id, role):
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
     if endpoint_name:
@@ -341,16 +342,30 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
     elif user_id:
         sagemaker_endpoint_raws = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         user_roles = get_user_roles(ddb_service, user_table, user_id)
-        available_endpoints = []
+        endpoints_pools = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
-            if endpoint.endpoint_status != 'InService':
+            if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
                 continue
 
             if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):
-                available_endpoints.append(endpoint)
+                endpoints_pools.append(endpoint)
+
+        if len(endpoints_pools) == 0:
+            raise Exception(f'no available Endpoints for user "{user_id}"')
+
+        if role and role not in user_roles:
+            raise Exception(f'user has no permission to access the endpoint for {role}')
+
+        available_endpoints = []
+        if role:
+            for endpoint in endpoints_pools:
+                if role in endpoint.owner_group_or_role:
+                    available_endpoints.append(endpoint)
+        if not role:
+            available_endpoints = endpoints_pools
 
         if len(available_endpoints) == 0:
-            raise Exception(f'no available Endpoints for user "{user_id}"')
+            raise Exception(f'no available Endpoints for user "{user_id}" and role "{role}"')
 
         return random.choice(available_endpoints)

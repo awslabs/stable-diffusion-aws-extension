@@ -31,7 +31,9 @@
         - *Dataset Directory* 处填写训练所需的图片路径，可以是web server上的路径也可以是s3路径，s3路径可以从**AWS Dataset Management**中上传数据后获取或者自行上传s3后获取，需以s3://开头。
         - *Training Prompts* 下的 *Instance Prompt* 处填写概念的关键词，关键词用于后续txt2img中生成本次训练所产生的概念，因此不要是常见的英文单词（会和基础模型中的其他概念混淆）。
    ![Input concepts](../images/dreambooth-input-concepts.png) 
-    - 需要选择将模型保存到子目录 **Save Checkpoint to Subdirectory**。目前不支持单独保存lora模型，所以请不要勾选**Generate lora weights for extra networks**。
+    - 需要选择将模型保存到子目录 **Save Checkpoint to Subdirectory**。
+    - 如果需要单独保存lora模型(这样模型文件会比较小,但需要配合SD基础模型使用)，请勾选**Generate lora weights for extra networks**。
+   ![Input saving](../images/dreambooth-lora-save.png) 
 
 4. 点击**SageMaker Train**，启动模型训练任务。**Training Job Details**区域会即时增加本次模型训练的工作状态。当状态变成**Complete**，同时您部署解决方案时预留的邮箱将会收到邮件通知，即完成模型训练。
 5. 后续工作。可以进入**txt2img**标签页的**Amazon SageMaker Inference**面板，刷新**Stable Diffusion Checkpoint**，即可看到已训练好的模型。

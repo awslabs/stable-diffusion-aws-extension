@@ -12,7 +12,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 class SimpleSagemakerInfer(InferManager):
 
-    def run(self, userid, models, sd_param, is_txt2img):
+    def run(self, userid, user_role, models, sd_param, is_txt2img):
         # finished construct api payload
         sd_api_param_json = _parse_api_param_to_json(api_param=sd_param)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -36,7 +36,8 @@ class SimpleSagemakerInfer(InferManager):
             'filters': {
                 'createAt': datetime.now().timestamp(),
                 'creator': 'sd-webui'
-            }
+            },
+            'role': user_role
         }
         logger.debug(payload)
         inference_id = None
