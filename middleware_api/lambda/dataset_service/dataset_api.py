@@ -111,7 +111,7 @@ def list_datasets_api(event, context):
     _filter = {}
     if 'queryStringParameters' not in event:
         return {
-            'statusCode': '500',
+            'statusCode': 500,
             'error': 'query parameter status and types are needed'
         }
 
@@ -121,7 +121,7 @@ def list_datasets_api(event, context):
 
     if 'x-auth' not in event or not event['x-auth']['username']:
         return {
-            'statusCode': '400',
+            'statusCode': 400,
             'error': 'no auth user provided'
         }
 
@@ -131,7 +131,7 @@ def list_datasets_api(event, context):
     if 'train' not in requestor_permissions or \
             ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
         return {
-            'statusCode': '400',
+            'statusCode': 400,
             'error': f'user has no permission to train'
         }
 
@@ -173,14 +173,14 @@ def list_data_by_dataset(event, context):
     _filter = {}
     if 'pathStringParameters' not in event:
         return {
-            'statusCode': '500',
+            'statusCode': 500,
             'error': 'path parameter /dataset/{dataset_name}/ are needed'
         }
 
     dataset_name = event['pathStringParameters']['dataset_name']
     if not dataset_name or len(dataset_name) == 0:
         return {
-            'statusCode': '500',
+            'statusCode': 500,
             'error': 'path parameter /dataset/{dataset_name}/ are needed'
         }
 
@@ -190,7 +190,7 @@ def list_data_by_dataset(event, context):
 
     if not dataset_info_rows or len(dataset_info_rows) == 0:
         return {
-            'statusCode': '500',
+            'statusCode': 500,
             'error': 'path parameter /dataset/{dataset_name}/ are not found'
         }
 
@@ -198,7 +198,7 @@ def list_data_by_dataset(event, context):
 
     if 'x-auth' not in event or not event['x-auth']['username']:
         return {
-            'statusCode': '400',
+            'statusCode': 400,
             'error': 'no auth user provided'
         }
 
@@ -211,7 +211,7 @@ def list_data_by_dataset(event, context):
             (not dataset_info.allowed_roles_or_users and 'user' in requestor_permissions and 'all' in requestor_permissions['user']) # legacy data for super admin
     ):
         return {
-            'statusCode': '400',
+            'statusCode': 400,
             'error': 'no permission to view dataset'
         }
 
