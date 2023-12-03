@@ -361,6 +361,9 @@ class Api:
         show_slim_dict(interrogate_payload)
 
         payload = payload_filter(payload)
+        if req.task != 'lcm_lora_pipeline':
+            shared.sd_pipeline.unload_lora_weights()
+
         try:
             if req.task == 'txt2img':
                 with self.queue_lock:
@@ -391,6 +394,7 @@ class Api:
             elif req.task == 'lcm_lora_pipeline':
                 with self.queue_lock:
                     sd_model_update_dict={}
+                    sd_model_update_dict['space_free_size'] = req.models['space_free_size']
                     sd_model_update_dict['Stable-diffusion'] = req.models['Stable-diffusion']
                     checkspace_and_update_models(sd_model_update_dict)
                     response = lcm_lora_pipeline(payload, req.models)

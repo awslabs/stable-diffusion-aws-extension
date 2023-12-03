@@ -8,6 +8,7 @@ from diffusers.pipelines.controlnet import MultiControlNetModel
 from diffusers import StableDiffusionXLControlNetInpaintPipeline, StableDiffusionControlNetInpaintPipeline
 from modules.paths_internal import models_path
 import os
+import random
 
 sd_model_folder = "Stable-diffusion"
 controlnet_folder = 'ControlNet'
@@ -15,7 +16,7 @@ sd_model_path = os.path.abspath(os.path.join(models_path, sd_model_folder))
 controlnet_path = os.path.abspath(os.path.join(models_path, sd_model_folder))
 
 def lcm_pipeline(payload, used_models):
-    sd_model_name = used_models['Stable-diffusion'][0]
+    sd_model_name = used_models['Stable-diffusion'][0]['model_name']
     init_images = None
     mask = None
     seed = payload['seed']
@@ -87,11 +88,11 @@ def lcm_pipeline(payload, used_models):
     generate_parameter['steps'] = payload['steps']
   
 
-    return models.TextToImageResponse(images=b64images, parameters=generate_parameter)
+    return models.TextToImageResponse(images=b64images, parameters=generate_parameter, info='')
 
 
 def lcm_lora_pipeline(payload, used_models):
-    sd_model_name = used_models['Stable-diffusion'][0]
+    sd_model_name = used_models['Stable-diffusion'][0]['model_name']
     controlnet_models = None
     if 'ControlNet' in used_models:
         controlnet_models = used_models['ControlNet']
@@ -100,7 +101,14 @@ def lcm_lora_pipeline(payload, used_models):
     mask = None
     control_images = None
     strength = 1 
-    seed = payload['seed']
+    if 'seed' in payload:
+        seed = payload['seed']
+    else:
+        seed = -1
+
+    if seed == -1:
+        seed = int(random.randrange(4294967294))
+
     generator = torch.manual_seed(seed)
     if 'init_images' in payload:
         init_images = payload['init_images']
@@ -115,30 +123,33 @@ def lcm_lora_pipeline(payload, used_models):
         strength = payload['strength']
     
     if 'xl' in sd_model_name and 'inpainting' in sd_model_name:
-        if shared.sd_pipeline.pipeline_name != 'lcm_lora_sdxl_inpaint':
+        if shared.sd_pipeline.pipeline_name != 'LCM_Lora_SDXL_Inpaint':
             shared.sd_pipeline = DiffusionPipeline.from_pretrained(sd_model_name, torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
-            shared.sd_pipeline.pipeline_name = 'lcm_lora_sdxl_inpaint'
-            shared.opts.data["sd_checkpoint_name"] = sd_model_name
+            shared.sd_pipeline.pipeline_name = 'LCM_Lora_SDXL_Inpaint'
+            shared.opts.data["sd_checkpoint_name"] = os.path.splitext(sd_model_name)[0]
             shared.sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdxl")
     elif 'xl' in sd_model_name:
-        if shared.opts.data["sd_checkpoint_name"] != sd_model_name:
+        if shared.opts.data["sd_checkpoint_name"] != os.path.splitext(sd_model_name)[0]:
             shared.sd_pipeline = StableDiffusionXLPipeline.from_single_file(os.path.join(sd_model_path, sd_model_name), torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
-            shared.sd_pipeline.pipeline_name = 'lcm_lora_sdxl'
-            shared.opts.data["sd_checkpoint_name"] = sd_model_name
+            shared.opts.data["sd_checkpoint_name"] = os.path.splitext(sd_model_name)[0]
+        if shared.sd_pipeline.pipeline_name != 'LCM_Lora_SDXL':
             shared.sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdxl")
+            shared.sd_pipeline.pipeline_name = 'LCM_Lora_SDXL'
     else:
         if 'inpainting' in sd_model_name:
-            if shared.sd_pipeline.pipeline_name != 'lcm_loral_sdv15_inpaint':
+            if shared.opts.data["sd_checkpoint_name"] != os.path.splitext(sd_model_name)[0]:
                 shared.sd_pipeline = StableDiffusionInpaintPipeline.from_single_file(os.path.join(sd_model_path, sd_model_name), torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
-                shared.sd_pipeline.pipeline_name = 'lcm_loral_sdv15_inpaint'
-                shared.opts.data["sd_checkpoint_name"] = sd_model_name
+                shared.opts.data["sd_checkpoint_name"] = os.path.splitext(sd_model_name)[0]
+            if shared.sd_pipeline.pipeline_name != 'LCM_Lora_SD15_Inpaint':
+                shared.sd_pipeline.pipeline_name = 'LCM_Lora_SD15_Inpaint'
                 shared.sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
         else:
-            if shared.opts.data["sd_checkpoint_name"] != sd_model_name:
+            if shared.opts.data["sd_checkpoint_name"] != os.path.splitext(sd_model_name)[0]:
                 shared.sd_pipeline = StableDiffusionPipeline.from_single_file(os.path.join(sd_model_path, sd_model_name), torch_dtype=torch.float16, load_safety_checker=False, variant="fp16")
-                shared.sd_pipeline.pipeline_name = 'lcm_loral_sdv15'
-                shared.opts.data["sd_checkpoint_name"] = sd_model_name
+                shared.opts.data["sd_checkpoint_name"] = os.path.splitext(sd_model_name)[0]
+            if shared.sd_pipeline.pipeline_name != 'LCM_Lora_SD15':
                 shared.sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdv1-5")
+                shared.sd_pipeline.pipeline_name = 'LCM_Lora_SD15'
 
     if init_images is not None and mask is None:
         shared.sd_pipeline = AutoPipelineForImage2Image(**shared.sd_pipeline.components)
@@ -153,7 +164,7 @@ def lcm_lora_pipeline(payload, used_models):
             valid_control_networks = valid_controlnets[0]
         elif len(valid_controlnets) > 1:
             valid_control_networks = MultiControlNetModel(valid_controlnets)
-        if 'sdxl' in shared.sd_pipeline.pipeline_name:
+        if 'XL' in shared.sd_pipeline.pipeline_name:
             pipeline_class = StableDiffusionXLControlNetPipeline
             if 'inpainting' in shared.sd_pipeline.pipeline_name:
                 pipeline_class = StableDiffusionXLControlNetInpaintPipeline
@@ -162,7 +173,7 @@ def lcm_lora_pipeline(payload, used_models):
                 shared.sd_pipeline.controlnet = valid_control_networks
             else:
                 shared.sd_pipeline = pipeline_class(**shared.sd_pipeline.components, controlnet=valid_control_networks)
-            shared.sd_pipeline_pipeline_name = 'lcm_sdxl_controlnet'
+            shared.sd_pipeline_pipeline_name = 'LCM_SDXL_Controlnet'
         else:
             pipeline_class = StableDiffusionControlNetPipeline
             if 'inpainting' in shared.sd_pipeline.pipeline_name:
@@ -172,7 +183,7 @@ def lcm_lora_pipeline(payload, used_models):
                 shared.sd_pipeline.controlnet = valid_control_networks
             else:
                 shared.sd_pipeline = pipeline_class(**shared.sd_pipeline.components, controlnet=valid_control_networks)
-            shared.sd_pipeline_pipeline_name = 'lcm_sdv15_controlnet'
+            shared.sd_pipeline_pipeline_name = 'LCM_SD_Controlnet'
     elif 'controlnet' in list(shared.sd_pipeline.components.keys()):
         if init_images is not None and mask is not None:
             if 'xl' in sd_model_name:
@@ -191,7 +202,6 @@ def lcm_lora_pipeline(payload, used_models):
                 shared.sd_pipeline = AutoPipelineForText2Image(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)    
 
     shared.sd_pipeline.scheduler = LCMScheduler.from_config(shared.sd_pipeline.scheduler.config)
-    shared.generator = generator
     shared.sd_pipeline.to('cuda')
     if 'controlnet' in shared.sd_pipeline.pipeline_name:
         output = shared.sd_pipeline(
@@ -200,11 +210,21 @@ def lcm_lora_pipeline(payload, used_models):
                     height=payload['height'],
                     width=payload['width'],
                     image=input_control_imgs,
-                    controlnet_conditioning_scale=0.8,
+                    controlnet_conditioning_scale=payload['controlnet_conditioning_scale'],
                     guidance_scale=payload['cfg_scale'],
-                    num_inference_steps=payload['steps']
+                    num_inference_steps=payload['steps'],
+                    generator=generator
                     ).images
     else:
+        # output = shared.sd_pipeline(
+        #             prompt='a beautiful girl of realistic style',
+        #             negative_prompt=payload['negative_prompt'],
+        #             height=payload['height'],
+        #             width=payload['width'],
+        #             guidance_scale=payload['cfg_scale'],
+        #             num_inference_steps=payload['steps'],
+        #             generator=generator
+        #             ).images
         output = shared.sd_pipeline(
                     prompt=payload['prompt'],
                     negative_prompt=payload['negative_prompt'],
@@ -216,6 +236,23 @@ def lcm_lora_pipeline(payload, used_models):
                     guidance_scale=payload['cfg_scale'],
                     num_inference_steps=payload['steps']
                     ).images
+    
+    # shared.sd_pipeline.to('cpu')
+    # sd_pipeline = AutoPipelineForText2Image.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", torch_dtype=torch.float16, variant="fp16")
+    # sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdxl")
+    # sd_pipeline.scheduler = LCMScheduler.from_config(sd_pipeline.scheduler.config)
+    # sd_pipeline.to('cuda')
+    # for i in range(10):
+    #     output1 = sd_pipeline(
+    #                     prompt=payload['prompt'],
+    #                     negative_prompt=payload['negative_prompt'],
+    #                     height=payload['height'],
+    #                     width=payload['width'],
+    #                     guidance_scale=payload['cfg_scale'],
+    #                     num_inference_steps=payload['steps']
+    #                     ).images[0]
+    
+    #     output1.save('test_lcm_%d.png'%i)
 
     b64images = list(map(encode_pil_to_base64, output))
 
@@ -226,4 +263,4 @@ def lcm_lora_pipeline(payload, used_models):
     generate_parameter['cfg_scale'] = payload['cfg_scale']
     generate_parameter['steps'] = payload['steps']
 
-    return models.TextToImageResponse(images=b64images, parameters=generate_parameter)
+    return models.TextToImageResponse(images=b64images, parameters=generate_parameter, info='')
