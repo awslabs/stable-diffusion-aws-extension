@@ -15,6 +15,7 @@ from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
 from aws_extension import sagemaker_ui
+import modules.sd_vae
 
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
 from aws_extension.inference_scripts_helper.scripts_processor import process_args_by_plugin
@@ -399,10 +400,10 @@ class SageMakerUI(scripts.Script):
         # check if endpoint is inService
         sd_model_on_cloud = args[0]
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
-            if self.is_txt2img:
+            if self.is_txt2img and self.original_selectable_scripts[cache_name] != None:
                 scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
 
-            if self.is_img2img:
+            if self.is_img2img and self.original_selectable_scripts[cache_name]!= None:
                 scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
             return
 
@@ -643,6 +644,49 @@ if os.environ.get('ON_DOCKER', "false") != "true":
     call_queue.queue_lock = ImprovedFiFoLock()
 
 
+def apply_checkpoint_detector(origin_fn, cloud_fn):
+    def wrapper(*args):
+        try:
+            return cloud_fn(*args)
+        except Exception as e:
+            return origin_fn(*args)
+
+    return wrapper
+
+def find_vae(name: str):
+    if name.lower() in ['auto', 'automatic']:
+        return modules.sd_vae.unspecified
+    if name.lower() == 'none':
+        return None
+    else:
+        choices = [x for x in sorted(modules.sd_vae.vae_dict, key=lambda x: len(x)) if name.lower().strip() in x.lower()]
+        if len(choices) == 0:
+            print(f"No VAE found for {name}; using automatic")
+            return modules.sd_vae.unspecified
+        else:
+            return modules.sd_vae.vae_dict[choices[0]]
+
+
+def apply_vae(p, x, xs):
+    modules.sd_vae.reload_vae_weights(shared.sd_model, vae_file=find_vae(x))
+
+
+def apply_checkpoint(p, x, xs):
+    # info = modules.sd_models.get_closet_checkpoint_match(x)
+    # if info is None:
+    #     raise RuntimeError(f"Unknown checkpoint: {x}")
+    p.override_settings['sd_model_checkpoint'] = x
+
+
+def apply_controlnet(p, x, xs):
+    shared.opts.data["control_net_allow_script_control"] = True
+    setattr(p, 'control_net_model', x)
+
+
+def apply_refiner(p, x, xs):
+    setattr(p, 'refiner_checkpoint', x)
+
+
 def _list_models(origin_fn, cloud_fn):
     def wrapper(*args):
         if len(args) == 0:
@@ -705,7 +749,7 @@ if xyz_grid:
     sd_models_xyz_option.choices = _list_models(origin_fn=sd_models_xyz_option.choices, cloud_fn=_list_cloud_sd_models)
     sd_models_xyz_option.confirm = lambda *args: ""
     sd_models_xyz_option.format_value = format_nothing
-    sd_models_xyz_option.apply = lambda x: x
+    sd_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=sd_models_xyz_option.apply, cloud_fn=apply_checkpoint)
     sagemaker_xyz_extensions.append(sd_models_xyz_option)
 
     vae_models_xyz_option = xyz_grid.axis_options[30]
@@ -713,7 +757,7 @@ if xyz_grid:
                                                  cloud_fn=_list_cloud_vae_models)
     vae_models_xyz_option.confirm = lambda *args: ""
     vae_models_xyz_option.format_value = format_nothing
-    vae_models_xyz_option.apply = lambda x: x
+    vae_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=vae_models_xyz_option.apply, cloud_fn=apply_vae)
     sagemaker_xyz_extensions.append(vae_models_xyz_option)
 
     refiner_models_xyz_option = xyz_grid.axis_options[38]
@@ -721,7 +765,7 @@ if xyz_grid:
                                                      cloud_fn=_list_cloud_refiner_models)
     refiner_models_xyz_option.confirm = lambda *args: ""
     refiner_models_xyz_option.format_value = format_nothing
-    refiner_models_xyz_option.apply = lambda x: x
+    refiner_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=refiner_models_xyz_option.apply, cloud_fn=apply_refiner)
     sagemaker_xyz_extensions.append(refiner_models_xyz_option)
 
     controlnet_models_xyz_option = xyz_grid.axis_options[42]
@@ -729,7 +773,7 @@ if xyz_grid:
                                                         cloud_fn=_list_cloud_controlnet_models)
     controlnet_models_xyz_option.confirm = lambda *args: ""
     controlnet_models_xyz_option.format_value = format_nothing
-    controlnet_models_xyz_option.apply = lambda x: x
+    controlnet_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=controlnet_models_xyz_option.apply, cloud_fn=apply_controlnet)
     sagemaker_xyz_extensions.append(controlnet_models_xyz_option)
 
     xyz_options = xyz_grid.axis_options

@@ -1,5 +1,16 @@
 from typing import Dict, List
 
+IMG_XYZ_CHECKPOINT_INDEX = 10
+TXT_XYZ_CHECKPOINT_INDEX = 11
+
+IMG_XYZ_REFINER_CHECKPOINT_INDEX = 34
+TXT_XYZ_REFINER_CHECKPOINT_INDEX = 35
+
+IMG_XYZ_VAE_INDEX = 26
+TXT_XYZ_VAE_INDEX = 27
+
+IMG_XYZ_CONTROLNET_INDEX = 38
+TXT_XYZ_CONTROLNET_INDEX = 39
 
 def xyz_args(script_name, arg, current_index, args, cache, is_txt2img):
     if script_name != 'x/y/z plot':
@@ -13,10 +24,11 @@ def xyz_args(script_name, arg, current_index, args, cache, is_txt2img):
     if current_index - 2 < 0:
         return {}, None
 
-    if is_txt2img and (args[current_index - 2] == 11 or args[current_index - 2] == 35):
+    if is_txt2img and (args[current_index - 2] == TXT_XYZ_CHECKPOINT_INDEX
+                       or args[current_index - 2] == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
         return {'Stable-diffusion': arg}, None
 
-    elif is_txt2img and (args[current_index - 2] == 39):
+    elif is_txt2img and (args[current_index - 2] == TXT_XYZ_CONTROLNET_INDEX):
         models = []
         for filename in cache['controlnet']:
             for model_without_type in arg:
@@ -24,13 +36,14 @@ def xyz_args(script_name, arg, current_index, args, cache, is_txt2img):
                     models.append(filename)
         return {'ControlNet': models}, None
 
-    elif is_txt2img and (args[current_index - 2] == 27):
+    elif is_txt2img and (args[current_index - 2] == TXT_XYZ_VAE_INDEX):
         return {'VAE': arg}, None
 
-    elif not is_txt2img and (args[current_index - 2] == 10 or args[current_index - 2] == 34):
+    elif not is_txt2img and (args[current_index - 2] == IMG_XYZ_CHECKPOINT_INDEX
+                             or args[current_index - 2] == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
         return {'Stable-diffusion': arg}, None
 
-    elif not is_txt2img and (args[current_index - 2] == 38):
+    elif not is_txt2img and (args[current_index - 2] == IMG_XYZ_CONTROLNET_INDEX):
         models = []
         for filename in cache['controlnet']:
             for model_without_type in arg:
@@ -38,7 +51,7 @@ def xyz_args(script_name, arg, current_index, args, cache, is_txt2img):
                     models.append(filename)
         return {'ControlNet': models}, None
 
-    elif not is_txt2img and (args[current_index - 2] == 26):
+    elif not is_txt2img and (args[current_index - 2] == IMG_XYZ_VAE_INDEX):
         return {'VAE': arg}, None
 
     return {}, None
