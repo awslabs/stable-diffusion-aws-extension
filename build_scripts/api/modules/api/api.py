@@ -45,7 +45,6 @@ import logging
 from dreambooth.sd_to_diff import extract_checkpoint
 from diffusers import AutoPipelineForText2Image
 import torch
-from modules.api.lcm_processing import lcm_pipeline, lcm_lora_pipeline
 
 if os.environ.get("DEBUG_API", False):
     logging.basicConfig(level=logging.DEBUG)
@@ -384,23 +383,7 @@ class Api:
                     response = self.wuerstchen_pipeline(payload)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
-                    return response
-            elif req.task == 'lcm_pipeline':
-                with self.queue_lock:
-                    response = lcm_pipeline(payload, req.models)
-                    logger.info(
-                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
-                    return response
-            elif req.task == 'lcm_lora_pipeline':
-                with self.queue_lock:
-                    sd_model_update_dict={}
-                    sd_model_update_dict['space_free_size'] = req.models['space_free_size']
-                    sd_model_update_dict['Stable-diffusion'] = req.models['Stable-diffusion']
-                    checkspace_and_update_models(sd_model_update_dict)
-                    response = lcm_lora_pipeline(payload, req.models)
-                    logger.info(
-                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
-                    return response
+                    return response   
             elif req.task == 'db-create-model':
                 # logger.info("db-create-model not implemented!")
                 # return 0

@@ -1,6 +1,7 @@
 from modules import shared
 
 from diffusers import (
+    LCMScheduler,
     DDPMScheduler,
     DDIMScheduler,
     PNDMScheduler,
@@ -111,6 +112,8 @@ def update_sampler(name, pipeline, pipeline_name):
         pipeline.scheduler = DPMSolverSinglestepScheduler.from_config(pipeline.scheduler.config, use_karras_sigma=True)
     elif name == 'DPM++ 2M SDE Karras':
         pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config, use_karras_sigma=True, algorithm_type="sde-dpmsolver++")
+    elif name == 'LCM':
+        pipeline.scheduler = LCMScheduler.from_config(pipeline.scheduler.config)
     else:
         raise NotImplementedError
 
