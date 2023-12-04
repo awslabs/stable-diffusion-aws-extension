@@ -602,7 +602,7 @@ for x in axis_options_aws:
         shared.axis_options_aws.append(x)
     else:
         try:
-            converted_obj = AxisOption(*x.__dict__)  # 使用实际参数来创建 AxisOption 对象
+            converted_obj = AxisOption(*x.__dict__)
             shared.axis_options_aws.append(converted_obj)
         except Exception as e:
             print(f"Failed to convert object: {x}. Error: {e}")
