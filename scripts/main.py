@@ -156,134 +156,6 @@ class SageMakerUI(scripts.Script):
             elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
                 self.img2img_generate_btn = component
 
-        # refiner models
-        def change_decorator(original_change, fn, inputs, outputs):
-            def wrapper(*args, **kwargs):
-                logger.info("Executing extra logic before original change method")
-                kwargs['fn'] = fn
-                result = original_change(*args, **kwargs)
-                logger.info("Executing extra logic after original change method")
-                return result
-
-            return wrapper
-
-        def select_axis(xyz_type_component, axis_values, axis_values_dropdown, csv_mode, model_selected, model_state):
-            if not model_selected or not model_state:
-                return gr.skip(), gr.skip(), gr.skip()
-            logger.info(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
-            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
-            axis_options = shared.axis_options_aws
-            from scripts.xyz_grid import AxisOption
-            axis_options_aws = [x for x in axis_options if type(x) == AxisOption or x.is_img2img == self.is_img2img]
-
-            choices = axis_options_aws[xyz_type_component].choices
-            has_choices = choices is not None
-            if not on_cloud:
-                if has_choices:
-                    choices = choices()
-            elif self.is_txt2img and (xyz_type_component == TXT_XYZ_CHECKPOINT_INDEX
-                                      or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
-                sd_model_list = model_state['sd']
-                logger.info(f"sd processed {sd_model_list}")
-                choices = sd_model_list
-                has_choices = choices is not None
-            elif not self.is_txt2img and (xyz_type_component == IMG_XYZ_CHECKPOINT_INDEX
-                                          or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
-                sd_model_list = model_state['sd']
-                logger.info(f"sd processed {sd_model_list}")
-                choices = sd_model_list
-                has_choices = choices is not None
-            elif self.is_txt2img and xyz_type_component == TXT_XYZ_VAE_INDEX:
-                vae_model_list = model_state['vae']
-                logger.info(f"vae processed {vae_model_list}")
-                choices = vae_model_list
-                has_choices = choices is not None
-            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_VAE_INDEX:
-                vae_model_list = model_state['vae']
-                logger.info(f"vae processed {vae_model_list}")
-                choices = vae_model_list
-                has_choices = choices is not None
-            elif self.is_txt2img and xyz_type_component == TXT_XYZ_CONTROLNET_INDEX:
-                controlnet_model_list = model_state['controlnet_xyz']
-                logger.info(f"controlnet processed {controlnet_model_list}")
-                choices = controlnet_model_list
-                has_choices = choices is not None
-            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
-                controlnet_model_list = model_state['controlnet_xyz']
-                logger.info(f"controlnet processed {controlnet_model_list}")
-                choices = controlnet_model_list
-                has_choices = choices is not None
-            else:
-                if has_choices:
-                    choices = choices()
-            if has_choices:
-                if csv_mode:
-                    if axis_values_dropdown:
-                        axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
-                        axis_values_dropdown = []
-                else:
-                    if axis_values:
-                        axis_values_dropdown = list(
-                            filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
-                        axis_values = ""
-            return (gr.Button.update(visible=has_choices),
-                    gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
-                    gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode,
-                              value=axis_values_dropdown))
-
-        def fill(axis_type, csv_mode, model_selected, model_state):
-            if not model_selected or not model_state:
-                return gr.skip(), gr.skip()
-            axis_options = shared.axis_options_aws
-            from scripts.xyz_grid import AxisOption
-            axis_options_aws = [x for x in axis_options if type(x) == AxisOption or x.is_img2img == self.is_img2img]
-            axis = axis_options_aws[axis_type]
-            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
-            choices = axis_options_aws[axis_type].choices
-            if choices:
-                if not on_cloud:
-                    choices = choices()
-                elif self.is_txt2img and (axis_type == TXT_XYZ_CHECKPOINT_INDEX
-                                         or axis_type == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
-                    sd_model_list = model_state['sd']
-                    logger.info(f"sd processed {sd_model_list}")
-                    choices = sd_model_list
-                elif not self.is_txt2img and (axis_type == IMG_XYZ_CHECKPOINT_INDEX
-                                     or axis_type == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
-                    sd_model_list = model_state['sd']
-                    logger.info(f"sd processed {sd_model_list}")
-                    choices = sd_model_list
-                elif self.is_txt2img and axis_type == TXT_XYZ_VAE_INDEX:
-                    vae_model_list = model_state['vae']
-                    logger.info(f"vae processed {vae_model_list}")
-                    choices = vae_model_list
-                elif not self.is_txt2img and axis_type == IMG_XYZ_VAE_INDEX:
-                    vae_model_list = model_state['vae']
-                    logger.info(f"vae processed {vae_model_list}")
-                    choices = vae_model_list
-                elif self.is_txt2img and axis_type == TXT_XYZ_CONTROLNET_INDEX or axis_type == IMG_XYZ_CONTROLNET_INDEX:
-                    controlnet_model_list = model_state['controlnet']
-                    logger.info(f"controlnet processed {controlnet_model_list}")
-                    choices = controlnet_model_list
-                elif not self.is_txt2img and axis_type == IMG_XYZ_CONTROLNET_INDEX:
-                    controlnet_model_list = model_state['controlnet']
-                    logger.info(f"controlnet processed {controlnet_model_list}")
-                    choices = controlnet_model_list
-                if csv_mode:
-                    return list_to_csv_string(choices), gr.update()
-                else:
-                    return gr.update(), choices
-            else:
-                return gr.update(), gr.update()
-
-        def change_choice_mode(csv_mode, x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown, z_type, z_values, z_values_dropdown, model_selected, model_state):
-            if not model_selected or not model_state:
-                return gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip()
-            _fill_x_button, _x_values, _x_values_dropdown = select_axis(x_type, x_values, x_values_dropdown, csv_mode, model_selected, model_state)
-            _fill_y_button, _y_values, _y_values_dropdown = select_axis(y_type, y_values, y_values_dropdown, csv_mode, model_selected, model_state)
-            _fill_z_button, _z_values, _z_values_dropdown = select_axis(z_type, z_values, z_values_dropdown, csv_mode, model_selected, model_state)
-            return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
-
         base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
         cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
         component_elem_id = getattr(component, 'elem_id', '')
@@ -414,12 +286,201 @@ class SageMakerUI(scripts.Script):
 
         cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
 
+        self.detector_xyz_func(base_model_component, cn_list)
+
+        for i in range(self.max_cn_models):
+            if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i] \
+                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
+                    and cn_list \
+                    and base_model_component:
+
+                def _check_cn(model_state, model_selected, k):
+                    logger.debug('load')
+                    on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+                    if not on_cloud:
+                        return gr.skip()
+                    controlnet_model_list = model_state['controlnet']
+                    # controlnet_model_list = sagemaker_ui.load_controlnet_list(pr.username, pr.username)
+                    original_dict = [('None', None)]
+                    for item in controlnet_model_list:
+                        if item == 'None':
+                            continue
+                        key = item[:item.rfind('.')]
+                        original_dict.append((key, ''))
+                    from collections import OrderedDict
+                    new_ordered_dict = OrderedDict(original_dict)
+                    # logger.debug(f'{new_ordered_dict} new_ordered_dict')
+                    global_state.cn_models = new_ordered_dict
+                    cn_models = global_state.select_control_type(k)
+                    modified_result = list(cn_models)
+                    modified_result[1] = list(new_ordered_dict.keys())
+                    return gr.update(choices=cn_models[1], value=cn_models[3])
+
+                cn_radio_tuple = self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i]
+                if cn_radio_tuple[1]:
+                    continue
+
+                cn_radio_tuple[0] \
+                    .change(fn=_check_cn,
+                            inputs=[
+                                cn_list,
+                                base_model_component,
+                                cn_radio_tuple[0]],
+                            outputs=[
+                                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                            ])
+                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i][0] \
+                    .click(fn=_check_cn,
+                           inputs=[
+                               cn_list,
+                               base_model_component,
+                               cn_radio_tuple[0]],
+                           outputs=[
+                               self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
+                           ])
+                cn_radio_tuple[1] = True
+        pass
+
+    def detector_xyz_func(self, base_model_component,  cn_list):
+
+        def change_decorator(original_change, fn, inputs, outputs):
+            def wrapper(*args, **kwargs):
+                logger.info("Executing extra logic before original change method")
+                kwargs['fn'] = fn
+                result = original_change(*args, **kwargs)
+                logger.info("Executing extra logic after original change method")
+                return result
+
+            return wrapper
+
+        def select_axis(xyz_type_component, axis_values, axis_values_dropdown, csv_mode, model_selected, model_state):
+            if not model_selected or not model_state:
+                return gr.skip(), gr.skip(), gr.skip()
+            logger.info(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
+            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            axis_options = shared.axis_options_aws
+            from scripts.xyz_grid import AxisOption
+            axis_options_aws = [x for x in axis_options if type(x) == AxisOption or x.is_img2img == self.is_img2img]
+
+            choices = axis_options_aws[xyz_type_component].choices
+            has_choices = choices is not None
+            if not on_cloud:
+                if has_choices:
+                    choices = choices()
+            elif self.is_txt2img and (xyz_type_component == TXT_XYZ_CHECKPOINT_INDEX
+                                      or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
+                sd_model_list = model_state['sd']
+                logger.info(f"sd processed {sd_model_list}")
+                choices = sd_model_list
+                has_choices = choices is not None
+            elif not self.is_txt2img and (xyz_type_component == IMG_XYZ_CHECKPOINT_INDEX
+                                          or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
+                sd_model_list = model_state['sd']
+                logger.info(f"sd processed {sd_model_list}")
+                choices = sd_model_list
+                has_choices = choices is not None
+            elif self.is_txt2img and xyz_type_component == TXT_XYZ_VAE_INDEX:
+                vae_model_list = model_state['vae']
+                logger.info(f"vae processed {vae_model_list}")
+                choices = vae_model_list
+                has_choices = choices is not None
+            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_VAE_INDEX:
+                vae_model_list = model_state['vae']
+                logger.info(f"vae processed {vae_model_list}")
+                choices = vae_model_list
+                has_choices = choices is not None
+            elif self.is_txt2img and xyz_type_component == TXT_XYZ_CONTROLNET_INDEX:
+                controlnet_model_list = model_state['controlnet_xyz']
+                logger.info(f"controlnet processed {controlnet_model_list}")
+                choices = controlnet_model_list
+                has_choices = choices is not None
+            elif not self.is_txt2img and xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
+                controlnet_model_list = model_state['controlnet_xyz']
+                logger.info(f"controlnet processed {controlnet_model_list}")
+                choices = controlnet_model_list
+                has_choices = choices is not None
+            else:
+                if has_choices:
+                    choices = choices()
+            if has_choices:
+                if csv_mode:
+                    if axis_values_dropdown:
+                        axis_values = list_to_csv_string(list(filter(lambda x: x in choices, axis_values_dropdown)))
+                        axis_values_dropdown = []
+                else:
+                    if axis_values:
+                        axis_values_dropdown = list(
+                            filter(lambda x: x in choices, csv_string_to_list_strip(axis_values)))
+                        axis_values = ""
+            return (gr.Button.update(visible=has_choices),
+                    gr.Textbox.update(visible=not has_choices or csv_mode, value=axis_values),
+                    gr.update(choices=choices if has_choices else None, visible=has_choices and not csv_mode,
+                              value=axis_values_dropdown))
+
+        def fill(axis_type, csv_mode, model_selected, model_state):
+            if not model_selected or not model_state:
+                return gr.skip(), gr.skip()
+            axis_options = shared.axis_options_aws
+            from scripts.xyz_grid import AxisOption
+            axis_options_aws = [x for x in axis_options if type(x) == AxisOption or x.is_img2img == self.is_img2img]
+            axis = axis_options_aws[axis_type]
+            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            choices = axis_options_aws[axis_type].choices
+            if choices:
+                if not on_cloud:
+                    choices = choices()
+                elif self.is_txt2img and (axis_type == TXT_XYZ_CHECKPOINT_INDEX
+                                          or axis_type == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
+                    sd_model_list = model_state['sd']
+                    logger.info(f"sd processed {sd_model_list}")
+                    choices = sd_model_list
+                elif not self.is_txt2img and (axis_type == IMG_XYZ_CHECKPOINT_INDEX
+                                              or axis_type == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
+                    sd_model_list = model_state['sd']
+                    logger.info(f"sd processed {sd_model_list}")
+                    choices = sd_model_list
+                elif self.is_txt2img and axis_type == TXT_XYZ_VAE_INDEX:
+                    vae_model_list = model_state['vae']
+                    logger.info(f"vae processed {vae_model_list}")
+                    choices = vae_model_list
+                elif not self.is_txt2img and axis_type == IMG_XYZ_VAE_INDEX:
+                    vae_model_list = model_state['vae']
+                    logger.info(f"vae processed {vae_model_list}")
+                    choices = vae_model_list
+                elif self.is_txt2img and axis_type == TXT_XYZ_CONTROLNET_INDEX or axis_type == IMG_XYZ_CONTROLNET_INDEX:
+                    controlnet_model_list = model_state['controlnet']
+                    logger.info(f"controlnet processed {controlnet_model_list}")
+                    choices = controlnet_model_list
+                elif not self.is_txt2img and axis_type == IMG_XYZ_CONTROLNET_INDEX:
+                    controlnet_model_list = model_state['controlnet']
+                    logger.info(f"controlnet processed {controlnet_model_list}")
+                    choices = controlnet_model_list
+                if csv_mode:
+                    return list_to_csv_string(choices), gr.update()
+                else:
+                    return gr.update(), choices
+            else:
+                return gr.update(), gr.update()
+
+        def change_choice_mode(csv_mode, x_type, x_values, x_values_dropdown, y_type, y_values, y_values_dropdown,
+                               z_type, z_values, z_values_dropdown, model_selected, model_state):
+            if not model_selected or not model_state:
+                return gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip(), gr.skip()
+            _fill_x_button, _x_values, _x_values_dropdown = select_axis(x_type, x_values, x_values_dropdown, csv_mode,
+                                                                        model_selected, model_state)
+            _fill_y_button, _y_values, _y_values_dropdown = select_axis(y_type, y_values, y_values_dropdown, csv_mode,
+                                                                        model_selected, model_state)
+            _fill_z_button, _z_values, _z_values_dropdown = select_axis(z_type, z_values, z_values_dropdown, csv_mode,
+                                                                        model_selected, model_state)
+            return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
+
+
         if cn_list and base_model_component:
             if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and \
                     self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components[
                 'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
-
                 self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_x_dropdown'],
                     self.xyz_components['txt2img_xyz_value_x_textbox'],
@@ -501,7 +562,6 @@ class SageMakerUI(scripts.Script):
                 'txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
                     self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components[
                 'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
-
                 self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_y_dropdown'],
                     self.xyz_components['txt2img_xyz_value_y_textbox'],
@@ -582,7 +642,6 @@ class SageMakerUI(scripts.Script):
                 'img2img_xyz_type_x_dropdown'] and self.xyz_components['img2img_xyz_value_x_dropdown'] and \
                     self.xyz_components['img2img_xyz_value_x_textbox'] and self.xyz_components[
                 'img2img_xyz_csv_mode'] and self.xyz_components['img_xyz_grid_fill_x_tool_button']:
-
                 self.xyz_components['img2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['img2img_xyz_type_x_dropdown'],
                     self.xyz_components['img2img_xyz_value_x_textbox'],
@@ -732,60 +791,6 @@ class SageMakerUI(scripts.Script):
                                                                                       self.xyz_components[
                                                                                           'img2img_xyz_value_z_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_z_dropdown'] = True
-
-        for i in range(self.max_cn_models):
-            if self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i] \
-                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i] \
-                    and self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i] \
-                    and cn_list \
-                    and base_model_component:
-
-                def _check_cn(model_state, model_selected, k):
-                    logger.debug('load')
-                    on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
-                    if not on_cloud:
-                        return gr.skip()
-                    controlnet_model_list = model_state['controlnet']
-                    # controlnet_model_list = sagemaker_ui.load_controlnet_list(pr.username, pr.username)
-                    original_dict = [('None', None)]
-                    for item in controlnet_model_list:
-                        if item == 'None':
-                            continue
-                        key = item[:item.rfind('.')]
-                        original_dict.append((key, ''))
-                    from collections import OrderedDict
-                    new_ordered_dict = OrderedDict(original_dict)
-                    # logger.debug(f'{new_ordered_dict} new_ordered_dict')
-                    global_state.cn_models = new_ordered_dict
-                    cn_models = global_state.select_control_type(k)
-                    modified_result = list(cn_models)
-                    modified_result[1] = list(new_ordered_dict.keys())
-                    return gr.update(choices=cn_models[1], value=cn_models[3])
-
-                cn_radio_tuple = self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_type_filter_radio_batch'][i]
-                if cn_radio_tuple[1]:
-                    continue
-
-                cn_radio_tuple[0] \
-                    .change(fn=_check_cn,
-                            inputs=[
-                                cn_list,
-                                base_model_component,
-                                cn_radio_tuple[0]],
-                            outputs=[
-                                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
-                            ])
-                self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_refresh_btn_batch'][i][0] \
-                    .click(fn=_check_cn,
-                           inputs=[
-                               cn_list,
-                               base_model_component,
-                               cn_radio_tuple[0]],
-                           outputs=[
-                               self.controlnet_components[f'{cn_txt2img_or_img2img}_controlnet_dropdown_batch'][i][0]
-                           ])
-                cn_radio_tuple[1] = True
-        pass
 
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
