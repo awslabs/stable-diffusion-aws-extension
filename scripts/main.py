@@ -286,6 +286,9 @@ class SageMakerUI(scripts.Script):
 
         cn_txt2img_or_img2img = ('txt2img' if self.is_txt2img else 'img2img')
 
+        base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
+        cn_list = self.txt2img_lora_and_hypernet_models_state if self.is_txt2img else self.img2img_lora_and_hypernet_models_state
+
         self.detector_xyz_func(base_model_component, cn_list)
 
         for i in range(self.max_cn_models):
