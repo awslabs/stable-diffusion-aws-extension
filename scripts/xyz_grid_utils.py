@@ -1,16 +1,11 @@
-import logging
 from collections import namedtuple
-from copy import copy
-from itertools import permutations, chain
-import random
+from itertools import chain
 import csv
 import os.path
 from io import StringIO
-from PIL import Image
 import numpy as np
 
 import modules.scripts as scripts
-import gradio as gr
 
 from modules import images, sd_samplers, processing, sd_models, sd_vae, sd_samplers_kdiffusion, errors
 from modules.processing import process_images, Processed, StableDiffusionProcessingTxt2Img
@@ -48,22 +43,14 @@ def apply_prompt(p, x, xs):
 
 def apply_order(p, x, xs):
     token_order = []
-
-    # Initally grab the tokens from the prompt, so they can be replaced in order of earliest seen
     for token in x:
         token_order.append((p.prompt.find(token), token))
-
     token_order.sort(key=lambda t: t[0])
-
     prompt_parts = []
-
-    # Split the prompt up, taking out the tokens
     for _, token in token_order:
         n = p.prompt.find(token)
         prompt_parts.append(p.prompt[0:n])
         p.prompt = p.prompt[n + len(token):]
-
-    # Rebuild the prompt with the tokens in the order we want
     prompt_tmp = ""
     for idx, part in enumerate(prompt_parts):
         prompt_tmp += part
@@ -671,7 +658,6 @@ if xyz_grid_support:
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                logging.error("e")
                 return True
         return wrapper
     xyz_grid_support.is_all_included = origin_detector
