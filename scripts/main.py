@@ -22,7 +22,7 @@ from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
 from scripts import global_state
-from scripts.xyz_grid import do_nothing, format_nothing, list_to_csv_string, csv_string_to_list_strip
+from scripts.xyz_grid import list_to_csv_string, csv_string_to_list_strip
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
@@ -482,8 +482,8 @@ class SageMakerUI(scripts.Script):
         if cn_list and base_model_component:
             if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and \
-                    self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components[
-                'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
+                    self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and \
+                    self.xyz_components['xyz_grid_fill_x_tool_button']:
                 self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_x_dropdown'],
                     self.xyz_components['txt2img_xyz_value_x_textbox'],
@@ -561,10 +561,11 @@ class SageMakerUI(scripts.Script):
                                 self.xyz_components['txt2img_xyz_value_z_dropdown']])
 
                 self.xyz_set_components['txt2img_xyz_type_x_dropdown'] = True
-            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components[
-                'txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
-                    self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components[
-                'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
+            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and \
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'] and \
+                    self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
+                    self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and \
+                    self.xyz_components['xyz_grid_fill_y_tool_button']:
                 self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_y_dropdown'],
                     self.xyz_components['txt2img_xyz_value_y_textbox'],
@@ -797,7 +798,7 @@ class SageMakerUI(scripts.Script):
 
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
-            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            on_cloud = model_selected and (model_selected != None_Option_For_On_Cloud_Model or 'sd_model_checkpoint' not in opts.quicksettings_list)
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
