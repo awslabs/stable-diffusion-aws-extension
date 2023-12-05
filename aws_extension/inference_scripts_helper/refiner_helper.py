@@ -2,7 +2,7 @@ from typing import List, Dict
 from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model
 
 
-def refiner_args(script_name, arg, current_index, args, _) -> Dict[str, List[str]]:
+def refiner_args(script_name, arg, current_index, args, _, is_txt2img) -> Dict[str, List[str]]:
     if script_name != 'refiner':
         return {}, None
 
