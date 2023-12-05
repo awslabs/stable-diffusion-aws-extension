@@ -84,7 +84,7 @@ export class RunInferenceJobApi {
       actions: [
         'sagemaker:InvokeEndpointAsync',
       ],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -98,9 +98,9 @@ export class RunInferenceJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 

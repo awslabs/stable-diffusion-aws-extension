@@ -1,5 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  Aws,
   aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
@@ -89,9 +90,9 @@ export class CreateTrainJobApi {
       ],
       // resources: ['arn:aws:s3:::*'],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({

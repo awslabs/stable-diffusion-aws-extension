@@ -1,7 +1,7 @@
 // Import the required CDK modules
 import * as path from 'path';
 import {
-  Duration, aws_sns as sns,
+  Duration, aws_sns as sns, Aws,
 } from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -104,7 +104,7 @@ export class SagemakerInferenceStateMachine {
       resources: [
         s3Bucket.bucketArn,
         `${s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     });
 

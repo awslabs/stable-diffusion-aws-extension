@@ -13,7 +13,7 @@ import { Construct } from 'constructs';
 export class SnsTopics {
 
   private static getTopicArnByTopicName(topicName: string): string {
-    return `arn:aws:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
+    return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
   }
 
   public readonly snsTopic: aws_sns.Topic;

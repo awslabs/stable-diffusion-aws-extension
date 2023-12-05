@@ -1,5 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  Aws,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -200,9 +201,9 @@ export class CreateModelSageMakerEndpoint {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({

@@ -85,7 +85,7 @@ export class InferenceL2Api {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -104,7 +104,7 @@ export class InferenceL2Api {
       actions: [
         'sagemaker:InvokeEndpointAsync',
       ],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
     }));
 
     return newRole;

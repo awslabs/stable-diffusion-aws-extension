@@ -1,5 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  Aws,
   aws_apigateway,
   aws_apigateway as apigw,
   aws_dynamodb,
@@ -92,9 +93,9 @@ export class UpdateDatasetApi {
         's3:ListBucketMultipartUploads',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
     return newRole;
   }
