@@ -6,6 +6,8 @@ RUN apt-get update -y
 # install pkg lib for proprocess in controlnet
 RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
+RUN apt-get install -y zip
+
 
 # COPY api /opt/ml/code/
 COPY stable-diffusion-aws-extension/build_scripts/api /opt/ml/code/
@@ -33,6 +35,9 @@ RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; pr
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 WORKDIR /opt/ml/code
+
+RUN cd ./extensions/ && wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/controlnet-dep.zip && unzip controlnet-dep.zip
+
 
 ENV ON_DOCKER true
 

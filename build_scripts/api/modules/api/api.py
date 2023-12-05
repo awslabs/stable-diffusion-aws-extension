@@ -17,29 +17,12 @@ import traceback
 import sys
 import copy
 from modules.api.mme_utils import decode_base64_to_image, encode_pil_to_base64
-from modules import shared, scripts, pipeline, errors # , sd_samplers
+from modules import shared, scripts, pipeline, errors, sd_models # , sd_samplers
 from modules.api.mme_utils import checkspace_and_update_models, payload_filter#, download_model, models_path
 from modules.api.utils import read_from_s3, get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, upload_folder_to_s3_by_tar
-# from modules import sd_samplers, deepbooru, sd_hijack, images, scripts, ui, postprocessing, errors, restart
-# from modules.api import models
-# from modules.shared import opts
-# from modules.processing import StableDiffusionProcessingTxt2Img, StableDiffusionProcessingImg2Img, process_images
-# from modules.textual_inversion.textual_inversion import create_embedding, train_embedding
-# from modules.textual_inversion.preprocess import preprocess
-# from modules.hypernetworks.hypernetwork import create_hypernetwork, train_hypernetwork
-# from PIL import PngImagePlugin,Image
-# from modules.sd_models import checkpoints_list, unload_model_weights, reload_model_weights, checkpoint_aliases
-# from modules.sd_vae import vae_dict
-# from modules.sd_models_config import find_checkpoint_config_near_filename
-# from modules.realesrgan_model import get_realesrgan_models
-# from modules import devices
-from modules import sd_models
-# from typing import Dict, List, Any
-# import piexif
-# import piexif.helper
 from contextlib import closing
-
 from modules.api import models
+from modules.api.lcm_processing import lcm_lora_pipeline, lcm_pipeline
 
 import logging
 from dreambooth.sd_to_diff import extract_checkpoint
@@ -360,6 +343,9 @@ class Api:
         show_slim_dict(interrogate_payload)
 
         payload = payload_filter(payload)
+        if 'pipeline_name' in payload:
+            req.task = payload['pipeline_name']
+
         if req.task != 'lcm_lora_pipeline':
             shared.sd_pipeline.unload_lora_weights()
 
@@ -381,6 +367,22 @@ class Api:
             elif req.task == 'wuerstchen':
                 with self.queue_lock:
                     response = self.wuerstchen_pipeline(payload)
+                    logger.info(
+                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
+                    return response
+            elif req.task == 'lcm_pipeline':
+                with self.queue_lock:
+                    response = lcm_pipeline(payload, req.models)
+                    logger.info(
+                        f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
+                    return response
+            elif req.task == 'lcm_lora_pipeline':
+                with self.queue_lock:
+                    sd_model_update_dict={}
+                    sd_model_update_dict['space_free_size'] = req.models['space_free_size']
+                    sd_model_update_dict['Stable-diffusion'] = req.models['Stable-diffusion']
+                    checkspace_and_update_models(sd_model_update_dict)
+                    response = lcm_lora_pipeline(payload, req.models)
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response   
