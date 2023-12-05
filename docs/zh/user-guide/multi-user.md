@@ -12,13 +12,14 @@
 
 ## 多用户管理
 ### 创建新用户
-1. 根据具体需求，创建所有新的用户、密码和角色，点击`Next Page`后， 可以看到新创建的用户。
+1. 根据具体需求，创建所有新的用户、密码和角色，点击`Next Page`后， 可以看到新创建的用户。需要再次重启webui，使新用户相关的配置在webuI的server中刷新。
 ![add user](../images/multi_user/multi-user-8.png)
 
-2. 打开另一个无痕浏览器，使用新创建的用户名、密码登陆，即可基于新用户权限进行工作任务。
+2. 打开另一个无痕浏览器，使用新创建的用户名、密码登陆。
+3. 进入到**Amazon SageMaker**页，不同的用户展示的内容有所不同。
 
 ### 管理现有用户
 1. 在表**User Table**中选择需要更新的用户，区域**Update a User Setting**将会显示该选中的用户信息。
-2. 在**Password**或**User Role**处按需更新信息，并点击**Upsert a User**以保存改动。或点击**Delete a User**已完成删除该用户的操作。
+2. 在**Password**或**User Role**处按需更新信息，并点击**Upsert a User**以保存改动。抑或点击**Delete a User**已完成删除该用户的操作。
 
 
