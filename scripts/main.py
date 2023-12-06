@@ -14,6 +14,8 @@ from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffus
 from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
+from modules.scripts import scripts_txt2img, scripts_img2img
+
 from aws_extension import sagemaker_ui
 
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager
@@ -480,7 +482,6 @@ class SageMakerUI(scripts.Script):
                                                                         model_selected, model_state)
             return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
 
-
         if cn_list and base_model_component:
             if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and \
@@ -798,6 +799,9 @@ class SageMakerUI(scripts.Script):
                                                                                           'img2img_xyz_value_z_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_z_dropdown'] = True
 
+    txt2img_script_runner = None
+    img2img_script_runner = None
+
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
             on_cloud = model_selected and (model_selected != None_Option_For_On_Cloud_Model or 'sd_model_checkpoint' not in opts.quicksettings_list)
@@ -811,6 +815,28 @@ class SageMakerUI(scripts.Script):
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
+
+            if not self.txt2img_script_runner and scripts_txt2img:
+                self.txt2img_script_runner = scripts_txt2img.run
+
+                def runner_wrapper(p, *args):
+                    if on_cloud:
+                        return None
+
+                    return self.txt2img_script_runner(p, *args)
+
+                setattr(scripts_txt2img, 'run', runner_wrapper)
+
+            if not self.img2img_script_runner and scripts_img2img:
+                self.img2img_script_runner = scripts_img2img.run
+
+                def runner_wrapper(p, *args):
+                    if on_cloud:
+                        return None
+
+                    return self.img2img_script_runner(p, *args)
+
+                setattr(scripts_img2img, 'run', runner_wrapper)
 
             return result
 
@@ -856,47 +882,6 @@ class SageMakerUI(scripts.Script):
 
         return sagemaker_inputs_components
 
-
-    original_selectable_scripts = {
-        'original_txt2img_selectable_scripts': None,
-        'original_img2img_selectable_scripts': None
-    }
-
-    def setup(self, p, *args):
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
-            return
-
-        cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
-        selected_script_index = p.script_args[0] - 1
-        # check if endpoint is inService
-        sd_model_on_cloud = args[0]
-        if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
-            if self.is_txt2img and selected_script_index == TXT_SCRIPT_IDX \
-                    and self.original_selectable_scripts[cache_name] != None:
-                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
-
-            if self.is_img2img and selected_script_index == IMG_SCRIPT_IDX and \
-                    self.original_selectable_scripts[cache_name]!= None:
-                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
-            return
-
-        if self.is_txt2img:
-            if selected_script_index == TXT_SCRIPT_IDX:
-                if not self.original_selectable_scripts[cache_name]:
-                    self.original_selectable_scripts[cache_name] = \
-                        scripts.scripts_txt2img.selectable_scripts[selected_script_index]
-
-                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = None
-
-        if self.is_img2img:
-            if selected_script_index == IMG_SCRIPT_IDX:
-                if not self.original_selectable_scripts[cache_name]:
-                    self.original_selectable_scripts[cache_name] = \
-                        scripts.scripts_img2img.selectable_scripts[selected_script_index]
-
-                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = None
-
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
         if on_docker == "true":
@@ -927,11 +912,8 @@ class SageMakerUI(scripts.Script):
             api_param.mask = p.image_mask
 
         selected_script_index = p.script_args[0] - 1
-        scripts_cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
-        selected_script_name = None if selected_script_index < 0 else \
-            self.original_selectable_scripts[scripts_cache_name].name
-        # selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[
-        #     selected_script_index].name
+        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[selected_script_index].name
+
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
