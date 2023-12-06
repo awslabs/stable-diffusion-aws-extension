@@ -1,32 +1,21 @@
-import copy
-import itertools
 import logging
 import os
-from pathlib import Path
 import html
 import boto3
 import time
-
 import json
-
 import gradio
 import requests
 import base64
-from urllib.parse import urljoin
-
 import gradio as gr
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-
-from modules import shared, scripts
-from modules.ui import create_refresh_button
 from modules.shared import opts
-from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton, FormHTML
-from utils import get_variable_from_json
-from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
+from modules.ui_components import FormRow
+from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url
 from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
@@ -276,58 +265,6 @@ def query_inference_job_list(task_type: str = '', status: str = '',
         logger.error("Exception occurred when fetching inference_job_ids")
         logger.error(e)
         return gr.Dropdown.update(choices=[])
-
-
-# def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
-#     global txt2img_inference_job_ids
-#     try:
-#         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
-#         response = server_request('inference/list-inference-jobs')
-#         r = response.json()
-#         logger.debug(f"response: {response.json()}")
-#         filter_checkbox = False
-#         selected_types = []
-#         if txt2img_type_checkbox:
-#             selected_types.append('txt2img')
-#             filter_checkbox = True
-#         if img2img_type_checkbox:
-#             selected_types.append('img2img')
-#             filter_checkbox = True
-#         if interrogate_type_checkbox:
-#             selected_types.append('interrogate_deepbooru')
-#             filter_checkbox = True
-#         logging.debug(f"selected_types: {selected_types}")
-#         if r:
-#             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
-#             temp_list = []
-#             for obj in r:
-#                 if obj.get('completeTime') is None:
-#                     complete_time = obj.get('startTime')
-#                 else:
-#                     complete_time = obj.get('completeTime')
-#                 status = obj.get('status')
-#                 task_type = obj.get('taskType', 'txt2img')
-#                 inference_job_id = obj.get('InferenceJobId')
-#                 if filter_checkbox and task_type not in selected_types:
-#                     continue
-#                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
-#                 temp_list.append((complete_time, combined_string))
-#
-#             # Sort the list based on completeTime in ascending order
-#             sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
-#
-#             # Append the sorted combined strings to the txt2img_inference_job_ids list
-#             for item in sorted_list:
-#                 txt2img_inference_job_ids.append(item[1])
-#             # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
-#             return gr.Dropdown.update(choices=txt2img_inference_job_ids)
-#         else:
-#             logger.debug("The API response is empty.")
-#             return gr.Dropdown.update(choices=[])
-#
-#     except Exception as e:
-#         logger.error("Exception occurred when fetching inference_job_ids")
-#         return gr.Dropdown.update(choices=[])
 
 
 def get_inference_job(inference_job_id):
@@ -1131,7 +1068,10 @@ def load_inference_job_list(username, usertoken):
 
 
 def load_model_list(username, user_token):
-    models_on_cloud = [None_Option_For_On_Cloud_Model]
+    models_on_cloud = []
+    if 'sd_model_checkpoint' in opts.quicksettings_list:
+        models_on_cloud = [None_Option_For_On_Cloud_Model]
+
     models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token)]))
     return models_on_cloud
 
@@ -1202,20 +1142,20 @@ def create_ui(is_img2img):
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
-            with gr.Row(visible=is_img2img):
-                global generate_on_cloud_button_with_js
-                # if not is_img2img:
-                #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
-                global generate_on_cloud_button_with_js_img2img
-                global interrogate_clip_on_cloud_button
-                global interrogate_deep_booru_on_cloud_button
-
-                interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                                                             elem_id="interrogate_clip_on_cloud_button", visible=False)
-                interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                                                                   elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
-            with gr.Row():
-                gr.HTML('<br/>')
+            # with gr.Row(visible=is_img2img):
+            #     global generate_on_cloud_button_with_js
+            #     # if not is_img2img:
+            #     #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
+            #     global generate_on_cloud_button_with_js_img2img
+            #     global interrogate_clip_on_cloud_button
+            #     global interrogate_deep_booru_on_cloud_button
+            #
+            #     interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
+            #                                                  elem_id="interrogate_clip_on_cloud_button", visible=False)
+            #     interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
+            #                                                        elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
+            # with gr.Row():
+            #     gr.HTML('<br/>')
 
             with gr.Row():
                 global inference_job_dropdown
@@ -1406,11 +1346,12 @@ def create_ui(is_img2img):
                 def setup_inference_for_plugin(pr: gr.Request):
                     models_on_cloud = load_model_list(pr.username, pr.username)
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
-                    inference_jobs = load_inference_job_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
                     controlnet_list = load_controlnet_list(pr.username, pr.username)
                     controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
+
+                    inference_jobs = load_inference_job_list(pr.username, pr.username)
                     lora_hypernets = {
                         'lora': lora_models_on_cloud,
                         'hypernet': hypernetworks_models_on_cloud,
@@ -1421,7 +1362,7 @@ def create_ui(is_img2img):
                     }
 
                     return lora_hypernets, \
-                        gr.update(choices=models_on_cloud), \
+                        gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud)
 
@@ -1430,8 +1371,8 @@ def create_ui(is_img2img):
                                                  lora_and_hypernet_models_state,
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
-                                                 sd_vae_on_cloud_dropdown]
-                                             )
+                                                 sd_vae_on_cloud_dropdown
+                                             ])
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
