@@ -1,4 +1,4 @@
-from modules import shared
+from modules import shared, devices
 from modules.api import models
 from diffusers import DiffusionPipeline, UNet2DConditionModel, LCMScheduler, StableDiffusionXLControlNetPipeline, StableDiffusionControlNetPipeline, StableDiffusionInpaintPipeline
 import torch
@@ -9,6 +9,7 @@ from diffusers import StableDiffusionXLControlNetInpaintPipeline, StableDiffusio
 from modules.paths_internal import models_path
 import os
 import random
+import time
 
 sd_model_folder = "Stable-diffusion"
 controlnet_folder = 'ControlNet'
@@ -16,38 +17,53 @@ sd_model_path = os.path.abspath(os.path.join(models_path, sd_model_folder))
 controlnet_path = os.path.abspath(os.path.join(models_path, sd_model_folder))
 
 def lcm_pipeline(payload, used_models):
+    #start_time =time.time()
     sd_model_name = used_models['Stable-diffusion'][0]['model_name']
     init_images = None
     mask = None
-    seed = payload['seed']
+    if 'seed' in payload:
+        seed = payload['seed']
+    else:
+        seed = -1
+
+    if seed == -1:
+        seed = int(random.randrange(4294967294))
     generator = torch.manual_seed(seed)
+
     if 'init_images' in payload.keys():
         init_images = payload['init_images']
     if 'mask' in payload.keys():
         mask = payload['mask']
+    
+    #print('!!!!!! parameter setting take', time.time()-start_time)
+    
+    #start_time =time.time()
 
-    if 'sdxl' in sd_model_name:
+    if 'xl' in sd_model_name:
         if 'lcm_sdxl' not in shared.sd_pipeline.pipeline_name:
             unet = UNet2DConditionModel.from_pretrained("latent-consistency/lcm-sdxl", torch_dtype=torch.float16, variant="fp16")
         
         if init_images is not None and mask is not None:
             if shared.sd_pipeline.pipeline_name != 'lcm_sdxl_inpaint':
-                shared.sd_pipeline = DiffusionPipeline.from_pretrained("diffusers/stable-diffusion-xl-1.0-inpainting-0.1", unet=unet, torch_dtype=torch.float16, variant="fp16")
+                shared.sd_pipeline = DiffusionPipeline.from_pretrained("diffusers/stable-diffusion-xl-1.0-inpainting-0.1", unet=unet, torch_dtype=torch.float16, variant="fp16").to('cuda')
                 shared.sd_pipeline.pipeline_name = 'lcm_sdxl_inpaint'
                 shared.opts.data["sd_model_checkpoint_path"] = 'lcm_sdxl_inpaint'
         else:
             if shared.sd_pipeline.pipeline_name != 'lcm_sdxl':            
-                shared.sd_pipeline = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", unet=unet, torch_dtype=torch.float16, variant="fp16")
+                shared.sd_pipeline = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-xl-base-1.0", unet=unet, torch_dtype=torch.float16, variant="fp16").to('cuda')
                 shared.sd_pipeline.pipeline_name = 'lcm_sdxl'
                 shared.opts.data["sd_model_checkpoint_path"] = 'lcm_sdxl'
         shared.sd_pipeline.scheduler = LCMScheduler.from_config(shared.sd_pipeline.scheduler.config)      
     else:
         if shared.sd_pipeline.pipeline_name != 'lcm_sdv15':
-            shared.sd_pipeline = DiffusionPipeline.from_pretrained("SimianLuo/LCM_Dreamshaper_v7", custom_pipeline="latent_consistency_txt2img", torch_dtype=torch.float16, variant="fp16")
+            shared.sd_pipeline = DiffusionPipeline.from_pretrained("SimianLuo/LCM_Dreamshaper_v7", custom_pipeline="latent_consistency_txt2img", torch_dtype=torch.float16, variant="fp16").to('cuda')
             shared.sd_pipeline.pipeline_name = 'lcm_sdv15'
             shared.opts.data["sd_model_checkpoint_path"] = 'lcm_sdv15'
     shared.sd_pipeline.generator = generator
-    shared.sd_pipeline.to('cuda')
+    #print('!!!!!!! load pipeline take', time.time()-start_time)
+
+    #start_time =time.time()
+
     if init_images is not None and mask is not None:
         input_images = [decode_base64_to_image(x) for x in init_images]
         mask = decode_base64_to_image(mask)
@@ -79,6 +95,10 @@ def lcm_pipeline(payload, used_models):
                 guidance_scale=payload['cfg_scale'],
                 num_inference_steps=payload['steps']
                 ).images
+    devices.torch_gc()  
+    #print('!!!!!!! inference take', time.time()-start_time)
+
+    #start_time =time.time()
     b64images = list(map(encode_pil_to_base64, output))
     generate_parameter={}
     generate_parameter['prompt'] = payload['prompt']
@@ -86,7 +106,8 @@ def lcm_pipeline(payload, used_models):
     generate_parameter['seed'] = payload['seed']
     generate_parameter['cfg_scale'] = payload['cfg_scale']
     generate_parameter['steps'] = payload['steps']
-  
+    #print('!!!!!!! encode result take', time.time()-start_time)
+
 
     return models.TextToImageResponse(images=b64images, parameters=generate_parameter, info='')
 
@@ -244,6 +265,7 @@ def lcm_lora_pipeline(payload, used_models):
                     num_inference_steps=payload['steps']
                     ).images
 
+    devices.torch_gc()
     b64images = list(map(encode_pil_to_base64, output))
 
     generate_parameter={}

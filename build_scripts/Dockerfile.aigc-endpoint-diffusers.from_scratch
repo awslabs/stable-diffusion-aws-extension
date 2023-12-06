@@ -34,10 +34,10 @@ RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; pr
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
+RUN mkdir -p /opt/ml/code/extensions && cd /opt/ml/code/extensions/ 
+RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/controlnet-dep.zip && unzip controlnet-dep.zip
+
 WORKDIR /opt/ml/code
-
-RUN cd ./extensions/ && wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/controlnet-dep.zip && unzip controlnet-dep.zip
-
 
 ENV ON_DOCKER true
 

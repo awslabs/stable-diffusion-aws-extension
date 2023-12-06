@@ -312,7 +312,7 @@ class Api:
             else:
                 logger.info(f" : {payload}")
 
-        
+        start_time = time.time()
         print(f'current version: dev')
         logger.info(f"task is {req.task}")
         logger.info(f"models is {req.models}")
@@ -348,7 +348,9 @@ class Api:
 
         if req.task != 'lcm_lora_pipeline':
             shared.sd_pipeline.unload_lora_weights()
-
+        
+        logger.info('!!!!!!! payload processing take', time.time()-start_time)
+        
         try:
             if req.task == 'txt2img':
                 with self.queue_lock:
@@ -501,6 +503,8 @@ class Api:
                 raise NotImplementedError
         except Exception as e:
             traceback.print_exc()
+        
+        logger.info('!!!!!!! inference take', time.time()-start_time)
 
     def ping(self):
         return {'status': 'Healthy'}
