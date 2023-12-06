@@ -185,6 +185,9 @@ def format_nothing(p, opt, x):
     return ""
 
 
+def format_name(p, opt, x):
+    return x
+
 def format_remove_path(p, opt, x):
     return os.path.basename(x)
 
@@ -632,22 +635,22 @@ xyz_grid = find_module("xyz_grid.py, xy_grid.py")
 if xyz_grid:
     sd_models_xyz_option = xyz_grid.axis_options[13]
     sd_models_xyz_option.confirm = lambda *args: ""
-    sd_models_xyz_option.format_value = format_nothing
+    sd_models_xyz_option.format_value = format_name
     sd_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=sd_models_xyz_option.apply, cloud_fn=apply_checkpoint)
 
     vae_models_xyz_option = xyz_grid.axis_options[30]
     vae_models_xyz_option.confirm = lambda *args: ""
-    vae_models_xyz_option.format_value = format_nothing
+    vae_models_xyz_option.format_value = format_name
     vae_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=vae_models_xyz_option.apply, cloud_fn=apply_vae)
 
     refiner_models_xyz_option = xyz_grid.axis_options[38]
     refiner_models_xyz_option.confirm = lambda *args: ""
-    refiner_models_xyz_option.format_value = format_nothing
+    refiner_models_xyz_option.format_value = format_name
     refiner_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=refiner_models_xyz_option.apply, cloud_fn=apply_refiner)
 
     controlnet_models_xyz_option = xyz_grid.axis_options[42]
     controlnet_models_xyz_option.confirm = lambda *args: ""
-    controlnet_models_xyz_option.format_value = format_nothing
+    controlnet_models_xyz_option.format_value = format_name
     controlnet_models_xyz_option.apply = apply_checkpoint_detector(origin_fn=controlnet_models_xyz_option.apply, cloud_fn=apply_controlnet)
 
 
