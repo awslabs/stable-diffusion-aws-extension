@@ -47,3 +47,9 @@ test/aigc_webui_inference_images/*.sh
 test/aigc_webui_inference_images/nohup.out
 test/aigc_webui_inference_images/.env
 test/**/.env
+test/results/
+test/test_payloads/
+test/debug/
+test/
+build_scripts/xy_test_dockerfile/
+build_scripts/api/extensions/
