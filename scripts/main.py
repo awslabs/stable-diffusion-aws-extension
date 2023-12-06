@@ -42,7 +42,7 @@ IMG_XYZ_CONTROLNET_INDEX = 38
 TXT_XYZ_CONTROLNET_INDEX = 39
 
 TXT_SCRIPT_IDX = 2
-IMG_SCRIPT_IDX = 2
+IMG_SCRIPT_IDX = 7
 
 
 def dummy_function(*args, **kwargs):
