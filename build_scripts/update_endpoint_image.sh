@@ -148,7 +148,7 @@ EndpointConfigArn=$(aws sagemaker create-endpoint-config \
                         --region "$REGION" \
                         --endpoint-config-name "$ENDPOINT_CONFIG_NAME" \
                         --production-variants VariantName="$VARIANT_NAME",ModelName="$MODEL_NAME",InstanceType="$INSTANCE_TYPE",InitialInstanceCount="$INITIAL_INSTANCE_COUNT",InitialVariantWeight="$INITIAL_VARIANT_WEIGHT" \
-                        --async-inference-config "{\"OutputConfig\":{\"S3OutputPath\":\"${S3OutputPath}\",\"NotificationConfig\":{\"SuccessTopic\":\"${SuccessTopic}\",\"ErrorTopic\":\"${ErrorTopic}\"}}}" | jq -r '.EndpointConfigArn')
+                        --async-inference-config "{\"OutputConfig\":{\"S3OutputPath\":\"${S3OutputPath}\",\"NotificationConfig\":{\"SuccessTopic\":\"${SuccessTopic}\",\"ErrorTopic\":\"${ErrorTopic}\"}},\"ClientConfig\":{\"MaxConcurrentInvocationsPerInstance\":1}}" | jq -r '.EndpointConfigArn')
 echo "Endpoint configuration recreated: $EndpointConfigArn"
 
 ## Create a new endpoint with the same name

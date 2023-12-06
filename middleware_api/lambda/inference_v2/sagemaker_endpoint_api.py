@@ -83,6 +83,11 @@ def list_all_sagemaker_endpoints(event, ctx):
         elif 'sagemaker_endpoint' in requestor_permissions and 'all' in requestor_permissions['sagemaker_endpoint']:
             results.append(endpoint.__dict__)
 
+    # Old data may never update the count of instances
+    for result in results:
+        if 'current_instance_count' not in result:
+            result['current_instance_count'] = 'N/A'
+
     return {
         'statusCode': 200,
         'endpoints': results
@@ -300,6 +305,11 @@ def _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, mode
                 "SuccessTopic": ASYNC_SUCCESS_TOPIC,
                 "ErrorTopic": ASYNC_ERROR_TOPIC
             }
+        },
+        "ClientConfig": {
+            # (Optional) Specify the max number of inflight invocations per instance
+            # If no value is provided, Amazon SageMaker will choose an optimal value for you
+            "MaxConcurrentInvocationsPerInstance": 1
         }
     }
 
