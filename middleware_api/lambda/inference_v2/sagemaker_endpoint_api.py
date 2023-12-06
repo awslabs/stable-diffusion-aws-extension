@@ -238,42 +238,48 @@ def sagemaker_endpoint_events(event, context):
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
 
-    item = get_endpoint_with_endpoint_name(endpoint_name)
-    if item:
+    endpoint = get_endpoint_with_endpoint_name(endpoint_name)
 
-        endpoint_deployment_job_id = item['EndpointDeploymentJobId']
+    if not endpoint:
+        # maybe the endpoint is not created by sde or already deleted
+        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
+        return {'statusCode': 200}
 
-        business_status = get_business_status(endpoint_status)
+    endpoint_deployment_job_id = endpoint['EndpointDeploymentJobId']
 
-        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
+    business_status = get_business_status(endpoint_status)
 
-        if business_status in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
-            status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
-            logger.info(f"Endpoint status: {status}")
-            if 'ProductionVariants' in status:
-                instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
-                update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+    update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
 
-        if business_status == EndpointStatus.DELETED.value:
-            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+    # update the instance count if the endpoint is not deleting or deleted
+    if business_status not in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
+        status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
+        logger.info(f"Endpoint status: {status}")
+        if 'ProductionVariants' in status:
+            instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
+            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+
+    # if endpoint is deleted, update the instance count to 0 and delete the config and model
+    if business_status == EndpointStatus.DELETED.value:
+        update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+        try:
             endpoint_config_name = event['detail']['EndpointConfigName']
             model_name = event['detail']['ModelName']
-            # todo need test
-            try:
-                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-                sagemaker.delete_model(ModelName=model_name)
-            except Exception as e:
-                logger.error(f"error deleting endpoint config and model with exception: {e}")
+            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            sagemaker.delete_model(ModelName=model_name)
+        except Exception as e:
+            logger.error(f"error deleting endpoint config and model with exception: {e}")
 
-        if business_status == EndpointStatus.IN_SERVICE.value:
-            current_time = str(datetime.now())
-            update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
-            check_and_enable_autoscaling(item, 'prod')
-        elif business_status == EndpointStatus.FAILED.value:
-            update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
+    if business_status == EndpointStatus.IN_SERVICE.value:
+        # if it is the first time in service
+        if 'endTime' not in endpoint:
+            check_and_enable_autoscaling(endpoint, 'prod')
 
-    else:
-        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
+        current_time = str(datetime.now())
+        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
+
+    if business_status == EndpointStatus.FAILED.value:
+        update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
 
     return {'statusCode': 200}
 
