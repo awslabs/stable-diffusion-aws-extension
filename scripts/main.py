@@ -41,6 +41,9 @@ TXT_XYZ_VAE_INDEX = 27
 IMG_XYZ_CONTROLNET_INDEX = 38
 TXT_XYZ_CONTROLNET_INDEX = 39
 
+TXT_SCRIPT_IDX = 2
+IMG_SCRIPT_IDX = 7
+
 
 def dummy_function(*args, **kwargs):
     return []
@@ -803,14 +806,6 @@ class SageMakerUI(scripts.Script):
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
                 result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
-            sd_model_list = sagemaker_ui.load_model_list(pr.username, pr.username)
-            vae_models = sagemaker_ui.load_vae_list(pr.username, pr.username)
-            hypernet_models = sagemaker_ui.load_hypernetworks_models(pr.username, pr.username)
-            lora_models = sagemaker_ui.load_lora_models(pr.username, pr.username)
-            controlnet_list = load_controlnet_list(pr.username, pr.username)
-            controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
-            result.append({"sd": sd_model_list, "vae": vae_models, "hypernet": hypernet_models, "lora": lora_models,
-                           "controlnet": controlnet_list, 'controlnet_xyz': controlnet_xyz_list})
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
@@ -826,7 +821,7 @@ class SageMakerUI(scripts.Script):
             modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.img2img_generate_btn, self.img2img_refiner_ckpt_refresh_btn,
-                       self.img2img_refiner_ckpt_dropdown, self.img2img_lora_and_hypernet_models_state]
+                       self.img2img_refiner_ckpt_dropdown]
             for value in self.controlnet_components['img2img_controlnet_dropdown_batch']:
                 if value:
                     outputs.append(value[0])
@@ -845,7 +840,7 @@ class SageMakerUI(scripts.Script):
             modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
             outputs = [self.txt2img_generate_btn, self.txt2img_refiner_ckpt_refresh_btn,
-                       self.txt2img_refiner_ckpt_dropdown, self.txt2img_lora_and_hypernet_models_state]
+                       self.txt2img_refiner_ckpt_dropdown]
             for value in self.controlnet_components['txt2img_controlnet_dropdown_batch']:
                 if value:
                     outputs.append(value[0])
@@ -872,31 +867,35 @@ class SageMakerUI(scripts.Script):
         if on_docker == "true":
             return
 
-        cache_name = f'original_{"txt2img" if self.is_img2img else "img2img"}_selectable_scripts'
-
+        cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
+        selected_script_index = p.script_args[0] - 1
         # check if endpoint is inService
         sd_model_on_cloud = args[0]
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
-            if self.is_txt2img and self.original_selectable_scripts[cache_name] != None:
-                scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
+            if self.is_txt2img and selected_script_index == TXT_SCRIPT_IDX \
+                    and self.original_selectable_scripts[cache_name] != None:
+                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
 
-            if self.is_img2img and self.original_selectable_scripts[cache_name]!= None:
-                scripts.scripts_txt2img.selectable_scripts = self.original_selectable_scripts[cache_name]
+            if self.is_img2img and selected_script_index == IMG_SCRIPT_IDX and \
+                    self.original_selectable_scripts[cache_name]!= None:
+                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
             return
 
         if self.is_txt2img:
-            if not self.original_selectable_scripts[cache_name]:
-                self.original_selectable_scripts[cache_name] = scripts.scripts_txt2img.selectable_scripts
+            if selected_script_index == TXT_SCRIPT_IDX:
+                if not self.original_selectable_scripts[cache_name]:
+                    self.original_selectable_scripts[cache_name] = \
+                        scripts.scripts_txt2img.selectable_scripts[selected_script_index]
 
-            selectable_scripts_size = len(scripts.scripts_txt2img.selectable_scripts)
-            scripts.scripts_txt2img.selectable_scripts = [None] * selectable_scripts_size
+                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = None
 
         if self.is_img2img:
-            if not self.original_selectable_scripts[cache_name]:
-                self.original_selectable_scripts[cache_name] = scripts.scripts_img2img.selectable_scripts
+            if selected_script_index == IMG_SCRIPT_IDX:
+                if not self.original_selectable_scripts[cache_name]:
+                    self.original_selectable_scripts[cache_name] = \
+                        scripts.scripts_img2img.selectable_scripts[selected_script_index]
 
-            selectable_scripts_size = len(scripts.scripts_img2img.selectable_scripts)
-            scripts.scripts_img2img.selectable_scripts = [None] * selectable_scripts_size
+                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = None
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -928,9 +927,11 @@ class SageMakerUI(scripts.Script):
             api_param.mask = p.image_mask
 
         selected_script_index = p.script_args[0] - 1
-        scripts_cache_name = f'original_{"txt2img" if self.is_img2img else "img2img"}_selectable_scripts'
+        scripts_cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
         selected_script_name = None if selected_script_index < 0 else \
-            self.original_selectable_scripts[scripts_cache_name][selected_script_index].name
+            self.original_selectable_scripts[scripts_cache_name].name
+        # selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[
+        #     selected_script_index].name
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
