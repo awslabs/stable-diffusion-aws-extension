@@ -1,5 +1,6 @@
 # FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
-FROM 727897471807.dkr.ecr.cn-north-1.amazonaws.com.cn/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
+# FROM 727897471807.dkr.ecr.cn-north-1.amazonaws.com.cn/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
+FROM 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
 
 RUN apt-get update -y
 

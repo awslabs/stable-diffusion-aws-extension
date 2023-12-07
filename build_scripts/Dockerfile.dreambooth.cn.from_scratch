@@ -1,7 +1,8 @@
 # FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:1.13.1-gpu-py39-cu117-ubuntu20.04-sagemaker
 # FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-gpu-py310-cu118-ubuntu20.04-sagemaker
 # FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
-FROM 727897471807.dkr.ecr.cn-north-1.amazonaws.com.cn/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
+# FROM 727897471807.dkr.ecr.cn-north-1.amazonaws.com.cn/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
+FROM 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn/pytorch-training:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 
 # update environment
 RUN apt-get update -y
