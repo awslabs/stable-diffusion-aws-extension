@@ -14,7 +14,6 @@ from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffus
 from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
-from modules.scripts import scripts_txt2img, scripts_img2img
 
 from aws_extension import sagemaker_ui
 
@@ -816,6 +815,7 @@ class SageMakerUI(scripts.Script):
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
 
+            from modules.scripts import scripts_txt2img, scripts_img2img
             if not self.txt2img_script_runner and scripts_txt2img:
                 self.txt2img_script_runner = scripts_txt2img.run
 
