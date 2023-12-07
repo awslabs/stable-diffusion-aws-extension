@@ -60,7 +60,7 @@ def create_train_job_api(raw_event, context):
             'id': event.model_id
         })
         # if model is not found, model_raw is {}
-        if not model_raw:
+        if model_raw == {}:
             return {
                 'statusCode': 500,
                 'error': f'model with id {event.model_id} is not found'
