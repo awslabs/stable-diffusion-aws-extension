@@ -14,7 +14,6 @@ from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffus
 from modules.sd_hijack import model_hijack
 from modules.processing import Processed
 from modules.shared import cmd_opts, opts
-
 from aws_extension import sagemaker_ui
 
 from aws_extension.cloud_models_manager.sd_manager import CloudSDModelsManager

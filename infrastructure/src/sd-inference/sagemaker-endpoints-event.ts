@@ -105,13 +105,6 @@ export class SagemakerEndpointEvents {
       eventPattern: {
         source: ['aws.sagemaker'],
         detailType: ['SageMaker Endpoint State Change'],
-        detail: {
-          EndpointName: [
-            {
-              prefix: 'infer-endpoint-',
-            },
-          ],
-        },
       },
     });
 
