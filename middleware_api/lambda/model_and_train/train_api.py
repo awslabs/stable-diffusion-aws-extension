@@ -59,7 +59,8 @@ def create_train_job_api(raw_event, context):
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id
         })
-        if model_raw is None:
+        # if model is not found, model_raw is {}
+        if not model_raw:
             return {
                 'statusCode': 500,
                 'error': f'model with id {event.model_id} is not found'
