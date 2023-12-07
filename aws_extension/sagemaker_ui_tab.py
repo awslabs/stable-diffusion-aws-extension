@@ -511,7 +511,7 @@ def model_upload_tab():
                 model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
             with FormRow(elem_id="model_upload_url_form_row_02"):
                 file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
-                file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
+                file_upload_params_component = gr.TextArea(visible=False, label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
             with FormRow(elem_id="model_upload_url_form_row_03"):
                 file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
             with gr.Row():
