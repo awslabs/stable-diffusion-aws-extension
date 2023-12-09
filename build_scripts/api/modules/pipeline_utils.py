@@ -70,10 +70,10 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, extra_ge
         if request_type == 'StableDiffusionPipelineTxt2Img':
             if 'XL' in pipeline_name:
                 if reference_only and len(controlnet_images) == 0:
-                    shared.sd_pipeline = StableDiffusionXLReferencePipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionXLReferencePipeline(vae=shared.sd_pipeline.vae, text_encoder_2=shared.sd_pipeline.text_encoder_2, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, tokenizer_2=shared.sd_pipeline.tokenizer_2, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionXLReferencePipeline'
                 elif inpaint_type and len(controlnet_images) == 0:
-                    shared.sd_pipeline = StableDiffusionXLInpaintPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionXLInpaintPipeline(vae=shared.sd_pipeline.vae, text_encoder_2=shared.sd_pipeline.text_encoder_2, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, tokenizer_2=shared.sd_pipeline.tokenizer_2, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionXLInpaintPipeline'
                     #load xlinpaint model and change the unet model
                     xl_inpaint_pipeline = StableDiffusionXLInpaintPipeline.from_pretrain('diffusers/stable-diffusion-xl-1.0-inpainting-0.1', torch_dtype=torch.float16).to('cuda')
@@ -104,10 +104,10 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, extra_ge
                         shared.sd_pipeline = StableDiffusionControlNetReferencePipeline(**shared.sd_pipeline.components, controlnet=valid_control_networks)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionControlNetReferencePipeline'
                 elif reference_only:
-                    shared.sd_pipeline = StableDiffusionReferencePipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionReferencePipeline(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler, safety_checker=shared.sd_pipeline.safety_checker, feature_extractor=shared.sd_pipeline.feature_extractor)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionReferencePipeline'
                 elif inpaint_type and len(controlnet_images) == 0:
-                    shared.sd_pipeline = StableDiffusionInpaintPipeline(**shared.sd_pipeline.components)
+                    shared.sd_pipeline = StableDiffusionInpaintPipeline(vae=shared.sd_pipeline.vae, text_encoder=shared.sd_pipeline.text_encoder, tokenizer=shared.sd_pipeline.tokenizer, unet=shared.sd_pipeline.unet, scheduler=shared.sd_pipeline.scheduler, safety_checker=shared.sd_pipeline.safety_checker, feature_extractor=shared.sd_pipeline.feature_extractor)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionInpaintPipeline'                    #load inpaint model and change the unet model
                     if shared.opts.data["sd_checkpoint_name"] != 'sd-v1-5-inpainting':
                         inpaint_pipeline = StableDiffusionInpaintPipeline.from_pretrained('runwayml/stable-diffusion-inpainting', torch_dtype=torch.float16).to('cuda')
