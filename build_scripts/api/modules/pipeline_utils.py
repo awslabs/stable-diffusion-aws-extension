@@ -129,7 +129,6 @@ def convert_pipeline(controlnet_state, controlnet_script, request_type, extra_ge
                     else:
                         shared.sd_pipeline = StableDiffusionControlNetPipeline(**shared.sd_pipeline.components, controlnet=valid_control_networks)
                     shared.sd_pipeline.pipeline_name = 'StableDiffusionControlNetPipeline'
-        
         elif request_type == 'StableDiffusionPipelineImg2Img':  
             if 'XL' in pipeline_name:
                 if image_mask is None:

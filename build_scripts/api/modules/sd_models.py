@@ -326,7 +326,7 @@ def reload_pipeline_weights(sd_pipeline=None, info=None):
         current_checkpoint_info = None
     else:
         current_checkpoint_info = shared.opts.data["sd_checkpoint_info"] #sd_pipeline.sd_checkpoint_info
-        if shared.opts.data["sd_model_checkpoint_path"] == checkpoint_info.filename:
+        if shared.opts.data["sd_model_checkpoint_path"] == checkpoint_info.filename and 'Inpaint' not in shared.sd_pipeline.pipeline_name:
            return
 
         #pipeline_data.sd_pipeline.to(devices.cpu)
