@@ -1425,7 +1425,7 @@ class StableDiffusionPipelineImg2Img(StableDiffusionProcessing):
                 self.init_latent = self.init_latent * self.mask
     
 
-    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts, controlnet_image=None, ref_img=None):
+    def sample(self, conditioning, unconditional_conditioning, seeds, subseeds, subseed_strength, prompts, controlnet_image=None, ref_img=None, inpaint_img=None):
         
         # update sampler
         shared.sd_pipeline = sd_samplers.update_sampler(self.sampler_name, self.sd_pipeline, self.pipeline_name)

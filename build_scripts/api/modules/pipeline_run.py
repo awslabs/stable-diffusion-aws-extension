@@ -2,6 +2,7 @@ import torch
 import modules.shared as shared
 from diffusers import StableDiffusionXLImg2ImgPipeline
 import os
+import numpy as np
 
 # some of those options should not be changed at all because they would break the model, so I removed them from options.
 opt_C = 4
@@ -224,8 +225,8 @@ def tx2img_pipeline_run(pipeline_name, strength, denoising_start,aesthetic_score
     elif pipeline_name == 'StableDiffusionInpaintPipeline':
             images = sd_pipeline(
             prompt = prompt,
-            image = inpaint_img[:,:,:3],
-            mask_image = inpaint_img[:,:,3],
+            image = np.array(inpaint_img)[:,:,:3],
+            mask_image = np.array(inpaint_img)[:,:,3],
             height = height,
             width = width,
             strength = strength,
@@ -289,7 +290,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
        
     # update sampler
     sd_pipeline = shared.sd_pipeline
-
+    init_images = init_images[0].convert('RGB')
     # default output: latents
     if pipeline_name == 'StableDiffusionImg2ImgPipeline':
         images = sd_pipeline(
@@ -310,7 +311,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             callback_steps = callback_steps,
             cross_attention_kwargs = cross_attention_kwargs).images
     elif pipeline_name == 'StableDiffusionInpaintPipeline':
-            images = sd_pipeline(
+        images = sd_pipeline(
             prompt = prompt,
             image = init_images,
             mask_image = image_mask,

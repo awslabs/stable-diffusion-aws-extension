@@ -137,7 +137,7 @@ def download_and_update(model_type, model_s3_pos):
     if model_type == 'Lora':
         shared.list_loras()
     if model_type == 'embeddings':
-        shared.sd_pipeline.load_textual_inversion(shared.cmd_opts.embeddings_dir)
+        shared.sd_pipeline.load_textual_inversion(os.path.join(shared.cmd_opts.embeddings_dir, tar_name))
     if model_type == 'ControlNet':
         sys.path.append("extensions/sd-aws-ext/")        
         from scripts import global_state
