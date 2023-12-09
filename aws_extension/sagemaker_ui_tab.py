@@ -620,7 +620,7 @@ def sagemaker_endpoint_tab():
                                              label="The image running on Sagemaker Endpoint: choose latest if not sure")
 
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
-                                                elem_id="sagemaker_deploy_endpoint_buttion")
+                                                elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
             def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, image_tag, pr: gr.Request):
