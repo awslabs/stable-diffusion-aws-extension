@@ -2,6 +2,7 @@ import torch
 import modules.shared as shared
 from diffusers import StableDiffusionXLImg2ImgPipeline
 import os
+import numpy as np
 
 # some of those options should not be changed at all because they would break the model, so I removed them from options.
 opt_C = 4
@@ -224,8 +225,8 @@ def tx2img_pipeline_run(pipeline_name, strength, denoising_start,aesthetic_score
     elif pipeline_name == 'StableDiffusionInpaintPipeline':
             images = sd_pipeline(
             prompt = prompt,
-            image = inpaint_img[:,:,:3],
-            mask_image = inpaint_img[:,:,3],
+            image = np.array(inpaint_img)[:,:,:3],
+            mask_image = np.array(inpaint_img)[:,:,3],
             height = height,
             width = width,
             strength = strength,
@@ -310,9 +311,10 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             callback_steps = callback_steps,
             cross_attention_kwargs = cross_attention_kwargs).images
     elif pipeline_name == 'StableDiffusionInpaintPipeline':
-            images = sd_pipeline(
+        init_image = init_images[0].convert('RGB')
+        images = sd_pipeline(
             prompt = prompt,
-            image = init_images,
+            image = init_image,
             mask_image = image_mask,
             height = height,
             width = width,
@@ -364,6 +366,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             aesthetic_score = aesthetic_score,
             negative_aesthetic_score = negative_aesthetic_score).images
     elif pipeline_name == 'StableDiffusionXLInpaintPipeline':
+            init_images = init_images[0].convert('RGB')
             images = sd_pipeline(
             prompt = prompt,
             prompt_2 = prompt_2,
@@ -424,6 +427,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             control_guidance_start = control_guidance_start,
             control_guidance_end = control_guidance_end).images
     elif pipeline_name == 'StableDiffusionControlNetInpaintPipeline':
+        init_images = init_images[0].convert('RGB')
         images = sd_pipeline(
             prompt = prompt,
             image = init_images,
@@ -488,6 +492,7 @@ def img2img_pipeline_run(pipeline_name, init_images, init_latents, image_mask, s
             aesthetic_score = 6.0,
             negative_aesthetic_score = 2.5).images
     elif pipeline_name == 'StableDiffusionXLControlNetInpaintPipeline':
+        init_images = init_images[0].convert('RGB')
         images = sd_pipeline(
             prompt = prompt,
             prompt_2 = prompt_2,

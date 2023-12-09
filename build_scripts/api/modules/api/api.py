@@ -346,7 +346,7 @@ class Api:
         if 'pipeline_name' in payload:
             req.task = payload['pipeline_name']
 
-        if req.task != 'lcm_lora_pipeline':
+        if req.task != 'lcm_lora_pipeline' and 'lcm_lora' in shared.sd_pipeline.pipeline_name:
             shared.sd_pipeline.unload_lora_weights()
         
         logger.info('!!!!!!! payload processing take', time.time()-start_time)

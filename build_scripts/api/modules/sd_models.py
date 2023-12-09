@@ -18,7 +18,7 @@ from modules import shared, modelloader, devices, sd_vae, errors, hashes
 from modules.paths_internal import models_path
 from modules.timer import Timer
 import tomesd
-from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionInpaintPipeline, StableDiffusionXLInpaintPipeline
 
 model_dir = "Stable-diffusion"
 model_path = os.path.abspath(os.path.join(models_path, model_dir))
@@ -257,8 +257,13 @@ def load_pipeline(checkpoint_info=None):
     key_name_sd_xl_refiner = "conditioner.embedders.0.model.transformer.resblocks.9.mlp.c_proj.bias"
 
     pipeline_class = StableDiffusionPipeline
+    if 'inpainting' in checkpoint_info.filename:
+        pipeline_class = StableDiffusionInpaintPipeline
+    
     if key_name_sd_xl_base in checkpoint or key_name_sd_xl_refiner in checkpoint:
         pipeline_class = StableDiffusionXLPipeline
+        if 'inpainting' in checkpoint_info.filename:
+            pipeline_class = StableDiffusionXLInpaintPipeline 
     
     checkpoint = None
     
@@ -324,8 +329,8 @@ def reload_pipeline_weights(sd_pipeline=None, info=None):
         if shared.opts.data["sd_model_checkpoint_path"] == checkpoint_info.filename:
            return
 
-        pipeline_data.sd_pipeline.to(devices.cpu)
-        send_model_to_trash(pipeline_data.sd_pipeline)
+        #pipeline_data.sd_pipeline.to(devices.cpu)
+        #send_model_to_trash(pipeline_data.sd_pipeline)
 
     timer = Timer()
     #del pipeline_data.sd_pipeline
