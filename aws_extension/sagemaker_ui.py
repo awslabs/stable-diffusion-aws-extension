@@ -1157,17 +1157,6 @@ def create_ui(is_img2img):
                 gr.HTML('<br/>')
 
             # with gr.Row(visible=is_img2img):
-<<<<<<< HEAD
-                # global interrogate_clip_on_cloud_button
-                # global interrogate_deep_booru_on_cloud_button
-                #
-                # interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                #                                              elem_id="interrogate_clip_on_cloud_button", visible=False)
-                # interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                #                                                    elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
-            with gr.Row():
-                gr.HTML('<br/>')
-=======
             #     global generate_on_cloud_button_with_js
             #     # if not is_img2img:
             #     #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
@@ -1181,7 +1170,6 @@ def create_ui(is_img2img):
             #                                                        elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
             # with gr.Row():
             #     gr.HTML('<br/>')
->>>>>>> d82a48e14b45e2ba82f0ece5604925b5183eb8ca
 
             with gr.Row():
                 global inference_job_dropdown

@@ -975,28 +975,28 @@ class SageMakerUI(scripts.Script):
         # load lora
         for key, vals in extra_network_data.items():
             if key == 'lora':
-                if not args[-1] or not args[-1]['lora']:
+                if not args[-2] or not args[-2]['lora']:
                     logger.error("please upload lora models!!!!")
                     continue
                 for val in vals:
                     if 'Lora' not in models:
                         models['Lora'] = []
                     lora_filename = val.positional[0]
-                    for filename in args[-1]['lora']:
+                    for filename in args[-2]['lora']:
                         if filename.startswith(lora_filename):
                             if lora_filename not in models['Lora']:
                                 models['Lora'].append(filename)
                     if len(models['Lora']) == 0:
                         logger.error("please upload matched lora models!!!!")
             if key == 'hypernet':
-                if not args[-1] or not args[-1]['hypernet']:
+                if not args[-2] or not args[-2]['hypernet']:
                     logger.error("please upload hypernetworks models!!!!")
                     continue
                 for val in vals:
                     if 'hypernetworks' not in models:
                         models['hypernetworks'] = []
                     hypernet_filename = val.positional[0]
-                    for filename in args[-1]['hypernet']:
+                    for filename in args[-2]['hypernet']:
                         if filename.startswith(hypernet_filename):
                             if hypernet_filename not in models['hypernetworks']:
                                 models['hypernetworks'].append(filename)
@@ -1018,6 +1018,7 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
+            inference_role = args[-1]
             inference_id = self.infer_manager.run(p.user, inference_role, models, api_param,
                                                   self.is_txt2img)
             self.current_inference_id = inference_id
