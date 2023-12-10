@@ -139,12 +139,12 @@ def delete_sagemaker_endpoints(raw_event, ctx):
 
 @dataclass
 class CreateEndpointEvent:
-    endpoint_name: str
     instance_type: str
     initial_instance_count: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
+    endpoint_name: str = None
 
 
 # POST /endpoints
