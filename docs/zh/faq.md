@@ -33,7 +33,10 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 
 您可以通过另开一个无痕浏览器的方式，登录另一个用户账户。
 
+**问：我如何去掉本地推理的选项，让我的webUI只能支持云上推理？**
 
+您可以打开webUI的主页面，进入**Settings**标签页，选择左侧的*User interface*标签栏，找到以下区域‘[info]
+ Quicksettings list (setting entries that appear at the top of page rather than in settings tab) (requires Reload UI)‘，不选中‘sd_model_checkpoint'。以上操作完成后，点击最上方‘Apply setting' 而后 'Reload UI'，来让此改动生效。重启webUI后，您就会发现，原本界面本地选择推理底模的左上角下拉菜单消失，用户将只会有云上推理的选项。
 
 
 ## 成本

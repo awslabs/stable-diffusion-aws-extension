@@ -39,6 +39,9 @@ Currently, it is recommended that users avoid frequently updating solutions by d
 
 You can switch to another user account by opening a new incognito browser window and logging in with the alternate user credentials.
 
+**Q: How can I remove the local inference option so that my webUI can only support cloud inference?**
+
+You can open the webUI, navigate to tab **Settings** and select section *User interface* on the left session bar. Find field‘[info] Quicksettings list (setting entries that appear at the top of page rather than in settings tab) (requires Reload UI)‘, and uncheck ‘sd_model_checkpoint'. After then, click ‘Apply setting' and'Reload UI' to make the change effective. After reloading the webUI, you will find that the checkpoint selecting drop down list on the upper left side disappeared, and user will only have cloud inference option.
 
 
 ## Pricing
