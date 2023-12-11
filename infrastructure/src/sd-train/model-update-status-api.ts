@@ -70,8 +70,8 @@ export class UpdateModelStatusRestApi {
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
-    // 设置超时时间为 20 分钟 (1200 秒)
-    dockerDeployment.ecrDeployment.node.addMetadata('aws:cdk:has-command-timeout', '1200');
+    // 设置超时时间为 40 分钟 (2400 秒)
+    dockerDeployment.ecrDeployment.node.addMetadata('aws:cdk:has-command-timeout', '2400');
 
     this.dockerRepo = dockerDeployment.dockerRepo;
     // create sagemaker endpoint
