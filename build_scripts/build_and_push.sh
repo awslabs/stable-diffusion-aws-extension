@@ -96,7 +96,8 @@ docker build  -t ${image_name}:${tag} -f ${dockerfile} .
 # echo $fullname
 
 # Push to public ecr
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
+#aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
+aws ecr-public get-login-password --region cn-northwest-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
 
 fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
 docker tag ${image_name}:${tag} ${fullname}

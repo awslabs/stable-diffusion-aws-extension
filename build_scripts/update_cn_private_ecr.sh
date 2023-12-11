@@ -36,7 +36,6 @@ region=$(aws configure get region)
 
 # If the repository doesn't exist in ECR, create it.
 image_name="stable-diffusion-aws-extension/${image}"
-#fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 fullname="${account}.dkr.ecr.${region}.amazonaws.com.cn/${image_name}:${tag}"
 
 desc_output=$(aws ecr describe-repositories --repository-names ${image_name} 2>&1)
@@ -51,7 +50,6 @@ then
     fi
 fi
 
-#aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com.cn
 
 # if [ "$image" == "aigc-webui-utils" ]; then
