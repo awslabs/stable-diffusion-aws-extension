@@ -929,32 +929,18 @@ def fake_gan(selected_value, original_prompt):
 
         if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = original_prompt
-            images = get_inference_job_image_output(inference_job_id)
-            image_list = []
-            json_list = []
-            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
             # output directory mapping to task type
-            if inference_job_taskType == "txt2img":
-                image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-                json_list = download_images(inference_pram_json_list,
-                                            f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-                json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            elif inference_job_taskType == "img2img":
-                image_list = download_images(images, f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
-                json_list = download_images(inference_pram_json_list,
-                                            f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
-                json_file = f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            logger.debug(f"{str(images)}")
-            logger.debug(f"{str(inference_pram_json_list)}")
-            if os.path.isfile(json_file):
-                with open(json_file) as f:
-                    log_file = json.load(f)
-                    info_text = log_file["info"]
-                    infotexts = json.loads(info_text)["infotexts"][0]
+            images = get_inference_job_image_output(inference_job_id.strip())
+            inference_param_json_list = get_inference_job_param_output(inference_job_id)
+            image_list = download_images_to_pil(images)
+            json_file = download_images_to_json(inference_param_json_list)[0]
+            if json_file:
+                info_text = json_file
+                infotexts = f"Inference id is {inference_job_id}\n" + json.loads(info_text)["infotexts"][0]
             else:
                 logger.debug(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
-                infotexts = 'something wrong when trying to download the inference parameters'
+                infotexts = info_text
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             job_status = get_inference_job(inference_job_id)
             logger.debug(job_status)
@@ -972,52 +958,11 @@ def fake_gan(selected_value, original_prompt):
         infotexts = ''
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
-
-def display_inference_result(inference_id: str):
-    logger.debug(f"selected value is {inference_id}")
-    if inference_id is not None:
-        # Extract the InferenceJobId value
-        inference_job_id = inference_id
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list,
-                                    f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        logger.debug(f"{str(images)}")
-        logger.debug(f"{str(inference_pram_json_list)}")
-
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-
-        f = open(json_file)
-
-        log_file = json.load(f)
-
-        info_text = log_file["info"]
-
-        infotexts = json.loads(info_text)["infotexts"][0]
-    else:
-        image_list = []  # Return an empty list if selected_value is None
-        json_list = []
-        info_text = ''
-
-    return image_list, info_text, plaintext_to_html(infotexts)
-
-
 def init_refresh_resource_list_from_cloud(username):
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         if not cloud_auth_manager.enableAuth:
-            # api_manager.list_all_sagemaker_endpoints()
             refresh_all_models(username)
-            # get_texual_inversion_list()
-            # get_lora_list()
-            # get_hypernetwork_list()
-            # get_controlnet_model_list()
-            # get_inference_job_list()
         else:
             logger.debug('auth enabled, not preload load any model')
     else:
@@ -1042,7 +987,7 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(username, usertoken):
+def load_inference_job_list(target_task_type, username, usertoken):
     inference_jobs = [None_Option_For_On_Cloud_Model]
     inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
 
@@ -1057,7 +1002,8 @@ def load_inference_job_list(username, usertoken):
         inference_job_id = obj.get('InferenceJobId')
         # if filter_checkbox and task_type not in selected_types:
         #     continue
-        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+        if target_task_type == task_type:
+            temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
     # Sort the list based on completeTime in ascending order
     sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
     # Append the sorted combined strings to the txt2img_inference_job_ids list
@@ -1118,6 +1064,7 @@ def create_ui(is_img2img):
     with gr.Blocks() as sagemaker_inference_tab:
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
         sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+        inference_task_type = 'txt2img' if not is_img2img else 'img2img'
         with gr.Column():
             with gr.Row():
                 lora_and_hypernet_models_state = gr.State({})
@@ -1166,7 +1113,7 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(username, username)
+                                                  'choices': load_inference_job_list(inference_task_type, username, username)
                                               }, 'refresh_inference_job_down')
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
@@ -1351,7 +1298,7 @@ def create_ui(is_img2img):
                     controlnet_list = load_controlnet_list(pr.username, pr.username)
                     controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
 
-                    inference_jobs = load_inference_job_list(pr.username, pr.username)
+                    inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
                     lora_hypernets = {
                         'lora': lora_models_on_cloud,
                         'hypernet': hypernetworks_models_on_cloud,

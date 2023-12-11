@@ -139,12 +139,12 @@ def delete_sagemaker_endpoints(raw_event, ctx):
 
 @dataclass
 class CreateEndpointEvent:
-    endpoint_name: str
     instance_type: str
     initial_instance_count: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
+    endpoint_name: str = None
 
 
 # POST /endpoints
@@ -258,10 +258,13 @@ def sagemaker_endpoint_events(event, context):
         if 'ProductionVariants' in status:
             instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
             update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+    else:
+        # sometime sagemaker don't send deleted event, so just use deleted status when deleting
+        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', EndpointStatus.DELETED.value)
+        update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
 
     # if endpoint is deleted, update the instance count to 0 and delete the config and model
     if business_status == EndpointStatus.DELETED.value:
-        update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
         try:
             endpoint_config_name = event['detail']['EndpointConfigName']
             model_name = event['detail']['ModelName']
