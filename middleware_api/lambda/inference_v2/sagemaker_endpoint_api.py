@@ -184,7 +184,8 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
             endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
-            if endpoint.endpoint_status != 'Deleted' and endpoint.status != 'deleted':
+            # Compatible with fields used in older data, endpoint.status must be 'deleted'
+            if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
                     if role in endpoint.owner_group_or_role:
                         return {
