@@ -2,9 +2,9 @@ import os
 from typing import Dict, List
 
 
-def controlnet_args(script_name, arg, *_) -> Dict[str, List[str]]:
+def controlnet_args(script_name, arg, current_index, args, cache) -> Dict[str, List[str]]:
     if script_name != 'controlnet' or not arg.enabled:
-        return {}
+        return {}, None
 
     model_name_parts = arg.model.split()
     models = []
@@ -13,12 +13,10 @@ def controlnet_args(script_name, arg, *_) -> Dict[str, List[str]]:
         arg.model = ' '.join(model_name_parts[:-1])
 
     if arg.model == 'None':
-        return {}
+        return {}, None
 
-    cn_models_dir = os.path.join("models", "ControlNet")
-
-    for filename in os.listdir(cn_models_dir):
+    for filename in cache['controlnet']:
         if filename.startswith(arg.model):
             models.append(filename)
 
-    return {'ControlNet': models}
+    return {'ControlNet': models}, None

@@ -29,7 +29,8 @@ def list_all_sagemaker_endpoints(event, ctx):
 
     if endpoint_deployment_job_id:
         scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
-                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id})
+                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
+                                            )
     else:
         scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
 
@@ -42,6 +43,11 @@ def list_all_sagemaker_endpoints(event, ctx):
         event['x-auth']['role'] = user_roles
 
     for row in scan_rows:
+
+        # Compatible with fields used in older versions
+        if 'status' in row and row['status']['S'] == 'deleted':
+            row['endpoint_status']['S'] = 'deleted'
+
         endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
         if username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
             results.append(endpoint.__dict__)

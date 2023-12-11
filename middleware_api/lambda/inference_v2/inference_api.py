@@ -42,10 +42,13 @@ def prepare_inference(raw_event, context):
     _type = event.task_type
 
     try:
-        if _type not in ['txt2img', 'img2img']:
+        extra_generate_types = ['extra-single-image', 'extra-batch-images', 'rembg']
+        simple_generate_types = ['txt2img', 'img2img']
+
+        if _type not in simple_generate_types and _type not in extra_generate_types:
             return {
                 'statusCode': 400,
-                'errMsg': f'task type {event.task_type} should be either txt2img or img2img'
+                'errMsg': f'task type {event.task_type} should be in {extra_generate_types} or {simple_generate_types}'
             }
 
         # check if endpoint table for endpoint status and existence
@@ -53,47 +56,10 @@ def prepare_inference(raw_event, context):
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
 
-        # check if model(checkpoint) path(s) exists. return error if not
-        ckpts = []
-        ckpts_to_upload = []
-        for ckpt_type, names in event.models.items():
-            for name in names:
-                ckpt = _get_checkpoint_by_name(name, ckpt_type)
-                # todo: need check if user has permission for the model
-                if ckpt is None:
-                    ckpts_to_upload.append({
-                        'name': name,
-                        'ckpt_type': ckpt_type
-                    })
-                else:
-                    ckpts.append(ckpt)
-
-        if len(ckpts_to_upload) > 0:
-            return {
-                'statusCode': 400,
-                'errMsg': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
-            }
-
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
         presign_url = generate_presign_url(bucket_name, param_s3_key)
-
-        # create inference job with param location in ddb, status set to Created
-        used_models = {}
-        for ckpt in ckpts:
-            if ckpt.checkpoint_type not in used_models:
-                used_models[ckpt.checkpoint_type] = []
-
-            used_models[ckpt.checkpoint_type].append(
-                {
-                    'id': ckpt.id,
-                    'model_name': ckpt.checkpoint_names[0],
-                    's3': ckpt.s3_location,
-                    'type': ckpt.checkpoint_type
-                }
-            )
-
         inference_job = InferenceJob(
             InferenceJobId=request_id,
             startTime=str(datetime.now()),
@@ -103,22 +69,62 @@ def prepare_inference(raw_event, context):
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
-                'used_models': used_models,
                 'sagemaker_inference_endpoint_id': endpoint_id,
                 'sagemaker_inference_endpoint_name': endpoint_name,
             },
         )
-        ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
-        return {
+        resp = {
             'statusCode': 200,
             'inference': {
                 'id': request_id,
                 'type': _type,
                 'api_params_s3_location': s3_location,
                 'api_params_s3_upload_url': presign_url,
-                'models': [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts]
             }
         }
+
+        if _type in simple_generate_types:
+            # check if model(checkpoint) path(s) exists. return error if not
+            ckpts = []
+            ckpts_to_upload = []
+            for ckpt_type, names in event.models.items():
+                for name in names:
+                    ckpt = _get_checkpoint_by_name(name, ckpt_type)
+                    # todo: need check if user has permission for the model
+                    if ckpt is None:
+                        ckpts_to_upload.append({
+                            'name': name,
+                            'ckpt_type': ckpt_type
+                        })
+                    else:
+                        ckpts.append(ckpt)
+
+            if len(ckpts_to_upload) > 0:
+                return {
+                    'statusCode': 400,
+                    'errMsg': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
+                }
+
+            # create inference job with param location in ddb, status set to Created
+            used_models = {}
+            for ckpt in ckpts:
+                if ckpt.checkpoint_type not in used_models:
+                    used_models[ckpt.checkpoint_type] = []
+
+                used_models[ckpt.checkpoint_type].append(
+                    {
+                        'id': ckpt.id,
+                        'model_name': ckpt.checkpoint_names[0],
+                        's3': ckpt.s3_location,
+                        'type': ckpt.checkpoint_type
+                    }
+                )
+
+            inference_job.params['used_models'] = used_models
+            resp['inference']['models'] = [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts]
+
+        ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
+        return resp
     except Exception as e:
         return {
             'statusCode': 500,
@@ -150,14 +156,17 @@ def run_inference(event, _):
     assert inference_raw is not None and len(inference_raw) > 0
     inference_job = InferenceJob(**inference_raw)
     endpoint_name = inference_job.params['sagemaker_inference_endpoint_name']
-    # payload = inference_job.params
+    models = {}
+    if 'used_models' in inference_job.params:
+        models = {
+            "space_free_size": 4e10,
+            **inference_job.params['used_models'],
+        }
+
     payload = InvocationsRequest(
         task=inference_job.taskType,
         username="test",
-        models={
-            "space_free_size": 4e10,
-            **inference_job.params['used_models'],
-        },
+        models=models,
         param_s3=inference_job.params['input_body_s3']
     )
 
@@ -335,7 +344,7 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
-            if endpoint.endpoint_status != 'InService':
+            if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
                 continue
 
             if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):

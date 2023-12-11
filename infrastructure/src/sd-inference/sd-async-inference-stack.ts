@@ -143,7 +143,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       endpointDeploymentJobTable: sd_endpoint_deployment_job_table,
       userNotifySNS: props.snsTopic,
       inference_ecr_url: inferenceECR_url,
-      useExist: props.useExist,
     });
 
     const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {

@@ -48,7 +48,7 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块的**Deploy New SageMaker Endpoint**区域。
 2. 方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击**Deploy**按钮启动Sagemaker endpoint的部署。
-3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Ednpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:
+3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Endpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:
 
     | 参数名                | 描述                                                                                                            |
     |--------------------|---------------------------------------------------------------------------------------------------------------|
