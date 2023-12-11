@@ -53,3 +53,4 @@ test/debug/
 test/
 build_scripts/xy_test_dockerfile/
 build_scripts/api/extensions/
+build_scripts/api/tools/
