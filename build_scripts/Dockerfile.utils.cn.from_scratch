@@ -27,16 +27,18 @@ RUN pip install --upgrade pip
 RUN pip install trash-cli
 RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
-RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
-    && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
+RUN cd /opt/ml/code && \
+    python -m venv venv && \
+    source venv/bin/active && \
+    pip install -r /opt/ml/code/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
+    apt-get install -y google-perftools
 
 WORKDIR /opt/ml/code
 
 ENV ON_DOCKER true
 
-# install libtcmalloc to solve memory leak for multi model switch 
-# https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-RUN apt-get install -y google-perftools
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
 ENTRYPOINT ["python", "/opt/ml/code/serve"]

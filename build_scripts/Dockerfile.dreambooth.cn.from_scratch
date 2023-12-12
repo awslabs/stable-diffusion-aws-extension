@@ -20,21 +20,24 @@ COPY stable-diffusion-webui /opt/ml/code/
 RUN pip install trash-cli
 RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
-RUN pip install -r /opt/ml/code/requirements.txt && pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt \
-    && pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
+RUN cd /opt/ml/code && \
+    python -m venv venv && \
+    source venv/bin/active && \
+    pip install -r /opt/ml/code/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
+    pip install torch==2.0.1 && \
+    pip uninstall -y torchvision && \
+    pip install torchvision && \
+    pip uninstall -y torchaudio && \
+    pip install torchaudio && \
+    pip install xformers && \
+    pip install tensorflow==2.10 && \
+    pip install pydantic && \
+    pip install safetensors && \
+    pip install omegaconf && \
+    rm /opt/ml/code/requirements.txt
 
-RUN pip install torch==2.0.1
-RUN pip uninstall -y torchvision
-RUN pip install torchvision
-RUN pip uninstall -y torchaudio
-RUN pip install torchaudio
-RUN pip install xformers
-RUN pip install tensorflow==2.10
-RUN pip install pydantic
-RUN pip install safetensors
-RUN pip install omegaconf
-
-RUN rm /opt/ml/code/requirements.txt
 WORKDIR /opt/ml/code
 ENV TORCHDYNAMO_DISABLE 1
 ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint.py
