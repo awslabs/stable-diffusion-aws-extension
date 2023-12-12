@@ -47,8 +47,7 @@ if [ "$NEW_IMAGE_URI" = "default" ]; then
     # get AWS Account ID
     ACCOUNT_ID=$(aws sts get-caller-identity --region "$REGION" --query Account --output text)
     echo "AWS Account ID: $ACCOUNT_ID"
-#    NEW_IMAGE_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/stable-diffusion-aws-extension/aigc-webui-inference"
-    NEW_IMAGE_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com.cn/stable-diffusion-aws-extension/aigc-webui-inference"
+    NEW_IMAGE_URI="$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/stable-diffusion-aws-extension/aigc-webui-inference"
 fi
 
 # if NEW_IMAGE_URI not start with AWS Account ID, throw error

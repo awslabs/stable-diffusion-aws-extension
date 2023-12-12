@@ -50,8 +50,7 @@ then
     fi
 fi
 
-#aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
-aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com.cn
+aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
 # if [ "$image" == "aigc-webui-utils" ]; then
 #     repo_id="e2t2y5y0"
