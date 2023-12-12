@@ -1,5 +1,5 @@
 import os
 
-cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --nowebui --api --listen --port 8080 --skip-torch-cuda-test"
+cmd = "source /opt/ml/code/venv/bin/active && accelerate launch --num_cpu_threads_per_process=6 launch.py --nowebui --api --listen --port 8080 --skip-torch-cuda-test"
 
 os.system(cmd)
