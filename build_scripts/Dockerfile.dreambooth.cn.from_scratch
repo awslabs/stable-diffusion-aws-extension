@@ -12,6 +12,7 @@ RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 
 COPY stable-diffusion-webui /opt/ml/code/
+mkdir /opt/ml/code/repositories
 
 
 # install requirements for webui
