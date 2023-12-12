@@ -25,7 +25,7 @@ RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; pr
 
 # install pkg lib for proprocess in controlnet
 RUN python -m venv /opt/ml/code/venv
-RUN ./opt/ml/code/venv/bin/activate
+RUN /bin/bash -c "source /opt/ml/code/venv/bin/activate"
 RUN apt-get install -y file && \
     pip install --upgrade pip && \
     pip install accelerate==0.19.0 && \
