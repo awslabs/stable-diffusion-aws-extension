@@ -20,8 +20,6 @@ COPY stable-diffusion-webui /opt/ml/code/
 RUN pip install trash-cli
 RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
-RUN python -m venv /opt/ml/code/venv
-RUN /bin/bash -c "source /opt/ml/code/venv/bin/activate"
 RUN pip install -r /opt/ml/code/requirements.txt && \
     pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
     pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
