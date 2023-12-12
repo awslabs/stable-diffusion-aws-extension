@@ -351,12 +351,6 @@ def role_settings_tab():
                     interactive=False,
                 )
 
-                # def refresh_roles(pr: gr.Request):
-                #     return _get_roles_table(pr.username)
-                #
-                # role_table_refresh_button = gr.Button(value='Refresh Role Table', variant='primary')
-                # role_table_refresh_button.click(fn=refresh_roles, inputs=[], outputs=[role_table])
-
                 with gr.Row():
                     current_page = gr.State(0)
                     previous_page_btn = gr.Button(value="Previous Page", variant='primary')
