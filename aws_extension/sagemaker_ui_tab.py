@@ -286,7 +286,7 @@ def user_settings_tab():
 
             with gr.Row():
                 current_page = gr.State(0)
-                previous_page_btn = gr.Button(value="Previous Page", variant='primary', visible=False)
+                previous_page_btn = gr.Button(value="Previous Page", variant='primary')
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
                 def list_users_prev(paging, rq: gr.Request):
@@ -347,15 +347,43 @@ def role_settings_tab():
                 role_table = gr.Dataframe(
                     headers=["role name", "permissions", "created by"],
                     datatype=["str", "str", "str"],
-                    max_rows=10,
+                    max_rows=user_table_size,
                     interactive=False,
                 )
 
-                def refresh_roles(pr: gr.Request):
-                    return _get_roles_table(pr.username)
+                # def refresh_roles(pr: gr.Request):
+                #     return _get_roles_table(pr.username)
+                #
+                # role_table_refresh_button = gr.Button(value='Refresh Role Table', variant='primary')
+                # role_table_refresh_button.click(fn=refresh_roles, inputs=[], outputs=[role_table])
 
-                role_table_refresh_button = gr.Button(value='Refresh Role Table', variant='primary')
-                role_table_refresh_button.click(fn=refresh_roles, inputs=[], outputs=[role_table])
+                with gr.Row():
+                    current_page = gr.State(0)
+                    previous_page_btn = gr.Button(value="Previous Page", variant='primary')
+                    next_page_btn = gr.Button(value="Next Page", variant='primary')
+
+                    def list_roles_prev(paging, rq: gr.Request):
+                        if paging == 0:
+                            return gr.skip(), gr.skip()
+
+                        result = _get_roles_table(rq.username)
+                        start = paging - user_table_size if paging - user_table_size >= 0 else 0
+                        end = start + user_table_size
+                        return result[start: end], start
+
+                    def list_roles_next(paging, rq: gr.Request):
+                        result = _get_roles_table(rq.username)
+
+                        if paging >= len(result):
+                            return gr.skip(), gr.skip()
+
+                        start = paging + user_table_size if paging + user_table_size < len(result) else paging
+                        end = start + user_table_size if start + user_table_size < len(result) else len(result)
+                        return result[start: end], start
+
+                    next_page_btn.click(fn=list_roles_next, inputs=[current_page], outputs=[role_table, current_page])
+                    previous_page_btn.click(fn=list_roles_prev, inputs=[current_page],
+                                            outputs=[role_table, current_page])
 
     return ui_role_setting, upsert_role_form, role_table
 
