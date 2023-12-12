@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from unittest import TestCase
 
-os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
+os.environ.setdefault('AWS_PROFILE', 'playground')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
 os_key_id = 'alias/sd-extension-password-key'
 os.environ.setdefault('KEY_ID', os_key_id)
@@ -61,6 +61,22 @@ class InferenceApiTest(TestCase):
             resp = upsert_role(event, {})
             print(resp)
 
+    def test_add_role(self):
+        from multi_users.roles_api import upsert_role
+        event = {
+            'role_name': f'avengers team',
+            'permissions': [
+                'train:all',
+                'checkpoint:all',
+                'inference:all',
+                'sagemaker_endpoint:all',
+                'user:all'
+            ],
+            'creator': 'nickfury'
+        }
+        resp = upsert_role(event, {})
+        print(resp)
+
     def test_add_roles(self, count):
         from multi_users.roles_api import upsert_role
         event = {
@@ -72,7 +88,7 @@ class InferenceApiTest(TestCase):
                 'sagemaker_endpoint:all',
                 'user:all'
             ],
-            'creator': 'alvindaiyan'
+            'creator': 'nickfury'
         }
         resp = upsert_role(event, {})
         print(resp)
@@ -83,12 +99,27 @@ class InferenceApiTest(TestCase):
 
     def test_add_user(self, count):
         from multi_users.multi_users_api import upsert_user
-        event = {
+        event = {'body': {
             'username': f'batman{count}',
             'password': 'password',
-            'roles': ['IT Operator', 'Designer'],
-            'creator': 'alvindaiyan'
-        }
+            'roles': ['IT Operator'],
+            'creator': 'spiderman'
+        }}
+        resp = upsert_user(event, {})
+        print(resp)
+        assert resp['status'] == 200
+
+    def test_add_user_with_no_permission(self):
+        self.test_add_user(0)
+
+    def test_add_user(self):
+        from multi_users.multi_users_api import upsert_user
+        event = {'body': {
+            'username': f'nickfury',
+            'password': 'password',
+            'roles': ['avengers manager'],
+            'creator': 'admin'
+        }}
         resp = upsert_user(event, {})
         print(resp)
         assert resp['status'] == 200
@@ -102,8 +133,12 @@ class InferenceApiTest(TestCase):
         event = {
             'queryStringParameters': {
                 # 'username': 'alvindaiyan',
-                'limit': 10,
+                'limit': 3,
                 'show_password': False,
+            },
+            'x-auth': {
+                'username': 'admin',
+                'role': ''
             }
         }
         resp = list_user(event, {})
@@ -121,6 +156,10 @@ class InferenceApiTest(TestCase):
         event = {
             'queryStringParameters': {
                 'show_password': False,
+            },
+            'x-auth': {
+                'username': 'thor',
+                'role': ''
             }
         }
         resp = list_user(event, {})
@@ -130,7 +169,7 @@ class InferenceApiTest(TestCase):
 
     def test_list_username(self):
         from multi_users.multi_users_api import list_user
-        username = 'superman'
+        username = 'admin'
         event = {
             'queryStringParameters': {
                 'show_password': True,
@@ -163,6 +202,10 @@ class InferenceApiTest(TestCase):
         from multi_users.roles_api import list_roles
         event = {
             'queryStringParameters': {
+            },
+            'x-auth': {
+                'username': 'xman',
+                'role': ''
             }
         }
         resp = list_roles(event, {})
@@ -175,7 +218,8 @@ class InferenceApiTest(TestCase):
         event = {
             'queryStringParameters': {
                 'role': role
-            }
+            },
+
         }
         resp = list_roles(event, {})
         assert len(resp['roles']) == 1

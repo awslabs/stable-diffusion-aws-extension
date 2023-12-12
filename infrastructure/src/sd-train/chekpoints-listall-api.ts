@@ -21,6 +21,7 @@ export interface ListAllCheckPointsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllCheckPointsApi {
@@ -32,6 +33,7 @@ export class ListAllCheckPointsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -45,6 +47,7 @@ export class ListAllCheckPointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.authorizer = props.authorizer;
 
     this.listAllCheckpointsApi();
   }
@@ -115,6 +118,10 @@ export class ListAllCheckPointsApi {
               '        #end\n' +
               '        ]#if($foreach.hasNext),#end\n' +
               '      #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -123,6 +130,7 @@ export class ListAllCheckPointsApi {
     );
     this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.username': false,
         'method.request.querystring.status': false,

@@ -38,6 +38,7 @@ nav:
     - Developer guide:
         - Source code: developer-guide/source.md
         - API Direct Call: developer-guide/api.md
+        - Custom Container: developer-guide/byoc.md
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md
     - Revisions: revisions.md

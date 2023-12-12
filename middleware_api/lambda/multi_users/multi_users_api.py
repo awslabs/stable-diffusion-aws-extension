@@ -1,13 +1,12 @@
-import json
 from dataclasses import dataclass
 import logging
 import os
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from multi_users._types import User, PARTITION_KEYS, Role
-from multi_users.roles_api import upsert_role
-from multi_users.utils import KeyEncryptService, check_user_existence
+from _types import User, PARTITION_KEYS, Role, Default_Role
+from roles_api import upsert_role
+from utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
@@ -32,7 +31,7 @@ def upsert_user(raw_event, ctx):
     print(raw_event)
     event = UpsertUserEvent(**raw_event['body'])
     if event.initial:
-        rolenames= ['IT Operator', 'Designer']
+        rolenames = [Default_Role]
 
         ddb_service.put_items(user_table, User(
             kind=PARTITION_KEYS.user,
@@ -50,11 +49,19 @@ def upsert_user(raw_event, ctx):
                     'checkpoint:all',
                     'inference:all',
                     'sagemaker_endpoint:all',
-                    'user:all'
+                    'user:all',
+                    'role:all'
                 ],
                 'creator': event.username
             }
-            resp = upsert_role(role_event, {})
+
+            @dataclass
+            class MockContext:
+                aws_request_id: str
+                from_sd_local: bool
+
+            resp = upsert_role(role_event, MockContext(aws_request_id='', from_sd_local=True))
+
             if resp['statusCode'] != 200:
                 return resp
 
@@ -67,15 +74,13 @@ def upsert_user(raw_event, ctx):
             'all_roles': rolenames,
         }
 
-    # todo: need check x-auth
-    # check if creator exist
-    if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
-        return {
-            'statusCode': 400,
-            'errMsg': f'creator {event.creator} not exist'
-        }
+    check_permission_resp = _check_action_permission(event.creator, event.username)
+    if check_permission_resp:
+        return check_permission_resp
 
-    # check if roles exists
+    creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
+
+    # check if created roles exists
     roles_result = ddb_service.scan(table=user_table, filters={
         'kind': PARTITION_KEYS.role,
         'sort_key': event.roles
@@ -84,6 +89,17 @@ def upsert_user(raw_event, ctx):
     roles_pool = []
     for row in roles_result:
         role = Role(**ddb_service.deserialize(row))
+        # checking if the creator has the proper permissions
+        for permission in role.permissions:
+            permission_parts = permission.split(':')
+            resource = permission_parts[0]
+            action = permission_parts[1]
+            if 'all' not in creator_permissions[resource] and action not in creator_permissions[resource]:
+                return {
+                    'statusCode': 400,
+                    'errMsg': f'creator has no permission to assign permission [{permission}] to others'
+                }
+
         roles_pool.append(role.sort_key)
 
     for role in event.roles:
@@ -116,41 +132,80 @@ def delete_user(event, ctx):
     _filter = {}
     if 'pathStringParameters' not in event:
         return {
-            'statusCode': '500',
+            'statusCode': '400',
             'error': 'path parameter /user/{username}/ are needed'
         }
-
     username = event['pathStringParameters']['username']
     if not username or len(username) == 0:
         return {
-            'statusCode': '500',
+            'statusCode': '400',
             'error': 'path parameter /user/{username}/ are needed'
         }
 
-    scan_rows = ddb_service.query_items(user_table, key_values={
-        'kind': PARTITION_KEYS.user,
-        'sort_key': username
-    })
-
-    if len(scan_rows) == 0 or not scan_rows:
+    if 'x-auth' not in event or not event['x-auth']['username']:
         return {
-            'statusCode': 400,
-            'errMsg': f'user {username} not found'
+            'statusCode': '400',
+            'error': 'no deleter provided'
         }
 
-    user = User(**(ddb_service.deserialize(scan_rows[0])))
-    # todo: need to figure out what happens to user's resources
+    requestor_name = event['x-auth']['username']
+    check_permission_resp = _check_action_permission(requestor_name, username)
+    if check_permission_resp:
+        return check_permission_resp
+
+    # todo: need to figure out what happens to user's resources: models, inferences, trainings and so on
     ddb_service.delete_item(user_table, keys={
         'kind': PARTITION_KEYS.user,
         'sort_key': username
     })
+
     return {
         'statusCode': 200,
         'user': {
-            'username': user.sort_key,
+            'username': username,
             'status': 'deleted'
         }
     }
+
+
+def _check_action_permission(creator_username, target_username):
+    # check if creator exist
+    if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=creator_username):
+        return {
+            'statusCode': 400,
+            'errMsg': f'creator {creator_username} not exist'
+        }
+
+    target_user = get_user_by_username(ddb_service, user_table, target_username)
+
+    creator_permissions = get_permissions_by_username(ddb_service, user_table, creator_username)
+
+    if 'user' not in creator_permissions or \
+            ('all' not in creator_permissions['user'] and 'create' not in creator_permissions['user']):
+        return {
+            'statusCode': 400,
+            'errMsg': f'creator {creator_username} does not have permission to manage the user'
+        }
+
+    # if the creator have no permission (not created by creator),
+    # make sure the creator doesn't change the existed user (created by others)
+    # and only user with 'user:all' can do update any users
+    if target_user and target_user.creator != creator_username and 'all' not in creator_permissions['user']:
+        return {
+            'statusCode': 400,
+            'errMsg': f'username {target_user.sort_key} has already exists, '
+                      f'creator {creator_username} does not have permissions to change it'
+        }
+
+    if target_user and target_user.creator == creator_username and 'create' not in creator_permissions['user'] and 'all' \
+            not in creator_permissions['user']:
+        return {
+            'statusCode': 400,
+            'errMsg': f'username {target_user.sort_key} has already exists, '
+                      f'creator {creator_username} does not have permissions to change it'
+        }
+
+    return None
 
 
 # GET /users?last_evaluated_key=xxx&limit=10&username=USER_NAME&filter=key:value,key:value&show_password=1
@@ -165,47 +220,78 @@ def list_user(event, ctx):
 
     parameters = event['queryStringParameters']
 
-    limit = parameters['limit'] if 'limit' in parameters and parameters['limit'] else None
-    last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
-        'last_evaluated_key'] else None
+    # limit = parameters['limit'] if 'limit' in parameters and parameters['limit'] else None
+    # last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
+    #     'last_evaluated_key'] else None
 
-    if last_evaluated_key and isinstance(last_evaluated_key, str):
-        last_evaluated_key = json.loads(last_evaluated_key)
+    # if last_evaluated_key and isinstance(last_evaluated_key, str):
+    #     last_evaluated_key = json.loads(last_evaluated_key)
 
     show_password = parameters['show_password'] if 'show_password' in parameters and parameters['show_password'] else 0
     username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-    last_token = None
+    if 'x-auth' not in event or not event['x-auth']['username']:
+        return {
+            'statusCode': '400',
+            'error': 'no auth provided'
+        }
+
+    requester_name = event['x-auth']['username']
+    requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     if not username:
         result = ddb_service.query_items(user_table,
-                                         key_values={'kind': PARTITION_KEYS.user},
-                                         last_evaluated_key=last_evaluated_key,
-                                         limit=limit)
+                                         key_values={'kind': PARTITION_KEYS.user})
 
         scan_rows = result
         if type(result) is tuple:
             scan_rows = result[0]
-            last_token = result[1]
     else:
         scan_rows = ddb_service.query_items(user_table, key_values={
             'kind': PARTITION_KEYS.user,
             'sort_key': username
         })
 
+    # generally speaking, the number of roles is limited, so it's okay to load them into memory to process
+    role_rows = ddb_service.query_items(user_table, key_values={
+        'kind': PARTITION_KEYS.role
+    })
+    roles_permission_lookup = {}
+    for role_row in role_rows:
+        r = Role(**(ddb_service.deserialize(role_row)))
+        roles_permission_lookup[r.sort_key] = r.permissions
+
     result = []
     for row in scan_rows:
         user = User(**(ddb_service.deserialize(row)))
-        result.append({
+        user_resp = {
             'username': user.sort_key,
             'roles': user.roles,
             'creator': user.creator,
+            'permissions': set(),
             'password': '*' * 8 if not show_password else password_encryptor.decrypt(
                 key_id=kms_key_id, cipher_text=user.password).decode(),
-        })
+        }
+        for role in user.roles:
+            if role in roles_permission_lookup:
+                user_resp['permissions'].update(roles_permission_lookup[role])
+            else:
+                print(f'role {role} not found and no permission is attached')
+
+        user_resp['permissions'] = list(user_resp['permissions'])
+        user_resp['permissions'].sort()
+
+        # only show user to requester if requester has 'user:all' permission
+        # or requester has 'user:list' permission and the user is created by the requester
+        if 'user' in requester_permissions and ('all' in requester_permissions['user'] or
+                                                ('list' in requester_permissions['user'] and
+                                                 user.creator == requester_name)):
+            result.append(user_resp)
+        elif user.sort_key == requester_name:
+            result.append(user_resp)
 
     return {
         'status': 200,
         'users': result,
-        'previous_evaluated_key': last_evaluated_key,
-        'last_evaluated_key': last_token
+        'previous_evaluated_key': "not_applicable",
+        'last_evaluated_key': "not_applicable"
     }

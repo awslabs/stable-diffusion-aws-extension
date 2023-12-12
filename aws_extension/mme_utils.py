@@ -125,7 +125,11 @@ def download_and_update(model_type, model_s3_pos):
         os.system(f"rm '{tar_name}'")  # 使用引号括起文件名
         logging.info(f"model type is origin file type: {file_type}")
         prefix_name = model_s3_pos.split('.')[0]
-        os.system(f'./tools/s5cmd cp "{prefix_name}"* ./models/{model_type}/')
+        if model_type == 'embeddings':
+            os.system(f'./tools/s5cmd cp "{prefix_name}"* ./{model_type}/')
+        else:
+            os.system(f'./tools/s5cmd cp "{prefix_name}"* ./models/{model_type}/')
+
     logging.info("download finished")
     if model_type == 'Stable-diffusion':
         sd_models.list_models()

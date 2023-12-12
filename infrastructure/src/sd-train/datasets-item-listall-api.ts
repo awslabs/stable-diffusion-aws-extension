@@ -18,9 +18,11 @@ export interface ListAllDatasetItemsApiProps {
   httpMethod: string;
   datasetInfoTable: aws_dynamodb.Table;
   datasetItemsTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllDatasetItemsApi {
@@ -30,8 +32,10 @@ export class ListAllDatasetItemsApi {
   private readonly scope: Construct;
   private readonly datasetInfoTable: aws_dynamodb.Table;
   private readonly datasetItemsTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -42,9 +46,11 @@ export class ListAllDatasetItemsApi {
     this.httpMethod = props.httpMethod;
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemsTable = props.datasetItemsTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.authorizer = props.authorizer;
 
     this.listAllDatasetApi();
   }
@@ -64,6 +70,7 @@ export class ListAllDatasetItemsApi {
       resources: [
         this.datasetInfoTable.tableArn,
         this.datasetItemsTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
@@ -105,6 +112,8 @@ export class ListAllDatasetItemsApi {
       memorySize: 1024,
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
+        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
       },
       layers: [this.layer],
@@ -124,6 +133,10 @@ export class ListAllDatasetItemsApi {
               '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
               '        #if($foreach.hasNext),#end\n' +
               '        #end\n' +
+              '    }, \n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -133,6 +146,7 @@ export class ListAllDatasetItemsApi {
     const dataItemRouter = this.router.addResource('{dataset_name}');
     dataItemRouter.addResource('data').addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.path.dataset_name': true,
       },

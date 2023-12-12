@@ -18,6 +18,7 @@ export interface UserDeleteApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class UserDeleteApi {
@@ -27,6 +28,7 @@ export class UserDeleteApi {
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly multiUserTable: aws_dynamodb.Table;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -38,6 +40,7 @@ export class UserDeleteApi {
     this.router = props.router;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
+    this.authorizer = props.authorizer;
 
     this.deleteUserApi();
   }
@@ -105,6 +108,10 @@ export class UserDeleteApi {
               '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
               '        #if($foreach.hasNext),#end\n' +
               '        #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -114,6 +121,7 @@ export class UserDeleteApi {
     const userRouter = this.router.addResource('{username}');
     userRouter.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.path.username': true,
       },

@@ -44,6 +44,7 @@ export class MultiUsersStack extends NestedStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
       srcRoot: this.srcRoot,
+      authorizer: props.authorizer,
     });
 
     new UserUpsertApi(scope, 'userUpsert', {
@@ -62,6 +63,7 @@ export class MultiUsersStack extends NestedStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.user,
       srcRoot: this.srcRoot,
+      authorizer: props.authorizer,
     });
 
     new ListAllUsersApi(scope, 'userListAll', {

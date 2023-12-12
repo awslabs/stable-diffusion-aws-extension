@@ -27,6 +27,9 @@ import { Construct } from 'constructs';
 import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
+import { CreateSagemakerEndpointsApi, CreateSagemakerEndpointsApiProps } from './sagemaker-endpoints-create';
+import { DeleteSagemakerEndpointsApi, DeleteSagemakerEndpointsApiProps } from './sagemaker-endpoints-delete';
+import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from './sagemaker-endpoints-event';
 import { ListAllSagemakerEndpointsApi, ListAllSageMakerEndpointsApiProps } from './sagemaker-endpoints-listall';
 import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
@@ -67,6 +70,8 @@ export class SDAsyncInferenceStack extends NestedStack {
       throw new Error('default_inference_ecr_image is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
+
+    const inferenceECR_url = this.createInferenceECR(srcImg);
 
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
@@ -115,6 +120,29 @@ export class SDAsyncInferenceStack extends NestedStack {
         },
     );
 
+    new DeleteSagemakerEndpointsApi(
+      this, 'sd-infer-v2-deleteEndpoints',
+        <DeleteSagemakerEndpointsApiProps>{
+          router: props.routers.endpoints,
+          commonLayer: props.commonLayer,
+          endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
+          httpMethod: 'DELETE',
+          srcRoot: srcRoot,
+          authorizer: props.authorizer,
+        },
+    );
+
+    new SagemakerEndpointEvents(
+      this, 'sd-infer-endpoint-events',
+        <SagemakerEndpointEventsProps>{
+          commonLayer: props.commonLayer,
+          endpointDeploymentTable: sd_endpoint_deployment_job_table,
+          multiUserTable: props.multiUserTable,
+          srcRoot: srcRoot,
+        },
+    );
+
     new ListAllInferencesApi(
       this, 'sd-infer-v2-allInferences',
       {
@@ -134,7 +162,25 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
 
-    const inferenceECR_url = this.createInferenceECR(srcImg);
+    new CreateSagemakerEndpointsApi(
+      this, 'sd-infer-v2-createEndpoint',
+          <CreateSagemakerEndpointsApiProps>{
+            router: props.routers.endpoints,
+            commonLayer: props.commonLayer,
+            endpointDeploymentTable: sd_endpoint_deployment_job_table,
+            multiUserTable: props.multiUserTable,
+            inferenceJobTable: sd_inference_job_table,
+            httpMethod: 'POST',
+            srcRoot: srcRoot,
+            authorizer: props.authorizer,
+            s3Bucket: props.s3_bucket,
+            userNotifySNS: props.snsTopic,
+            inferenceECRUrl: inferenceECR_url,
+            inferenceResultTopic: inference_result_topic,
+            inferenceResultErrorTopic: inference_result_error_topic,
+          },
+    );
+
     const stepFunctionStack = new SagemakerInferenceStateMachine(this, <SagemakerInferenceProps>{
       snsTopic: inference_result_topic,
       snsErrorTopic: inference_result_error_topic,

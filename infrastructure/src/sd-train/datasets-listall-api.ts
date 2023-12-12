@@ -17,9 +17,11 @@ export interface ListAllDatasetsApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   datasetInfoTable: aws_dynamodb.Table;
+  multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
+  authorizer: aws_apigateway.IAuthorizer;
 }
 
 export class ListAllDatasetsApi {
@@ -28,8 +30,10 @@ export class ListAllDatasetsApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly datasetInfoTable: aws_dynamodb.Table;
+  private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly authorizer: aws_apigateway.IAuthorizer;
 
   private readonly baseId: string;
 
@@ -39,9 +43,11 @@ export class ListAllDatasetsApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.datasetInfoTable = props.datasetInfoTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.authorizer = props.authorizer;
 
     this.listAllDatasetApi();
   }
@@ -58,7 +64,10 @@ export class ListAllDatasetsApi {
         'dynamodb:Scan',
         'dynamodb:Query',
       ],
-      resources: [this.datasetInfoTable.tableArn],
+      resources: [
+        this.datasetInfoTable.tableArn,
+        this.multiUserTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -88,6 +97,7 @@ export class ListAllDatasetsApi {
       environment: {
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -106,6 +116,10 @@ export class ListAllDatasetsApi {
               '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
               '        #if($foreach.hasNext),#end\n' +
               '        #end\n' +
+              '    },\n' +
+              '    "x-auth": {\n' +
+              '        "username": "$context.authorizer.username",\n' +
+              '        "role": "$context.authorizer.role"\n' +
               '    }\n' +
               '}',
         },
@@ -114,6 +128,7 @@ export class ListAllDatasetsApi {
     );
     this.router.addMethod(this.httpMethod, listDatasetsIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      authorizer: this.authorizer,
       requestParameters: {
         'method.request.querystring.dataset_status': true,
       },

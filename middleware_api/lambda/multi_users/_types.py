@@ -4,6 +4,9 @@ from typing import Optional, Any
 import boto3.dynamodb.types
 
 
+Default_Role = 'IT Operator'
+
+
 @dataclass
 class _PartitionKeys:
     user = 'user'

@@ -3,7 +3,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
-from multi_users._types import PARTITION_KEYS, User
+from multi_users._types import PARTITION_KEYS, User, Role
 
 
 class KeyEncryptService:
@@ -58,6 +58,18 @@ def check_user_existence(ddb_service, user_table, username):
     return not creator or len(creator) == 0
 
 
+def get_user_by_username(ddb_service, user_table, username):
+    user_raw = ddb_service.query_items(table=user_table, key_values={
+        'kind': PARTITION_KEYS.user,
+        'sort_key': username,
+    })
+
+    if not user_raw or len(user_raw) == 0:
+        return None
+
+    return User(**(ddb_service.deserialize(user_raw[0])))
+
+
 def get_user_roles(ddb_service, user_table_name, username):
     user = ddb_service.query_items(table=user_table_name, key_values={
         'kind': PARTITION_KEYS.user,
@@ -79,3 +91,25 @@ def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_nam
             return True
 
     return False
+
+
+def get_permissions_by_username(ddb_service, user_table, username):
+    creator_roles = get_user_roles(ddb_service, user_table, username)
+    roles = ddb_service.scan(table=user_table, filters={
+        'kind': PARTITION_KEYS.role,
+        'sort_key': creator_roles,
+    })
+    permissions = {}
+    for role_raw in roles:
+        role = Role(**(ddb_service.deserialize(role_raw)))
+        for permission in role.permissions:
+            permission_parts = permission.split(':')
+            resource = permission_parts[0]
+            action = permission_parts[1]
+
+            if resource not in permissions:
+                permissions[resource] = set()
+
+            permissions[resource].add(action)
+
+    return permissions

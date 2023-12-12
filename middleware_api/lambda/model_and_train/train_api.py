@@ -16,22 +16,20 @@ from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
 from common.util import get_s3_presign_urls
 from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
-
+from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
+user_table = os.environ.get('MULTI_USER_TABLE')
 instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
 image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
-region_name = os.environ['AWS_REGION']
-
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)
-s3 = boto3.client('s3', region_name=region_name)
 
 
 @dataclass
@@ -39,6 +37,7 @@ class Event:
     train_type: str
     model_id: str
     params: dict[str, Any]
+    creator: str
     filenames: Optional[List[str]] = None
 
 
@@ -49,10 +48,19 @@ def create_train_job_api(raw_event, context):
     _type = event.train_type
 
     try:
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
+        if 'train' not in creator_permissions \
+                or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
+            return {
+                'statusCode': 400,
+                'errMsg': f'user {event.creator} has not permission to create a train job'
+            }
+
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id
         })
-        if model_raw is None:
+        # if model is not found, model_raw is {}
+        if model_raw == {}:
             return {
                 'statusCode': 500,
                 'error': f'model with id {event.model_id} is not found'
@@ -94,6 +102,8 @@ def create_train_job_api(raw_event, context):
                 with tarfile.open('/tmp/' + tar_file_name, 'w') as tar:
                     # Add the contents of 'models' directory to the tar file without including the /tmp itself
                     tar.add(tar_file_content, arcname=f'models/sagemaker_dreambooth/{model.name}')
+
+                s3 = boto3.client('s3')
                 s3.upload_file(tar_file_path, bucket_name, os.path.join(input_location, tar_file_name))
                 logger.info(f"Tar file '{tar_file_name}' uploaded to '{bucket_name}' successfully.")
             except Exception as e:
@@ -101,13 +111,14 @@ def create_train_job_api(raw_event, context):
         else:
             presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
 
+        user_roles = get_user_roles(ddb_service, user_table, event.creator)
         checkpoint = CheckPoint(
             id=request_id,
             checkpoint_type=event.train_type,
             s3_location=f's3://{bucket_name}/{base_key}/output',
             checkpoint_status=CheckPointStatus.Initial,
             timestamp=datetime.datetime.now().timestamp(),
-            allowed_roles_or_users=['*']  # fixme: not in scope yet, need fix later for train process
+            allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         train_input_s3_location = f's3://{bucket_name}/{input_location}'
@@ -120,7 +131,8 @@ def create_train_job_api(raw_event, context):
             train_type=event.train_type,
             input_s3_location=train_input_s3_location,
             checkpoint_id=checkpoint.id,
-            timestamp=datetime.datetime.now().timestamp()
+            timestamp=datetime.datetime.now().timestamp(),
+            allowed_roles_or_users=[event.creator]
         )
         ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -166,6 +178,22 @@ def list_all_train_jobs_api(event, context):
             'trainJobs': []
         }
 
+    if 'x-auth' not in event or not event['x-auth']['username']:
+        return {
+            'statusCode': '400',
+            'error': 'no auth user provided'
+        }
+
+    requestor_name = event['x-auth']['username']
+    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
+    if 'train' not in requestor_permissions or \
+            ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
+        return {
+            'statusCode': '400',
+            'error': f'user has no permission to train'
+        }
+
     train_jobs = []
     for tr in resp:
         train_job = TrainJob(**(ddb_service.deserialize(tr)))
@@ -173,14 +201,21 @@ def list_all_train_jobs_api(event, context):
         if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
             model_name = train_job.params['training_params']['model_name']
 
-        train_jobs.append({
+        train_job_dto = {
             'id': train_job.id,
             'modelName': model_name,
             'status': train_job.job_status.value,
             'trainType': train_job.train_type,
             'created': train_job.timestamp,
             'sagemakerTrainName': train_job.sagemaker_train_name,
-        })
+        }
+        if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users, requestor_roles, requestor_name):
+            train_jobs.append(train_job_dto)
+        elif not train_job.allowed_roles_or_users and \
+                'user' in requestor_permissions and \
+                'all' in requestor_permissions['user']:
+            # superuser can view the legacy data
+            train_jobs.append(train_job_dto)
 
     return {
         'statusCode': 200,
