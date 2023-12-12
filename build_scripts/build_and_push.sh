@@ -63,7 +63,7 @@ region=$(aws configure get region)
 # region=${region:-us-west-2}
 
 image_name="stable-diffusion-aws-extension/${image}"
-fullname="${account}.dkr.ecr.${region}.amazonaws.com.cn/${image_name}:${tag}"
+fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 
 # If the repository doesn't exist in ECR, create it.
 
@@ -79,10 +79,9 @@ then
     fi
 fi
 
-#aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
 #aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
 # aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
-aws ecr get-login-password --region cn-northwest-1 | docker login --username AWS --password-stdin 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn
 
 cp ${dockerfile} .
 
@@ -96,8 +95,7 @@ docker build  -t ${image_name}:${tag} -f ${dockerfile} .
 # echo $fullname
 
 # Push to public ecr
-#aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
-aws ecr-public get-login-password --region cn-northwest-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
 
 fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
 docker tag ${image_name}:${tag} ${fullname}
