@@ -33,7 +33,7 @@ RUN apt-get install -y file && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 # prepare environment fow webui
-RUN wget -O https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors /opt/ml/code/models/Stable-diffusion
+RUN wget -O https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
