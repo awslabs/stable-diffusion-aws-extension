@@ -33,7 +33,8 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     apt-get install -y google-perftools
 
 # prepare environment fow webui
-RUN wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors /opt/ml/code/models/Stable-diffusion
+RUN mkdir /opt/ml/code/models/Stable-diffusion && \
+    wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors /opt/ml/code/models/Stable-diffusion
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
