@@ -33,6 +33,16 @@ RUN apt-get install -y file && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 # prepare environment fow webui
+RUN mkdir /opt/ml/code/openai
+RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/config.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/merges.txt && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/model.safetensors && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/preprocessor_config.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/special_tokens_map.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer_config.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/vocab.json
+
 RUN wget -O /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
