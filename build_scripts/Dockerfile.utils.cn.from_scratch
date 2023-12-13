@@ -9,7 +9,7 @@ RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 
 COPY stable-diffusion-webui /opt/ml/code/
-COPY utils/serve /opt/ml/code
+COPY utils/cn_serve /opt/ml/code
 
 # add accelerate
 RUN mkdir -p /root/.cache/huggingface/accelerate
@@ -74,4 +74,4 @@ ENV ON_DOCKER true
 
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
-ENTRYPOINT ["python", "/opt/ml/code/serve"]
+ENTRYPOINT ["python", "/opt/ml/code/cn_serve"]
