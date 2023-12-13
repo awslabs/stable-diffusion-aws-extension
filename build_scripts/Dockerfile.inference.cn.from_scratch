@@ -34,22 +34,22 @@ RUN apt-get install -y file && \
 
 # prepare environment fow webui
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
-    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
-    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
-    pip install -U -I --no-deps xformers==0.0.20
+    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
+    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
+    pip install -U -I --no-deps xformers==0.0.20 && \
     pip install ngrok
 
 RUN mkdir /opt/ml/code/repositories
-RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/repositories/stable-diffusion-stability-ai
-    git -C /opt/ml/code/repositories/stable-diffusion-stability-ai checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf
-    git clone https://github.com/Stability-AI/generative-models.git /opt/ml/code/repositories/generative-models
-    git -C /opt/ml/code/repositories/generative-models checkout 45c443b316737a4ab6e40413d7794a7f5657c19f
-    git clone https://github.com/crowsonkb/k-diffusion.git /opt/ml/code/repositories/k-diffusion
-    git -C /opt/ml/code/repositories/k-diffusion checkout ab527a9a6d347f364e3d185ba6d714e22d80cb3c
-    git clone https://github.com/sczhou/CodeFormer.git /opt/ml/code/repositories/CodeFormer
-    git -C /opt/ml/code/repositories/CodeFormer checkout c5b4593074ba6214284d6acd5f1719b6c5d739af
-    git clone https://github.com/salesforce/BLIP.git /opt/ml/code/repositories/BLIP
-    git -C /opt/ml/code/repositories/BLIP checkout 48211a1594f1321b00f14c9f7a5b4813144b2fb9
+RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/repositories/stable-diffusion-stability-ai && \
+    git -C /opt/ml/code/repositories/stable-diffusion-stability-ai checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf && \
+    git clone https://github.com/Stability-AI/generative-models.git /opt/ml/code/repositories/generative-models && \
+    git -C /opt/ml/code/repositories/generative-models checkout 45c443b316737a4ab6e40413d7794a7f5657c19f && \
+    git clone https://github.com/crowsonkb/k-diffusion.git /opt/ml/code/repositories/k-diffusion && \
+    git -C /opt/ml/code/repositories/k-diffusion checkout ab527a9a6d347f364e3d185ba6d714e22d80cb3c && \
+    git clone https://github.com/sczhou/CodeFormer.git /opt/ml/code/repositories/CodeFormer && \
+    git -C /opt/ml/code/repositories/CodeFormer checkout c5b4593074ba6214284d6acd5f1719b6c5d739af && \
+    git clone https://github.com/salesforce/BLIP.git /opt/ml/code/repositories/BLIP && \
+    git -C /opt/ml/code/repositories/BLIP checkout 48211a1594f1321b00f14c9f7a5b4813144b2fb9 && \
     pip install -r /opt/ml/code/repositories/CodeFormer/requirements.txt
 
 RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
