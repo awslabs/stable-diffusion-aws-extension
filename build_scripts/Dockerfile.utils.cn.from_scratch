@@ -34,11 +34,16 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
 
 # prepare environment fow webui
 RUN mkdir /opt/ml/code/openai
-RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/config.json && \
+RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/.gitattributes && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/README.md && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/config.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/flax_model.msgpack && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/merges.txt && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/model.safetensors && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/preprocessor_config.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/pytorch_model.bin && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/special_tokens_map.json && \
+    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tf_model.h5 && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer.json && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer_config.json && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/vocab.json
