@@ -19,10 +19,3 @@ fi
 ./build_and_push.sh Dockerfile.utils.cn.from_scratch aigc-webui-utils $mode $tag $commit_id
 
 ./build_and_push.sh Dockerfile.dreambooth.cn.from_scratch aigc-webui-dreambooth-training $mode $tag $commit_id
-
-#
-#./build_and_push_cn.sh Dockerfile.inference.cn.from_scratch aigc-webui-inference $mode $tag $commit_id
-#
-#./build_and_push_cn.sh Dockerfile.utils.cn.from_scratch aigc-webui-utils $mode $tag $commit_id
-#
-#./build_and_push_cn.sh Dockerfile.dreambooth.cn.from_scratch aigc-webui-dreambooth-training $mode $tag $commit_id
