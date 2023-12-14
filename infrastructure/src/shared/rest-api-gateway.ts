@@ -48,9 +48,9 @@ export class RestApiGateway {
         allowMethods: apigw.Cors.ALL_METHODS, // You can also provide a list of specific methods ['GET', 'POST', 'OPTIONS']
         allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'], // Customize as needed
       },
-      endpointConfiguration: {
-        types: [apigw.EndpointType.REGIONAL],
-      },
+      // endpointConfiguration: {
+      //   types: [apigw.EndpointType.REGIONAL],
+      // },
     });
 
     // Add API Key to the API Gateway
