@@ -513,3 +513,56 @@ class Api:
         self.app.include_router(self.router)
         uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=shared.cmd_opts.timeout_keep_alive)
 
+import hashlib
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
+def get_file_md5_dict(path):
+    file_dict = {}
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            file_dict[file] = md5(os.path.join(root, file))
+    return file_dict
+
+def move_model_to_tmp(_, app: FastAPI):
+    # Move model dir to /tmp
+    logging.info("Copy model dir to tmp")
+    model_tmp_dir = f"models_{time.time()}"
+    os.system(f"cp -rL models /tmp/{model_tmp_dir}")
+    src_file_dict = get_file_md5_dict("models")
+    tgt_file_dict = get_file_md5_dict(f"/tmp/{model_tmp_dir}")
+    is_complete = True
+    for file in src_file_dict:
+        logging.info(f"Src file {file} md5 {src_file_dict[file]}")
+        if file not in tgt_file_dict:
+            is_complete = False
+            break
+        if src_file_dict[file] != tgt_file_dict[file]:
+            is_complete = False
+            break
+    if is_complete:
+        os.system(f"rm -rf models")
+        logging.info("Link model dir")
+        os.system(f"ln -s /tmp/{model_tmp_dir} models")
+    else:
+        logging.info("Failed to copy model dir, use the original dir")
+    logging.info("Check disk usage on app started")
+    os.system("df -h")
+
+try:
+    import modules.script_callbacks as script_callbacks
+
+    on_docker = os.environ.get('ON_DOCKER', "false")
+    if on_docker == "true":
+        from modules import shared
+        shared.opts.data.update(control_net_max_models_num=10)
+        script_callbacks.on_app_started(move_model_to_tmp)
+    logger.debug("Diffusers API layer loaded")
+except Exception as e:
+    logger.error(e)
+    logger.debug("Unable to import script callbacks.")
+    pass
