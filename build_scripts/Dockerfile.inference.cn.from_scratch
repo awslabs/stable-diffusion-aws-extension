@@ -48,7 +48,8 @@ RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-pat
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer_config.json && \
     wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/vocab.json
 
-RUN wget -O /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
+#RUN wget -O /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
+
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
