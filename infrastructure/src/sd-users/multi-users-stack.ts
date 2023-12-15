@@ -13,6 +13,7 @@ import { ListAllRolesApi } from './roles-listall-api';
 import { UserDeleteApi } from './user-delete-api';
 import { UserUpsertApi } from './user-upsert-api';
 import { ListAllUsersApi } from './users-listall-api';
+import {DeleteRolesApi, DeleteRolesApiProps} from "./roles-delete";
 
 
 export interface MultiUsersStackProps extends StackProps {
@@ -75,6 +76,17 @@ export class MultiUsersStack extends NestedStack {
       passwordKey: props.passwordKeyAlias,
       authorizer: props.authorizer,
     });
+
+    new DeleteRolesApi(
+        this, 'DeleteRoles',
+        <DeleteRolesApiProps>{
+          router: props.routers.roles,
+          commonLayer: props.commonLayer,
+          multiUserTable: props.multiUserTable,
+          httpMethod: 'DELETE',
+          srcRoot: this.srcRoot,
+        },
+    );
 
   }
 }
