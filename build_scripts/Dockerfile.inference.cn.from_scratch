@@ -32,11 +32,6 @@ RUN apt-get install -y file && \
     pip install trash-cli && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
-
-COPY interface/clip_init.py /opt/ml/code
-RUN python /opt/ml/code/clip_init.py
-COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
-
 # prepare environment fow webui
 #RUN mkdir /opt/ml/code/openai
 #RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/.gitattributes && \
@@ -78,8 +73,11 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
     pip install segment_anything
 
-
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
+
+COPY interface/clip_init.py /opt/ml/code
+RUN python /opt/ml/code/clip_init.py
+COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
 
 WORKDIR /opt/ml/code
 
