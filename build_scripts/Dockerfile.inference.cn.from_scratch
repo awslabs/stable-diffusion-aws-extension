@@ -19,9 +19,9 @@ RUN mkdir -p /opt/ml/code/tools
 RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
 RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
 
-RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformer_name.txt
-RUN URL=$(cat xformer_name.txt) && wget $URL
-RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('''$URL'''))") && pip install $(basename $decoded)
+#RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformer_name.txt
+#RUN URL=$(cat xformer_name.txt) && wget $URL
+#RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('''$URL'''))") && pip install $(basename $decoded)
 
 # install pkg lib for proprocess in controlnet
 RUN apt-get install -y file && \
@@ -53,7 +53,6 @@ RUN apt-get install -y file && \
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
-    pip install -U -I --no-deps xformers==0.0.20 && \
     pip install ngrok
 
 RUN mkdir /opt/ml/code/repositories
@@ -71,7 +70,9 @@ RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/r
 
 RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
     pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
-    pip install segment_anything
+    pip install segment_anything && \
+    pip install nest-asyncio && \
+    pip install xformers
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
