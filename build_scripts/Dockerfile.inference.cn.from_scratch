@@ -75,7 +75,7 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
-COPY interface/clip_init.py /opt/ml/code
+COPY inference/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
 #COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
 
