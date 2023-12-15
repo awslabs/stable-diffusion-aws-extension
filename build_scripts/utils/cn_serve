@@ -4,34 +4,5 @@ os.system(f'./tools/s5cmd cp https://aws-gcr-solutions.s3.cn-north-1.amazonaws.c
 
 cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --nowebui --api --listen --port 8080 --skip-torch-cuda-test --skip-prepare-environment --no-download-sd-model"
 
-download_cmd_1 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/config.json"
-download_cmd_2 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/flax_model.msgpack"
-download_cmd_3 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/.gitattributes"
-download_cmd_4 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/README.md"
-download_cmd_5 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/flax_model.msgpack"
-download_cmd_6 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/merges.txt"
-download_cmd_7 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/model.safetensors"
-download_cmd_8 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/preprocessor_config.json"
-download_cmd_9 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/pytorch_model.bin"
-download_cmd_10 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/special_tokens_map.json"
-download_cmd_11 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/tf_model.h5"
-download_cmd_12 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/tokenizer.json"
-download_cmd_13 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/tokenizer_config.json"
-download_cmd_14 = "wget -P  ./openai https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/openai-resources/14/vocab.json"
-
-os.system(download_cmd_1)
-os.system(download_cmd_2)
-os.system(download_cmd_3)
-os.system(download_cmd_4)
-os.system(download_cmd_5)
-os.system(download_cmd_6)
-os.system(download_cmd_7)
-os.system(download_cmd_8)
-os.system(download_cmd_9)
-os.system(download_cmd_10)
-os.system(download_cmd_11)
-os.system(download_cmd_12)
-os.system(download_cmd_13)
-os.system(download_cmd_14)
 
 os.system(cmd)
