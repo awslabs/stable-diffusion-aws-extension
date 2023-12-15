@@ -77,7 +77,7 @@ RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 COPY interface/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
-COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
+#COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
 
 WORKDIR /opt/ml/code
 
