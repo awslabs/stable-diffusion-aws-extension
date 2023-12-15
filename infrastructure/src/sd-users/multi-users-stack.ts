@@ -13,7 +13,7 @@ import { ListAllRolesApi } from './roles-listall-api';
 import { UserDeleteApi } from './user-delete-api';
 import { UserUpsertApi } from './user-upsert-api';
 import { ListAllUsersApi } from './users-listall-api';
-import {DeleteRolesApi, DeleteRolesApiProps} from "./roles-delete";
+import {DeleteRolesApi, DeleteRolesApiProps} from "./delete-roles";
 
 
 export interface MultiUsersStackProps extends StackProps {
