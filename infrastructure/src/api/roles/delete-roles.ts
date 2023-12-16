@@ -105,11 +105,11 @@ export class DeleteRolesApi {
             `${this.baseId}-model`,
             {
                 restApi: this.router.api,
-                modelName: 'DeleteRolesModel',
-                description: 'Delete Roles Model',
+                modelName: this.baseId,
+                description: `${this.baseId} Request Model`,
                 schema: {
                     schema: JsonSchemaVersion.DRAFT4,
-                    title: 'deleteRolesSchema',
+                    title: this.baseId,
                     type: JsonSchemaType.OBJECT,
                     properties: {
                         role_name_list: {
@@ -145,7 +145,7 @@ export class DeleteRolesApi {
             `${this.baseId}-validator`,
             {
                 restApi: this.router.api,
-                requestValidatorName: 'DeleteRolesRequestValidator',
+                requestValidatorName: this.baseId,
                 validateRequestBody: true,
             });
 
