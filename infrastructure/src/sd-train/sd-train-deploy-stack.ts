@@ -25,6 +25,11 @@ import { CreateTrainJobApi } from './train-job-create-api';
 import { ListAllTrainJobsApi } from './train-job-listall-api';
 import { UpdateTrainJobApi } from './train-job-update-api';
 import { Database } from '../shared/database';
+import {DeleteCheckpointsApi, DeleteCheckpointsApiProps} from "../api/checkpoints/delete-checkpoints";
+import {DeleteDatasetsApi, DeleteDatasetsApiProps} from "../api/datasets/delete-datasets";
+import {DeleteModelsApi, DeleteModelsApiProps} from "../api/models/delete-models";
+import {DeleteTrainingJobsApi, DeleteTrainingJobsApiProps} from "../api/trainings/delete-training-jobs";
+import {GetTrainingJobApi, GetTrainingJobApiProps} from "../api/trainings/get-training-job";
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
@@ -234,5 +239,67 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });
+
+    new DeleteCheckpointsApi(
+        this, 'DeleteCheckpoints',
+        <DeleteCheckpointsApiProps>{
+          router: props.routers.checkpoints,
+          commonLayer: props.commonLayer,
+          checkPointsTable: checkPointTable,
+          httpMethod: 'DELETE',
+          s3Bucket: s3Bucket,
+          srcRoot: this.srcRoot,
+        },
+    );
+
+    new DeleteDatasetsApi(
+        this, 'DeleteDatasets',
+        <DeleteDatasetsApiProps>{
+          router: props.routers.datasets,
+          commonLayer: props.commonLayer,
+          datasetInfoTable: props.database.datasetInfoTable,
+          datasetItemTable: props.database.datasetItemTable,
+          httpMethod: 'DELETE',
+          s3Bucket: s3Bucket,
+          srcRoot: this.srcRoot,
+        },
+    );
+
+    new DeleteModelsApi(
+        this, 'DeleteModels',
+        <DeleteModelsApiProps>{
+          router: props.routers.models,
+          commonLayer: props.commonLayer,
+          modelTable: props.database.modelTable,
+          httpMethod: 'DELETE',
+          s3Bucket: s3Bucket,
+          srcRoot: this.srcRoot,
+        },
+    );
+
+    new DeleteTrainingJobsApi(
+        this, 'DeleteTrainingJobs',
+        <DeleteTrainingJobsApiProps>{
+          router: props.routers.trainings,
+          commonLayer: props.commonLayer,
+          trainingTable: props.database.trainingTable,
+          httpMethod: 'DELETE',
+          s3Bucket: s3Bucket,
+          srcRoot: this.srcRoot,
+        },
+    );
+
+    new GetTrainingJobApi(
+        this, 'GetTrainingJob',
+        <GetTrainingJobApiProps>{
+          router: props.routers.trainings,
+          commonLayer: props.commonLayer,
+          trainingTable: props.database.trainingTable,
+          httpMethod: 'GET',
+          s3Bucket: s3Bucket,
+          srcRoot: this.srcRoot,
+        },
+    );
+
   }
 }
