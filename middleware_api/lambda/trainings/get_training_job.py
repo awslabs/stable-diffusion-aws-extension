@@ -28,4 +28,16 @@ def handler(event, ctx):
     if 'Item' not in job:
         return not_found(message=f'Job with id {job_id} not found')
 
-    return ok(data=job['Item'])
+    item = job['Item']
+
+    data = {
+        'id': item['id'],
+        'checkpoint_id': item['checkpoint_id'],
+        'job_status': item['job_status'],
+        'model_id': item['model_id'],
+        'params': item['params'],
+        'timestamp': item['timestamp'],
+        'train_type': item['train_type'],
+    }
+
+    return ok(data=data)
