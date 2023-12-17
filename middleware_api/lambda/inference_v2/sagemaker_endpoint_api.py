@@ -21,6 +21,7 @@ INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
 # logger = Logger(service="sagemaker_endpoint_api", level="INFO")
 logger = logging.getLogger('inference_v2')
+logger.setLevel(logging.INFO)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -83,6 +84,11 @@ def list_all_sagemaker_endpoints(event, ctx):
         elif 'sagemaker_endpoint' in requestor_permissions and 'all' in requestor_permissions['sagemaker_endpoint']:
             results.append(endpoint.__dict__)
 
+    # Old data may never update the count of instances
+    for result in results:
+        if 'current_instance_count' not in result:
+            result['current_instance_count'] = 'N/A'
+
     return {
         'statusCode': 200,
         'endpoints': results
@@ -134,12 +140,12 @@ def delete_sagemaker_endpoints(raw_event, ctx):
 
 @dataclass
 class CreateEndpointEvent:
-    endpoint_name: str
     instance_type: str
     initial_instance_count: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
+    endpoint_name: str = None
 
 
 # POST /endpoints
@@ -167,6 +173,27 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
 
+        # check if roles have already linked to an endpoint?
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
+        if 'sagemaker_endpoint' not in creator_permissions or \
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
+            return {
+                'statusCode': 400,
+                'message': f"Creator {event.creator} has no permission to create Sagemaker",
+            }
+
+        endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+        for endpoint_row in endpoint_rows:
+            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            # Compatible with fields used in older data, endpoint.status must be 'deleted'
+            if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
+                for role in event.assign_to_roles:
+                    if role in endpoint.owner_group_or_role:
+                        return {
+                            'statusCode': 400,
+                            'message': f"role [{role}] has a valid endpoint already, not allow to have another one",
+                        }
+
         _create_sagemaker_model(sagemaker_model_name, image_url, model_data_url)
 
         _create_sagemaker_endpoint_config(sagemaker_endpoint_config, s3_output_path, sagemaker_model_name,
@@ -180,26 +207,6 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         logger.info(f"Successfully created endpoint: {response}")
 
         current_time = str(datetime.now())
-
-        # check if roles has already linked to an endpoint?
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
-            return {
-                'statusCode': 400,
-                'errMsg': f"Creator {event.creator} has no permission to create Sagemaker",
-            }
-
-        endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
-        for endpoint_row in endpoint_rows:
-            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
-            if endpoint.endpoint_status == 'InService' and endpoint.status != 'deleted':
-                for role in event.assign_to_roles:
-                    if role in endpoint.owner_group_or_role:
-                        return {
-                            'statusCode': 400,
-                            'errMsg': f"role [{role}] has a valid endpoint already, not allow to have another one",
-                        }
 
         raw = EndpointDeploymentJob(
             EndpointDeploymentJobId=endpoint_deployment_id,
@@ -233,42 +240,51 @@ def sagemaker_endpoint_events(event, context):
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
 
-    item = get_endpoint_with_endpoint_name(endpoint_name)
-    if item:
+    endpoint = get_endpoint_with_endpoint_name(endpoint_name)
 
-        endpoint_deployment_job_id = item['EndpointDeploymentJobId']
+    if not endpoint:
+        # maybe the endpoint is not created by sde or already deleted
+        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
+        return {'statusCode': 200}
 
-        business_status = get_business_status(endpoint_status)
+    endpoint_deployment_job_id = endpoint['EndpointDeploymentJobId']
 
-        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
+    business_status = get_business_status(endpoint_status)
 
-        if business_status in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
-            status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
-            logger.info(f"Endpoint status: {status}")
-            if 'ProductionVariants' in status:
-                instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
-                update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+    update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
 
-        if business_status == EndpointStatus.DELETED.value:
-            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+    # update the instance count if the endpoint is not deleting or deleted
+    if business_status not in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
+        status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
+        logger.info(f"Endpoint status: {status}")
+        if 'ProductionVariants' in status:
+            instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
+            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+    else:
+        # sometime sagemaker don't send deleted event, so just use deleted status when deleting
+        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', EndpointStatus.DELETED.value)
+        update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+
+    # if endpoint is deleted, update the instance count to 0 and delete the config and model
+    if business_status == EndpointStatus.DELETED.value:
+        try:
             endpoint_config_name = event['detail']['EndpointConfigName']
             model_name = event['detail']['ModelName']
-            # todo need test
-            try:
-                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-                sagemaker.delete_model(ModelName=model_name)
-            except Exception as e:
-                logger.error(f"error deleting endpoint config and model with exception: {e}")
+            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            sagemaker.delete_model(ModelName=model_name)
+        except Exception as e:
+            logger.error(f"error deleting endpoint config and model with exception: {e}")
 
-        if business_status == EndpointStatus.IN_SERVICE.value:
-            current_time = str(datetime.now())
-            update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
-            check_and_enable_autoscaling(item, 'prod')
-        elif business_status == EndpointStatus.FAILED.value:
-            update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
+    if business_status == EndpointStatus.IN_SERVICE.value:
+        # if it is the first time in service
+        if 'endTime' not in endpoint:
+            check_and_enable_autoscaling(endpoint, 'prod')
 
-    else:
-        logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
+        current_time = str(datetime.now())
+        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
+
+    if business_status == EndpointStatus.FAILED.value:
+        update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
 
     return {'statusCode': 200}
 
@@ -300,6 +316,11 @@ def _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, mode
                 "SuccessTopic": ASYNC_SUCCESS_TOPIC,
                 "ErrorTopic": ASYNC_ERROR_TOPIC
             }
+        },
+        "ClientConfig": {
+            # (Optional) Specify the max number of inflight invocations per instance
+            # If no value is provided, Amazon SageMaker will choose an optimal value for you
+            "MaxConcurrentInvocationsPerInstance": 1
         }
     }
 
@@ -438,6 +459,9 @@ def get_endpoint_with_endpoint_name(endpoint_name):
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,
         })
+
+        # not include deleted endpoint anywhere
+        record_list = [item for item in record_list if item['endpoint_status']['S'] != EndpointStatus.DELETED.value]
 
         if len(record_list) == 0:
             logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)

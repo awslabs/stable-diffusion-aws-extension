@@ -11,11 +11,12 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Effect, PolicyStatement, Role, CompositePrincipal, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Effect, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { LAMBDA_START_DEPLOY_ROLE_NAME } from '../shared/deploy-role';
 
 
 export interface CreateSagemakerEndpointsApiProps {
@@ -153,12 +154,11 @@ export class CreateSagemakerEndpointsApi {
       ],
     });
 
-    const newRole = new Role(this.scope, `${this.baseId}-role`, {
-      assumedBy: new CompositePrincipal(
-        new ServicePrincipal('sagemaker.amazonaws.com'),
-        new ServicePrincipal('lambda.amazonaws.com'),
-      ),
-    });
+    const lambdaStartDeployRole = <Role>Role.fromRoleName(
+      this.scope,
+      'createSagemakerEpRole',
+      LAMBDA_START_DEPLOY_ROLE_NAME,
+    );
 
     const logStatement = new PolicyStatement({
       effect: Effect.ALLOW,
@@ -177,14 +177,14 @@ export class CreateSagemakerEndpointsApi {
       resources: [`arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/LambdaStartDeployRole`],
     });
 
-    newRole.addToPolicy(snsStatement);
-    newRole.addToPolicy(s3Statement);
-    newRole.addToPolicy(endpointStatement);
-    newRole.addToPolicy(ddbStatement);
-    newRole.addToPolicy(logStatement);
-    newRole.addToPolicy(passStartDeployRole);
+    lambdaStartDeployRole.addToPolicy(snsStatement);
+    lambdaStartDeployRole.addToPolicy(s3Statement);
+    lambdaStartDeployRole.addToPolicy(endpointStatement);
+    lambdaStartDeployRole.addToPolicy(ddbStatement);
+    lambdaStartDeployRole.addToPolicy(logStatement);
+    lambdaStartDeployRole.addToPolicy(passStartDeployRole);
 
-    return newRole;
+    return lambdaStartDeployRole;
   }
 
   private createEndpointsApi() {
