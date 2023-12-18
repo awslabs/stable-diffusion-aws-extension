@@ -80,9 +80,9 @@ class CloudApiManager:
 
         try:
             response = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
-            r = response.json()
-            logger.debug(f"response for rest api {r}")
-            return r
+            response = response.json()
+            logger.debug(f"response for rest api {response}")
+            return response['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
