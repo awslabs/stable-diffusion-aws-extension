@@ -24,9 +24,8 @@ RUN apt-get install -y file && \
     pip install --upgrade pip && \
     pip install accelerate==0.19.0 && \
     pip install deepspeed==0.9.5 && \
-    apt-get install -y libtcmalloc-minimal4 && \
-    pip install trash-cli && \
-    trash /opt/conda/lib/python3.10/site-packages/opencv_python*
+    apt-get install -y libtcmalloc-minimal4
+
 
 # prepare environment fow webui
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
@@ -58,6 +57,8 @@ RUN python /opt/ml/code/clip_init.py
 RUN pip install xformers && \
     pip install ngrok
 
+RUN pip install trash-cli && \
+    trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 WORKDIR /opt/ml/code
