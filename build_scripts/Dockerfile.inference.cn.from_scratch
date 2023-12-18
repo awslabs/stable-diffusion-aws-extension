@@ -47,10 +47,6 @@ RUN apt-get install -y file && \
 #RUN wget -O /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
 
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
-    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
-    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
-    pip install xformers && \
-    pip install ngrok
 
 RUN mkdir /opt/ml/code/repositories
 RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/repositories/stable-diffusion-stability-ai && \
@@ -69,7 +65,11 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
     pip install segment_anything && \
     pip install nest-asyncio && \
-    pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
+    pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
+    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
+    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
+    pip install xformers && \
+    pip install ngrok
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
