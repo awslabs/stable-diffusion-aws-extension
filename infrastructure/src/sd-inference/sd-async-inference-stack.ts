@@ -35,6 +35,7 @@ import { ListAllInferencesApi } from './sagemaker-inference-listall';
 import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
+import {DeleteInferenceJobsApi, DeleteInferenceJobsApiProps} from "../api/inferences/delete-inference-jobs";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -318,6 +319,18 @@ export class SDAsyncInferenceStack extends NestedStack {
         srcRoot: srcRoot,
       },
     );
+
+      new DeleteInferenceJobsApi(
+          this, 'DeleteInferenceJobs',
+          <DeleteInferenceJobsApiProps>{
+              router: props.routers.inferences,
+              commonLayer: props.commonLayer,
+              inferenceJobTable: sd_inference_job_table,
+              httpMethod: 'DELETE',
+              s3Bucket: props.s3_bucket,
+              srcRoot: srcRoot,
+          },
+      );
 
     // Add a POST method with prefix inference
     if (!inference) {

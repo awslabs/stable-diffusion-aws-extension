@@ -125,6 +125,7 @@ export class Middleware extends Stack {
       'roles',
       'endpoints',
       'inferences',
+      'trainings',
       api_train_path,
     ]);
 
