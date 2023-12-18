@@ -57,7 +57,7 @@ RUN python /opt/ml/code/clip_init.py
 RUN pip install ngrok
 
 RUN wget https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/stable-diffusion-public-resources/dependencies/xformers-0.0.20%2B1dc3d7a.d20231218-cp310-cp310-linux_x86_64.whl && \
-    pip install xformers-0.0.20%2B1dc3d7a.d20231218-cp310-cp310-linux_x86_64.whl
+    pip install xformers-0.0.20+1dc3d7a.d20231218-cp310-cp310-linux_x86_64.whl
 
 RUN pip install trash-cli && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
