@@ -29,23 +29,6 @@ RUN apt-get install -y file && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 # prepare environment fow webui
-#RUN mkdir /opt/ml/code/openai
-#RUN wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/.gitattributes && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/README.md && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/config.json && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/flax_model.msgpack && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/merges.txt && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/model.safetensors && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/preprocessor_config.json && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/pytorch_model.bin && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/special_tokens_map.json && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tf_model.h5 && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer.json && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/tokenizer_config.json && \
-#    wget -P /opt/ml/code/openai https://huggingface.co/openai/clip-vit-large-patch14/resolve/main/vocab.json
-
-#RUN wget -O /opt/ml/code/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
-
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
 
 RUN mkdir /opt/ml/code/repositories
@@ -68,14 +51,14 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
-    pip install xformers && \
-    pip install ngrok
-
-RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 COPY inference/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
-#COPY --from=0 /root/.cache/huggingface/hub ~/.cache/huggingface/hub
+
+RUN pip install xformers && \
+    pip install ngrok
+
+RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 WORKDIR /opt/ml/code
 
