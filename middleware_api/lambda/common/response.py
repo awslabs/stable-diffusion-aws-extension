@@ -99,4 +99,4 @@ def not_found(data=None,
 def internal_server_error(data=None,
                           message: str = http_status_descriptions[HttpStatusCode.InternalServerError],
                           headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.NotFound, data, message, headers)
+    return response(HttpStatusCode.InternalServerError, data, message, headers)
