@@ -28,7 +28,7 @@ RUN apt-get install -y file && \
 
 
 # prepare environment fow webui
-RUN pip install -r /opt/ml/code/requirements_versions.txt && \
+RUN pip install -r /opt/ml/code/requirements_versions.txt
 
 RUN mkdir /opt/ml/code/repositories
 RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/repositories/stable-diffusion-stability-ai && \
