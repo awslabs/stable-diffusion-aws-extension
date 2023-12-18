@@ -55,14 +55,6 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip uninstall -y torchaudio && \
     pip install torchaudio
 
-RUN git clone https://github.com/facebookresearch/xformers.git && \
-    cd xformers && \
-    git checkout v0.0.20 && \
-    git submodule update --init --recursive && \
-    pip install -r requirements.txt && \
-    python setup.py build && \
-    python setup.py bdist_wheel
-
 COPY inference/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
 
