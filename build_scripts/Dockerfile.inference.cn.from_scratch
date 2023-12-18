@@ -74,8 +74,7 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install nest-asyncio && \
     pip install xformers && \
     pip uninstall -y torchvision && \
-    pip install torchvision && \
-    pip install omegaconf
+    pip install torchvision
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
