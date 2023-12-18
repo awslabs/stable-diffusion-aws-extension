@@ -58,11 +58,11 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new UserDeleteApi(scope, 'userDelete', {
+    new UserDeleteApi(scope, 'DeleteUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'DELETE',
       multiUserTable: props.multiUserTable,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });

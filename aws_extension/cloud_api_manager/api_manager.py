@@ -245,12 +245,17 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return {}
 
-        raw_resp = requests.delete(f'{cloud_auth_manager.api_url}user/{username}',
+        payload = {
+            "user_name_list": [username]
+        }
+
+        raw_resp = requests.delete(f'{cloud_auth_manager.api_url}users',
+                                   json=payload,
                                    headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if resp['statusCode'] != 200:
-            raise Exception(resp['errMsg'])
+        if raw_resp.status_code != 200:
+            raise Exception(resp['message'])
         return True
 
     def list_models_on_cloud(self, username, user_token="", types='Stable-diffusion', status='Active'):
