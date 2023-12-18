@@ -73,14 +73,8 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install segment_anything && \
     pip install nest-asyncio && \
     pip install xformers && \
-    pip install torch==2.0.1 && \
     pip uninstall -y torchvision && \
     pip install torchvision && \
-    pip uninstall -y torchaudio && \
-    pip install torchaudio && \
-    pip install tensorflow==2.10 && \
-    pip install pydantic && \
-    pip install safetensors && \
     pip install omegaconf
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
