@@ -49,7 +49,7 @@ RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.
     pip install nest-asyncio && \
     pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
-    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
+    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
 
 COPY inference/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
