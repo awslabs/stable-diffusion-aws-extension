@@ -4,9 +4,11 @@ import uuid
 from dataclasses import dataclass
 
 import boto3
+import json
 from datetime import datetime
 from botocore.exceptions import BotoCoreError, ClientError
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import forbidden, ok, internal_server_error
 from multi_users._types import PARTITION_KEYS, Role
 from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 from _types import EndpointDeploymentJob
@@ -97,7 +99,7 @@ def list_all_sagemaker_endpoints(event, ctx):
 
 @dataclass
 class DeleteEndpointEvent:
-    delete_endpoint_list: [str]
+    endpoint_name_list: [str]
     username: str
 
 
@@ -105,17 +107,14 @@ class DeleteEndpointEvent:
 def delete_sagemaker_endpoints(raw_event, ctx):
     try:
         # delete sagemaker endpoints in the same loop
-        event = DeleteEndpointEvent(**raw_event)
+        event = DeleteEndpointEvent(**json.loads(raw_event['body']))
 
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
         if 'sagemaker_endpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
-            return {
-                'statusCode': 400,
-                'errMsg': f"User {event.username} has no permission to delete a Sagemaker endpoint",
-            }
+            return forbidden(message=f"User {event.username} has no permission to delete a Sagemaker endpoint")
 
-        for endpoint in event.delete_endpoint_list:
+        for endpoint in event.endpoint_name_list:
             try:
                 delete_response = sagemaker.delete_endpoint(EndpointName=endpoint)
                 logger.info(delete_response)
@@ -132,10 +131,10 @@ def delete_sagemaker_endpoints(raw_event, ctx):
                 else:
                     logger.error(error)
 
-        return "Endpoint deleted"
+        return ok(message="Endpoints Deleted")
     except Exception as e:
         logger.error(f"error deleting sagemaker endpoint with exception: {e}")
-        return f"error deleting sagemaker endpoint with exception: {e}"
+        return internal_server_error(message=f"error deleting sagemaker endpoint with exception: {e}")
 
 
 @dataclass

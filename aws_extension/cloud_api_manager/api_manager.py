@@ -72,7 +72,7 @@ class CloudApiManager:
         delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
-            "delete_endpoint_list": delete_endpoint_list,
+            "endpoint_name_list": delete_endpoint_list,
             "username": user_token,
         }
 

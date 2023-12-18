@@ -10,6 +10,7 @@ class HttpStatusCode:
     OK = 200
     NoContent: int = 204
     BadRequest = 400
+    Forbidden = 403
     NotFound = 404
     InternalServerError = 500
 
@@ -19,6 +20,7 @@ http_status_descriptions = {
     HttpStatusCode.OK: "OK",
     HttpStatusCode.NoContent: "No Content",
     HttpStatusCode.BadRequest: "Bad Request",
+    HttpStatusCode.Forbidden: "Forbidden",
     HttpStatusCode.NotFound: "Not Found",
     HttpStatusCode.InternalServerError: "Internal Server Error"
 }
@@ -80,6 +82,12 @@ def bad_request(data=None,
                 message: str = http_status_descriptions[HttpStatusCode.BadRequest],
                 headers: Optional[dict[str, Any]] = None):
     return response(HttpStatusCode.BadRequest, data, message, headers)
+
+
+def forbidden(data=None,
+              message: str = http_status_descriptions[HttpStatusCode.Forbidden],
+              headers: Optional[dict[str, Any]] = None):
+    return response(HttpStatusCode.Forbidden, data, message, headers)
 
 
 def not_found(data=None,
