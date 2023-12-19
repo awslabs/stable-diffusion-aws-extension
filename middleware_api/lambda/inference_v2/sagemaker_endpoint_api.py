@@ -21,6 +21,7 @@ INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
 # logger = Logger(service="sagemaker_endpoint_api", level="INFO")
 logger = logging.getLogger('inference_v2')
+logger.setLevel(logging.INFO)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -172,6 +173,27 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
 
+        # check if roles have already linked to an endpoint?
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
+        if 'sagemaker_endpoint' not in creator_permissions or \
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
+            return {
+                'statusCode': 400,
+                'message': f"Creator {event.creator} has no permission to create Sagemaker",
+            }
+
+        endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+        for endpoint_row in endpoint_rows:
+            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
+            # Compatible with fields used in older data, endpoint.status must be 'deleted'
+            if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
+                for role in event.assign_to_roles:
+                    if role in endpoint.owner_group_or_role:
+                        return {
+                            'statusCode': 400,
+                            'message': f"role [{role}] has a valid endpoint already, not allow to have another one",
+                        }
+
         _create_sagemaker_model(sagemaker_model_name, image_url, model_data_url)
 
         _create_sagemaker_endpoint_config(sagemaker_endpoint_config, s3_output_path, sagemaker_model_name,
@@ -185,26 +207,6 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         logger.info(f"Successfully created endpoint: {response}")
 
         current_time = str(datetime.now())
-
-        # check if roles has already linked to an endpoint?
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
-            return {
-                'statusCode': 400,
-                'errMsg': f"Creator {event.creator} has no permission to create Sagemaker",
-            }
-
-        endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
-        for endpoint_row in endpoint_rows:
-            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(endpoint_row)))
-            if endpoint.endpoint_status == 'InService' and endpoint.status != 'deleted':
-                for role in event.assign_to_roles:
-                    if role in endpoint.owner_group_or_role:
-                        return {
-                            'statusCode': 400,
-                            'errMsg': f"role [{role}] has a valid endpoint already, not allow to have another one",
-                        }
 
         raw = EndpointDeploymentJob(
             EndpointDeploymentJobId=endpoint_deployment_id,
@@ -457,6 +459,9 @@ def get_endpoint_with_endpoint_name(endpoint_name):
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,
         })
+
+        # not include deleted endpoint anywhere
+        record_list = [item for item in record_list if item['endpoint_status']['S'] != EndpointStatus.DELETED.value]
 
         if len(record_list) == 0:
             logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)
