@@ -45,4 +45,4 @@ RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 WORKDIR /opt/ml/code
 ENV TORCHDYNAMO_DISABLE 1
-ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint.py
+ENV SAGEMAKER_PROGRAM extensions/stable-diffusion-aws-extension/build_scripts/training/sagemaker_entrypoint_cn.py
