@@ -109,7 +109,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new ListAllSagemakerEndpointsApi(
-      this, 'sd-infer-v2-allEndpoints',
+      this, 'ListEndpoints',
         <ListAllSageMakerEndpointsApiProps>{
           router: props.routers.endpoints,
           commonLayer: props.commonLayer,
@@ -145,7 +145,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new ListAllInferencesApi(
-      this, 'sd-infer-v2-allInferences',
+      this, 'ListInferenceJobs',
       {
         inferenceJobTable: sd_inference_job_table,
         authorizer: props.authorizer,

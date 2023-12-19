@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 import boto3
 from botocore.exceptions import ClientError
 
+from common.response import ok, bad_request
 from common.util import publish_msg
 from common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
 from common.stepfunction_service.client import StepFunctionUtilsService
@@ -175,65 +176,52 @@ def create_model_api(raw_event, context):
 # GET /models
 def list_all_models_api(event, context):
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
-    parameters = event['queryStringParameters']
-    if 'types' in parameters and len(parameters['types']) > 0:
-        _filter['model_type'] = parameters['types']
 
-    if 'status' in parameters and len(parameters['status']) > 0:
-        _filter['job_status'] = parameters['status']
+    parameters = event['queryStringParameters']
+    if parameters:
+        if 'types' in parameters and len(parameters['types']) > 0:
+            _filter['model_type'] = parameters['types']
+
+        if 'status' in parameters and len(parameters['status']) > 0:
+            _filter['job_status'] = parameters['status']
+
     resp = ddb_service.scan(table=model_table, filters=_filter)
 
     if resp is None or len(resp) == 0:
-        return {
-            'statusCode': 200,
-            'models': []
-        }
+        return ok(data={'models': []})
 
     models = []
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth user provided'
-        }
+    try:
+        requestor_name = event['requestContext']['authorizer']['username']
+        requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+        requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
+        if 'train' not in requestor_permissions or \
+                ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
+            return bad_request(message='user has no permission to train')
 
-    requestor_name = event['x-auth']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
-    if 'train' not in requestor_permissions or \
-            ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-        return {
-            'statusCode': '400',
-            'error': f'user has no permission to train'
-        }
+        for r in resp:
+            model = Model(**(ddb_service.deserialize(r)))
+            model_dto = {
+                'id': model.id,
+                'model_name': model.name,
+                'created': model.timestamp,
+                'params': model.params,
+                'status': model.job_status.value,
+                'output_s3_location': model.output_s3_location
+            }
+            if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles, requestor_name):
+                models.append(model_dto)
+            elif not model.allowed_roles_or_users and \
+                    'user' in requestor_permissions and \
+                    'all' in requestor_permissions['user']:
+                # superuser can view the legacy data
+                models.append(model_dto)
 
-    for r in resp:
-        model = Model(**(ddb_service.deserialize(r)))
-        model_dto = {
-            'id': model.id,
-            'model_name': model.name,
-            'created': model.timestamp,
-            'params': model.params,
-            'status': model.job_status.value,
-            'output_s3_location': model.output_s3_location
-        }
-        if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles, requestor_name):
-            models.append(model_dto)
-        elif not model.allowed_roles_or_users and \
-                'user' in requestor_permissions and \
-                'all' in requestor_permissions['user']:
-            # superuser can view the legacy data
-            models.append(model_dto)
-
-    return {
-        'statusCode': 200,
-        'models': models
-    }
+        return ok(data={'models': models}, decimal=True)
+    except Exception as e:
+        logger.error(e)
+        return bad_request(message=str(e))
 
 
 @dataclass

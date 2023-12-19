@@ -84,8 +84,7 @@ export class ListAllDatasetsApi {
   }
 
   private listAllDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/dataset_service`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -105,36 +104,12 @@ export class ListAllDatasetsApi {
     const listDatasetsIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.querystring.dataset_status': 'method.request.querystring.dataset_status',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "queryStringParameters": {\n' +
-              '        #foreach($queryParam in $input.params().querystring.keySet())\n' +
-              '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
-              '        #if($foreach.hasNext),#end\n' +
-              '        #end\n' +
-              '    },\n' +
-              '    "x-auth": {\n' +
-              '        "username": "$context.authorizer.username",\n' +
-              '        "role": "$context.authorizer.role"\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, listDatasetsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.querystring.dataset_status': true,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
     });
   }
 }

@@ -56,9 +56,9 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""
             'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
         }).json()
         model_list = []
-        if "models" not in response:
+        if "models" not in response['data']:
             return []
-        for model in response["models"]:
+        for model in response['data']["models"]:
             model_list.append(model)
             params = model['params']
             if 'resp' in params:
@@ -350,10 +350,12 @@ def get_sorted_cloud_dataset(username):
         })
         raw_response.raise_for_status()
         response = raw_response.json()
-        response['datasets'].sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
-        return response['datasets']
+        logger.info(f"datasets response: {response}")
+        datasets = response['data']['datasets']
+        datasets.sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
+        return datasets
     except Exception as e:
-        print(f"exception {e}")
+        logger.error(f"exception {e}")
         return []
 
 

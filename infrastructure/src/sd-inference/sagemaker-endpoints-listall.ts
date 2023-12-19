@@ -80,8 +80,7 @@ export class ListAllSagemakerEndpointsApi {
   }
 
   private listAllSageMakerEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -100,42 +99,12 @@ export class ListAllSagemakerEndpointsApi {
     const listSagemakerEndpointsIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.querystring.endpointDeploymentJobId': 'method.request.querystring.endpointDeploymentJobId',
-          'integration.request.querystring.endpointName': 'method.request.querystring.endpointName',
-          'integration.request.querystring.username': 'method.request.querystring.username',
-          'integration.request.querystring.filter': 'method.request.querystring.filter',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-                        '    "queryStringParameters": {\n' +
-                        '        #foreach($queryParam in $input.params().querystring.keySet())\n' +
-                        '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
-                        '        #if($foreach.hasNext),#end\n' +
-                        '        #end\n' +
-                        '    },\n' +
-                        '    "x-auth": {\n' +
-                        '        "username": "$context.authorizer.username",\n' +
-                        '        "role": "$context.authorizer.role"\n' +
-                        '    }\n' +
-                        '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.querystring.endpointDeploymentJobId': false,
-        'method.request.querystring.endpointName': false,
-        'method.request.querystring.username': false,
-        'method.request.querystring.filter': false,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
     });
   }
 }

@@ -102,10 +102,10 @@ class CloudApiManager:
         response.raise_for_status()
         r = response.json()
         if not r or r['statusCode'] != 200:
-            logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['errMsg']}")
+            logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['message']}")
             return []
 
-        return r['endpoints']
+        return r['data']['endpoints']
 
     def list_all_sagemaker_endpoints(self, username=None, user_token=""):
         try:
@@ -124,7 +124,7 @@ class CloudApiManager:
                 return []
 
             sagemaker_raw_endpoints = []
-            for obj in r['endpoints']:
+            for obj in r['data']['endpoints']:
                 if "EndpointDeploymentJobId" in obj:
                     if "endpoint_name" in obj:
                         endpoint_name = obj["endpoint_name"]
@@ -298,7 +298,7 @@ class CloudApiManager:
         }, headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        return resp['inferences']
+        return resp['data']['inferences']
 
     def get_dataset_items_from_dataset(self, dataset_name, user_token=""):
         if not self.auth_manger.enableAuth:
