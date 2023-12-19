@@ -193,6 +193,11 @@ def api_setting_tab():
 
     with gr.Row():
         whoami_label = gr.Label(label='whoami')
+
+    with gr.Row():
+        logout_btn = gr.Button(value='logout')
+        logout_btn.click(fn=lambda : None, _js="logout", inputs=[], outputs=[])
+
     return api_setting, disclaimer_tab, whoami_label
 
 
