@@ -48,12 +48,12 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new UserUpsertApi(scope, 'userUpsert', {
+    new UserUpsertApi(scope, 'CreateUser', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
       passwordKey: props.passwordKeyAlias,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });

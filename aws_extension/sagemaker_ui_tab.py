@@ -335,7 +335,7 @@ def role_settings_tab():
                         if resp:
                             return f'Role upsert complete "{role_name}"'
                     except Exception as e:
-                        return f'User upsert failed: {e}'
+                        return f'Role upsert failed: {e}'
 
                 upsert_role_button.click(fn=upsert_role,
                                          inputs=[rolename_textbox, permissions_dropdown],
@@ -892,7 +892,7 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
                                        initial=initial, user_token=username):
             return 'Initial Setup Failed'
     except Exception as e:
-        return f'User upsert failed: {e}'
+        return f'Initial Setup failed: {e}'
     return "Setting updated"
 
 
