@@ -14,4 +14,4 @@ def custom_logout(_, app: FastAPI):
         return response
 
 
-script_callbacks.on_app_started(my_logout)
+script_callbacks.on_app_started(custom_logout)
