@@ -21,6 +21,7 @@ INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
 # logger = Logger(service="sagemaker_endpoint_api", level="INFO")
 logger = logging.getLogger('inference_v2')
+logger.setLevel(logging.INFO)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -458,6 +459,9 @@ def get_endpoint_with_endpoint_name(endpoint_name):
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,
         })
+
+        # not include deleted endpoint anywhere
+        record_list = [item for item in record_list if item['endpoint_status']['S'] != EndpointStatus.DELETED.value]
 
         if len(record_list) == 0:
             logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)

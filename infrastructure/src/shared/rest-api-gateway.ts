@@ -53,6 +53,18 @@ export class RestApiGateway {
       },
     });
 
+    // custom error response to return details of validation errors to the client.
+    api.addGatewayResponse('BadRequestBodyResponse', {
+      type: apigw.ResponseType.BAD_REQUEST_BODY,
+      templates: {
+        'application/json':
+            '{' +
+            '"statusCode":400,' +
+            '"message":"$context.error.validationErrorString"' +
+            '}',
+      },
+    });
+
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey('sd-extension-api-key', {
       apiKeyName: 'sd-extension-api-key',
