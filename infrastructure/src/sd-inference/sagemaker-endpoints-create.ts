@@ -192,7 +192,6 @@ export class CreateSagemakerEndpointsApi {
     const role = this.iamRole();
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-api`,
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -213,14 +212,14 @@ export class CreateSagemakerEndpointsApi {
       layers: [this.layer],
     });
 
-    const model = new Model(this.scope, 'CreateEndpointModel', {
+    const model = new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',
-      modelName: 'CreateEndpointModel',
-      description: 'Create Endpoint Model',
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT4,
-        title: 'createEndpointSchema',
+        title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
           endpoint_name: {
@@ -262,14 +261,13 @@ export class CreateSagemakerEndpointsApi {
     const integration = new LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, 'CreateEndpointRequestValidator', {
+    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
       restApi: this.router.api,
-      requestValidatorName: 'CreateEndpointRequestValidator',
+      requestValidatorName: this.baseId,
       validateRequestBody: true,
       validateRequestParameters: false,
     });
@@ -281,11 +279,6 @@ export class CreateSagemakerEndpointsApi {
       requestModels: {
         'application/json': model,
       },
-      methodResponses: [
-        {
-          statusCode: '200',
-        }, { statusCode: '500' },
-      ],
     });
 
   }

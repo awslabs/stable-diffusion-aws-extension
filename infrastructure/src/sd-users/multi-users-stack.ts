@@ -31,7 +31,7 @@ export class MultiUsersStack extends NestedStack {
   constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
     super(scope, id, props);
 
-    new RoleUpsertApi(scope, 'roleUpsert', {
+    new RoleUpsertApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
