@@ -72,7 +72,7 @@ class CloudApiManager:
         delete_endpoint_list = [item.split('+')[0] for item in delete_endpoint_list]
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
-            "delete_endpoint_list": delete_endpoint_list,
+            "endpoint_name_list": delete_endpoint_list,
             "username": user_token,
         }
 
@@ -80,9 +80,9 @@ class CloudApiManager:
 
         try:
             response = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
-            r = response.json()
-            logger.debug(f"response for rest api {r}")
-            return r
+            response = response.json()
+            logger.debug(f"response for rest api {response}")
+            return response['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
@@ -170,8 +170,8 @@ class CloudApiManager:
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         logger.debug(raw_resp.json())
-        resp = raw_resp.json()
-        return raw_resp.json()['users'][0]
+        resp = raw_resp.json()['data']
+        return resp['users'][0]
 
     def list_users(self, user_token=""):
         if not self.auth_manger.enableAuth:
@@ -183,7 +183,7 @@ class CloudApiManager:
                                 params={},
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
-        return raw_resp.json()
+        return raw_resp.json()['data']
 
     def list_roles(self, user_token=""):
         if not self.auth_manger.enableAuth:
@@ -193,7 +193,7 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
-        return raw_resp.json()
+        return raw_resp.json()['data']
 
     def upsert_role(self, role_name, permissions, creator, user_token=""):
         if not self.auth_manger.enableAuth:
@@ -205,11 +205,11 @@ class CloudApiManager:
             "creator": creator
         }
 
-        raw_resp = requests.post(f'{cloud_auth_manager.api_url}role', json=payload, headers=self._get_headers_by_user(user_token))
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload, headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if resp['statusCode'] != 200:
-            raise Exception(resp['errMsg'])
+        if raw_resp.status_code != 200:
+            raise Exception(resp['message'])
 
         return True
 
@@ -245,12 +245,17 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return {}
 
-        raw_resp = requests.delete(f'{cloud_auth_manager.api_url}user/{username}',
+        payload = {
+            "user_name_list": [username]
+        }
+
+        raw_resp = requests.delete(f'{cloud_auth_manager.api_url}users',
+                                   json=payload,
                                    headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if resp['statusCode'] != 200:
-            raise Exception(resp['errMsg'])
+        if raw_resp.status_code != 200:
+            raise Exception(resp['message'])
         return True
 
     def list_models_on_cloud(self, username, user_token="", types='Stable-diffusion', status='Active'):

@@ -1,10 +1,12 @@
 from dataclasses import dataclass
 import logging
 import os
+import json
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
 from _types import User, PARTITION_KEYS, Role, Default_Role
+from common.response import ok
 from roles_api import upsert_role
 from utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 
@@ -12,6 +14,7 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 password_encryptor = KeyEncryptService()
@@ -129,43 +132,24 @@ def upsert_user(raw_event, ctx):
 
 # DELETE /user/{username}
 def delete_user(event, ctx):
-    _filter = {}
-    if 'pathStringParameters' not in event:
-        return {
-            'statusCode': '400',
-            'error': 'path parameter /user/{username}/ are needed'
-        }
-    username = event['pathStringParameters']['username']
-    if not username or len(username) == 0:
-        return {
-            'statusCode': '400',
-            'error': 'path parameter /user/{username}/ are needed'
-        }
+    logger.info(f'event: {event}')
+    body = json.loads(event['body'])
+    user_name_list = body['user_name_list']
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no deleter provided'
-        }
+    requestor_name = event['requestContext']['authorizer']['username']
 
-    requestor_name = event['x-auth']['username']
-    check_permission_resp = _check_action_permission(requestor_name, username)
-    if check_permission_resp:
-        return check_permission_resp
+    for username in user_name_list:
+        check_permission_resp = _check_action_permission(requestor_name, username)
+        if check_permission_resp:
+            return check_permission_resp
 
-    # todo: need to figure out what happens to user's resources: models, inferences, trainings and so on
-    ddb_service.delete_item(user_table, keys={
-        'kind': PARTITION_KEYS.user,
-        'sort_key': username
-    })
+        # todo: need to figure out what happens to user's resources: models, inferences, trainings and so on
+        ddb_service.delete_item(user_table, keys={
+            'kind': PARTITION_KEYS.user,
+            'sort_key': username
+        })
 
-    return {
-        'statusCode': 200,
-        'user': {
-            'username': username,
-            'status': 'deleted'
-        }
-    }
+    return ok(message='Users Deleted')
 
 
 def _check_action_permission(creator_username, target_username):
@@ -210,13 +194,9 @@ def _check_action_permission(creator_username, target_username):
 
 # GET /users?last_evaluated_key=xxx&limit=10&username=USER_NAME&filter=key:value,key:value&show_password=1
 def list_user(event, ctx):
+    logger.info(json.dumps(event))
     # todo: if user has no list all, we should add username to self, prevent security issue
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
 
@@ -227,16 +207,14 @@ def list_user(event, ctx):
     # if last_evaluated_key and isinstance(last_evaluated_key, str):
     #     last_evaluated_key = json.loads(last_evaluated_key)
 
-    show_password = parameters['show_password'] if 'show_password' in parameters and parameters['show_password'] else 0
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
+    show_password = 0
+    username = 0
+    if parameters:
+        show_password = parameters['show_password'] if 'show_password' in parameters and parameters[
+            'show_password'] else 0
+        username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth provided'
-        }
-
-    requester_name = event['x-auth']['username']
+    requester_name = event['requestContext']['authorizer']['username']
     requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     if not username:
         result = ddb_service.query_items(user_table,
@@ -289,9 +267,10 @@ def list_user(event, ctx):
         elif user.sort_key == requester_name:
             result.append(user_resp)
 
-    return {
-        'status': 200,
+    data = {
         'users': result,
         'previous_evaluated_key': "not_applicable",
         'last_evaluated_key': "not_applicable"
     }
+
+    return ok(data=data)

@@ -83,9 +83,10 @@ export class DeleteInferenceJobsApi {
                             type: JsonSchemaType.ARRAY,
                             items: {
                                 type: JsonSchemaType.STRING,
+                                minLength: 1,
                             },
                             minItems: 1,
-                            maxItems: 10,
+                            maxItems: 100,
                         },
                     },
                     required: [

@@ -35,7 +35,7 @@ export class MultiUsersStack extends NestedStack {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
-      router: props.routers.role,
+      router: props.routers.roles,
       srcRoot: this.srcRoot,
     });
 
@@ -58,16 +58,16 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new UserDeleteApi(scope, 'userDelete', {
+    new UserDeleteApi(scope, 'DeleteUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'DELETE',
       multiUserTable: props.multiUserTable,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });
 
-    new ListAllUsersApi(scope, 'userListAll', {
+    new ListAllUsersApi(scope, 'ListUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,

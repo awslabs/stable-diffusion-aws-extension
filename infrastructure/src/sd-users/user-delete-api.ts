@@ -11,6 +11,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 export interface UserDeleteApiProps {
   router: aws_apigateway.Resource;
@@ -80,7 +81,6 @@ export class UserDeleteApi {
 
   private deleteUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-delete`,
       entry: `${this.src}/multi_users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -94,40 +94,56 @@ export class UserDeleteApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          user_name_list: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 100,
+          },
+        },
+        required: [
+          'user_name_list',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.path.username': 'method.request.path.username',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "pathStringParameters": {\n' +
-              '        #foreach($pathParam in $input.params().path.keySet())\n' +
-              '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
-              '        #if($foreach.hasNext),#end\n' +
-              '        #end\n' +
-              '    },\n' +
-              '    "x-auth": {\n' +
-              '        "username": "$context.authorizer.username",\n' +
-              '        "role": "$context.authorizer.role"\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    const userRouter = this.router.addResource('{username}');
-    userRouter.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.path.username': true,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 }

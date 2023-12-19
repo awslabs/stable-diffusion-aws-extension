@@ -137,10 +137,11 @@ export class DeleteSagemakerEndpointsApi {
         title: 'deleteEndpointSchema',
         type: JsonSchemaType.OBJECT,
         properties: {
-          delete_endpoint_list: {
+          endpoint_name_list: {
             type: JsonSchemaType.ARRAY,
             items: {
               type: JsonSchemaType.STRING,
+              minLength: 1,
             },
             minItems: 1,
             maxItems: 10,
@@ -150,7 +151,7 @@ export class DeleteSagemakerEndpointsApi {
           },
         },
         required: [
-          'delete_endpoint_list',
+          'endpoint_name_list',
           'username',
         ],
       },
@@ -160,8 +161,7 @@ export class DeleteSagemakerEndpointsApi {
     const deleteEndpointsIntegration = new LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
 
@@ -178,11 +178,6 @@ export class DeleteSagemakerEndpointsApi {
       requestModels: {
         'application/json': model,
       },
-      methodResponses: [
-        {
-          statusCode: '200',
-        }, { statusCode: '500' },
-      ],
     });
 
   }
