@@ -11,6 +11,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok
 from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from _types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
 from model_and_train._types import CheckPoint, CheckPointStatus
@@ -198,11 +199,6 @@ def run_inference(event, _):
 # GET /inferences?last_evaluated_key=xxx&limit=10&username=USER_NAME&name=SageMaker_Endpoint_Name&filter=key:value,key:value
 def list_all_inference_jobs(event, ctx):
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
 
@@ -215,7 +211,9 @@ def list_all_inference_jobs(event, ctx):
     #     last_evaluated_key = json.loads(last_evaluated_key)
     # last_token = None
 
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+    username = None
+    if parameters:
+        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
     scan_rows = ddb_service.scan(inference_table_name, filters=None)
     results = []
@@ -228,10 +226,11 @@ def list_all_inference_jobs(event, ctx):
         if username and check_user_permissions(inference.owner_group_or_role, user_roles, username):
             results.append(inference.__dict__)
 
-    return {
-        'statusCode': 200,
+    data = {
         'inferences': results
     }
+
+    return ok(data=data, decimal=True)
 
 
 # POST /inference-api

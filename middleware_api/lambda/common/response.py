@@ -3,7 +3,7 @@ import logging
 from decimal import Decimal
 from typing import Optional, Any
 
-logger = logging.getLogger('response')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
@@ -71,7 +71,8 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         payload['body'] = json.dumps(body)
 
-    logging.info(f"Response: {payload}")
+    logging.info("Lambda Response Payload:")
+    logging.info(json.dumps(payload))
 
     return payload
 

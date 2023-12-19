@@ -68,10 +68,10 @@ export class SdTrainDeployStack extends NestedStack {
     const multiUserTable = props.database.multiUserTable;
 
     // GET /trains
-    new ListAllTrainJobsApi(this, 'sdExtn-trains', {
+    new ListAllTrainJobsApi(this, 'ListTrainingJobs', {
       commonLayer: commonLayer,
       httpMethod: 'GET',
-      router: routers.trains,
+      router: routers.trainings,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
@@ -119,7 +119,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /models
-    new ListAllModelJobApi(this, 'sdExtn-listallModel', {
+    new ListAllModelJobApi(this, 'ListModels', {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -216,7 +216,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /datasets
-    new ListAllDatasetsApi(this, 'sdExtn-listallDatasets', {
+    new ListAllDatasetsApi(this, 'ListDatasets', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
