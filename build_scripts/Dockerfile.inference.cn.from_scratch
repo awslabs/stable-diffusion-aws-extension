@@ -43,11 +43,11 @@ RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/r
     git -C /opt/ml/code/repositories/BLIP checkout 48211a1594f1321b00f14c9f7a5b4813144b2fb9 && \
     pip install -r /opt/ml/code/repositories/CodeFormer/requirements.txt
 
-RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
-    pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
+RUN pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
     pip install segment_anything && \
     pip install nest-asyncio && \
-    pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
+    # pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
 
