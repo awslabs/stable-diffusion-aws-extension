@@ -43,6 +43,8 @@ RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/r
     git -C /opt/ml/code/repositories/BLIP checkout 48211a1594f1321b00f14c9f7a5b4813144b2fb9 && \
     pip install -r /opt/ml/code/repositories/CodeFormer/requirements.txt
 
+RUN wget -O /opt/ml/code/models/VAE-approx/vaeapprox-sdxl.pt https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt
+
 RUN pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
     pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
     pip install segment_anything && \
