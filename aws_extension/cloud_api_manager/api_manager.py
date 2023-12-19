@@ -170,8 +170,8 @@ class CloudApiManager:
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         logger.debug(raw_resp.json())
-        resp = raw_resp.json()
-        return raw_resp.json()['users'][0]
+        resp = raw_resp.json()['data']
+        return resp['users'][0]
 
     def list_users(self, user_token=""):
         if not self.auth_manger.enableAuth:
@@ -183,7 +183,7 @@ class CloudApiManager:
                                 params={},
                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
-        return raw_resp.json()
+        return raw_resp.json()['data']
 
     def list_roles(self, user_token=""):
         if not self.auth_manger.enableAuth:

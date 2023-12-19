@@ -194,13 +194,9 @@ def _check_action_permission(creator_username, target_username):
 
 # GET /users?last_evaluated_key=xxx&limit=10&username=USER_NAME&filter=key:value,key:value&show_password=1
 def list_user(event, ctx):
+    logger.info(json.dumps(event))
     # todo: if user has no list all, we should add username to self, prevent security issue
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
 
@@ -211,16 +207,14 @@ def list_user(event, ctx):
     # if last_evaluated_key and isinstance(last_evaluated_key, str):
     #     last_evaluated_key = json.loads(last_evaluated_key)
 
-    show_password = parameters['show_password'] if 'show_password' in parameters and parameters['show_password'] else 0
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
+    show_password = 0
+    username = 0
+    if parameters:
+        show_password = parameters['show_password'] if 'show_password' in parameters and parameters[
+            'show_password'] else 0
+        username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth provided'
-        }
-
-    requester_name = event['x-auth']['username']
+    requester_name = event['requestContext']['authorizer']['username']
     requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     if not username:
         result = ddb_service.query_items(user_table,
@@ -273,9 +267,10 @@ def list_user(event, ctx):
         elif user.sort_key == requester_name:
             result.append(user_resp)
 
-    return {
-        'status': 200,
+    data = {
         'users': result,
         'previous_evaluated_key': "not_applicable",
         'last_evaluated_key': "not_applicable"
     }
+
+    return ok(data=data)

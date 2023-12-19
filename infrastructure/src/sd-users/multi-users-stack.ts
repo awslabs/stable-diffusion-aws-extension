@@ -67,7 +67,7 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new ListAllUsersApi(scope, 'userListAll', {
+    new ListAllUsersApi(scope, 'ListUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,
