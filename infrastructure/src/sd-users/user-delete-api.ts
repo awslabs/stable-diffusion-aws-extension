@@ -111,7 +111,7 @@ export class UserDeleteApi {
               minLength: 1,
             },
             minItems: 1,
-            maxItems: 10,
+            maxItems: 100,
           },
         },
         required: [

@@ -35,7 +35,7 @@ export class MultiUsersStack extends NestedStack {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
-      router: props.routers.role,
+      router: props.routers.roles,
       srcRoot: this.srcRoot,
     });
 

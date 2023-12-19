@@ -193,7 +193,7 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
-        return raw_resp.json()
+        return raw_resp.json()['data']
 
     def upsert_role(self, role_name, permissions, creator, user_token=""):
         if not self.auth_manger.enableAuth:
@@ -205,11 +205,11 @@ class CloudApiManager:
             "creator": creator
         }
 
-        raw_resp = requests.post(f'{cloud_auth_manager.api_url}role', json=payload, headers=self._get_headers_by_user(user_token))
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload, headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if resp['statusCode'] != 200:
-            raise Exception(resp['errMsg'])
+        if raw_resp.status_code != 200:
+            raise Exception(resp['message'])
 
         return True
 

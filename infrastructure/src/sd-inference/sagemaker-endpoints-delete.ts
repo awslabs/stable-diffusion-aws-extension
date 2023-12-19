@@ -141,6 +141,7 @@ export class DeleteSagemakerEndpointsApi {
             type: JsonSchemaType.ARRAY,
             items: {
               type: JsonSchemaType.STRING,
+              minLength: 1,
             },
             minItems: 1,
             maxItems: 10,
