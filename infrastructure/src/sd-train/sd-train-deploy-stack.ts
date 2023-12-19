@@ -172,22 +172,22 @@ export class SdTrainDeployStack extends NestedStack {
 
 
     // POST /checkpoint
-    new CreateCheckPointApi(this, 'sdExtn-createCkpt', {
+    new CreateCheckPointApi(this, 'CreateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
-      router: routers.checkpoint,
+      router: routers.checkpoints,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
     });
 
     // PUT /checkpoint
-    new UpdateCheckPointApi(this, 'sdExtn-updateCkpt', {
+    new UpdateCheckPointApi(this, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
-      router: routers.checkpoint,
+      router: routers.checkpoints,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
     });
