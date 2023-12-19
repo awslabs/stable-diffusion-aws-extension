@@ -4,7 +4,7 @@ from starlette.responses import RedirectResponse
 from modules import script_callbacks
 
 
-def my_logout(_, app: FastAPI):
+def custom_logout(_, app: FastAPI):
 
     @app.get("/logout")
     def logout(request: fastapi.Request):
