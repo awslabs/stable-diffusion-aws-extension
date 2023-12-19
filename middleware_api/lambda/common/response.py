@@ -1,5 +1,6 @@
 import json
 import logging
+from decimal import Decimal
 from typing import Optional, Any
 
 logger = logging.getLogger('response')
@@ -35,7 +36,13 @@ class StatusCode:
         return f"Status Code: {self.code} - {self.description}"
 
 
-def response(status_code: int, data=None, message: str = None, headers: Optional[dict[str, Any]] = None):
+def dumps_default(obj):
+    if isinstance(obj, Decimal):
+        return str(obj)
+    raise TypeError("Object of type 'Decimal' is not JSON serializable")
+
+
+def response(status_code: int, data=None, message: str = None, headers: Optional[dict[str, Any]] = None, decimal=None):
     payload = {
         'isBase64Encoded': False,
         'statusCode': status_code,
@@ -59,7 +66,10 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     if message:
         body['message'] = message
 
-    payload['body'] = json.dumps(body)
+    if decimal:
+        payload['body'] = json.dumps(body, default=dumps_default)
+    else:
+        payload['body'] = json.dumps(body)
 
     logging.info(f"Response: {payload}")
 
@@ -68,35 +78,46 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
 
 def ok(data=None,
        message: str = http_status_descriptions[HttpStatusCode.OK],
-       headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.OK, data, message, headers)
+       headers: Optional[dict[str, Any]] = None,
+       decimal=None
+       ):
+    return response(HttpStatusCode.OK, data, message, headers, decimal)
 
 
 def no_content(data=None,
                message: str = http_status_descriptions[HttpStatusCode.NoContent],
-               headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.NoContent, data, message, headers)
+               headers: Optional[dict[str, Any]] = None,
+               decimal=None
+               ):
+    return response(HttpStatusCode.NoContent, data, message, headers, decimal)
 
 
 def bad_request(data=None,
                 message: str = http_status_descriptions[HttpStatusCode.BadRequest],
-                headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.BadRequest, data, message, headers)
+                headers: Optional[dict[str, Any]] = None,
+                decimal=None
+                ):
+    return response(HttpStatusCode.BadRequest, data, message, headers, decimal)
 
 
 def forbidden(data=None,
               message: str = http_status_descriptions[HttpStatusCode.Forbidden],
-              headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.Forbidden, data, message, headers)
+              headers: Optional[dict[str, Any]] = None,
+              decimal=None
+              ):
+    return response(HttpStatusCode.Forbidden, data, message, headers, decimal)
 
 
 def not_found(data=None,
               message: str = http_status_descriptions[HttpStatusCode.NotFound],
-              headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.NotFound, data, message, headers)
+              headers: Optional[dict[str, Any]] = None,
+              decimal=None
+              ):
+    return response(HttpStatusCode.NotFound, data, message, headers, decimal)
 
 
 def internal_server_error(data=None,
                           message: str = http_status_descriptions[HttpStatusCode.InternalServerError],
-                          headers: Optional[dict[str, Any]] = None):
-    return response(HttpStatusCode.InternalServerError, data, message, headers)
+                          headers: Optional[dict[str, Any]] = None,
+                          decimal=None):
+    return response(HttpStatusCode.InternalServerError, data, message, headers, decimal)

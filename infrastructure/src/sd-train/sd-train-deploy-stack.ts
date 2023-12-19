@@ -148,7 +148,7 @@ export class SdTrainDeployStack extends NestedStack {
     // this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
 
     // GET /checkpoints
-    new ListAllCheckPointsApi(this, 'sdExtn-listAllCkpts', {
+    new ListAllCheckPointsApi(this, 'ListCheckPoints', {
       s3Bucket: s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,

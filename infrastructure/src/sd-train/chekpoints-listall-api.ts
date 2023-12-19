@@ -81,8 +81,7 @@ export class ListAllCheckPointsApi {
   }
 
   private listAllCheckpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall-checkpoints`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -102,43 +101,12 @@ export class ListAllCheckPointsApi {
     const listCheckpointsIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.querystring.username': 'method.request.querystring.username',
-          'integration.request.querystring.status': 'method.request.querystring.status',
-          'integration.request.querystring.types': 'method.request.querystring.types',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "queryStringParameters": {\n' +
-              '      #foreach($key in $method.request.multivaluequerystring.keySet())\n' +
-              '      "$key" : [\n' +
-              '        #foreach($val in $method.request.multivaluequerystring.get($key))\n' +
-              '       "$val"#if($foreach.hasNext),#end\n' +
-              '        #end\n' +
-              '        ]#if($foreach.hasNext),#end\n' +
-              '      #end\n' +
-              '    },\n' +
-              '    "x-auth": {\n' +
-              '        "username": "$context.authorizer.username",\n' +
-              '        "role": "$context.authorizer.role"\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.querystring.username': false,
-        'method.request.querystring.status': false,
-        'method.request.querystring.types': false,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
     });
   }
 }

@@ -270,7 +270,7 @@ class CloudApiManager:
 
         raw_resp.raise_for_status()
         checkpoints = []
-        resp = raw_resp.json()
+        resp = raw_resp.json()['data']
         for ckpt in resp['checkpoints']:
             if not ckpt or 'name' not in ckpt or not ckpt['name']:
                 continue
@@ -283,7 +283,7 @@ class CloudApiManager:
                         's3Location': ckpt['s3Location'],
                         'type': ckpt['type'],
                         'status': ckpt['status'],
-                        'created': ckpt['created'],
+                        'created': float(ckpt['created']),
                         'allowed_roles_or_users': ckpt['allowed_roles_or_users'],
                     })
 
