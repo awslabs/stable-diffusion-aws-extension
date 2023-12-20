@@ -127,7 +127,7 @@ def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
 
 def upload_checkpoint_by_urls(raw_event, context):
     request_id = context.aws_request_id
-    event = CreateCheckPointEvent(**raw_event)
+    event = CreateCheckPointEvent(**json.loads(raw_event['body']))
     _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
