@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from dataclasses import dataclass
@@ -6,7 +7,7 @@ from typing import Any, List
 
 from common.ddb_service.client import DynamoDbUtilsService
 from _types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
-from common.response import ok, bad_request
+from common.response import ok, bad_request, internal_server_error, not_found, forbidden
 from common.util import get_s3_presign_urls, generate_presign_url
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
@@ -47,16 +48,13 @@ class DatasetCreateEvent:
 
 # POST /dataset
 def create_dataset_api(raw_event, context):
-    event = DatasetCreateEvent(**raw_event)
+    event = DatasetCreateEvent(**json.loads(raw_event['body']))
 
     try:
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'train' not in creator_permissions \
                 or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'user {event.creator} has not permission to create a train job'
-            }
+            return bad_request(message=f'user {event.creator} has not permission to create a train job')
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
         timestamp = datetime.now().timestamp()
@@ -94,17 +92,16 @@ def create_dataset_api(raw_event, context):
             dataset_item_table: dataset,
             dataset_info_table: [new_dataset_info.__dict__]
         })
-        return {
-            'statusCode': 200,
+
+        data = {
             'datasetName': new_dataset_info.dataset_name,
             's3PresignUrl': presign_url_map
         }
+
+        return ok(data=data)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # GET /datasets
@@ -158,49 +155,27 @@ def list_datasets_api(event, context):
 # GET /dataset/{dataset_name}/data
 def list_data_by_dataset(event, context):
     _filter = {}
-    if 'pathStringParameters' not in event:
-        return {
-            'statusCode': 500,
-            'error': 'path parameter /dataset/{dataset_name}/ are needed'
-        }
 
-    dataset_name = event['pathStringParameters']['dataset_name']
-    if not dataset_name or len(dataset_name) == 0:
-        return {
-            'statusCode': 500,
-            'error': 'path parameter /dataset/{dataset_name}/ are needed'
-        }
+    dataset_name = event['pathParameters']['id']
 
     dataset_info_rows = ddb_service.get_item(table=dataset_info_table, key_values={
         'dataset_name': dataset_name
     })
 
     if not dataset_info_rows or len(dataset_info_rows) == 0:
-        return {
-            'statusCode': 500,
-            'error': 'path parameter /dataset/{dataset_name}/ are not found'
-        }
+        return not_found(message=f'dataset {dataset_name} is not found')
 
     dataset_info = DatasetInfo(**dataset_info_rows)
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': 400,
-            'error': 'no auth user provided'
-        }
-
-    requestor_name = event['x-auth']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
+    requester_name = event['requestContext']['authorizer']['username']
+    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
+    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requester_name)
 
     if not (
-            (dataset_info.allowed_roles_or_users and check_user_permissions(dataset_info.allowed_roles_or_users, requestor_roles, requestor_name)) or # permission in dataset
+            (dataset_info.allowed_roles_or_users and check_user_permissions(dataset_info.allowed_roles_or_users, requestor_roles, requester_name)) or # permission in dataset
             (not dataset_info.allowed_roles_or_users and 'user' in requestor_permissions and 'all' in requestor_permissions['user']) # legacy data for super admin
     ):
-        return {
-            'statusCode': 400,
-            'error': 'no permission to view dataset'
-        }
+        return forbidden(message='no permission to view dataset')
 
     rows = ddb_service.query_items(table=dataset_item_table, key_values={
         'dataset_name': dataset_name
@@ -218,8 +193,7 @@ def list_data_by_dataset(event, context):
             **item.params
         })
 
-    return {
-        'statusCode': 200,
+    return ok(data={
         'dataset_name': dataset_name,
         'datasetName': dataset_info.dataset_name,
         's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
@@ -227,27 +201,24 @@ def list_data_by_dataset(event, context):
         'timestamp': dataset_info.timestamp,
         'data': resp,
         **dataset_info.params
-    }
+    }, decimal=True)
 
 
 @dataclass
 class UpdateDatasetStatusEvent:
-    dataset_name: str
     status: str
 
 
 # PUT /dataset
 def update_dataset_status(raw_event, context):
-    event = UpdateDatasetStatusEvent(**raw_event)
+    event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
+    dataset_id = raw_event['pathParameters']['id']
     try:
         raw_dataset_info = ddb_service.get_item(table=dataset_info_table, key_values={
-            'dataset_name': event.dataset_name
+            'dataset_name': dataset_id
         })
         if not raw_dataset_info or len(raw_dataset_info) == 0:
-            return {
-                'statusCode': 404,
-                'errorMsg': f'dataset {event.dataset_name} is not found'
-            }
+            return not_found(message=f'dataset {dataset_id} is not found')
 
         dataset_info = DatasetInfo(**raw_dataset_info)
         new_status = DatasetStatus[event.status]
@@ -269,15 +240,11 @@ def update_dataset_status(raw_event, context):
         ddb_service.batch_put_items(table_items={
             dataset_item_table: updates_items
         })
-        return {
-            'statusCode': 200,
+        return ok(data={
             'datasetName': dataset_info.dataset_name,
             'status': dataset_info.dataset_status.value,
-        }
+        })
 
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))

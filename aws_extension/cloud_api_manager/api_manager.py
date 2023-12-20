@@ -304,10 +304,10 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_response = requests.get(url=f'{self.auth_manger.api_url}dataset/{dataset_name}/data', headers=self._get_headers_by_user(user_token))
+        raw_response = requests.get(url=f'{self.auth_manger.api_url}datasets/{dataset_name}', headers=self._get_headers_by_user(user_token))
         raw_response.raise_for_status()
         # todo: the s3 presign url is not ready as content type to img
-        resp = raw_response.json()
+        resp = raw_response.json()['data']
         return resp
 
 

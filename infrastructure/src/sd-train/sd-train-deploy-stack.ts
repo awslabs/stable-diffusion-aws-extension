@@ -193,24 +193,24 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /dataset
-    new CreateDatasetApi(this, 'sdExtn-createDataset', {
+    new CreateDatasetApi(this, 'CreateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'POST',
-      router: routers.dataset,
+      router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
     });
 
     // PUT /dataset
-    new UpdateDatasetApi(this, 'sdExtn-updateDataset', {
+    const updateDataset = new UpdateDatasetApi(this, 'UpdateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',
-      router: routers.dataset,
+      router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
     });
@@ -228,13 +228,13 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /dataset/{dataset_name}/data
-    new ListAllDatasetItemsApi(this, 'sdExtn-listallDsItems', {
+    new ListAllDatasetItemsApi(this, 'GetDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,
       multiUserTable: multiUserTable,
       httpMethod: 'GET',
-      router: routers.dataset,
+      router: updateDataset.router,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
