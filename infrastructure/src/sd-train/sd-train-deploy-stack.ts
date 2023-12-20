@@ -10,7 +10,6 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
-import { UploadCheckPointApi } from './checkpoint-upload-api';
 import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
 import { ListAllCheckPointsApi } from './chekpoints-listall-api';
@@ -160,18 +159,6 @@ export class SdTrainDeployStack extends NestedStack {
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
     });
-
-    // POST /upload_checkpoint
-    new UploadCheckPointApi(this, 'UploadCheckPointByUrl', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'POST',
-      router: routers.upload_checkpoint,
-      s3Bucket: s3Bucket,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
-    });
-
 
     // POST /checkpoint
     new CreateCheckPointApi(this, 'CreateCheckPoint', {

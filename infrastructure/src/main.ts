@@ -110,7 +110,6 @@ export class Middleware extends Stack {
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
       'models',
-      'upload_checkpoint',
       'checkpoints',
       'datasets',
       'inference',

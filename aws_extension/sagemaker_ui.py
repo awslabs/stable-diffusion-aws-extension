@@ -589,9 +589,9 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
         params_dict = {}
 
     params_dict['creator'] = pr.username
-    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
-    response = server_request_post('upload_checkpoint', body_params)
-    response_data = response.json()
+    body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
+    response = server_request_post('checkpoints', body_params)
+    response_data = response.json()['data']
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
     if 'checkpoint' in response_data:
@@ -601,7 +601,7 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
 
 
 def generate_on_cloud(sagemaker_endpoint):
-    logger.info(f"checkpiont_info {checkpoint_info}")
+    logger.info(f"checkpoint_info {checkpoint_info}")
     logger.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
