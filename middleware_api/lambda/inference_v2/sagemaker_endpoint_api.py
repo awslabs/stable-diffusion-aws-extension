@@ -137,7 +137,7 @@ def delete_sagemaker_endpoints(raw_event, ctx):
                 # delete ddb item
                 ddb_service.delete_item(
                     table=sagemaker_endpoint_table,
-                    key={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['s']},
+                    keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
                 )
 
         return ok(message="Endpoints Deleted")
