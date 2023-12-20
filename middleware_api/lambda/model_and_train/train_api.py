@@ -30,6 +30,7 @@ image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-eas
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 logger = logging.getLogger('boto3')
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -201,8 +202,10 @@ def list_all_train_jobs_api(event, context):
 
 # PUT /train used to kickoff a train job step function
 def update_train_job_api(event, context):
+    logger.info(json.dumps(event))
+    
     body = json.loads(event['body'])
-    if 'status' in body and 'train_job_id' in body and body['status'] == TrainJobStatus.Training.value:
+    if 'status' in body and body['status'] == TrainJobStatus.Training.value:
         return _start_train_job(body['train_job_id'])
 
     return ok(message=f'not implemented for train job status {body["status"]}')
