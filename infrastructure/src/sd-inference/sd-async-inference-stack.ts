@@ -349,32 +349,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
-    const get_texual_inversion_list = inference.addResource(
-      'get-texual-inversion-list',
-    );
-    get_texual_inversion_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_lora_list = inference.addResource('get-lora-list');
-    get_lora_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_hypernetwork_list = inference.addResource(
-      'get-hypernetwork-list',
-    );
-    get_hypernetwork_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_controlnet_model_list = inference.addResource(
-      'get-controlnet-model-list',
-    );
-    get_controlnet_model_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
     const handler = new python.PythonFunction(
       this,
       'InferenceResultNotification',
