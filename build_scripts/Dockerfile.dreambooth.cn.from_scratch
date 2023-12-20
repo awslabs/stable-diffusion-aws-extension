@@ -13,6 +13,11 @@ RUN apt-get install -y libcairo2-dev
 
 COPY stable-diffusion-webui /opt/ml/code/
 
+# install pkg lib for proprocess in controlnet
+RUN apt-get install -y file && \
+    pip install --upgrade pip && \
+    pip install deepspeed==0.9.5 && \
+    apt-get install -y libtcmalloc-minimal4
 
 # prepare environment fow webui
 RUN pip install -r /opt/ml/code/requirements_versions.txt && \
