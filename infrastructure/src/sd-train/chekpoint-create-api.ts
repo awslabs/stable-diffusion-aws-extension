@@ -135,7 +135,7 @@ export class CreateCheckPointApi {
               'embeddings',
               'Lora',
               'hypernetworks',
-              'Controlnet',
+              'ControlNet',
               'VAE',
             ],
           },

@@ -125,9 +125,16 @@ def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
     return None
 
 
-def upload_checkpoint_by_urls(raw_event, context):
+@dataclass
+class CreateCheckPointEvent:
+    checkpoint_type: str
+    params: dict[str, Any]
+    filenames: [MultipartFileReq] = None
+    urls: [str] = None
+
+
+def upload_checkpoint_by_urls(event: CreateCheckPointEvent, context):
     request_id = context.aws_request_id
-    event = CreateCheckPointEvent(**json.loads(raw_event['body']))
     _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -188,21 +195,13 @@ def upload_checkpoint_by_urls(raw_event, context):
         return internal_server_error(headers=headers, message=str(e))
 
 
-@dataclass
-class CreateCheckPointEvent:
-    checkpoint_type: str
-    params: dict[str, Any]
-    filenames: [MultipartFileReq] = None
-    urls: [str] = None
-
-
 # POST /checkpoint
 def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
     if event.urls:
-        return upload_checkpoint_by_urls(raw_event, context)
+        return upload_checkpoint_by_urls(event, context)
 
     _type = event.checkpoint_type
     headers = {
