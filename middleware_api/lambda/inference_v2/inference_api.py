@@ -208,7 +208,10 @@ def list_all_inference_jobs(event, ctx):
 
     for row in scan_rows:
         inference = InferenceJob(**(ddb_service.deserialize(row)))
-        if username and check_user_permissions(inference.owner_group_or_role, user_roles, username):
+        if username:
+            if check_user_permissions(inference.owner_group_or_role, user_roles, username):
+                results.append(inference.__dict__)
+        else:
             results.append(inference.__dict__)
 
     data = {

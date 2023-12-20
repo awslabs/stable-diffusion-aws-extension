@@ -391,6 +391,7 @@ async def run_sagemaker_inference(request: Request):
         return response
 
 
+# todo will remove
 @app.post("/inference/query-inference-jobs")
 async def query_inference_jobs(request: Request):
     logger.info(f"entering query-inference-jobs")

@@ -342,13 +342,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
-    const query_inference_jobs = inference.addResource(
-      'query-inference-jobs',
-    );
-    query_inference_jobs.addMethod('POST', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
     const handler = new python.PythonFunction(
       this,
       'InferenceResultNotification',
