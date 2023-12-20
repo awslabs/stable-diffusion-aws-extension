@@ -223,7 +223,6 @@ def main(s3_input_path, s3_output_path, params):
     os.system("df -h")
     # import launch
     # launch.prepare_environment()
-    params = params["training_params"]
     model_name = params["model_name"]
     model_type = params["model_type"]
     s3_model_path = params["s3_model_path"]
@@ -261,22 +260,47 @@ def test():
     main(s3_input_path, s3_output_path, training_params)
 
 def parse_params(args):
-    s3_input_path = json.loads(args.s3_input_path)
-    s3_output_path = json.loads(args.s3_output_path)
+    s3_input_path = args.s3_input_path
+    s3_output_path = args.s3_output_path
     params = json.loads(args.params)
     return s3_input_path, s3_output_path, params
 
 if __name__ == "__main__":
-    # test()
-    # sys.exit()
     print(sys.argv)
-    import argparse
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--params", type=str)
-    parser.add_argument("--s3-input-path", type=str)
-    parser.add_argument("--s3-output-path", type=str)
-    args, _ = parser.parse_known_args()
-    s3_input_path, s3_output_path, training_params = parse_params(args)
+    command_line_args = ' '.join(sys.argv[1:])
+    params = {}
+    s3_input_path = ''
+    s3_output_path = ''
+    args_list = command_line_args.split("--")
+    for arg in args_list:
+        if arg.strip().startswith("params"):
+            start_idx = arg.find("{")
+            end_idx = arg.rfind("}")
+            if start_idx != -1 and end_idx != -1:
+                params_str = arg[start_idx:end_idx + 1]
+                try:
+                    params_str = json.dumps(params_str.replace("'", "\""))
+                    print(params_str)
+                    param_array = params_str.split(",")
+                    if not param_array:
+                        print("param_array is None")
+                        break
+                    for kv in param_array:
+                        kv_array = kv.split(":")
+                        if not kv_array or len(kv_array) < 2:
+                            print("kv_array error")
+                            break
+                        params[kv_array[0].strip()] = kv_array[1].strip()
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+        if arg.strip().startswith("s3-input-path"):
+            start_idx = arg.find(":")
+            s3_input_path = f"s3{arg[start_idx:]}"
+        if arg.strip().startswith("s3-output-path"):
+            start_idx = arg.find(":")
+            s3_output_path = f"s3{arg[start_idx:]}"
+    training_params = params
+    print(training_params)
+    print(s3_input_path)
+    print(s3_output_path)
     main(s3_input_path, s3_output_path, training_params)
-
-    # upload_model_to_s3_v2("test-1-1", "s3://stable-diffusion-aws-extension-991301791329-us-east-1/dreambooth/checkpoint/test-sd-type/test/")
