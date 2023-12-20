@@ -116,6 +116,8 @@ def delete_sagemaker_endpoints(raw_event, ctx):
         for endpoint_name in event.endpoint_name_list:
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
             if endpoint_item:
+                logger.info("endpoint_name")
+                logger.info(json.dumps(endpoint_item))
                 # delete sagemaker endpoint
                 try:
                     endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
@@ -459,11 +461,8 @@ def get_endpoint_with_endpoint_name(endpoint_name):
             'endpoint_name': endpoint_name,
         })
 
-        # not include deleted endpoint anywhere
-        record_list = [item for item in record_list if item['endpoint_status']['S'] != EndpointStatus.DELETED.value]
-
         if len(record_list) == 0:
-            logger.error("There is no endpoint deployment job info item with endpoint name:" + endpoint_name)
+            logger.error("There is no endpoint deployment job info item with endpoint name: " + endpoint_name)
             return {}
 
         logger.info(record_list[0])
