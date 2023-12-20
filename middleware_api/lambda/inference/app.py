@@ -269,10 +269,6 @@ def load_json_from_s3(bucket_name, key):
 # Global exception capture
 stepf_client = boto3.client('stepfunctions')
 
-@app.get("/inference")
-def root():
-    return {"message": const.SOLUTION_NAME}
-
 # def get_curent_time():
 #     # Get the current time
 #     now = datetime.now()

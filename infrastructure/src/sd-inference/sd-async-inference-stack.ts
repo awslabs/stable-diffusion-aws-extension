@@ -327,13 +327,6 @@ export class SDAsyncInferenceStack extends NestedStack {
     if (!inference) {
       throw new Error('inference is undefined');
     }
-    inference.addMethod('POST', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    inference.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
 
     const run_sagemaker_inference = inference.addResource(
       'run-sagemaker-inference',
