@@ -241,6 +241,11 @@ def main(s3_input_path, s3_output_path, params):
     os.system("df -h")
 
 def test():
+    {'s3_class_data_path_list': [''], 'class_data_tar_list': [''], 'model_name': 'ceshijuan13',
+     's3_data_path_list': ['s3://jingyicnnx2023120502/dataset/huahua'], 'model_type': 'Lora',
+     's3_model_path': 's3://jingyicnnx2023120502/Stable-diffusion/model/ceshijuan13/b0446945-adf8-4cc3-b3e9-7895479033f2/output',
+     'training_instance_type': '', 'data_tar_list': ['s3://jingyicnnx2023120502/dataset/huahua']}
+
     model_name = "qiaohu-1-1"
     s3_model_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/model/qiaohu-1-1/066dc5e6-1ed7-470a-ab9e-aa9e01cfe5e4/output"
     s3_input_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/train/qiaohu-1-1/546290f8-9b0c-460b-be28-74a4ccad9a63/input"
@@ -256,14 +261,9 @@ def test():
     main(s3_input_path, s3_output_path, training_params)
 
 def parse_params(args):
-    def decode_base64(base64_message):
-        base64_bytes = base64_message.encode('ascii')
-        message_bytes = base64.b64decode(base64_bytes)
-        message = message_bytes.decode('ascii')
-        return message
-    s3_input_path = json.loads(decode_base64(args.s3_input_path))
-    s3_output_path = json.loads(decode_base64(args.s3_output_path))
-    params = json.loads(decode_base64(args.params))
+    s3_input_path = json.loads(args.s3_input_path)
+    s3_output_path = json.loads(args.s3_output_path)
+    params = json.loads(args.params)
     return s3_input_path, s3_output_path, params
 
 if __name__ == "__main__":
