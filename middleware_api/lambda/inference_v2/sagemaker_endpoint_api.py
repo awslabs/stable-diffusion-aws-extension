@@ -162,17 +162,17 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
     logger.info(f"Received ctx: {ctx}")
     event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
+    endpoint_deployment_id = str(uuid.uuid4())
+    short_id = endpoint_deployment_id[:7]
+
+    if event.endpoint_name:
+        short_id = event.endpoint_name
+
+    model_name = f"infer-model-{short_id}"
+    endpoint_config_name = f"infer-config-{short_id}"
+    endpoint_name = f"infer-endpoint-{short_id}"
+
     try:
-        endpoint_deployment_id = str(uuid.uuid4())
-        short_id = endpoint_deployment_id[:7]
-
-        if event.endpoint_name:
-            short_id = event.endpoint_name
-
-        sagemaker_model_name = f"infer-model-{short_id}"
-        sagemaker_endpoint_config = f"infer-config-{short_id}"
-        sagemaker_endpoint_name = f"infer-endpoint-{short_id}"
-
         image_url = INFERENCE_ECR_IMAGE_URL
 
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
@@ -199,15 +199,15 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(sagemaker_model_name, image_url, model_data_url)
+        _create_sagemaker_model(model_name, image_url, model_data_url)
 
-        _create_sagemaker_endpoint_config(sagemaker_endpoint_config, s3_output_path, sagemaker_model_name,
+        _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name,
                                           initial_instance_count, instance_type)
 
         logger.info('Creating new model endpoint...')
         response = sagemaker.create_endpoint(
-            EndpointName=sagemaker_endpoint_name,
-            EndpointConfigName=sagemaker_endpoint_config
+            EndpointName=endpoint_name,
+            EndpointConfigName=endpoint_config_name
         )
         logger.info(f"Successfully created endpoint: {response}")
 
@@ -215,7 +215,7 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
 
         raw = EndpointDeploymentJob(
             EndpointDeploymentJobId=endpoint_deployment_id,
-            endpoint_name=sagemaker_endpoint_name,
+            endpoint_name=endpoint_name,
             startTime=current_time,
             endpoint_status=EndpointStatus.CREATING.value,
             max_instance_number=event.initial_instance_count,
@@ -227,12 +227,18 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         logger.info(f"Successfully created endpoint deployment: {raw.__dict__}")
 
         return ok(
-            message=f"Endpoint deployment started: {sagemaker_endpoint_name}",
+            message=f"Endpoint deployment started: {endpoint_name}",
             data=raw.__dict__
         )
     except Exception as e:
         logger.error(e)
-        return ok(message=str(e))
+        message = str(e)
+        try:
+            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            sagemaker.delete_model(ModelName=model_name)
+        except Exception as e:
+            logger.error(f"error deleting endpoint config and model with exception: {e}")
+        return ok(message=message)
 
 
 # lambda: handle sagemaker events

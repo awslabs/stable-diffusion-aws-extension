@@ -105,11 +105,15 @@ export class CreateSagemakerEndpointsApi {
 
     const endpointStatement = new PolicyStatement({
       actions: [
+        'sagemaker:DeleteModel',
+        'sagemaker:DeleteEndpoint',
+        'sagemaker:DescribeEndpoint',
+        'sagemaker:DeleteEndpointConfig',
+        'sagemaker:DescribeEndpointConfig',
         'sagemaker:InvokeEndpoint',
         'sagemaker:CreateModel',
         'sagemaker:CreateEndpoint',
         'sagemaker:CreateEndpointConfig',
-        'sagemaker:DescribeEndpoint',
         'sagemaker:InvokeEndpointAsync',
         'ecr:GetAuthorizationToken',
         'ecr:BatchCheckLayerAvailability',
@@ -125,7 +129,6 @@ export class CreateSagemakerEndpointsApi {
         'ecr:PutImage',
         'cloudwatch:PutMetricAlarm',
         'cloudwatch:PutMetricData',
-        'sagemaker:DescribeEndpointConfig',
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
         'sagemaker:UpdateEndpointWeightsAndCapacities',
