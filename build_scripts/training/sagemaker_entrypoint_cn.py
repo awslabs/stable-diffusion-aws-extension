@@ -6,6 +6,7 @@ import sys
 import time
 import pickle
 import logging
+import ast
 import base64
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.INFO)
@@ -141,8 +142,8 @@ def download_data(data_list, s3_data_path_list, s3_input_path):
 def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
     s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar')
-    logger.info(f"Download src model from s3 {model_bucket_name} {s3_model_path} {model_name}.tar")
-    print(f"Download src model from s3 {model_bucket_name} {s3_model_path} {model_name}.tar")
+    logger.info(f"Download src model from s3: {model_bucket_name} {s3_model_path} {model_name}.tar")
+    print(f"Download src model from s3: model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
     download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar')
 
     input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
@@ -230,8 +231,8 @@ def main(s3_input_path, s3_output_path, params):
     s3_class_data_path_list = params["class_data_tar_list"]
     # s3_data_path_list = params["s3_data_path_list"]
     # s3_class_data_path_list = params["s3_class_data_path_list"]
-    prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
     print(f"s3_model_path {s3_model_path} model_name:{model_name} s3_input_path: {s3_input_path} s3_data_path_list:{s3_data_path_list} s3_class_data_path_list:{s3_class_data_path_list}")
+    prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
     os.system("df -h")
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
@@ -278,18 +279,20 @@ if __name__ == "__main__":
             start_idx = arg.find("{")
             end_idx = arg.rfind("}")
             if start_idx != -1 and end_idx != -1:
-                params_str = arg[start_idx:end_idx + 1]
+                params_str = arg[start_idx:end_idx+1]
                 try:
-                    params_str = json.dumps(params_str.replace(" ", "").replace("\n", "").replace("'", "\""))
+                    params_str = params_str.replace(" ", "").replace("\n", "").replace("'", "")
                     print(params_str)
-                    param_array = params_str.split(",")
-                    if not param_array:
-                        print("param_array is None")
-                        break
-                    for kv in param_array:
-                        split_result = kv.split(":", 1)
-                        params[split_result[0].strip()] = split_result[1].strip()
-
+                    params_str = params_str.replace(",,", ",")
+                    print(params_str)
+                    # params_str = params_str.replace(":,", ":")
+                    # print(params_str)
+                    params_str = params_str.replace(",,", ",")
+                    print(params_str)
+                    fixed_string = params_str.replace('{', '{"').replace(':', '":"').replace(',', '","')\
+                        .replace('}', '"}').replace("\"[", "[\"").replace("]\"", "\"]").replace('s3":"//', "s3://")
+                    print(fixed_string)
+                    params = json.loads(fixed_string)
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON: {e}")
         if arg.strip().startswith("s3-input-path"):
