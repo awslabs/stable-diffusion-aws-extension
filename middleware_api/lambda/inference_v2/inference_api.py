@@ -125,7 +125,7 @@ def prepare_inference(raw_event, context):
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
         return ok(data=resp)
     except Exception as e:
-        return internal_server_error(message=str(e))
+        return bad_request(message=str(e))
 
 
 # PUT /v2/inference/{inference_id}/run
