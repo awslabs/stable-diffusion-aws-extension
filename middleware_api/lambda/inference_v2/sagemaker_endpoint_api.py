@@ -114,28 +114,25 @@ def delete_sagemaker_endpoints(raw_event, ctx):
             return forbidden(message=f"User {event.username} has no permission to delete a Sagemaker endpoint")
 
         for endpoint_name in event.endpoint_name_list:
-
-            try:
-                # delete sagemaker endpoint
-                endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
-                if endpoint:
-                    logger.info("endpoint")
-                    logger.info(endpoint)
-                    sagemaker.delete_endpoint(EndpointName=endpoint_name)
-                    config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-                    if config:
-                        logger.info("config")
-                        logger.info(config)
-                        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-                        for ProductionVariant in config['ProductionVariants']:
-                            sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
-
-            except (BotoCoreError, ClientError) as error:
-                logger.error(error)
-
-            # delete ddb item
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
             if endpoint_item:
+                # delete sagemaker endpoint
+                try:
+                    endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
+                    if endpoint:
+                        logger.info("endpoint")
+                        logger.info(endpoint)
+                        sagemaker.delete_endpoint(EndpointName=endpoint_name)
+                        config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+                        if config:
+                            logger.info("config")
+                            logger.info(config)
+                            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+                            for ProductionVariant in config['ProductionVariants']:
+                                sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
+                except (BotoCoreError, ClientError) as error:
+                    logger.error(error)
+                # delete ddb item
                 ddb_service.delete_item(
                     table=sagemaker_endpoint_table,
                     key={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['s']},
