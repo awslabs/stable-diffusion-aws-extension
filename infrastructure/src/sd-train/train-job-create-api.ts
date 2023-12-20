@@ -12,6 +12,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 export interface CreateTrainJobApiProps{
   router: aws_apigateway.Resource;
@@ -135,9 +136,58 @@ export class CreateTrainJobApi {
       },
     );
 
-      this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
-        apiKeyRequired: true,
-      });
+    const requestModel = new Model(this.scope, `${this.id}-model`,{
+      restApi: this.router.api,
+      modelName: this.id,
+      description: `${this.id} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          train_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          model_id: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          filenames: {
+            type: JsonSchemaType.ARRAY,
+            maxItems: 1,
+          },
+          params:{
+            type: JsonSchemaType.OBJECT,
+          }
+        },
+        required: [
+          'train_type',
+          'model_id',
+          'filenames',
+          'params',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.id}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.id,
+          validateRequestBody: true,
+        });
+
+
+    this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
+    });
 
     return lambdaFunction;
   }

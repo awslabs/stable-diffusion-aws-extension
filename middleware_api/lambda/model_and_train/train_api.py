@@ -203,10 +203,10 @@ def list_all_train_jobs_api(event, context):
 # PUT /train used to kickoff a train job step function
 def update_train_job_api(event, context):
     logger.info(json.dumps(event))
-    
+    train_job_id = event['pathParameters']['id']
     body = json.loads(event['body'])
-    if 'status' in body and body['status'] == TrainJobStatus.Training.value:
-        return _start_train_job(body['train_job_id'])
+    if body['status'] == TrainJobStatus.Training.value:
+        return _start_train_job(train_job_id)
 
     return ok(message=f'not implemented for train job status {body["status"]}')
 

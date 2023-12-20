@@ -25,6 +25,7 @@ import { LambdaInvokeProps } from 'aws-cdk-lib/aws-stepfunctions-tasks/lib/lambd
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../common/dockerImages';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 export interface UpdateTrainJobApiProps{
   router: aws_apigateway.Resource;
@@ -289,6 +290,37 @@ export class UpdateTrainJobApi {
     });
     lambdaFunction.node.addDependency(this.customJob);
 
+    const requestModel = new Model(this.scope, `${this.id}-model`,{
+      restApi: this.router.api,
+      modelName: this.id,
+      description: `${this.id} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+        },
+        required: [
+          'status',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.id}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.id,
+          validateRequestBody: true,
+        });
+
+
     const createTrainJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -297,6 +329,10 @@ export class UpdateTrainJobApi {
     );
     this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
     return lambdaFunction;
   }

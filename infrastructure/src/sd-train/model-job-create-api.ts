@@ -12,6 +12,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface CreateModelJobApiProps {
@@ -125,8 +126,59 @@ export class CreateModelJobApi {
         proxy: true,
       },
     );
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          model_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          filenames: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.OBJECT,
+            }
+          },
+          params: {
+            type: JsonSchemaType.OBJECT,
+          }
+        },
+        required: [
+          'model_type',
+          'name',
+          'filenames',
+          'params',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
       apiKeyRequired: true,
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 
