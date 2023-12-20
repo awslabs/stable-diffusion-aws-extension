@@ -201,44 +201,47 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
 
         _create_sagemaker_model(model_name, image_url, model_data_url)
 
-        _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name,
-                                          initial_instance_count, instance_type)
+        try:
+            _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name,
+                                              initial_instance_count, instance_type)
+        except Exception as e:
+            logger.error(f"error creating endpoint config with exception: {e}")
+            sagemaker.delete_model(ModelName=model_name)
+            return bad_request(message=str(e))
 
-        logger.info('Creating new model endpoint...')
-        response = sagemaker.create_endpoint(
-            EndpointName=endpoint_name,
-            EndpointConfigName=endpoint_config_name
-        )
-        logger.info(f"Successfully created endpoint: {response}")
+        try:
+            response = sagemaker.create_endpoint(
+                EndpointName=endpoint_name,
+                EndpointConfigName=endpoint_config_name
+            )
+            logger.info(f"Successfully created endpoint: {response}")
+        except Exception as e:
+            logger.error(f"error creating endpoint with exception: {e}")
+            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+            sagemaker.delete_model(ModelName=model_name)
+            return bad_request(message=str(e))
 
-        current_time = str(datetime.now())
-
-        raw = EndpointDeploymentJob(
+        data = EndpointDeploymentJob(
             EndpointDeploymentJobId=endpoint_deployment_id,
             endpoint_name=endpoint_name,
-            startTime=current_time,
+            startTime=str(datetime.now()),
             endpoint_status=EndpointStatus.CREATING.value,
             max_instance_number=event.initial_instance_count,
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
             current_instance_count="0",
-        )
-        ddb_service.put_items(table=sagemaker_endpoint_table, entries=raw.__dict__)
-        logger.info(f"Successfully created endpoint deployment: {raw.__dict__}")
+        ).__dict__
+
+        ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
+        logger.info(f"Successfully created endpoint deployment: {data}")
 
         return ok(
             message=f"Endpoint deployment started: {endpoint_name}",
-            data=raw.__dict__
+            data=data
         )
     except Exception as e:
         logger.error(e)
-        message = str(e)
-        try:
-            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-            sagemaker.delete_model(ModelName=model_name)
-        except Exception as e:
-            logger.error(f"error deleting endpoint config and model with exception: {e}")
-        return ok(message=message)
+        return bad_request(message=str(e))
 
 
 # lambda: handle sagemaker events
