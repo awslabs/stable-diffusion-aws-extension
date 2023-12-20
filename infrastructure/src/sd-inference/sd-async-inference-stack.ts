@@ -12,7 +12,6 @@ import {
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -24,7 +23,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { InferenceL2Api, InferenceL2ApiProps } from './inference-api-l2';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from './inference-job-create-api';
 import { RunInferenceJobApi, RunInferenceJobApiProps } from './inference-job-run-api';
 import { CreateSagemakerEndpointsApi, CreateSagemakerEndpointsApiProps } from './sagemaker-endpoints-create';
@@ -36,6 +34,7 @@ import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sa
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import {DeleteInferenceJobsApi, DeleteInferenceJobsApiProps} from "../api/inferences/delete-inference-jobs";
+import {GetInferenceJobApi, GetInferenceJobApiProps} from "../api/inferences/get-inference-job";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -77,17 +76,17 @@ export class SDAsyncInferenceStack extends NestedStack {
     const sd_inference_job_table = props.sd_inference_job_table;
     const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
     const inference = props.routers.inference;
-    const inferV2Router = inference.addResource('v2');
+    const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
     new CreateInferenceJobApi(
-      this, 'sd-infer-v2-create',
+      this, 'CreateInferenceJob',
       <CreateInferenceJobApiProps>{
         checkpointTable: props.checkpointTable,
         commonLayer: props.commonLayer,
         endpointDeploymentTable: sd_endpoint_deployment_job_table,
         httpMethod: 'POST',
         inferenceJobTable: sd_inference_job_table,
-        router: inferV2Router,
+        router: props.routers.inferences,
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
         multiUserTable: props.multiUserTable,
@@ -95,7 +94,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new RunInferenceJobApi(
-      this, 'sd-infer-v2-run',
+      this, 'StartInferenceJob',
       <RunInferenceJobApiProps>{
         checkpointTable: props.checkpointTable,
         commonLayer: props.commonLayer,
@@ -300,25 +299,17 @@ export class SDAsyncInferenceStack extends NestedStack {
     // Create a POST method for the API Gateway and connect it to the Lambda function
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
-    // The api can be invoked directly from the user's client code, the path starts with /api
-    const inferenceApi = props.routers['inference-api'];
-    const run_sagemaker_inference_api = inferenceApi.addResource(
-      'inference',
-    );
-
-    new InferenceL2Api(
-      this, 'sd-infer-l2-api',
-      <InferenceL2ApiProps>{
-        checkpointTable: props.checkpointTable,
-        commonLayer: props.commonLayer,
-        endpointDeploymentTable: sd_endpoint_deployment_job_table,
-        httpMethod: 'POST',
-        inferenceJobTable: sd_inference_job_table,
-        router: run_sagemaker_inference_api,
-        s3Bucket: props.s3_bucket,
-        srcRoot: srcRoot,
-      },
-    );
+      new GetInferenceJobApi(
+          this, 'GetInferenceJob',
+          <GetInferenceJobApiProps>{
+              router: inferV2Router,
+              commonLayer: props.commonLayer,
+              inferenceJobTable: sd_inference_job_table,
+              httpMethod: 'GET',
+              s3Bucket: props.s3_bucket,
+              srcRoot: srcRoot,
+          },
+      );
 
       new DeleteInferenceJobsApi(
           this, 'DeleteInferenceJobs',
@@ -351,28 +342,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
-    const deploy_sagemaker_endpoint = inference.addResource(
-      'deploy-sagemaker-endpoint',
-    );
-    deploy_sagemaker_endpoint.addMethod('POST', txt2imgIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      authorizer: props.authorizer,
-    });
-
-    // const list_endpoint_deployment_jobs = inference.addResource(
-    //   'list-endpoint-deployment-jobs',
-    // );
-    // list_endpoint_deployment_jobs.addMethod('GET', txt2imgIntegration, {
-    //   apiKeyRequired: true,
-    // });
-
-    const delete_deployment_jobs = inference.addResource(
-      'delete-sagemaker-endpoint');
-    delete_deployment_jobs.addMethod('POST', txt2imgIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      authorizer: props.authorizer,
-    });
-
     const list_inference_jobs = inference.addResource(
       'list-inference-jobs',
     );
@@ -390,11 +359,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       'get-endpoint-deployment-job',
     );
     get_endpoint_deployment_job.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_inference_job = inference.addResource('get-inference-job');
-    get_inference_job.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,
     });
 
@@ -421,20 +385,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       'get-controlnet-model-list',
     );
     get_controlnet_model_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_inference_job_image_output = inference.addResource(
-      'get-inference-job-image-output',
-    );
-    get_inference_job_image_output.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_inference_job_param_output = inference.addResource(
-      'get-inference-job-param-output',
-    );
-    get_inference_job_param_output.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,
     });
 

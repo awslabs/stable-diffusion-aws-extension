@@ -472,16 +472,6 @@ async def get_endpoint_deployment_job(jobID: str = None):
     logger.info(f"endpoint_deployment_jobId is {str(endpoint_deployment_jobId)}")
     return getEndpointDeployJob(endpoint_deployment_jobId)
 
-@app.get("/inference/get-inference-job")
-async def get_inference_job(jobID: str = None):
-    inference_jobId = jobID
-    # logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
-    try:
-        return getInferenceJob(inference_jobId)
-    except Exception as e:
-        # logger.error(f"Error getting inference job: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/inference/get-inference-job-image-output")
 async def get_inference_job_image_output(jobID: str = None) -> List[str]:
     inference_jobId = jobID

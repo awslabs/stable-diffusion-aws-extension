@@ -268,36 +268,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 
 def get_inference_job(inference_job_id):
-    response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
-    return response.json()
-
-
-def get_inference_job_image_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-image-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_image_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_image_list.append(obj_value)
-        return txt2img_inference_job_image_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job image output: {e}")
-        return []
-
-
-def get_inference_job_param_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-param-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_param_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_param_list.append(obj_value)
-        return txt2img_inference_job_param_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job param output: {e}")
-        return []
+    response = server_request(f'inferences/{inference_job_id}')
+    return response.json()['data']
 
 
 def download_images(image_urls: list, local_directory: str):
@@ -780,8 +752,8 @@ def process_result_by_inference_id(inference_id):
                     prompt_txt = resp['caption']
                     # return with default value, including image_list, info_text, infotexts
                     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
-                images = get_inference_job_image_output(inference_id.strip())
-                inference_param_json_list = get_inference_job_param_output(inference_id)
+                images = resp['img_presigned_urls']
+                inference_param_json_list = resp['output_presigned_urls']
                 # todo: these not need anymore
                 if resp['taskType'] in ['txt2img', 'img2img']:
                     image_list = download_images_to_pil(images)
@@ -929,8 +901,9 @@ def fake_gan(selected_value, original_prompt):
         if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = original_prompt
             # output directory mapping to task type
-            images = get_inference_job_image_output(inference_job_id.strip())
-            inference_param_json_list = get_inference_job_param_output(inference_job_id)
+            job = get_inference_job(inference_job_id)
+            images = job['img_presigned_urls']
+            inference_param_json_list = job['output_presigned_urls']
             image_list = download_images_to_pil(images)
             json_file = download_images_to_json(inference_param_json_list)[0]
             if json_file:
