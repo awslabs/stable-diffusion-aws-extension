@@ -147,7 +147,7 @@ class CreateEndpointEvent:
 def sagemaker_endpoint_create_api(raw_event, ctx):
     logger.info(f"Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")
-    event = CreateEndpointEvent(**raw_event)
+    event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
     try:
         endpoint_deployment_id = str(uuid.uuid4())
@@ -172,10 +172,7 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'sagemaker_endpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
-            return {
-                'statusCode': 400,
-                'message': f"Creator {event.creator} has no permission to create Sagemaker",
-            }
+            return bad_request(message=f"Creator {event.creator} has no permission to create Sagemaker")
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
@@ -184,10 +181,8 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
             if endpoint.endpoint_status != EndpointStatus.DELETED.value and endpoint.status != 'deleted':
                 for role in event.assign_to_roles:
                     if role in endpoint.owner_group_or_role:
-                        return {
-                            'statusCode': 400,
-                            'message': f"role [{role}] has a valid endpoint already, not allow to have another one",
-                        }
+                        return bad_request(
+                            message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
         _create_sagemaker_model(sagemaker_model_name, image_url, model_data_url)
 
@@ -216,17 +211,13 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=raw.__dict__)
         logger.info(f"Successfully created endpoint deployment: {raw.__dict__}")
 
-        return {
-            'statusCode': 200,
-            'message': f"Endpoint deployment started: {sagemaker_endpoint_name}",
-            'data': raw.__dict__
-        }
+        return ok(
+            message=f"Endpoint deployment started: {sagemaker_endpoint_name}",
+            data=raw.__dict__
+        )
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 200,
-            'message': str(e),
-        }
+        return ok(message=str(e))
 
 
 # lambda: handle sagemaker events

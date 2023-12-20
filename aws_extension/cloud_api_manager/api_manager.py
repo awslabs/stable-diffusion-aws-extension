@@ -229,14 +229,14 @@ class CloudApiManager:
         if initial:
             cloud_auth_manager.refresh()
 
-        raw_resp = requests.post(f'{cloud_auth_manager.api_url}user',
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}users',
                                  json=payload,
                                  headers=self._get_headers_by_user(user_token)
                                  )
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if resp['statusCode'] != 200:
-            raise Exception(resp['errMsg'])
+        if raw_resp.status_code != 200:
+            raise Exception(resp['message'])
 
         cloud_auth_manager.update_gradio_auth()
         return True
@@ -304,10 +304,10 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_response = requests.get(url=f'{self.auth_manger.api_url}dataset/{dataset_name}/data', headers=self._get_headers_by_user(user_token))
+        raw_response = requests.get(url=f'{self.auth_manger.api_url}datasets/{dataset_name}', headers=self._get_headers_by_user(user_token))
         raw_response.raise_for_status()
         # todo: the s3 presign url is not ready as content type to img
-        resp = raw_response.json()
+        resp = raw_response.json()['data']
         return resp
 
 

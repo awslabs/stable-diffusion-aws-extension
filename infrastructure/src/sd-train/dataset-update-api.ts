@@ -11,6 +11,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface UpdateDatasetApiProps {
@@ -25,7 +26,7 @@ export interface UpdateDatasetApiProps {
 
 export class UpdateDatasetApi {
   private readonly src;
-  private readonly router: aws_apigateway.Resource;
+  public readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly datasetInfoTable: aws_dynamodb.Table;
@@ -100,8 +101,7 @@ export class UpdateDatasetApi {
   }
 
   private updateDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-update`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-update`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/dataset_service`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -117,19 +117,51 @@ export class UpdateDatasetApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+        },
+        required: [
+          'status',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-      }],
-    });
+    this.router.addResource('{id}')
+        .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
+          apiKeyRequired: true,
+          requestValidator,
+          requestModels: {
+            'application/json': requestModel,
+          }
+        });
   }
 }
 

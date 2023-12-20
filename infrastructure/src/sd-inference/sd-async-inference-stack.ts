@@ -122,7 +122,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new DeleteSagemakerEndpointsApi(
-      this, 'sd-infer-v2-deleteEndpoints',
+      this, 'DeleteEndpoints',
         <DeleteSagemakerEndpointsApiProps>{
           router: props.routers.endpoints,
           commonLayer: props.commonLayer,
@@ -164,7 +164,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
 
     new CreateSagemakerEndpointsApi(
-      this, 'sd-infer-v2-createEndpoint',
+      this, 'CreateEndpoint',
           <CreateSagemakerEndpointsApiProps>{
             router: props.routers.endpoints,
             commonLayer: props.commonLayer,

@@ -111,8 +111,7 @@ export class DeleteSagemakerEndpointsApi {
   }
 
   private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-delete-endpoints`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-function`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -128,13 +127,13 @@ export class DeleteSagemakerEndpointsApi {
       layers: [this.layer],
     });
 
-    const model = new Model(this.scope, 'DeleteEndpointsModel', {
+    const model = new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: 'DeleteEndpointsModel',
-      description: 'Delete Endpoint Model',
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT4,
-        title: 'deleteEndpointSchema',
+        title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
           endpoint_name_list: {
@@ -165,9 +164,9 @@ export class DeleteSagemakerEndpointsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, 'DeleteEndpointRequestValidator', {
+    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
       restApi: this.router.api,
-      requestValidatorName: 'DeleteEndpointRequestValidator',
+      requestValidatorName: this.baseId,
       validateRequestBody: true,
     });
 

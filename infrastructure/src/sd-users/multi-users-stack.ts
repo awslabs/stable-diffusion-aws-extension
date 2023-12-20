@@ -31,7 +31,7 @@ export class MultiUsersStack extends NestedStack {
   constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
     super(scope, id, props);
 
-    new RoleUpsertApi(scope, 'roleUpsert', {
+    new RoleUpsertApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
@@ -48,12 +48,12 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new UserUpsertApi(scope, 'userUpsert', {
+    new UserUpsertApi(scope, 'CreateUser', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
       passwordKey: props.passwordKeyAlias,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });

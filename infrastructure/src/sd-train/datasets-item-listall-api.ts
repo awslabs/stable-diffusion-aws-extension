@@ -100,8 +100,7 @@ export class ListAllDatasetItemsApi {
   }
 
   private listAllDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/dataset_service`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -122,38 +121,15 @@ export class ListAllDatasetItemsApi {
     const listDatasetItemsIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.path.dataset_name': 'method.request.path.dataset_name',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "pathStringParameters": {\n' +
-              '        #foreach($pathParam in $input.params().path.keySet())\n' +
-              '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
-              '        #if($foreach.hasNext),#end\n' +
-              '        #end\n' +
-              '    }, \n' +
-              '    "x-auth": {\n' +
-              '        "username": "$context.authorizer.username",\n' +
-              '        "role": "$context.authorizer.role"\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    const dataItemRouter = this.router.addResource('{dataset_name}');
-    dataItemRouter.addResource('data').addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.path.dataset_name': true,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
-    });
+
+    this.router.getResource('{id}')
+        ?.addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
+          apiKeyRequired: true,
+          authorizer: this.authorizer,
+        });
   }
 }
 

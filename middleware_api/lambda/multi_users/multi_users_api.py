@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
 from _types import User, PARTITION_KEYS, Role, Default_Role
-from common.response import ok
+from common.response import ok, bad_request
 from roles_api import upsert_role
 from utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 
@@ -31,8 +31,8 @@ class UpsertUserEvent:
 
 # POST /user
 def upsert_user(raw_event, ctx):
-    print(raw_event)
-    event = UpsertUserEvent(**raw_event['body'])
+    logger.info(json.dumps(raw_event))
+    event = UpsertUserEvent(**json.loads(raw_event['body']))
     if event.initial:
         rolenames = [Default_Role]
 
@@ -63,19 +63,24 @@ def upsert_user(raw_event, ctx):
                 aws_request_id: str
                 from_sd_local: bool
 
-            resp = upsert_role(role_event, MockContext(aws_request_id='', from_sd_local=True))
+            # todo will be remove, not use api
+            create_role_event = {
+                'body': json.dumps(role_event)
+            }
+            resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
 
             if resp['statusCode'] != 200:
                 return resp
 
-        return {
-            'statusCode': 200,
+        data = {
             'user': {
                 'username': event.username,
                 'roles': [rolenames[0]]
             },
             'all_roles': rolenames,
         }
+
+        return ok(data=data)
 
     check_permission_resp = _check_action_permission(event.creator, event.username)
     if check_permission_resp:
@@ -98,19 +103,13 @@ def upsert_user(raw_event, ctx):
             resource = permission_parts[0]
             action = permission_parts[1]
             if 'all' not in creator_permissions[resource] and action not in creator_permissions[resource]:
-                return {
-                    'statusCode': 400,
-                    'errMsg': f'creator has no permission to assign permission [{permission}] to others'
-                }
+                return bad_request(message=f'creator has no permission to assign permission [{permission}] to others')
 
         roles_pool.append(role.sort_key)
 
     for role in event.roles:
         if role not in roles_pool:
-            return {
-                'statusCode': 400,
-                'errMsg': f'user roles "{role}" not exist'
-            }
+            return bad_request(message=f'user roles "{role}" not exist')
 
     ddb_service.put_items(user_table, User(
         kind=PARTITION_KEYS.user,
@@ -120,14 +119,15 @@ def upsert_user(raw_event, ctx):
         creator=event.creator,
     ).__dict__)
 
-    return {
-        'statusCode': 200,
+    data = {
         'user': {
             'username': event.username,
             'roles': event.roles,
             'creator': event.creator,
         }
     }
+
+    return ok(data=data)
 
 
 # DELETE /user/{username}
@@ -155,10 +155,7 @@ def delete_user(event, ctx):
 def _check_action_permission(creator_username, target_username):
     # check if creator exist
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=creator_username):
-        return {
-            'statusCode': 400,
-            'errMsg': f'creator {creator_username} not exist'
-        }
+        return bad_request(message=f'creator {creator_username} not exist')
 
     target_user = get_user_by_username(ddb_service, user_table, target_username)
 
@@ -166,28 +163,20 @@ def _check_action_permission(creator_username, target_username):
 
     if 'user' not in creator_permissions or \
             ('all' not in creator_permissions['user'] and 'create' not in creator_permissions['user']):
-        return {
-            'statusCode': 400,
-            'errMsg': f'creator {creator_username} does not have permission to manage the user'
-        }
+        return bad_request(message=f'creator {creator_username} does not have permission to manage the user')
 
     # if the creator have no permission (not created by creator),
     # make sure the creator doesn't change the existed user (created by others)
     # and only user with 'user:all' can do update any users
     if target_user and target_user.creator != creator_username and 'all' not in creator_permissions['user']:
-        return {
-            'statusCode': 400,
-            'errMsg': f'username {target_user.sort_key} has already exists, '
-                      f'creator {creator_username} does not have permissions to change it'
-        }
+        return bad_request(message=f'username {target_user.sort_key} has already exists, '
+                                   f'creator {creator_username} does not have permissions to change it')
 
     if target_user and target_user.creator == creator_username and 'create' not in creator_permissions['user'] and 'all' \
             not in creator_permissions['user']:
-        return {
-            'statusCode': 400,
-            'errMsg': f'username {target_user.sort_key} has already exists, '
-                      f'creator {creator_username} does not have permissions to change it'
-        }
+        return bad_request(
+            message=f'username {target_user.sort_key} has already exists, '
+                    f'creator {creator_username} does not have permissions to change it')
 
     return None
 

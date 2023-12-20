@@ -10,7 +10,7 @@ import json
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import ok, bad_request, internal_server_error
 from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
 from multi_users._types import PARTITION_KEYS, Role
@@ -226,7 +226,7 @@ class CreateCheckPointEvent:
 # POST /checkpoint
 def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
-    event = CreateCheckPointEvent(**raw_event)
+    event = CreateCheckPointEvent(**json.loads(raw_event['body']))
     _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -262,11 +262,7 @@ def create_checkpoint_api(raw_event, context):
             filenames_only.append(file.filename)
 
         if len(filenames_only) == 0:
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'errorMsg': 'no checkpoint name (file names) detected'
-            }
+            return bad_request(message='no checkpoint name (file names) detected', headers=headers)
 
         user_roles = ['*']
         creator_permissions = {}
@@ -276,11 +272,7 @@ def create_checkpoint_api(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'error': f"user has no permissions to create a model"
-            }
+            return bad_request(message='user has no permissions to create a model', headers=headers)
 
         checkpoint = CheckPoint(
             id=request_id,
@@ -293,9 +285,7 @@ def create_checkpoint_api(raw_event, context):
             allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -305,25 +295,22 @@ def create_checkpoint_api(raw_event, context):
             },
             's3PresignUrl': multiparts_resp
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': str(e)
-        }
+        return internal_server_error(headers=headers, message=str(e))
 
 
 @dataclass
 class UpdateCheckPointEvent:
-    checkpoint_id: str
     status: str
     multi_parts_tags: Dict[str, Any]
 
 
 # PUT /checkpoint
 def update_checkpoint_api(raw_event, context):
-    event = UpdateCheckPointEvent(**raw_event)
+    event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
+    checkpoint_id = raw_event['pathParameters']['id']
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Origin': '*',
@@ -331,14 +318,13 @@ def update_checkpoint_api(raw_event, context):
     }
     try:
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
-            'id': event.checkpoint_id
+            'id': checkpoint_id
         })
         if raw_checkpoint is None or len(raw_checkpoint) == 0:
-            return {
-                'statusCode': 500,
-                'headers': headers,
-                'error': f'checkpoint not found with id {event.checkpoint_id}'
-            }
+            return bad_request(
+                message=f'checkpoint not found with id {checkpoint_id}',
+                headers=headers
+            )
 
         checkpoint = CheckPoint(**raw_checkpoint)
         new_status = CheckPointStatus[event.status]
@@ -352,9 +338,7 @@ def update_checkpoint_api(raw_event, context):
             field_name='checkpoint_status',
             value=new_status
         )
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': checkpoint.id,
                 'type': checkpoint.checkpoint_type,
@@ -363,10 +347,7 @@ def update_checkpoint_api(raw_event, context):
                 'params': checkpoint.params
             }
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'msg': str(e)
-        }
+        return internal_server_error(headers=headers, message=str(e))

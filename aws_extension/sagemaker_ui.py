@@ -534,7 +534,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         api_key = get_variable_from_json('api_token')
         logger.info(f'!!!!!!api_gateway_url {api_gateway_url}')
 
-        url = str(api_gateway_url) + "checkpoint"
+        url = str(api_gateway_url) + "checkpoints"
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
@@ -542,7 +542,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         try:
             response.raise_for_status()
-            json_response = response.json()
+            json_response = response.json()['data']
             logger.debug(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
@@ -577,12 +577,11 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             )
 
             payload = {
-                "checkpoint_id": checkpoint_id,
                 "status": "Active",
                 "multi_parts_tags": {local_tar_path: multiparts_tags}
             }
             # Start creating model on cloud.
-            response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+            response = requests.put(url=f"{url}/{checkpoint_id}", json=payload, headers={'x-api-key': api_key})
             s3_input_path = s3_base
             logger.debug(response)
 
