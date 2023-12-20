@@ -231,6 +231,7 @@ def main(s3_input_path, s3_output_path, params):
     # s3_data_path_list = params["s3_data_path_list"]
     # s3_class_data_path_list = params["s3_class_data_path_list"]
     prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
+    print(f"s3_model_path {s3_model_path} model_name:{model_name} s3_input_path: {s3_input_path} s3_data_path_list:{s3_data_path_list} s3_class_data_path_list:{s3_class_data_path_list}")
     os.system("df -h")
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
@@ -279,18 +280,16 @@ if __name__ == "__main__":
             if start_idx != -1 and end_idx != -1:
                 params_str = arg[start_idx:end_idx + 1]
                 try:
-                    params_str = json.dumps(params_str.replace("'", "\""))
+                    params_str = json.dumps(params_str.replace(" ", "").replace("\n", "").replace("'", "\""))
                     print(params_str)
                     param_array = params_str.split(",")
                     if not param_array:
                         print("param_array is None")
                         break
                     for kv in param_array:
-                        kv_array = kv.split(":")
-                        if not kv_array or len(kv_array) < 2:
-                            print("kv_array error")
-                            break
-                        params[kv_array[0].strip()] = kv_array[1].strip()
+                        split_result = kv.split(":", 1)
+                        params[split_result[0].strip()] = split_result[1].strip()
+
                 except json.JSONDecodeError as e:
                     print(f"Error decoding JSON: {e}")
         if arg.strip().startswith("s3-input-path"):
