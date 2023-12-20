@@ -36,7 +36,7 @@ export class SagemakerEndpointEvents {
 
   private iamRole(): Role {
 
-    const newRole = new Role(this.scope, `${this.baseId}-eb-role`, {
+    const newRole = new Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
     });
 
@@ -84,8 +84,7 @@ export class SagemakerEndpointEvents {
 
   private createEndpointEventBridge() {
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-delete-endpoints`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-function`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -101,7 +100,7 @@ export class SagemakerEndpointEvents {
       layers: [this.layer],
     });
 
-    const rule = new Rule(this.scope, 'SageMakerEndpointStateChangeRule', {
+    const rule = new Rule(this.scope, `${this.baseId}-rule`, {
       eventPattern: {
         source: ['aws.sagemaker'],
         detailType: ['SageMaker Endpoint State Change'],

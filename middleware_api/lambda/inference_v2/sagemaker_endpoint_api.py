@@ -1,18 +1,19 @@
+import json
 import logging
 import os
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 
 import boto3
-import json
-from datetime import datetime
 from botocore.exceptions import BotoCoreError, ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import forbidden, ok, internal_server_error, bad_request
 from multi_users._types import PARTITION_KEYS, Role
 from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
-from _types import EndpointDeploymentJob
+
 from _enums import EndpointStatus
+from _types import EndpointDeploymentJob
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -36,9 +37,10 @@ def list_all_sagemaker_endpoints(event, ctx):
     username = None
     parameters = event['queryStringParameters']
     if parameters:
-        endpoint_deployment_job_id = parameters['endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
-                                                                          parameters[
-                                                                              'endpointDeploymentJobId'] else None
+        endpoint_deployment_job_id = parameters[
+            'endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
+                                          parameters[
+                                              'endpointDeploymentJobId'] else None
         username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
     if endpoint_deployment_job_id:
@@ -107,25 +109,37 @@ def delete_sagemaker_endpoints(raw_event, ctx):
 
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
         if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
+                    'sagemaker_endpoint']):
             return forbidden(message=f"User {event.username} has no permission to delete a Sagemaker endpoint")
 
-        for endpoint in event.endpoint_name_list:
+        for endpoint_name in event.endpoint_name_list:
+
             try:
-                delete_response = sagemaker.delete_endpoint(EndpointName=endpoint)
-                logger.info(delete_response)
+                # delete sagemaker endpoint
+                endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
+                if endpoint:
+                    logger.info("endpoint")
+                    logger.info(endpoint)
+                    sagemaker.delete_endpoint(EndpointName=endpoint_name)
+                    config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+                    if config:
+                        logger.info("config")
+                        logger.info(config)
+                        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+                        for ProductionVariant in config['ProductionVariants']:
+                            sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
 
-                short_id = endpoint.split('-')[2]
-
-                sagemaker.delete_model(ModelName=f"infer-model-{short_id}")
-
-                sagemaker.delete_endpoint_config(EndpointConfigName=f"infer-config-{short_id}")
-
+                # delete ddb item
+                endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
+                if endpoint_item:
+                    ddb_service.delete_item(
+                        table=sagemaker_endpoint_table,
+                        key={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['s']},
+                    )
             except (BotoCoreError, ClientError) as error:
-                if error.response['Error']['Code'] == 'ResourceNotFound':
-                    logger.info("Endpoint not found, no need to delete.")
-                else:
-                    logger.error(error)
+                logger.error(error)
+                return internal_server_error(message=str(error))
 
         return ok(message="Endpoints Deleted")
     except Exception as e:
@@ -171,7 +185,8 @@ def sagemaker_endpoint_create_api(raw_event, ctx):
         # check if roles have already linked to an endpoint?
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions['sagemaker_endpoint']):
+                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
+                    'sagemaker_endpoint']):
             return bad_request(message=f"Creator {event.creator} has no permission to create Sagemaker")
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
@@ -294,7 +309,8 @@ def _create_sagemaker_model(name, image_url, model_data_url):
     logger.info(f"Successfully created model resource: {response}")
 
 
-def _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name, initial_instance_count, instance_type):
+def _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
+                                      instance_type):
     async_inference_config = {
         "OutputConfig": {
             "S3OutputPath": s3_output_path,
