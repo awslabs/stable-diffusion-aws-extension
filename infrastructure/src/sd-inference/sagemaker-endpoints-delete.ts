@@ -61,7 +61,9 @@ export class DeleteSagemakerEndpointsApi {
       actions: [
         'sagemaker:DeleteModel',
         'sagemaker:DeleteEndpoint',
+        'sagemaker:DescribeEndpoint',
         'sagemaker:DeleteEndpointConfig',
+        'sagemaker:DescribeEndpointConfig',
       ],
       resources: [
         `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:model/*`,
