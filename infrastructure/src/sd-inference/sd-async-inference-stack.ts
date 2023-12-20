@@ -134,7 +134,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new SagemakerEndpointEvents(
-      this, 'sd-infer-endpoint-events',
+      this, 'EndpointEvents',
         <SagemakerEndpointEventsProps>{
           commonLayer: props.commonLayer,
           endpointDeploymentTable: sd_endpoint_deployment_job_table,
@@ -342,23 +342,10 @@ export class SDAsyncInferenceStack extends NestedStack {
       apiKeyRequired: true,
     });
 
-    const list_inference_jobs = inference.addResource(
-      'list-inference-jobs',
-    );
-    list_inference_jobs.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
     const query_inference_jobs = inference.addResource(
       'query-inference-jobs',
     );
     query_inference_jobs.addMethod('POST', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    const get_endpoint_deployment_job = inference.addResource(
-      'get-endpoint-deployment-job',
-    );
-    get_endpoint_deployment_job.addMethod('GET', txt2imgIntegration, {
       apiKeyRequired: true,
     });
 
@@ -385,47 +372,6 @@ export class SDAsyncInferenceStack extends NestedStack {
       'get-controlnet-model-list',
     );
     get_controlnet_model_list.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-
-    // fixme: this api is actually no needed anymore, delete later
-    const test_output = inference.addResource('generate-s3-presigned-url-for-uploading');
-    // test_output.addCorsPreflight({
-    //   allowOrigins: apigw.Cors.ALL_ORIGINS,
-    //   allowMethods: apigw.Cors.ALL_METHODS,
-    //   allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'],
-    // });
-
-    test_output.addMethod('GET', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
-    const testResource = inference.addResource('test-connection');
-    const mockIntegration = new apigw.MockIntegration({
-      integrationResponses: [
-        {
-          statusCode: '200',
-          responseTemplates: {
-            'application/json': JSON.stringify({
-              message: 'Success',
-            }),
-          },
-        },
-      ],
-      passthroughBehavior: apigw.PassthroughBehavior.NEVER,
-      requestTemplates: {
-        'application/json': '{"statusCode": 200}',
-      },
-    });
-
-    testResource.addMethod('GET', mockIntegration, {
-      methodResponses: [
-        {
-          statusCode: '200',
-          responseModels: {
-            'application/json': apigw.Model.EMPTY_MODEL,
-          },
-        },
-      ],
       apiKeyRequired: true,
     });
 

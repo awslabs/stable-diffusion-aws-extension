@@ -14,7 +14,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 
 export interface CreateTrainJobApiProps{
-  router: aws_apigateway.Resource[];
+  router: aws_apigateway.Resource;
   httpMethod: string;
   modelTable: aws_dynamodb.Table;
   trainTable: aws_dynamodb.Table;
@@ -34,7 +34,7 @@ export class CreateTrainJobApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly httpMethod: string;
-  private readonly router: aws_apigateway.Resource[];
+  private readonly router: aws_apigateway.Resource;
   private readonly trainTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
@@ -109,8 +109,7 @@ export class CreateTrainJobApi {
   }
 
   private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-handler`, <PythonFunctionProps>{
-      functionName: `${this.id}-model`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -132,18 +131,13 @@ export class CreateTrainJobApi {
     const createTrainJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    for (let routeItem of this.router) {
-      routeItem.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
+
+      this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        methodResponses: [{
-          statusCode: '200',
-        }],
       });
-    }
 
     return lambdaFunction;
   }

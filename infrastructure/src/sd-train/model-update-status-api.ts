@@ -150,8 +150,7 @@ export class UpdateModelStatusRestApi {
   }
 
   private updateModelJobApi() {
-    const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-handler`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-update-model`,
+    const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -173,16 +172,13 @@ export class UpdateModelStatusRestApi {
     const updateModelLambdaIntegration = new apigw.LambdaIntegration(
       updateModelLambda,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-      }],
-    });
+    this.router.addResource('{id}')
+        .addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
+          apiKeyRequired: true,
+        });
   }
 }
 

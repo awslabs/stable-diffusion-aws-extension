@@ -39,7 +39,7 @@ export class MultiUsersStack extends NestedStack {
       srcRoot: this.srcRoot,
     });
 
-    new ListAllRolesApi(scope, 'roleListAll', {
+    new ListAllRolesApi(scope, 'ListRoles', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,

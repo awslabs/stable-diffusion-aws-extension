@@ -814,28 +814,6 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 #     # placeholder for saving txt2img config
 #     pass
 
-def displayEndpointInfo(input_string: str):
-    logger.debug(f"selected value is {input_string}")
-    if not input_string:
-        return
-    parts = input_string.split('+')
-
-    if len(parts) < 2:
-        return plaintext_to_html("")
-
-    endpoint_job_id, status = parts[0], parts[1]
-
-    if status == 'failed':
-        response = server_request(f'inference/get-endpoint-deployment-job?jobID={endpoint_job_id}')
-        # Do something with the response
-        r = response.json()
-        if "error" in r:
-            return plaintext_to_html(r["error"])
-        else:
-            return plaintext_to_html(r["EndpointDeploymentJobId"])
-    else:
-        return plaintext_to_html("")
-
 
 def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
     return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'embeddings', False)
