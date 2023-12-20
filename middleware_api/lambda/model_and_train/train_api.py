@@ -205,7 +205,7 @@ def update_train_job_api(event, context):
     if 'status' in body and 'train_job_id' in body and body['status'] == TrainJobStatus.Training.value:
         return _start_train_job(body['train_job_id'])
 
-    return ok(message=f'not implemented for train job status {event["status"]}')
+    return ok(message=f'not implemented for train job status {body["status"]}')
 
 
 def _start_train_job(train_job_id: str):
