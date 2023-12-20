@@ -122,7 +122,7 @@ def async_prepare_for_training_on_sagemaker(
     if url is None or api_key is None:
         logger.debug("Url or API-Key is not setting.")
         return
-    url += "train"
+    url += "trainings"
     upload_files = []
     db_config_tar = f"db_config.tar"
     # os.system(f"tar cvf {db_config_tar} {db_config_path}")
@@ -181,7 +181,7 @@ def async_prepare_for_training_on_sagemaker(
     response.raise_for_status()
     json_response = response.json()
     print(json_response)
-    for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
+    for local_tar_path, s3_presigned_url in response.json()['data']["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
 
@@ -229,7 +229,7 @@ def cloud_train(
     if url is None or api_key is None:
         logger.debug("Url or API-Key is not setting.")
         return
-    url += "train"
+    url += "trainings"
     try:
         # Get data path and class data path.
         print(f"Start cloud training {train_model_name}")
@@ -269,10 +269,9 @@ def cloud_train(
         job_id = response["job"]["id"]
 
         payload = {
-            "train_job_id": job_id,
             "status": "Training"
         }
-        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.put(url=f"{url}/{job_id}", json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
         print(f"Start training response:\n{response.json()}")
         integral_check = True
@@ -283,10 +282,9 @@ def cloud_train(
             if job_id:
                 gr.Error(f'train job {train_model_name} failed')
                 payload = {
-                    "train_job_id": job_id,
                     "status": "Fail"
                 }
-                response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                response = requests.put(url=f"{url}/{job_id}", json=payload, headers={'x-api-key': api_key})
                 print(f'training job failed but updated the job status {response.json()}')
 
 
@@ -319,13 +317,13 @@ def get_train_job_list(pr: gr.Request):
 
     table = []
     try:
-        url += "trains?types=Stable-diffusion&types=Lora"
+        url += "trainings?types=Stable-diffusion&types=Lora"
         encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}',
         }).json()
-        if 'trainJobs' in response:
+        if 'trainJobs' in response['data']:
             response['trainJobs'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
             for trainJob in response['trainJobs']:
                 table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
