@@ -78,7 +78,7 @@ export class DeleteUsersApi {
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'delete_users.py',
-      handler: 'delete_user',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,
