@@ -6,24 +6,22 @@ import sys
 import time
 import pickle
 import logging
-import ast
-import base64
-logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
-logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
-import boto3
+from utils_cn import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, \
+    upload_folder_to_s3_by_tar
+from utils_cn import get_bucket_name_from_s3_path, get_path_from_s3_path
 
-sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
-sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
-from utils import download_file_from_s3, download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3, upload_folder_to_s3_by_tar
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
-
-os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
-from utils import tar, mv
+from utils_cn import tar, mv
+
+os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
+sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
 
 def sync_status_from_s3_json(bucket_name, webui_status_file_path, sagemaker_status_file_path):
     while True:
@@ -45,6 +43,7 @@ def sync_status_from_s3_json(bucket_name, webui_status_file_path, sagemaker_stat
             json.dump(status.__dict__, sagemaker_status_file)
         upload_file_to_s3('sagemaker_status.json', bucket_name, sagemaker_status_file_path)
 
+
 def sync_status_from_s3_in_sagemaker(bucket_name, webui_status_file_path, sagemaker_status_file_path):
     while True:
         time.sleep(1)
@@ -65,17 +64,20 @@ def sync_status_from_s3_in_sagemaker(bucket_name, webui_status_file_path, sagema
             pickle.dump(status, sagemaker_status_file)
         upload_file_to_s3('sagemaker_status.pickle', bucket_name, sagemaker_status_file_path)
 
+
 def train(model_dir):
     start_training(model_dir)
 
-def check_and_upload(local_path, bucket, s3_path):
+
+def check_and_upload(local_path, bucket, s3_path, region):
     while True:
         time.sleep(1)
         if os.path.exists(local_path):
             print(f'upload {s3_path} to {local_path}')
-            upload_folder_to_s3_by_tar(local_path, bucket, s3_path)
+            upload_folder_to_s3_by_tar(local_path, bucket, s3_path, region)
         else:
             print(f'{local_path} is not exist')
+
 
 def upload_model_to_s3(model_name, s3_output_path):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
@@ -85,7 +87,8 @@ def upload_model_to_s3(model_name, s3_output_path):
     print(f"Upload check point to s3 {local_path} {output_bucket_name} {s3_output_path}")
     upload_folder_to_s3_by_tar(local_path, output_bucket_name, s3_output_path)
 
-def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
+
+def upload_model_to_s3_v2(model_name, s3_output_path, model_type, region):
     output_bucket_name = get_bucket_name_from_s3_path(s3_output_path)
     s3_output_path = get_path_from_s3_path(s3_output_path).rstrip("/")
     logger.info("Upload the model file to s3.")
@@ -109,7 +112,7 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
                     # os.system(tar_command)
                     tar(mode='c', archive=output_tar, sfiles=[safetensors, yaml], verbose=True)
                     print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
-                    upload_file_to_s3(output_tar, output_bucket_name, os.path.join(s3_output_path, model_name))
+                    upload_file_to_s3(output_tar, output_bucket_name, os.path.join(s3_output_path, model_name), region)
                 elif model_type == "Lora":
                     output_tar = file
                     tar_command = f"tar cvf {output_tar} {safetensors}"
@@ -117,10 +120,10 @@ def upload_model_to_s3_v2(model_name, s3_output_path, model_type):
                     # os.system(tar_command)
                     tar(mode='c', archive=output_tar, sfiles=[safetensors], verbose=True)
                     print(f"Upload check point to s3 {output_tar} {output_bucket_name} {s3_output_path}")
-                    upload_file_to_s3(output_tar, output_bucket_name, s3_output_path)
+                    upload_file_to_s3(output_tar, output_bucket_name, s3_output_path, region)
 
 
-def download_data(data_list, s3_data_path_list, s3_input_path):
+def download_data(data_list, s3_data_path_list, s3_input_path, region):
     for data, data_tar in zip(data_list, s3_data_path_list):
         if len(data) == 0:
             continue
@@ -137,19 +140,20 @@ def download_data(data_list, s3_data_path_list, s3_input_path):
             input_path = os.path.join(get_path_from_s3_path(s3_input_path), data_tar)
             local_tar_path = data_tar
             logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir} {local_tar_path}")
-            download_folder_from_s3_by_tar(input_bucket_name, input_path, local_tar_path, target_dir)
+            download_folder_from_s3_by_tar(input_bucket_name, input_path, local_tar_path, target_dir, region)
 
-def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list):
+
+def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list, region):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
     s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar')
     logger.info(f"Download src model from s3: {model_bucket_name} {s3_model_path} {model_name}.tar")
     print(f"Download src model from s3: model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
-    download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar')
+    download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar', region)
 
     input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
     input_path = os.path.join(get_path_from_s3_path(s3_input_path), "db_config.tar")
     logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
-    download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar")
+    download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar", region)
     download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")
@@ -164,8 +168,9 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
         data_list.append(concept["instance_data_dir"])
         class_data_list.append(concept["class_data_dir"])
     # hack_db_config(db_config, db_config_path, model_name, data_tar_list, class_data_tar_list)
-    download_data(data_list, data_tar_list, s3_input_path)
-    download_data(class_data_list, class_data_tar_list, s3_input_path)
+    download_data(data_list, data_tar_list, s3_input_path, region)
+    download_data(class_data_list, class_data_tar_list, s3_input_path, region)
+
 
 def prepare_for_training_v2(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
@@ -211,16 +216,19 @@ def prepare_for_training_v2(s3_model_path, model_name, s3_input_path, s3_data_pa
         logger.info(f"Download data from s3 {input_bucket_name} {input_path} to {target_dir}")
         download_folder_from_s3_by_tar(input_bucket_name, input_path, target_dir)
 
+
 def sync_status(job_id, bucket_name, model_dir):
     local_samples_dir = f'models/dreambooth/{model_dir}/samples'
-    upload_thread = threading.Thread(target=check_and_upload, args=(local_samples_dir, bucket_name, f'aigc-webui-test-samples/{job_id}'))
+    upload_thread = threading.Thread(target=check_and_upload, args=(local_samples_dir, bucket_name,
+                                                                    f'aigc-webui-test-samples/{job_id}'))
     upload_thread.start()
     sync_status_thread = threading.Thread(target=sync_status_from_s3_in_sagemaker,
-                                        args=(bucket_name, f'aigc-webui-test-status/{job_id}/webui_status.pickle',
-                                              f'aigc-webui-test-status/{job_id}/sagemaker_status.pickle'))
+                                          args=(bucket_name, f'aigc-webui-test-status/{job_id}/webui_status.pickle',
+                                                f'aigc-webui-test-status/{job_id}/sagemaker_status.pickle'))
     sync_status_thread.start()
 
-def main(s3_input_path, s3_output_path, params):
+
+def main(s3_input_path, s3_output_path, params, region):
     os.system("df -h")
     # import launch
     # launch.prepare_environment()
@@ -232,7 +240,7 @@ def main(s3_input_path, s3_output_path, params):
     # s3_data_path_list = params["s3_data_path_list"]
     # s3_class_data_path_list = params["s3_class_data_path_list"]
     print(f"s3_model_path {s3_model_path} model_name:{model_name} s3_input_path: {s3_input_path} s3_data_path_list:{s3_data_path_list} s3_class_data_path_list:{s3_class_data_path_list}")
-    prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list)
+    prepare_for_training(s3_model_path, model_name, s3_input_path, s3_data_path_list, s3_class_data_path_list, region)
     os.system("df -h")
     # sync_status(job_id, bucket_name, model_dir)
     train(model_name)
@@ -241,31 +249,6 @@ def main(s3_input_path, s3_output_path, params):
     upload_model_to_s3_v2(model_name, s3_output_path, model_type)
     os.system("df -h")
 
-def test():
-    {'s3_class_data_path_list': [''], 'class_data_tar_list': [''], 'model_name': 'ceshijuan13',
-     's3_data_path_list': ['s3://jingyicnnx2023120502/dataset/huahua'], 'model_type': 'Lora',
-     's3_model_path': 's3://jingyicnnx2023120502/Stable-diffusion/model/ceshijuan13/b0446945-adf8-4cc3-b3e9-7895479033f2/output',
-     'training_instance_type': '', 'data_tar_list': ['s3://jingyicnnx2023120502/dataset/huahua']}
-
-    model_name = "qiaohu-1-1"
-    s3_model_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/model/qiaohu-1-1/066dc5e6-1ed7-470a-ab9e-aa9e01cfe5e4/output"
-    s3_input_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/train/qiaohu-1-1/546290f8-9b0c-460b-be28-74a4ccad9a63/input"
-    s3_output_path = "s3://stable-diffusion-aws-5c2b588b-2023-05-19-02/Stable-diffusion/model/qiaohu-1-1/066dc5e6-1ed7-470a-ab9e-aa9e01cfe5e4/output"
-    training_params = {
-        "training_params": {
-            "model_name": model_name,
-            "s3_model_path": s3_model_path,
-            "data_tar_list": ["data_images-75.tar"],
-            "class_data_tar_list": [""],
-        }
-    }
-    main(s3_input_path, s3_output_path, training_params)
-
-def parse_params(args):
-    s3_input_path = args.s3_input_path
-    s3_output_path = args.s3_output_path
-    params = json.loads(args.params)
-    return s3_input_path, s3_output_path, params
 
 if __name__ == "__main__":
     print(sys.argv)
@@ -305,4 +288,5 @@ if __name__ == "__main__":
     print(training_params)
     print(s3_input_path)
     print(s3_output_path)
-    main(s3_input_path, s3_output_path, training_params)
+    region = 'cn-northwest-1'
+    main(s3_input_path, s3_output_path, training_params, region)
