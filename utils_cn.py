@@ -1,18 +1,11 @@
 import logging
 import os
 import boto3
-import botocore
-import boto3.s3.transfer as s3transfer
 import sys
-from urllib.parse import urlparse
-import requests
-import json
-import gradio as gr
 
 import tarfile
 import shutil
 from pathlib import Path
-import psutil
 
 sys.path.append(os.getcwd())
 LOGGING_LEVEL = logging.DEBUG
@@ -54,40 +47,8 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None, regio
     return True
 
 
-def upload_file_to_s3_by_presign_url(local_path, s3_presign_url):
-    response = requests.put(s3_presign_url, open(local_path, "rb"))
-    response.raise_for_status()
-
-
-def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_size):
-    integral_uploaded = False
-    with open(local_path, "rb") as f:
-        parts = []
-        try:
-            for i, signed_url in enumerate(signed_urls):
-                file_data = f.read(part_size)
-                response = requests.put(signed_url, data=file_data)
-                response.raise_for_status()
-                etag = response.headers['ETag']
-                parts.append({
-                    'ETag': etag,
-                    'PartNumber': i + 1
-                })
-                print(f'model upload part {i+1}: {response}')
-
-            integral_uploaded = True
-            return parts
-        except Exception as e:
-            print(e)
-            gr.Error(f'Upload file{local_path} failed, please try again. If still not work, contact your admin')
-        finally:
-            if not integral_uploaded:
-                gr.Error(f'Upload file {local_path} not complete, please try again or create new one.')
-                raise Exception('failed at multipart')
-
-
-def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
-    s3_resource = boto3.resource('s3')
+def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path, region):
+    s3_resource = boto3.resource('s3', region_name=region)
     bucket = s3_resource.Bucket(bucket_name)
     for obj in bucket.objects.filter(Prefix=s3_folder_path):
         obj_dirname = os.sep.join(os.path.dirname(obj.key).split("/")[1:])
@@ -99,29 +60,10 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
 
 
 def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir=".", region=None):
-    # caller_identity = boto3.client('sts').get_caller_identity()
-    # admin_account_id = caller_identity.get('Account')
-    # admin_region = boto3.session.Session().region_name
-    # partition = caller_identity['Arn'].split(':')[1]
     s3_client = boto3.client(service_name='s3', region_name=region)
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
-    # tar_name = os.path.basename(s3_tar_path)
-    # os.system(f"tar xvf {local_tar_path} -C {target_dir}")
     tar(mode='x', archive=local_tar_path, verbose=True, change_dir=target_dir)
-    # tar = tarfile.open(local_tar_path, "r")
-    # tar.extractall()
-    # tar.close()
-    # os.system(f"rm {local_tar_path}")
     rm(local_tar_path, recursive=True)
-
-
-def download_file_from_s3(bucket_name, s3_file_path, local_file_path, region):
-    s3_client = boto3.client(service_name='s3', region_name=region)
-    s3_client.download_file(bucket_name, s3_file_path, local_file_path)
-
-def get_bucket_name_from_s3_url(s3_path) -> str:
-    o = urlparse(s3_path, allow_fragments=False)
-    return o.netloc
 
 
 def get_bucket_name_from_s3_path(s3_path) -> str:
@@ -132,85 +74,6 @@ def get_bucket_name_from_s3_path(s3_path) -> str:
 def get_path_from_s3_path(s3_path) -> str:
     s3_path = s3_path.replace("s3://", "")
     return "/".join(s3_path.split("/")[1:])
-
-
-def split_s3_path(s3_path):
-    path_parts = s3_path.replace("s3://", "").split("/")
-    bucket = path_parts.pop(0)
-    key = "/".join(path_parts)
-    return bucket, key
-
-
-def read_from_s3(s3_path, region):
-    s3_client = boto3.client(service_name='s3', region_name=region)
-    bucket, key = split_s3_path(s3_path)
-    s3_resp = s3.get_object(
-        Bucket=bucket,
-        Key=key,
-    )
-
-    if s3_resp['ContentLength'] > 0:
-        return s3_resp['Body'].read()
-
-    raise Exception(f'no content for file {s3_path}')
-
-
-def fast_upload(session, bucketname, s3dir, filelist, progress_func=None, workers=10):
-    # timer = Timer()
-    botocore_config = botocore.config.Config(max_pool_connections=workers)
-    s3client = session.client('s3', config=botocore_config)
-    transfer_config = s3transfer.TransferConfig(
-        use_threads=True,
-        max_concurrency=workers,
-    )
-    s3t = s3transfer.create_transfer_manager(s3client, transfer_config)
-    # timer.record("init")
-    for src in filelist:
-        dst = os.path.join(s3dir, os.path.basename(src))
-        s3t.upload(
-            src, bucketname, dst,
-            subscribers=[
-                s3transfer.ProgressCallbackInvoker(progress_func),
-            ] if progress_func else None,
-        )
-    s3t.shutdown()  # wait for all the upload tasks to finish
-    # timer.record("upload")
-    # print(timer.summary())
-
-
-def save_variable_to_json(variable_name, variable_value, filename='sagemaker_ui.json'):
-    data = {}
-
-    if os.path.exists(filename):
-        with open(filename, 'r') as json_file:
-            data = json.load(json_file)
-
-    data[variable_name] = variable_value
-
-    with open(filename, 'w') as json_file:
-        json.dump(data, json_file)
-
-def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
-    if not os.path.exists(filename):
-        initial_data = {
-            "api_gateway_url": "",
-            "api_token": "",
-            "username": ""
-        }
-        with open(filename, 'w') as json_file:
-            json.dump(initial_data, json_file)
-
-    with open(filename, 'r') as json_file:
-        data = json.load(json_file)
-
-    variable_value = data.get(variable_name)
-
-    return variable_value
-
-
-"""
-    Description: Below functions are used to replace existing shell command implementation with os.system method, which is not os agonostic and not recommended.
-"""
 
 
 def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
@@ -298,48 +161,6 @@ def rm(path, force=False, recursive=False):
             raise e
 
 
-def cp(src, dst, recursive=False, dereference=False, preserve=True):
-    """
-    Description:
-        Copy a file or directory from source path to destination path.
-    Args:
-        src (str): Source file or directory path.
-        dst (str): Destination file or directory path.
-        recursive (bool): If True, copy directory and its contents recursively. Default is False.
-        dereference (bool): If True, always dereference symbolic links. Default is False.
-        preserve (bool): If True, preserve file metadata. Default is True.
-    Usage:
-        src = "source/file/path.txt"
-        dst = "destination/file/path.txt"
-
-        # Copy the file
-        cp(src, dst)
-
-        # Copy a directory recursively and dereference symlinks
-        cp("source/directory", "destination/directory", recursive=True, dereference=True)
-    """
-    src_path = Path(src)
-    dst_path = Path(dst)
-    try:
-        if dereference:
-            src_path = src_path.resolve()
-
-        if src_path.is_dir() and recursive:
-            if preserve:
-                shutil.copytree(src_path, dst_path, copy_function=shutil.copy2, symlinks=not dereference)
-            else:
-                shutil.copytree(src_path, dst_path, symlinks=not dereference)
-        elif src_path.is_file():
-            if preserve:
-                shutil.copy2(src_path, dst_path)
-            else:
-                shutil.copy(src_path, dst_path)
-        else:
-            raise ValueError("Source must be a file or a directory with recursive=True")
-    except shutil.SameFileError:
-        print("Source and destination represents the same file.")
-
-
 def mv(src, dest, force=False):
     """
     Description:
@@ -379,57 +200,12 @@ def mv(src, dest, force=False):
         raise FileNotFoundError(f"Source path '{src}' does not exist")
 
 
-def format_size(size, human_readable):
-    if human_readable:
-        for unit in ['B', 'K', 'M', 'G', 'T', 'P']:
-            if size < 1024:
-                return f"{size:.1f}{unit}"
-            size /= 1024
-    else:
-        return str(size)
-
-
-def df(show_all=False, human_readable=False):
-    """
-    Description:
-        Get disk usage statistics.
-    Args:
-        show_all (bool): If True, include all filesystems. Default is False.
-        human_readable (bool): If True, format sizes in human readable format. Default is False.
-    Usage:
-        filesystems = df(show_all=True, human_readable=True)
-        for filesystem in filesystems:
-            print(f"Filesystem: {filesystem['filesystem']}")
-            print(f"Total: {filesystem['total']}")
-            print(f"Used: {filesystem['used']}")
-            print(f"Free: {filesystem['free']}")
-            print(f"Percent: {filesystem['percent']}%")
-            print(f"Mountpoint: {filesystem['mountpoint']}")
-    """
-    partitions = psutil.disk_partitions(all=show_all)
-    result = []
-
-    for partition in partitions:
-        usage = psutil.disk_usage(partition.mountpoint)
-        partition_info = {
-            'filesystem': partition.device,
-            'total': format_size(usage.total, human_readable),
-            'used': format_size(usage.used, human_readable),
-            'free': format_size(usage.free, human_readable),
-            'percent': usage.percent,
-            'mountpoint': partition.mountpoint,
-        }
-        result.append(partition_info)
-
-    return result
-
-
 if __name__ == '__main__':
     import sys
 
     # upload_file_to_s3(sys.argv[1], 'aws-gcr-csdc-atl-exp-us-west-2', sys.argv[2])
     # fast_upload(boto3.Session(), 'aws-gcr-csdc-atl-exp-us-west-2', sys.argv[2], [sys.argv[1]])
     upload_folder_to_s3_by_tar('models/dreambooth/sagemaker_test/samples', 'aws-gcr-csdc-atl-exp-us-west-2',
-                               'aigc-webui-test-samples')
+                               'aigc-webui-test-samples', '')
     download_folder_from_s3_by_tar('aws-gcr-csdc-atl-exp-us-west-2', 'aigc-webui-test-samples/samples.tar',
                                    'samples.tar')
