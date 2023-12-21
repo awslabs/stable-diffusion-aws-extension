@@ -57,8 +57,6 @@ def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, tar
     local_tar_file = os.path.join(target_dir, os.path.basename(local_tar_path))
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_file)
     print(f"local_tar_path: {local_tar_path} target_dir: {target_dir}")
-    target_dir = "."
-    print(f"local_tar_path: {local_tar_path} target_dir: {target_dir}")
     tar(mode='x', archive=local_tar_path, verbose=True, change_dir=target_dir)
     # rm(local_tar_path, recursive=True)
 

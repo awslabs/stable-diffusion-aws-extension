@@ -82,12 +82,12 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path.strip()), f'{model_name}.tar')
     logger.info(f"Download src model from s3: {model_bucket_name} {s3_model_path} {model_name}.tar")
     print(f"Download src model from s3: region__{region} model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
-    download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar', region)
+    download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar',  ".", region)
 
     input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
     input_path = os.path.join(get_path_from_s3_path(s3_input_path.strip()), "db_config.tar")
     logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
-    download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar", region)
+    download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar", ".", region)
     download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
     target_db_config_path = f"models/dreambooth/{model_name}/db_config.json"
     logger.info(f"Move db_config to correct position {download_db_config_path} {target_db_config_path}")

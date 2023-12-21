@@ -41,7 +41,8 @@ RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/r
 COPY inference/clip_init.py /opt/ml/code
 RUN python /opt/ml/code/clip_init.py
 
-RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
+RUN pip install -r <(sed 's/bitsandbytes==0.35.4/bitsandbytes-cuda111==0.26.0.post2/' /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt) && \
+    #pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
     pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt
 
 RUN wget https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/stable-diffusion-public-resources/dependencies/opencv_python-4.8.1.78-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl && \
