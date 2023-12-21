@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 LOGGING_LEVEL = logging.DEBUG
 
 
-def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path, region):
+def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path, region=None):
     tar_name = f"{os.path.basename(local_folder_path)}.tar"
     # os.system(f'tar cvf {tar_name} {local_folder_path}')
     tar(mode='c', archive=tar_name, sfiles=local_folder_path, verbose=True)
@@ -21,7 +21,10 @@ def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path, r
     #         local_file_path = os.path.join(root, file)
     #         tar.add(local_file_path)
     # tar.close()
-    s3_client = boto3.client(service_name='s3', region_name=region)
+    if region:
+        s3_client = boto3.client(service_name='s3', region_name=region)
+    else:
+        s3_client = boto3.client('s3')
     s3_client.upload_file(tar_name, bucket_name, os.path.join(s3_folder_path, tar_name))
     # os.system(f"rm {tar_name}")
     rm(tar_name, recursive=True)
@@ -38,7 +41,10 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None, regio
 
     # Upload the file
     try:
-        s3_client = boto3.client(service_name='s3', region_name=region)
+        if region:
+            s3_client = boto3.client(service_name='s3', region_name=region)
+        else:
+            s3_client = boto3.client('s3')
         s3_client.upload_file(file_name, bucket, object_name)
         print(f"File {file_name} uploaded to {bucket}/{object_name}")
     except Exception as e:
@@ -47,8 +53,11 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None, regio
     return True
 
 
-def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path, region):
-    s3_resource = boto3.resource('s3', region_name=region)
+def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path, region=None):
+    if region:
+        s3_resource = boto3.resource(service_name='s3', region_name=region)
+    else:
+        s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket(bucket_name)
     for obj in bucket.objects.filter(Prefix=s3_folder_path):
         obj_dirname = os.sep.join(os.path.dirname(obj.key).split("/")[1:])
@@ -60,7 +69,10 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path, regi
 
 
 def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir=".", region=None):
-    s3_client = boto3.client(service_name='s3', region_name=region)
+    if region:
+        s3_client = boto3.client(service_name='s3', region_name=region)
+    else:
+        s3_client = boto3.client('s3')
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
     tar(mode='x', archive=local_tar_path, verbose=True, change_dir=target_dir)
     rm(local_tar_path, recursive=True)
