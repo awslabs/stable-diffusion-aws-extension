@@ -6,11 +6,11 @@ import time
 
 import sagemaker
 
-from _types import TrainJob, TrainJobStatus, Model, CheckPoint
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common_tools import DecimalEncoder
+from lib._types import TrainJob, TrainJobStatus, Model, CheckPoint
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')

@@ -4,10 +4,10 @@ import os
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from _types import CheckPoint, CheckPointStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
 from common_tools import complete_multipart_upload
+from lib._types import CheckPoint, CheckPointStatus
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')

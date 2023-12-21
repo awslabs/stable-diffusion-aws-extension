@@ -8,11 +8,11 @@ from typing import Any, List, Optional
 
 import boto3
 
-from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, not_found, forbidden, internal_server_error
 from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, save_json_to_file
+from lib._types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from multi_users.utils import get_permissions_by_username, get_user_roles
 
 bucket_name = os.environ.get('S3_BUCKET')

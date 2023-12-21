@@ -1,10 +1,10 @@
 import logging
 import os
 
-from _types import Model
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from common.stepfunction_service.client import StepFunctionUtilsService
+from lib._types import Model
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')

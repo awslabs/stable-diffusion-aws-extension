@@ -6,11 +6,12 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+from model_and_train._types import CheckPoint, CheckPointStatus
+
 from _types import InferenceJob, EndpointDeploymentJob
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from common.util import generate_presign_url
-from model_and_train._types import CheckPoint, CheckPointStatus
 from multi_users.utils import get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')

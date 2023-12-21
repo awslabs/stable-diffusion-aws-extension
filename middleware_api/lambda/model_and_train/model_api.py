@@ -11,7 +11,6 @@ from botocore.exceptions import ClientError
 from sagemaker import Predictor
 from sagemaker.predictor_async import AsyncPredictor
 
-from _types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
@@ -19,6 +18,7 @@ from common.util import publish_msg
 from common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
 from common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
+from lib._types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')

@@ -1,9 +1,9 @@
 import logging
 import os
 
-from _types import TrainJob
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
+from lib._types import TrainJob
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 train_table = os.environ.get('TRAIN_TABLE')
