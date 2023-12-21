@@ -56,14 +56,14 @@ def handler(raw_event, context):
                 value=CheckPointStatus.Active.value
             )
 
-        resp = _exec(model_job, CreateModelStatus[event.status])
+        data = _exec(model_job, CreateModelStatus[event.status])
         ddb_service.update_item(
             table=model_table,
             key={'id': model_job.id},
             field_name='job_status',
             value=event.status
         )
-        return ok(data=resp)
+        return ok(data=data)
     except ClientError as e:
         logger.error(e)
         return internal_server_error(message=str(e))
@@ -78,7 +78,7 @@ def _exec(model_job: Model, action: CreateModelStatus):
         model_job.job_status = action
         raw_chkpt = ddb_service.get_item(table=checkpoint_table, key_values={'id': model_job.checkpoint_id})
         if raw_chkpt is None:
-            return bad_request(message=f'model related checkpoint with id {model_job.checkpoint_id} is not found')
+            raise Exception(f'model related checkpoint with id {model_job.checkpoint_id} is not found')
 
         checkpoint = CheckPoint(**raw_chkpt)
         checkpoint.checkpoint_status = CheckPointStatus.Active
@@ -121,7 +121,7 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
     prediction = predictor.predict_async(data=payload, inference_id=job.id)
     output_path = prediction.output_path
 
-    data = {
+    return {
         'job': {
             'output_path': output_path,
             'id': job.id,
@@ -130,5 +130,3 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
             'jobType': job.model_type
         }
     }
-
-    return ok(data)
