@@ -8,14 +8,14 @@ logging.basicConfig(level=logging.INFO) # Set logging level and STDOUT handler
 
 sys.path.insert(0, os.path.join(os.getcwd(), "extensions/stable-diffusion-aws-extension/"))
 sys.path.append(os.path.join(os.getcwd(), "extensions/sd_dreambooth_extension"))
-from utils import download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3
-from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
+from utils_cn import download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3
+from utils_cn import get_bucket_name_from_s3_path, get_path_from_s3_path
 
 os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 from dreambooth.ui_functions import start_training
 from dreambooth.shared import status
 
-from utils import tar, mv
+from utils_cn import tar, mv
 
 
 def train(model_dir):
@@ -79,13 +79,13 @@ def download_data(data_list, s3_data_path_list, s3_input_path, region):
 
 def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list, class_data_tar_list, region):
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
-    s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar').strip()
+    s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path.strip()), f'{model_name}.tar')
     logger.info(f"Download src model from s3: {model_bucket_name} {s3_model_path} {model_name}.tar")
     print(f"Download src model from s3: region__{region} model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
     download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar', region)
 
     input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
-    input_path = os.path.join(get_path_from_s3_path(s3_input_path), "db_config.tar").strip()
+    input_path = os.path.join(get_path_from_s3_path(s3_input_path.strip()), "db_config.tar")
     logger.info(f"Download db_config from s3 {input_bucket_name} {input_path} db_config.tar")
     download_folder_from_s3_by_tar(input_bucket_name, input_path, "db_config.tar", region)
     download_db_config_path = f"models/sagemaker_dreambooth/{model_name}/db_config_cloud.json"
