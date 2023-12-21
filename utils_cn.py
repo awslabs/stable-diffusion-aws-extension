@@ -54,7 +54,11 @@ def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, tar
         s3_client = boto3.client(service_name='s3', region_name=region)
     else:
         s3_client = boto3.client('s3')
-    s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
+    local_tar_file = os.path.join(target_dir, os.path.basename(local_tar_path))
+    s3_client.download_file(bucket_name, s3_tar_path, local_tar_file)
+    print(f"local_tar_path: {local_tar_path} target_dir: {target_dir}")
+    target_dir = "."
+    print(f"local_tar_path: {local_tar_path} target_dir: {target_dir}")
     tar(mode='x', archive=local_tar_path, verbose=True, change_dir=target_dir)
     # rm(local_tar_path, recursive=True)
 
@@ -110,6 +114,7 @@ def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
                         tar.add(os.path.join(folder_path, file))
 
     elif mode == 'x':
+        extracted_files = []
         with tarfile.open(archive, mode='r') as tar:
             # sfiles is set to all files in the archive if not specified
             if not sfiles:
@@ -120,8 +125,15 @@ def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
                 # extra to specified directory
                 if change_dir:
                     tar.extract(file, path=change_dir)
+                    extracted_files.append(os.path.join(change_dir, file))
                 else:
                     tar.extract(file)
+                    extracted_files.append(file)
+        for extracted_file in extracted_files:
+            if os.path.exists(extracted_file):
+                print(f"File {extracted_file} was successfully extracted.")
+            else:
+                print(f"Error: File {extracted_file} does not exist or extraction failed.")
 
 
 def mv(src, dest, force=False):

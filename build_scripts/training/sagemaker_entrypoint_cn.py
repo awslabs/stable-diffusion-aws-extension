@@ -124,7 +124,7 @@ def main(s3_input_path, s3_output_path, params, region):
     train(model_name)
     os.system("df -h")
     os.system("ls -R models")
-    upload_model_to_s3_v2(model_name, s3_output_path, model_type)
+    upload_model_to_s3_v2(model_name, s3_output_path, model_type, region)
     os.system("df -h")
 
 
