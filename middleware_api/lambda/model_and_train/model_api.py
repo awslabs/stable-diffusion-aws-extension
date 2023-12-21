@@ -211,7 +211,6 @@ def list_all_models_api(event, context):
 
 @dataclass
 class PutModelEvent:
-    model_id: str
     status: str
     multi_parts_tags: Dict[str, Any]
 
