@@ -346,7 +346,8 @@ export class SDAsyncInferenceStack extends NestedStack {
         runtime: lambda.Runtime.PYTHON_3_9,
         handler: 'lambda_handler',
         index: 'app.py', // optional, defaults to 'index.py'
-        memorySize: 256,
+        memorySize: 10240,
+        ephemeralStorageSize: 10240,
         timeout: Duration.seconds(900),
         environment: {
           DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
