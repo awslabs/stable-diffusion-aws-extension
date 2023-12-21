@@ -105,7 +105,7 @@ def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path):
     rm(tar_name, recursive=True)
 
 
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
+def upload_file_to_s3(file_name, bucket, directory=None, object_name=None, region=None):
     # If S3 object_name was not specified, use file_name
     if object_name is None:
         object_name = file_name
@@ -117,6 +117,8 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # Upload the file
     try:
         s3_client = boto3.client('s3')
+        if region:
+            s3_client = boto3.client(service_name='s3', region_name=region)
         s3_client.upload_file(file_name, bucket, object_name)
         print(f"File {file_name} uploaded to {bucket}/{object_name}")
     except Exception as e:
@@ -155,8 +157,10 @@ def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_siz
                 raise Exception('failed at multipart')
 
 
-def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
+def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path, region=None):
     s3_resource = boto3.resource('s3')
+    if region:
+        s3_resource = boto3.resource(service_name='s3', region_name=region)
     bucket = s3_resource.Bucket(bucket_name)
     for obj in bucket.objects.filter(Prefix=s3_folder_path):
         obj_dirname = os.sep.join(os.path.dirname(obj.key).split("/")[1:])
@@ -167,8 +171,10 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
         bucket.download_file(obj.key, os.path.join(local_sub_folder_path, obj_basename))  # save to same path
 
 
-def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir="."):
+def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir=".", region=None):
     s3_client = boto3.client('s3')
+    if region:
+        s3_client = boto3.client(service_name='s3', region_name=region)
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
     # tar_name = os.path.basename(s3_tar_path)
     # os.system(f"tar xvf {local_tar_path} -C {target_dir}")

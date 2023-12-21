@@ -4,12 +4,12 @@ import json
 import sys
 import logging
 
-from utils_cn import download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3
-from utils_cn import get_bucket_name_from_s3_path, get_path_from_s3_path
+from utils import download_folder_from_s3_by_tar, download_folder_from_s3, upload_file_to_s3
+from utils import get_bucket_name_from_s3_path, get_path_from_s3_path
 
 from dreambooth.ui_functions import start_training
 
-from utils_cn import tar, mv
+from utils import tar, mv
 
 os.environ['IGNORE_CMD_ARGS_ERRORS'] = ""
 logging.basicConfig(level=logging.INFO)
