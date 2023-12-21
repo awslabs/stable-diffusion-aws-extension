@@ -7,10 +7,10 @@ import {
   aws_lambda, aws_s3,
   Duration,
 } from 'aws-cdk-lib';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface UpdateCheckPointApiProps {
@@ -93,8 +93,7 @@ export class UpdateCheckPointApi {
   }
 
   private updateCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-update`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-update-checkpoint`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -109,31 +108,56 @@ export class UpdateCheckPointApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+        required: [
+          'status',
+          'multi_parts_tags',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{
-          statusCode: '200',
-          responseParameters: {
-            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-            'method.response.header.Access-Control-Allow-Methods': "'GET,POST,PUT,OPTIONS'",
-            'method.response.header.Access-Control-Allow-Origin': "'*'",
-          },
-        }],
+        proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
-    });
+    this.router.addResource('{id}')
+        .addMethod(this.httpMethod, createModelIntegration,
+            {
+              apiKeyRequired: true,
+              requestValidator,
+              requestModels: {
+                'application/json': requestModel,
+              }
+            });
   }
 }
 

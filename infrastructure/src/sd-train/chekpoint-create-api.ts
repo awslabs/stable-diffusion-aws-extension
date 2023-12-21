@@ -11,6 +11,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface CreateCheckPointApiProps {
@@ -101,8 +102,7 @@ export class CreateCheckPointApi {
   }
 
   private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-create`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-create-checkpoint`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -118,30 +118,95 @@ export class CreateCheckPointApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          checkpoint_type: {
+            type: JsonSchemaType.STRING,
+            enum: [
+              'Stable-diffusion',
+              'embeddings',
+              'Lora',
+              'hypernetworks',
+              'ControlNet',
+              'VAE',
+            ],
+          },
+          filenames: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.OBJECT,
+              properties: {
+                filename: {
+                  type: JsonSchemaType.STRING,
+                  minLength: 1,
+                },
+                parts_number: {
+                  type: JsonSchemaType.INTEGER,
+                  minimum: 1,
+                  maximum: 100,
+                },
+              },
+            },
+            minItems: 1,
+            maxItems: 20,
+          },
+          urls: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 20,
+          },
+          params: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              message: {
+                type: JsonSchemaType.STRING,
+              },
+              creator: {
+                type: JsonSchemaType.STRING,
+              }
+            },
+          },
+        },
+        required: [
+          'checkpoint_type',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const createCheckpointIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{
-          statusCode: '200',
-          responseParameters: {
-            'method.response.header.Access-Control-Allow-Headers': "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-            'method.response.header.Access-Control-Allow-Methods': "'GET,POST,PUT,OPTIONS'",
-            'method.response.header.Access-Control-Allow-Origin': "'*'",
-          },
-        }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-        responseParameters: {
-          'method.response.header.Access-Control-Allow-Headers': true,
-          'method.response.header.Access-Control-Allow-Methods': true,
-          'method.response.header.Access-Control-Allow-Origin': true,
-        },
-      }],
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 }

@@ -1,4 +1,5 @@
 import dataclasses
+import json
 import logging
 import os
 from datetime import datetime
@@ -11,6 +12,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, internal_server_error
 from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from _types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
 from model_and_train._types import CheckPoint, CheckPointStatus
@@ -38,7 +40,7 @@ class PrepareEvent:
 # POST /inference/v2
 def prepare_inference(raw_event, context):
     request_id = context.aws_request_id
-    event = PrepareEvent(**raw_event)
+    event = PrepareEvent(**json.loads(raw_event['body']))
     _type = event.task_type
 
     try:
@@ -46,10 +48,9 @@ def prepare_inference(raw_event, context):
         simple_generate_types = ['txt2img', 'img2img']
 
         if _type not in simple_generate_types and _type not in extra_generate_types:
-            return {
-                'statusCode': 400,
-                'errMsg': f'task type {event.task_type} should be in {extra_generate_types} or {simple_generate_types}'
-            }
+            return bad_request(
+                message=f'task type {event.task_type} should be in {extra_generate_types} or {simple_generate_types}'
+            )
 
         # check if endpoint table for endpoint status and existence
         inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
@@ -74,7 +75,6 @@ def prepare_inference(raw_event, context):
             },
         )
         resp = {
-            'statusCode': 200,
             'inference': {
                 'id': request_id,
                 'type': _type,
@@ -100,10 +100,9 @@ def prepare_inference(raw_event, context):
                         ckpts.append(ckpt)
 
             if len(ckpts_to_upload) > 0:
-                return {
-                    'statusCode': 400,
-                    'errMsg': [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in ckpts_to_upload]
-                }
+                message = [f'checkpoint with name {c["name"]}, type {c["ckpt_type"]} is not found' for c in
+                           ckpts_to_upload]
+                return bad_request(message=' '.join(message))
 
             # create inference job with param location in ddb, status set to Created
             used_models = {}
@@ -124,33 +123,19 @@ def prepare_inference(raw_event, context):
             resp['inference']['models'] = [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
-        return resp
+        return ok(data=resp)
     except Exception as e:
-        return {
-            'statusCode': 500,
-            'errMsg': str(e)
-        }
+        return bad_request(message=str(e))
 
 
 # PUT /v2/inference/{inference_id}/run
 def run_inference(event, _):
     _filter = {}
-    if 'pathStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'path parameter /v2/inference/{inference_id}/run are needed'
-        }
-
-    infer_id = event['pathStringParameters']['inference_id']
-    if not infer_id or len(infer_id) == 0:
-        return {
-            'statusCode': '500',
-            'error': 'path parameter /v2/inference/{inference_id}/run are needed, typically inference id is not found'
-        }
+    inference_id = event['pathParameters']['id']
 
     # get the inference job from ddb by job id
     inference_raw = ddb_service.get_item(inference_table_name, {
-        'InferenceJobId': infer_id
+        'InferenceJobId': inference_id
     })
 
     assert inference_raw is not None and len(inference_raw) > 0
@@ -176,7 +161,7 @@ def run_inference(event, _):
     predictor = AsyncPredictor(predictor, name=endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()
-    prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args, inference_id=infer_id)
+    prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args, inference_id=inference_id)
     output_path = prediction.output_path
 
     # update the ddb job status to 'inprogress' and save to ddb
@@ -184,25 +169,21 @@ def run_inference(event, _):
     inference_job.params['output_path'] = output_path
     ddb_service.put_items(inference_table_name, inference_job.__dict__)
 
-    return {
-        'statusCode': 200,
+    data = {
         'inference': {
-            'inference_id': infer_id,
+            'inference_id': inference_id,
             'status': inference_job.status,
             'endpoint_name': endpoint_name,
             'output_path': output_path
         }
     }
 
+    return ok(data=data)
+
 
 # GET /inferences?last_evaluated_key=xxx&limit=10&username=USER_NAME&name=SageMaker_Endpoint_Name&filter=key:value,key:value
 def list_all_inference_jobs(event, ctx):
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
 
@@ -215,7 +196,9 @@ def list_all_inference_jobs(event, ctx):
     #     last_evaluated_key = json.loads(last_evaluated_key)
     # last_token = None
 
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+    username = None
+    if parameters:
+        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
     scan_rows = ddb_service.scan(inference_table_name, filters=None)
     results = []
@@ -225,13 +208,17 @@ def list_all_inference_jobs(event, ctx):
 
     for row in scan_rows:
         inference = InferenceJob(**(ddb_service.deserialize(row)))
-        if username and check_user_permissions(inference.owner_group_or_role, user_roles, username):
+        if username:
+            if check_user_permissions(inference.owner_group_or_role, user_roles, username):
+                results.append(inference.__dict__)
+        else:
             results.append(inference.__dict__)
 
-    return {
-        'statusCode': 200,
+    data = {
         'inferences': results
     }
+
+    return ok(data=data, decimal=True)
 
 
 # POST /inference-api

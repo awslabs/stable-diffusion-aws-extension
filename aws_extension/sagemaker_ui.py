@@ -115,6 +115,21 @@ def server_request_post(path, params):
     return response
 
 
+def server_request_get(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.get(list_endpoint_url, params=params, headers=headers)
+    return response
+
+
 def get_s3_file_names(bucket, folder):
     """Get a list of file names from an S3 bucket and folder."""
     s3 = boto3.resource('s3')
@@ -235,8 +250,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
         if checkpoint:
             body_params['checkpoint'] = checkpoint
         body_params['limit'] = -1 if show_all_inference_job else 10
-        response = server_request_post(f'inference/query-inference-jobs', body_params)
-        r = response.json()
+        response = server_request_get(f'inferences', body_params)
+        r = response.json()['data']['inferences']
         logger.debug(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -268,36 +283,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 
 def get_inference_job(inference_job_id):
-    response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
-    return response.json()
-
-
-def get_inference_job_image_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-image-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_image_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_image_list.append(obj_value)
-        return txt2img_inference_job_image_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job image output: {e}")
-        return []
-
-
-def get_inference_job_param_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-param-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_param_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_param_list.append(obj_value)
-        return txt2img_inference_job_param_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job param output: {e}")
-        return []
+    response = server_request(f'inferences/{inference_job_id}')
+    return response.json()['data']
 
 
 def download_images(image_urls: list, local_directory: str):
@@ -534,7 +521,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         api_key = get_variable_from_json('api_token')
         logger.info(f'!!!!!!api_gateway_url {api_gateway_url}')
 
-        url = str(api_gateway_url) + "checkpoint"
+        url = str(api_gateway_url) + "checkpoints"
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
@@ -542,7 +529,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         try:
             response.raise_for_status()
-            json_response = response.json()
+            json_response = response.json()['data']
             logger.debug(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
@@ -577,12 +564,11 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             )
 
             payload = {
-                "checkpoint_id": checkpoint_id,
                 "status": "Active",
                 "multi_parts_tags": {local_tar_path: multiparts_tags}
             }
             # Start creating model on cloud.
-            response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+            response = requests.put(url=f"{url}/{checkpoint_id}", json=payload, headers={'x-api-key': api_key})
             s3_input_path = s3_base
             logger.debug(response)
 
@@ -618,9 +604,9 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
         params_dict = {}
 
     params_dict['creator'] = pr.username
-    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
-    response = server_request_post('upload_checkpoint', body_params)
-    response_data = response.json()
+    body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
+    response = server_request_post('checkpoints', body_params)
+    response_data = response.json()['data']
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
     if 'checkpoint' in response_data:
@@ -630,7 +616,7 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
 
 
 def generate_on_cloud(sagemaker_endpoint):
-    logger.info(f"checkpiont_info {checkpoint_info}")
+    logger.info(f"checkpoint_info {checkpoint_info}")
     logger.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
@@ -781,8 +767,8 @@ def process_result_by_inference_id(inference_id):
                     prompt_txt = resp['caption']
                     # return with default value, including image_list, info_text, infotexts
                     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
-                images = get_inference_job_image_output(inference_id.strip())
-                inference_param_json_list = get_inference_job_param_output(inference_id)
+                images = resp['img_presigned_urls']
+                inference_param_json_list = resp['output_presigned_urls']
                 # todo: these not need anymore
                 if resp['taskType'] in ['txt2img', 'img2img']:
                     image_list = download_images_to_pil(images)
@@ -842,28 +828,6 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 # def txt2img_config_save():
 #     # placeholder for saving txt2img config
 #     pass
-
-def displayEndpointInfo(input_string: str):
-    logger.debug(f"selected value is {input_string}")
-    if not input_string:
-        return
-    parts = input_string.split('+')
-
-    if len(parts) < 2:
-        return plaintext_to_html("")
-
-    endpoint_job_id, status = parts[0], parts[1]
-
-    if status == 'failed':
-        response = server_request(f'inference/get-endpoint-deployment-job?jobID={endpoint_job_id}')
-        # Do something with the response
-        r = response.json()
-        if "error" in r:
-            return plaintext_to_html(r["error"])
-        else:
-            return plaintext_to_html(r["EndpointDeploymentJobId"])
-    else:
-        return plaintext_to_html("")
 
 
 def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
@@ -930,8 +894,9 @@ def fake_gan(selected_value, original_prompt):
         if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = original_prompt
             # output directory mapping to task type
-            images = get_inference_job_image_output(inference_job_id.strip())
-            inference_param_json_list = get_inference_job_param_output(inference_job_id)
+            job = get_inference_job(inference_job_id)
+            images = job['img_presigned_urls']
+            inference_param_json_list = job['output_presigned_urls']
             image_list = download_images_to_pil(images)
             json_file = download_images_to_json(inference_param_json_list)[0]
             if json_file:

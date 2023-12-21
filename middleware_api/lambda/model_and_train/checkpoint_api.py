@@ -6,9 +6,11 @@ from typing import Any, Dict
 import urllib.parse
 import concurrent.futures
 import requests
+import json
 
 from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, internal_server_error
 from common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
 from multi_users._types import PARTITION_KEYS, Role
@@ -20,40 +22,33 @@ checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "C
 user_table = os.environ.get('MULTI_USER_TABLE')
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
-logger = logging.getLogger('boto3')
-logger.setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 
 
 # GET /checkpoints?username=USER_NAME&types=value&status=value
 def list_all_checkpoints_api(event, context):
+    logger.info(json.dumps(event))
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
-    parameters = event['queryStringParameters']
-    if 'types' in parameters and len(parameters['types']) > 0:
-        _filter['checkpoint_type'] = parameters['types']
 
-    if 'status' in parameters and len(parameters['status']) > 0:
-        _filter['checkpoint_status'] = parameters['status']
-
-    # todo: support multi user fetch later
-    username = parameters['username'] if 'username' in parameters and parameters['username'] else None
     user_roles = ['*']
-    if username:
-        user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username[0])
+    username = None
+    parameters = event['queryStringParameters']
+    if parameters:
+        if 'types' in parameters and len(parameters['types']) > 0:
+            _filter['checkpoint_type'] = parameters['types']
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth user provided'
-        }
+        if 'status' in parameters and len(parameters['status']) > 0:
+            _filter['checkpoint_status'] = parameters['status']
 
-    requestor_name = event['x-auth']['username']
+        # todo: support multi user fetch later
+        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+        if username:
+            user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+
+    requestor_name = event['requestContext']['authorizer']['username']
     requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
     requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
         'kind': PARTITION_KEYS.role,
@@ -65,10 +60,10 @@ def list_all_checkpoints_api(event, context):
 
     raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
     if raw_ckpts is None or len(raw_ckpts) == 0:
-        return {
-            'statusCode': 200,
+        data = {
             'checkpoints': []
         }
+        return ok(data=data)
 
     ckpts = []
     for r in raw_ckpts:
@@ -83,19 +78,15 @@ def list_all_checkpoints_api(event, context):
                 'status': ckpt.checkpoint_status.value,
                 'name': ckpt.checkpoint_names,
                 'created': ckpt.timestamp,
+                'params': ckpt.params,
                 'allowed_roles_or_users': ckpt.allowed_roles_or_users
             })
-    return {
-        'statusCode': 200,
+
+    data = {
         'checkpoints': ckpts
     }
 
-
-@dataclass
-class UploadCheckPointEvent:
-    checkpointType: str
-    modelUrl: list[str]
-    params: dict[str, Any]
+    return ok(data=data, decimal=True)
 
 
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict, cannot_download: list):
@@ -135,28 +126,26 @@ def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
     return None
 
 
-# POST /upload_checkpoint
-def upload_checkpoint_api(raw_event, context):
+@dataclass
+class CreateCheckPointEvent:
+    checkpoint_type: str
+    params: dict[str, Any]
+    filenames: [MultipartFileReq] = None
+    urls: [str] = None
+
+
+def upload_checkpoint_by_urls(event: CreateCheckPointEvent, context):
     request_id = context.aws_request_id
-    event = UploadCheckPointEvent(**raw_event)
-    _type = event.checkpointType
+    _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
     }
-    if _type not in checkpoint_type:
-        logger.info(f"type error:{_type}")
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': "please choose the right type from :"
-                     "'Stable-diffusion', 'embeddings', 'Lora', 'hypernetworks', 'Controlnet', 'VAE'"
-        }
 
     try:
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
-        urls = event.modelUrl
+        urls = event.urls
         file_names = []
         logger.info(f"start to upload models:{urls}")
         checkpoint_params = {}
@@ -173,19 +162,12 @@ def upload_checkpoint_api(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'error': f"user has no permissions to create a model"
-            }
+            return bad_request(message=f"user has no permissions to create a model", headers=headers)
 
         cannot_download = concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
         if cannot_download:
-            return {
-                'statusCode': 500,
-                'headers': headers,
-                'error': f"contains invalid urls:{cannot_download}"
-            }
+            return bad_request(message=f"contains invalid urls:{cannot_download}", headers=headers)
+
         logger.info("finished upload, prepare to insert item to ddb")
         checkpoint = CheckPoint(
             id=request_id,
@@ -199,9 +181,7 @@ def upload_checkpoint_api(raw_event, context):
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         logger.info("finished insert item to ddb")
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -210,26 +190,20 @@ def upload_checkpoint_api(raw_event, context):
                 'params': checkpoint.params
             }
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': str(e)
-        }
-
-
-@dataclass
-class CreateCheckPointEvent:
-    checkpoint_type: str
-    filenames: [MultipartFileReq]
-    params: dict[str, Any]
+        return internal_server_error(headers=headers, message=str(e))
 
 
 # POST /checkpoint
 def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
-    event = CreateCheckPointEvent(**raw_event)
+    event = CreateCheckPointEvent(**json.loads(raw_event['body']))
+
+    if event.urls:
+        return upload_checkpoint_by_urls(event, context)
+
     _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -265,11 +239,7 @@ def create_checkpoint_api(raw_event, context):
             filenames_only.append(file.filename)
 
         if len(filenames_only) == 0:
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'errorMsg': 'no checkpoint name (file names) detected'
-            }
+            return bad_request(message='no checkpoint name (file names) detected', headers=headers)
 
         user_roles = ['*']
         creator_permissions = {}
@@ -279,11 +249,7 @@ def create_checkpoint_api(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'error': f"user has no permissions to create a model"
-            }
+            return bad_request(message='user has no permissions to create a model', headers=headers)
 
         checkpoint = CheckPoint(
             id=request_id,
@@ -296,9 +262,7 @@ def create_checkpoint_api(raw_event, context):
             allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -308,25 +272,22 @@ def create_checkpoint_api(raw_event, context):
             },
             's3PresignUrl': multiparts_resp
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': str(e)
-        }
+        return internal_server_error(headers=headers, message=str(e))
 
 
 @dataclass
 class UpdateCheckPointEvent:
-    checkpoint_id: str
     status: str
     multi_parts_tags: Dict[str, Any]
 
 
 # PUT /checkpoint
 def update_checkpoint_api(raw_event, context):
-    event = UpdateCheckPointEvent(**raw_event)
+    event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
+    checkpoint_id = raw_event['pathParameters']['id']
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Origin': '*',
@@ -334,14 +295,13 @@ def update_checkpoint_api(raw_event, context):
     }
     try:
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
-            'id': event.checkpoint_id
+            'id': checkpoint_id
         })
         if raw_checkpoint is None or len(raw_checkpoint) == 0:
-            return {
-                'statusCode': 500,
-                'headers': headers,
-                'error': f'checkpoint not found with id {event.checkpoint_id}'
-            }
+            return bad_request(
+                message=f'checkpoint not found with id {checkpoint_id}',
+                headers=headers
+            )
 
         checkpoint = CheckPoint(**raw_checkpoint)
         new_status = CheckPointStatus[event.status]
@@ -355,9 +315,7 @@ def update_checkpoint_api(raw_event, context):
             field_name='checkpoint_status',
             value=new_status
         )
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': checkpoint.id,
                 'type': checkpoint.checkpoint_type,
@@ -366,10 +324,7 @@ def update_checkpoint_api(raw_event, context):
                 'params': checkpoint.params
             }
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'msg': str(e)
-        }
+        return internal_server_error(headers=headers, message=str(e))

@@ -11,6 +11,7 @@ from typing import Any, List, Optional
 import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, not_found, forbidden, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
@@ -29,6 +30,7 @@ image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-eas
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 logger = logging.getLogger('boto3')
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -44,34 +46,26 @@ class Event:
 # POST /train
 def create_train_job_api(raw_event, context):
     request_id = context.aws_request_id
-    event = Event(**raw_event)
+    event = Event(**json.loads(raw_event['body']))
     _type = event.train_type
 
     try:
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'train' not in creator_permissions \
                 or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'user {event.creator} has not permission to create a train job'
-            }
+            return forbidden(message=f'user {event.creator} has not permission to create a train job')
 
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id
         })
         # if model is not found, model_raw is {}
         if model_raw == {}:
-            return {
-                'statusCode': 500,
-                'error': f'model with id {event.model_id} is not found'
-            }
+            return not_found(message=f'model with id {event.model_id} is not found')
 
         model = Model(**model_raw)
         if model.job_status != CreateModelStatus.Complete:
-            return {
-                'statusCode': 500,
-                'error': f'model {model.id} is in {model.job_status.value} state, not valid to be used for train'
-            }
+            return bad_request(
+                message=f'model {model.id} is in {model.job_status.value} state, not valid to be used for train')
 
         base_key = f'{_type}/train/{model.name}/{request_id}'
         input_location = f'{base_key}/input'
@@ -136,8 +130,7 @@ def create_train_job_api(raw_event, context):
         )
         ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
-        return {
-            'statusCode': 200,
+        data = {
             'job': {
                 'id': train_job.id,
                 'status': train_job.job_status.value,
@@ -147,91 +140,75 @@ def create_train_job_api(raw_event, context):
             },
             's3PresignUrl': presign_url_map
         }
+
+        return ok(data=data)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 200,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # GET /trains
 def list_all_train_jobs_api(event, context):
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
-    if 'types' in parameters and len(parameters['types']) > 0:
-        _filter['train_type'] = parameters['types']
+    if parameters:
+        if 'types' in parameters and len(parameters['types']) > 0:
+            _filter['train_type'] = parameters['types']
 
-    if 'status' in parameters and len(parameters['status']) > 0:
-        _filter['job_status'] = parameters['status']
+        if 'status' in parameters and len(parameters['status']) > 0:
+            _filter['job_status'] = parameters['status']
 
     resp = ddb_service.scan(table=train_table, filters=_filter)
     if resp is None or len(resp) == 0:
-        return {
-            'statusCode': 200,
-            'trainJobs': []
-        }
+        return ok(data={'trainJobs': []})
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth user provided'
-        }
+    requestor_name = event['requestContext']['authorizer']['username']
+    try:
+        requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+        requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
+        if 'train' not in requestor_permissions or \
+                ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
+            return bad_request(message='user has no permission to train')
 
-    requestor_name = event['x-auth']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
-    if 'train' not in requestor_permissions or \
-            ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-        return {
-            'statusCode': '400',
-            'error': f'user has no permission to train'
-        }
+        train_jobs = []
+        for tr in resp:
+            train_job = TrainJob(**(ddb_service.deserialize(tr)))
+            model_name = 'not_applied'
+            if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
+                model_name = train_job.params['training_params']['model_name']
 
-    train_jobs = []
-    for tr in resp:
-        train_job = TrainJob(**(ddb_service.deserialize(tr)))
-        model_name = 'not_applied'
-        if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
-            model_name = train_job.params['training_params']['model_name']
+            train_job_dto = {
+                'id': train_job.id,
+                'modelName': model_name,
+                'status': train_job.job_status.value,
+                'trainType': train_job.train_type,
+                'created': train_job.timestamp,
+                'sagemakerTrainName': train_job.sagemaker_train_name,
+            }
+            if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users, requestor_roles, requestor_name):
+                train_jobs.append(train_job_dto)
+            elif not train_job.allowed_roles_or_users and \
+                    'user' in requestor_permissions and \
+                    'all' in requestor_permissions['user']:
+                # superuser can view the legacy data
+                train_jobs.append(train_job_dto)
 
-        train_job_dto = {
-            'id': train_job.id,
-            'modelName': model_name,
-            'status': train_job.job_status.value,
-            'trainType': train_job.train_type,
-            'created': train_job.timestamp,
-            'sagemakerTrainName': train_job.sagemaker_train_name,
-        }
-        if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users, requestor_roles, requestor_name):
-            train_jobs.append(train_job_dto)
-        elif not train_job.allowed_roles_or_users and \
-                'user' in requestor_permissions and \
-                'all' in requestor_permissions['user']:
-            # superuser can view the legacy data
-            train_jobs.append(train_job_dto)
-
-    return {
-        'statusCode': 200,
-        'trainJobs': train_jobs
-    }
+        return ok(data={'trainJobs': train_jobs}, decimal=True)
+    except Exception as e:
+        logger.error(e)
+        return bad_request(message=str(e))
 
 
 # PUT /train used to kickoff a train job step function
 def update_train_job_api(event, context):
-    if 'status' in event and 'train_job_id' in event and event['status'] == TrainJobStatus.Training.value:
-        return _start_train_job(event['train_job_id'])
+    logger.info(json.dumps(event))
+    train_job_id = event['pathParameters']['id']
+    body = json.loads(event['body'])
+    if body['status'] == TrainJobStatus.Training.value:
+        return _start_train_job(train_job_id)
 
-    return {
-        'statusCode': 200,
-        'msg': f'not implemented for train job status {event["status"]}'
-    }
+    return ok(message=f'not implemented for train job status {body["status"]}')
 
 
 def _start_train_job(train_job_id: str):
@@ -239,10 +216,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job_id
     })
     if raw_train_job is None or len(raw_train_job) == 0:
-        return {
-            'statusCode': 500,
-            'error': f'no such train job with id({train_job_id})'
-        }
+        return not_found(message=f'no such train job with id({train_job_id})')
 
     train_job = TrainJob(**raw_train_job)
 
@@ -250,10 +224,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job.model_id
     })
     if model_raw is None:
-        return {
-            'statusCode': 500,
-            'error': f'model with id {train_job.model_id} is not found'
-        }
+        return not_found(message=f'model with id {train_job.model_id} is not found')
 
     model = Model(**model_raw)
 
@@ -261,10 +232,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job.checkpoint_id
     })
     if raw_checkpoint is None:
-        return {
-            'statusCode': 500,
-            'error': f'checkpoint with id {train_job.checkpoint_id} is not found'
-        }
+        return not_found(message=f'checkpoint with id {train_job.checkpoint_id} is not found')
 
     checkpoint = CheckPoint(**raw_checkpoint)
 
@@ -339,8 +307,7 @@ def _start_train_job(train_job_id: str):
             value=sfn_arn
         )
 
-        return {
-            'statusCode': 200,
+        data = {
             'job': {
                 'id': train_job.id,
                 'status': train_job.job_status.value,
@@ -350,12 +317,11 @@ def _start_train_job(train_job_id: str):
                 'input_location': train_job.input_s3_location
             },
         }
+
+        return ok(data=data)
     except Exception as e:
         print(e)
-        return {
-            'statusCode': 500,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # sfn

@@ -51,14 +51,31 @@ export class RestApiGateway {
     });
 
     // custom error response to return details of validation errors to the client.
-    api.addGatewayResponse('BadRequestBodyResponse', {
+    api.addGatewayResponse('BAD_REQUEST_BODY', {
       type: apigw.ResponseType.BAD_REQUEST_BODY,
       templates: {
-        'application/json':
-            '{' +
-            '"statusCode":400,' +
-            '"message":"$context.error.validationErrorString"' +
-            '}',
+        'application/json': JSON.stringify({
+          statusCode: 400,
+          message: '$context.error.validationErrorString',
+        }),
+      },
+    });
+
+    api.addGatewayResponse('DEFAULT_4XX', {
+      type: apigw.ResponseType.DEFAULT_4XX,
+      templates: {
+        'application/json': JSON.stringify({
+          message: '$context.error.message',
+        }),
+      },
+    });
+
+    api.addGatewayResponse('DEFAULT_5XX', {
+      type: apigw.ResponseType.DEFAULT_5XX,
+      templates: {
+        'application/json': JSON.stringify({
+          message: '$context.error.message',
+        }),
       },
     });
 

@@ -269,10 +269,6 @@ def load_json_from_s3(bucket_name, key):
 # Global exception capture
 stepf_client = boto3.client('stepfunctions')
 
-@app.get("/inference")
-def root():
-    return {"message": const.SOLUTION_NAME}
-
 # def get_curent_time():
 #     # Get the current time
 #     now = datetime.now()
@@ -391,63 +387,7 @@ async def run_sagemaker_inference(request: Request):
         return response
 
 
-@app.post("/inference/deploy-sagemaker-endpoint")
-async def deploy_sagemaker_endpoint(request: Request):
-    logger.info("entering the deploy_sagemaker_endpoint function!")
-    endpoint_deployment_id = get_uuid()
-    try:
-        payload = await request.json()
-        logger.info(f"input in json format {payload}")
-        payload['endpoint_deployment_id'] = endpoint_deployment_id
-
-        # put the item to inference DDB for later check status
-        # must insert item first
-        current_time = str(datetime.now())
-        response = endpoint_deployment_table.put_item(
-            Item={
-                'EndpointDeploymentJobId': endpoint_deployment_id,
-                'startTime': current_time,
-                'endpoint_status': 'Creating',
-                'max_instance_number': payload['initial_instance_count'],
-                'autoscaling': payload['autoscaling_enabled'],
-                'owner_group_or_role': payload['assign_to_roles']
-            })
-
-        resp = stepf_client.start_execution(
-            stateMachineArn=STEP_FUNCTION_ARN,
-            input=json.dumps(payload)
-        )
-
-        logger.info("trigger step-function with following response")
-
-        logger.info(f"finish trigger step function for deployment with output {resp}")
-        return 0
-    except Exception as e:
-        logger.error(f"error calling run-sagemaker-inference with exception: {e}")
-        #put the item to inference DDB for later check status
-        current_time = str(datetime.now())
-        response = endpoint_deployment_table.put_item(
-        Item={
-            'EndpointDeploymentJobId': endpoint_deployment_id,
-            'startTime': current_time,
-            'status': 'failed',
-            'completeTime': current_time,
-            'error': str(e)
-        })
-        return 0
-
-
-@app.get("/inference/list-endpoint-deployment-jobs")
-async def list_endpoint_deployment_jobs():
-    logger.info(f"entering list_endpoint_deployment_jobs")
-    return getEndpointDeploymentJobList()
-
-@app.get("/inference/list-inference-jobs")
-async def list_inference_jobs():
-    logger.info(f"entering list_endpoint_deployment_jobs")
-    return getInferenceJobList()
-
-
+# todo will remove
 @app.post("/inference/query-inference-jobs")
 async def query_inference_jobs(request: Request):
     logger.info(f"entering query-inference-jobs")
@@ -462,85 +402,6 @@ async def query_inference_jobs(request: Request):
     limit = query_params.get("limit") if query_params.get("limit") else const.PAGE_LIMIT_ALL
     logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
-
-
-@app.get("/inference/get-endpoint-deployment-job")
-async def get_endpoint_deployment_job(jobID: str = None):
-    logger.info(f"entering get_endpoint_deployment_job function ")
-    # endpoint_deployment_jobId = request.query_params
-    endpoint_deployment_jobId = jobID
-    logger.info(f"endpoint_deployment_jobId is {str(endpoint_deployment_jobId)}")
-    return getEndpointDeployJob(endpoint_deployment_jobId)
-
-@app.get("/inference/get-inference-job")
-async def get_inference_job(jobID: str = None):
-    inference_jobId = jobID
-    # logger.info(f"entering get_inference_job function with jobId: {inference_jobId}")
-    try:
-        return getInferenceJob(inference_jobId)
-    except Exception as e:
-        # logger.error(f"Error getting inference job: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/inference/get-inference-job-image-output")
-async def get_inference_job_image_output(jobID: str = None) -> List[str]:
-    inference_jobId = jobID
-
-    if inference_jobId is None or inference_jobId.strip() == "":
-        logger.info(f"jobId is empty string or None, just return empty string list")
-        return []
-
-    logger.info(f"Entering get_inference_job_image_output function with jobId: {inference_jobId}")
-
-    try:
-        job_record = getInferenceJob(inference_jobId)
-    except Exception as e:
-        logger.error(f"Error getting inference job: {str(e)}")
-        return []
-
-    # Assuming the job_record contains a list of image names
-    image_names = job_record.get("image_names", [])
-
-    presigned_urls = []
-
-    for image_name in image_names:
-        try:
-            image_key = f"out/{inference_jobId}/result/{image_name}"
-            presigned_url = generate_presigned_url(S3_BUCKET_NAME, image_key)
-            presigned_urls.append(presigned_url)
-        except Exception as e:
-            logger.error(f"Error generating presigned URL for image {image_name}: {str(e)}")
-            # Continue with the next image if this one fails
-            continue
-
-    return presigned_urls
-
-@app.get("/inference/get-inference-job-param-output")
-async def get_inference_job_param_output(jobID: str = None) -> List[str]:
-    inference_jobId = jobID
-
-    if inference_jobId is None or inference_jobId.strip() == "":
-        logger.info(f"jobId is empty string or None, just return empty string list")
-        return []
-
-    logger.info(f"Entering get_inference_job_param_output function with jobId: {inference_jobId}")
-
-    try:
-        job_record = getInferenceJob(inference_jobId)
-    except Exception as e:
-        logger.error(f"Error getting inference job: {str(e)}")
-        return []
-
-    presigned_url = ""
-
-    try:
-        json_key = f"out/{inference_jobId}/result/{inference_jobId}_param.json"
-        presigned_url = generate_presigned_url(S3_BUCKET_NAME, json_key)
-    except Exception as e:
-        logger.error(f"Error generating presigned URL: {str(e)}")
-        return []
-
-    return [presigned_url]
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
     try:
@@ -592,23 +453,6 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
     response = JSONResponse(content=presigned_url, headers=headers)
 
     return response
-
-@app.get("/inference/get-texual-inversion-list")
-async def get_texual_inversion_list():
-    logger.info(f"entering get_texual_inversion_list()")
-    return get_s3_objects(S3_BUCKET_NAME,'texual_inversion')
-
-@app.get("/inference/get-lora-list")
-async def get_lora_list():
-    return get_s3_objects(S3_BUCKET_NAME,'lora')
-
-@app.get("/inference/get-hypernetwork-list")
-async def get_hypernetwork_list():
-    return get_s3_objects(S3_BUCKET_NAME,'hypernetwork')
-
-@app.get("/inference/get-controlnet-model-list")
-async def get_controlnet_model_list():
-    return get_s3_objects(S3_BUCKET_NAME,'controlnet')
 
 @app.post("/inference/run-model-merge")
 async def run_model_merge(request: Request):

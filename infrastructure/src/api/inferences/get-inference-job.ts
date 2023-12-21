@@ -1,100 +1,65 @@
 import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
 import {Aws, Duration} from 'aws-cdk-lib';
-import {
-    JsonSchemaType,
-    JsonSchemaVersion,
-    LambdaIntegration,
-    Model,
-    RequestValidator,
-    Resource,
-} from 'aws-cdk-lib/aws-apigateway';
+import {LambdaIntegration, Resource,} from 'aws-cdk-lib/aws-apigateway';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
 import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
 import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {Construct} from 'constructs';
 import {Bucket} from "aws-cdk-lib/aws-s3";
 
-export interface DeleteModelsApiProps {
+export interface GetInferenceJobApiProps {
     router: Resource;
     httpMethod: string;
-    modelTable: Table;
+    inferenceJobTable: Table;
     srcRoot: string;
     commonLayer: LayerVersion;
     s3Bucket: Bucket;
 }
 
-export class DeleteModelsApi {
+export class GetInferenceJobApi {
     private readonly src: string;
     private readonly router: Resource;
     private readonly httpMethod: string;
     private readonly scope: Construct;
-    private readonly modelTable: Table;
+    private readonly inferenceJobTable: Table;
     private readonly layer: LayerVersion;
     private readonly baseId: string;
     private readonly s3Bucket: Bucket;
 
-    constructor(scope: Construct, id: string, props: DeleteModelsApiProps) {
+    constructor(scope: Construct, id: string, props: GetInferenceJobApiProps) {
         this.scope = scope;
         this.baseId = id;
         this.router = props.router;
         this.httpMethod = props.httpMethod;
-        this.modelTable = props.modelTable;
+        this.inferenceJobTable = props.inferenceJobTable;
         this.src = props.srcRoot;
         this.layer = props.commonLayer;
         this.s3Bucket = props.s3Bucket;
 
-        this.deleteModelsApi();
+        this.getInferenceJobsApi();
     }
 
-    private deleteModelsApi() {
+    private getInferenceJobsApi() {
 
         const lambdaFunction = new PythonFunction(
             this.scope,
             `${this.baseId}-lambda`,
             {
-                entry: `${this.src}/models`,
+                entry: `${this.src}/inferences`,
                 architecture: Architecture.X86_64,
                 runtime: Runtime.PYTHON_3_9,
-                index: 'delete_models.py',
+                index: 'get_inference_job.py',
                 handler: 'handler',
                 timeout: Duration.seconds(900),
                 role: this.iamRole(),
                 memorySize: 1024,
                 environment: {
-                    MODELS_TABLE: this.modelTable.tableName,
+                    INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
                     S3_BUCKET_NAME: this.s3Bucket.bucketName,
                 },
                 layers: [this.layer],
             });
 
-        const requestModel = new Model(
-            this.scope,
-            `${this.baseId}-model`,
-            {
-                restApi: this.router.api,
-                modelName: this.baseId,
-                description: `${this.baseId} Request Model`,
-                schema: {
-                    schema: JsonSchemaVersion.DRAFT4,
-                    title: this.baseId,
-                    type: JsonSchemaType.OBJECT,
-                    properties: {
-                        model_id_list: {
-                            type: JsonSchemaType.ARRAY,
-                            items: {
-                                type: JsonSchemaType.STRING,
-                                minLength: 1,
-                            },
-                            minItems: 1,
-                            maxItems: 100,
-                        },
-                    },
-                    required: [
-                        'model_id_list',
-                    ],
-                },
-                contentType: 'application/json',
-            });
 
         const lambdaIntegration = new LambdaIntegration(
             lambdaFunction,
@@ -103,24 +68,12 @@ export class DeleteModelsApi {
             },
         );
 
-        const requestValidator = new RequestValidator(
-            this.scope,
-            `${this.baseId}-validator`,
-            {
-                restApi: this.router.api,
-                requestValidatorName: this.baseId,
-                validateRequestBody: true,
-            });
 
         this.router.addMethod(
             this.httpMethod,
             lambdaIntegration,
             {
                 apiKeyRequired: true,
-                requestValidator,
-                requestModels: {
-                    'application/json': requestModel,
-                }
             });
 
     }
@@ -137,25 +90,19 @@ export class DeleteModelsApi {
 
         newRole.addToPolicy(new PolicyStatement({
             actions: [
-                // get model
+                // get an inference job
                 'dynamodb:GetItem',
-                // delete model
-                'dynamodb:DeleteItem',
             ],
             resources: [
-                this.modelTable.tableArn,
+                this.inferenceJobTable.tableArn,
             ],
         }));
 
         newRole.addToPolicy(new PolicyStatement({
             actions: [
-                // list model objects by prefix
-                's3:ListBucket',
-                // delete model file
-                's3:DeleteObject',
+                's3:GetObject',
             ],
             resources: [
-                `${this.s3Bucket.bucketArn}`,
                 `${this.s3Bucket.bucketArn}/*`,
             ],
         }));

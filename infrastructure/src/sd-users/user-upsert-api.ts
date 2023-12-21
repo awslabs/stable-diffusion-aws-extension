@@ -11,6 +11,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 export interface UserUpsertApiProps {
   router: aws_apigateway.Resource;
@@ -95,7 +96,6 @@ export class UserUpsertApi {
 
   private upsertUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-upsert`,
       entry: `${this.src}/multi_users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -110,28 +110,72 @@ export class UserUpsertApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          username: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          password: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          creator: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          initial: {
+            type: JsonSchemaType.BOOLEAN,
+            default: false,
+          },
+          roles: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 20,
+          },
+        },
+        required: [
+          'username',
+          'creator',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "body": $input.json("$"),' +
-              '    "x-auth": {\n' +
-              '        "username": "$context.authorizer.username",\n' +
-              '        "role": "$context.authorizer.role"\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      methodResponses: [{
-        statusCode: '200',
-      }],
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 }

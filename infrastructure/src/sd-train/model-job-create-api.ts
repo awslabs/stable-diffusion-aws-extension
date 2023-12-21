@@ -12,6 +12,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface CreateModelJobApiProps {
@@ -102,8 +103,7 @@ export class CreateModelJobApi {
   }
 
   private createModelJobApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-handler`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-model`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -123,15 +123,62 @@ export class CreateModelJobApi {
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          model_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          filenames: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.OBJECT,
+            }
+          },
+          params: {
+            type: JsonSchemaType.OBJECT,
+          }
+        },
+        required: [
+          'model_type',
+          'name',
+          'filenames',
+          'params',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-      }],
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 
