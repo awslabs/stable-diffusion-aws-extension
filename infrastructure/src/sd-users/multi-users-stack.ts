@@ -31,15 +31,15 @@ export class MultiUsersStack extends NestedStack {
   constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
     super(scope, id, props);
 
-    new RoleUpsertApi(scope, 'roleUpsert', {
+    new RoleUpsertApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
-      router: props.routers.role,
+      router: props.routers.roles,
       srcRoot: this.srcRoot,
     });
 
-    new ListAllRolesApi(scope, 'roleListAll', {
+    new ListAllRolesApi(scope, 'ListRoles', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,
@@ -48,26 +48,26 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new UserUpsertApi(scope, 'userUpsert', {
+    new UserUpsertApi(scope, 'CreateUser', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
       passwordKey: props.passwordKeyAlias,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });
 
-    new UserDeleteApi(scope, 'userDelete', {
+    new UserDeleteApi(scope, 'DeleteUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'DELETE',
       multiUserTable: props.multiUserTable,
-      router: props.routers.user,
+      router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
     });
 
-    new ListAllUsersApi(scope, 'userListAll', {
+    new ListAllUsersApi(scope, 'ListUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,

@@ -12,6 +12,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface CreateDatasetApiProps {
@@ -109,8 +110,7 @@ export class CreateDatasetApi {
   }
 
   private createDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-create`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-create`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/dataset_service`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -127,18 +127,88 @@ export class CreateDatasetApi {
       },
       layers: [this.layer],
     });
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          dataset_name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          content: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.OBJECT,
+              properties: {
+                filename: {
+                  type: JsonSchemaType.STRING,
+                  minLength: 1,
+                },
+                name: {
+                  type: JsonSchemaType.STRING,
+                  minLength: 1,
+                },
+                type: {
+                  type: JsonSchemaType.STRING,
+                  minLength: 1,
+                },
+                params: {
+                  type: JsonSchemaType.OBJECT,
+                },
+              },
+            },
+            minItems: 1,
+            maxItems: 100,
+          },
+          creator: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          params: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              description: {
+                type: JsonSchemaType.STRING,
+              },
+            }
+          },
+        },
+        required: [
+          'dataset_name',
+          'content',
+          'creator',
+        ],
+      },
+      contentType: 'application/json',
+    });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
     const createDatasetIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, createDatasetIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-      }],
+      requestValidator,
+      requestModels: {
+        'application/json': requestModel,
+      }
     });
   }
 }

@@ -1841,3 +1841,9 @@ function postToApiGateway(remote_url, api_key, data, callback) {
     // Convert data object to JSON string before sending
     xhr.send(JSON.stringify(data));
 }
+
+
+function logout() {
+    // similar behavior as an HTTP redirect
+    window.location.replace(window.location.href+"logout");
+}

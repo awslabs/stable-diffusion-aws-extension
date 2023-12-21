@@ -61,7 +61,9 @@ export class DeleteSagemakerEndpointsApi {
       actions: [
         'sagemaker:DeleteModel',
         'sagemaker:DeleteEndpoint',
+        'sagemaker:DescribeEndpoint',
         'sagemaker:DeleteEndpointConfig',
+        'sagemaker:DescribeEndpointConfig',
       ],
       resources: [
         `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:model/*`,
@@ -111,8 +113,7 @@ export class DeleteSagemakerEndpointsApi {
   }
 
   private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-delete-endpoints`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-function`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -128,19 +129,20 @@ export class DeleteSagemakerEndpointsApi {
       layers: [this.layer],
     });
 
-    const model = new Model(this.scope, 'DeleteEndpointsModel', {
+    const model = new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: 'DeleteEndpointsModel',
-      description: 'Delete Endpoint Model',
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT4,
-        title: 'deleteEndpointSchema',
+        title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          delete_endpoint_list: {
+          endpoint_name_list: {
             type: JsonSchemaType.ARRAY,
             items: {
               type: JsonSchemaType.STRING,
+              minLength: 1,
             },
             minItems: 1,
             maxItems: 10,
@@ -150,7 +152,7 @@ export class DeleteSagemakerEndpointsApi {
           },
         },
         required: [
-          'delete_endpoint_list',
+          'endpoint_name_list',
           'username',
         ],
       },
@@ -160,14 +162,13 @@ export class DeleteSagemakerEndpointsApi {
     const deleteEndpointsIntegration = new LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, 'DeleteEndpointRequestValidator', {
+    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
       restApi: this.router.api,
-      requestValidatorName: 'DeleteEndpointRequestValidator',
+      requestValidatorName: this.baseId,
       validateRequestBody: true,
     });
 
@@ -178,11 +179,6 @@ export class DeleteSagemakerEndpointsApi {
       requestModels: {
         'application/json': model,
       },
-      methodResponses: [
-        {
-          statusCode: '200',
-        }, { statusCode: '500' },
-      ],
     });
 
   }

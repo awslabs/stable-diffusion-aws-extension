@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 import boto3
 from botocore.exceptions import ClientError
 
+from common.response import ok, bad_request, internal_server_error
 from common.util import publish_msg
 from common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
 from common.stepfunction_service.client import StepFunctionUtilsService
@@ -32,6 +33,7 @@ error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
 user_topic_arn = os.environ.get('USER_TOPIC_ARN')
 
 logger = logging.getLogger('boto3')
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 stepfunctions_client = StepFunctionUtilsService(logger=logger)
 
@@ -48,8 +50,9 @@ class Event:
 
 # POST /model
 def create_model_api(raw_event, context):
+    logger.info(json.dumps(raw_event))
     request_id = context.aws_request_id
-    event = Event(**raw_event)
+    event = Event(**json.loads(raw_event['body']))
     _type = event.model_type
 
     try:
@@ -57,19 +60,13 @@ def create_model_api(raw_event, context):
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'train' not in creator_permissions \
                 or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'user {event.creator} has not permission to create a train job'
-            }
+            return bad_request(message=f'user {event.creator} has not permission to create a train job')
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
 
         # todo: check if duplicated name and new_model_name only for Completed and Model
         if not event.checkpoint_id and len(event.filenames) == 0:
-            return {
-                'statusCode': 400,
-                'errMsg': 'either checkpoint_id or filenames need to be provided'
-            }
+            return bad_request(message='either checkpoint_id or filenames need to be provided')
 
         base_key = get_base_model_s3_key(_type, event.name, request_id)
         timestamp = datetime.datetime.now().timestamp()
@@ -114,17 +111,11 @@ def create_model_api(raw_event, context):
                 'id': event.checkpoint_id,
             })
             if raw_checkpoint is None:
-                return {
-                    'status': 500,
-                    'error': f'create model ckpt with id {event.checkpoint_id} is not found'
-                }
+                return bad_request(message=f'create model ckpt with id {event.checkpoint_id} is not found')
 
             checkpoint = CheckPoint(**raw_checkpoint)
             if checkpoint.checkpoint_status != CheckPointStatus.Active:
-                return {
-                    'status': 400,
-                    'error': f'checkpoint with id ({checkpoint.id}) is not Active to use'
-                }
+                return bad_request(message=f'checkpoint with id ({checkpoint.id}) is not Active to use')
             checkpoint_id = checkpoint.id
             if checkpoint.allowed_roles_or_users:
                 allowed_to_use = False
@@ -134,10 +125,7 @@ def create_model_api(raw_event, context):
                         break
 
                 if not allowed_to_use:
-                    return {
-                        'status': 400,
-                        'error': f'checkpoint with id ({checkpoint.id}) is not allowed to use by user {event.creator}'
-                    }
+                    return bad_request(message=f'checkpoint with id ({checkpoint.id}) is not allowed to use by user {event.creator}')
 
         model_job = Model(
             id=request_id,
@@ -154,13 +142,9 @@ def create_model_api(raw_event, context):
 
     except ClientError as e:
         logger.error(e)
-        return {
-            'statusCode': 200,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
-    return {
-        'statusCode': 200,
+    data = {
         'job': {
             'id': model_job.id,
             'status': model_job.job_status.value,
@@ -171,99 +155,84 @@ def create_model_api(raw_event, context):
         's3PresignUrl':  multiparts_resp
     }
 
+    return ok(data=data)
+
 
 # GET /models
 def list_all_models_api(event, context):
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
-    parameters = event['queryStringParameters']
-    if 'types' in parameters and len(parameters['types']) > 0:
-        _filter['model_type'] = parameters['types']
 
-    if 'status' in parameters and len(parameters['status']) > 0:
-        _filter['job_status'] = parameters['status']
+    parameters = event['queryStringParameters']
+    if parameters:
+        if 'types' in parameters and len(parameters['types']) > 0:
+            _filter['model_type'] = parameters['types']
+
+        if 'status' in parameters and len(parameters['status']) > 0:
+            _filter['job_status'] = parameters['status']
+
     resp = ddb_service.scan(table=model_table, filters=_filter)
 
     if resp is None or len(resp) == 0:
-        return {
-            'statusCode': 200,
-            'models': []
-        }
+        return ok(data={'models': []})
 
     models = []
 
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth user provided'
-        }
+    try:
+        requestor_name = event['requestContext']['authorizer']['username']
+        requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+        requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
+        if 'train' not in requestor_permissions or \
+                ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
+            return bad_request(message='user has no permission to train')
 
-    requestor_name = event['x-auth']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
-    if 'train' not in requestor_permissions or \
-            ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-        return {
-            'statusCode': '400',
-            'error': f'user has no permission to train'
-        }
+        for r in resp:
+            model = Model(**(ddb_service.deserialize(r)))
+            model_dto = {
+                'id': model.id,
+                'model_name': model.name,
+                'created': model.timestamp,
+                'params': model.params,
+                'status': model.job_status.value,
+                'output_s3_location': model.output_s3_location
+            }
+            if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles, requestor_name):
+                models.append(model_dto)
+            elif not model.allowed_roles_or_users and \
+                    'user' in requestor_permissions and \
+                    'all' in requestor_permissions['user']:
+                # superuser can view the legacy data
+                models.append(model_dto)
 
-    for r in resp:
-        model = Model(**(ddb_service.deserialize(r)))
-        model_dto = {
-            'id': model.id,
-            'model_name': model.name,
-            'created': model.timestamp,
-            'params': model.params,
-            'status': model.job_status.value,
-            'output_s3_location': model.output_s3_location
-        }
-        if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles, requestor_name):
-            models.append(model_dto)
-        elif not model.allowed_roles_or_users and \
-                'user' in requestor_permissions and \
-                'all' in requestor_permissions['user']:
-            # superuser can view the legacy data
-            models.append(model_dto)
-
-    return {
-        'statusCode': 200,
-        'models': models
-    }
+        return ok(data={'models': models}, decimal=True)
+    except Exception as e:
+        logger.error(e)
+        return bad_request(message=str(e))
 
 
 @dataclass
 class PutModelEvent:
-    model_id: str
     status: str
     multi_parts_tags: Dict[str, Any]
 
 
 # PUT /model
 def update_model_job_api(raw_event, context):
-    event = PutModelEvent(**raw_event)
+    logger.info(json.dumps(raw_event))
+    event = PutModelEvent(**json.loads(raw_event['body']))
+
+    model_id = raw_event['pathParameters']['id']
 
     try:
-        raw_model_job = ddb_service.get_item(table=model_table, key_values={'id': event.model_id})
+        raw_model_job = ddb_service.get_item(table=model_table, key_values={'id': model_id})
         if raw_model_job is None:
-            return {
-                'statusCode': 200,
-                'error': f'create model with id {event.model_id} is not found'
-            }
+            return bad_request(message=f'create model with id {model_id} is not found')
 
         model_job = Model(**raw_model_job)
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': model_job.checkpoint_id,
         })
         if raw_checkpoint is None:
-            return {
-                'status': 500,
-                'error': f'create model ckpt with id {event.model_id} is not found'
-            }
+            return bad_request(message=f'create model ckpt with id {model_id} is not found')
 
         ckpt = CheckPoint(**raw_checkpoint)
         if ckpt.checkpoint_status == ckpt.checkpoint_status.Initial:
@@ -282,13 +251,10 @@ def update_model_job_api(raw_event, context):
             field_name='job_status',
             value=event.status
         )
-        return resp
+        return ok(data=resp)
     except ClientError as e:
         logger.error(e)
-        return {
-            'statusCode': 200,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # SNS callback

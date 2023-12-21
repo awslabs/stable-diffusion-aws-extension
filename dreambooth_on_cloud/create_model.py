@@ -79,7 +79,7 @@ def async_create_model_on_sagemaker(
     if url is None or api_key is None:
         logger.debug("Url or API-Key is not setting.")
         return
-    url += "model"
+    url += "models"
     model_id = ""
     try:
         if len(params["ckpt_path"]) == 0 or len(params["new_model_name"]) == 0:
@@ -114,7 +114,7 @@ def async_create_model_on_sagemaker(
             print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
             response.raise_for_status()
-            json_response = response.json()
+            json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             payload = {
                 "model_id": model_id,
@@ -146,7 +146,7 @@ def async_create_model_on_sagemaker(
             print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
             response.raise_for_status()
-            json_response = response.json()
+            json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             multiparts_tags=[]
             if not from_hub:
@@ -172,7 +172,7 @@ def async_create_model_on_sagemaker(
             logger.debug("Create model params error.")
             return
         # Start creating model on cloud.
-        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.put(url=f"{url}/{model_id}", json=payload, headers={'x-api-key': api_key})
         integral_check = True
         print(response)
     except Exception as e:

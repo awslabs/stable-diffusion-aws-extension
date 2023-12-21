@@ -65,8 +65,7 @@ export class GetTrainingJobApi {
             {proxy: true}
         );
 
-        this.router.addResource('{id}')
-            .addMethod(this.httpMethod, lambdaIntegration, {apiKeyRequired: true});
+        this.router.addMethod(this.httpMethod, lambdaIntegration, {apiKeyRequired: true});
 
     }
 

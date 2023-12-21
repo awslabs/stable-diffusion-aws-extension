@@ -1,14 +1,17 @@
 import logging
 import os
+import json
 from dataclasses import dataclass
 
 from common.ddb_service.client import DynamoDbUtilsService
 from _types import Role, PARTITION_KEYS
+from common.response import bad_request, ok
 from utils import check_user_existence, get_permissions_by_username, get_user_roles
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 
-logger = logging.getLogger('roles_api')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -21,32 +24,25 @@ class UpsertRoleEvent:
 
 # POST /role
 def upsert_role(raw_event, ctx):
-    event = UpsertRoleEvent(**raw_event)
+
+    event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
     # check if creator exist
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
-        return {
-            'statusCode': 400,
-            'errMsg': f'creator {event.creator} not exist'
-        }
+        return bad_request(message=f'creator {event.creator} not exist')
 
     if not ctx or 'from_sd_local' not in vars(ctx):
         # should check the creator permission contains role:all
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'role' not in creator_permissions or \
                 ('all' not in creator_permissions['role'] and 'create' not in creator_permissions['role']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'creator {event.creator} not have permission to create role'
-            }
+            return bad_request(message=f'creator {event.creator} not have permission to create role')
 
         if 'all' not in creator_permissions['role']:
             target_role = _get_role_by_name(event.role_name)
             if target_role and target_role.creator != event.creator:
-                return {
-                    'statusCode': 400,
-                    'errMsg': f'creator {event.creator} not have permission to update role {target_role.sort_key}'
-                }
+                return bad_request(
+                    message=f'creator {event.creator} not have permission to update role {target_role.sort_key}')
 
             for permission_str in event.permissions:
                 permission_parts = permission_str.split(':')
@@ -54,11 +50,8 @@ def upsert_role(raw_event, ctx):
                 action = permission_parts[1]
                 if resource not in creator_permissions or \
                         ('all' not in creator_permissions[resource] and action not in creator_permissions[resource]):
-                    return {
-                        'statusCode': 400,
-                        'errMsg': f'creator {event.creator} have not permission '
-                                  f'to create role with permission: [{permission_str}]'
-                    }
+                    return bad_request(
+                        message=f'creator {event.creator} have not permission to create role with permission: [{permission_str}]')
 
     ddb_service.put_items(user_table, Role(
         kind=PARTITION_KEYS.role,
@@ -67,37 +60,29 @@ def upsert_role(raw_event, ctx):
         creator=event.creator,
     ).__dict__)
 
-    return {
-        'statusCode': 200,
-        'role': {
-            'role_name':  event.role_name,
-            'permissions': event.permissions,
-            'creator': event.creator,
-        }
+    data = {
+        'role_name': event.role_name,
+        'permissions': event.permissions,
+        'creator': event.creator,
     }
+
+    return ok(message='role created', data=data)
 
 
 # GET /roles?last_evaluated_key=xxx&limit=10&role=ROLE_NAME&filter=key:value,key:value
 def list_roles(event, ctx):
+    logger.info(json.dumps(event))
     _filter = {}
-    if 'queryStringParameters' not in event:
-        return {
-            'statusCode': '500',
-            'error': 'query parameter status and types are needed'
-        }
 
     parameters = event['queryStringParameters']
-    if 'x-auth' not in event or not event['x-auth']['username']:
-        return {
-            'statusCode': '400',
-            'error': 'no auth provided'
-        }
 
-    requestor_name = event['x-auth']['username']
+    requestor_name = event['requestContext']['authorizer']['username']
     requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
     requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
 
-    role = parameters['role'] if 'role' in parameters and parameters['role'] else 0
+    role = 0
+    if parameters:
+        role = parameters['role'] if 'role' in parameters and parameters['role'] else 0
     last_token = None
     if not role:
         result = ddb_service.query_items(user_table,
@@ -132,12 +117,14 @@ def list_roles(event, ctx):
         elif r.sort_key in requestor_roles and 'role' in requestor_permissions and \
                 'list' in requestor_permissions['role']:
             result.append(role_dto)
-    return {
-        'statusCode': 200,
+
+    data = {
         'roles': result,
         'previous_evaluated_key': 'not_applicable',
         'last_evaluated_key': last_token
     }
+
+    return ok(data=data)
 
 
 def _get_role_by_name(role_name):

@@ -74,8 +74,7 @@ export class ListAllRolesApi {
   }
 
   private listAllRolesApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/multi_users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -93,42 +92,12 @@ export class ListAllRolesApi {
     const listRolesIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.querystring.last_evaluated_key': 'method.request.querystring.last_evaluated_key',
-          'integration.request.querystring.limit': 'method.request.querystring.limit',
-          'integration.request.querystring.role': 'method.request.querystring.role',
-          'integration.request.querystring.filter': 'method.request.querystring.filter',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-                        '    "queryStringParameters": {\n' +
-                        '        #foreach($queryParam in $input.params().querystring.keySet())\n' +
-                        '        "$queryParam": "$util.escapeJavaScript($input.params().querystring.get($queryParam))"\n' +
-                        '        #if($foreach.hasNext),#end\n' +
-                        '        #end\n' +
-                        '    },\n' +
-                        '    "x-auth": {\n' +
-                        '        "username": "$context.authorizer.username",\n' +
-                        '        "role": "$context.authorizer.role"\n' +
-                        '    }\n' +
-                        '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
     this.router.addMethod(this.httpMethod, listRolesIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestParameters: {
-        'method.request.querystring.last_evaluated_key': false,
-        'method.request.querystring.limit': false,
-        'method.request.querystring.role': false,
-        'method.request.querystring.filter': false,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
     });
   }
 }

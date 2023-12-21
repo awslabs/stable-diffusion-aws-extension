@@ -119,8 +119,7 @@ export class RunInferenceJobApi {
   }
 
   private updateTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-updateTrainJob`, <PythonFunctionProps>{
-      functionName: `${this.id}-run-infer-job-v2`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/inference_v2`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -141,34 +140,14 @@ export class RunInferenceJobApi {
     const runJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
-        proxy: false,
-        requestParameters: {
-          'integration.request.path.inference_id': 'method.request.path.inference_id',
-        },
-        requestTemplates: {
-          'application/json': '{\n' +
-              '    "pathStringParameters": {\n' +
-              '        #foreach($pathParam in $input.params().path.keySet())\n' +
-              '        "$pathParam": "$util.escapeJavaScript($input.params().path.get($pathParam))"\n' +
-              '        #if($foreach.hasNext),#end\n' +
-              '        #end\n' +
-              '    }\n' +
-              '}',
-        },
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
 
-    const inferIdRouter = this.router.addResource('{inference_id}');
-    inferIdRouter.addResource('run').addMethod(this.httpMethod, runJobIntegration, <MethodOptions>{
+    this.router.addResource('start').addMethod(this.httpMethod, runJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestParameters: {
-        'method.request.path.inference_id': true,
-      },
-      methodResponses: [{
-        statusCode: '200',
-      }, { statusCode: '500' }],
     });
+
     return lambdaFunction;
   }
 }
