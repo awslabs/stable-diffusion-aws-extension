@@ -3,7 +3,7 @@ import logging
 import os
 from dataclasses import dataclass
 
-from _types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
+from common.types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, internal_server_error, not_found
 

@@ -131,6 +131,7 @@ class Role(BaseMultiUserEntity):
     permissions: [str]
     params: Optional[dict[str, Any]] = None
 
+
 # @dataclass
 # class Permission(BaseMultiUserEntity):
 #     name: str

@@ -11,9 +11,6 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
 
-s3 = boto3.resource('s3')
-bucket = s3.Bucket(os.environ.get('S3_BUCKET_NAME'))
-
 
 def handler(event, ctx):
     logger.info(f'event: {event}')

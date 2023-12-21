@@ -9,8 +9,8 @@ import sagemaker
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
-from lib._types import TrainJob, TrainJobStatus, Model, CheckPoint
-from lib.common_tools import DecimalEncoder
+from common.types import TrainJob, TrainJobStatus, Model, CheckPoint
+from common.common_tools import DecimalEncoder
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')

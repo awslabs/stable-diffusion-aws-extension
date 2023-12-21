@@ -233,7 +233,7 @@ class ModelsApiTest(TestCase):
 
     def test_batch_get_s3_multipart_signed_urls(self):
         from model_and_train.common_tools import batch_get_s3_multipart_signed_urls
-        from model_and_train._types import MultipartFileReq
+        from model_and_train.types import MultipartFileReq
         resp = batch_get_s3_multipart_signed_urls(
             'bucket',
             'test-multipart-api',

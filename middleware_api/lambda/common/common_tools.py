@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 import boto3
 
-from lib._types import MultipartFileReq, CheckPoint
+from types import MultipartFileReq, CheckPoint
 
 PART_SIZE = 500 * 1024 * 1024
 

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, ok
-from lib._types import Role, PARTITION_KEYS
-from utils import check_user_existence, get_permissions_by_username
+from common.types import Role, PARTITION_KEYS
+from common.utils import check_user_existence, get_permissions_by_username
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 

@@ -17,7 +17,7 @@ class InferenceApiTest(TestCase):
 
     def test_kms(self):
         from common.ddb_service.client import DynamoDbUtilsService
-        from multi_users.utils import KeyEncryptService
+        from common.utils import KeyEncryptService
 
         text = 'this text need to be encrypted'
         key_id = os_key_id
@@ -26,7 +26,7 @@ class InferenceApiTest(TestCase):
         cipher_text = key_client.encrypt(key_id, text)
         ddb_service = DynamoDbUtilsService()
         table_name = 'MultiUserTable'
-        from multi_users._types import User
+        from common.types import User
         ddb_service.put_items(table_name, User(
             kind='user',
             sort_key='superman',
@@ -44,7 +44,7 @@ class InferenceApiTest(TestCase):
         assert plain_txt.decode() == text
 
     def test_add_two_roles(self):
-        from multi_users.roles_api import upsert_role
+        from common.roles_api import upsert_role
         rolenames = ['IT Operator', 'Designer']
         for rn in rolenames:
             event = {

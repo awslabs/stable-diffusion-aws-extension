@@ -48,7 +48,7 @@ class InferenceApiTest(TestCase):
         # get the inference job from ddb by job id
 
         from inference_api import inference_table_name, ddb_service
-        from inference_v2._types import InferenceJob
+        from inference_v2.types import InferenceJob
         inference_raw = ddb_service.get_item(inference_table_name, {
             'InferenceJobId': _id
         })
@@ -91,7 +91,7 @@ class InferenceApiTest(TestCase):
         # get the inference job from ddb by job id
 
         from inference_api import inference_table_name, ddb_service
-        from inference_v2._types import InferenceJob
+        from inference_v2.types import InferenceJob
         inference_raw = ddb_service.get_item(inference_table_name, {
             'InferenceJobId': _id
         })

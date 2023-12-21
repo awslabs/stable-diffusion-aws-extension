@@ -1,12 +1,11 @@
 import logging
 import os
 
-from _types import InferenceJob
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from multi_users.utils import get_user_roles, check_user_permissions
+from common.types import InferenceJob
+from common.utils import get_user_roles, check_user_permissions
 
-bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')

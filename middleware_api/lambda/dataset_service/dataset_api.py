@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
-from _types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
+from common.types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error, not_found, forbidden
 from common.util import get_s3_presign_urls, generate_presign_url
-from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')

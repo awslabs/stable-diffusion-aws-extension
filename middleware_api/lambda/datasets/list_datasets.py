@@ -1,10 +1,10 @@
 import logging
 import os
 
-from _types import DatasetInfo
+from common.types import DatasetInfo
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')

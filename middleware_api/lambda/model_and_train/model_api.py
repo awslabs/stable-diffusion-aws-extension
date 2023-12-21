@@ -15,9 +15,9 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import publish_msg
-from lib._types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
-from lib.common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
-from lib.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
+from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
+from common.common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
+from common.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 

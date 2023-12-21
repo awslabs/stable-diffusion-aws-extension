@@ -6,7 +6,7 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
-from _types import InferenceJob, InvocationsRequest
+from common.types import InferenceJob, InvocationsRequest
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 

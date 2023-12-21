@@ -3,7 +3,7 @@ import logging
 import boto3
 from botocore.exceptions import ClientError
 
-from lib._types import PARTITION_KEYS, User, Role
+from types import PARTITION_KEYS, User, Role
 
 
 class KeyEncryptService:

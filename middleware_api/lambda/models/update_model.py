@@ -8,21 +8,15 @@ from botocore.exceptions import ClientError
 from sagemaker import Predictor
 from sagemaker.predictor_async import AsyncPredictor
 
+from common.common_tools import complete_multipart_upload, DecimalEncoder
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
-from lib._types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
-from lib.common_tools import complete_multipart_upload, DecimalEncoder
+from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
-bucket_name = os.environ.get('S3_BUCKET')
 model_table = os.environ.get('DYNAMODB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 endpoint_name = os.environ.get('SAGEMAKER_ENDPOINT_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
-
-success_topic_arn = os.environ.get('SUCCESS_TOPIC_ARN')
-error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
-user_topic_arn = os.environ.get('USER_TOPIC_ARN')
 
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
@@ -86,10 +80,7 @@ def _exec(model_job: Model, action: CreateModelStatus):
         model_job.job_status = action
         raw_chkpt = ddb_service.get_item(table=checkpoint_table, key_values={'id': model_job.checkpoint_id})
         if raw_chkpt is None:
-            return {
-                'statusCode': 200,
-                'error': f'model related checkpoint with id {model_job.checkpoint_id} is not found'
-            }
+            return bad_request(message=f'model related checkpoint with id {model_job.checkpoint_id} is not found')
 
         checkpoint = CheckPoint(**raw_chkpt)
         checkpoint.checkpoint_status = CheckPointStatus.Active
@@ -132,8 +123,7 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
     prediction = predictor.predict_async(data=payload, inference_id=job.id)
     output_path = prediction.output_path
 
-    return {
-        'statusCode': 200,
+    data = {
         'job': {
             'output_path': output_path,
             'id': job.id,
@@ -142,3 +132,5 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
             'jobType': job.model_type
         }
     }
+
+    return ok(data)
