@@ -81,7 +81,7 @@ def prepare_for_training(s3_model_path, model_name, s3_input_path, data_tar_list
     model_bucket_name = get_bucket_name_from_s3_path(s3_model_path)
     s3_model_path = os.path.join(get_path_from_s3_path(s3_model_path), f'{model_name}.tar')
     logger.info(f"Download src model from s3: {model_bucket_name} {s3_model_path} {model_name}.tar")
-    print(f"Download src model from s3: model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
+    print(f"Download src model from s3: region__{region} model_bucket_name __ {model_bucket_name} s3_model_path__{s3_model_path} model_name__{model_name}.tar")
     download_folder_from_s3_by_tar(model_bucket_name, s3_model_path, f'{model_name}.tar', region)
 
     input_bucket_name = get_bucket_name_from_s3_path(s3_input_path)
@@ -129,6 +129,7 @@ def main(s3_input_path, s3_output_path, params, region):
 
 
 if __name__ == "__main__":
+    os.environ['AWS_DEFAULT_REGION'] = 'cn-northwest-1'
     print(sys.argv)
     command_line_args = ' '.join(sys.argv[1:])
     params = {}
