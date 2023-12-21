@@ -2,9 +2,9 @@ import json
 import logging
 import os
 
-from _types import Role, PARTITION_KEYS
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from lib._types import Role, PARTITION_KEYS
 from utils import get_permissions_by_username, get_user_roles
 
 user_table = os.environ.get('MULTI_USER_TABLE')

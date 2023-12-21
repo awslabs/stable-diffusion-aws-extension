@@ -2,10 +2,11 @@ import json
 import logging
 import os
 
+from multi_users._types import PARTITION_KEYS, Role
+
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from lib._types import CheckPoint
-from multi_users._types import PARTITION_KEYS, Role
 from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')

@@ -11,9 +11,9 @@ import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common_tools import get_base_checkpoint_s3_key, \
-    batch_get_s3_multipart_signed_urls, multipart_upload_from_url
 from lib._types import CheckPoint, CheckPointStatus, MultipartFileReq
+from lib.common_tools import get_base_checkpoint_s3_key, \
+    batch_get_s3_multipart_signed_urls, multipart_upload_from_url
 from multi_users.utils import get_user_roles, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')

@@ -7,7 +7,7 @@ from datetime import datetime
 
 import boto3
 
-from _enums import EndpointStatus
+from lib._enums import EndpointStatus
 from _types import EndpointDeploymentJob
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request

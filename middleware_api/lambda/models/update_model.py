@@ -11,8 +11,8 @@ from sagemaker.predictor_async import AsyncPredictor
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common_tools import complete_multipart_upload, DecimalEncoder
 from lib._types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
+from lib.common_tools import complete_multipart_upload, DecimalEncoder
 
 bucket_name = os.environ.get('S3_BUCKET')
 model_table = os.environ.get('DYNAMODB_TABLE')

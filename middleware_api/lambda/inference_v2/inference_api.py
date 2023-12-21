@@ -6,7 +6,6 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
-from model_and_train._types import CheckPoint, CheckPointStatus
 from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
@@ -16,6 +15,7 @@ from _types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
+from lib._types import CheckPoint, CheckPointStatus
 from multi_users.utils import get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')

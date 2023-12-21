@@ -4,9 +4,9 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
-from _types import User, PARTITION_KEYS, Role, Default_Role
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
+from lib._types import User, PARTITION_KEYS, Role, Default_Role
 from roles.create_role import handler as upsert_role
 from utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 

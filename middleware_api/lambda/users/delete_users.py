@@ -2,9 +2,9 @@ import json
 import logging
 import os
 
-from _types import PARTITION_KEYS
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from lib._types import PARTITION_KEYS
 from users.create_user import _check_action_permission
 from utils import KeyEncryptService
 
