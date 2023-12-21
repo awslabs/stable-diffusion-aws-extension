@@ -908,7 +908,7 @@ def test_aws_connect_config(api_url, api_token):
     api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
-    target_url = f'{api_url}inference/test-connection'
+    target_url = f'{api_url}ping'
     headers = {
         "x-api-key": api_token,
         "Content-Type": "application/json"
@@ -917,7 +917,7 @@ def test_aws_connect_config(api_url, api_token):
         response = requests.get(target_url,
                                 headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
-        r = response.json()
+        assert response.json()['message'] == 'pong'
         return "Successfully Connected"
     except requests.exceptions.RequestException as e:
         logger.error(f"Error: Failed to get server request. Details: {e}")

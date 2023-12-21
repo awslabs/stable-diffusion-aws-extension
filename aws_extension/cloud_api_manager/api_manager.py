@@ -133,12 +133,8 @@ class CloudApiManager:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
 
-                    # Skip if status is 'Deleted'
-                    if endpoint_status == 'Deleted':
-                        continue
-
-                    # Compatible with fields used in older versions
-                    if obj["status"] == 'deleted':
+                    # Skip if status is 'Creating'
+                    if endpoint_status == 'Creating':
                         continue
 
                     if "endTime" in obj:

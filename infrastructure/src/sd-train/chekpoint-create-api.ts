@@ -130,7 +130,14 @@ export class CreateCheckPointApi {
         properties: {
           checkpoint_type: {
             type: JsonSchemaType.STRING,
-            minLength: 1,
+            enum: [
+              'Stable-diffusion',
+              'embeddings',
+              'Lora',
+              'hypernetworks',
+              'ControlNet',
+              'VAE',
+            ],
           },
           filenames: {
             type: JsonSchemaType.ARRAY,
@@ -151,6 +158,15 @@ export class CreateCheckPointApi {
             minItems: 1,
             maxItems: 20,
           },
+          urls: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 20,
+          },
           params: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -165,7 +181,6 @@ export class CreateCheckPointApi {
         },
         required: [
           'checkpoint_type',
-          'filenames',
         ],
       },
       contentType: 'application/json',

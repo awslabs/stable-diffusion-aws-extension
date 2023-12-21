@@ -20,6 +20,7 @@ import { Construct } from 'constructs';
 import { CreateModelSageMakerEndpoint } from './create-model-endpoint';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_UTILS } from '../common/dockerImages';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from "aws-cdk-lib/aws-apigateway";
 
 
 export interface UpdateModelStatusRestApiProps {
@@ -150,8 +151,7 @@ export class UpdateModelStatusRestApi {
   }
 
   private updateModelJobApi() {
-    const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-handler`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-update-model`,
+    const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
@@ -173,16 +173,52 @@ export class UpdateModelStatusRestApi {
     const updateModelLambdaIntegration = new apigw.LambdaIntegration(
       updateModelLambda,
       {
-        proxy: false,
-        integrationResponses: [{ statusCode: '200' }],
+        proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      methodResponses: [{
-        statusCode: '200',
-      }],
+
+    const requestModel = new Model(this.scope, `${this.baseId}-model`,{
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          multi_parts_tags:{
+            type: JsonSchemaType.OBJECT,
+          }
+        },
+        required: [
+          'status',
+          'multi_parts_tags',
+        ],
+      },
+      contentType: 'application/json',
     });
+
+    const requestValidator = new RequestValidator(
+        this.scope,
+        `${this.baseId}-validator`,
+        {
+          restApi: this.router.api,
+          requestValidatorName: this.baseId,
+          validateRequestBody: true,
+        });
+
+    this.router.addResource('{id}')
+        .addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
+          apiKeyRequired: true,
+          requestValidator,
+          requestModels: {
+            'application/json': requestModel,
+          }
+        });
   }
 }
 

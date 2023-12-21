@@ -11,7 +11,7 @@ from typing import Any, List, Optional
 import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok, bad_request, not_found, forbidden, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
 from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
@@ -30,6 +30,7 @@ image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-eas
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 logger = logging.getLogger('boto3')
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -45,34 +46,26 @@ class Event:
 # POST /train
 def create_train_job_api(raw_event, context):
     request_id = context.aws_request_id
-    event = Event(**raw_event)
+    event = Event(**json.loads(raw_event['body']))
     _type = event.train_type
 
     try:
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'train' not in creator_permissions \
                 or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return {
-                'statusCode': 400,
-                'errMsg': f'user {event.creator} has not permission to create a train job'
-            }
+            return forbidden(message=f'user {event.creator} has not permission to create a train job')
 
         model_raw = ddb_service.get_item(table=model_table, key_values={
             'id': event.model_id
         })
         # if model is not found, model_raw is {}
         if model_raw == {}:
-            return {
-                'statusCode': 500,
-                'error': f'model with id {event.model_id} is not found'
-            }
+            return not_found(message=f'model with id {event.model_id} is not found')
 
         model = Model(**model_raw)
         if model.job_status != CreateModelStatus.Complete:
-            return {
-                'statusCode': 500,
-                'error': f'model {model.id} is in {model.job_status.value} state, not valid to be used for train'
-            }
+            return bad_request(
+                message=f'model {model.id} is in {model.job_status.value} state, not valid to be used for train')
 
         base_key = f'{_type}/train/{model.name}/{request_id}'
         input_location = f'{base_key}/input'
@@ -137,8 +130,7 @@ def create_train_job_api(raw_event, context):
         )
         ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
-        return {
-            'statusCode': 200,
+        data = {
             'job': {
                 'id': train_job.id,
                 'status': train_job.job_status.value,
@@ -148,12 +140,11 @@ def create_train_job_api(raw_event, context):
             },
             's3PresignUrl': presign_url_map
         }
+
+        return ok(data=data)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 200,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # GET /trains
@@ -211,13 +202,13 @@ def list_all_train_jobs_api(event, context):
 
 # PUT /train used to kickoff a train job step function
 def update_train_job_api(event, context):
-    if 'status' in event and 'train_job_id' in event and event['status'] == TrainJobStatus.Training.value:
-        return _start_train_job(event['train_job_id'])
+    logger.info(json.dumps(event))
+    train_job_id = event['pathParameters']['id']
+    body = json.loads(event['body'])
+    if body['status'] == TrainJobStatus.Training.value:
+        return _start_train_job(train_job_id)
 
-    return {
-        'statusCode': 200,
-        'msg': f'not implemented for train job status {event["status"]}'
-    }
+    return ok(message=f'not implemented for train job status {body["status"]}')
 
 
 def _start_train_job(train_job_id: str):
@@ -225,10 +216,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job_id
     })
     if raw_train_job is None or len(raw_train_job) == 0:
-        return {
-            'statusCode': 500,
-            'error': f'no such train job with id({train_job_id})'
-        }
+        return not_found(message=f'no such train job with id({train_job_id})')
 
     train_job = TrainJob(**raw_train_job)
 
@@ -236,10 +224,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job.model_id
     })
     if model_raw is None:
-        return {
-            'statusCode': 500,
-            'error': f'model with id {train_job.model_id} is not found'
-        }
+        return not_found(message=f'model with id {train_job.model_id} is not found')
 
     model = Model(**model_raw)
 
@@ -247,10 +232,7 @@ def _start_train_job(train_job_id: str):
         'id': train_job.checkpoint_id
     })
     if raw_checkpoint is None:
-        return {
-            'statusCode': 500,
-            'error': f'checkpoint with id {train_job.checkpoint_id} is not found'
-        }
+        return not_found(message=f'checkpoint with id {train_job.checkpoint_id} is not found')
 
     checkpoint = CheckPoint(**raw_checkpoint)
 
@@ -325,8 +307,7 @@ def _start_train_job(train_job_id: str):
             value=sfn_arn
         )
 
-        return {
-            'statusCode': 200,
+        data = {
             'job': {
                 'id': train_job.id,
                 'status': train_job.job_status.value,
@@ -336,12 +317,11 @@ def _start_train_job(train_job_id: str):
                 'input_location': train_job.input_s3_location
             },
         }
+
+        return ok(data=data)
     except Exception as e:
         print(e)
-        return {
-            'statusCode': 500,
-            'error': str(e)
-        }
+        return internal_server_error(message=str(e))
 
 
 # sfn

@@ -74,8 +74,7 @@ export class ListAllRolesApi {
   }
 
   private listAllRolesApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-listall`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-listall`,
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/multi_users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,

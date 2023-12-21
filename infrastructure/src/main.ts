@@ -22,6 +22,7 @@ import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
+import {PingApi} from "./api/service/ping";
 
 const app = new App();
 
@@ -105,14 +106,11 @@ export class Middleware extends Stack {
       useExist: useExist,
     });
 
-    const api_train_path = 'train-api/train';
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
-      'model',
+      'ping',
       'models',
-      'upload_checkpoint',
       'checkpoints',
-      'train',
       'datasets',
       'inference',
       'users',
@@ -120,7 +118,6 @@ export class Middleware extends Stack {
       'endpoints',
       'inferences',
       'trainings',
-      api_train_path,
     ]);
 
     new MultiUsersStack(this, 'multiUserSt', {
@@ -131,6 +128,13 @@ export class Middleware extends Stack {
       useExist: useExist,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
+    });
+
+    new PingApi(this, 'Ping', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      router: restApi.routers.ping,
+      srcRoot: '../middleware_api/lambda',
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);

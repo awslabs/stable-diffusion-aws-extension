@@ -115,6 +115,21 @@ def server_request_post(path, params):
     return response
 
 
+def server_request_get(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.get(list_endpoint_url, params=params, headers=headers)
+    return response
+
+
 def get_s3_file_names(bucket, folder):
     """Get a list of file names from an S3 bucket and folder."""
     s3 = boto3.resource('s3')
@@ -235,8 +250,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
         if checkpoint:
             body_params['checkpoint'] = checkpoint
         body_params['limit'] = -1 if show_all_inference_job else 10
-        response = server_request_post(f'inference/query-inference-jobs', body_params)
-        r = response.json()
+        response = server_request_get(f'inferences', body_params)
+        r = response.json()['data']['inferences']
         logger.debug(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -589,9 +604,9 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
         params_dict = {}
 
     params_dict['creator'] = pr.username
-    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
-    response = server_request_post('upload_checkpoint', body_params)
-    response_data = response.json()
+    body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
+    response = server_request_post('checkpoints', body_params)
+    response_data = response.json()['data']
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
     if 'checkpoint' in response_data:
@@ -601,7 +616,7 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
 
 
 def generate_on_cloud(sagemaker_endpoint):
-    logger.info(f"checkpiont_info {checkpoint_info}")
+    logger.info(f"checkpoint_info {checkpoint_info}")
     logger.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
@@ -813,28 +828,6 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 # def txt2img_config_save():
 #     # placeholder for saving txt2img config
 #     pass
-
-def displayEndpointInfo(input_string: str):
-    logger.debug(f"selected value is {input_string}")
-    if not input_string:
-        return
-    parts = input_string.split('+')
-
-    if len(parts) < 2:
-        return plaintext_to_html("")
-
-    endpoint_job_id, status = parts[0], parts[1]
-
-    if status == 'failed':
-        response = server_request(f'inference/get-endpoint-deployment-job?jobID={endpoint_job_id}')
-        # Do something with the response
-        r = response.json()
-        if "error" in r:
-            return plaintext_to_html(r["error"])
-        else:
-            return plaintext_to_html(r["EndpointDeploymentJobId"])
-    else:
-        return plaintext_to_html("")
 
 
 def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):

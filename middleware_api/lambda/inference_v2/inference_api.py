@@ -125,7 +125,7 @@ def prepare_inference(raw_event, context):
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
         return ok(data=resp)
     except Exception as e:
-        return internal_server_error(message=str(e))
+        return bad_request(message=str(e))
 
 
 # PUT /v2/inference/{inference_id}/run
@@ -208,7 +208,10 @@ def list_all_inference_jobs(event, ctx):
 
     for row in scan_rows:
         inference = InferenceJob(**(ddb_service.deserialize(row)))
-        if username and check_user_permissions(inference.owner_group_or_role, user_roles, username):
+        if username:
+            if check_user_permissions(inference.owner_group_or_role, user_roles, username):
+                results.append(inference.__dict__)
+        else:
             results.append(inference.__dict__)
 
     data = {

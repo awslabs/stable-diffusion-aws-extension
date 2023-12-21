@@ -10,7 +10,6 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
-import { UploadCheckPointApi } from './checkpoint-upload-api';
 import { CreateCheckPointApi } from './chekpoint-create-api';
 import { UpdateCheckPointApi } from './chekpoint-update-api';
 import { ListAllCheckPointsApi } from './chekpoints-listall-api';
@@ -80,25 +79,27 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /train
-    new CreateTrainJobApi(this, 'sdExtn-createTrain', {
+    new CreateTrainJobApi(this, 'CreateTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       modelTable: props.database.modelTable,
-      router: [routers.train, routers['train-api/train']],
+      router: routers.trainings,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
     });
 
+    const trainJobRouter = routers.trainings.addResource('{id}');
+
     // PUT /train
-    new UpdateTrainJobApi(this, 'sdExtn-putTrain', {
+    new UpdateTrainJobApi(this, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       modelTable: props.database.modelTable,
-      router: routers.train,
+      router: trainJobRouter,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
@@ -107,8 +108,8 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /model
-    new CreateModelJobApi(this, 'sdExtn-createModel', {
-      router: routers.model,
+    new CreateModelJobApi(this, 'CreateModel', {
+      router: routers.models,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -130,9 +131,9 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /model
-    new UpdateModelStatusRestApi(this, 'sdExtn-updateModel', {
+    new UpdateModelStatusRestApi(this, 'UpdateModel', {
       s3Bucket: s3Bucket,
-      router: routers.model,
+      router: routers.models,
       httpMethod: 'PUT',
       commonLayer: commonLayer,
       srcRoot: this.srcRoot,
@@ -158,18 +159,6 @@ export class SdTrainDeployStack extends NestedStack {
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
     });
-
-    // POST /upload_checkpoint
-    new UploadCheckPointApi(this, 'sdExtn-uploadCkpt', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'POST',
-      router: routers.upload_checkpoint,
-      s3Bucket: s3Bucket,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
-    });
-
 
     // POST /checkpoint
     new CreateCheckPointApi(this, 'CreateCheckPoint', {
@@ -292,7 +281,7 @@ export class SdTrainDeployStack extends NestedStack {
     new GetTrainingJobApi(
         this, 'GetTrainingJob',
         <GetTrainingJobApiProps>{
-          router: props.routers.trainings,
+          router: trainJobRouter,
           commonLayer: props.commonLayer,
           trainingTable: props.database.trainingTable,
           httpMethod: 'GET',

@@ -78,6 +78,7 @@ def list_all_checkpoints_api(event, context):
                 'status': ckpt.checkpoint_status.value,
                 'name': ckpt.checkpoint_names,
                 'created': ckpt.timestamp,
+                'params': ckpt.params,
                 'allowed_roles_or_users': ckpt.allowed_roles_or_users
             })
 
@@ -86,13 +87,6 @@ def list_all_checkpoints_api(event, context):
     }
 
     return ok(data=data, decimal=True)
-
-
-@dataclass
-class UploadCheckPointEvent:
-    checkpointType: str
-    modelUrl: list[str]
-    params: dict[str, Any]
 
 
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict, cannot_download: list):
@@ -132,28 +126,26 @@ def concurrent_upload(file_urls, base_key, file_names, multipart_upload):
     return None
 
 
-# POST /upload_checkpoint
-def upload_checkpoint_api(raw_event, context):
+@dataclass
+class CreateCheckPointEvent:
+    checkpoint_type: str
+    params: dict[str, Any]
+    filenames: [MultipartFileReq] = None
+    urls: [str] = None
+
+
+def upload_checkpoint_by_urls(event: CreateCheckPointEvent, context):
     request_id = context.aws_request_id
-    event = UploadCheckPointEvent(**raw_event)
-    _type = event.checkpointType
+    _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
     }
-    if _type not in checkpoint_type:
-        logger.info(f"type error:{_type}")
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': "please choose the right type from :"
-                     "'Stable-diffusion', 'embeddings', 'Lora', 'hypernetworks', 'Controlnet', 'VAE'"
-        }
 
     try:
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
-        urls = event.modelUrl
+        urls = event.urls
         file_names = []
         logger.info(f"start to upload models:{urls}")
         checkpoint_params = {}
@@ -170,19 +162,12 @@ def upload_checkpoint_api(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'error': f"user has no permissions to create a model"
-            }
+            return bad_request(message=f"user has no permissions to create a model", headers=headers)
 
         cannot_download = concurrent_upload(urls, base_key, file_names, checkpoint_params['multipart_upload'])
         if cannot_download:
-            return {
-                'statusCode': 500,
-                'headers': headers,
-                'error': f"contains invalid urls:{cannot_download}"
-            }
+            return bad_request(message=f"contains invalid urls:{cannot_download}", headers=headers)
+
         logger.info("finished upload, prepare to insert item to ddb")
         checkpoint = CheckPoint(
             id=request_id,
@@ -196,9 +181,7 @@ def upload_checkpoint_api(raw_event, context):
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         logger.info("finished insert item to ddb")
-        return {
-            'statusCode': 200,
-            'headers': headers,
+        data = {
             'checkpoint': {
                 'id': request_id,
                 'type': _type,
@@ -207,26 +190,20 @@ def upload_checkpoint_api(raw_event, context):
                 'params': checkpoint.params
             }
         }
+        return ok(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return {
-            'statusCode': 500,
-            'headers': headers,
-            'error': str(e)
-        }
-
-
-@dataclass
-class CreateCheckPointEvent:
-    checkpoint_type: str
-    filenames: [MultipartFileReq]
-    params: dict[str, Any]
+        return internal_server_error(headers=headers, message=str(e))
 
 
 # POST /checkpoint
 def create_checkpoint_api(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointEvent(**json.loads(raw_event['body']))
+
+    if event.urls:
+        return upload_checkpoint_by_urls(event, context)
+
     _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
