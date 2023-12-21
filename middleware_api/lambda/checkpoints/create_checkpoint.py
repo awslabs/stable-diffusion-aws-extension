@@ -9,12 +9,12 @@ from typing import Any
 
 import requests
 
-from common.common_tools import get_base_checkpoint_s3_key, \
+from libs.common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, multipart_upload_from_url
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common.types import CheckPoint, CheckPointStatus, MultipartFileReq
-from common.utils import get_user_roles, get_permissions_by_username
+from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
+from libs.utils import get_user_roles, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')

@@ -11,14 +11,14 @@ from botocore.exceptions import ClientError
 from sagemaker import Predictor
 from sagemaker.predictor_async import AsyncPredictor
 
-from common.common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
-from common.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
+from libs.common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
+from libs.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
+from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from common.util import publish_msg
-from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
 model_table = os.environ.get('DYNAMODB_TABLE')

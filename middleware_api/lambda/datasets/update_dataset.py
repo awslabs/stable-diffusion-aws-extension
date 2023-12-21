@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, internal_server_error, not_found
-from common.types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
+from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')

@@ -3,8 +3,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.types import Model
-from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from libs.data_types import Model
+from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 model_table = os.environ.get('DYNAMODB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')

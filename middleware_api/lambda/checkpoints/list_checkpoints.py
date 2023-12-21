@@ -4,8 +4,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from common.types import CheckPoint, PARTITION_KEYS, Role
-from common.utils import get_user_roles, check_user_permissions, get_permissions_by_username
+from libs.data_types import CheckPoint, PARTITION_KEYS, Role
+from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 

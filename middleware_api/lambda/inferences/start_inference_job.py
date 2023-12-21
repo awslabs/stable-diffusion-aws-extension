@@ -8,7 +8,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from common.types import InferenceJob, InvocationsRequest
+from libs.data_types import InferenceJob, InvocationsRequest
 
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 

@@ -9,10 +9,10 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.enums import EndpointStatus
+from libs.enums import EndpointStatus
 from common.response import forbidden, ok, internal_server_error, bad_request
-from common.types import EndpointDeploymentJob, PARTITION_KEYS, Role
-from common.utils import get_user_roles, check_user_permissions, get_permissions_by_username
+from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
+from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')

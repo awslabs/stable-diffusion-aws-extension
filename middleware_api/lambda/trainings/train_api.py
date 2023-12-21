@@ -11,14 +11,14 @@ from typing import Any, List, Optional
 import boto3
 import sagemaker
 
-from common.common_tools import split_s3_path, DecimalEncoder
+from libs.common_tools import split_s3_path, DecimalEncoder
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, not_found, forbidden, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
-from common.types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
+from libs.data_types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, publish_msg, save_json_to_file
-from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
 train_table = os.environ.get('TRAIN_TABLE')

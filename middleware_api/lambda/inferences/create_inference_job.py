@@ -9,9 +9,9 @@ from typing import List, Any, Optional
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from common.util import generate_presign_url
-from common.types import CheckPoint, CheckPointStatus
-from common.types import InferenceJob, EndpointDeploymentJob
-from common.utils import get_user_roles, check_user_permissions
+from libs.data_types import CheckPoint, CheckPointStatus
+from libs.data_types import InferenceJob, EndpointDeploymentJob
+from libs.utils import get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')

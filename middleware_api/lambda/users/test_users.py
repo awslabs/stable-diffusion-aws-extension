@@ -17,7 +17,7 @@ class InferenceApiTest(TestCase):
 
     def test_kms(self):
         from common.ddb_service.client import DynamoDbUtilsService
-        from common.utils import KeyEncryptService
+        from libs.utils import KeyEncryptService
 
         text = 'this text need to be encrypted'
         key_id = os_key_id
@@ -26,7 +26,7 @@ class InferenceApiTest(TestCase):
         cipher_text = key_client.encrypt(key_id, text)
         ddb_service = DynamoDbUtilsService()
         table_name = 'MultiUserTable'
-        from common.types import User
+        from libs.data_types import User
         ddb_service.put_items(table_name, User(
             kind='user',
             sort_key='superman',

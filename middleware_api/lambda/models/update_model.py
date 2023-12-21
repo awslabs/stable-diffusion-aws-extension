@@ -8,10 +8,10 @@ from botocore.exceptions import ClientError
 from sagemaker import Predictor
 from sagemaker.predictor_async import AsyncPredictor
 
-from common.common_tools import complete_multipart_upload, DecimalEncoder
+from libs.common_tools import complete_multipart_upload, DecimalEncoder
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
+from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 model_table = os.environ.get('DYNAMODB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')

@@ -3,8 +3,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from common.types import InferenceJob
-from common.utils import get_user_roles, check_user_permissions
+from libs.data_types import InferenceJob
+from libs.utils import get_user_roles, check_user_permissions
 
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')

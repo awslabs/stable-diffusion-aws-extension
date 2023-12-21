@@ -4,10 +4,10 @@ import os
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from common.common_tools import complete_multipart_upload
+from libs.common_tools import complete_multipart_upload
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common.types import CheckPoint, CheckPointStatus
+from libs.data_types import CheckPoint, CheckPointStatus
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 

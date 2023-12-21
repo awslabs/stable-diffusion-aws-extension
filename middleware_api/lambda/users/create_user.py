@@ -6,9 +6,9 @@ from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.types import User, PARTITION_KEYS, Role, Default_Role
+from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from roles.create_role import handler as upsert_role
-from common.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
+from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')

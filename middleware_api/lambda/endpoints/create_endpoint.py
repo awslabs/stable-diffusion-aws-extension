@@ -8,10 +8,10 @@ from datetime import datetime
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.enums import EndpointStatus
+from libs.enums import EndpointStatus
 from common.response import ok, bad_request
-from common.types import EndpointDeploymentJob
-from common.utils import get_permissions_by_username
+from libs.data_types import EndpointDeploymentJob
+from libs.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')

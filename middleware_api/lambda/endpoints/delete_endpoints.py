@@ -8,7 +8,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import forbidden, ok, internal_server_error
-from common.utils import get_permissions_by_username
+from libs.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')

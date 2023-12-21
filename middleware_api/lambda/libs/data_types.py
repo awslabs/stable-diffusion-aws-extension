@@ -1,19 +1,22 @@
 import dataclasses
-from enum import Enum
-from typing import Optional, Any
+from dataclasses import dataclass
+from typing import Optional, Any, List
+
+import boto3.dynamodb.types
+
+from libs.enums import CreateModelStatus, CheckPointStatus, TrainJobStatus, DataStatus, DatasetStatus
+
+Default_Role = 'IT Operator'
 
 
-class CreateModelStatus(Enum):
-    Initial = 'Initial'
-    Creating = 'Creating'
-    Complete = 'Complete'
-    Fail = 'Fail'
+@dataclass
+class _PartitionKeys:
+    user = 'user'
+    role = 'role'
+    # permission = 'permission'
 
 
-class CheckPointStatus(Enum):
-    Initial = 'Initial'
-    Active = 'Active'
-    Disabled = 'Disabled'
+PARTITION_KEYS = _PartitionKeys()
 
 
 @dataclasses.dataclass
@@ -55,13 +58,6 @@ class CheckPoint:
             self.checkpoint_status = CheckPointStatus[self.checkpoint_status]
 
 
-class TrainJobStatus(Enum):
-    Initial = 'Initial'
-    Training = 'Training'
-    Complete = 'Complete'
-    Fail = 'Fail'
-
-
 @dataclasses.dataclass
 class TrainJob:
     id: str
@@ -90,24 +86,6 @@ class MultipartFileReq:
     parts_number: int
 
 
-from dataclasses import dataclass
-from typing import Optional, Any
-
-import boto3.dynamodb.types
-
-Default_Role = 'IT Operator'
-
-
-@dataclass
-class _PartitionKeys:
-    user = 'user'
-    role = 'role'
-    # permission = 'permission'
-
-
-PARTITION_KEYS = _PartitionKeys()
-
-
 @dataclass
 class BaseMultiUserEntity:
     kind: str
@@ -132,22 +110,6 @@ class Role(BaseMultiUserEntity):
     params: Optional[dict[str, Any]] = None
 
 
-# @dataclass
-# class Permission(BaseMultiUserEntity):
-#     name: str
-#     params: Optional[dict[str, Any]] = None
-
-from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, Any
-
-
-class DataStatus(Enum):
-    Initialed = 'Initialed'
-    Enabled = 'Enabled'
-    Disabled = 'Disabled'
-
-
 @dataclass
 class DatasetItem:
     dataset_name: str  # partition key (s3 key base, not include bucket name)
@@ -166,12 +128,6 @@ class DatasetItem:
         return f'dataset/{self.dataset_name}/{self.name}'
 
 
-class DatasetStatus(Enum):
-    Initialed = 'Initialed'
-    Enabled = 'Enabled'
-    Disabled = 'Disabled'
-
-
 @dataclass
 class DatasetInfo:
     dataset_name: str  # primary key
@@ -186,10 +142,6 @@ class DatasetInfo:
 
     def get_s3_key(self):
         return f'dataset/{self.dataset_name}'
-
-
-from dataclasses import dataclass
-from typing import Optional, Any, List
 
 
 @dataclass
