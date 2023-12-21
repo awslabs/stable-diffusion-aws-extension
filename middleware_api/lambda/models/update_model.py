@@ -11,7 +11,6 @@ from sagemaker.predictor_async import AsyncPredictor
 from common.common_tools import complete_multipart_upload, DecimalEncoder
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from common.stepfunction_service.client import StepFunctionUtilsService
 from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 model_table = os.environ.get('DYNAMODB_TABLE')
@@ -21,7 +20,6 @@ endpoint_name = os.environ.get('SAGEMAKER_ENDPOINT_NAME')
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
-stepfunctions_client = StepFunctionUtilsService(logger=logger)
 
 
 @dataclass

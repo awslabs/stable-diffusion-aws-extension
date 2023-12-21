@@ -8,28 +8,22 @@ from typing import Any, Optional
 
 from botocore.exceptions import ClientError
 
-from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
-from common.stepfunction_service.client import StepFunctionUtilsService
-from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from common.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, internal_server_error
+from common.types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from common.utils import get_permissions_by_username, get_user_roles
 
 bucket_name = os.environ.get('S3_BUCKET')
 model_table = os.environ.get('DYNAMODB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-endpoint_name = os.environ.get('SAGEMAKER_ENDPOINT_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 
-success_topic_arn = os.environ.get('SUCCESS_TOPIC_ARN')
-error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
-user_topic_arn = os.environ.get('USER_TOPIC_ARN')
+user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
-stepfunctions_client = StepFunctionUtilsService(logger=logger)
 
 
 @dataclasses.dataclass

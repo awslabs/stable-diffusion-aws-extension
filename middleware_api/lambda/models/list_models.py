@@ -3,24 +3,15 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.stepfunction_service.client import StepFunctionUtilsService
 from common.types import Model
 from common.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
-bucket_name = os.environ.get('S3_BUCKET')
 model_table = os.environ.get('DYNAMODB_TABLE')
-checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-endpoint_name = os.environ.get('SAGEMAKER_ENDPOINT_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
-
-success_topic_arn = os.environ.get('SUCCESS_TOPIC_ARN')
-error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
-user_topic_arn = os.environ.get('USER_TOPIC_ARN')
 
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
-stepfunctions_client = StepFunctionUtilsService(logger=logger)
 
 
 def handler(event, context):

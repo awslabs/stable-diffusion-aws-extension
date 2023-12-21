@@ -6,8 +6,6 @@ from common.response import ok
 from common.types import InferenceJob
 from common.utils import get_user_roles, check_user_permissions
 
-checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 

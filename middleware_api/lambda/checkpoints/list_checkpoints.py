@@ -8,10 +8,8 @@ from common.types import CheckPoint, PARTITION_KEYS, Role
 from common.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
+
 user_table = os.environ.get('MULTI_USER_TABLE')
-CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

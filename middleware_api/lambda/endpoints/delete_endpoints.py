@@ -12,13 +12,8 @@ from common.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
-ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
-INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
-# logger = Logger(service="sagemaker_endpoint_api", level="INFO")
-logger = logging.getLogger('inference_v2')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)

@@ -3,14 +3,12 @@ import logging
 import os
 from dataclasses import dataclass
 
-from common.types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, internal_server_error, not_found
+from common.types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
-user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('boto3')
 ddb_service = DynamoDbUtilsService(logger=logger)

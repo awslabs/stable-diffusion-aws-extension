@@ -6,15 +6,11 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
-from common.types import InferenceJob, InvocationsRequest
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.types import InferenceJob, InvocationsRequest
 
-bucket_name = os.environ.get('S3_BUCKET')
-checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger('inference_v2')
 ddb_service = DynamoDbUtilsService(logger=logger)

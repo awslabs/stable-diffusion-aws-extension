@@ -10,10 +10,6 @@ from common.response import ok, bad_request, internal_server_error
 from common.types import CheckPoint, CheckPointStatus
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
-checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
-user_table = os.environ.get('MULTI_USER_TABLE')
-CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
