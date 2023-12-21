@@ -5,17 +5,16 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 import requests
-from _types import CheckPoint, CheckPointStatus, MultipartFileReq
-from common_tools import get_base_checkpoint_s3_key, \
-    batch_get_s3_multipart_signed_urls, complete_multipart_upload, multipart_upload_from_url
 
+from _types import CheckPoint, CheckPointStatus, MultipartFileReq
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error
-from multi_users._types import PARTITION_KEYS, Role
-from multi_users.utils import get_user_roles, check_user_permissions, get_permissions_by_username
+from common_tools import get_base_checkpoint_s3_key, \
+    batch_get_s3_multipart_signed_urls, multipart_upload_from_url
+from multi_users.utils import get_user_roles, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -27,67 +26,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
-
-
-# GET /checkpoints?username=USER_NAME&types=value&status=value
-def list_all_checkpoints_api(event, context):
-    logger.info(json.dumps(event))
-    _filter = {}
-
-    user_roles = ['*']
-    username = None
-    parameters = event['queryStringParameters']
-    if parameters:
-        if 'types' in parameters and len(parameters['types']) > 0:
-            _filter['checkpoint_type'] = parameters['types']
-
-        if 'status' in parameters and len(parameters['status']) > 0:
-            _filter['checkpoint_status'] = parameters['status']
-
-        # todo: support multi user fetch later
-        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-        if username:
-            user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
-
-    requestor_name = event['requestContext']['authorizer']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
-        'kind': PARTITION_KEYS.role,
-        'creator': requestor_name
-    })
-    for requestor_created_roles_row in requestor_created_roles_rows:
-        role = Role(**ddb_service.deserialize(requestor_created_roles_row))
-        user_roles.append(role.sort_key)
-
-    raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
-    if raw_ckpts is None or len(raw_ckpts) == 0:
-        data = {
-            'checkpoints': []
-        }
-        return ok(data=data)
-
-    ckpts = []
-    for r in raw_ckpts:
-        ckpt = CheckPoint(**(ddb_service.deserialize(r)))
-        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
-                'user' in requestor_permissions and 'all' in requestor_permissions['user']
-        ):
-            ckpts.append({
-                'id': ckpt.id,
-                's3Location': ckpt.s3_location,
-                'type': ckpt.checkpoint_type,
-                'status': ckpt.checkpoint_status.value,
-                'name': ckpt.checkpoint_names,
-                'created': ckpt.timestamp,
-                'params': ckpt.params,
-                'allowed_roles_or_users': ckpt.allowed_roles_or_users
-            })
-
-    data = {
-        'checkpoints': ckpts
-    }
-
-    return ok(data=data, decimal=True)
 
 
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict,
@@ -272,58 +210,6 @@ def handler(raw_event, context):
                 'params': checkpoint.params
             },
             's3PresignUrl': multiparts_resp
-        }
-        return ok(data=data, headers=headers)
-    except Exception as e:
-        logger.error(e)
-        return internal_server_error(headers=headers, message=str(e))
-
-
-@dataclass
-class UpdateCheckPointEvent:
-    status: str
-    multi_parts_tags: Dict[str, Any]
-
-
-# PUT /checkpoint
-def update_checkpoint_api(raw_event, context):
-    event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
-    checkpoint_id = raw_event['pathParameters']['id']
-    headers = {
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-    }
-    try:
-        raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
-            'id': checkpoint_id
-        })
-        if raw_checkpoint is None or len(raw_checkpoint) == 0:
-            return bad_request(
-                message=f'checkpoint not found with id {checkpoint_id}',
-                headers=headers
-            )
-
-        checkpoint = CheckPoint(**raw_checkpoint)
-        new_status = CheckPointStatus[event.status]
-        complete_multipart_upload(checkpoint, event.multi_parts_tags)
-        # if complete part failed, then no update
-        ddb_service.update_item(
-            table=checkpoint_table,
-            key={
-                'id': checkpoint.id,
-            },
-            field_name='checkpoint_status',
-            value=new_status
-        )
-        data = {
-            'checkpoint': {
-                'id': checkpoint.id,
-                'type': checkpoint.checkpoint_type,
-                's3_location': checkpoint.s3_location,
-                'status': checkpoint.checkpoint_status.value,
-                'params': checkpoint.params
-            }
         }
         return ok(data=data, headers=headers)
     except Exception as e:

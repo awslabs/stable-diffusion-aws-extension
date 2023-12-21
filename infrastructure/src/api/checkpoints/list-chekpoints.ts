@@ -18,7 +18,7 @@ export interface ListCheckPointsApiProps {
 }
 
 export class ListCheckPointsApi {
-  private readonly src;
+  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -42,7 +42,7 @@ export class ListCheckPointsApi {
     this.s3Bucket = props.s3Bucket;
     this.authorizer = props.authorizer;
 
-    this.listAllCheckpointsApi();
+    this.listCheckpointsApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -73,7 +73,7 @@ export class ListCheckPointsApi {
     return newRole;
   }
 
-  private listAllCheckpointsApi() {
+  private listCheckpointsApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,

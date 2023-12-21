@@ -15,7 +15,7 @@ export interface SagemakerEndpointEventsProps {
 }
 
 export class SagemakerEndpointEvents {
-  private readonly src;
+  private readonly src: string;
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;

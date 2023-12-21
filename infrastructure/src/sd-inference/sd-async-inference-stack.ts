@@ -15,7 +15,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { SagemakerInferenceProps, SagemakerInferenceStateMachine } from './sd-sagemaker-inference-state-machine';
 import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi, ListEndpointsApiProps } from '../api/endpoints/list-endpoints';
@@ -173,16 +172,6 @@ export class SDAsyncInferenceStack extends NestedStack {
             },
     );
 
-    const stepFunctionStack = new SagemakerInferenceStateMachine(this, <SagemakerInferenceProps>{
-      snsTopic: inference_result_topic,
-      snsErrorTopic: inference_result_error_topic,
-      s3_bucket: props.s3_bucket,
-      inferenceJobTable: sd_inference_job_table,
-      endpointDeploymentJobTable: sd_endpoint_deployment_job_table,
-      userNotifySNS: props.snsTopic,
-      inference_ecr_url: inferenceECR_url,
-    });
-
     const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal('sagemaker.amazonaws.com'),
@@ -215,7 +204,6 @@ export class SDAsyncInferenceStack extends NestedStack {
           REGION_NAME: Aws.REGION,
           SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
           SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
-          STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
         },
@@ -244,12 +232,8 @@ export class SDAsyncInferenceStack extends NestedStack {
         resources: ['*'],
       }),
     );
-    const stateMachineStatement = new iam.PolicyStatement({
-      actions: [
-        'states:StartExecution',
-      ],
-      resources: [stepFunctionStack.stateMachineArn],
-    });
+
+
     const ddbStatement = new iam.PolicyStatement({
       actions: [
         'dynamodb:Query',
@@ -285,7 +269,6 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
     inferenceLambda.addToRolePolicy(ddbStatement);
     inferenceLambda.addToRolePolicy(s3Statement);
-    inferenceLambda.addToRolePolicy(stateMachineStatement);
     inferenceLambda.addToRolePolicy(snsStatement);
 
     // Create a POST method for the API Gateway and connect it to the Lambda function
@@ -349,7 +332,6 @@ export class SDAsyncInferenceStack extends NestedStack {
           REGION_NAME: Aws.REGION,
           SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
           SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
-          STEP_FUNCTION_ARN: stepFunctionStack.stateMachineArn,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
         },

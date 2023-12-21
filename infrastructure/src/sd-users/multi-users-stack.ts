@@ -2,7 +2,7 @@ import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_kms, NestedStack, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
-import { RoleUpsertApi } from '../api/roles/create-role';
+import { CreateRoleApi } from '../api/roles/create-role';
 import { DeleteRolesApi, DeleteRolesApiProps } from '../api/roles/delete-roles';
 import { ListRolesApi } from '../api/roles/list-roles';
 import { CreateUserApi } from '../api/users/create-user';
@@ -25,7 +25,8 @@ export class MultiUsersStack extends NestedStack {
   constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
     super(scope, id, props);
 
-    new RoleUpsertApi(scope, 'CreateRole', {
+    // POST /roles
+    new CreateRoleApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
@@ -33,6 +34,7 @@ export class MultiUsersStack extends NestedStack {
       srcRoot: this.srcRoot,
     });
 
+    // GET /roles
     new ListRolesApi(scope, 'ListRoles', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
@@ -42,6 +44,7 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
+    // POST /users
     new CreateUserApi(scope, 'CreateUser', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
@@ -52,6 +55,7 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
+    // DELETE /users
     new DeleteUsersApi(scope, 'DeleteUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'DELETE',
@@ -61,6 +65,7 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
+    // GET /roles
     new ListUsersApi(scope, 'ListUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'GET',
@@ -71,8 +76,8 @@ export class MultiUsersStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    new DeleteRolesApi(
-      this, 'DeleteRoles',
+    // DELETE /roles
+    new DeleteRolesApi(this, 'DeleteRoles',
             <DeleteRolesApiProps>{
               router: props.routers.roles,
               commonLayer: props.commonLayer,

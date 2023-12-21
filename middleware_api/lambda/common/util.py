@@ -1,9 +1,9 @@
 import json
-from typing import Dict
-import os
-import tarfile
-import boto3
 import logging
+import os
+from typing import Dict
+
+import boto3
 
 s3 = boto3.client('s3')
 logger = logging.getLogger('util')
@@ -87,4 +87,3 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
-

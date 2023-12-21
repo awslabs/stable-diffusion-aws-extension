@@ -77,7 +77,7 @@ export class ListEndpointsApi {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'list-endpoints.py',
+      index: 'list_endpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),

@@ -17,7 +17,8 @@ def auth(event, context):
     encode_type = 'utf-8'
     username = ''
     if event['authorizationToken']:
-        username = base64.b16decode(event['authorizationToken'].replace('Bearer ', '').encode(encode_type)).decode(encode_type)
+        username = base64.b16decode(event['authorizationToken'].replace('Bearer ', '').encode(encode_type)).decode(
+            encode_type)
         print(f'decoded username: {username}')
 
     return {

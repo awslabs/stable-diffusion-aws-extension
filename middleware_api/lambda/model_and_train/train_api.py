@@ -1,22 +1,23 @@
+import base64
 import datetime
 import json
 import logging
 import os
-import base64
+import tarfile
 import time
 from dataclasses import dataclass
-import boto3
-import tarfile
 from typing import Any, List, Optional
+
+import boto3
 import sagemaker
 
+from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, not_found, forbidden, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
+from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, publish_msg, save_json_to_file
 from common_tools import split_s3_path, DecimalEncoder
-from common.util import get_s3_presign_urls
-from _types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
@@ -26,7 +27,8 @@ checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
-image_uri = os.environ.get('TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
+image_uri = os.environ.get(
+    'TRAIN_ECR_URL')  # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 logger = logging.getLogger('boto3')
@@ -103,7 +105,8 @@ def create_train_job_api(raw_event, context):
             except Exception as e:
                 raise RuntimeError(f"Error uploading JSON file to S3: {e}")
         else:
-            presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location, filenames=event.filenames)
+            presign_url_map = get_s3_presign_urls(bucket_name=bucket_name, base_key=input_location,
+                                                  filenames=event.filenames)
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
         checkpoint = CheckPoint(
@@ -186,7 +189,8 @@ def list_all_train_jobs_api(event, context):
                 'created': train_job.timestamp,
                 'sagemakerTrainName': train_job.sagemaker_train_name,
             }
-            if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users, requestor_roles, requestor_name):
+            if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users,
+                                                                           requestor_roles, requestor_name):
                 train_jobs.append(train_job_dto)
             elif not train_job.allowed_roles_or_users and \
                     'user' in requestor_permissions and \

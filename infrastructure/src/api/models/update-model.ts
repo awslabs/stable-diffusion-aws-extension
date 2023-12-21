@@ -87,7 +87,7 @@ export class UpdateModelApi {
     });
     this.sagemakerEndpoint.model.node.addDependency(dockerDeployment.customJob);
     // create lambda to trigger
-    this.updateModelJobApi();
+    this.updateModelApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -150,13 +150,13 @@ export class UpdateModelApi {
     return newRole;
   }
 
-  private updateModelJobApi() {
+  private updateModelApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/models`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'model_api.py',
-      handler: 'update_model_job_api',
+      index: 'update_model.py',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,

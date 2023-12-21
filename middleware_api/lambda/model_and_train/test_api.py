@@ -1,5 +1,4 @@
 import dataclasses
-
 import os
 from decimal import Decimal
 from unittest import TestCase
@@ -14,7 +13,6 @@ os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
-
 
 
 @dataclasses.dataclass
@@ -117,7 +115,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_create_update_checkpoint(self):
-        from checkpoint_api import create_checkpoint_api, update_checkpoint_api
+        from checkpoint_api import update_checkpoint_api
         # resp = create_checkpoint_api({
         #     "checkpoint_type": "dreambooth",
         #     "filenames": [
@@ -146,7 +144,8 @@ class ModelsApiTest(TestCase):
 
     def test_check_train_job_status(self):
         from model_and_train.train_api import check_train_job_status
-        event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0', 'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
+        event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0',
+                 'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
         check_train_job_status(event, {})
 
     def test_scan(self):
@@ -244,7 +243,6 @@ class ModelsApiTest(TestCase):
 
     def test_list_bucket_objects(self):
         import boto3
-        from botocore.config import Config
         s3 = boto3.client('s3')
         bucket = 'alvindaiyan-aigc-testing-playground'
         key = 'Stable-diffusion/checkpoint/dytest004/8d3a46e6-756e-47a5-a138-66d66f8ffec6'
@@ -275,7 +273,6 @@ class ModelsApiTest(TestCase):
         key = 'test_upload_manual/yan'
         resp = get_s3_presign_urls(bucket_name=bucket, base_key=key, filenames=["test"])
         print(resp)
-
 
     def test_s3_download(self):
         import boto3

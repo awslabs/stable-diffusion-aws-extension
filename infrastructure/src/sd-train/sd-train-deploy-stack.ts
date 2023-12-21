@@ -60,7 +60,7 @@ export class SdTrainDeployStack extends NestedStack {
     const checkPointTable = props.database.checkpointTable;
     const multiUserTable = props.database.multiUserTable;
 
-    // GET /trains
+    // GET /trainings
     new ListTrainingJobsApi(this, 'ListTrainingJobs', {
       commonLayer: commonLayer,
       httpMethod: 'GET',
@@ -72,7 +72,7 @@ export class SdTrainDeployStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    // POST /train
+    // POST /trainings
     new CreateTrainingJobApi(this, 'CreateTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -87,7 +87,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     const trainJobRouter = routers.trainings.addResource('{id}');
 
-    // PUT /train
+    // PUT /trainings/{id}
     new UpdateTrainingJobApi(this, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -101,7 +101,7 @@ export class SdTrainDeployStack extends NestedStack {
       ecr_image_tag: props.ecr_image_tag,
     });
 
-    // POST /model
+    // POST /models
     new CreateModelJobApi(this, 'CreateModel', {
       router: routers.models,
       s3Bucket: s3Bucket,
@@ -124,7 +124,7 @@ export class SdTrainDeployStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
-    // PUT /model
+    // PUT /models/{id}
     new UpdateModelApi(this, 'UpdateModel', {
       s3Bucket: s3Bucket,
       router: routers.models,
@@ -139,8 +139,6 @@ export class SdTrainDeployStack extends NestedStack {
       createModelFailureTopic: props.createModelFailureTopic,
       createModelSuccessTopic: props.createModelSuccessTopic,
     });
-
-    // this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
 
     // GET /checkpoints
     new ListCheckPointsApi(this, 'ListCheckPoints', {
@@ -165,7 +163,7 @@ export class SdTrainDeployStack extends NestedStack {
       multiUserTable: multiUserTable,
     });
 
-    // PUT /checkpoint
+    // PUT /checkpoints/{id}
     new UpdateCheckPointApi(this, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -175,7 +173,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
     });
 
-    // POST /dataset
+    // POST /datasets
     new CreateDatasetApi(this, 'CreateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -187,7 +185,7 @@ export class SdTrainDeployStack extends NestedStack {
       multiUserTable: multiUserTable,
     });
 
-    // PUT /dataset
+    // PUT /datasets/{id}
     const updateDataset = new UpdateDatasetApi(this, 'UpdateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -210,7 +208,7 @@ export class SdTrainDeployStack extends NestedStack {
       multiUserTable: multiUserTable,
     });
 
-    // GET /dataset/{dataset_name}/data
+    // GET /dataset/{dataset_name}
     new GetDatasetApi(this, 'GetDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -223,6 +221,7 @@ export class SdTrainDeployStack extends NestedStack {
       authorizer: props.authorizer,
     });
 
+    // DELETE /checkpoints
     new DeleteCheckpointsApi(
       this, 'DeleteCheckpoints',
             <DeleteCheckpointsApiProps>{
@@ -235,6 +234,7 @@ export class SdTrainDeployStack extends NestedStack {
             },
     );
 
+    // DELETE /datasets
     new DeleteDatasetsApi(
       this, 'DeleteDatasets',
             <DeleteDatasetsApiProps>{
@@ -248,6 +248,7 @@ export class SdTrainDeployStack extends NestedStack {
             },
     );
 
+    // DELETE /models
     new DeleteModelsApi(
       this, 'DeleteModels',
             <DeleteModelsApiProps>{
@@ -260,6 +261,7 @@ export class SdTrainDeployStack extends NestedStack {
             },
     );
 
+    // DELETE /trainings
     new DeleteTrainingJobsApi(
       this, 'DeleteTrainingJobs',
             <DeleteTrainingJobsApiProps>{
@@ -272,6 +274,7 @@ export class SdTrainDeployStack extends NestedStack {
             },
     );
 
+    // DELETE /trainings/{id}
     new GetTrainingJobApi(
       this, 'GetTrainingJob',
             <GetTrainingJobApiProps>{

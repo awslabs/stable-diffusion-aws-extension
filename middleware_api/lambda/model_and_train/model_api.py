@@ -1,8 +1,6 @@
-from sagemaker import Predictor
-from sagemaker.predictor_async import AsyncPredictor
-import json
 import dataclasses
 import datetime
+import json
 import logging
 import os
 from dataclasses import dataclass
@@ -10,16 +8,17 @@ from typing import Any, Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
-
-from common.response import ok, bad_request, internal_server_error
-from common.util import publish_msg
-from common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
-from common.stepfunction_service.client import StepFunctionUtilsService
-from common.ddb_service.client import DynamoDbUtilsService
-from common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
-    batch_get_s3_multipart_signed_urls
+from sagemaker import Predictor
+from sagemaker.predictor_async import AsyncPredictor
 
 from _types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, internal_server_error
+from common.stepfunction_service.client import StepFunctionUtilsService
+from common.util import publish_msg
+from common_tools import complete_multipart_upload, split_s3_path, DecimalEncoder
+from common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
+    batch_get_s3_multipart_signed_urls
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
@@ -125,7 +124,8 @@ def create_model_api(raw_event, context):
                         break
 
                 if not allowed_to_use:
-                    return bad_request(message=f'checkpoint with id ({checkpoint.id}) is not allowed to use by user {event.creator}')
+                    return bad_request(
+                        message=f'checkpoint with id ({checkpoint.id}) is not allowed to use by user {event.creator}')
 
         model_job = Model(
             id=request_id,
@@ -152,7 +152,7 @@ def create_model_api(raw_event, context):
             'model_type': model_job.model_type,
             'params': model_job.params  # not safe if not json serializable type
         },
-        's3PresignUrl':  multiparts_resp
+        's3PresignUrl': multiparts_resp
     }
 
     return ok(data=data)
@@ -195,7 +195,8 @@ def list_all_models_api(event, context):
                 'status': model.job_status.value,
                 'output_s3_location': model.output_s3_location
             }
-            if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles, requestor_name):
+            if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles,
+                                                                       requestor_name):
                 models.append(model_dto)
             elif not model.allowed_roles_or_users and \
                     'user' in requestor_permissions and \
@@ -410,5 +411,3 @@ def create_sagemaker_inference(job: Model, checkpoint: CheckPoint):
             'jobType': job.model_type
         }
     }
-
-

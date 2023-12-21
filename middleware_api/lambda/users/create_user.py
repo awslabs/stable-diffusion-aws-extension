@@ -1,13 +1,13 @@
-from dataclasses import dataclass
+import json
 import logging
 import os
-import json
+from dataclasses import dataclass
 from typing import List, Optional
 
-from common.ddb_service.client import DynamoDbUtilsService
 from _types import User, PARTITION_KEYS, Role, Default_Role
+from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from roles_api import upsert_role
+from roles.create_role import handler as upsert_role
 from utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -29,8 +29,7 @@ class UpsertUserEvent:
     roles: Optional[List[str]] = None
 
 
-# POST /user
-def upsert_user(raw_event, ctx):
+def handler(raw_event, ctx):
     logger.info(json.dumps(raw_event))
     event = UpsertUserEvent(**json.loads(raw_event['body']))
     if event.initial:
@@ -88,7 +87,7 @@ def upsert_user(raw_event, ctx):
 
     creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
 
-    # check if created roles exists
+    # check if created roles exist
     roles_result = ddb_service.scan(table=user_table, filters={
         'kind': PARTITION_KEYS.role,
         'sort_key': event.roles
@@ -130,28 +129,6 @@ def upsert_user(raw_event, ctx):
     return ok(data=data)
 
 
-# DELETE /user/{username}
-def delete_user(event, ctx):
-    logger.info(f'event: {event}')
-    body = json.loads(event['body'])
-    user_name_list = body['user_name_list']
-
-    requestor_name = event['requestContext']['authorizer']['username']
-
-    for username in user_name_list:
-        check_permission_resp = _check_action_permission(requestor_name, username)
-        if check_permission_resp:
-            return check_permission_resp
-
-        # todo: need to figure out what happens to user's resources: models, inferences, trainings and so on
-        ddb_service.delete_item(user_table, keys={
-            'kind': PARTITION_KEYS.user,
-            'sort_key': username
-        })
-
-    return ok(message='Users Deleted')
-
-
 def _check_action_permission(creator_username, target_username):
     # check if creator exist
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=creator_username):
@@ -179,87 +156,3 @@ def _check_action_permission(creator_username, target_username):
                     f'creator {creator_username} does not have permissions to change it')
 
     return None
-
-
-# GET /users?last_evaluated_key=xxx&limit=10&username=USER_NAME&filter=key:value,key:value&show_password=1
-def list_user(event, ctx):
-    logger.info(json.dumps(event))
-    # todo: if user has no list all, we should add username to self, prevent security issue
-    _filter = {}
-
-    parameters = event['queryStringParameters']
-
-    # limit = parameters['limit'] if 'limit' in parameters and parameters['limit'] else None
-    # last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
-    #     'last_evaluated_key'] else None
-
-    # if last_evaluated_key and isinstance(last_evaluated_key, str):
-    #     last_evaluated_key = json.loads(last_evaluated_key)
-
-    show_password = 0
-    username = 0
-    if parameters:
-        show_password = parameters['show_password'] if 'show_password' in parameters and parameters[
-            'show_password'] else 0
-        username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
-
-    requester_name = event['requestContext']['authorizer']['username']
-    requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
-    if not username:
-        result = ddb_service.query_items(user_table,
-                                         key_values={'kind': PARTITION_KEYS.user})
-
-        scan_rows = result
-        if type(result) is tuple:
-            scan_rows = result[0]
-    else:
-        scan_rows = ddb_service.query_items(user_table, key_values={
-            'kind': PARTITION_KEYS.user,
-            'sort_key': username
-        })
-
-    # generally speaking, the number of roles is limited, so it's okay to load them into memory to process
-    role_rows = ddb_service.query_items(user_table, key_values={
-        'kind': PARTITION_KEYS.role
-    })
-    roles_permission_lookup = {}
-    for role_row in role_rows:
-        r = Role(**(ddb_service.deserialize(role_row)))
-        roles_permission_lookup[r.sort_key] = r.permissions
-
-    result = []
-    for row in scan_rows:
-        user = User(**(ddb_service.deserialize(row)))
-        user_resp = {
-            'username': user.sort_key,
-            'roles': user.roles,
-            'creator': user.creator,
-            'permissions': set(),
-            'password': '*' * 8 if not show_password else password_encryptor.decrypt(
-                key_id=kms_key_id, cipher_text=user.password).decode(),
-        }
-        for role in user.roles:
-            if role in roles_permission_lookup:
-                user_resp['permissions'].update(roles_permission_lookup[role])
-            else:
-                print(f'role {role} not found and no permission is attached')
-
-        user_resp['permissions'] = list(user_resp['permissions'])
-        user_resp['permissions'].sort()
-
-        # only show user to requester if requester has 'user:all' permission
-        # or requester has 'user:list' permission and the user is created by the requester
-        if 'user' in requester_permissions and ('all' in requester_permissions['user'] or
-                                                ('list' in requester_permissions['user'] and
-                                                 user.creator == requester_name)):
-            result.append(user_resp)
-        elif user.sort_key == requester_name:
-            result.append(user_resp)
-
-    data = {
-        'users': result,
-        'previous_evaluated_key': "not_applicable",
-        'last_evaluated_key': "not_applicable"
-    }
-
-    return ok(data=data)

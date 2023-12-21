@@ -8,13 +8,11 @@ from common.response import ok, not_found
 logger = logging.getLogger('get_training_job')
 logger.setLevel(logging.INFO)
 
-training_job_table = os.environ.get('TRAINING_JOB_TABLE')
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(training_job_table)
+table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
 
-s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3 = boto3.resource('s3')
-bucket = s3.Bucket(s3_bucket_name)
+bucket = s3.Bucket(os.environ.get('S3_BUCKET_NAME'))
 
 
 def handler(event, ctx):

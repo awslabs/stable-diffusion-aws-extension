@@ -77,7 +77,7 @@ export class DeleteUsersApi {
       entry: `${this.src}/users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'multi_users_api.py',
+      index: 'delete_users.py',
       handler: 'delete_user',
       timeout: Duration.seconds(900),
       role: this.iamRole(),

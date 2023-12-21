@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
-from common.ddb_service.client import DynamoDbUtilsService
 from _types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
+from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, internal_server_error, not_found, forbidden
 from common.util import get_s3_presign_urls, generate_presign_url
 from multi_users.utils import get_permissions_by_username, get_user_roles, check_user_permissions
@@ -151,7 +151,6 @@ def list_datasets_api(event, context):
         return bad_request(message=str(e))
 
 
-
 # GET /dataset/{dataset_name}/data
 def list_data_by_dataset(event, context):
     _filter = {}
@@ -172,8 +171,11 @@ def list_data_by_dataset(event, context):
     requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requester_name)
 
     if not (
-            (dataset_info.allowed_roles_or_users and check_user_permissions(dataset_info.allowed_roles_or_users, requestor_roles, requester_name)) or # permission in dataset
-            (not dataset_info.allowed_roles_or_users and 'user' in requestor_permissions and 'all' in requestor_permissions['user']) # legacy data for super admin
+            (dataset_info.allowed_roles_or_users and check_user_permissions(dataset_info.allowed_roles_or_users,
+                                                                            requestor_roles,
+                                                                            requester_name)) or  # permission in dataset
+            (not dataset_info.allowed_roles_or_users and 'user' in requestor_permissions and 'all' in
+             requestor_permissions['user'])  # legacy data for super admin
     ):
         return forbidden(message='no permission to view dataset')
 

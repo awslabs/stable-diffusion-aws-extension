@@ -18,7 +18,7 @@ export interface DeleteEndpointsApiProps {
 }
 
 export class DeleteEndpointsApi {
-  private readonly src;
+  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -109,7 +109,7 @@ export class DeleteEndpointsApi {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'delete-endpoints.py',
+      index: 'delete_endpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),

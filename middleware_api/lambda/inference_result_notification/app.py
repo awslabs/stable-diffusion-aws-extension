@@ -1,13 +1,14 @@
-import json
-import io
-import boto3
 import base64
-import os
+import io
+import json
 import logging
-from PIL import Image
+import os
 from datetime import datetime
+
+import boto3
+from PIL import Image
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Attr, Key
 
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
@@ -26,11 +27,13 @@ sns = boto3.client('sns')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+
 def get_bucket_and_key(s3uri):
     pos = s3uri.find('/', 5)
-    bucket = s3uri[5 : pos]
-    key = s3uri[pos + 1 : ]
+    bucket = s3uri[5: pos]
+    key = s3uri[pos + 1:]
     return bucket, key
+
 
 def decode_base64_to_image(encoding):
     if encoding.startswith("data:image/"):
@@ -58,6 +61,7 @@ def update_inference_job_table(inference_id, key, value):
         ReturnValues="UPDATED_NEW"
     )
 
+
 def getInferenceJob(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")
@@ -74,7 +78,8 @@ def getInferenceJob(inference_job_id):
             raise ValueError(f"There is no inference job info item for id: {inference_job_id}")
         return record_list[0]
     except Exception as e:
-        logger.error(f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
+        logger.error(
+            f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
         raise
 
 
@@ -96,6 +101,7 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
         return False
     return True
 
+
 def get_topic_arn(sns, topic_name):
     response = sns.list_topics()
     for topic in response['Topics']:
@@ -103,8 +109,8 @@ def get_topic_arn(sns, topic_name):
             return topic['TopicArn']
     return None
 
-def send_message_to_sns(message_json):
 
+def send_message_to_sns(message_json):
     try:
         message = message_json
         sns_topic_name = SNS_TOPIC
@@ -137,6 +143,7 @@ def send_message_to_sns(message_json):
             'error': str(e)
         }
 
+
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
     message = event['Records'][0]['Sns']['Message']
@@ -165,7 +172,7 @@ def lambda_handler(event, context):
 
             # Get the task type
             job = getInferenceJob(inference_id)
-            taskType = job.get('taskType','txt2img')
+            taskType = job.get('taskType', 'txt2img')
 
             if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
                 caption = json_body['caption']
@@ -174,7 +181,7 @@ def lambda_handler(event, context):
                 inference_table.update_item(
                     Key={
                         'InferenceJobId': inference_id
-                        },
+                    },
                     UpdateExpression='SET caption=:f',
                     ExpressionAttributeValues={
                         ':f': caption,
@@ -196,7 +203,7 @@ def lambda_handler(event, context):
                     inference_table.update_item(
                         Key={
                             'InferenceJobId': inference_id
-                            },
+                        },
                         UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                         ExpressionAttributeValues={
                             ':new_image': [f"image_{count}.jpg"],
@@ -217,7 +224,8 @@ def lambda_handler(event, context):
                 with open(json_file_name, "w") as outfile:
                     json.dump(inference_parameters, outfile)
 
-                upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",f"{inference_id}_param.json")
+                upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
+                                  f"{inference_id}_param.json")
                 update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
 
                 print(f"Complete inference parameters {inference_parameters}")

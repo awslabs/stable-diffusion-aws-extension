@@ -45,7 +45,7 @@ class InferenceApiTest(TestCase):
 
     def test_add_two_roles(self):
         from multi_users.roles_api import upsert_role
-        rolenames= ['IT Operator', 'Designer']
+        rolenames = ['IT Operator', 'Designer']
         for rn in rolenames:
             event = {
                 'role_name': rn,
@@ -166,7 +166,6 @@ class InferenceApiTest(TestCase):
         print(len(resp['users']))
         print([u['username'] for u in resp['users']])
 
-
     def test_list_username(self):
         from multi_users.multi_users_api import list_user
         username = 'admin'
@@ -247,7 +246,6 @@ class InferenceApiTest(TestCase):
         }
         resp = list_user(event, {})
         assert len(resp['users']) == 0
-
 
     def test_get_user_roles(self):
         from multi_users.utils import get_user_roles

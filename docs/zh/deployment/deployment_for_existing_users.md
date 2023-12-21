@@ -12,7 +12,7 @@
 在亚马逊云科技上部署本解决方案主要包括以下过程：
 
 - 步骤1：部署Stable Diffusion WebUI。
-- 步骤2：登陆AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。
+- 步骤2：登录AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。
 - 步骤3：检查资源是否齐全。
 - 步骤4：重新部署本解决方案中间件。
 - 步骤5: 配置API Url和API Token。
@@ -40,7 +40,7 @@
 9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
 
 ### 步骤1：部署Stable Diffusion WebUI (Windows)。
-1. 启动一台Windows Server，通过RDP登陆。
+1. 启动一台Windows Server，通过RDP登录。
 2. 参考[链接](https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html)安装NVIDIA驱动程序。
 3. 访问[Python网站](https://www.python.org/downloads/release/python-3106/)，下载Python并安装，记得要选上 Add Python to Path。
 4. 访问[Git网站](https://git-scm.com/download/win)，下载Git并安装。
@@ -49,7 +49,7 @@
 7. 在下载的stable-diffusion-webui文件夹中，执行webui-user.bat。
 
 
-### 步骤2：登陆AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。
+### 步骤2：登录AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。
 
 1. 打开 AWS 管理控制台[（https://console.aws.amazon.com）](https://console.aws.amazon.com)并登录。
 2. 在服务菜单中选择 "CloudFormation"。

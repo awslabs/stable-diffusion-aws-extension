@@ -1,7 +1,6 @@
 import os
 from unittest import TestCase
 
-
 os.environ.setdefault('AWS_PROFILE', 'playground')
 os.environ.setdefault('S3_BUCKET', 'alvindaiyan-aigc-testing-playground')
 os.environ.setdefault('DATASET_ITEM_TABLE', 'DatasetItemTable')

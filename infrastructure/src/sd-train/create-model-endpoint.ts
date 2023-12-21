@@ -108,7 +108,6 @@ export class CreateModelSageMakerEndpoint {
         's3:DeleteObject',
         's3:ListBucket',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [`${this.s3Bucket.bucketArn}/*`],
     }));
 
@@ -139,7 +138,6 @@ export class CreateModelSageMakerEndpoint {
 
   private createProcessResultLambda(scope: Construct, id: string): aws_lambda.Function {
     const updateModelLambda = new PythonFunction(scope, `${id}-process-sg-result`, <PythonFunctionProps>{
-      functionName: `${id}-process-sg-result`,
       entry: `${this.rootSrc}/model_and_train`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,

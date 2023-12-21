@@ -2,8 +2,8 @@ import dataclasses
 import json
 import logging
 import os
-from datetime import datetime
 import random
+from datetime import datetime
 from typing import List, Any, Optional
 
 from sagemaker import Predictor
@@ -11,10 +11,10 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
-from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
-from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from _types import InferenceJob, InvocationsRequest, EndpointDeploymentJob
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request
+from common.util import generate_presign_url, load_json_from_s3, upload_json_to_s3, split_s3_path
 from model_and_train._types import CheckPoint, CheckPointStatus
 from multi_users.utils import get_user_roles, check_user_permissions
 
@@ -120,7 +120,8 @@ def prepare_inference(raw_event, context):
                 )
 
             inference_job.params['used_models'] = used_models
-            resp['inference']['models'] = [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type} for ckpt in ckpts]
+            resp['inference']['models'] = [{'id': ckpt.id, 'name': ckpt.checkpoint_names, 'type': ckpt.checkpoint_type}
+                                           for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
         return ok(data=resp)

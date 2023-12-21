@@ -38,7 +38,7 @@ export class ListUsersApi {
     this.layer = props.commonLayer;
     this.authorizer = props.authorizer;
 
-    this.listAllUsersApi();
+    this.listUsersApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -82,13 +82,13 @@ export class ListUsersApi {
     return newRole;
   }
 
-  private listAllUsersApi() {
+  private listUsersApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'multi_users_api.py',
-      handler: 'list_user',
+      index: 'list_users.py',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,
@@ -99,13 +99,14 @@ export class ListUsersApi {
       layers: [this.layer],
     });
 
-    const listUsersIntegration = new apigw.LambdaIntegration(
+    const integration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, listUsersIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
     });

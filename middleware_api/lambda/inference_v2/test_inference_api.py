@@ -103,7 +103,9 @@ class InferenceApiTest(TestCase):
         print(models)
 
         def upload_with_put(url):
-            with open('/Users/cyanda/Dev/python-projects/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/playground_NO_COMMIT/api_img2img_param.json', 'rb') as file:
+            with open(
+                    '/Users/cyanda/Dev/python-projects/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/playground_NO_COMMIT/api_img2img_param.json',
+                    'rb') as file:
                 import requests
                 response = requests.put(url, data=file)
                 response.raise_for_status()
@@ -203,7 +205,6 @@ class InferenceApiTest(TestCase):
         assert resp['statusCode'] == 200
 
         print(f"result s3 location: {resp['inference']['output_path']}")
-
 
     def test_delete_endpoint(self):
         from inference_v2.sagemaker_endpoint_api import delete_sagemaker_endpoints

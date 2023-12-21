@@ -68,11 +68,11 @@ export class ListRolesApi {
 
   private listAllRolesApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/models`,
+      entry: `${this.src}/roles`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'roles_api.py',
-      handler: 'list_roles',
+      index: 'list_roles.py',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 1024,
