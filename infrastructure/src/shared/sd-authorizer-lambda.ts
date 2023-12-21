@@ -102,8 +102,7 @@ export class AuthorizerLambda {
 
   private createAuthorizer(): aws_apigateway.IAuthorizer {
     const authFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-func`,
-      entry: `${this.srcRoot}/multi_users`,
+      entry: `${this.srcRoot}/users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'authorizer.py',

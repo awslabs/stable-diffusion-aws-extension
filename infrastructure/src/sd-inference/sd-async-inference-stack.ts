@@ -316,7 +316,7 @@ export class SDAsyncInferenceStack extends NestedStack {
       {
         entry: path.join(
           __dirname,
-          '../../../middleware_api/lambda/inference_result_notification',
+          '../../../middleware_api/lambda/inferences/result_notification',
         ),
         runtime: lambda.Runtime.PYTHON_3_9,
         handler: 'lambda_handler',

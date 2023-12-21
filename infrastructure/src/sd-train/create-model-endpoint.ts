@@ -138,7 +138,7 @@ export class CreateModelSageMakerEndpoint {
 
   private createProcessResultLambda(scope: Construct, id: string): aws_lambda.Function {
     const updateModelLambda = new PythonFunction(scope, `${id}-process-sg-result`, <PythonFunctionProps>{
-      entry: `${this.rootSrc}/model_and_train`,
+      entry: `${this.rootSrc}/models`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'model_api.py',

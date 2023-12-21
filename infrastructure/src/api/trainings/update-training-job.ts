@@ -339,13 +339,12 @@ export class UpdateTrainingJobApi {
 
   private checkTrainingJobStatusLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-checkTrainingJobStatus`, <PythonFunctionProps>{
-      functionName: `${this.id}-train-state-check`,
-      entry: `${this.srcRoot}/model_and_train`,
+      entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'update_training_job.py',
+      index: 'train_api.py',
       role: this.sfnLambdaRole,
-      handler: 'handler',
+      handler: 'check_train_job_status',
       timeout: Duration.seconds(900),
       memorySize: 1024,
       environment: {
@@ -364,8 +363,7 @@ export class UpdateTrainingJobApi {
 
   private processTrainingJobResultLambda(): aws_lambda.IFunction {
     return new PythonFunction(this.scope, `${this.id}-processTrainingJobResult`, <PythonFunctionProps>{
-      functionName: `${this.id}-train-result-process`,
-      entry: `${this.srcRoot}/model_and_train`,
+      entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       role: this.sfnLambdaRole,

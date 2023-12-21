@@ -25,12 +25,12 @@ class MockContext:
 class InferenceApiTest(TestCase):
 
     def test_get_checkpoint_by_name(self):
-        from inference_api import _get_checkpoint_by_name
+        from inferences.inference_api import _get_checkpoint_by_name
         ckpt = _get_checkpoint_by_name('v1-5-pruned-emaonly.safetensors', 'Stable-diffusion')
         assert ckpt is not None
 
     def test_prepare_inference(self):
-        from inference_api import prepare_inference
+        from inferences.inference_api import prepare_inference
         event = {
             'user_id': 'admin',
             'task_type': 'txt2img',
@@ -47,7 +47,7 @@ class InferenceApiTest(TestCase):
         assert resp['statusCode'] == 200
         # get the inference job from ddb by job id
 
-        from inference_api import inference_table_name, ddb_service
+        from inferences.inference_api import inference_table_name, ddb_service
         from inference_v2.types import InferenceJob
         inference_raw = ddb_service.get_item(inference_table_name, {
             'InferenceJobId': _id
@@ -66,7 +66,7 @@ class InferenceApiTest(TestCase):
                 response.raise_for_status()
 
         upload_with_put(resp['inference']['api_params_s3_upload_url'])
-        from inference_api import run_inference
+        from inferences.inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
                 'inference_id': _id
@@ -75,7 +75,7 @@ class InferenceApiTest(TestCase):
         print(resp)
 
     def test_prepare_inference_img2img(self):
-        from inference_api import prepare_inference
+        from inferences.inference_api import prepare_inference
         event = {
             'user_id': 'yuxiaox',
             'task_type': 'txt2img',
@@ -90,7 +90,7 @@ class InferenceApiTest(TestCase):
         assert resp['statusCode'] == 200
         # get the inference job from ddb by job id
 
-        from inference_api import inference_table_name, ddb_service
+        from inferences.inference_api import inference_table_name, ddb_service
         from inference_v2.types import InferenceJob
         inference_raw = ddb_service.get_item(inference_table_name, {
             'InferenceJobId': _id
@@ -111,7 +111,7 @@ class InferenceApiTest(TestCase):
                 response.raise_for_status()
 
         upload_with_put(resp['inference']['api_params_s3_upload_url'])
-        from inference_api import run_inference
+        from inferences.inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
                 'inference_id': _id
@@ -120,7 +120,7 @@ class InferenceApiTest(TestCase):
         print(resp)
 
     def test_run_infer(self):
-        from inference_api import run_inference
+        from inferences.inference_api import run_inference
         resp = run_inference({
             'pathStringParameters': {
                 'inference_id': '2f5a14ba-44c1-438a-b369-ae1102b2dcab'
@@ -157,7 +157,7 @@ class InferenceApiTest(TestCase):
         print(resp)
 
     def test_list_all_inference_jobs(self):
-        from inference_v2.inference_api import list_all_inference_jobs
+        from inferences.inference_api import list_all_inference_jobs
         resp = list_all_inference_jobs({
             'queryStringParameters': {
                 'username': 'mickey'
@@ -176,7 +176,7 @@ class InferenceApiTest(TestCase):
         self._do_generate_extra('rembg', 'payload_rembg.json')
 
     def _do_generate_extra(self, _task_type, payload_url):
-        from inference_v2.inference_api import prepare_inference, run_inference
+        from inferences.inference_api import prepare_inference, run_inference
 
         event = {
             'user_id': 'admin',

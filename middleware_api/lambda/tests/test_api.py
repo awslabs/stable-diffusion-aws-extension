@@ -23,7 +23,7 @@ class MockContext:
 class ModelsApiTest(TestCase):
 
     def test_upload(self):
-        from model_api import create_model_api
+        from models.model_api import create_model_api
         resp = create_model_api({
             "model_type": "dreambooth",
             "name": "test_upload",
@@ -53,7 +53,7 @@ class ModelsApiTest(TestCase):
         upload_with_put(url)
 
     def test_model_update(self):
-        from model_api import update_model_job_api
+        from models.model_api import update_model_job_api
         update_model_job_api({
             'model_id': 'asdfasdf',
             'status': 'Creating',
@@ -62,7 +62,7 @@ class ModelsApiTest(TestCase):
 
     def test_process(self):
         data = {}  # sample data
-        from model_api import process_result
+        from models.model_api import process_result
         process_result(data, {})
 
     def test_convert(self):
@@ -72,7 +72,7 @@ class ModelsApiTest(TestCase):
         print(obj)
 
     def test_list_all(self):
-        from model_api import list_all_models_api
+        from models.model_api import list_all_models_api
         resp = list_all_models_api({
             'queryStringParameters': {
 
@@ -86,9 +86,9 @@ class ModelsApiTest(TestCase):
 
     def test_s3(self):
         # split s3://alvindaiyan-aigc-testing-playground/models/7a77d369-142c-4091-91e1-9278566a6a4f.out
-        from model_api import split_s3_path
+        from models.model_api import split_s3_path
         bucket, key = split_s3_path('s3://path')
-        from model_api import get_object
+        from models.model_api import get_object
         get_object(bucket=bucket, key=key)
 
     def test_list_checkpoints(self):
@@ -103,7 +103,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_list_train_jobs(self):
-        from train_api import list_all_train_jobs_api
+        from trainings.train_api import list_all_train_jobs_api
         resp = list_all_train_jobs_api({
             'queryStringParameters': {
             },
@@ -136,14 +136,14 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_update_train_job_api(self):
-        from model_and_train.train_api import update_train_job_api
+        from trainings.train_api import update_train_job_api
         update_train_job_api({
             "train_job_id": "asdfasdf",
             "status": "Training"
         }, {})
 
     def test_check_train_job_status(self):
-        from model_and_train.train_api import check_train_job_status
+        from trainings.train_api import check_train_job_status
         event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0',
                  'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
         check_train_job_status(event, {})
@@ -261,7 +261,7 @@ class ModelsApiTest(TestCase):
         print(type(timestamp))
 
     def test_get_item(self):
-        from model_api import ddb_service, model_table
+        from models.model_api import ddb_service, model_table
         resp = ddb_service.get_item(table=model_table, key_values={
             "id": "262676e1-9b57-4ff3-a876-4e1de5ff5d25"
         })

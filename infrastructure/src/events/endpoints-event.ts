@@ -85,7 +85,7 @@ export class SagemakerEndpointEvents {
   private createEndpointEventBridge() {
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/inference_v2`,
+      entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'endpoint_event.py',
