@@ -1,8 +1,6 @@
 // Import the required CDK modules
 import * as path from 'path';
-import {
-  Duration, aws_sns as sns,
-} from 'aws-cdk-lib';
+import { aws_sns as sns, Duration } from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';

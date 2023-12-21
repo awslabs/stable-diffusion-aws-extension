@@ -1,175 +1,168 @@
-import {PythonFunction} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, Duration} from 'aws-cdk-lib';
-import {
-    JsonSchemaType,
-    JsonSchemaVersion,
-    LambdaIntegration,
-    Model,
-    RequestValidator,
-    Resource,
-} from 'aws-cdk-lib/aws-apigateway';
-import {Table} from 'aws-cdk-lib/aws-dynamodb';
-import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
-import {Architecture, LayerVersion, Runtime} from 'aws-cdk-lib/aws-lambda';
-import {Construct} from 'constructs';
-import {Bucket} from "aws-cdk-lib/aws-s3";
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
+import { Aws, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
 
 export interface DeleteCheckpointsApiProps {
-    router: Resource;
-    httpMethod: string;
-    checkPointsTable: Table;
-    srcRoot: string;
-    commonLayer: LayerVersion;
-    s3Bucket: Bucket;
+  router: Resource;
+  httpMethod: string;
+  checkPointsTable: Table;
+  srcRoot: string;
+  commonLayer: LayerVersion;
+  s3Bucket: Bucket;
 }
 
 export class DeleteCheckpointsApi {
-    private readonly src: string;
-    private readonly router: Resource;
-    private readonly httpMethod: string;
-    private readonly scope: Construct;
-    private readonly checkPointsTable: Table;
-    private readonly layer: LayerVersion;
-    private readonly baseId: string;
-    private readonly s3Bucket: Bucket;
+  private readonly src: string;
+  private readonly router: Resource;
+  private readonly httpMethod: string;
+  private readonly scope: Construct;
+  private readonly checkPointsTable: Table;
+  private readonly layer: LayerVersion;
+  private readonly baseId: string;
+  private readonly s3Bucket: Bucket;
 
-    constructor(scope: Construct, id: string, props: DeleteCheckpointsApiProps) {
-        this.scope = scope;
-        this.baseId = id;
-        this.router = props.router;
-        this.httpMethod = props.httpMethod;
-        this.checkPointsTable = props.checkPointsTable;
-        this.src = props.srcRoot;
-        this.layer = props.commonLayer;
-        this.s3Bucket = props.s3Bucket;
+  constructor(scope: Construct, id: string, props: DeleteCheckpointsApiProps) {
+    this.scope = scope;
+    this.baseId = id;
+    this.router = props.router;
+    this.httpMethod = props.httpMethod;
+    this.checkPointsTable = props.checkPointsTable;
+    this.src = props.srcRoot;
+    this.layer = props.commonLayer;
+    this.s3Bucket = props.s3Bucket;
 
-        this.deleteCheckpointsApi();
-    }
+    this.deleteCheckpointsApi();
+  }
 
-    private deleteCheckpointsApi() {
+  private deleteCheckpointsApi() {
 
-        const lambdaFunction = new PythonFunction(
-            this.scope,
-            `${this.baseId}-lambda`,
-            {
-                entry: `${this.src}/checkpoints`,
-                architecture: Architecture.X86_64,
-                runtime: Runtime.PYTHON_3_9,
-                index: 'delete_checkpoints.py',
-                handler: 'handler',
-                timeout: Duration.seconds(900),
-                role: this.iamRole(),
-                memorySize: 1024,
-                environment: {
-                    CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
-                    S3_BUCKET_NAME: this.s3Bucket.bucketName,
-                },
-                layers: [this.layer],
-            });
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/checkpoints`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_checkpoints.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
+          S3_BUCKET_NAME: this.s3Bucket.bucketName,
+        },
+        layers: [this.layer],
+      });
 
-        const requestModel = new Model(
-            this.scope,
-            `${this.baseId}-model`,
-            {
-                restApi: this.router.api,
-                modelName: this.baseId,
-                description: `${this.baseId} Request Model`,
-                schema: {
-                    schema: JsonSchemaVersion.DRAFT4,
-                    title: this.baseId,
-                    type: JsonSchemaType.OBJECT,
-                    properties: {
-                        checkpoint_id_list: {
-                            type: JsonSchemaType.ARRAY,
-                            items: {
-                                type: JsonSchemaType.STRING,
-                                minLength: 1,
-                            },
-                            minItems: 1,
-                            maxItems: 100,
-                        },
-                    },
-                    required: [
-                        'checkpoint_id_list',
-                    ],
-                },
-                contentType: 'application/json',
-            });
-
-        const lambdaIntegration = new LambdaIntegration(
-            lambdaFunction,
-            {
-                proxy: true
+    const requestModel = new Model(
+      this.scope,
+      `${this.baseId}-model`,
+      {
+        restApi: this.router.api,
+        modelName: this.baseId,
+        description: `${this.baseId} Request Model`,
+        schema: {
+          schema: JsonSchemaVersion.DRAFT4,
+          title: this.baseId,
+          type: JsonSchemaType.OBJECT,
+          properties: {
+            checkpoint_id_list: {
+              type: JsonSchemaType.ARRAY,
+              items: {
+                type: JsonSchemaType.STRING,
+                minLength: 1,
+              },
+              minItems: 1,
+              maxItems: 100,
             },
-        );
+          },
+          required: [
+            'checkpoint_id_list',
+          ],
+        },
+        contentType: 'application/json',
+      });
 
-        const requestValidator = new RequestValidator(
-            this.scope,
-            `${this.baseId}-validator`,
-            {
-                restApi: this.router.api,
-                requestValidatorName: this.baseId,
-                validateRequestBody: true,
-            });
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
 
-        this.router.addMethod(
-            this.httpMethod,
-            lambdaIntegration,
-            {
-                apiKeyRequired: true,
-                requestValidator,
-                requestModels: {
-                    'application/json': requestModel,
-                }
-            });
+    const requestValidator = new RequestValidator(
+      this.scope,
+      `${this.baseId}-validator`,
+      {
+        restApi: this.router.api,
+        requestValidatorName: this.baseId,
+        validateRequestBody: true,
+      });
 
-    }
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator,
+        requestModels: {
+          'application/json': requestModel,
+        },
+      });
 
-    private iamRole(): Role {
+  }
 
-        const newRole = new Role(
-            this.scope,
-            `${this.baseId}-role`,
-            {
-                assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-            }
-        );
+  private iamRole(): Role {
 
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                // get checkpoint
-                'dynamodb:GetItem',
-                // delete checkpoint
-                'dynamodb:DeleteItem',
-            ],
-            resources: [
-                this.checkPointsTable.tableArn,
-            ],
-        }));
+    const newRole = new Role(
+      this.scope,
+      `${this.baseId}-role`,
+      {
+        assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      },
+    );
 
-        newRole.addToPolicy(new PolicyStatement({
-            actions: [
-                // list checkpoint objects by prefix
-                's3:ListBucket',
-                // delete checkpoint file
-                's3:DeleteObject',
-            ],
-            resources: [
-                `${this.s3Bucket.bucketArn}`,
-                `${this.s3Bucket.bucketArn}/*`,
-            ],
-        }));
+    newRole.addToPolicy(new PolicyStatement({
+      actions: [
+        // get checkpoint
+        'dynamodb:GetItem',
+        // delete checkpoint
+        'dynamodb:DeleteItem',
+      ],
+      resources: [
+        this.checkPointsTable.tableArn,
+      ],
+    }));
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents',
-            ],
-            resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
-        }));
+    newRole.addToPolicy(new PolicyStatement({
+      actions: [
+        // list checkpoint objects by prefix
+        's3:ListBucket',
+        // delete checkpoint file
+        's3:DeleteObject',
+      ],
+      resources: [
+        `${this.s3Bucket.bucketArn}`,
+        `${this.s3Bucket.bucketArn}/*`,
+      ],
+    }));
 
-        return newRole;
-    }
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'logs:CreateLogGroup',
+        'logs:CreateLogStream',
+        'logs:PutLogEvents',
+      ],
+      resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
+    }));
+
+    return newRole;
+  }
 }

@@ -1,28 +1,18 @@
-import {
-  App,
-  Stack,
-  StackProps,
-  Aspects,
-  CfnParameter,
-  CfnOutput,
-} from 'aws-cdk-lib';
-import {
-  BootstraplessStackSynthesizer,
-  CompositeECRRepositoryAspect,
-} from 'cdk-bootstrapless-synthesizer';
+import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { PingApi } from './api/service/ping';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
-import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
+import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
-import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
-import {PingApi} from "./api/service/ping";
 
 const app = new App();
 

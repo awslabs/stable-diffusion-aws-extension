@@ -1,14 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_lambda_event_sources,
-  aws_s3,
-  aws_sagemaker,
-  aws_sns,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_dynamodb, aws_iam, aws_lambda, aws_lambda_event_sources, aws_s3, aws_sagemaker, aws_sns, Duration } from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { CfnEndpointConfigProps, CfnEndpointProps, CfnModelProps } from 'aws-cdk-lib/aws-sagemaker';
@@ -51,8 +42,8 @@ export class CreateModelSageMakerEndpoint {
     this.layer = props.commonLayer;
     this.rootSrc = props.rootSrc;
     this.userSnsTopic = props.userSnsTopic;
-    this.successTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
-    this.failureTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
+    this.successTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
+    this.failureTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
