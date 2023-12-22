@@ -232,8 +232,8 @@ def user_settings_tab():
         with gr.Column(scale=1):
 
             gr.HTML(value="<b>Update a User Setting</b>")
-            username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
-            pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
+            username_textbox = gr.Textbox(placeholder="Please Enter a username", label="User name")
+            pwd_textbox = gr.Textbox(placeholder="Please Enter password", label="Password", type='password')
             with gr.Row():
                 user_roles_dropdown = gr.Dropdown(multiselect=True, label="User Role")
                 create_refresh_button_by_user(user_roles_dropdown,
@@ -325,7 +325,7 @@ def role_settings_tab():
         with gr.Row(variant='panel') as role_tab:
             with gr.Column(scale=1) as upsert_role_form:
                 gr.HTML(value="<b>Update a Role</b>")
-                rolename_textbox = gr.Textbox(placeholder="Please enter Enter a role name", label="Role name")
+                rolename_textbox = gr.Textbox(placeholder="Please Enter a role name", label="Role name")
                 permissions_dropdown = gr.Dropdown(choices=all_permissions,
                                                    multiselect=True,
                                                    label="Role Permissions")
