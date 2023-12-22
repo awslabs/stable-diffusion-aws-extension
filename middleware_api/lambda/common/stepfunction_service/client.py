@@ -53,4 +53,3 @@ class StepFunctionUtilsService:
         except Exception as e:
             self.logger.error(f'error invoking step function {state_machine_arn}: {e}')
             raise e
-

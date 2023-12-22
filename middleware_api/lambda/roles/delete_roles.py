@@ -6,8 +6,7 @@ from dataclasses import dataclass
 import boto3
 
 from common.response import ok, bad_request
-# todo will be optimize later
-from multi_users._types import PARTITION_KEYS, Default_Role
+from libs.data_types import PARTITION_KEYS, Default_Role
 
 logger = logging.getLogger('delete_roles')
 logger.setLevel(logging.INFO)

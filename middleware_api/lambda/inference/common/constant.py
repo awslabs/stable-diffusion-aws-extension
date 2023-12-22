@@ -27,4 +27,3 @@ const.TASK_TYPE_IMG2IMG = "img2img"
 
 const.PAGE_LIMIT_DEFAULT = 10
 const.PAGE_LIMIT_ALL = -1
-

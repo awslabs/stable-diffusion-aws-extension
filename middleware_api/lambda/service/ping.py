@@ -1,7 +1,6 @@
 import logging
 
-from common.response import ok, bad_request
-
+from common.response import ok
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

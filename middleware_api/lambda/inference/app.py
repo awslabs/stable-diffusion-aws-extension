@@ -1,37 +1,28 @@
-import time
-import logging
+import json
+import logging.config
 import logging.config
 import os
 import traceback
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.exception_handlers import http_exception_handler
-from mangum import Mangum
-from common.response_wrapper import resp_err
-from common.enum import MessageEnum
-from common.constant import const
-from common.exception_handler import biz_exception
-from parse.parameter_parser import json_convert_to_payload
-from fastapi_pagination import add_pagination
+import uuid
 from datetime import datetime
-from typing import List
 
 import boto3
-from botocore.client import Config
-from botocore.exceptions import BotoCoreError, ClientError
-import json
-import uuid
-
+from boto3.dynamodb.conditions import Attr, Key
+from botocore.exceptions import ClientError
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi_pagination import add_pagination
+from mangum import Mangum
+from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor import Predictor
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
-from sagemaker.deserializers import JSONDeserializer
-from boto3.dynamodb.conditions import Attr, Key
+
+from common.constant import const
+from parse.parameter_parser import json_convert_to_payload
 
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger(const.LOGGER_API)
-STEP_FUNCTION_ARN = os.environ.get('STEP_FUNCTION_ARN')
 
 DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
@@ -45,6 +36,7 @@ sagemaker = boto3.client('sagemaker')
 inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
+
 async def custom_exception_handler(request: Request, exc: HTTPException):
     headers = {
         "Access-Control-Allow-Headers": "Content-Type",
@@ -57,20 +49,24 @@ async def custom_exception_handler(request: Request, exc: HTTPException):
         headers=headers
     )
 
+
 app = FastAPI(
     title="API List of SageMaker Inference",
     version="0.9",
 )
 app.exception_handler(HTTPException)(custom_exception_handler)
 
+
 def get_uuid():
     uuid_str = str(uuid.uuid4())
     return uuid_str
+
 
 def getInferenceJobList():
     response = inference_table.scan()
     logger.info(f"inference job list response is {str(response)}")
     return response['Items']
+
 
 def build_filter_expression(end_time, endpoint, start_time, status, task_type):
     filter_expression = None
@@ -170,8 +166,10 @@ def getInferenceJob(inference_job_id):
             raise ValueError(f"There is no inference job info item for id: {inference_job_id}")
         return record_list[0]
     except Exception as e:
-        logger.error(f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
+        logger.error(
+            f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
         raise
+
 
 def getEndpointDeploymentJobList():
     try:
@@ -212,6 +210,7 @@ def getEndpointDeploymentJobList():
         print(f"An unexpected error occurred: {e}")
         return []
 
+
 def getEndpointDeployJob(endpoint_deploy_job_id):
     try:
         resp = endpoint_deployment_table.query(
@@ -225,6 +224,7 @@ def getEndpointDeployJob(endpoint_deploy_job_id):
         logger.error("There is no endpoint deployment job info item for id:" + endpoint_deploy_job_id)
         return {}
     return record_list[0]
+
 
 def getEndpointDeployJob_with_endpoint_name(endpoint_name):
     try:
@@ -242,6 +242,7 @@ def getEndpointDeployJob_with_endpoint_name(endpoint_name):
 
     return record_list[0]
 
+
 def get_s3_objects(bucket_name, folder_name):
     # Ensure the folder name ends with a slash
     if not folder_name.endswith('/'):
@@ -255,8 +256,8 @@ def get_s3_objects(bucket_name, folder_name):
 
     return object_names
 
-def load_json_from_s3(bucket_name, key):
 
+def load_json_from_s3(bucket_name, key):
     # Get the JSON file from the specified bucket and key
     response = s3.get_object(Bucket=bucket_name, Key=key)
     json_file = response['Body'].read().decode('utf-8')
@@ -266,8 +267,10 @@ def load_json_from_s3(bucket_name, key):
 
     return data
 
+
 # Global exception capture
 stepf_client = boto3.client('stepfunctions')
+
 
 # def get_curent_time():
 #     # Get the current time
@@ -304,6 +307,7 @@ async def run_sagemaker_inference(request: Request):
             checkpoint_name = params_dict['img2img_sagemaker_stable_diffusion_checkpoint']
         elif task_type == 'txt2img':
             checkpoint_name = params_dict['txt2img_sagemaker_stable_diffusion_checkpoint']
+
         def show_slim_dict(payload):
             pay_type = type(payload)
             if pay_type is dict:
@@ -337,7 +341,7 @@ async def run_sagemaker_inference(request: Request):
         prediction = predictor.predict_async(data=payload, initial_args=initial_args, inference_id=inference_id)
         output_path = prediction.output_path
 
-        #put the item to inference DDB for later check status
+        # put the item to inference DDB for later check status
         current_time = str(datetime.now())
         response = inference_table.put_item(
             Item={
@@ -356,7 +360,9 @@ async def run_sagemaker_inference(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
-        response = JSONResponse(content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}, headers=headers)
+        response = JSONResponse(
+            content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name,
+                     "output_path": output_path}, headers=headers)
         return response
 
     except Exception as e:
@@ -381,9 +387,11 @@ async def run_sagemaker_inference(request: Request):
                 'checkpoint': checkpoint_name,
                 'taskType': task_type or "unknown",
                 'error': f"error info {str(e)}"}
-            )
+        )
 
-        response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
+        response = JSONResponse(
+            content={"inference_id": inference_id, "status": "failure", "error": f"error info {str(e)}"},
+            headers=headers)
         return response
 
 
@@ -400,8 +408,10 @@ async def query_inference_jobs(request: Request):
     endpoint = query_params.get('endpoint')
     checkpoint = query_params.get('checkpoint')
     limit = query_params.get("limit") if query_params.get("limit") else const.PAGE_LIMIT_ALL
-    logger.info(f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
+    logger.info(
+        f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
     return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
+
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
     try:
@@ -454,6 +464,7 @@ async def generate_s3_presigned_url_for_uploading(s3_bucket_name: str = None, ke
 
     return response
 
+
 @app.post("/inference/run-model-merge")
 async def run_model_merge(request: Request):
     try:
@@ -485,7 +496,7 @@ async def run_model_merge(request: Request):
         prediction = predictor.predict_async(data=payload, inference_id=inference_id)
         output_path = prediction.output_path
 
-        #put the item to inference DDB for later check status
+        # put the item to inference DDB for later check status
         current_time = str(datetime.now())
         response = inference_table.put_item(
             Item={
@@ -503,8 +514,10 @@ async def run_model_merge(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
-        response = JSONResponse(content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name, "output_path": output_path}, headers=headers)
-        #response = JSONResponse(content={"inference_id": '6fa743f0-cb7a-496f-8205-dbd67df08be2', "status": "succeed", "output_path": ""}, headers=headers)
+        response = JSONResponse(
+            content={"inference_id": inference_id, "status": "inprogress", "endpoint_name": endpoint_name,
+                     "output_path": output_path}, headers=headers)
+        # response = JSONResponse(content={"inference_id": '6fa743f0-cb7a-496f-8205-dbd67df08be2', "status": "succeed", "output_path": ""}, headers=headers)
         return response
 
     except Exception as e:
@@ -517,12 +530,13 @@ async def run_model_merge(request: Request):
             "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
         }
 
-        response = JSONResponse(content={"inference_id": inference_id, "status":"failure", "error": f"error info {str(e)}"}, headers=headers)
+        response = JSONResponse(
+            content={"inference_id": inference_id, "status": "failure", "error": f"error info {str(e)}"},
+            headers=headers)
         return response
 
 
-
-#app.include_router(search) TODO: adding sub router for future
+# app.include_router(search) TODO: adding sub router for future
 
 handler = Mangum(app)
 add_pagination(app)

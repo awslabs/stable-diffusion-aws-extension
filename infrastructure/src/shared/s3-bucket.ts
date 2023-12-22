@@ -33,6 +33,6 @@ export class S3BucketStore {
 
     (newBucket.node.defaultChild as s3.CfnBucket).cfnOptions.condition = shouldCreateBucketCondition;
 
-    this.s3Bucket = <aws_s3.Bucket> s3.Bucket.fromBucketName(scope, `${id}-aigc-bucket`, s3BucketName);
+    this.s3Bucket = <aws_s3.Bucket>s3.Bucket.fromBucketName(scope, `${id}-aigc-bucket`, s3BucketName);
   }
 }
