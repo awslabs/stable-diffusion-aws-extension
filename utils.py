@@ -256,8 +256,7 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
         initial_data = {
             "api_gateway_url": "",
             "api_token": "",
-            "username": "",
-            "password": ""
+            "username": ""
         }
         with open(filename, 'w') as json_file:
             json.dump(initial_data, json_file)

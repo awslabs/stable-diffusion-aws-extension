@@ -2,7 +2,7 @@ import os
 from typing import Dict, List
 
 
-def controlnet_args(script_name, arg, current_index, args, cache) -> Dict[str, List[str]]:
+def controlnet_args(script_name, arg, current_index, args, cache, is_txt2img) -> Dict[str, List[str]]:
     if script_name != 'controlnet' or not arg.enabled:
         return {}, None
 

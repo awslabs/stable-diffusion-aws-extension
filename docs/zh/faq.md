@@ -27,8 +27,17 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 
 **问：我应该如何更新解决方案？**
 
-目前推荐用户不要频繁通过更新CloudFormation部署堆栈的方式更新解决方案。如果有更新需要，建议成功卸载现有解决方案堆栈后，再次根据CloudFormation模版部署新的堆栈。
+目前推荐用户不要频繁通过更新CloudFormation部署堆栈的方式更新解决方案。如果有更新需要，建议成功卸载现有解决方案堆栈后，再次根据CloudFormation模版部署新的堆栈。只要非第一次部署CloudFormation，请在部署时，区域‘Bucket’填入之前部署使用的S3桶名称，‘DeployedBefore’选择yes，以保证重新部署CloudFormation成功。
 
+**问：我应该在同一台电脑上更换登录用户？**
+
+您可以通过另开一个无痕浏览器的方式，登录另一个用户账户。
+
+**问：我如何去掉本地推理的选项，让我的webUI只能支持云上推理？**
+
+您可以打开webUI的主页面，进入**Settings**标签页，选择左侧的*User interface*标签栏，找到以下区域‘[info]
+ Quicksettings list (setting entries that appear at the top of page rather than in settings tab) (requires Reload UI)‘，不选中‘sd_model_checkpoint' 和 ‘sd_vae' （如果sd_vae之前被选中的话）。以上操作完成后，点击最上方‘Apply setting'，而后在控制台重启webUI，来让此改动生效。重启webUI后，您就会发现，原本界面本地选择推理底模的左上角下拉菜单消失，用户将只会有云上推理的选项。
+![generate-lock-step](images/generate-lock-step.png)
 
 
 ## 成本

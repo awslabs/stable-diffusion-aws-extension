@@ -6,13 +6,15 @@ from unittest import TestCase
 
 import requests
 
-os.environ.setdefault('AWS_PROFILE', 'cloudfront_ext')
-os.environ.setdefault('S3_BUCKET', 'alvindaiyan-aigc-testing-playground')
+os.environ.setdefault('AWS_PROFILE', 'aws_profile')
+os.environ.setdefault('S3_BUCKET', 'bucket')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
 os.environ.setdefault('MODEL_TABLE', 'ModelTable')
 os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
+os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
+
 
 
 @dataclasses.dataclass
@@ -73,7 +75,15 @@ class ModelsApiTest(TestCase):
 
     def test_list_all(self):
         from model_api import list_all_models_api
-        resp = list_all_models_api({}, {})
+        resp = list_all_models_api({
+            'queryStringParameters': {
+
+            },
+            'x-auth': {
+                'username': 'admin',
+                'role': ''
+            }
+        }, {})
         print(resp)
 
     def test_s3(self):
@@ -85,13 +95,23 @@ class ModelsApiTest(TestCase):
 
     def test_list_checkpoints(self):
         from model_and_train.checkpoint_api import list_all_checkpoints_api
-        resp = list_all_checkpoints_api({}, {})
+        resp = list_all_checkpoints_api({
+            'queryStringParameters': {},
+            'x-auth': {
+                'username': 'xman',
+                'role': []
+            }
+        }, {})
         print(resp)
 
     def test_list_train_jobs(self):
         from train_api import list_all_train_jobs_api
         resp = list_all_train_jobs_api({
             'queryStringParameters': {
+            },
+            'x-auth': {
+                'username': 'xman',
+                'role': []
             }
         }, {})
         print(resp)
@@ -151,7 +171,7 @@ class ModelsApiTest(TestCase):
             'checkpoint_id': '512d5e64-021e-49f5-a313-227f842c3f93',
             'model_type': 'dreambooth',
             'job_status': 'Initial',
-            'output_s3_location': 's3://alvindaiyan-aigc-testing-playground/dreambooth/model/testProgressBar01/512d5e64-021e-49f5-a313-227f842c3f93/output',
+            'output_s3_location': 's3://placeholder.s3/dreambooth/model/testProgressBar01/512d5e64-021e-49f5-a313-227f842c3f93/output',
             'params': {'create_model_params': {'new_model_name': 'testProgressBar01',
                                                'ckpt_path': 'v1-5-pruned-emaonly.safetensors', 'from_hub': False,
                                                'new_model_url': '', 'new_model_token': '', 'extract_ema': False,
@@ -167,7 +187,7 @@ class ModelsApiTest(TestCase):
         import requests
         import math
         s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
-        bucket = 'alvindaiyan-aigc-testing-playground'
+        bucket = 'bucketname'
         key = 'test_multipart/tmp_10M_file'
         large_file_location = '/Users/cyanda/Dev/remote/tmp_10M_file'
 

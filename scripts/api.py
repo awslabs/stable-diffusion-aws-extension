@@ -34,27 +34,13 @@ except Exception as e:
     logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
     dreambooth_available = False
     create_model = dummy_function
-# try:
-#     from dreambooth import shared
-#     from dreambooth.dataclasses.db_concept import Concept
-#     from dreambooth.dataclasses.db_config import from_file, DreamboothConfig
-#     from dreambooth.diff_to_sd import compile_checkpoint
-#     from dreambooth.secret import get_secret
-#     from dreambooth.shared import DreamState
-#     from dreambooth.ui_functions import create_model, generate_samples, \
-#         start_training
-#     from dreambooth.utils.gen_utils import generate_classifiers
-#     from dreambooth.utils.image_utils import get_images
-#     from dreambooth.utils.model_utils import get_db_models, get_lora_models
-# except:
-#     logger.info("Exception importing api")
-#     traceback.print_exc()
+
+logger = logging.getLogger(__name__)
 
 if os.environ.get("DEBUG_API", False):
-    logging.basicConfig(level=logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
@@ -186,49 +172,44 @@ def sagemaker_api(_, app: FastAPI):
                 logger.info(f" : {payload}")
 
         with condition:
-            thread_deque.append(req)
-            logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
-            if len(thread_deque) > THREAD_CHECK_COUNT and len(thread_deque) <= CONDITION_POOL_MAX_COUNT:
-                logger.info(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
-                condition.wait(timeout=CONDITION_WAIT_TIME_OUT)
-            elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
-                logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
-                raise MemoryError
-
-            print(f'current version: dev - extra generate')
-            logger.info(f"task is {req.task}")
-            logger.info(f"models is {req.models}")
-            payload = {}
-            if req.param_s3:
-                def parse_constant(c: str) -> float:
-                    if c == "NaN":
-                        raise ValueError("NaN is not valid JSON")
-
-                    if c == 'Infinity':
-                        return sys.float_info.max
-
-                    return float(c)
-
-                payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
-                show_slim_dict(payload)
-
-            logger.info(f"extra_single_payload is: ")
-            extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-                req.extras_single_payload.json())
-            show_slim_dict(extra_single_payload)
-            logger.info(f"extra_batch_payload is: ")
-            extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-                req.extras_batch_payload.json())
-            show_slim_dict(extra_batch_payload)
-            logger.info(f"interrogate_payload is: ")
-            interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
-            show_slim_dict(interrogate_payload)
-            # logger.info(f"db_create_model_payload is: ")
-            # logger.info(f"{req.db_create_model_payload}")
-            # logger.info(f"merge_checkpoint_payload is: ")
-            # logger.info(f"{req.merge_checkpoint_payload}")
-            # logger.info(f"json is {json.loads(req.json())}")
             try:
+                thread_deque.append(req)
+                logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                if len(thread_deque) > THREAD_CHECK_COUNT and len(thread_deque) <= CONDITION_POOL_MAX_COUNT:
+                    logger.info(f"wait {threading.current_thread().ident}_{threading.current_thread().name} {len(thread_deque)}")
+                    condition.wait(timeout=CONDITION_WAIT_TIME_OUT)
+                elif len(thread_deque) > CONDITION_POOL_MAX_COUNT:
+                    logger.info(f"waiting thread too much in condition pool {len(thread_deque)}, max: {CONDITION_POOL_MAX_COUNT}")
+                    raise MemoryError
+
+                logger.info(f"task is {req.task}")
+                logger.info(f"models is {req.models}")
+                payload = {}
+                if req.param_s3:
+                    def parse_constant(c: str) -> float:
+                        if c == "NaN":
+                            raise ValueError("NaN is not valid JSON")
+
+                        if c == 'Infinity':
+                            return sys.float_info.max
+
+                        return float(c)
+
+                    payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
+                    show_slim_dict(payload)
+
+                logger.info(f"extra_single_payload is: ")
+                extra_single_payload = {} if req.extras_single_payload is None else json.loads(
+                    req.extras_single_payload.json())
+                show_slim_dict(extra_single_payload)
+                logger.info(f"extra_batch_payload is: ")
+                extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
+                    req.extras_batch_payload.json())
+                show_slim_dict(extra_batch_payload)
+                logger.info(f"interrogate_payload is: ")
+                interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
+                show_slim_dict(interrogate_payload)
+
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
                     checkspace_and_update_models(req.models)

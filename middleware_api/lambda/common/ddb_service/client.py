@@ -120,14 +120,14 @@ class DynamoDbUtilsService:
                             KeyConditionExpression=key_expressions,
                             ExpressionAttributeValues=expression_values,
                             ExclusiveStartKey=last_evaluated_key,
-                            Limit=10
+                            Limit=limit
                         )
                     else:
                         resp = self.client.query(
                             TableName=table,
                             KeyConditionExpression=key_expressions,
                             ExpressionAttributeValues=expression_values,
-                            Limit=10
+                            Limit=limit
                         )
                 else:
                     scan_resp = self.client.query(

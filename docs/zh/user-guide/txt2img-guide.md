@@ -35,6 +35,11 @@
 ![generate results](../images/continue-inference.png)
 
 
+### 使用Lora等云上模型进行推理
+1. 请按照单机版webUI使用方式，将所需模型，包括Textual Inversion, Hypernetworks, Checkpoints或者Lora模型上传一份到本地。
+2. 请按照[上传训练模型](../CloudAssetsManage/)的方式，将所需模型上传到云上账户。
+3. 在对应Lora模型等区域选中模型，在提示词框调整模型参数，点击**Generate on Cloud**即可进行推理。
+
 
 ## Inference Job
 Inference Job下拉列表默认列出最近10条推理任务，命名格式遵循 Time-Type-Status-Uid。如果需要列出账户历史上所有推理任务，只需选中**Show All**。如果需要应用筛选器，缩小显示列表，可以勾选**Advanced Inference Job filter**，页面下方会自动增加本解决方案提供的筛选器维度，用户可以按需选择。
