@@ -79,7 +79,6 @@ except Exception as e:
 class SageMakerUI(scripts.Script):
     latest_result = None
     current_inference_id = None
-    inference_queue = Queue(maxsize=30)
     default_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
@@ -1020,7 +1019,6 @@ class SageMakerUI(scripts.Script):
             # logger.debug(f"########################{api_param}")
             inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
             self.current_inference_id = inference_id
-            self.inference_queue.put(inference_id)
         except Exception as e:
             logger.error(e)
             err = str(e)
