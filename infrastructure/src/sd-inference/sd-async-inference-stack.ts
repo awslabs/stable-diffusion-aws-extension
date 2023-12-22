@@ -26,6 +26,7 @@ import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferenc
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
+import {Size} from "aws-cdk-lib/core";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -322,7 +323,7 @@ export class SDAsyncInferenceStack extends NestedStack {
         handler: 'lambda_handler',
         index: 'app.py', // optional, defaults to 'index.py'
         memorySize: 10240,
-        ephemeralStorageSize: 10240,
+        ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
           DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
