@@ -5,7 +5,7 @@ import logging
 import requests
 
 import utils
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -214,6 +214,11 @@ class CloudApiManager:
             return {}
         if not password or len(password) < 1:
             raise Exception('password should not be none')
+
+        if initial:
+            roles = [Admin_Role]
+            cloud_auth_manager.refresh()
+
         payload = {
             "initial": initial,
             "username": username,
@@ -222,14 +227,12 @@ class CloudApiManager:
             "creator": creator,
         }
 
-        if initial:
-            cloud_auth_manager.refresh()
-
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}users',
                                  json=payload,
                                  headers=self._get_headers_by_user(user_token)
                                  )
-        raw_resp.raise_for_status()
+        logger.info(payload)
+        logger.info(raw_resp.json())
         resp = raw_resp.json()
         if raw_resp.status_code != 200:
             raise Exception(resp['message'])
