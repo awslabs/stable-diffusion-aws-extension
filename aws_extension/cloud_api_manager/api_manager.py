@@ -241,6 +241,9 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return {}
 
+        if username == cloud_auth_manager.username:
+            raise Exception('Cannot delete current user')
+
         payload = {
             "user_name_list": [username]
         }
