@@ -11,10 +11,10 @@ Before you launch the solution, review the architecture, supported regions, and 
 ## Deployment overview
 Use the following steps to deploy this solution on AWS.
 
-- Step 1：Deploy Stable Diffusion WebUI.
-- Step 2：After logging into the AWS Console, delete the existing Stable Diffusion AWS extension template in CloudFormation.
-- Step 3：Check if all required cloud resources are complete. 
-- Step 4：Deploy the solution as a middleware.
+- Step 1: Deploy Stable Diffusion WebUI.
+- Step 2: After logging into the AWS Console, delete the existing Stable Diffusion AWS extension template in CloudFormation.
+- Step 3: Check if all required cloud resources are complete. 
+- Step 4: Deploy the solution as middleware.
 - Step 5: Configure API url and API token.
 
 ## Deployment steps
@@ -66,17 +66,17 @@ Use the following steps to deploy this solution on AWS.
 2. Configure [aws cli](https://aws.amazon.com/cli/).
 3. Using the command line, navigate to the update_scripts directory and run `./validate_resources.sh`. When the output displays `[Success] [Complete] All resources checked, ok to upgrade, you can proceed to the next step`. If any resource check fails, you will need to manually update the relevant resources.
 
-### Step 4: Deploy the solution as a middleware.
+### Step 4: Deploy the solution as middleware.
 
 This automated AWS CloudFormation template deploys the solution in the AWS Cloud.
 
 1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"} to launch the AWS CloudFormation template.
 2. The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
-4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. Under **Parameters**, enter a valid bucket name under **aigcbucketname** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for **SdExtensionApiKey**, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the **EcrImageTag** field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this [link](ecr_image_param.md). Select "yes" in **DeployedBefore**, and enter the S3 bucket used for previous deployment in **bucket**. Choose **Next**.
+4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. Under **Parameters**, enter a valid bucket name under **aigcbucketname** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for **SdExtensionApiKey**, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, etc. To select the tag for the ECR image corresponding to the solution, please refer to the **EcrImageTag** field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this [link](ecr_image_param.md). Select "yes" in **DeployedBefore**, and enter the S3 bucket used for previous deployment in **bucket**. Choose **Next**.
 
    !!! Important "Notice"
-   Please do not change **EcrImageTag** before consulting solution team.
+   Please do not change **EcrImageTag** before consulting the solution team.
 
 6. On the **Configure stack options** page, choose **Next**.
 7. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
