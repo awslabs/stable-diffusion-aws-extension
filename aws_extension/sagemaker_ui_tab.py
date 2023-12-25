@@ -625,7 +625,7 @@ def sagemaker_endpoint_tab():
                                                      value="ml.g5.2xlarge")
                 instance_count_dropdown = gr.Number(label="Max Instance count",
                                                     elem_id="sagemaker_inference_instance_count_textbox",
-                                                    value=1, min=1, max=10000, step=1
+                                                    value=1, min=1, max=1000, step=1
                                                     )
                 autoscaling_enabled = gr.Checkbox(
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
