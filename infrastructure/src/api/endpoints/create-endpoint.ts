@@ -226,7 +226,8 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
           },
           initial_instance_count: {
-            type: JsonSchemaType.STRING,
+            type: JsonSchemaType.NUMBER,
+            minimum: 1,
           },
           autoscaling_enabled: {
             type: JsonSchemaType.BOOLEAN,
