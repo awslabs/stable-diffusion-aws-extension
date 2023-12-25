@@ -114,7 +114,7 @@ export class UpdateModelApi {
       actions: [
         'sagemaker:InvokeEndpointAsync',
       ],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -131,9 +131,9 @@ export class UpdateModelApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
