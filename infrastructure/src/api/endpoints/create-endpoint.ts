@@ -91,7 +91,7 @@ export class CreateEndpointApi {
       resources: [
         this.s3Bucket.bucketArn,
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     });
 
