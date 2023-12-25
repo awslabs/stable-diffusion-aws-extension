@@ -98,9 +98,9 @@ export class UpdateTrainingJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -150,8 +150,7 @@ export class UpdateTrainingJobApi {
       actions: [
         'sagemaker:CreateTrainingJob',
       ],
-      // resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -172,9 +171,9 @@ export class UpdateTrainingJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -221,7 +220,6 @@ export class UpdateTrainingJobApi {
         'sns:ListSubscriptionsByTopic',
         'sns:Receive',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [this.userSnsTopic.topicArn],
     }));
 
@@ -230,8 +228,7 @@ export class UpdateTrainingJobApi {
       actions: [
         'sagemaker:DescribeTrainingJob',
       ],
-      // resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -245,9 +242,9 @@ export class UpdateTrainingJobApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `${this.s3Bucket.bucketArn}`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -517,7 +514,7 @@ export class UpdateTrainingJobApi {
         resources: [
           `${this.s3Bucket.bucketArn}/*`,
           `${this.s3Bucket.bucketArn}`,
-          'arn:aws:s3:::*sagemaker*',
+          `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
         ],
       }),
     );

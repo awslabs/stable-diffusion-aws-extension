@@ -103,7 +103,7 @@ export class SnsTopics {
   }
 
   private static getTopicArnByTopicName(topicName: string): string {
-    return `arn:aws:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
+    return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
   }
 
   private createOrImportTopic(topicName: string, useExistCondition: CfnCondition): aws_sns.Topic {
