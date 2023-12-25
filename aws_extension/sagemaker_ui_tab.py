@@ -169,15 +169,11 @@ def api_setting_tab():
             global test_connection_result
             test_connection_result = gr.Label(title="Output")
         with gr.Row():
-            aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
+            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary', elem_id="aws_config_save")
             aws_connect_button.click(_js="update_auth_settings",
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
-        with gr.Row():
-            aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
-            aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
-                                  outputs=[test_connection_result])
 
     with gr.Row() as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
@@ -884,6 +880,10 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     if not api_url.endswith('/'):
         api_url += '/'
 
+    if not test_aws_connect_config(api_url, api_token):
+        return "Failed to connect to backend server, please check the url and token"
+
+    message = "Successfully Connected"
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
     save_variable_to_json('username', username)
@@ -895,16 +895,13 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     try:
         if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
                                        initial=initial, user_token=username):
-            return 'Initial Setup Failed'
+            return f'{message}, but update setting failed'
     except Exception as e:
-        return f'Initial Setup failed: {e}'
-    return "Setting updated"
+        return f'{message}, but update setting failed: {e}'
+    return f"{message} & Setting Updated"
 
 
 def test_aws_connect_config(api_url, api_token):
-    # update_connect_config(api_url, api_token, initial=False)
-    api_url = get_variable_from_json('api_gateway_url')
-    api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
     target_url = f'{api_url}ping'
@@ -916,8 +913,7 @@ def test_aws_connect_config(api_url, api_token):
         response = requests.get(target_url,
                                 headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
-        assert response.json()['message'] == 'pong'
-        return "Successfully Connected"
+        return response.json()['message'] == 'pong'
     except requests.exceptions.RequestException as e:
         logger.error(f"Error: Failed to get server request. Details: {e}")
-        return "failed to connect to backend server, please check the url and token"
+        return False
