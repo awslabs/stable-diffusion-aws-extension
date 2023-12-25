@@ -1,5 +1,11 @@
 import os
 
-cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model"
+cmd_install_torch = "pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121"
 
+cmd_install_xformers = "pip install xformers"
+
+cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae"
+
+os.system(cmd_install_torch)
+os.system(cmd_install_xformers)
 os.system(cmd)
