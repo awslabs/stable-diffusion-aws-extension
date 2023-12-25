@@ -763,7 +763,10 @@ def dataset_tab():
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
             def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
-                logger.debug(dataset_name)
+                if not files:
+                    return 'Error: No files selected', None, None, None, None
+                if not dataset_name:
+                    return 'Error: No dataset name', None, None, None, None
                 dataset_content = []
                 file_path_lookup = {}
                 for file in files:
@@ -793,7 +796,8 @@ def dataset_tab():
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())
 
-                raw_response.raise_for_status()
+                if raw_response.status_code != 200:
+                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
                 response = raw_response.json()['data']
 
                 logger.info(f"Start upload sample files response:\n{response}")
