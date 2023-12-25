@@ -1,7 +1,4 @@
-import {
-  CfnOutput,
-  aws_apigateway as apigw,
-} from 'aws-cdk-lib';
+import { aws_apigateway as apigw, CfnOutput } from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -10,7 +7,7 @@ import { Construct } from 'constructs';
 export class RestApiGateway {
   public apiGateway: apigw.RestApi;
   public readonly apiKey: string;
-  public readonly routers: {[key: string]: Resource} = {};
+  public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
 
   constructor(scope: Construct, apiKey: string, routes: string[]) {
@@ -42,6 +39,9 @@ export class RestApiGateway {
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(apiAccessLogGroup),
         accessLogFormat: AccessLogFormat.clf(),
+      },
+      endpointConfiguration: {
+        types: [apigw.EndpointType.EDGE],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS, // You can also provide a list of specific origins ['https://example.com']

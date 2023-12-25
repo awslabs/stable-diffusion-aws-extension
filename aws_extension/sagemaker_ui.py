@@ -881,7 +881,7 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
 def fake_gan(selected_value, original_prompt):
     logger.debug(f"selected value is {selected_value}")
     logger.debug(f"original prompt is {original_prompt}")
-    if selected_value is not None:
+    if selected_value and selected_value != None_Option_For_On_Cloud_Model:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value

@@ -8,7 +8,7 @@ import {
   aws_s3,
   aws_sagemaker,
   aws_sns,
-  Duration,
+  Duration
 } from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -52,8 +52,8 @@ export class CreateModelSageMakerEndpoint {
     this.layer = props.commonLayer;
     this.rootSrc = props.rootSrc;
     this.userSnsTopic = props.userSnsTopic;
-    this.successTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
-    this.failureTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
+    this.successTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
+    this.failureTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
@@ -118,7 +118,6 @@ export class CreateModelSageMakerEndpoint {
         's3:DeleteObject',
         's3:ListBucket',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [`${this.s3Bucket.bucketArn}/*`],
     }));
 
@@ -149,8 +148,7 @@ export class CreateModelSageMakerEndpoint {
 
   private createProcessResultLambda(scope: Construct, id: string): aws_lambda.Function {
     const updateModelLambda = new PythonFunction(scope, `${id}-process-sg-result`, <PythonFunctionProps>{
-      functionName: `${id}-process-sg-result`,
-      entry: `${this.rootSrc}/model_and_train`,
+      entry: `${this.rootSrc}/models`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'model_api.py',

@@ -1,7 +1,7 @@
 # Uninstall Extension for Stable Diffusion on AWS 
 
 !!! Warning "Warning"
-    Before uninstalling the solution, please manually delete all the Amazon SageMaker Endpoints deployed by this solution, referring to **Delete deployed endpoint** in [Main tab](./user-guide/CloudAssetsManage.md). By uninstalling the solution, the DynamoDB tables that indicates the model training, finetuning and inference logs and mapping relationship, AWS Lambda related functions, AWS Step Functions and so on will be deleted simultaneously.
+    Before uninstalling the solution, please manually delete all the Amazon SageMaker Endpoints deployed by this solution, referring to **Delete deployed endpoint** in [Main tab](./user-guide/CloudAssetsManage.md). By uninstalling the solution, the DynamoDB tables that indicate the model training, finetuning and inference logs and mapping relationship, AWS Lambda related functions, AWS Step Functions and so on will be deleted simultaneously.
 
 
 To uninstall the Extension for Stable Diffusion on AWS solution, you must delete the AWS CloudFormation stack. 

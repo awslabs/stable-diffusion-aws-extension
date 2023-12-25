@@ -169,15 +169,11 @@ def api_setting_tab():
             global test_connection_result
             test_connection_result = gr.Label(title="Output")
         with gr.Row():
-            aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
+            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary', elem_id="aws_config_save")
             aws_connect_button.click(_js="update_auth_settings",
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
-        with gr.Row():
-            aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
-            aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
-                                  outputs=[test_connection_result])
 
     with gr.Row() as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
@@ -232,8 +228,8 @@ def user_settings_tab():
         with gr.Column(scale=1):
 
             gr.HTML(value="<b>Update a User Setting</b>")
-            username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
-            pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
+            username_textbox = gr.Textbox(placeholder="Please Enter a username", label="User name")
+            pwd_textbox = gr.Textbox(placeholder="Please Enter password", label="Password", type='password')
             with gr.Row():
                 user_roles_dropdown = gr.Dropdown(multiselect=True, label="User Role")
                 create_refresh_button_by_user(user_roles_dropdown,
@@ -325,7 +321,7 @@ def role_settings_tab():
         with gr.Row(variant='panel') as role_tab:
             with gr.Column(scale=1) as upsert_role_form:
                 gr.HTML(value="<b>Update a Role</b>")
-                rolename_textbox = gr.Textbox(placeholder="Please enter Enter a role name", label="Role name")
+                rolename_textbox = gr.Textbox(placeholder="Please Enter a role name", label="Role name")
                 permissions_dropdown = gr.Dropdown(choices=all_permissions,
                                                    multiselect=True,
                                                    label="Role Permissions")
@@ -623,10 +619,10 @@ def sagemaker_endpoint_tab():
                 instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
                                                      elem_id="sagemaker_inference_instance_type_textbox",
                                                      value="ml.g5.2xlarge")
-                instance_count_dropdown = gr.Dropdown(label="Max Instance count",
-                                                      choices=["1", "2", "3", "4", "5", "6"],
-                                                      elem_id="sagemaker_inference_instance_count_textbox",
-                                                      value="1")
+                instance_count_dropdown = gr.Number(label="Max Instance count",
+                                                    elem_id="sagemaker_inference_instance_count_textbox",
+                                                    value=1, min=1, max=1000, step=1
+                                                    )
                 autoscaling_enabled = gr.Checkbox(
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
@@ -705,7 +701,6 @@ def _list_sagemaker_endpoints(username):
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
-                endpoint['EndpointDeploymentJobId'][:4],
                 endpoint['endpoint_name'],
                 endpoint_roles,
                 endpoint['autoscaling'],
@@ -720,8 +715,8 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            headers=['name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str']
             )
 
         def list_ep_prev(paging, rq: gr.Request):
@@ -768,7 +763,10 @@ def dataset_tab():
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
             def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
-                logger.debug(dataset_name)
+                if not files:
+                    return 'Error: No files selected', None, None, None, None
+                if not dataset_name:
+                    return 'Error: No dataset name', None, None, None, None
                 dataset_content = []
                 file_path_lookup = {}
                 for file in files:
@@ -798,7 +796,8 @@ def dataset_tab():
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())
 
-                raw_response.raise_for_status()
+                if raw_response.status_code != 200:
+                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
                 response = raw_response.json()['data']
 
                 logger.info(f"Start upload sample files response:\n{response}")
@@ -885,6 +884,10 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     if not api_url.endswith('/'):
         api_url += '/'
 
+    if not test_aws_connect_config(api_url, api_token):
+        return "Failed to connect to backend server, please check the url and token"
+
+    message = "Successfully Connected"
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
     save_variable_to_json('username', username)
@@ -896,16 +899,13 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     try:
         if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
                                        initial=initial, user_token=username):
-            return 'Initial Setup Failed'
+            return f'{message}, but update setting failed'
     except Exception as e:
-        return f'Initial Setup failed: {e}'
-    return "Setting updated"
+        return f'{message}, but update setting failed: {e}'
+    return f"{message} & Setting Updated"
 
 
 def test_aws_connect_config(api_url, api_token):
-    # update_connect_config(api_url, api_token, initial=False)
-    api_url = get_variable_from_json('api_gateway_url')
-    api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
     target_url = f'{api_url}ping'
@@ -917,8 +917,7 @@ def test_aws_connect_config(api_url, api_token):
         response = requests.get(target_url,
                                 headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
-        assert response.json()['message'] == 'pong'
-        return "Successfully Connected"
+        return response.json()['message'] == 'pong'
     except requests.exceptions.RequestException as e:
         logger.error(f"Error: Failed to get server request. Details: {e}")
-        return "failed to connect to backend server, please check the url and token"
+        return False

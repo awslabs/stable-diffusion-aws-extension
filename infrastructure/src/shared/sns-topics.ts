@@ -1,27 +1,14 @@
-import {
-  aws_iam,
-  aws_kms,
-  CfnCondition,
-  Fn,
-  CfnParameter,
-  RemovalPolicy, Aws,
-} from 'aws-cdk-lib';
+import { Aws, aws_iam, aws_kms, CfnCondition, CfnParameter, Fn, RemovalPolicy } from 'aws-cdk-lib';
 import * as aws_sns from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 
 
 export class SnsTopics {
-
-  private static getTopicArnByTopicName(topicName: string): string {
-    return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
-  }
-
   public readonly snsTopic: aws_sns.Topic;
   public readonly createModelSuccessTopic: aws_sns.Topic;
   public readonly createModelFailureTopic: aws_sns.Topic;
   public readonly inferenceResultTopic: aws_sns.Topic;
   public readonly inferenceResultErrorTopic: aws_sns.Topic;
-
   private readonly scope: Construct;
   private readonly id: string;
 
@@ -100,7 +87,7 @@ export class SnsTopics {
     newUserTopic.applyRemovalPolicy(RemovalPolicy.RETAIN);
     (newUserTopic.node.defaultChild as aws_sns.CfnTopic).cfnOptions.condition = shouldCreateSnsTopicCondition;
 
-    this.snsTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-StableDiffusionSnsTopic`, SnsTopics.getTopicArnByTopicName('StableDiffusionSnsUserTopic'));
+    this.snsTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-StableDiffusionSnsTopic`, SnsTopics.getTopicArnByTopicName('StableDiffusionSnsUserTopic'));
 
     // Subscribe user to SNS notifications
     // this.snsTopic.addSubscription(
@@ -114,6 +101,10 @@ export class SnsTopics {
     this.createModelFailureTopic = this.createOrImportTopic('failureCreateModel', shouldCreateSnsTopicCondition);
   }
 
+  private static getTopicArnByTopicName(topicName: string): string {
+    return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
+  }
+
   private createOrImportTopic(topicName: string, useExistCondition: CfnCondition): aws_sns.Topic {
     const newTopic = new aws_sns.Topic(this.scope, `${this.id}-New${topicName}`, {
       topicName: topicName,
@@ -121,6 +112,6 @@ export class SnsTopics {
     });
     newTopic.applyRemovalPolicy(RemovalPolicy.RETAIN);
     (newTopic.node.defaultChild as aws_sns.CfnTopic).cfnOptions.condition = useExistCondition;
-    return <aws_sns.Topic> aws_sns.Topic.fromTopicArn(this.scope, `${this.id}-${topicName}`, SnsTopics.getTopicArnByTopicName(topicName));
+    return <aws_sns.Topic>aws_sns.Topic.fromTopicArn(this.scope, `${this.id}-${topicName}`, SnsTopics.getTopicArnByTopicName(topicName));
   }
 }
