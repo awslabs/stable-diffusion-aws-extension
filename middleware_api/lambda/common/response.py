@@ -1,11 +1,13 @@
 import json
 import logging
+import os
 from decimal import Decimal
 from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+x_api_version = os.environ.get('X_API_VERSION') or '1.4.0'
 
 class HttpStatusCode:
     OK = 200
@@ -55,6 +57,7 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         headers['Content-Type'] = 'application/json'
 
+    headers['x-api-version'] = x_api_version
     payload['headers'] = headers
 
     body = {

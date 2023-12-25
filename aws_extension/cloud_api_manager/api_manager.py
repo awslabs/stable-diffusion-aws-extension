@@ -6,6 +6,7 @@ import requests
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
+from aws_extension.cloud_api_manager.api import Api
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -16,6 +17,7 @@ class CloudApiManager:
 
     def __init__(self):
         self.auth_manger = cloud_auth_manager
+        self.api = Api(debug=True)
 
     # todo: not sure how to get current login user's password from gradio
     # todo: use username only for authorize checking for now only, e.g. user_token = username
@@ -292,11 +294,10 @@ class CloudApiManager:
     def list_all_inference_jobs_on_cloud(self, username, user_token=""):
         if not self.auth_manger.enableAuth:
             return []
-
-        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
+        self.api.set_username(username)
+        raw_resp = self.api.list_inferences(params={
             'username': username,
-        }, headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
+        })
         resp = raw_resp.json()
         return resp['data']['inferences']
 
