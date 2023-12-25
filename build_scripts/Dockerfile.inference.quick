@@ -12,7 +12,7 @@ RUN apt-get update -y
 # RUN apt-get install -y file
 # 
 COPY stable-diffusion-webui /opt/ml/code/
-COPY inference/serve /opt/ml/code
+COPY inference/quick_serve /opt/ml/code
 # 
 # # add accelerate
 # RUN mkdir -p /root/.cache/huggingface/accelerate
