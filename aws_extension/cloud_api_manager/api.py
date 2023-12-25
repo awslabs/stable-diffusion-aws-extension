@@ -1,14 +1,34 @@
 import base64
 import logging
 
-import requests
 import gradio as gr
+import requests
+
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-client_api_version = "1.3.0"
+client_api_version = "1.4.0"
+
+
+def upgrade_info(resp):
+    if 'x-api-version' not in resp.headers:
+        gr.Warning(f"Client api version {client_api_version} is not compatible api version. "
+                   f"Please update the client or api.")
+        return
+
+    api_version = resp.headers['x-api-version']
+
+    if api_version < client_api_version:
+        gr.Warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
+                   f"Please update the api.")
+        return
+
+    if api_version > client_api_version:
+        gr.Warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
+                   f"Please update the extension.")
+        return
 
 
 class Api:
@@ -60,17 +80,11 @@ class Api:
             timeout=(20, 30)
         )
 
+        upgrade_info(resp)
+
         if self.debug:
             logger.info(f"resp headers: {resp.headers}")
             logger.info(f"{resp.status_code} {resp.text}")
-
-        if 'x-api-version' in resp.headers:
-            if resp.headers['x-api-version'] != client_api_version:
-                gr.Warning(
-                    f"Client api version {client_api_version} is not compatible api version {resp.headers['x-api-version']}. "
-                    f"Please update the client or api.")
-        else:
-            logger.warning(f"please update the middleware api.")
 
         return resp
 
