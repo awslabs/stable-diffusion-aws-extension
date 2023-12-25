@@ -11,7 +11,7 @@ Users need to prepare a computer running linux system in advance.
 Use the following steps to deploy this solution on AWS. 
 
 - Step 1: Deploy Stable Diffusion WebUI. 
-- Step 2: Deploy the solution as a middleware.
+- Step 2: Deploy the solution as middleware.
 - Step 3: Configure API url and API token.
 
 

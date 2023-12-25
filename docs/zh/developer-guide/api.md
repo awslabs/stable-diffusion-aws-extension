@@ -95,7 +95,7 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 ```
 
 <details>
-  <summary>sequence digram raw</summary>
+  <summary>sequence diagram raw</summary>
   
 title Do Inference
 

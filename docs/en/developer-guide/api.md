@@ -17,9 +17,9 @@ headingLevel: 2
 <h1 id="stable-diffusion-train-and-deploy-api">Stable Diffusion AWS extension API</h1>
 
 # Overview
-This document describe all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WebUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
+This document describes all the api for Stable Diffusion AWS extension solution. This Solution contains two parts, one part is stable diffusion WebUI extension which is gradio based client to provide a user-friendly interface, another part is called middle-ware which is resources deploy on AWS cloud, the middleware provide several API interfaces to let stable diffusion aws extension client to interact services on AWS cloud like Sagemaker and S3 to do the model update/training and inference operations. 
 
-In order to support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.
+To support users who do not use stable diffusion aws extension. We provide this document to list all the API interfaces to help user understand how to call API methods to do the training or inference.
 
 
 After user [deployed](../deployment/deployment.md) solution middleware cloudformation, user can get the API URL and Token in the output part of the main stack. Please refer to [this document](../deployment/deployment.md)
