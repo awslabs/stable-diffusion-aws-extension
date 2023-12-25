@@ -1,6 +1,8 @@
 import logging
 import os
 
+import boto3
+
 from common.ddb_service.client import DynamoDbUtilsService
 from libs.common_tools import split_s3_path
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
@@ -10,12 +12,12 @@ checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 logger = logging.getLogger('boto3')
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
+boto3_sagemaker = boto3.client('sagemaker')
+s3 = boto3.client('s3')
 
 
 # sfn
 def handler(event, context):
-    import boto3
-    boto3_sagemaker = boto3.client('sagemaker')
     train_job_name = event['train_job_name']
     train_job_id = event['train_job_id']
 
@@ -63,12 +65,12 @@ def handler(event, context):
 
         checkpoint = CheckPoint(**raw_checkpoint)
         checkpoint.checkpoint_status = CheckPointStatus.Active
-        s3 = boto3.client('s3')
         bucket, key = split_s3_path(checkpoint.s3_location)
         s3_resp = s3.list_objects(
             Bucket=bucket,
             Prefix=key,
         )
+
         checkpoint.checkpoint_names = []
         if 'Contents' in s3_resp and len(s3_resp['Contents']) > 0:
             for obj in s3_resp['Contents']:
@@ -86,6 +88,7 @@ def handler(event, context):
             field_name='checkpoint_status',
             value=checkpoint.checkpoint_status.value
         )
+
         ddb_service.update_item(
             table=checkpoint_table,
             key={

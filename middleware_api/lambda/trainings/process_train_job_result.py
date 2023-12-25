@@ -16,9 +16,12 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 def handler(event, context):
     train_job_id = event['train_job_id']
 
-    raw_train_job = ddb_service.get_item(table=train_table, key_values={
-        'id': train_job_id,
-    })
+    raw_train_job = ddb_service.get_item(
+        table=train_table,
+        key_values={
+            'id': train_job_id,
+        }
+    )
 
     if raw_train_job is None or len(raw_train_job) == 0:
         return {
