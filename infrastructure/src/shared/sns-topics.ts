@@ -4,6 +4,7 @@ import { Construct } from 'constructs';
 
 
 export class SnsTopics {
+
   public readonly snsTopic: aws_sns.Topic;
   public readonly createModelSuccessTopic: aws_sns.Topic;
   public readonly createModelFailureTopic: aws_sns.Topic;
