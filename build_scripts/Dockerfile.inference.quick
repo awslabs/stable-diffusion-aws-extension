@@ -11,8 +11,8 @@ RUN apt-get update -y
 # # install file cmd
 # RUN apt-get install -y file
 # 
-# COPY stable-diffusion-webui /opt/ml/code/
-# COPY inference/serve /opt/ml/code
+COPY stable-diffusion-webui /opt/ml/code/
+COPY inference/serve /opt/ml/code
 # 
 # # add accelerate
 # RUN mkdir -p /root/.cache/huggingface/accelerate
@@ -50,4 +50,4 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 # RUN pip install trash-cli
 # RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
-ENTRYPOINT ["python", "/opt/ml/code/serve"]
+ENTRYPOINT ["python", "/opt/ml/code/quick_serve"]
