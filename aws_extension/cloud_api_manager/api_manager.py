@@ -231,8 +231,6 @@ class CloudApiManager:
                                  json=payload,
                                  headers=self._get_headers_by_user(user_token)
                                  )
-        logger.info(payload)
-        logger.info(raw_resp.json())
         resp = raw_resp.json()
         if raw_resp.status_code != 200:
             raise Exception(resp['message'])
