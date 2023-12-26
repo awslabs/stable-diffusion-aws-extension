@@ -7,10 +7,10 @@ from typing import Any, Optional
 
 from botocore.exceptions import ClientError
 
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import bad_request, internal_server_error, created
 from libs.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
-from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
 from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from libs.utils import get_permissions_by_username, get_user_roles
 
@@ -143,4 +143,4 @@ def handler(raw_event, context):
         's3PresignUrl': multiparts_resp
     }
 
-    return ok(data=data)
+    return created(data=data)

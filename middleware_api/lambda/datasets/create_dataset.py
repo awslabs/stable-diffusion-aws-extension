@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
-from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
+from common.response import bad_request, internal_server_error, created
 from common.util import get_s3_presign_urls
+from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from libs.utils import get_permissions_by_username, get_user_roles
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
@@ -98,7 +98,7 @@ def handler(raw_event, context):
             's3PresignUrl': presign_url_map
         }
 
-        return ok(data=data)
+        return created(data=data)
     except Exception as e:
         logger.error(e)
         return internal_server_error(message=str(e))
