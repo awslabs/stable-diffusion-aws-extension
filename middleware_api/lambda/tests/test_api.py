@@ -103,7 +103,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_list_train_jobs(self):
-        from trainings.train_api import list_all_train_jobs_api
+        from trainings.process_train_job_result import list_all_train_jobs_api
         resp = list_all_train_jobs_api({
             'queryStringParameters': {
             },
@@ -136,14 +136,14 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_update_train_job_api(self):
-        from trainings.train_api import update_train_job_api
+        from trainings.process_train_job_result import update_train_job_api
         update_train_job_api({
             "train_job_id": "asdfasdf",
             "status": "Training"
         }, {})
 
     def test_check_train_job_status(self):
-        from trainings.train_api import check_train_job_status
+        from trainings.process_train_job_result import check_train_job_status
         event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0',
                  'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
         check_train_job_status(event, {})
