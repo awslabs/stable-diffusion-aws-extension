@@ -8,7 +8,7 @@ from datetime import datetime
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, created
+from common.response import bad_request, accepted
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus
 from libs.utils import get_permissions_by_username
@@ -116,7 +116,7 @@ def handler(raw_event, ctx):
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
 
-        return created(
+        return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
             data=data
         )
