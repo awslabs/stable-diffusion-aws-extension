@@ -21,7 +21,7 @@ import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
 import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/trainings/delete-training-jobs';
 import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
-import { UpdateTrainingJobApi } from '../api/trainings/update-training-job';
+import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { Database } from '../shared/database';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -88,7 +88,7 @@ export class SdTrainDeployStack extends NestedStack {
     const trainJobRouter = routers.trainings.addResource('{id}');
 
     // PUT /trainings/{id}
-    new UpdateTrainingJobApi(this, 'StartTrainingJob', {
+    new StartTrainingJobApi(this, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',

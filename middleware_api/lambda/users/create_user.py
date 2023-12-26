@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import bad_request, created
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
-from roles.create_role import handler as upsert_role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
+from roles.create_role import handler as upsert_role
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
@@ -79,7 +79,7 @@ def handler(raw_event, ctx):
             'all_roles': rolenames,
         }
 
-        return ok(data=data)
+        return created(data=data)
 
     check_permission_resp = _check_action_permission(event.creator, event.username)
     if check_permission_resp:
@@ -126,11 +126,11 @@ def handler(raw_event, ctx):
         }
     }
 
-    return ok(data=data)
+    return created(data=data)
 
 
 def _check_action_permission(creator_username, target_username):
-    # check if creator exist
+    # check if the creator exists
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=creator_username):
         return bad_request(message=f'creator {creator_username} not exist')
 
@@ -142,7 +142,7 @@ def _check_action_permission(creator_username, target_username):
             ('all' not in creator_permissions['user'] and 'create' not in creator_permissions['user']):
         return bad_request(message=f'creator {creator_username} does not have permission to manage the user')
 
-    # if the creator have no permission (not created by creator),
+    # if the creator has no permission (not created by creator),
     # make sure the creator doesn't change the existed user (created by others)
     # and only user with 'user:all' can do update any users
     if target_user and target_user.creator != creator_username and 'all' not in creator_permissions['user']:

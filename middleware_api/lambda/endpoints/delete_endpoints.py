@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import forbidden, ok, internal_server_error
+from common.response import forbidden, no_content, internal_server_error
 from libs.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -64,7 +64,7 @@ def handler(raw_event, ctx):
                     keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
                 )
 
-        return ok(message="Endpoints Deleted")
+        return no_content(message="Endpoints Deleted")
     except Exception as e:
         logger.error(f"error deleting sagemaker endpoint with exception: {e}")
         return internal_server_error(message=f"error deleting sagemaker endpoint with exception: {e}")

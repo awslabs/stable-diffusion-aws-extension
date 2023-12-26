@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok, bad_request
+from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
 
 logger = logging.getLogger('delete_roles')
@@ -41,7 +41,7 @@ def handler(event, ctx):
             }
         )
 
-    return ok(message='roles deleted')
+    return no_content(message='roles deleted')
 
 
 def update_users_with_role(role_name: str):

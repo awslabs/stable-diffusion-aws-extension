@@ -9,10 +9,10 @@ from typing import Any
 
 import requests
 
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import bad_request, internal_server_error, created, accepted
 from libs.common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls, multipart_upload_from_url
-from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
 from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
 from libs.utils import get_user_roles, get_permissions_by_username
 
@@ -130,7 +130,7 @@ def upload_checkpoint_by_urls(event: CreateCheckPointEvent, context):
                 'params': checkpoint.params
             }
         }
-        return ok(data=data, headers=headers)
+        return accepted(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
         return internal_server_error(headers=headers, message=str(e))
@@ -211,7 +211,7 @@ def handler(raw_event, context):
             },
             's3PresignUrl': multiparts_resp
         }
-        return ok(data=data, headers=headers)
+        return created(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
         return internal_server_error(headers=headers, message=str(e))

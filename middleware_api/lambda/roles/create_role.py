@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, ok
+from common.response import bad_request, created
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import check_user_existence, get_permissions_by_username
 
@@ -64,4 +64,4 @@ def handler(raw_event, ctx):
         'creator': event.creator,
     }
 
-    return ok(message='role created', data=data)
+    return created(message='role created', data=data)

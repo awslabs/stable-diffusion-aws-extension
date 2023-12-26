@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
 logger = logging.getLogger('delete_inference_jobs')
 logger.setLevel(logging.INFO)
@@ -61,4 +61,4 @@ def handler(event, ctx):
         # todo will rename primary key
         inference_job_table.delete_item(Key={'InferenceJobId': inference_id})
 
-    return ok(message='inferences deleted')
+    return no_content(message='inferences deleted')

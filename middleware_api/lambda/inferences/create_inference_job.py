@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import List, Any, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import bad_request, created
 from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
@@ -119,7 +119,7 @@ def handler(raw_event, context):
                                            for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
-        return ok(data=resp)
+        return created(data=resp)
     except Exception as e:
         return bad_request(message=str(e))
 
