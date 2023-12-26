@@ -6,6 +6,7 @@ RUN apt-get update -y
 RUN pip uninstall -y torch
 RUN pip uninstall -y torchvision
 RUN pip uninstall -y torchaudio
+RUN pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu118
 
 # # install pkg lib for proprocess in controlnet
 # RUN apt-get install -y pkg-config
