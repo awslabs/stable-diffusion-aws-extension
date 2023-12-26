@@ -1,32 +1,21 @@
-import copy
-import itertools
 import logging
 import os
-from pathlib import Path
 import html
 import boto3
 import time
-
 import json
-
 import gradio
 import requests
 import base64
-from urllib.parse import urljoin
-
 import gradio as gr
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-
-from modules import shared, scripts
-from modules.ui import create_refresh_button
 from modules.shared import opts
-from modules.ui_components import FormRow, FormColumn, FormGroup, ToolButton, FormHTML
-from utils import get_variable_from_json
-from utils import upload_file_to_s3_by_presign_url, upload_multipart_files_to_s3_by_signed_url
+from modules.ui_components import FormRow
+from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url
 from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
@@ -123,6 +112,21 @@ def server_request_post(path, params):
     }
     list_endpoint_url = f'{api_gateway_url}{path}'
     response = requests.post(list_endpoint_url, json=params, headers=headers)
+    return response
+
+
+def server_request_get(path, params):
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    # Check if api_url ends with '/', if not append it
+    if not api_gateway_url.endswith('/'):
+        api_gateway_url += '/'
+    api_key = get_variable_from_json('api_token')
+    headers = {
+        "x-api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    list_endpoint_url = f'{api_gateway_url}{path}'
+    response = requests.get(list_endpoint_url, params=params, headers=headers)
     return response
 
 
@@ -246,8 +250,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
         if checkpoint:
             body_params['checkpoint'] = checkpoint
         body_params['limit'] = -1 if show_all_inference_job else 10
-        response = server_request_post(f'inference/query-inference-jobs', body_params)
-        r = response.json()
+        response = server_request_get(f'inferences', body_params)
+        r = response.json()['data']['inferences']
         logger.debug(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -278,89 +282,9 @@ def query_inference_job_list(task_type: str = '', status: str = '',
         return gr.Dropdown.update(choices=[])
 
 
-# def get_inference_job_list(txt2img_type_checkbox=True, img2img_type_checkbox=True, interrogate_type_checkbox=True):
-#     global txt2img_inference_job_ids
-#     try:
-#         txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
-#         response = server_request('inference/list-inference-jobs')
-#         r = response.json()
-#         logger.debug(f"response: {response.json()}")
-#         filter_checkbox = False
-#         selected_types = []
-#         if txt2img_type_checkbox:
-#             selected_types.append('txt2img')
-#             filter_checkbox = True
-#         if img2img_type_checkbox:
-#             selected_types.append('img2img')
-#             filter_checkbox = True
-#         if interrogate_type_checkbox:
-#             selected_types.append('interrogate_deepbooru')
-#             filter_checkbox = True
-#         logging.debug(f"selected_types: {selected_types}")
-#         if r:
-#             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
-#             temp_list = []
-#             for obj in r:
-#                 if obj.get('completeTime') is None:
-#                     complete_time = obj.get('startTime')
-#                 else:
-#                     complete_time = obj.get('completeTime')
-#                 status = obj.get('status')
-#                 task_type = obj.get('taskType', 'txt2img')
-#                 inference_job_id = obj.get('InferenceJobId')
-#                 if filter_checkbox and task_type not in selected_types:
-#                     continue
-#                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
-#                 temp_list.append((complete_time, combined_string))
-#
-#             # Sort the list based on completeTime in ascending order
-#             sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
-#
-#             # Append the sorted combined strings to the txt2img_inference_job_ids list
-#             for item in sorted_list:
-#                 txt2img_inference_job_ids.append(item[1])
-#             # inference_job_dropdown.update(choices=txt2img_inference_job_ids)
-#             return gr.Dropdown.update(choices=txt2img_inference_job_ids)
-#         else:
-#             logger.debug("The API response is empty.")
-#             return gr.Dropdown.update(choices=[])
-#
-#     except Exception as e:
-#         logger.error("Exception occurred when fetching inference_job_ids")
-#         return gr.Dropdown.update(choices=[])
-
-
 def get_inference_job(inference_job_id):
-    response = server_request(f'inference/get-inference-job?jobID={inference_job_id}')
-    return response.json()
-
-
-def get_inference_job_image_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-image-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_image_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_image_list.append(obj_value)
-        return txt2img_inference_job_image_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job image output: {e}")
-        return []
-
-
-def get_inference_job_param_output(inference_job_id):
-    try:
-        response = server_request(f'inference/get-inference-job-param-output?jobID={inference_job_id}')
-        r = response.json()
-        txt2img_inference_job_param_list = []
-        for obj in r:
-            obj_value = str(obj)
-            txt2img_inference_job_param_list.append(obj_value)
-        return txt2img_inference_job_param_list
-    except Exception as e:
-        logger.error(f"An error occurred while getting inference job param output: {e}")
-        return []
+    response = server_request(f'inferences/{inference_job_id}')
+    return response.json()['data']
 
 
 def download_images(image_urls: list, local_directory: str):
@@ -383,7 +307,35 @@ def download_images(image_urls: list, local_directory: str):
     return image_list
 
 
-def get_model_list_by_type(model_type):
+def download_images_to_json(image_urls: list):
+    results = []
+    for url in image_urls:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            json_resp = response.json()
+            results.append(json_resp['info'])
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error downloading image {url}: {e}")
+    return results
+
+
+def download_images_to_pil(image_urls: list):
+    image_list = []
+    for url in image_urls:
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            from PIL import Image
+            import io
+            pil_image = Image.open(io.BytesIO(response.content))
+            image_list.append(pil_image)
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error downloading image {url}: {e}")
+    return image_list
+
+
+def get_model_list_by_type(model_type, username=""):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
@@ -403,7 +355,11 @@ def get_model_list_by_type(model_type):
         url += f"&types={model_type}"
 
     try:
-        response = requests.get(url=url, headers={'x-api-key': api_key})
+        encode_type = "utf-8"
+        response = requests.get(url=url, headers={
+            'x-api-key': api_key,
+            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+        })
         response.raise_for_status()
         json_response = response.json()
 
@@ -458,11 +414,11 @@ def get_checkpoints_by_type(model_type):
         checkpoint_list = list(checkpoint_dict.values())
         return checkpoint_list
     except Exception as e:
-        logging.error(f"Error fetching model list: {e}")
+        logging.error(f"Error fetching checkpoints list: {e}")
         return []
 
 
-def update_sd_checkpoints():
+def update_sd_checkpoints(username):
     model_type = ["Stable-diffusion"]
     return get_model_list_by_type(model_type)
 
@@ -487,13 +443,18 @@ def get_controlnet_model_list():
     return get_model_list_by_type(model_type)
 
 
-def refresh_all_models():
+def refresh_all_models(username):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
+    encode_type = "utf-8"
+
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
-            response = requests.get(url=url, headers={'x-api-key': api_key})
+            response = requests.get(url=url, headers={
+                'x-api-key': api_key,
+                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+            })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")
             checkpoint_info[rp] = {}
@@ -521,7 +482,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                    vae_path]
 
     logger.info(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
-    refresh_all_models()
+    refresh_all_models(pr.username)
 
     for lp, rp in zip(local_paths, checkpoint_type):
         if lp == "" or not lp:
@@ -560,7 +521,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         api_key = get_variable_from_json('api_token')
         logger.info(f'!!!!!!api_gateway_url {api_gateway_url}')
 
-        url = str(api_gateway_url) + "checkpoint"
+        url = str(api_gateway_url) + "checkpoints"
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
@@ -568,7 +529,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         try:
             response.raise_for_status()
-            json_response = response.json()
+            json_response = response.json()['data']
             logger.debug(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
             checkpoint_id = json_response["checkpoint"]["id"]
@@ -603,12 +564,11 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             )
 
             payload = {
-                "checkpoint_id": checkpoint_id,
                 "status": "Active",
                 "multi_parts_tags": {local_tar_path: multiparts_tags}
             }
             # Start creating model on cloud.
-            response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+            response = requests.put(url=f"{url}/{checkpoint_id}", json=payload, headers={'x-api-key': api_key})
             s3_input_path = s3_base
             logger.debug(response)
 
@@ -620,7 +580,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             logger.error(f"fail to upload model {lp}, error: {e}")
 
     logger.debug(f"Refresh checkpoints after upload...")
-    refresh_all_models()
+    refresh_all_models(pr.username)
     return log, None, None, None, None, None, None
 
 
@@ -633,20 +593,20 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
-    url_pattern = r'^(https?|ftp)://[^\s/$.?#][^\s]*$'
-    if all(re.match(url_pattern, url) for url in url_list.split(',')):
+    url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+    if re.match(f'^{url_pattern}$', url_list):
         url_list = url_list.split(',')
     else:
-        return "Please fill in the right URL list."
+        return "Please fill in right url list."
     if params:
         params_dict = json.loads(params)
     else:
         params_dict = {}
 
     params_dict['creator'] = pr.username
-    body_params = {'checkpointType': model_type, 'modelUrl': url_list, 'params': params_dict}
-    response = server_request_post('upload_checkpoint', body_params)
-    response_data = response.json()
+    body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
+    response = server_request_post('checkpoints', body_params)
+    response_data = response.json()['data']
     logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
     log = "uploading……"
     if 'checkpoint' in response_data:
@@ -656,7 +616,7 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
 
 
 def generate_on_cloud(sagemaker_endpoint):
-    logger.info(f"checkpiont_info {checkpoint_info}")
+    logger.info(f"checkpoint_info {checkpoint_info}")
     logger.info(f"sagemaker endpoint {sagemaker_endpoint}")
     text = "failed to check endpoint"
     return plaintext_to_html(text)
@@ -785,12 +745,20 @@ def process_result_by_inference_id(inference_id):
 
     resp = get_inference_job(inference_id)
     if resp is None:
-        return image_list, info_text, plaintext_to_html(infotexts)
+        logger.info(f"get_inference_job resp is null")
+        return image_list, info_text, plaintext_to_html(infotexts), infotexts
     else:
+        logger.debug(f"get_inference_job resp is {resp}")
+        if 'taskType' not in resp:
+            raise Exception(resp)
+
         if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
-            while resp['status'] == "inprogress":
+            while resp and resp['status'] == "inprogress":
                 time.sleep(3)
                 resp = get_inference_job(inference_id)
+            if resp is None:
+                logger.info(f"get_inference_job resp is null.")
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
             if resp['status'] == "failed":
                 infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -799,28 +767,23 @@ def process_result_by_inference_id(inference_id):
                     prompt_txt = resp['caption']
                     # return with default value, including image_list, info_text, infotexts
                     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
-                images = get_inference_job_image_output(inference_id.strip())
-                inference_param_json_list = get_inference_job_param_output(inference_id)
+                images = resp['img_presigned_urls']
+                inference_param_json_list = resp['output_presigned_urls']
                 # todo: these not need anymore
-                if resp['taskType'] == "txt2img":
-                    image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                    json_list = download_images(inference_param_json_list,
-                                                f"outputs/txt2img-images/{get_current_date()}/{inference_id}/")
-                    json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                elif resp['taskType'] == "img2img":
-                    image_list = download_images(images, f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                    json_list = download_images(inference_param_json_list,
-                                                f"outputs/img2img-images/{get_current_date()}/{inference_id}/")
-                    json_file = f"outputs/img2img-images/{get_current_date()}/{inference_id}/{inference_id}_param.json"
-                if os.path.isfile(json_file):
-                    with open(json_file) as f:
-                        log_file = json.load(f)
-                        info_text = log_file["info"]
-                        infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                if resp['taskType'] in ['txt2img', 'img2img']:
+                    image_list = download_images_to_pil(images)
+                    json_file = download_images_to_json(inference_param_json_list)[0]
+
+                if json_file:
+                    info_text = json_file
+                    infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
                 else:
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
                     infotexts = info_text
+                return image_list, info_text, plaintext_to_html(infotexts), infotexts
+            else:
+                logger.debug(f"inference job status is {resp['status']}")
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
         else:
             return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -865,28 +828,6 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 # def txt2img_config_save():
 #     # placeholder for saving txt2img config
 #     pass
-
-def displayEndpointInfo(input_string: str):
-    logger.debug(f"selected value is {input_string}")
-    if not input_string:
-        return
-    parts = input_string.split('+')
-
-    if len(parts) < 2:
-        return plaintext_to_html("")
-
-    endpoint_job_id, status = parts[0], parts[1]
-
-    if status == 'failed':
-        response = server_request(f'inference/get-endpoint-deployment-job?jobID={endpoint_job_id}')
-        # Do something with the response
-        r = response.json()
-        if "error" in r:
-            return plaintext_to_html(r["error"])
-        else:
-            return plaintext_to_html(r["EndpointDeploymentJobId"])
-    else:
-        return plaintext_to_html("")
 
 
 def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
@@ -940,7 +881,7 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
 def fake_gan(selected_value, original_prompt):
     logger.debug(f"selected value is {selected_value}")
     logger.debug(f"original prompt is {original_prompt}")
-    if selected_value is not None:
+    if selected_value and selected_value != None_Option_For_On_Cloud_Model:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
@@ -952,32 +893,19 @@ def fake_gan(selected_value, original_prompt):
 
         if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = original_prompt
-            images = get_inference_job_image_output(inference_job_id)
-            image_list = []
-            json_list = []
-            inference_pram_json_list = get_inference_job_param_output(inference_job_id)
             # output directory mapping to task type
-            if inference_job_taskType == "txt2img":
-                image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-                json_list = download_images(inference_pram_json_list,
-                                            f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-                json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            elif inference_job_taskType == "img2img":
-                image_list = download_images(images, f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
-                json_list = download_images(inference_pram_json_list,
-                                            f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/")
-                json_file = f"outputs/img2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-            logger.debug(f"{str(images)}")
-            logger.debug(f"{str(inference_pram_json_list)}")
-            if os.path.isfile(json_file):
-                with open(json_file) as f:
-                    log_file = json.load(f)
-                    info_text = log_file["info"]
-                    infotexts = json.loads(info_text)["infotexts"][0]
+            job = get_inference_job(inference_job_id)
+            images = job['img_presigned_urls']
+            inference_param_json_list = job['output_presigned_urls']
+            image_list = download_images_to_pil(images)
+            json_file = download_images_to_json(inference_param_json_list)[0]
+            if json_file:
+                info_text = json_file
+                infotexts = f"Inference id is {inference_job_id}\n" + json.loads(info_text)["infotexts"][0]
             else:
                 logger.debug(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
-                infotexts = 'something wrong when trying to download the inference parameters'
+                infotexts = info_text
         elif inference_job_taskType in ["interrogate_clip", "interrogate_deepbooru"]:
             job_status = get_inference_job(inference_job_id)
             logger.debug(job_status)
@@ -995,52 +923,11 @@ def fake_gan(selected_value, original_prompt):
         infotexts = ''
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
-
-def display_inference_result(inference_id: str):
-    logger.debug(f"selected value is {inference_id}")
-    if inference_id is not None:
-        # Extract the InferenceJobId value
-        inference_job_id = inference_id
-        images = get_inference_job_image_output(inference_job_id)
-        image_list = []
-        image_list = download_images(images, f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        inference_pram_json_list = get_inference_job_param_output(inference_job_id)
-        json_list = []
-        json_list = download_images(inference_pram_json_list,
-                                    f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/")
-
-        logger.debug(f"{str(images)}")
-        logger.debug(f"{str(inference_pram_json_list)}")
-
-        json_file = f"outputs/txt2img-images/{get_current_date()}/{inference_job_id}/{inference_job_id}_param.json"
-
-        f = open(json_file)
-
-        log_file = json.load(f)
-
-        info_text = log_file["info"]
-
-        infotexts = json.loads(info_text)["infotexts"][0]
-    else:
-        image_list = []  # Return an empty list if selected_value is None
-        json_list = []
-        info_text = ''
-
-    return image_list, info_text, plaintext_to_html(infotexts)
-
-
-def init_refresh_resource_list_from_cloud():
+def init_refresh_resource_list_from_cloud(username):
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
         if not cloud_auth_manager.enableAuth:
-            # api_manager.list_all_sagemaker_endpoints()
-            refresh_all_models()
-            get_texual_inversion_list()
-            get_lora_list()
-            get_hypernetwork_list()
-            get_controlnet_model_list()
-            # get_inference_job_list()
+            refresh_all_models(username)
         else:
             logger.debug('auth enabled, not preload load any model')
     else:
@@ -1065,7 +952,7 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(username, usertoken):
+def load_inference_job_list(target_task_type, username, usertoken):
     inference_jobs = [None_Option_For_On_Cloud_Model]
     inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
 
@@ -1080,7 +967,8 @@ def load_inference_job_list(username, usertoken):
         inference_job_id = obj.get('InferenceJobId')
         # if filter_checkbox and task_type not in selected_types:
         #     continue
-        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+        if target_task_type == task_type:
+            temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
     # Sort the list based on completeTime in ascending order
     sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
     # Append the sorted combined strings to the txt2img_inference_job_ids list
@@ -1091,7 +979,10 @@ def load_inference_job_list(username, usertoken):
 
 
 def load_model_list(username, user_token):
-    models_on_cloud = [None_Option_For_On_Cloud_Model]
+    models_on_cloud = []
+    if 'sd_model_checkpoint' in opts.quicksettings_list:
+        models_on_cloud = [None_Option_For_On_Cloud_Model]
+
     models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token)]))
     return models_on_cloud
 
@@ -1106,16 +997,21 @@ def load_hypernetworks_models(username, user_token):
 
 def load_vae_list(username, user_token):
     vae_model_on_cloud = ['Automatic', 'None']
-    if 'sd_vae' in opts.quicksettings_list:
-        vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
-
+    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
     return vae_model_on_cloud
 
 
 def load_controlnet_list(username, user_token):
-    vae_model_on_cloud = ['None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
-    return vae_model_on_cloud
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    return controlnet_model_on_cloud
+
+
+def load_xyz_controlnet_list(username, user_token):
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(
+        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    return controlnet_model_on_cloud
 
 
 def load_embeddings_list(username, user_token):
@@ -1128,14 +1024,15 @@ def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
     import modules.ui
 
-    init_refresh_resource_list_from_cloud()
+    # init_refresh_resource_list_from_cloud()
 
     with gr.Blocks() as sagemaker_inference_tab:
         gr.HTML('<h3>Amazon SageMaker Inference</h3>')
         sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
+        inference_task_type = 'txt2img' if not is_img2img else 'img2img'
         with gr.Column():
             with gr.Row():
-                lora_models_state = gr.State({})
+                lora_and_hypernet_models_state = gr.State({})
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
 
@@ -1145,7 +1042,7 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
-            with gr.Row(visible='sd_vae' in opts.quicksettings_list):
+            with gr.Row():
                 sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
                                                        label='SD Vae on Cloud')
 
@@ -1157,20 +1054,20 @@ def create_ui(is_img2img):
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
-            with gr.Row(visible=is_img2img):
-                global generate_on_cloud_button_with_js
-                # if not is_img2img:
-                #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
-                global generate_on_cloud_button_with_js_img2img
-                global interrogate_clip_on_cloud_button
-                global interrogate_deep_booru_on_cloud_button
-
-                interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-                                                             elem_id="interrogate_clip_on_cloud_button")
-                interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-                                                                   elem_id="interrogate_deep_booru_on_cloud_button")
-            with gr.Row():
-                gr.HTML('<br/>')
+            # with gr.Row(visible=is_img2img):
+            #     global generate_on_cloud_button_with_js
+            #     # if not is_img2img:
+            #     #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
+            #     global generate_on_cloud_button_with_js_img2img
+            #     global interrogate_clip_on_cloud_button
+            #     global interrogate_deep_booru_on_cloud_button
+            #
+            #     interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
+            #                                                  elem_id="interrogate_clip_on_cloud_button", visible=False)
+            #     interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
+            #                                                        elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
+            # with gr.Row():
+            #     gr.HTML('<br/>')
 
             with gr.Row():
                 global inference_job_dropdown
@@ -1181,7 +1078,7 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(username, username)
+                                                  'choices': load_inference_job_list(inference_task_type, username, username)
                                               }, 'refresh_inference_job_down')
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
@@ -1361,53 +1258,60 @@ def create_ui(is_img2img):
                 def setup_inference_for_plugin(pr: gr.Request):
                     models_on_cloud = load_model_list(pr.username, pr.username)
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
-                    inference_jobs = load_inference_job_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
+                    controlnet_list = load_controlnet_list(pr.username, pr.username)
+                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
 
-                    return lora_models_on_cloud, \
-                        hypernetworks_models_on_cloud,\
-                        gr.update(choices=models_on_cloud), \
+                    inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
+                    lora_hypernets = {
+                        'lora': lora_models_on_cloud,
+                        'hypernet': hypernetworks_models_on_cloud,
+                        'controlnet': controlnet_list,
+                        'controlnet_xyz': controlnet_xyz_list,
+                        'vae': vae_model_on_cloud,
+                        'sd': models_on_cloud,
+                    }
+
+                    return lora_hypernets, \
+                        gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud)
 
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
-                                                 lora_models_state,
+                                                 lora_and_hypernet_models_state,
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
-                                                 sd_vae_on_cloud_dropdown]
-                                             )
+                                                 sd_vae_on_cloud_dropdown
+                                             ])
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
             sagemaker_html_log = gr.HTML(elem_id=f'html_log_sagemaker')
             with FormRow(elem_id="modelmerger_models_in_the_cloud"):
                 global primary_model_name
-                primary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                 elem_id="modelmerger_primary_model_name_in_the_cloud",
+                primary_model_name = gr.Dropdown(elem_id="modelmerger_primary_model_name_in_the_cloud",
                                                  label="Primary model (A) in the cloud")
-                create_refresh_button(primary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(primary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_A_in_the_cloud")
 
                 global secondary_model_name
-                secondary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                   elem_id="modelmerger_secondary_model_name_in_the_cloud",
+                secondary_model_name = gr.Dropdown(elem_id="modelmerger_secondary_model_name_in_the_cloud",
                                                    label="Secondary model (B) in the cloud")
-                create_refresh_button(secondary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(secondary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_B_in_the_cloud")
 
                 global tertiary_model_name
-                tertiary_model_name = gr.Dropdown(choices=sorted(update_sd_checkpoints()),
-                                                  elem_id="modelmerger_tertiary_model_name_in_the_cloud",
+                tertiary_model_name = gr.Dropdown(elem_id="modelmerger_tertiary_model_name_in_the_cloud",
                                                   label="Tertiary model (C) in the cloud")
-                create_refresh_button(tertiary_model_name, update_sd_checkpoints,
-                                      lambda: {"choices": sorted(update_sd_checkpoints())},
+                create_refresh_button_by_user(tertiary_model_name, lambda *args: None,
+                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
                                       "refresh_checkpoint_C_in_the_cloud")
             with gr.Row():
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_models_state
+    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state

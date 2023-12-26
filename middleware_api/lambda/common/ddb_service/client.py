@@ -1,6 +1,5 @@
 import datetime
 import enum
-import json
 import logging
 from decimal import Decimal
 from typing import Any, List, Dict
@@ -71,7 +70,8 @@ class DynamoDbUtilsService:
             )
         except ClientError as e:
             self.logger.error('keys: %s -> %s: %s', key, field_name, value)
-            raise Exception(f'dynamodb update failed with table {table}, key: {key}, field: {field_name}, value: {value}, error: {e}')
+            raise Exception(
+                f'dynamodb update failed with table {table}, key: {key}, field: {field_name}, value: {value}, error: {e}')
 
     def get_item(self, table: str, key_values: Dict[str, Any]) -> Dict[str, Any]:
         try:
@@ -109,7 +109,8 @@ class DynamoDbUtilsService:
             self.logger.error(f'table {table} keys_values: {key_values}')
             raise Exception(f'table {table} get_item failed with keys_values: {key_values}, e: {e}')
 
-    def query_items(self, table: str, key_values: Dict[str, Any], filters: Dict[str, Any] = None, limit: int = None, last_evaluated_key=None):
+    def query_items(self, table: str, key_values: Dict[str, Any], filters: Dict[str, Any] = None, limit: int = None,
+                    last_evaluated_key=None):
         try:
             key_expressions, expression_values = self._get_ddb_filter(key_values)
             if not filters:
@@ -120,14 +121,14 @@ class DynamoDbUtilsService:
                             KeyConditionExpression=key_expressions,
                             ExpressionAttributeValues=expression_values,
                             ExclusiveStartKey=last_evaluated_key,
-                            Limit=10
+                            Limit=limit
                         )
                     else:
                         resp = self.client.query(
                             TableName=table,
                             KeyConditionExpression=key_expressions,
                             ExpressionAttributeValues=expression_values,
-                            Limit=10
+                            Limit=limit
                         )
                 else:
                     scan_resp = self.client.query(
@@ -179,8 +180,8 @@ class DynamoDbUtilsService:
 
                 prepare_filter_expressions.append('{} in ({})'.format(key, val_keys[:len(val_keys) - 2]))
             else:
-                prepare_filter_expressions.append('{} = {}'.format(key, prefix+key))
-                expression_values[prefix+key] = self._convert(val)
+                prepare_filter_expressions.append('{} = {}'.format(key, prefix + key))
+                expression_values[prefix + key] = self._convert(val)
         filter_expressions = ' AND '.join(prepare_filter_expressions)
         return filter_expressions, expression_values
 

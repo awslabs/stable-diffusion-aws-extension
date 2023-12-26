@@ -21,8 +21,7 @@ def check_config_json_exist(filename='sagemaker_ui.json') -> bool:
             data = json.load(json_file)
             return ('api_gateway_url' in data and data['api_gateway_url']) and \
                    ('api_token' in data and data['api_token']) and \
-                   ('username' in data and data['username']) and \
-                   ('password' in data and data['password'])
+                   ('username' in data and data['username'])
 
     return False
 
@@ -42,13 +41,26 @@ class CloudAuthLoader:
     def enable(self):
         return self.enableAuth
 
+    def update_gradio_auth(self):
+        from modules import shared
+        user_cred_str = self.create_config()
+        if user_cred_str:
+            for user_password in user_cred_str.split(','):
+                parts = user_password.split(':')
+                user = parts[0]
+                password = parts[1]
+                if not shared.demo.server_app.auth:
+                    shared.demo.server_app.auth = {}
+
+                shared.demo.server_app.auth[user] = password
+
     def create_config(self) -> str:
         return self._get_users_config_from_api()
 
     def _get_users_config_from_api(self):
         raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
         raw_resp.raise_for_status()
-        resp = raw_resp.json()
+        resp = raw_resp.json()['data']
         return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
 
     def refresh(self):
