@@ -339,9 +339,9 @@ export class UpdateTrainingJobApi {
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'train_api.py',
+      index: 'check_train_job_status.py',
       role: this.sfnLambdaRole,
-      handler: 'check_train_job_status',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       memorySize: 1024,
       environment: {
@@ -364,8 +364,8 @@ export class UpdateTrainingJobApi {
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       role: this.sfnLambdaRole,
-      index: 'train_api.py',
-      handler: 'process_train_job_result',
+      index: 'process_train_job_result.py',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       memorySize: 1024,
       environment: {
