@@ -254,7 +254,7 @@ class CloudApiManager:
                                    headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if raw_resp.status_code != 200:
+        if raw_resp.status_code != 204:
             raise Exception(resp['message'])
         return True
 
