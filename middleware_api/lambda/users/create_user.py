@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, created
+from common.response import bad_request, created
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 from roles.create_role import handler as upsert_role
@@ -79,7 +79,7 @@ def handler(raw_event, ctx):
             'all_roles': rolenames,
         }
 
-        return ok(data=data)
+        return created(data=data)
 
     check_permission_resp = _check_action_permission(event.creator, event.username)
     if check_permission_resp:
