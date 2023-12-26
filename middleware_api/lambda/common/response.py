@@ -10,6 +10,7 @@ logger.setLevel(logging.INFO)
 class HttpStatusCode:
     OK = 200
     Created = 201
+    Accepted = 202
     NoContent: int = 204
     BadRequest = 400
     Forbidden = 403
@@ -21,6 +22,7 @@ class HttpStatusCode:
 http_status_descriptions = {
     HttpStatusCode.OK: "OK",
     HttpStatusCode.Created: "Created",
+    HttpStatusCode.Accepted: "Accepted",
     HttpStatusCode.NoContent: "No Content",
     HttpStatusCode.BadRequest: "Bad Request",
     HttpStatusCode.Forbidden: "Forbidden",
@@ -93,6 +95,14 @@ def created(data=None,
             decimal=None
             ):
     return response(HttpStatusCode.Created, data, message, headers, decimal)
+
+
+def accepted(data=None,
+             message: str = http_status_descriptions[HttpStatusCode.Accepted],
+             headers: Optional[dict[str, Any]] = None,
+             decimal=None
+             ):
+    return response(HttpStatusCode.Accepted, data, message, headers, decimal)
 
 
 def no_content(data=None,
