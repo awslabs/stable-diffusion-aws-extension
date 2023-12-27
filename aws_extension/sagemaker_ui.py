@@ -20,7 +20,7 @@ from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
 import re
-
+from modules.ui_components import ToolButton
 import asyncio
 import nest_asyncio
 
@@ -923,6 +923,19 @@ def fake_gan(selected_value, original_prompt):
         infotexts = ''
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
+
+def delete_inference_job(selected_value):
+    logger.debug(f"selected value is {selected_value}")
+    if selected_value and selected_value != None_Option_For_On_Cloud_Model:
+        delimiter = "-->"
+        parts = selected_value.split(delimiter)
+        # Extract the InferenceJobId value
+        inference_job_id = parts[3].strip()
+        logger.debug(f'inference {inference_job_id} will be deleted')
+    else:
+        gr.Warning('Please select a valid inference job to delete')
+
+
 def init_refresh_resource_list_from_cloud(username):
     logger.debug(f"start refreshing resource list from cloud")
     if get_variable_from_json('api_gateway_url') is not None:
@@ -1080,6 +1093,12 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_inference_job_list(inference_task_type, username, username)
                                               }, 'refresh_inference_job_down')
+                refresh_button = ToolButton(value='\u274C', elem_id="delete_inference_job")
+                refresh_button.click(
+                    fn=delete_inference_job,
+                    inputs=[inference_job_dropdown],
+                    outputs=[]
+                )
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
                 #                                      elem_id="txt2img_inference_job_ids_dropdown"
