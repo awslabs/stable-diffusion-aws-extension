@@ -3,7 +3,7 @@
 FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 # update environment
 RUN apt-get update -y
-RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y torchaudio
+RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y torchaudio && pip install accelerate
 
 # # install pkg lib for proprocess in controlnet
 # RUN apt-get install -y pkg-config
@@ -13,8 +13,8 @@ RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y t
 # RUN apt-get install -y file
 # 
 # COPY stable-diffusion-webui /opt/ml/code/
-COPY inference/quick_serve /opt/ml/code
-COPY inference/commands.txt /opt/ml/code
+COPY inference/quick_serve /opt/ml/code/
+COPY inference/commands.txt /opt/ml/code/
 # 
 # # add accelerate
 # RUN mkdir -p /root/.cache/huggingface/accelerate

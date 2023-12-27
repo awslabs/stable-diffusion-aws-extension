@@ -8,7 +8,7 @@ cmd_s5cmd = "/opt/ml/code/tools/s5cmd run /opt/ml/code/commands.txt"
 
 # cmd_install_accelerate = "pip install accelerate"
 
-cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae"
+cmd = "accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model"
 
 os.system(cmd_s5cmd)
 # os.system(cmd_install_xformers)
