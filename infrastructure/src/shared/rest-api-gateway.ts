@@ -31,7 +31,7 @@ export class RestApiGateway {
       'aigc-api-logs',
     );
     let endpointType;
-    if (Aws.PARTITION === 'aws-cn') {
+    if (Aws.REGION.startsWith('cn')) {
       endpointType = apigw.EndpointType.REGIONAL;
     } else {
       endpointType = apigw.EndpointType.EDGE;
