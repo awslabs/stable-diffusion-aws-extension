@@ -1,5 +1,4 @@
 import base64
-import json
 import logging
 
 import requests
@@ -79,7 +78,9 @@ class CloudApiManager:
         deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            resp = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            if resp.status_code != 204:
+                raise Exception(resp.json()['message'])
             return "Delete Endpoint Successfully"
         except Exception as e:
             logger.error(e)
@@ -199,7 +200,8 @@ class CloudApiManager:
             "creator": creator
         }
 
-        raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload, headers=self._get_headers_by_user(user_token))
+        raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload,
+                                 headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
         if raw_resp.status_code != 200:
@@ -300,7 +302,8 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_response = requests.get(url=f'{self.auth_manger.api_url}datasets/{dataset_name}', headers=self._get_headers_by_user(user_token))
+        raw_response = requests.get(url=f'{self.auth_manger.api_url}datasets/{dataset_name}',
+                                    headers=self._get_headers_by_user(user_token))
         raw_response.raise_for_status()
         # todo: the s3 presign url is not ready as content type to img
         resp = raw_response.json()['data']
