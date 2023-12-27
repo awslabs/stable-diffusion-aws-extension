@@ -41,7 +41,7 @@ export interface SdTrainDeployStackProps extends StackProps {
 export class SdTrainDeployStack extends NestedStack {
   private readonly srcRoot = '../middleware_api/lambda';
 
-  constructor(scope: Construct, id: string, props: SdTrainDeployStackProps) {
+  constructor(scope: Construct, currentRegion: string, id: string, props: SdTrainDeployStackProps) {
     super(scope, id, props);
     // Use the parameters passed from Middleware
     const snsTopic = props.snsTopic;
@@ -88,7 +88,7 @@ export class SdTrainDeployStack extends NestedStack {
     const trainJobRouter = routers.trainings.addResource('{id}');
 
     // PUT /trainings/{id}
-    new StartTrainingJobApi(this, 'StartTrainingJob', {
+    new StartTrainingJobApi(this, currentRegion, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',

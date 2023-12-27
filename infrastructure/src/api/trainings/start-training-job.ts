@@ -60,7 +60,7 @@ export class StartTrainingJobApi {
   private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
-  constructor(scope: Construct, id: string, props: StartTrainingJobApiProps) {
+  constructor(scope: Construct, currentRegion: string, id: string, props: StartTrainingJobApiProps) {
     this.id = id;
     this.scope = scope;
     this.srcRoot = props.srcRoot;
@@ -80,7 +80,7 @@ export class StartTrainingJobApi {
     this.trainingStateMachine = this.sagemakerStepFunction(this.userSnsTopic);
     this.trainingStateMachine.node.addDependency(this.customJob);
 
-    this.startTrainJobLambda();
+    this.startTrainJobLambda(currentRegion);
   }
 
   private sageMakerTrainRole(): aws_iam.Role {
@@ -261,7 +261,7 @@ export class StartTrainingJobApi {
     return newRole;
   }
 
-  private startTrainJobLambda(): aws_lambda.IFunction {
+  private startTrainJobLambda(currentRegion: string): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
@@ -281,7 +281,7 @@ export class StartTrainingJobApi {
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
         TRAINING_SAGEMAKER_ARN: this.trainingStateMachine.stateMachineArn,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
-        REGION: Aws.REGION,
+        REGION: currentRegion,
       },
       layers: [this.layer],
     });

@@ -149,7 +149,7 @@ export class Middleware extends Stack {
       useExist: useExist,
     });
 
-    new SdTrainDeployStack(this, 'SdDBTrainStack', {
+    new SdTrainDeployStack(this, currentRegion, 'SdDBTrainStack', {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
