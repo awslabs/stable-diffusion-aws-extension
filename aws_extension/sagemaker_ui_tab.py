@@ -17,6 +17,8 @@ from modules.ui_components import FormRow
 import modules.ui
 from utils import get_variable_from_json, save_variable_to_json
 import datetime
+from modules.ui_components import ToolButton
+from aws_extension.cloud_api_manager.api import api
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -857,6 +859,13 @@ def dataset_tab():
                     },
                     "refresh_cloud_dataset",
                 )
+
+                delete_dataset_button = ToolButton(value='\u274C', elem_id="delete_dataset_btn")
+                delete_dataset_button.click(
+                    fn=delete_dataset,
+                    inputs=[cloud_dataset_name],
+                    outputs=[]
+                )
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
                                                type='text').style(show_copy_button=True)
@@ -877,6 +886,19 @@ def dataset_tab():
                                           outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
 
     return dt
+
+
+def delete_dataset(selected_value):
+    logger.debug(f"selected value is {selected_value}")
+    if selected_value:
+        resp = api.delete_datasets(data={
+            "dataset_name_list": [selected_value],
+        })
+        if resp.status_code != 204:
+            gr.Error(f"Error deleting dataset: {resp.json()['message']}")
+        gr.Info(f"{selected_value} deleted successfully")
+    else:
+        gr.Warning('Please select a dataset to delete')
 
 
 def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
