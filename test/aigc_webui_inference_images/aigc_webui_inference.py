@@ -138,7 +138,7 @@ model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
 
 initial_instance_count = 1
-instance_type = "ml.g4dn.2xlarge"
+instance_type = "ml.g5.2xlarge"
 
 print('Creating model resource ...')
 
