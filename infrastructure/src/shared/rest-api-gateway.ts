@@ -10,9 +10,9 @@ export class RestApiGateway {
   public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
 
-  constructor(scope: Construct, apiKey: string, routes: string[]) {
+  constructor(scope: Construct, currentRegion: string, apiKey: string, routes: string[]) {
     this.scope = scope;
-    [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
+    [this.apiGateway, this.apiKey] = this.createApigw(apiKey, currentRegion);
     for (let route of routes) {
       const pathList: string[] = route.split('/');
       // pathList has at least one item
@@ -25,19 +25,20 @@ export class RestApiGateway {
     }
   }
 
-  private createApigw(apiKeyStr: string): [apigw.RestApi, string] {
+  private createApigw(apiKeyStr: string, currentRegion: string): [apigw.RestApi, string] {
     const apiAccessLogGroup = new logs.LogGroup(
       this.scope,
       'aigc-api-logs',
     );
     let endpointType;
-    if (Aws.REGION.startsWith('cn')) {
+    if (currentRegion.startsWith('cn')) {
       endpointType = apigw.EndpointType.REGIONAL;
     } else {
       endpointType = apigw.EndpointType.EDGE;
     }
     console.log('当前 AWS 区域:', Aws.REGION);
     console.log('当前账户 ID:', Aws.ACCOUNT_ID);
+    console.log('currentRegion ', currentRegion);
     console.log('当前endpointType:', endpointType);
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {

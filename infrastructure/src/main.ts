@@ -27,7 +27,8 @@ export class Middleware extends Stack {
   ) {
     super(scope, id, props);
     this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
-
+    const currentRegion = this.region;
+    console.log('当前所处的 AWS 区域111:', currentRegion);
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
       description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
@@ -97,7 +98,7 @@ export class Middleware extends Stack {
     });
 
 
-    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+    const restApi = new RestApiGateway(this, currentRegion, apiKeyParam.valueAsString, [
       'ping',
       'models',
       'checkpoints',
