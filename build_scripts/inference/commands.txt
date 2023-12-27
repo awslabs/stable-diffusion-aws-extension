@@ -1,0 +1,2 @@
+cp 's3://sagemaker-us-west-2-002224604296/quick_serve/stable-diffusion-webui/*' /opt/ml/code/
+cp 's3://sagemaker-us-west-2-002224604296/quick_serve/site-packages/*' /opt/conda/lib/python3.10/site-packages/

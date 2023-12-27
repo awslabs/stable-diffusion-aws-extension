@@ -12,8 +12,9 @@ RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y t
 # # install file cmd
 # RUN apt-get install -y file
 # 
-COPY stable-diffusion-webui /opt/ml/code/
+# COPY stable-diffusion-webui /opt/ml/code/
 COPY inference/quick_serve /opt/ml/code
+COPY inference/commands.txt /opt/ml/code
 # 
 # # add accelerate
 # RUN mkdir -p /root/.cache/huggingface/accelerate
