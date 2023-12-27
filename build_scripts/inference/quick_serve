@@ -1,6 +1,6 @@
 import os
 
-cmd_s5cmd = "/opt/ml/code/tools/s5cmd run /opt/ml/code/commands.txt"
+cmd_s5cmd = "/opt/ml/code/tools/s5cmd --log=error run /opt/ml/code/commands.txt"
 
 # cmd_install_torch = "pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cu118"
 
