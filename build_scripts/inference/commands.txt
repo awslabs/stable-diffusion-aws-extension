@@ -1,3 +1,3 @@
-cp 's3://aoyu-webui-uw2/stable-diffusion-webui/*' /opt/ml/code/
-cp 's3://aoyu-webui-uw2/site-packages/*' /opt/conda/lib/python3.10/site-packages/
-cp 's3://aoyu-webui-uw2/bin/*' /opt/conda/bin/
+--log=error cp 's3://aoyu-webui-uw2/stable-diffusion-webui/*' /opt/ml/code/
+--log=error cp 's3://aoyu-webui-uw2/site-packages/*' /opt/conda/lib/python3.10/site-packages/
+--log=error cp 's3://aoyu-webui-uw2/bin/*' /opt/conda/bin/
