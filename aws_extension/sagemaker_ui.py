@@ -1094,12 +1094,14 @@ def create_ui(is_img2img):
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                      label="Inference Job: Time-Type-Status-Uuid")
-                refresh_button = ToolButton(value='\u274C', elem_id="delete_inference_job")
-                refresh_button.click(
+
+                delete_inference_job_button = ToolButton(value='\u274C', elem_id="delete_inference_job")
+                delete_inference_job_button.click(
                     fn=delete_inference_job,
                     inputs=[inference_job_dropdown],
                     outputs=[]
                 )
+
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
