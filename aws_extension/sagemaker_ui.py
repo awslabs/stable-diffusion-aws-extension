@@ -12,6 +12,7 @@ import gradio as gr
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.cloud_api_manager.api import api
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from modules.shared import opts
 from modules.ui_components import FormRow
@@ -931,9 +932,14 @@ def delete_inference_job(selected_value):
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
         inference_job_id = parts[3].strip()
-        logger.debug(f'inference {inference_job_id} will be deleted')
+        resp = api.delete_inferences(data={
+            "inference_id_list": [inference_job_id],
+        })
+        if resp.status_code != 204:
+            gr.Error(f"Error deleting inference: {resp.json()['message']}")
+        gr.Info(f"{inference_job_id} deleted successfully")
     else:
-        gr.Warning('Please select a valid inference job to delete')
+        gr.Warning('Please select a inference job to delete')
 
 
 def init_refresh_resource_list_from_cloud(username):
@@ -1088,17 +1094,17 @@ def create_ui(is_img2img):
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                      label="Inference Job: Time-Type-Status-Uuid")
-                create_refresh_button_by_user(inference_job_dropdown,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username, username)
-                                              }, 'refresh_inference_job_down')
                 refresh_button = ToolButton(value='\u274C', elem_id="delete_inference_job")
                 refresh_button.click(
                     fn=delete_inference_job,
                     inputs=[inference_job_dropdown],
                     outputs=[]
                 )
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username, username)
+                                              }, 'refresh_inference_job_down')
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
                 #                                      elem_id="txt2img_inference_job_ids_dropdown"
