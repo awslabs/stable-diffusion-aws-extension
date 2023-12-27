@@ -36,6 +36,9 @@ export class RestApiGateway {
     } else {
       endpointType = apigw.EndpointType.EDGE;
     }
+    console.log('当前 AWS 区域:', Aws.REGION);
+    console.log('当前账户 ID:', Aws.ACCOUNT_ID);
+    console.log('当前endpointType:', endpointType);
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: 'Stable Diffusion Train and Deploy API',
