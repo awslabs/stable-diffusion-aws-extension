@@ -1,4 +1,4 @@
-import { aws_apigateway as apigw, CfnOutput} from 'aws-cdk-lib';
+import { Aws, aws_apigateway as apigw, CfnOutput} from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -30,6 +30,12 @@ export class RestApiGateway {
       this.scope,
       'aigc-api-logs',
     );
+    let endpointType;
+    if (Aws.PARTITION === 'aws-cn') {
+      endpointType = apigw.EndpointType.REGIONAL;
+    } else {
+      endpointType = apigw.EndpointType.EDGE;
+    }
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: 'Stable Diffusion Train and Deploy API',
@@ -40,7 +46,7 @@ export class RestApiGateway {
         accessLogFormat: AccessLogFormat.clf(),
       },
       endpointConfiguration: {
-        types: [apigw.EndpointType.EDGE, apigw.EndpointType.REGIONAL],
+        types: [endpointType],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS, // You can also provide a list of specific origins ['https://example.com']
