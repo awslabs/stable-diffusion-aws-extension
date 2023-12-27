@@ -79,9 +79,7 @@ class CloudApiManager:
         deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            response = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
-            response = response.json()
-            logger.debug(f"response for rest api {response}")
+            requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
             return "Delete Endpoint Successfully"
         except Exception as e:
             logger.error(e)
@@ -252,10 +250,8 @@ class CloudApiManager:
         raw_resp = requests.delete(f'{cloud_auth_manager.api_url}users',
                                    json=payload,
                                    headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
-        resp = raw_resp.json()
         if raw_resp.status_code != 204:
-            raise Exception(resp['message'])
+            raise Exception(raw_resp.json()['message'])
         return True
 
     def list_models_on_cloud(self, username, user_token="", types='Stable-diffusion', status='Active'):
