@@ -5,12 +5,11 @@ import os
 import time
 
 import sagemaker
-
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, not_found, internal_server_error
+from common.response import not_found, internal_server_error, accepted
 from common.stepfunction_service.client import StepFunctionUtilsService
-from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
 from libs.common_tools import DecimalEncoder
+from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
@@ -29,11 +28,8 @@ region = os.environ.get('REGION')
 def handler(event, context):
     logger.info(json.dumps(event))
     train_job_id = event['pathParameters']['id']
-    body = json.loads(event['body'])
-    if body['status'] == TrainJobStatus.Training.value:
-        return _start_train_job(train_job_id)
 
-    return ok(message=f'not implemented for train job status {body["status"]}')
+    return _start_train_job(train_job_id)
 
 
 def _start_train_job(train_job_id: str):
@@ -146,7 +142,7 @@ def _start_train_job(train_job_id: str):
             },
         }
 
-        return ok(data=data, decimal=True)
+        return accepted(data=data, decimal=True)
     except Exception as e:
         print(e)
         return internal_server_error(message=str(e))

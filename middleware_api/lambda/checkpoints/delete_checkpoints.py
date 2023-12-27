@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
 logger = logging.getLogger('delete_checkpoints')
 logger.setLevel(logging.INFO)
@@ -49,4 +49,4 @@ def handler(event, ctx):
 
         checkpoints_table.delete_item(Key={'id': checkpoint_id})
 
-    return ok(message='checkpoints deleted')
+    return no_content(message='checkpoints deleted')

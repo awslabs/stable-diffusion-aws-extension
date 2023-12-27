@@ -9,10 +9,10 @@ from typing import Any, List, Optional
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, not_found, forbidden, internal_server_error
-from libs.data_types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
+from common.response import bad_request, not_found, forbidden, internal_server_error, created
 from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, save_json_to_file
+from libs.data_types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
 from libs.utils import get_permissions_by_username, get_user_roles
 
 bucket_name = os.environ.get('S3_BUCKET')
@@ -133,7 +133,7 @@ def handler(raw_event, context):
             's3PresignUrl': presign_url_map
         }
 
-        return ok(data=data)
+        return created(data=data)
     except Exception as e:
         logger.error(e)
         return internal_server_error(message=str(e))

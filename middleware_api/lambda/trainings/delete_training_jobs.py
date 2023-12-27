@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
 logger = logging.getLogger('delete_training_jobs')
 logger.setLevel(logging.INFO)
@@ -60,4 +60,4 @@ def handler(event, ctx):
 
         training_job_table.delete_item(Key={'id': training_job})
 
-    return ok(message='training jobs deleted')
+    return no_content(message='training jobs deleted')

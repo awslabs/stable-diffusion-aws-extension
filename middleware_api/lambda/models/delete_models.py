@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
 logger = logging.getLogger('delete_models')
 logger.setLevel(logging.INFO)
@@ -53,4 +53,4 @@ def handler(event, ctx):
 
         models_table.delete_item(Key={'id': model_id})
 
-    return ok(message='models deleted')
+    return no_content(message='models deleted')
