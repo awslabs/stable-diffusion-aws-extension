@@ -14,4 +14,4 @@
 #     exit 1
 # fi
 
-./build_quick_and_push.sh Dockerfile.inference.quick aigc-webui-inference feature/inference-optimize inference-optimize 
+./build_and_push.sh Dockerfile.inference.quick aigc-webui-inference feature/inference-optimize inference-optimize 
