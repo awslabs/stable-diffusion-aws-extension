@@ -12,7 +12,8 @@ sys.path.append("../../../middleware_api/lambda/inference")
 from parse.parameter_parser import json_convert_to_payload
 start_time = time.time()
 
-url = "http://127.0.0.1:8082"
+url = "http://127.0.0.1:8083"
+# url = "http://0.0.0.0:8083"
 
 aigc_json_file = "../json_files/txt2img_test.json"
 f = open(aigc_json_file)
@@ -25,27 +26,33 @@ payload = json_convert_to_payload(aigc_params, checkpoint_info, task_type)
 
 model_list = []
 model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
-model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
-model_list.append("v1-5-pruned-emaonly.safetensors")
-model_list.append("darkSushiMixMix_225D.safetensors")
-model_list.append("sd-v1-5-inpainting.ckpt")
-model_list.append("dreamshaper_7.safetensors")
-model_list.append("v2-1_768-ema-pruned.safetensors")
+# model_list.append("darkSushiMixMix_225D.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("dreamshaper_7.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
+# model_list.append("v1-5-pruned-emaonly.safetensors")
+# model_list.append("darkSushiMixMix_225D.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("dreamshaper_7.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
+# model_list.append("v1-5-pruned-emaonly.safetensors")
+# model_list.append("darkSushiMixMix_225D.safetensors")
+# model_list.append("sd-v1-5-inpainting.ckpt")
+# model_list.append("dreamshaper_7.safetensors")
+# model_list.append("v2-1_768-ema-pruned.safetensors")
 
 import psutil
 # import gc
 
+payload = {
+    "prompt": "maltese puppy",
+    "steps": 5
+}
+
 for model in model_list:
-    payload["models"]["Stable-diffusion"]= [model]
-    response = requests.post(url=f'{url}/invocations', json=payload)
+    # payload["models"]["Stable-diffusion"]= [model]
+    # response = requests.post(url=f'{url}/invocations', json=payload)
+    response = requests.post(url=f'http://0.0.0.0:8083/sdapi/v1/txt2img', json=payload)
 
     print(f'Model {model} RAM memory {psutil.virtual_memory()[2]} used: {psutil.virtual_memory()[3]/1000000000 } (GB)')
 
