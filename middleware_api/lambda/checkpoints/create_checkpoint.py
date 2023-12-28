@@ -1,15 +1,16 @@
 import datetime
-import datetime
 import json
 import logging
 import os
+import urllib.parse
 from dataclasses import dataclass
 from typing import Any
 
 import boto3
+import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, internal_server_error, created, accepted
+from common.response import bad_request, created, accepted
 from libs.common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
@@ -41,29 +42,21 @@ class CreateCheckPointEvent:
 def handler(raw_event, context):
     logger.info(json.dumps(raw_event))
     request_id = context.aws_request_id
-    event = CreateCheckPointEvent(**json.loads(raw_event['body']))
-
-    if event.urls:
-        for url in event.urls:
-            resp = lambda_client.invoke(
-                FunctionName=upload_by_url_lambda_name,
-                InvocationType='Event',
-                Payload=json.dumps({
-                    'checkpoint_type': event.checkpoint_type,
-                    'params': event.params,
-                    'url': url,
-                })
-            )
-            logger.info(resp)
-        return accepted(message='Checkpoint creation in progress, please check later')
-
-    _type = event.checkpoint_type
     headers = {
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
     }
     try:
+        event = CreateCheckPointEvent(**json.loads(raw_event['body']))
+
+        check_filenames_unique(event)
+
+        if event.urls:
+            return invoke_url_lambda(event)
+
+        _type = event.checkpoint_type
+
         base_key = get_base_checkpoint_s3_key(_type, 'custom', request_id)
         presign_url_map = batch_get_s3_multipart_signed_urls(
             bucket_name=bucket_name,
@@ -128,4 +121,68 @@ def handler(raw_event, context):
         return created(data=data, headers=headers)
     except Exception as e:
         logger.error(e)
-        return internal_server_error(headers=headers, message=str(e))
+        return bad_request(headers=headers, message=str(e))
+
+
+def invoke_url_lambda(event: CreateCheckPointEvent):
+    for url in event.urls:
+        resp = lambda_client.invoke(
+            FunctionName=upload_by_url_lambda_name,
+            InvocationType='Event',
+            Payload=json.dumps({
+                'checkpoint_type': event.checkpoint_type,
+                'params': event.params,
+                'url': url,
+            })
+        )
+        logger.info(resp)
+    return accepted(message='Checkpoint creation in progress, please check later')
+
+
+def check_filenames_unique(event: CreateCheckPointEvent):
+    names = []
+
+    if event.filenames:
+        for file in event.filenames:
+            names.append(file['filename'])
+
+    if event.urls:
+        for url in event.urls:
+            url = get_real_url(url)
+            filename = get_download_file_name(url)
+            names.append(filename)
+
+    logger.info(f"names: {names}")
+
+    check_ckpt_name_unique(names)
+
+
+def check_ckpt_name_unique(names: [str]):
+    if len(names) == 0:
+        return
+
+    ckpts = ddb_service.scan(table=checkpoint_table)
+    exists_names = []
+    for ckpt in ckpts:
+        for name in ckpt['checkpoint_names']['L']:
+            exists_names.append(name['S'])
+
+    logger.info(json.dumps(exists_names))
+
+    for name in names:
+        if name.strip() in exists_names:
+            raise Exception(f'{name} already exists, '
+                            f'please use another or rename/delete exists')
+
+
+def get_real_url(url: str):
+    response = requests.head(url, allow_redirects=False)
+    if response and response.status_code == 307:
+        if response.headers and 'Location' in response.headers:
+            return response.headers.get('Location')
+    return url
+
+
+def get_download_file_name(url: str):
+    parsed_url = urllib.parse.urlparse(url)
+    return os.path.basename(parsed_url.path)

@@ -482,7 +482,13 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
                    vae_path]
 
-    if local_paths == ["", "", "", "", "", ""]:
+    # check parameters
+    params_empty = True
+    for local_path in local_paths:
+        if local_path:
+            params_empty = False
+            break
+    if params_empty:
         return "Please choose at least one model to upload.", None, None, None, None, None, None
 
     logger.info(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
@@ -531,8 +537,10 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
+        if response.status_code not in [201, 202]:
+            return response.json()['message'], None, None, None, None, None, None
+
         try:
-            response.raise_for_status()
             json_response = response.json()['data']
             logger.debug(f"Response json {json_response}")
             s3_base = json_response["checkpoint"]["s3_location"]
@@ -566,6 +574,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
                 s3_signed_urls_resp,
                 part_size
             )
+            logger.debug(f"multiparts_tags {multiparts_tags}")
 
             payload = {
                 "status": "Active",
@@ -595,15 +604,16 @@ def sagemaker_upload_model_s3_local():
     return log
 
 
+def check_url(url: str):
+    url = url.replace('\n', '')
+    return url.strip()
+
+
 def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: str, pr: gradio.Request):
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
-    url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
-    if re.match(f'^{url_pattern}$', url_list):
-        url_list = url_list.split(',')
-    else:
-        return "Please fill in right url list."
+
     if description:
         params_dict = {
             'message': description
@@ -612,8 +622,17 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: s
         params_dict = {}
 
     params_dict['creator'] = pr.username
-    body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
-    response = server_request_post('checkpoints', body_params)
+
+    url_list = url_list.split(',')
+    modified_urls = [check_url(url) for url in url_list]
+
+    for url in modified_urls:
+        url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+        if not re.match(f'^{url_pattern}$', url):
+            return f"{url} is not a valid url."
+
+    data = {'checkpoint_type': model_type, 'urls': modified_urls, 'params': params_dict}
+    response = api.create_checkpoint(data=data)
     return response.json()['message']
 
 
