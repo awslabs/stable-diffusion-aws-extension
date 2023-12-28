@@ -924,6 +924,8 @@ def fake_gan(selected_value, original_prompt):
 def delete_inference_job(selected_value):
     logger.debug(f"selected value is {selected_value}")
     if selected_value and selected_value != None_Option_For_On_Cloud_Model:
+        if selected_value == 'cancelled':
+            return
         delimiter = "-->"
         parts = selected_value.split(delimiter)
         # Extract the InferenceJobId value
@@ -1091,18 +1093,21 @@ def create_ui(is_img2img):
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                      label="Inference Job: Time-Type-Status-Uuid")
 
-                delete_inference_job_button = ToolButton(value='\u274C', elem_id="delete_inference_job")
-                delete_inference_job_button.click(
-                    fn=delete_inference_job,
-                    inputs=[inference_job_dropdown],
-                    outputs=[]
-                )
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
                                                   'choices': load_inference_job_list(inference_task_type, username, username)
                                               }, 'refresh_inference_job_down')
+
+                delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
+                delete_inference_job_button.click(
+                    _js="delete_inference_job_confirm",
+                    fn=delete_inference_job,
+                    inputs=[inference_job_dropdown],
+                    outputs=[]
+                )
+
                 # inference_job_dropdown = gr.Dropdown(choices=txt2img_inference_job_ids,
                 #                                      label="Inference Job: Time-Type-Status-Uuid",
                 #                                      elem_id="txt2img_inference_job_ids_dropdown"
