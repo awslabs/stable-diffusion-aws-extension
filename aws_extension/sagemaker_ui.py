@@ -590,7 +590,7 @@ def sagemaker_upload_model_s3_local():
     return log
 
 
-def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, pr: gradio.Request):
+def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: str, pr: gradio.Request):
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
@@ -599,21 +599,17 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, params: str, p
         url_list = url_list.split(',')
     else:
         return "Please fill in right url list."
-    if params:
-        params_dict = json.loads(params)
+    if description:
+        params_dict = {
+            'message': description
+        }
     else:
         params_dict = {}
 
     params_dict['creator'] = pr.username
     body_params = {'checkpoint_type': model_type, 'urls': url_list, 'params': params_dict}
     response = server_request_post('checkpoints', body_params)
-    response_data = response.json()['data']
-    logging.info(f"sagemaker_upload_model_s3_url response:{response_data}")
-    log = "uploading……"
-    if 'checkpoint' in response_data:
-        if response_data['checkpoint'].get('status') == 'Active':
-            log = "upload success!"
-    return log
+    return response.json()['message']
 
 
 def generate_on_cloud(sagemaker_endpoint):
@@ -889,8 +885,8 @@ def fake_gan(selected_value, original_prompt):
         inference_job_id = parts[3].strip()
         inference_job_status = parts[2].strip()
         inference_job_taskType = parts[1].strip()
-        if inference_job_status == 'inprogress':
-            return [], [], plaintext_to_html('inference still in progress')
+        if inference_job_status != 'succeed':
+            return [], [], plaintext_to_html(f'inference is {inference_job_status}'), original_prompt
 
         if inference_job_taskType in ["txt2img", "img2img"]:
             prompt_txt = original_prompt
