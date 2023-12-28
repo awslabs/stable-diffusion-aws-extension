@@ -116,9 +116,7 @@ class CloudApiManager:
 
         try:
             resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
-            if resp.status_code != 200:
-                return resp.json()['message']
-            return "Rename Checkpoint Successfully"
+            return resp.json()['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to rename checkpoint with exception: {e}"

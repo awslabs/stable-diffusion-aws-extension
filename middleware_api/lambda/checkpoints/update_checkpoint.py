@@ -112,7 +112,7 @@ def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
         ]
     )
 
-    return ok(headers=headers)
+    return ok(headers=headers, message='update name success')
 
 
 def rename_s3_object(old_key, new_key):
