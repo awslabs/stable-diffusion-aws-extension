@@ -32,7 +32,7 @@ function update_auth_settings(api_url_textbox, api_token_textbox, username_textb
 }
 
 function delete_inference_job_confirm(inference_job_dropdown) {
-    res = confirm("You are about to delete inference jop. Do you want to continue?");
+    res = confirm("You are about to delete inference job. Do you want to continue?");
     if (res === true) {
         console.log("Action confirm.");
         return [inference_job_dropdown];
