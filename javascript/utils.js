@@ -41,3 +41,14 @@ function delete_inference_job_confirm(inference_job_dropdown) {
     console.log("Action cancelled.");
     return ["cancelled"];
 }
+
+function delete_inference_job_confirm(dataset_name) {
+    res = confirm("You are about to delete inference jop. Do you want to continue?");
+    if (res === true) {
+        console.log("Action confirm.");
+        return [inference_job_dropdown];
+    }
+
+    console.log("Action cancelled.");
+    return ["cancelled"];
+}
