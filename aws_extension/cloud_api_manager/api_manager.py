@@ -202,9 +202,8 @@ class CloudApiManager:
 
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload,
                                  headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
         resp = raw_resp.json()
-        if raw_resp.status_code != 200:
+        if raw_resp.status_code != 200 and raw_resp.status_code != 201:
             raise Exception(resp['message'])
 
         return True
@@ -232,7 +231,7 @@ class CloudApiManager:
                                  headers=self._get_headers_by_user(user_token)
                                  )
         resp = raw_resp.json()
-        if raw_resp.status_code != 200:
+        if raw_resp.status_code != 201:
             raise Exception(resp['message'])
 
         cloud_auth_manager.update_gradio_auth()
