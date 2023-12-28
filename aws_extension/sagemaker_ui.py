@@ -582,6 +582,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             rm(local_tar_path, recursive=True)
         except Exception as e:
             logger.error(f"fail to upload model {lp}, error: {e}")
+            refresh_all_models(pr.username)
+            return str(e), None, None, None, None, None, None
 
     logger.debug(f"Refresh checkpoints after upload...")
     refresh_all_models(pr.username)
