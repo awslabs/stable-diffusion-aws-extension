@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import ok, bad_request
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
@@ -24,8 +24,13 @@ def handler(event, context):
 
     user_roles = ['*']
     username = None
+    page = 1
+    per_page = 10
     parameters = event['queryStringParameters']
     if parameters:
+        page = parameters['page'] if 'page' in parameters and parameters['page'] else 1
+        per_page = parameters['per_page'] if 'per_page' in parameters and parameters['per_page'] else 10
+
         if 'types' in parameters and len(parameters['types']) > 0:
             _filter['checkpoint_type'] = parameters['types']
 
@@ -38,41 +43,48 @@ def handler(event, context):
             user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
     requestor_name = event['requestContext']['authorizer']['username']
-    requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
-    requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
-        'kind': PARTITION_KEYS.role,
-        'creator': requestor_name
-    })
-    for requestor_created_roles_row in requestor_created_roles_rows:
-        role = Role(**ddb_service.deserialize(requestor_created_roles_row))
-        user_roles.append(role.sort_key)
 
-    raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
-    if raw_ckpts is None or len(raw_ckpts) == 0:
+    try:
+        requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
+        requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
+            'kind': PARTITION_KEYS.role,
+            'creator': requestor_name
+        })
+        for requestor_created_roles_row in requestor_created_roles_rows:
+            role = Role(**ddb_service.deserialize(requestor_created_roles_row))
+            user_roles.append(role.sort_key)
+
+        raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
+        if raw_ckpts is None or len(raw_ckpts) == 0:
+            data = {
+                'checkpoints': []
+            }
+            return ok(data=data)
+
+        ckpts = []
+        for r in raw_ckpts:
+            ckpt = CheckPoint(**(ddb_service.deserialize(r)))
+            if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
+                    'user' in requestor_permissions and 'all' in requestor_permissions['user']
+            ):
+                ckpts.append({
+                    'id': ckpt.id,
+                    's3Location': ckpt.s3_location,
+                    'type': ckpt.checkpoint_type,
+                    'status': ckpt.checkpoint_status.value,
+                    'name': ckpt.checkpoint_names,
+                    'created': ckpt.timestamp,
+                    'params': ckpt.params,
+                    'allowed_roles_or_users': ckpt.allowed_roles_or_users
+                })
+
         data = {
-            'checkpoints': []
+            'page': page,
+            'per_page': per_page,
+            'checkpoints': ckpts,
         }
-        return ok(data=data)
 
-    ckpts = []
-    for r in raw_ckpts:
-        ckpt = CheckPoint(**(ddb_service.deserialize(r)))
-        if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
-                'user' in requestor_permissions and 'all' in requestor_permissions['user']
-        ):
-            ckpts.append({
-                'id': ckpt.id,
-                's3Location': ckpt.s3_location,
-                'type': ckpt.checkpoint_type,
-                'status': ckpt.checkpoint_status.value,
-                'name': ckpt.checkpoint_names,
-                'created': ckpt.timestamp,
-                'params': ckpt.params,
-                'allowed_roles_or_users': ckpt.allowed_roles_or_users
-            })
-
-    data = {
-        'checkpoints': ckpts
-    }
-
-    return ok(data=data, decimal=True)
+        return ok(data=data, decimal=True)
+    except Exception as e:
+        logger.error(e)
+        return bad_request(data=str(e))
