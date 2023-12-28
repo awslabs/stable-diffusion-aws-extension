@@ -877,7 +877,7 @@ def dataset_tab():
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())
 
-                if raw_response.status_code != 200:
+                if raw_response.status_code != 201:
                     return f'Error: {raw_response.json()["message"]}', None, None, None, None
                 response = raw_response.json()['data']
 
