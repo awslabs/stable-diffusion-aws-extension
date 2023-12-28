@@ -5,6 +5,7 @@ import requests
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
+from aws_extension.cloud_api_manager.api import api
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -86,6 +87,24 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
 
+    def ckpts_delete(self, ckpts, user_token=""):
+        logger.debug(f"ckpts: {ckpts}")
+
+        checkpoint_id_list = [item.split('+')[0] for item in ckpts]
+        logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
+        data = {
+            "checkpoint_id_list": checkpoint_id_list,
+        }
+
+        try:
+            resp = api.delete_checkpoints(data=data)
+            if resp.status_code != 204:
+                raise Exception(resp.json()['message'])
+            return "Delete Checkpoints Successfully"
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to delete checkpoints with exception: {e}"
+
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
         if self.auth_manger.enableAuth and not user_token:
             return []
@@ -149,6 +168,34 @@ class CloudApiManager:
 
         except Exception as e:
             logger.error(f"An error occurred while updating SageMaker endpoints: {e}")
+            return []
+
+    def list_all_ckpts(self, username=None, user_token=""):
+        try:
+            if self.auth_manger.enableAuth and not user_token:
+                return []
+
+            params = {
+                'username': username,
+            }
+
+            api.set_username(username)
+            response = api.list_checkpoints(params=params)
+            r = response.json()
+            if not r:
+                logger.info("The API response is empty for update_sagemaker_endpoints().")
+                return []
+
+            ckpts_list = []
+            for ckpt in r['data']['checkpoints']:
+                ckpt_name = ckpt['name'][0]
+                option_value = f"{ckpt['id']}+{ckpt_name}+{ckpt['status']}"
+                ckpts_list.append(option_value)
+
+            return sorted(ckpts_list, key=lambda x: x.split('+')[-1], reverse=True)
+
+        except Exception as e:
+            logger.error(f"list_all_ckpts: {e}")
             return []
 
     def get_user_by_username(self, username='', user_token='', show_password=False):
