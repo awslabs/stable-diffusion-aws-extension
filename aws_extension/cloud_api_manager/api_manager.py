@@ -193,6 +193,7 @@ class CloudApiManager:
 
             params = {
                 'username': username,
+                'per_page': 200,
             }
 
             api.set_username(username)

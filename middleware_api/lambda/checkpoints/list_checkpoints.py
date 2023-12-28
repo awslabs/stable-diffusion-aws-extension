@@ -28,8 +28,8 @@ def handler(event, context):
     per_page = 10
     parameters = event['queryStringParameters']
     if parameters:
-        page = parameters['page'] if 'page' in parameters and parameters['page'] else 1
-        per_page = parameters['per_page'] if 'per_page' in parameters and parameters['per_page'] else 10
+        page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
+        per_page = int(parameters['per_page']) if 'per_page' in parameters and parameters['per_page'] else 10
 
         if 'types' in parameters and len(parameters['types']) > 0:
             _filter['checkpoint_type'] = parameters['types']
@@ -57,6 +57,10 @@ def handler(event, context):
         raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
         if raw_ckpts is None or len(raw_ckpts) == 0:
             data = {
+                'page': page,
+                'per_page': per_page,
+                'pages': 0,
+                'total': 0,
                 'checkpoints': []
             }
             return ok(data=data)
@@ -81,10 +85,19 @@ def handler(event, context):
         data = {
             'page': page,
             'per_page': per_page,
-            'checkpoints': ckpts,
+            'pages': int(len(ckpts) / per_page) + 1,
+            'total': len(ckpts),
+            'checkpoints': page_data(ckpts, page, per_page),
         }
 
         return ok(data=data, decimal=True)
     except Exception as e:
         logger.error(e)
         return bad_request(data=str(e))
+
+
+# todo will use query
+def page_data(data, page, per_page):
+    start = (page - 1) * per_page
+    end = page * per_page
+    return data[start:end]

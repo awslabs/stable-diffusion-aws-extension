@@ -14,6 +14,7 @@ from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api import api
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
 from utils import get_variable_from_json, save_variable_to_json
@@ -642,18 +643,67 @@ def model_upload_tab():
             end = start + 10 if start + 10 < len(result) else len(result)
             return result[start: end], start
 
-        current_page = gr.State(0)
+        def list_ckpts_data(query_types, query_status, query_roles, current_page, rq: gr.Request):
+            params = {
+                'types': query_types,
+                'status': query_status,
+                'roles': query_roles,
+                'page': current_page,
+                'username': rq.username,
+            }
+            api.set_username(rq.username)
+            resp = api.list_checkpoints(params=params)
+            models = []
+            page = resp.json()['data']['page']
+            per_page = resp.json()['data']['per_page']
+            total = resp.json()['data']['total']
+            pages = resp.json()['data']['pages']
+            for model in resp.json()['data']['checkpoints']:
+                allowed = ''
+                if model['allowed_roles_or_users']:
+                    allowed = ', '.join(model['allowed_roles_or_users'])
+                models.append([
+                    model['name'],
+                    model['type'],
+                    allowed,
+                    'In-Use' if model['status'] == 'Active' else 'Disabled',
+                    datetime.datetime.fromtimestamp(float(model['created']))
+                ])
+            page_info = f"Page {page} of {pages} (Total {total} models)"
+            return models, page_info
+
+
         gr.HTML(value="<b>Cloud Model List</b>")
         model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
                                      datatype=['str', 'str', 'str', 'str', 'str']
                                      )
         with gr.Row():
-            model_list_prev_btn = gr.Button(value='Previous')
-            model_list_next_btn = gr.Button(value='Next')
-
-            model_list_prev_btn.click(fn=list_models_prev, inputs=[current_page], outputs=[model_list_df, current_page])
-            model_list_next_btn.click(fn=list_models_next, inputs=[current_page], outputs=[model_list_df, current_page])
-
+            page_info = gr.Textbox(label="Page Info")
+            current_page = gr.State(1)
+        with gr.Row():
+            with gr.Column():
+                query_types = gr.Dropdown(
+                    multiselect=True,
+                    choices=checkpoint_type,
+                    label="Types")
+            with gr.Column():
+                query_status = gr.Dropdown(
+                    multiselect=True,
+                    choices=['Active', 'Initial'],
+                    label="Status")
+            with gr.Column():
+                query_roles = gr.Dropdown(
+                    multiselect=True,
+                    choices=roles(cloud_auth_manager.username),
+                    label="Roles")
+            with gr.Column():
+                refresh_symbol = '\U0001f504'  # 🔄
+                refresh_button = ToolButton(value=refresh_symbol, elem_id='refresh_ckpts_elem_id')
+                refresh_button.click(
+                    fn=list_ckpts_data,
+                    inputs=[query_types, query_status, query_roles, current_page],
+                    outputs=[model_list_df, page_info]
+                )
     return upload_tab, model_list_df
 
 
