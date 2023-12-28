@@ -625,8 +625,8 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: s
 
     url_list = url_list.split(',')
     modified_urls = [check_url(url) for url in url_list]
-
-    for url in modified_urls:
+    unique_urls = list(set(modified_urls))
+    for url in unique_urls:
         url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
         if not re.match(f'^{url_pattern}$', url):
             return f"{url} is not a valid url."

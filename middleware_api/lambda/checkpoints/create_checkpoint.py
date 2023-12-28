@@ -125,7 +125,10 @@ def handler(raw_event, context):
 
 
 def invoke_url_lambda(event: CreateCheckPointEvent):
-    for url in event.urls:
+
+    urls = list(set(event.urls))
+
+    for url in urls:
         resp = lambda_client.invoke(
             FunctionName=upload_by_url_lambda_name,
             InvocationType='Event',
