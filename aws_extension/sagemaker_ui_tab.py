@@ -860,8 +860,9 @@ def dataset_tab():
                     "refresh_cloud_dataset",
                 )
 
-                delete_dataset_button = ToolButton(value='\u274C', elem_id="delete_dataset_btn")
+                delete_dataset_button = ToolButton(value='\U0001F5D1', elem_id="delete_dataset_btn")
                 delete_dataset_button.click(
+                    _js="delete_dataset_confirm",
                     fn=delete_dataset,
                     inputs=[cloud_dataset_name],
                     outputs=[]
@@ -891,6 +892,8 @@ def dataset_tab():
 def delete_dataset(selected_value):
     logger.debug(f"selected value is {selected_value}")
     if selected_value:
+        if selected_value == 'cancelled':
+            return
         resp = api.delete_datasets(data={
             "dataset_name_list": [selected_value],
         })
