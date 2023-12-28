@@ -45,10 +45,11 @@ ENV ON_DOCKER true
 RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 #uninstall 
-RUN pip uninstall -y awscli
-RUN find /opt/conda/lib/python3.10/site-packages/ -maxdepth 1 -mindepth 1 -type d ! -name 'pip*' -exec rm -r {} +
-RUN pip install awscli
-RUN rm -rf /opt/conda/pkgs/* && rm /opt/conda/lib/*so*
+# RUN pip uninstall -y awscli
+# RUN find /opt/conda/lib/python3.10/site-packages/ -maxdepth 1 -mindepth 1 -type d ! -name 'pip*' -exec rm -r {} +
+# RUN pip install awscli
+RUN rm -rf /opt/conda/lib/python3.10/site-packages/*
+RUN rm -rf /opt/conda/pkgs/* 
 
 # # patch for opencv 4.7
 # # https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found

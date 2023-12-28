@@ -1,4 +1,3 @@
 cp -c 2 's3://aoyu-webui-uw2/stable-diffusion-webui/*' /opt/ml/code/
 cp -c 3 's3://aoyu-webui-uw2/site-packages/*' /opt/conda/lib/python3.10/site-packages/
-cp 's3://aoyu-webui-uw2/bin/*' /opt/conda/bin/
-cp 's3://aoyu-webui-uw2/lib/*' /opt/conda/lib/
+cp -c 2 's3://aoyu-webui-uw2/bin/*' /opt/conda/bin/
