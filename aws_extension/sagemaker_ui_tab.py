@@ -1,24 +1,22 @@
-import json
+import datetime
 import logging
 import os
 
 import gradio as gr
+import modules.ui
 import requests
+from modules.ui_common import create_refresh_button
+from modules.ui_components import FormRow
+from modules.ui_components import ToolButton
 
 import utils
 from aws_extension import sagemaker_ui
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
-
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+from aws_extension.cloud_api_manager.api import api
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from modules.ui_common import create_refresh_button
-from modules.ui_components import FormRow
-import modules.ui
 from utils import get_variable_from_json, save_variable_to_json
-import datetime
-from modules.ui_components import ToolButton
-from aws_extension.cloud_api_manager.api import api
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -171,7 +169,8 @@ def api_setting_tab():
             global test_connection_result
             test_connection_result = gr.Label(title="Output")
         with gr.Row():
-            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary', elem_id="aws_config_save")
+            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary',
+                                           elem_id="aws_config_save")
             aws_connect_button.click(_js="update_auth_settings",
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
@@ -194,7 +193,7 @@ def api_setting_tab():
 
     with gr.Row():
         logout_btn = gr.Button(value='logout')
-        logout_btn.click(fn=lambda : None, _js="logout", inputs=[], outputs=[])
+        logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
     return api_setting, disclaimer_tab, whoami_label
 
@@ -393,7 +392,8 @@ def _list_models(username, user_token):
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
         models.append([model['name'], model['type'], allowed,
-                       'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
+                       'In-Use' if model['status'] == 'Active' else 'Disabled',
+                       datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -432,6 +432,7 @@ def ckpt_delete_block():
                                              "refresh_ckpts_delete")
 
         ckpts_delete_button = gr.Button(value="Delete", variant='primary', elem_id="ckpts_delete_button")
+
         delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
         def _endpoint_ckpts(ckpts, pr: gr.Request):
@@ -596,10 +597,17 @@ def model_upload_tab():
 
         with gr.Tab("From URL"):
             with FormRow(elem_id="model_upload_url_form_row_01"):
-                model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
+                model_type_url_drop_down = gr.Dropdown(label="Model Type",
+                                                       choices=["SD Checkpoints", "Textual Inversion", "LoRA model",
+                                                                "ControlNet model", "Hypernetwork", "VAE"],
+                                                       elem_id="model_url_type_ele_id")
             with FormRow(elem_id="model_upload_url_form_row_02"):
-                file_upload_url_component = gr.TextArea(label="URL List (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
-                file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example: placeholder for chkpts upload test')
+                file_upload_url_component = gr.TextArea(label="URL List (Comma-separated in English)",
+                                                        elem_id="model_urls_value_ele_id",
+                                                        placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
+                file_upload_params_component = gr.TextArea(label="Models Description (Optional)",
+                                                           elem_id="model_params_value_ele_id",
+                                                           placeholder='for example: placeholder for chkpts upload test')
             with FormRow(elem_id="model_upload_url_form_row_03"):
                 file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
             with gr.Row():
@@ -710,7 +718,8 @@ def sagemaker_endpoint_tab():
                                                 elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, pr: gr.Request):
+            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles,
+                                           pr: gr.Request):
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
@@ -723,7 +732,6 @@ def sagemaker_endpoint_tab():
                                           inputs=[endpoint_name_textbox, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
-
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
@@ -741,12 +749,16 @@ def sagemaker_endpoint_tab():
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
                 # todo: this list is not safe
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username),
-                                                                 multiselect=True,
-                                                                 label="Select Cloud SageMaker Endpoint")
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(
+                    choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username,
+                                                                     user_token=cloud_auth_manager.username),
+                    multiselect=True,
+                    label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
                                                  lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username)},
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(
+                                                     username=cloud_auth_manager.username,
+                                                     user_token=cloud_auth_manager.username)},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
@@ -786,7 +798,7 @@ def list_sagemaker_endpoints_tab():
         model_list_df = gr.Dataframe(
             headers=['name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
             datatype=['str', 'str', 'str', 'str', 'str', 'str']
-            )
+        )
 
         def list_ep_prev(paging, rq: gr.Request):
             if paging == 0:

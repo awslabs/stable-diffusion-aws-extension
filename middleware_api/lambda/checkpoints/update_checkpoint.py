@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 import boto3
 
+from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, internal_server_error, not_found, bad_request
 from libs.common_tools import complete_multipart_upload
@@ -86,12 +87,19 @@ def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
 
 def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if checkpoint.checkpoint_status != CheckPointStatus.Active:
-        return bad_request(message='checkpoint status is not active', headers=headers)
+        return bad_request(message='only active can update name', headers=headers)
 
     old_name = checkpoint.checkpoint_names[0]
+    new_name = event.name
+
+    if old_name == new_name:
+        return ok(headers=headers, message='no need to update')
+
+    check_ckpt_name_unique([event.name])
+
     s3_path = checkpoint.s3_location.replace(f's3://{bucket_name}/', '')
 
-    rename_s3_object(f"{s3_path}/{old_name}", f"{s3_path}/{event.name}")
+    rename_s3_object(f"{s3_path}/{old_name}", f"{s3_path}/{new_name}")
 
     ddb_service.update_item(
         table=checkpoint_table,
@@ -100,7 +108,7 @@ def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
         },
         field_name='checkpoint_names',
         value=[
-            event.name
+            new_name
         ]
     )
 
