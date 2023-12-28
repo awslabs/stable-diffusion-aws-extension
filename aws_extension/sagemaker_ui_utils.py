@@ -7,7 +7,9 @@ from modules.ui_components import ToolButton
 
 training_job_dashboard = None
 txt2img_show_hook = None
+txt2img_lora_show_hook = None
 img2img_prompt = None
+img2img_lora_show_hook = None
 init_img = None
 sketch = None
 init_img_with_mask = None
@@ -81,7 +83,7 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[training_job_dashboard]
         )
     # Hook image display logic
-    global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook, txt2img_prompt
+    global txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_show_hook, txt2img_prompt, txt2img_lora_show_hook
     is_txt2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'txt2img_gallery'
     is_txt2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id',
                                                                            None) == 'generation_info_txt2img'
@@ -108,6 +110,17 @@ def on_after_component_callback(component, **_kwargs):
             outputs=[txt2img_gallery, txt2img_generation_info, txt2img_html_info, txt2img_prompt]
         )
 
+    if sagemaker_ui.lora_dropdown is not None and \
+            txt2img_lora_show_hook is None and \
+            txt2img_prompt is not None:
+        txt2img_lora_show_hook = "finish"
+        sagemaker_ui.lora_dropdown.change(
+            fn=sagemaker_ui.add_lora_to_prompt,
+            inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        )
+        sagemaker_ui.lora_dropdown = None
+
     global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
         img2img_prompt, \
         init_img, \
@@ -115,7 +128,8 @@ def on_after_component_callback(component, **_kwargs):
         init_img_with_mask, \
         inpaint_color_sketch, \
         init_img_inpaint, \
-        init_mask_inpaint
+        init_mask_inpaint, \
+        img2img_lora_show_hook
     is_img2img_gallery = type(component) is gr.Gallery and getattr(component, 'elem_id', None) == 'img2img_gallery'
     is_img2img_generation_info = type(component) is gr.Textbox and getattr(component, 'elem_id',
                                                                            None) == 'generation_info_img2img'
@@ -165,6 +179,17 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
             outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
         )
+    
+    if sagemaker_ui.lora_dropdown is not None and \
+            img2img_lora_show_hook is None and \
+            img2img_prompt is not None:
+        img2img_lora_show_hook = "finish"
+        sagemaker_ui.lora_dropdown.change(
+            fn=sagemaker_ui.add_lora_to_prompt,
+            inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
+            outputs=[img2img_prompt]
+        )
+        sagemaker_ui.lora_dropdown = None
 
 
 def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_args, elem_id):
