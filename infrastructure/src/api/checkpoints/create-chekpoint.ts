@@ -58,6 +58,7 @@ export class CreateCheckPointApi {
 
   private uploadByUrlLambdaFunction() {
     return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, <PythonFunctionProps>{
+      functionName: `${this.baseId}-create-checkpoint-by-url`,
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,

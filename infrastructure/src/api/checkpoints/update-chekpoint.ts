@@ -78,6 +78,17 @@ export class UpdateCheckPointApi {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        's3:CopyObject',
+        's3:DeleteObject',
+      ],
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
+      ],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         's3:GetObject',
         's3:PutObject',
         's3:DeleteObject',
@@ -124,14 +135,16 @@ export class UpdateCheckPointApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+            maxLength: 20,
+            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
+          },
           multi_parts_tags: {
             type: JsonSchemaType.OBJECT,
           },
         },
-        required: [
-          'status',
-          'multi_parts_tags',
-        ],
       },
       contentType: 'application/json',
     });

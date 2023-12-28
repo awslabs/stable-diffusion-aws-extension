@@ -417,6 +417,69 @@ def _list_users(username):
     return table
 
 
+def ckpt_delete_block():
+    with gr.Column(title="Delete CheckPoints", variant='panel'):
+        gr.HTML(value="<u><b>Delete CheckPoints</b></u>")
+        with gr.Row():
+            ckpts_delete_dropdown = gr.Dropdown(
+                multiselect=True,
+                label="Select Cloud CheckPoints")
+            modules.ui.create_refresh_button(ckpts_delete_dropdown,
+                                             lambda: None,
+                                             lambda: {"choices": api_manager.list_all_ckpts(
+                                                 username=cloud_auth_manager.username,
+                                                 user_token=cloud_auth_manager.username)},
+                                             "refresh_ckpts_delete")
+
+        ckpts_delete_button = gr.Button(value="Delete", variant='primary', elem_id="ckpts_delete_button")
+        delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
+
+        def _endpoint_ckpts(ckpts, pr: gr.Request):
+            if not ckpts:
+                return 'Please select at least one checkpoint to delete.'
+            return api_manager.ckpts_delete(ckpts=ckpts, user_token=pr.username)
+
+        ckpts_delete_button.click(_endpoint_ckpts,
+                                  inputs=[ckpts_delete_dropdown],
+                                  outputs=[delete_ep_output_textbox])
+
+
+def ckpt_rename_block():
+    with gr.Column(title="Rename CheckPoint", variant='panel'):
+        gr.HTML(value="<u><b>Rename CheckPoint</b></u>")
+        with gr.Row():
+            ckpt_rename_dropdown = gr.Dropdown(
+                multiselect=False,
+                label="Select Cloud CheckPoint")
+            modules.ui.create_refresh_button(ckpt_rename_dropdown,
+                                             lambda: None,
+                                             lambda: {"choices": api_manager.list_all_ckpts(
+                                                 username=cloud_auth_manager.username,
+                                                 user_token=cloud_auth_manager.username)},
+                                             "refresh_ckpts_delete")
+
+        new_name_textbox = gr.TextArea(label="Input new Checkpoint name",
+                                       lines=1,
+                                       elem_id="new_ckpt_value_ele_id")
+
+        ckpts_rename_button = gr.Button(value="Rename", variant='primary', elem_id="ckpts_delete_button")
+
+        rename_output_textbox = gr.Textbox(interactive=False, show_label=False)
+
+        def _rename_ckpt(ckpt, name, pr: gr.Request):
+            if not ckpt:
+                return 'Please select one checkpoint to rename.'
+            if not name:
+                return 'Please intput new name.'
+            return api_manager.ckpt_rename(ckpt=ckpt,
+                                           name=name,
+                                           user_token=pr.username)
+
+        ckpts_rename_button.click(_rename_ckpt,
+                                  inputs=[ckpt_rename_dropdown, new_name_textbox],
+                                  outputs=[rename_output_textbox])
+
+
 def model_upload_tab():
     with gr.Column() as upload_tab:
         gr.HTML(value="<b>Upload Model to Cloud</b>")
@@ -549,28 +612,8 @@ def model_upload_tab():
                                                 outputs=[file_upload_result_component]
                                                 )
 
-        with gr.Column(title="Delete CheckPoints", variant='panel'):
-            gr.HTML(value="<u><b>Delete CheckPoints</b></u>")
-            with gr.Row():
-                ckpts_delete_dropdown = gr.Dropdown(
-                    multiselect=True,
-                    label="Select Cloud CheckPoints")
-                modules.ui.create_refresh_button(ckpts_delete_dropdown,
-                                                 lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_ckpts(
-                                                     username=cloud_auth_manager.username,
-                                                     user_token=cloud_auth_manager.username)},
-                                                 "refresh_ckpts_delete")
-
-            ckpts_delete_button = gr.Button(value="Delete", variant='primary', elem_id="ckpts_delete_button")
-            delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
-
-            def _endpoint_ckpts(ckpts, pr: gr.Request):
-                return api_manager.ckpts_delete(ckpts=ckpts, user_token=pr.username)
-
-            ckpts_delete_button.click(_endpoint_ckpts,
-                                      inputs=[ckpts_delete_dropdown],
-                                      outputs=[delete_ep_output_textbox])
+        ckpt_rename_block()
+        ckpt_delete_block()
 
     with gr.Column():
         def list_models_prev(paging, rq: gr.Request):

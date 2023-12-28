@@ -105,6 +105,24 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete checkpoints with exception: {e}"
 
+    def ckpt_rename(self, ckpt, name, user_token=""):
+        logger.debug(f"ckpts: {ckpt}")
+
+        checkpoint_id = ckpt.split('+')[0]
+        logger.debug(f"checkpoint_id: {checkpoint_id}")
+        data = {
+            "name": name,
+        }
+
+        try:
+            resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
+            if resp.status_code != 200:
+                return resp.json()['message']
+            return "Rename Checkpoint Successfully"
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to rename checkpoint with exception: {e}"
+
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
         if self.auth_manger.enableAuth and not user_token:
             return []
