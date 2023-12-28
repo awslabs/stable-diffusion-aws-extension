@@ -13,6 +13,7 @@ import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {Size} from "aws-cdk-lib/core";
 
 
 export interface UpdateCheckPointApiProps {
@@ -114,7 +115,8 @@ export class UpdateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 10240,
+      ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
