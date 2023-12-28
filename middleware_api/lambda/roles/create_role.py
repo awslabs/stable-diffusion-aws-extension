@@ -25,7 +25,7 @@ class UpsertRoleEvent:
 def handler(raw_event, ctx):
     event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
-    # check if creator exist
+    # check if the creator exists
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
         return bad_request(message=f'creator {event.creator} not exist')
 
