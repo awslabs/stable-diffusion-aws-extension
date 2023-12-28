@@ -548,6 +548,30 @@ def model_upload_tab():
                                                         file_upload_params_component],
                                                 outputs=[file_upload_result_component]
                                                 )
+
+        with gr.Column(title="Delete CheckPoints", variant='panel'):
+            gr.HTML(value="<u><b>Delete CheckPoints</b></u>")
+            with gr.Row():
+                ckpts_delete_dropdown = gr.Dropdown(
+                    multiselect=True,
+                    label="Select Cloud CheckPoints")
+                modules.ui.create_refresh_button(ckpts_delete_dropdown,
+                                                 lambda: None,
+                                                 lambda: {"choices": api_manager.list_all_ckpts(
+                                                     username=cloud_auth_manager.username,
+                                                     user_token=cloud_auth_manager.username)},
+                                                 "refresh_ckpts_delete")
+
+            ckpts_delete_button = gr.Button(value="Delete", variant='primary', elem_id="ckpts_delete_button")
+            delete_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
+
+            def _endpoint_ckpts(ckpts, pr: gr.Request):
+                return api_manager.ckpts_delete(ckpts=ckpts, user_token=pr.username)
+
+            ckpts_delete_button.click(_endpoint_ckpts,
+                                      inputs=[ckpts_delete_dropdown],
+                                      outputs=[delete_ep_output_textbox])
+
     with gr.Column():
         def list_models_prev(paging, rq: gr.Request):
             if paging == 0:
