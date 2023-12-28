@@ -21,9 +21,7 @@ COPY inference/commands.txt /opt/ml/code/
 # COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
 # 
 # download s5cmd
-RUN mkdir -p /opt/ml/code/tools
-RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz
-RUN tar xzvf /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz -C /opt/ml/code/tools/
+RUN mkdir -p /opt/ml/code/tools && wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && tar xzvf /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz -C /opt/ml/code/tools/ && rm /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz
 # 
 # RUN pip install --upgrade pip
 # RUN pip install accelerate==0.19.0
@@ -46,6 +44,8 @@ ENV ON_DOCKER true
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
 RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+RUN rm -rf /opt/conda/lib/python3.10/site-packages/*
+RUN rm -rf /opt/conda/pkgs/*
 
 # # patch for opencv 4.7
 # # https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
