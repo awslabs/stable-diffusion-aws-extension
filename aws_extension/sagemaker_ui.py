@@ -481,6 +481,9 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
                    vae_path]
 
+    if local_paths == ["", "", "", "", "", ""]:
+        return "Please choose at least one model to upload.", None, None, None, None, None, None
+
     logger.info(f"Refresh checkpoints before upload to get rid of duplicate uploads...")
     refresh_all_models(pr.username)
 
