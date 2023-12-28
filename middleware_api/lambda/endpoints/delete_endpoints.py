@@ -7,7 +7,8 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import forbidden, no_content, internal_server_error
+from common.response import forbidden, no_content, bad_request
+from libs.enums import EndpointStatus
 from libs.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -42,6 +43,7 @@ def handler(raw_event, ctx):
             if endpoint_item:
                 logger.info("endpoint_name")
                 logger.info(json.dumps(endpoint_item))
+                delete_forbidden(endpoint_item)
                 # delete sagemaker endpoint
                 try:
                     endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
@@ -66,11 +68,18 @@ def handler(raw_event, ctx):
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
-        logger.error(f"error deleting sagemaker endpoint with exception: {e}")
-        return internal_server_error(message=f"error deleting sagemaker endpoint with exception: {e}")
+        logger.error(f"{e}")
+        return bad_request(message=f"{e}")
 
 
-def get_endpoint_with_endpoint_name(endpoint_name):
+def delete_forbidden(endpoint_item):
+    forbidden_list = [EndpointStatus.CREATING.value, EndpointStatus.UPDATING.value]
+    endpoint_status = endpoint_item['endpoint_status']['S']
+    if endpoint_status in forbidden_list:
+        raise Exception(f"endpoint status is {endpoint_status}, can not delete")
+
+
+def get_endpoint_with_endpoint_name(endpoint_name: str):
     try:
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,
