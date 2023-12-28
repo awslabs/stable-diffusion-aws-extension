@@ -65,3 +65,15 @@ def handler(raw_event, ctx):
     }
 
     return created(message='role created', data=data)
+
+
+def _get_role_by_name(role_name):
+    role_raw = ddb_service.query_items(table=user_table, key_values={
+        'kind': PARTITION_KEYS.role,
+        'sort_key': role_name,
+    })
+
+    if not role_raw or len(role_raw) == 0:
+        return None
+
+    return Role(**(ddb_service.deserialize(role_raw)))
