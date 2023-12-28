@@ -39,6 +39,7 @@ class CreateCheckPointEvent:
 
 
 def handler(raw_event, context):
+    logger.info(json.dumps(raw_event))
     request_id = context.aws_request_id
     event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
