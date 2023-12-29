@@ -4,7 +4,7 @@ import logging
 
 import requests
 
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+from utils import get_variable_from_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,8 +19,8 @@ class Api:
         return self.username
 
     def __init__(self, debug: bool = True):
-        self.host_url = cloud_auth_manager.api_url
-        self.api_key = cloud_auth_manager.api_key
+        self.host_url = get_variable_from_json('api_gateway_url')
+        self.api_key = get_variable_from_json('api_token')
         self.debug = debug
 
     def req(self, method: str, path: str, headers=None, data=None, params=None):

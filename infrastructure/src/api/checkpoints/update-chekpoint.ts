@@ -13,6 +13,7 @@ import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {Size} from "aws-cdk-lib/core";
 
 
 export interface UpdateCheckPointApiProps {
@@ -32,6 +33,7 @@ export class UpdateCheckPointApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly role: aws_iam.Role;
 
   private readonly baseId: string;
 
@@ -44,6 +46,7 @@ export class UpdateCheckPointApi {
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
     this.s3Bucket = props.s3Bucket;
+    this.role = this.iamRole();
 
     this.updateCheckpointApi();
   }
@@ -78,10 +81,22 @@ export class UpdateCheckPointApi {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        's3:CopyObject',
+        's3:DeleteObject',
+      ],
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
+      ],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         's3:GetObject',
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:CopyObject',
         's3:AbortMultipartUpload',
         's3:ListMultipartUploadParts',
         's3:ListBucketMultipartUploads',
@@ -91,10 +106,38 @@ export class UpdateCheckPointApi {
         `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'lambda:invokeFunction',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
+      ],
+    }));
+
     return newRole;
   }
 
   private updateCheckpointApi() {
+    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'update_checkpoint_rename.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 10240,
+      ephemeralStorageSize: Size.mebibytes(10240),
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+      },
+      layers: [this.layer],
+    });
+
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
@@ -102,11 +145,12 @@ export class UpdateCheckPointApi {
       index: 'update_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
+      role: this.role,
+      memorySize: 4048,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
       },
       layers: [this.layer],
     });
@@ -124,14 +168,16 @@ export class UpdateCheckPointApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+            maxLength: 20,
+            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
+          },
           multi_parts_tags: {
             type: JsonSchemaType.OBJECT,
           },
         },
-        required: [
-          'status',
-          'multi_parts_tags',
-        ],
       },
       contentType: 'application/json',
     });

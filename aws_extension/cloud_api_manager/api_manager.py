@@ -10,7 +10,7 @@ from aws_extension.cloud_api_manager.api import api
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 encode_type = "utf-8"
-
+string_separator = "___"
 
 class CloudApiManager:
 
@@ -90,7 +90,7 @@ class CloudApiManager:
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
 
-        checkpoint_id_list = [item.split('+')[0] for item in ckpts]
+        checkpoint_id_list = [item.split(string_separator)[2] for item in ckpts]
         logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
         data = {
             "checkpoint_id_list": checkpoint_id_list,
@@ -104,6 +104,22 @@ class CloudApiManager:
         except Exception as e:
             logger.error(e)
             return f"Failed to delete checkpoints with exception: {e}"
+
+    def ckpt_rename(self, ckpt, name, user_token=""):
+        logger.debug(f"ckpts: {ckpt}")
+
+        checkpoint_id = ckpt.split(string_separator)[2]
+        logger.debug(f"checkpoint_id: {checkpoint_id}")
+        data = {
+            "name": name,
+        }
+
+        try:
+            resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
+            return resp.json()['message']
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to rename checkpoint with exception: {e}"
 
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
         if self.auth_manger.enableAuth and not user_token:
@@ -177,6 +193,7 @@ class CloudApiManager:
 
             params = {
                 'username': username,
+                'per_page': 200,
             }
 
             api.set_username(username)
@@ -189,7 +206,7 @@ class CloudApiManager:
             ckpts_list = []
             for ckpt in r['data']['checkpoints']:
                 ckpt_name = ckpt['name'][0]
-                option_value = f"{ckpt['id']}+{ckpt_name}+{ckpt['status']}"
+                option_value = f"{ckpt_name}{string_separator}{ckpt['status']}{string_separator}{ckpt['id']}"
                 ckpts_list.append(option_value)
 
             return sorted(ckpts_list, key=lambda x: x.split('+')[-1], reverse=True)

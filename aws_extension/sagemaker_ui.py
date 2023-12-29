@@ -582,10 +582,9 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             }
             # Start creating model on cloud.
             response = requests.put(url=f"{url}/{checkpoint_id}", json=payload, headers={'x-api-key': api_key})
-            s3_input_path = s3_base
             logger.debug(response)
 
-            log = f"\n finish upload {local_tar_path} to {s3_base}"
+            log = f"finish upload {local_tar_path} to {s3_base}"
 
             # os.system(f"rm {local_tar_path}")
             rm(local_tar_path, recursive=True)
@@ -625,13 +624,13 @@ def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: s
 
     url_list = url_list.split(',')
     modified_urls = [check_url(url) for url in url_list]
-
-    for url in modified_urls:
+    unique_urls = list(set(modified_urls))
+    for url in unique_urls:
         url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
         if not re.match(f'^{url_pattern}$', url):
             return f"{url} is not a valid url."
 
-    data = {'checkpoint_type': model_type, 'urls': modified_urls, 'params': params_dict}
+    data = {'checkpoint_type': model_type, 'urls': unique_urls, 'params': params_dict}
     response = api.create_checkpoint(data=data)
     return response.json()['message']
 
