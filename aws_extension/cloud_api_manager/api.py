@@ -9,6 +9,7 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+client_api_version = "1.4.0"
 
 class Api:
     username = None
