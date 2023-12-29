@@ -1,7 +1,19 @@
 import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_apigateway, aws_dynamodb, aws_ecr, aws_sns, CustomResource, Duration, NestedStack, RemovalPolicy, StackProps } from 'aws-cdk-lib';
+import {
+    Aws,
+    aws_apigateway,
+    aws_dynamodb,
+    aws_ecr,
+    aws_sns,
+    CfnParameter,
+    CustomResource,
+    Duration,
+    NestedStack,
+    RemovalPolicy,
+    StackProps
+} from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
@@ -49,6 +61,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   useExist: string;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class SDAsyncInferenceStack extends NestedStack {
@@ -70,6 +83,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
+
     new CreateInferenceJobApi(
       this, 'CreateInferenceJob',
             <CreateInferenceJobApiProps>{
@@ -82,6 +96,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
               multiUserTable: props.multiUserTable,
+              logLevel: props.logLevel,
             },
     );
 
@@ -96,6 +111,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               router: inferV2Router,
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -109,6 +125,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               httpMethod: 'GET',
               srcRoot: srcRoot,
               authorizer: props.authorizer,
+              logLevel: props.logLevel,
             },
     );
 
@@ -122,6 +139,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               httpMethod: 'DELETE',
               srcRoot: srcRoot,
               authorizer: props.authorizer,
+              logLevel: props.logLevel,
             },
     );
 
@@ -132,6 +150,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               endpointDeploymentTable: sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               srcRoot: srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -146,6 +165,7 @@ export class SDAsyncInferenceStack extends NestedStack {
         httpMethod: 'GET',
         router: props.routers.inferences,
         srcRoot: srcRoot,
+        logLevel: props.logLevel,
       },
     );
 
@@ -170,6 +190,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               inferenceECRUrl: inferenceECR_url,
               inferenceResultTopic: inference_result_topic,
               inferenceResultErrorTopic: inference_result_error_topic,
+              logLevel: props.logLevel,
             },
     );
 
@@ -207,6 +228,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+          LOG_LEVEL: props.logLevel.valueAsString,
         },
         role: inferenceLambdaRole,
         logRetention: RetentionDays.ONE_WEEK,
@@ -284,6 +306,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               httpMethod: 'GET',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -296,6 +319,7 @@ export class SDAsyncInferenceStack extends NestedStack {
               httpMethod: 'DELETE',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -336,6 +360,7 @@ export class SDAsyncInferenceStack extends NestedStack {
           SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
+          LOG_LEVEL: props.logLevel.valueAsString,
         },
         bundling: {
           buildArgs: {

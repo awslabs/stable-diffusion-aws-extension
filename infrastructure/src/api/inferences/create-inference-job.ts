@@ -7,6 +7,7 @@ import {
   aws_iam,
   aws_lambda,
   aws_s3,
+  CfnParameter,
   Duration
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -25,6 +26,7 @@ export interface CreateInferenceJobApiProps {
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
+  logLevel: CfnParameter;
 }
 
 export class CreateInferenceJobApi {
@@ -40,6 +42,7 @@ export class CreateInferenceJobApi {
   private readonly router: aws_apigateway.Resource;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
@@ -53,6 +56,7 @@ export class CreateInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
     this.router = props.router;
+    this.logLevel = props.logLevel;
 
     this.createInferenceJobLambda();
   }
@@ -125,6 +129,7 @@ export class CreateInferenceJobApi {
         DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

@@ -1,5 +1,13 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -14,6 +22,7 @@ export interface ListEndpointsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class ListEndpointsApi {
@@ -26,6 +35,7 @@ export class ListEndpointsApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
   private readonly authorizer: aws_apigateway.IAuthorizer;
+  private readonly logLevel: CfnParameter;
 
 
   constructor(scope: Construct, id: string, props: ListEndpointsApiProps) {
@@ -38,6 +48,7 @@ export class ListEndpointsApi {
     this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.logLevel = props.logLevel;
 
     this.listAllSageMakerEndpointsApi();
   }
@@ -85,6 +96,7 @@ export class ListEndpointsApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

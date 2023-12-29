@@ -1,5 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
 import { IAuthorizer, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -25,6 +25,7 @@ export interface CreateEndpointApiProps {
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
+  logLevel: CfnParameter;
 }
 
 export class CreateEndpointApi {
@@ -43,6 +44,7 @@ export class CreateEndpointApi {
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -60,8 +62,7 @@ export class CreateEndpointApi {
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
-
-    console.log(this.userNotifySNS);
+    this.logLevel = props.logLevel;
 
     this.createEndpointsApi();
   }
@@ -203,6 +204,7 @@ export class CreateEndpointApi {
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
