@@ -90,7 +90,7 @@ class CloudApiManager:
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
 
-        checkpoint_id_list = [item.split('+')[0] for item in ckpts]
+        checkpoint_id_list = [item.split('+')[2] for item in ckpts]
         logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
         data = {
             "checkpoint_id_list": checkpoint_id_list,
@@ -108,7 +108,7 @@ class CloudApiManager:
     def ckpt_rename(self, ckpt, name, user_token=""):
         logger.debug(f"ckpts: {ckpt}")
 
-        checkpoint_id = ckpt.split('+')[0]
+        checkpoint_id = ckpt.split('+')[2]
         logger.debug(f"checkpoint_id: {checkpoint_id}")
         data = {
             "name": name,
@@ -206,7 +206,7 @@ class CloudApiManager:
             ckpts_list = []
             for ckpt in r['data']['checkpoints']:
                 ckpt_name = ckpt['name'][0]
-                option_value = f"{ckpt['id']}+{ckpt_name}+{ckpt['status']}"
+                option_value = f"{ckpt_name}+{ckpt['status']}+{ckpt['id']}"
                 ckpts_list.append(option_value)
 
             return sorted(ckpts_list, key=lambda x: x.split('+')[-1], reverse=True)

@@ -33,6 +33,7 @@ export class UpdateCheckPointApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly role: aws_iam.Role;
 
   private readonly baseId: string;
 
@@ -45,6 +46,7 @@ export class UpdateCheckPointApi {
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
     this.s3Bucket = props.s3Bucket;
+    this.role = this.iamRole();
 
     this.updateCheckpointApi();
   }
@@ -103,10 +105,38 @@ export class UpdateCheckPointApi {
         `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'lambda:invokeFunction',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
+      ],
+    }));
+
     return newRole;
   }
 
   private updateCheckpointApi() {
+    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'update_checkpoint_rename.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 10240,
+      ephemeralStorageSize: Size.mebibytes(10240),
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+      },
+      layers: [this.layer],
+    });
+
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
@@ -114,12 +144,12 @@ export class UpdateCheckPointApi {
       index: 'update_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 10240,
-      ephemeralStorageSize: Size.mebibytes(10240),
+      role: this.role,
+      memorySize: 4048,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
       },
       layers: [this.layer],
     });

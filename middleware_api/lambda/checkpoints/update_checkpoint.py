@@ -8,16 +8,17 @@ import boto3
 
 from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, internal_server_error, not_found, bad_request
+from common.response import ok, internal_server_error, not_found, bad_request, accepted
 from libs.common_tools import complete_multipart_upload
 from libs.data_types import CheckPoint, CheckPointStatus
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
+rename_lambda_name = os.environ.get('RENAME_LAMBDA_NAME')
 bucket_name = os.environ.get('S3_BUCKET')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
-s3_client = boto3.client('s3')
+lambda_client = boto3.client('lambda')
 
 headers = {
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -99,25 +100,15 @@ def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
 
     s3_path = checkpoint.s3_location.replace(f's3://{bucket_name}/', '')
 
-    rename_s3_object(f"{s3_path}/{old_name}", f"{s3_path}/{new_name}")
-
-    ddb_service.update_item(
-        table=checkpoint_table,
-        key={
+    lambda_client.invoke(
+        FunctionName=rename_lambda_name,
+        InvocationType='Event',
+        Payload=json.dumps({
             'id': checkpoint.id,
-        },
-        field_name='checkpoint_names',
-        value=[
-            new_name
-        ]
+            's3_path': s3_path,
+            'old_name': old_name,
+            'new_name': new_name,
+        })
     )
 
-    return ok(headers=headers, message='update name success')
-
-
-def rename_s3_object(old_key, new_key):
-    # Copy the object to the new key
-    s3_client.copy_object(Bucket=bucket_name, CopySource={'Bucket': bucket_name, 'Key': old_key}, Key=new_key)
-
-    # Delete the original object
-    s3_client.delete_object(Bucket=bucket_name, Key=old_key)
+    return accepted(headers=headers, message='rename is processing, please wait')
