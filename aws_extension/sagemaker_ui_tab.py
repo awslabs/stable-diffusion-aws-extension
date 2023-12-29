@@ -392,9 +392,12 @@ def _list_models(username, user_token):
         allowed = ''
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
-        models.append([model['name'], model['type'], allowed,
-                       'In-Use' if model['status'] == 'Active' else 'Disabled',
-                       datetime.datetime.fromtimestamp(model['created'])])
+        models.append([
+            model['name'],
+            model['type'],
+            allowed,
+            model['status'],
+            datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -666,7 +669,7 @@ def model_upload_tab():
                     model['name'],
                     model['type'],
                     allowed,
-                    'In-Use' if model['status'] == 'Active' else 'Disabled',
+                    model['status'],
                     datetime.datetime.fromtimestamp(float(model['created']))
                 ])
             page_info = f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"

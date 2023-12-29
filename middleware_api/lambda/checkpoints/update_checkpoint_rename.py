@@ -23,9 +23,9 @@ def handler(raw_event, context):
     rename_s3_object(f"{s3_path}/{old_name}", f"{s3_path}/{new_name}")
 
     ddb_service.update_item(
-        table=ckpt_id,
+        table=checkpoint_table,
         key={
-            'id': id,
+            'id': ckpt_id,
         },
         field_name='checkpoint_names',
         value=[

@@ -582,10 +582,9 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
             }
             # Start creating model on cloud.
             response = requests.put(url=f"{url}/{checkpoint_id}", json=payload, headers={'x-api-key': api_key})
-            s3_input_path = s3_base
             logger.debug(response)
 
-            log = f"\n finish upload {local_tar_path} to {s3_base}"
+            log = f"finish upload {local_tar_path} to {s3_base}"
 
             # os.system(f"rm {local_tar_path}")
             rm(local_tar_path, recursive=True)

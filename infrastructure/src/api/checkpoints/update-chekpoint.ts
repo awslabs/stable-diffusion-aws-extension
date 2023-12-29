@@ -96,6 +96,7 @@ export class UpdateCheckPointApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:CopyObject',
         's3:AbortMultipartUpload',
         's3:ListMultipartUploadParts',
         's3:ListBucketMultipartUploads',
