@@ -648,7 +648,7 @@ def model_upload_tab():
                 'types': query_types,
                 'status': query_status,
                 'roles': query_roles,
-                'page': current_page,
+                'page': int(current_page),
                 'username': rq.username,
             }
             api.set_username(rq.username)
@@ -669,18 +669,17 @@ def model_upload_tab():
                     'In-Use' if model['status'] == 'Active' else 'Disabled',
                     datetime.datetime.fromtimestamp(float(model['created']))
                 ])
-            page_info = f"Page {page} of {pages} (Total {total} models)"
+            page_info = f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
             return models, page_info
-
 
         gr.HTML(value="<b>Cloud Model List</b>")
         model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
                                      datatype=['str', 'str', 'str', 'str', 'str']
                                      )
+        page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False)
         with gr.Row():
-            page_info = gr.Textbox(label="Page Info")
-            current_page = gr.State(1)
-        with gr.Row():
+            with gr.Column():
+                current_page = gr.Number(label="Page Number", value=1, min=1, max=1000, step=1)
             with gr.Column():
                 query_types = gr.Dropdown(
                     multiselect=True,
@@ -696,14 +695,14 @@ def model_upload_tab():
                     multiselect=True,
                     choices=roles(cloud_auth_manager.username),
                     label="Roles")
-            with gr.Column():
-                refresh_symbol = '\U0001f504'  # 🔄
-                refresh_button = ToolButton(value=refresh_symbol, elem_id='refresh_ckpts_elem_id')
-                refresh_button.click(
-                    fn=list_ckpts_data,
-                    inputs=[query_types, query_status, query_roles, current_page],
-                    outputs=[model_list_df, page_info]
-                )
+        with gr.Row():
+            refresh_button = gr.Button(value="Refresh", variant="primary")
+            refresh_button.click(
+                fn=list_ckpts_data,
+                inputs=[query_types, query_status, query_roles, current_page],
+                outputs=[model_list_df, page_info]
+            )
+
     return upload_tab, model_list_df
 
 

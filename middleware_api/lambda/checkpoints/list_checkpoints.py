@@ -26,6 +26,12 @@ def handler(event, context):
     username = None
     page = 1
     per_page = 10
+
+    multi_value_query_string = event['multiValueQueryStringParameters']
+    roles = []
+    if 'roles' in multi_value_query_string and len(multi_value_query_string['roles']) > 0:
+        roles = event['multiValueQueryStringParameters']['roles']
+
     parameters = event['queryStringParameters']
     if parameters:
         page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
@@ -68,6 +74,10 @@ def handler(event, context):
         ckpts = []
         for r in raw_ckpts:
             ckpt = CheckPoint(**(ddb_service.deserialize(r)))
+
+            if len(roles) > 0 and set(roles).isdisjoint(set(ckpt.allowed_roles_or_users)):
+                continue
+
             if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
                     'user' in requestor_permissions and 'all' in requestor_permissions['user']
             ):
