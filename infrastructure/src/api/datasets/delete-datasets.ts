@@ -81,6 +81,8 @@ export class DeleteDatasetsApi {
               items: {
                 type: JsonSchemaType.STRING,
                 minLength: 1,
+                maxLength: 20,
+                pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
               },
               minItems: 1,
               maxItems: 10,

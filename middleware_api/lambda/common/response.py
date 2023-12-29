@@ -6,6 +6,7 @@ from typing import Optional, Any
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+x_api_version = '1.4.0'
 
 class HttpStatusCode:
     OK = 200

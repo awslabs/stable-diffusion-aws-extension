@@ -141,6 +141,8 @@ export class CreateDatasetApi {
           dataset_name: {
             type: JsonSchemaType.STRING,
             minLength: 1,
+            maxLength: 20,
+            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
           },
           content: {
             type: JsonSchemaType.ARRAY,
