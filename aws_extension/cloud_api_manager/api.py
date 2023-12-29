@@ -4,12 +4,33 @@ import logging
 
 import requests
 
+from aws_extension.sagemaker_ui_utils import warning
 from utils import get_variable_from_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 client_api_version = "1.4.0"
+
+
+def upgrade_info(resp):
+    if 'x-api-version' not in resp.headers:
+        warning(f"Client api version {client_api_version} is not compatible api version. "
+                f"Please update the client or api.")
+        return
+
+    api_version = resp.headers['x-api-version']
+
+    if api_version < client_api_version:
+        warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
+                f"Please update the api.")
+        return
+
+    if api_version > client_api_version:
+        warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
+                f"Please update the extension.")
+        return
+
 
 class Api:
     username = None
@@ -62,6 +83,8 @@ class Api:
             params=params,
             timeout=(20, 30)
         )
+
+        upgrade_info(resp)
 
         if self.debug:
             logger.info(f"resp headers: {resp.headers}")

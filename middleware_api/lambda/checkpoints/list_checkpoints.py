@@ -4,6 +4,7 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
+from common.util import get_multi_query_params
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
@@ -27,22 +28,20 @@ def handler(event, context):
     page = 1
     per_page = 10
 
-    roles = []
-    if 'multiValueQueryStringParameters' in event:
-        multi_query = event['multiValueQueryStringParameters']
-        if multi_query and 'roles' in multi_query and len(multi_query['roles']) > 0:
-            roles = event['multiValueQueryStringParameters']['roles']
+    roles = get_multi_query_params(event, 'roles', default=[])
+
+    status = get_multi_query_params(event, 'status')
+    if status:
+        _filter['checkpoint_status'] = status
+
+    types = get_multi_query_params(event, 'types')
+    if types:
+        _filter['checkpoint_type'] = types
 
     parameters = event['queryStringParameters']
     if parameters:
         page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
         per_page = int(parameters['per_page']) if 'per_page' in parameters and parameters['per_page'] else 10
-
-        if 'types' in parameters and len(parameters['types']) > 0:
-            _filter['checkpoint_type'] = parameters['types']
-
-        if 'status' in parameters and len(parameters['status']) > 0:
-            _filter['checkpoint_status'] = parameters['status']
 
         # todo: support multi user fetch later
         username = parameters['username'] if 'username' in parameters and parameters['username'] else None
