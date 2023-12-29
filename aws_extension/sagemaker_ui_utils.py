@@ -1,6 +1,7 @@
 import gradio
 import gradio as gr
-
+import threading
+import time
 from aws_extension import sagemaker_ui
 from dreambooth_on_cloud.train import async_cloud_train
 from modules.ui_components import ToolButton
@@ -30,6 +31,19 @@ cloud_db_model_name = None
 cloud_train_instance_type = None
 txt2img_html_info = None
 txt2img_prompt = None
+
+
+last_warning_time = None
+warning_lock = threading.Lock()
+
+
+def warning(msg, seconds: int = 5):
+    global last_warning_time
+    with warning_lock:
+        current_time = time.time()
+        if last_warning_time is None or current_time - last_warning_time > seconds:
+            last_warning_time = current_time
+            gr.Warning(msg)
 
 
 def on_after_component_callback(component, **_kwargs):
@@ -179,7 +193,7 @@ def on_after_component_callback(component, **_kwargs):
             inputs=[sagemaker_ui.inference_job_dropdown, img2img_prompt],
             outputs=[img2img_gallery, img2img_generation_info, img2img_html_info, img2img_prompt]
         )
-    
+
     if sagemaker_ui.lora_dropdown is not None and \
             img2img_lora_show_hook is None and \
             img2img_prompt is not None:

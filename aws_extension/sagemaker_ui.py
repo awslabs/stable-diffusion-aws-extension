@@ -1119,6 +1119,19 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_vae_list(username, username)
                                               }, 'refresh_cloud_vae_down')
+            with gr.Row():
+                # Lora model
+                global lora_dropdown
+                lora_dropdown_local = gr.Dropdown(choices=[],
+                                                  label="Lora model on cloud",
+                                                  multiselect=True)
+                create_refresh_button_by_user(lora_dropdown_local,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_lora_models(username, username)
+                                              }, 'refresh_lora_down')
+
+                lora_dropdown = lora_dropdown_local
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
@@ -1159,19 +1172,7 @@ def create_ui(is_img2img):
                     outputs=[]
                 )
 
-            # Lora model
             with gr.Row():
-                global lora_dropdown
-                lora_dropdown_local = gr.Dropdown(choices=[],
-                                                  label="Lora model on cloud",
-                                                  multiselect=True)
-                create_refresh_button_by_user(lora_dropdown_local,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_lora_models(username, username)
-                                              }, 'refresh_lora_down')
-                
-                lora_dropdown = lora_dropdown_local
 
                 def setup_inference_for_plugin(pr: gr.Request):
                     models_on_cloud = load_model_list(pr.username, pr.username)

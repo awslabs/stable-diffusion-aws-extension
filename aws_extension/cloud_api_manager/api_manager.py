@@ -323,11 +323,13 @@ class CloudApiManager:
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_resp = requests.get(url=f'{self.auth_manger.api_url}checkpoints', params={
+        params={
             'username': username,
             'types': types,
             'status': status
-        }, headers=self._get_headers_by_user(user_token))
+        }
+        headers=self._get_headers_by_user(user_token)
+        raw_resp = api.list_checkpoints(params=params, headers=headers)
 
         raw_resp.raise_for_status()
         checkpoints = []
