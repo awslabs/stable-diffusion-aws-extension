@@ -27,10 +27,11 @@ def handler(event, context):
     page = 1
     per_page = 10
 
-    multi_value_query_string = event['multiValueQueryStringParameters']
     roles = []
-    if 'roles' in multi_value_query_string and len(multi_value_query_string['roles']) > 0:
-        roles = event['multiValueQueryStringParameters']['roles']
+    if 'multiValueQueryStringParameters' in event:
+        multi_query = event['multiValueQueryStringParameters']
+        if multi_query and 'roles' in multi_query and len(multi_query['roles']) > 0:
+            roles = event['multiValueQueryStringParameters']['roles']
 
     parameters = event['queryStringParameters']
     if parameters:
