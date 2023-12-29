@@ -62,12 +62,12 @@ def handler(event, context):
             logger.error(f"error deleting endpoint config and model with exception: {e}")
 
     if business_status == EndpointStatus.IN_SERVICE.value:
+        current_time = str(datetime.now())
+        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
+
         # if it is the first time in service
         if 'endTime' not in endpoint:
             check_and_enable_autoscaling(endpoint, 'prod')
-
-        current_time = str(datetime.now())
-        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
 
     if business_status == EndpointStatus.FAILED.value:
         update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
@@ -78,7 +78,7 @@ def handler(event, context):
 def check_and_enable_autoscaling(item, variant_name):
     autoscaling = item['autoscaling']['BOOL']
     endpoint_name = item['endpoint_name']['S']
-    max_instance_number = item['max_instance_number']['S']
+    max_instance_number = item['max_instance_number']['N']
 
     logger.info(f"autoscaling: {autoscaling}")
     logger.info(f"endpoint_name: {endpoint_name}")
