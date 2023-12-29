@@ -1,5 +1,13 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -13,6 +21,7 @@ export interface DeleteUsersApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class DeleteUsersApi {
@@ -23,6 +32,7 @@ export class DeleteUsersApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly authorizer: aws_apigateway.IAuthorizer;
+  private readonly logLevel: CfnParameter;
 
   private readonly baseId: string;
 
@@ -35,6 +45,7 @@ export class DeleteUsersApi {
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
     this.authorizer = props.authorizer;
+    this.logLevel = props.logLevel;
 
     this.deleteUserApi();
   }
@@ -84,6 +95,7 @@ export class DeleteUsersApi {
       memorySize: 1024,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

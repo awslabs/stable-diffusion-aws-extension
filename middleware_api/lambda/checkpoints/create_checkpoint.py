@@ -24,7 +24,8 @@ upload_by_url_lambda_name = os.environ.get('UPLOAD_BY_URL_LAMBDA_NAME')
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 

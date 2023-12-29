@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -14,6 +14,7 @@ export interface DeleteTrainingJobsApiProps {
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
+  logLevel: CfnParameter;
 }
 
 export class DeleteTrainingJobsApi {
@@ -25,6 +26,7 @@ export class DeleteTrainingJobsApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteTrainingJobsApiProps) {
     this.scope = scope;
@@ -35,6 +37,7 @@ export class DeleteTrainingJobsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
+    this.logLevel = props.logLevel;
 
     this.deleteInferenceJobsApi();
   }
@@ -56,6 +59,7 @@ export class DeleteTrainingJobsApi {
         environment: {
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
+          LOG_LEVEL: this.logLevel.valueAsString,
         },
         layers: [this.layer],
       });

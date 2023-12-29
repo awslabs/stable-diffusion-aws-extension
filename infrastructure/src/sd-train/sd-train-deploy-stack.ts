@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_s3, aws_sns, NestedStack, StackProps } from 'aws-cdk-lib';
+import {aws_apigateway, aws_s3, aws_sns, CfnParameter, NestedStack, StackProps} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
@@ -36,6 +36,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class SdTrainDeployStack extends NestedStack {
@@ -70,6 +71,7 @@ export class SdTrainDeployStack extends NestedStack {
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // POST /trainings
@@ -83,6 +85,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     const trainJobRouter = routers.trainings.addResource('{id}');
@@ -99,6 +102,7 @@ export class SdTrainDeployStack extends NestedStack {
       trainTable: props.database.trainingTable,
       userTopic: snsTopic,
       ecr_image_tag: props.ecr_image_tag,
+      logLevel: props.logLevel,
     });
 
     // POST /models
@@ -111,6 +115,7 @@ export class SdTrainDeployStack extends NestedStack {
       httpMethod: 'POST',
       checkpointTable: checkPointTable,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     // GET /models
@@ -122,6 +127,7 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // PUT /models/{id}
@@ -138,6 +144,7 @@ export class SdTrainDeployStack extends NestedStack {
       ecr_image_tag: props.ecr_image_tag,
       createModelFailureTopic: props.createModelFailureTopic,
       createModelSuccessTopic: props.createModelSuccessTopic,
+      logLevel: props.logLevel,
     });
 
     // GET /checkpoints
@@ -150,6 +157,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // POST /checkpoint
@@ -161,6 +169,7 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     // PUT /checkpoints/{id}
@@ -171,6 +180,7 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.checkpoints,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
     });
 
     // POST /datasets
@@ -183,6 +193,7 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     // PUT /datasets/{id}
@@ -194,6 +205,7 @@ export class SdTrainDeployStack extends NestedStack {
       router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
     });
 
     // GET /datasets
@@ -206,6 +218,7 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     // GET /dataset/{dataset_name}
@@ -219,6 +232,7 @@ export class SdTrainDeployStack extends NestedStack {
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
+        logLevel: props.logLevel,
     });
 
     // DELETE /checkpoints
@@ -231,6 +245,7 @@ export class SdTrainDeployStack extends NestedStack {
               httpMethod: 'DELETE',
               s3Bucket: s3Bucket,
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -245,6 +260,7 @@ export class SdTrainDeployStack extends NestedStack {
               httpMethod: 'DELETE',
               s3Bucket: s3Bucket,
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -258,6 +274,7 @@ export class SdTrainDeployStack extends NestedStack {
               httpMethod: 'DELETE',
               s3Bucket: s3Bucket,
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -271,6 +288,7 @@ export class SdTrainDeployStack extends NestedStack {
               httpMethod: 'DELETE',
               s3Bucket: s3Bucket,
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 
@@ -284,6 +302,7 @@ export class SdTrainDeployStack extends NestedStack {
               httpMethod: 'GET',
               s3Bucket: s3Bucket,
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 

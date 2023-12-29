@@ -22,7 +22,8 @@ checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

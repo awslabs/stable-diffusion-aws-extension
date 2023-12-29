@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -12,6 +12,7 @@ export interface DeleteRolesApiProps {
   multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
+  logLevel: CfnParameter;
 }
 
 export class DeleteRolesApi {
@@ -22,6 +23,7 @@ export class DeleteRolesApi {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteRolesApiProps) {
     this.scope = scope;
@@ -31,6 +33,7 @@ export class DeleteRolesApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.logLevel = props.logLevel;
 
     this.deleteRolesApi();
   }
@@ -88,6 +91,7 @@ export class DeleteRolesApi {
         memorySize: 1024,
         environment: {
           MULTI_USER_TABLE: this.multiUserTable.tableName,
+          LOG_LEVEL: this.logLevel.valueAsString,
         },
         layers: [this.layer],
       });

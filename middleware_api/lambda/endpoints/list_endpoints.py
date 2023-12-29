@@ -11,7 +11,7 @@ sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
