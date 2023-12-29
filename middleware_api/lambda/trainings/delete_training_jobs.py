@@ -7,7 +7,7 @@ import boto3
 
 from common.response import no_content
 
-logger = logging.getLogger('delete_training_jobs')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')

@@ -20,8 +20,9 @@ checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

@@ -6,7 +6,9 @@ from typing import Dict
 import boto3
 
 s3 = boto3.client('s3')
-logger = logging.getLogger('util')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def get_multi_query_params(event, param_name: str, default=None):
