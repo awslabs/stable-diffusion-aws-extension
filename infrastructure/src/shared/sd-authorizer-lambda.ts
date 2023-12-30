@@ -1,13 +1,14 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, CfnCondition, Duration, Fn, RemovalPolicy } from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ResourceProvider } from './resource-provider';
 
 export interface UserUpsertApiProps {
   multiUserTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
-  useExist: string;
+  resourceProvider: ResourceProvider;
 }
 
 export class AuthorizerLambda {
@@ -24,32 +25,10 @@ export class AuthorizerLambda {
     this.scope = scope;
     this.baseId = id;
 
-    const shouldCreatePasswordKeyCondition = new CfnCondition(
-      scope,
-      `${id}-shouldCreateUseExistPasswordKey`,
-      {
-        expression: Fn.conditionEquals(props.useExist, 'no'),
-      },
-    );
     const keyAlias = 'sd-extension-password-key';
-    const newPasswordKey = new aws_kms.Key(scope, `${id}-password-key`, {
-      // const passwordKey = new aws_kms.Key(scope, `${id}-password-key`, {
-      description: 'a custom key for sd extension to encrypt and decrypt password',
-      // alias: keyAlias,
-      removalPolicy: RemovalPolicy.RETAIN,
-      enableKeyRotation: false,
-    });
 
-    const newKeyAlias = new aws_kms.Alias(scope, `${id}-passwordkey-alias`, {
-      aliasName: keyAlias,
-      removalPolicy: RemovalPolicy.RETAIN,
-      targetKey: newPasswordKey,
-      // targetKey: passwordKey,
-    });
-
-    (newPasswordKey.node.defaultChild as aws_kms.CfnKey).cfnOptions.condition = shouldCreatePasswordKeyCondition;
-    (newKeyAlias.node.defaultChild as aws_kms.CfnAlias).cfnOptions.condition = shouldCreatePasswordKeyCondition;
     this.passwordKeyAlias = aws_kms.Alias.fromAliasName(scope, `${id}-createOrNew-passwordKey`, keyAlias);
+    this.passwordKeyAlias.node.addDependency(props.resourceProvider.resources);
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
 

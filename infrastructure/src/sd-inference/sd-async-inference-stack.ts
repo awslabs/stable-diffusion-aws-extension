@@ -39,6 +39,7 @@ import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
 import {Size} from "aws-cdk-lib/core";
+import {ResourceProvider} from "../shared/resource-provider";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -59,7 +60,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  useExist: string;
+  resourceProvider: ResourceProvider;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }

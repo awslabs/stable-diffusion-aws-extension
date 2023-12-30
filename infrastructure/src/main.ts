@@ -8,11 +8,11 @@ import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
-import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import { ResourceProvider } from './shared/resource-provider';
 
 const app = new App();
 
@@ -47,14 +47,6 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
-    const deployedBefore = new CfnParameter(this, 'DeployedBefore', {
-      type: 'String',
-      description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
-      default: 'no',
-      allowedValues: ['yes', 'no'],
-    });
-
-    const useExist = deployedBefore.valueAsString;
 
     const s3BucketName = new CfnParameter(this, 'Bucket', {
       type: 'String',
@@ -85,22 +77,23 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
+    const resourceProvider = new ResourceProvider(this, 'ResourcesProvider', `${s3BucketName.valueAsString}`);
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
     // Therefore, this resource is prioritized to save time.
-    new LambdaDeployRoleStack(this, useExist);
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3', resourceProvider, s3BucketName.valueAsString);
 
-    const ddbTables = new Database(this, 'sd-ddb', useExist);
+    const ddbTables = new Database(this, 'sd-ddb', resourceProvider);
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
     const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
-      useExist: useExist,
+      resourceProvider,
     });
 
 
@@ -122,7 +115,7 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      useExist: useExist,
+      resourceProvider,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
       logLevel,
@@ -136,7 +129,7 @@ export class Middleware extends Stack {
       logLevel,
     });
 
-    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
+    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, resourceProvider);
 
     new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
@@ -154,7 +147,7 @@ export class Middleware extends Stack {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
-      useExist: useExist,
+      resourceProvider,
       logLevel,
     });
 

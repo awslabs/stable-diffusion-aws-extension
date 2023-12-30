@@ -1,12 +1,13 @@
-import { aws_dynamodb, CfnCondition, Fn, RemovalPolicy } from 'aws-cdk-lib';
+import { aws_dynamodb } from 'aws-cdk-lib';
 import { Attribute, AttributeType } from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { ResourceProvider } from './resource-provider';
 
 
 export class Database {
   [index: string]: aws_dynamodb.Table;
 
-  constructor(scope: Construct, baseId: string, useExist: string) {
+  constructor(scope: Construct, baseId: string, resourceProvider: ResourceProvider) {
     interface tableProperties {
       partitionKey: Attribute;
       sortKey?: Attribute;
@@ -71,29 +72,12 @@ export class Database {
       },
     };
 
-    const shouldCreateDDBTableCondition = new CfnCondition(
-      scope,
-      `${this.id}-shouldCreateDDBTable`,
-      {
-        expression: Fn.conditionEquals(useExist, 'no'),
-      },
-    );
 
-    // Create DynamoDB table to store model job id
     for (let key in tables) {
-      const val = tables[key];
-
-      const newTable = new aws_dynamodb.Table(scope, `${baseId}-new-${key}`, {
-        tableName: key,
-        partitionKey: val.partitionKey,
-        billingMode: aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-        sortKey: val.sortKey,
-        removalPolicy: RemovalPolicy.RETAIN,
-      });
-
-      (newTable.node.defaultChild as aws_dynamodb.CfnTable).cfnOptions.condition = shouldCreateDDBTableCondition;
-
-      this[key.charAt(0).toLocaleLowerCase() + key.slice(1)] = <aws_dynamodb.Table>aws_dynamodb.Table.fromTableName(scope, `${baseId}-${key}`, key);
+      const tableName = key.charAt(0).toLocaleLowerCase() + key.slice(1);
+      this[tableName] = <aws_dynamodb.Table>aws_dynamodb.Table.fromTableName(scope, `${baseId}-${key}`, key);
+      this[tableName].node.addDependency(resourceProvider.resources);
     }
+
   }
 }
