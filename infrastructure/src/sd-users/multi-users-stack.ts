@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, NestedStack, StackProps} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, NestedStack, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { CreateRoleApi } from '../api/roles/create-role';
@@ -8,7 +8,7 @@ import { ListRolesApi } from '../api/roles/list-roles';
 import { CreateUserApi } from '../api/users/create-user';
 import { DeleteUsersApi } from '../api/users/delete-users';
 import { ListUsersApi } from '../api/users/list-users';
-import {ResourceProvider} from "../shared/resource-provider";
+import { ResourceProvider } from '../shared/resource-provider';
 
 
 export interface MultiUsersStackProps extends StackProps {
