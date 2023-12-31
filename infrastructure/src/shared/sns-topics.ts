@@ -86,16 +86,12 @@ export class SnsTopics {
     this.createModelFailureTopic = this.createOrImportTopic('failureCreateModel');
   }
 
-  private static getTopicArnByTopicName(topicName: string): string {
-    return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
-  }
-
   private createOrImportTopic(topicName: string): Topic {
 
     const topic = <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,
-      SnsTopics.getTopicArnByTopicName(topicName),
+        `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`,
     );
 
     topic.node.addDependency(this.resourceProvider.resources);

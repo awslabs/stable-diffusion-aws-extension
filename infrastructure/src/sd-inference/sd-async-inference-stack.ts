@@ -368,6 +368,8 @@ export class SDAsyncInferenceStack {
       },
     );
 
+    handler.node.addDependency(props.resourceProvider.resources);
+
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
