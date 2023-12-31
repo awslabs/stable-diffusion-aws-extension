@@ -169,8 +169,10 @@ export class SDAsyncInferenceStack {
 
     // Create an SNS topic to get async inference result
     const inference_result_topic = aws_sns.Topic.fromTopicArn(scope, `infer-result-tp`, props.inferenceResultTopic.topicArn);
+    inference_result_topic.node.addDependency(props.resourceProvider.resources);
 
     const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
+    inference_result_error_topic.node.addDependency(props.resourceProvider.resources);
 
     new CreateEndpointApi(
         scope, 'CreateEndpoint',

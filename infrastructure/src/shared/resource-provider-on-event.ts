@@ -247,13 +247,10 @@ async function createTopics() {
 
     for (let Name of list) {
 
-        const createTopicCommand = new CreateTopicCommand({
-            Name,
-        });
+        const createTopicCommand = new CreateTopicCommand({Name});
         await snsClient.send(createTopicCommand);
 
         console.log(`Topic ${Name} created.`);
-
     }
 
 
@@ -324,11 +321,7 @@ async function createRole() {
         });
         const listPolicies = await iamClient.send(listRolePoliciesCommand);
 
-        if (!listPolicies.PolicyNames) {
-            return;
-        }
-
-        if (listPolicies.PolicyNames.includes('LambdaStartDeployPolicy')) {
+        if (!listPolicies.PolicyNames || listPolicies.PolicyNames.includes('LambdaStartDeployPolicy')) {
             return;
         }
 
@@ -444,11 +437,13 @@ async function createRole() {
         if (err?.Error?.Message === `The role with name ${name} cannot be found.`) {
             return;
         }
-        console.log(err?.Error?.Code);
-        console.log(err?.Error?.Message);
+
         if (err?.Error?.Code !== 'NoSuchEntity') {
+            console.log(err?.Error?.Code);
+            console.log(err?.Error?.Message);
             throw err;
         }
+
     }
 
 }
