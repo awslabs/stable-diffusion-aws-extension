@@ -33,7 +33,7 @@ export class ResourceProvider extends Construct {
             logRetention: RetentionDays.ONE_DAY,
         });
 
-        this.resources = new CustomResource(scope, 'CustomResource', {
+        this.resources = new CustomResource(scope, 'CustomResourceManager', {
             serviceToken: provider.serviceToken,
             properties: {bucketName},
         });
