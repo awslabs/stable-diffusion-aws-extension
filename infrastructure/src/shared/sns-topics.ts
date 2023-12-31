@@ -1,16 +1,16 @@
 import { Aws, CfnParameter } from 'aws-cdk-lib';
-import * as aws_sns from 'aws-cdk-lib/aws-sns';
+import {Topic} from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 import { ResourceProvider } from './resource-provider';
 
 
 export class SnsTopics {
 
-  public readonly snsTopic: aws_sns.Topic;
-  public readonly createModelSuccessTopic: aws_sns.Topic;
-  public readonly createModelFailureTopic: aws_sns.Topic;
-  public readonly inferenceResultTopic: aws_sns.Topic;
-  public readonly inferenceResultErrorTopic: aws_sns.Topic;
+  public readonly snsTopic: Topic;
+  public readonly createModelSuccessTopic: Topic;
+  public readonly createModelFailureTopic: Topic;
+  public readonly inferenceResultTopic: Topic;
+  public readonly inferenceResultErrorTopic: Topic;
   private readonly scope: Construct;
   private readonly id: string;
   private readonly resourceProvider: ResourceProvider;
@@ -92,8 +92,8 @@ export class SnsTopics {
     return `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`;
   }
 
-  private createOrImportTopic(topicName: string): aws_sns.Topic {
-    const topic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(
+  private createOrImportTopic(topicName: string): Topic {
+    const topic = <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,
       SnsTopics.getTopicArnByTopicName(topicName),

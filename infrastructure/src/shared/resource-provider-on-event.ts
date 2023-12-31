@@ -51,7 +51,7 @@ async function changeResource(event: any) {
     await createDdbTable();
     await createBucket(event);
     await createKms('sd-extension-password-key', 'a custom key for sd extension to encrypt and decrypt password');
-    await createKms('sd-extension-topic-key', 'a custom key for sd extension to encrypt and decrypt topic');
+    // await createKms('sd-extension-topic-key', 'a custom key for sd extension to encrypt and decrypt topic');
     await createTopics();
     await createRole();
     return response(event, true);
