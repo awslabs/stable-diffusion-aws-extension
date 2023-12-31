@@ -68,6 +68,7 @@ export class ResourceProvider extends Construct {
             actions: [
                 's3:ListBucket',
                 's3:CreateBucket',
+                's3:PutBucketCORS',
             ],
             resources: [
                 'arn:aws:s3:::*',

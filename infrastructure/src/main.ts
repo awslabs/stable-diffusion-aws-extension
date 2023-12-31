@@ -120,7 +120,7 @@ export class Middleware extends Stack {
       'trainings',
     ]);
 
-    new MultiUsersStack(this, 'multiUserSt', {
+    new MultiUsersStack(this, {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
@@ -141,7 +141,7 @@ export class Middleware extends Stack {
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, resourceProvider);
 
-    new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
+    new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
       s3_bucket: s3BucketStore.s3Bucket,
@@ -161,7 +161,7 @@ export class Middleware extends Stack {
       logLevel,
     });
 
-    new SdTrainDeployStack(this, 'SdDBTrainStack', {
+    new SdTrainDeployStack(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,

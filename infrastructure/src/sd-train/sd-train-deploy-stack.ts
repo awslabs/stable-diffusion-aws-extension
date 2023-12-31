@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {aws_apigateway, aws_s3, aws_sns, CfnParameter, NestedStack, StackProps} from 'aws-cdk-lib';
+import {aws_apigateway, aws_s3, aws_sns, CfnParameter, StackProps} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
@@ -39,17 +39,17 @@ export interface SdTrainDeployStackProps extends StackProps {
   logLevel: CfnParameter;
 }
 
-export class SdTrainDeployStack extends NestedStack {
+export class SdTrainDeployStack {
   private readonly srcRoot = '../middleware_api/lambda';
 
-  constructor(scope: Construct, id: string, props: SdTrainDeployStackProps) {
-    super(scope, id, props);
+  constructor(scope: Construct, props: SdTrainDeployStackProps) {
+
     // Use the parameters passed from Middleware
     const snsTopic = props.snsTopic;
     const s3Bucket = props.s3Bucket;
 
     // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(this, 'DeployApiTemplate', <BucketDeploymentProps>{
+    new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', <BucketDeploymentProps>{
       sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
       destinationBucket: s3Bucket,
       destinationKeyPrefix: 'template',
@@ -62,7 +62,7 @@ export class SdTrainDeployStack extends NestedStack {
     const multiUserTable = props.database.multiUserTable;
 
     // GET /trainings
-    new ListTrainingJobsApi(this, 'ListTrainingJobs', {
+    new ListTrainingJobsApi(scope, 'ListTrainingJobs', {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trainings,
@@ -75,7 +75,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /trainings
-    new CreateTrainingJobApi(this, 'CreateTrainingJob', {
+    new CreateTrainingJobApi(scope, 'CreateTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -91,7 +91,7 @@ export class SdTrainDeployStack extends NestedStack {
     const trainJobRouter = routers.trainings.addResource('{id}');
 
     // PUT /trainings/{id}
-    new StartTrainingJobApi(this, 'StartTrainingJob', {
+    new StartTrainingJobApi(scope, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
@@ -106,7 +106,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /models
-    new CreateModelJobApi(this, 'CreateModel', {
+    new CreateModelJobApi(scope, 'CreateModel', {
       router: routers.models,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
@@ -119,7 +119,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /models
-    new ListModelsApi(this, 'ListModels', {
+    new ListModelsApi(scope, 'ListModels', {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -131,7 +131,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /models/{id}
-    new UpdateModelApi(this, 'UpdateModel', {
+    new UpdateModelApi(scope, 'UpdateModel', {
       s3Bucket: s3Bucket,
       router: routers.models,
       httpMethod: 'PUT',
@@ -148,7 +148,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /checkpoints
-    new ListCheckPointsApi(this, 'ListCheckPoints', {
+    new ListCheckPointsApi(scope, 'ListCheckPoints', {
       s3Bucket: s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -161,7 +161,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /checkpoint
-    new CreateCheckPointApi(this, 'CreateCheckPoint', {
+    new CreateCheckPointApi(scope, 'CreateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -173,7 +173,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /checkpoints/{id}
-    new UpdateCheckPointApi(this, 'UpdateCheckPoint', {
+    new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
@@ -184,7 +184,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // POST /datasets
-    new CreateDatasetApi(this, 'CreateDataset', {
+    new CreateDatasetApi(scope, 'CreateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -197,7 +197,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // PUT /datasets/{id}
-    const updateDataset = new UpdateDatasetApi(this, 'UpdateDataset', {
+    const updateDataset = new UpdateDatasetApi(scope, 'UpdateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -209,7 +209,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /datasets
-    new ListDatasetsApi(this, 'ListDatasets', {
+    new ListDatasetsApi(scope, 'ListDatasets', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
@@ -222,7 +222,7 @@ export class SdTrainDeployStack extends NestedStack {
     });
 
     // GET /dataset/{dataset_name}
-    new GetDatasetApi(this, 'GetDataset', {
+    new GetDatasetApi(scope, 'GetDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,
@@ -237,7 +237,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // DELETE /checkpoints
     new DeleteCheckpointsApi(
-      this, 'DeleteCheckpoints',
+        scope, 'DeleteCheckpoints',
             <DeleteCheckpointsApiProps>{
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
@@ -251,7 +251,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // DELETE /datasets
     new DeleteDatasetsApi(
-      this, 'DeleteDatasets',
+        scope, 'DeleteDatasets',
             <DeleteDatasetsApiProps>{
               router: props.routers.datasets,
               commonLayer: props.commonLayer,
@@ -266,7 +266,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // DELETE /models
     new DeleteModelsApi(
-      this, 'DeleteModels',
+        scope, 'DeleteModels',
             <DeleteModelsApiProps>{
               router: props.routers.models,
               commonLayer: props.commonLayer,
@@ -280,7 +280,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // DELETE /trainings
     new DeleteTrainingJobsApi(
-      this, 'DeleteTrainingJobs',
+        scope, 'DeleteTrainingJobs',
             <DeleteTrainingJobsApiProps>{
               router: props.routers.trainings,
               commonLayer: props.commonLayer,
@@ -294,7 +294,7 @@ export class SdTrainDeployStack extends NestedStack {
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(
-      this, 'GetTrainingJob',
+        scope, 'GetTrainingJob',
             <GetTrainingJobApiProps>{
               router: trainJobRouter,
               commonLayer: props.commonLayer,

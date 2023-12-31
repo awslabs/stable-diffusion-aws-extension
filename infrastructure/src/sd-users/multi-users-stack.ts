@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, NestedStack, StackProps } from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { CreateRoleApi } from '../api/roles/create-role';
@@ -21,11 +21,10 @@ export interface MultiUsersStackProps extends StackProps {
   logLevel: CfnParameter;
 }
 
-export class MultiUsersStack extends NestedStack {
+export class MultiUsersStack {
   private readonly srcRoot = '../middleware_api/lambda';
 
-  constructor(scope: Construct, id: string, props: MultiUsersStackProps) {
-    super(scope, id, props);
+  constructor(scope: Construct, props: MultiUsersStackProps) {
 
     // POST /roles
     new CreateRoleApi(scope, 'CreateRole', {
@@ -84,7 +83,7 @@ export class MultiUsersStack extends NestedStack {
     });
 
     // DELETE /roles
-    new DeleteRolesApi(this, 'DeleteRoles',
+    new DeleteRolesApi(scope, 'DeleteRoles',
             <DeleteRolesApiProps>{
               router: props.routers.roles,
               commonLayer: props.commonLayer,
