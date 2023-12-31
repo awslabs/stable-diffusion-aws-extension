@@ -77,16 +77,6 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
-    // todo will remove
-    const deployedBefore = new CfnParameter(this, 'DeployedBefore', {
-      type: 'String',
-      description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
-      default: 'no',
-      allowedValues: ['yes', 'no'],
-    });
-
-    console.log('deployedBefore', deployedBefore.valueAsString);
-
     const resourceProvider = new ResourceProvider(this, 'ResourcesProvider', `${s3BucketName.valueAsString}`);
 
     // Create resources here
