@@ -192,7 +192,7 @@ export class Middleware extends Stack {
 
 new Middleware(
   app,
-  'Stable-diffusion-aws-extension-middleware-stack',
+  'extension-for-stable-diffusion-on-aws',
   {
     // env: devEnv,
     synthesizer: synthesizer(),
