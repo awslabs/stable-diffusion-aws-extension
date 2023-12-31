@@ -70,7 +70,7 @@ export class SDAsyncInferenceStack {
     props: SDAsyncInferenceStackProps,
   ) {
     if (!props?.ecr_image_tag) {
-      throw new Error('default_inference_ecr_image is required');
+      throw new Error('ecr_image_tag is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
@@ -167,13 +167,6 @@ export class SDAsyncInferenceStack {
       },
     );
 
-    // Create an SNS topic to get async inference result
-    const inference_result_topic = aws_sns.Topic.fromTopicArn(scope, `infer-result-tp`, props.inferenceResultTopic.topicArn);
-    inference_result_topic.node.addDependency(props.resourceProvider.resources);
-
-    const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
-    inference_result_error_topic.node.addDependency(props.resourceProvider.resources);
-
     new CreateEndpointApi(
         scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
@@ -188,8 +181,8 @@ export class SDAsyncInferenceStack {
               s3Bucket: props.s3_bucket,
               userNotifySNS: props.snsTopic,
               inferenceECRUrl: inferenceECR_url,
-              inferenceResultTopic: inference_result_topic,
-              inferenceResultErrorTopic: inference_result_error_topic,
+              inferenceResultTopic: props.inferenceResultTopic,
+              inferenceResultErrorTopic: props.inferenceErrorTopic,
               logLevel: props.logLevel,
             },
     );
@@ -224,8 +217,8 @@ export class SDAsyncInferenceStack {
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+          SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
+          SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           LOG_LEVEL: props.logLevel.valueAsString,
@@ -288,7 +281,11 @@ export class SDAsyncInferenceStack {
         'sns:Publish',
         'sns:ListTopics',
       ],
-      resources: [props?.snsTopic.topicArn, inference_result_error_topic.topicArn, inference_result_topic.topicArn],
+      resources: [
+          props?.snsTopic.topicArn,
+          props.inferenceErrorTopic.topicArn,
+          props.inferenceResultTopic.topicArn
+      ],
     });
     inferenceLambda.addToRolePolicy(ddbStatement);
     inferenceLambda.addToRolePolicy(s3Statement);
@@ -356,8 +353,8 @@ export class SDAsyncInferenceStack {
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+          SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
+          SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           LOG_LEVEL: props.logLevel.valueAsString,
@@ -383,10 +380,10 @@ export class SDAsyncInferenceStack {
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
-      new eventSources.SnsEventSource(inference_result_topic),
+      new eventSources.SnsEventSource(props.inferenceResultTopic),
     );
     handler.addEventSource(
-      new eventSources.SnsEventSource(inference_result_error_topic),
+      new eventSources.SnsEventSource(props.inferenceErrorTopic),
     );
   }
 
