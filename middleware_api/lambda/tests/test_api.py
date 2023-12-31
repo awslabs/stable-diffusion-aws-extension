@@ -5,6 +5,8 @@ from unittest import TestCase
 
 import requests
 
+from checkpoints.create_checkpoint import get_real_url
+
 os.environ.setdefault('AWS_PROFILE', 'aws_profile')
 os.environ.setdefault('S3_BUCKET', 'bucket')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
@@ -21,6 +23,16 @@ class MockContext:
 
 
 class ModelsApiTest(TestCase):
+
+    def test_get_real_url(self):
+        real_url = get_real_url(
+            "https://civitai.com/api/download/models/275491?type=Model&format=SafeTensor&size=full&fp=fp16")
+        assert 'civitai-delivery-worker-prod' in real_url
+
+    def test_get_real_url_file(self):
+        url = "https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/models/v1-5-pruned-emaonly.safetensors"
+        real_url = get_real_url(url)
+        assert real_url == url
 
     def test_upload(self):
         from models.model_api import create_model_api

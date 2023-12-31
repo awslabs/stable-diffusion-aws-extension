@@ -180,7 +180,11 @@ def check_ckpt_name_unique(names: [str]):
 
 
 def get_real_url(url: str):
-    response = requests.head(url, allow_redirects=False)
+    if url.startswith('https://civitai.com/api/download/models/'):
+        response = requests.get(url, allow_redirects=False)
+    else:
+        response = requests.head(url, allow_redirects=True, timeout=10)
+
     if response and response.status_code == 307:
         if response.headers and 'Location' in response.headers:
             return response.headers.get('Location')
