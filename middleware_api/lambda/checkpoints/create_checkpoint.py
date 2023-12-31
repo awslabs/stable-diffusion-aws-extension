@@ -50,6 +50,7 @@ def handler(raw_event, context):
     try:
         event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
+        # all urls or filenames must be passed check
         check_filenames_unique(event)
 
         if event.urls:
@@ -179,6 +180,7 @@ def check_ckpt_name_unique(names: [str]):
 
 
 def get_real_url(url: str):
+    url = url.strip()
     if url.startswith('https://civitai.com/api/download/models/'):
         response = requests.get(url, allow_redirects=False)
     else:
