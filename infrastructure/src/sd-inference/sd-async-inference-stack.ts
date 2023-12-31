@@ -76,8 +76,6 @@ export class SDAsyncInferenceStack {
 
     const inferenceECR_url = this.createInferenceECR(scope, srcImg);
 
-    const sd_inference_job_table = props.sd_inference_job_table;
-    const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
@@ -87,9 +85,9 @@ export class SDAsyncInferenceStack {
             <CreateInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               httpMethod: 'POST',
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               router: props.routers.inferences,
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -103,9 +101,9 @@ export class SDAsyncInferenceStack {
             <StartInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               httpMethod: 'PUT',
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               router: inferV2Router,
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -118,7 +116,7 @@ export class SDAsyncInferenceStack {
             <ListEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               httpMethod: 'GET',
               srcRoot: srcRoot,
@@ -132,7 +130,7 @@ export class SDAsyncInferenceStack {
             <DeleteEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               httpMethod: 'DELETE',
               srcRoot: srcRoot,
@@ -145,7 +143,7 @@ export class SDAsyncInferenceStack {
         scope, 'EndpointEvents',
             <SagemakerEndpointEventsProps>{
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               srcRoot: srcRoot,
               logLevel: props.logLevel,
@@ -155,10 +153,10 @@ export class SDAsyncInferenceStack {
     new ListInferencesApi(
         scope, 'ListInferenceJobs',
       {
-        inferenceJobTable: sd_inference_job_table,
+        inferenceJobTable: props.sd_inference_job_table,
         authorizer: props.authorizer,
         commonLayer: props.commonLayer,
-        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
         multiUserTable: props.multiUserTable,
         httpMethod: 'GET',
         router: props.routers.inferences,
@@ -172,9 +170,9 @@ export class SDAsyncInferenceStack {
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'POST',
               srcRoot: srcRoot,
               authorizer: props.authorizer,
@@ -209,11 +207,9 @@ export class SDAsyncInferenceStack {
         timeout: Duration.minutes(15),
         memorySize: 3008,
         environment: {
-          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
-          DDB_TRAINING_TABLE_NAME:
-                        props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME:
-                    sd_endpoint_deployment_job_table.tableName,
+          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
+          DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
+          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
@@ -261,7 +257,10 @@ export class SDAsyncInferenceStack {
         'dynamodb:List*',
         'dynamodb:Scan',
       ],
-      resources: [sd_endpoint_deployment_job_table.tableArn, sd_inference_job_table.tableArn],
+      resources: [
+          props.sd_endpoint_deployment_job_table.tableArn,
+          props.sd_inference_job_table.tableArn
+      ],
     });
     const s3Statement = new iam.PolicyStatement({
       actions: [
@@ -299,7 +298,7 @@ export class SDAsyncInferenceStack {
             <GetInferenceJobApiProps>{
               router: inferV2Router,
               commonLayer: props.commonLayer,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'GET',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -312,7 +311,7 @@ export class SDAsyncInferenceStack {
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
               commonLayer: props.commonLayer,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'DELETE',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -347,9 +346,9 @@ export class SDAsyncInferenceStack {
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
-          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
+          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: sd_endpoint_deployment_job_table.tableName,
+          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,

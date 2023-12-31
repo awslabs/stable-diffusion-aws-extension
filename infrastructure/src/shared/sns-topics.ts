@@ -26,8 +26,6 @@ export class SnsTopics {
       throw new Error('emailParam and bucketName must be provided');
     }
 
-
-
     // CDK parameters for SNS email address
     // Create SNS topic for notifications
     // const snsKmsKey = new kms.Key(this, 'SNSTrainEncryptionKey');
@@ -93,12 +91,15 @@ export class SnsTopics {
   }
 
   private createOrImportTopic(topicName: string): Topic {
+
     const topic = <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,
       SnsTopics.getTopicArnByTopicName(topicName),
     );
+
     topic.node.addDependency(this.resourceProvider.resources);
+
     return topic;
   }
 }

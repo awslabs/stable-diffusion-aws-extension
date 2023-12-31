@@ -22,26 +22,20 @@ export class Database {
         this.trainingTable = this.table(scope, baseId, 'TrainingTable');
         this.trainingTable.node.addDependency(resourceProvider.resources);
 
-
         this.checkpointTable = this.table(scope, baseId, 'CheckpointTable');
         this.checkpointTable.node.addDependency(resourceProvider.resources);
-
 
         this.datasetInfoTable = this.table(scope, baseId, 'DatasetInfoTable');
         this.datasetInfoTable.node.addDependency(resourceProvider.resources);
 
-
         this.datasetItemTable = this.table(scope, baseId, 'DatasetItemTable');
         this.datasetItemTable.node.addDependency(resourceProvider.resources);
-
 
         this.sDInferenceJobTable = this.table(scope, baseId, 'SDInferenceJobTable');
         this.sDInferenceJobTable.node.addDependency(resourceProvider.resources);
 
-
         this.sDEndpointDeploymentJobTable = this.table(scope, baseId, 'SDEndpointDeploymentJobTable');
         this.sDEndpointDeploymentJobTable.node.addDependency(resourceProvider.resources);
-
 
         this.multiUserTable = this.table(scope, baseId, 'MultiUserTable');
         this.multiUserTable.node.addDependency(resourceProvider.resources);

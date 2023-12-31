@@ -30,7 +30,7 @@ export interface CreateModelSageMakerEndpointProps {
 
 export class CreateModelSageMakerEndpoint {
 
-  private readonly id;
+  private readonly id: string;
 
   private readonly rootSrc: string;
   private readonly modelTable: aws_dynamodb.Table;

@@ -44,14 +44,10 @@ export class SdTrainDeployStack {
 
   constructor(scope: Construct, props: SdTrainDeployStackProps) {
 
-    // Use the parameters passed from Middleware
-    const snsTopic = props.snsTopic;
-    const s3Bucket = props.s3Bucket;
-
     // Upload api template file to the S3 bucket
     new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', <BucketDeploymentProps>{
       sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
-      destinationBucket: s3Bucket,
+      destinationBucket: props.s3Bucket,
       destinationKeyPrefix: 'template',
     });
 
@@ -66,7 +62,7 @@ export class SdTrainDeployStack {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trainings,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
@@ -81,7 +77,7 @@ export class SdTrainDeployStack {
       httpMethod: 'POST',
       modelTable: props.database.modelTable,
       router: routers.trainings,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
@@ -97,10 +93,10 @@ export class SdTrainDeployStack {
       httpMethod: 'PUT',
       modelTable: props.database.modelTable,
       router: trainJobRouter,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
-      userTopic: snsTopic,
+      userTopic: props.snsTopic,
       ecr_image_tag: props.ecr_image_tag,
       logLevel: props.logLevel,
     });
@@ -108,7 +104,7 @@ export class SdTrainDeployStack {
     // POST /models
     new CreateModelJobApi(scope, 'CreateModel', {
       router: routers.models,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
       commonLayer: commonLayer,
@@ -132,13 +128,13 @@ export class SdTrainDeployStack {
 
     // PUT /models/{id}
     new UpdateModelApi(scope, 'UpdateModel', {
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       router: routers.models,
       httpMethod: 'PUT',
       commonLayer: commonLayer,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
-      snsTopic: snsTopic,
+      snsTopic: props.snsTopic,
       checkpointTable: checkPointTable,
       trainMachineType: props.modelInfInstancetype,
       ecr_image_tag: props.ecr_image_tag,
@@ -149,7 +145,7 @@ export class SdTrainDeployStack {
 
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
@@ -166,7 +162,7 @@ export class SdTrainDeployStack {
       commonLayer: commonLayer,
       httpMethod: 'POST',
       router: routers.checkpoints,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
@@ -178,7 +174,7 @@ export class SdTrainDeployStack {
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoints,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       logLevel: props.logLevel,
     });
@@ -190,7 +186,7 @@ export class SdTrainDeployStack {
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'POST',
       router: routers.datasets,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
@@ -203,7 +199,7 @@ export class SdTrainDeployStack {
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',
       router: routers.datasets,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       logLevel: props.logLevel,
     });
@@ -214,7 +210,7 @@ export class SdTrainDeployStack {
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
       router: routers.datasets,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
       multiUserTable: multiUserTable,
@@ -229,7 +225,7 @@ export class SdTrainDeployStack {
       multiUserTable: multiUserTable,
       httpMethod: 'GET',
       router: updateDataset.router,
-      s3Bucket: s3Bucket,
+      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
         logLevel: props.logLevel,
@@ -243,7 +239,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               checkPointsTable: checkPointTable,
               httpMethod: 'DELETE',
-              s3Bucket: s3Bucket,
+              s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
@@ -258,7 +254,7 @@ export class SdTrainDeployStack {
               datasetInfoTable: props.database.datasetInfoTable,
               datasetItemTable: props.database.datasetItemTable,
               httpMethod: 'DELETE',
-              s3Bucket: s3Bucket,
+              s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
@@ -272,7 +268,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               modelTable: props.database.modelTable,
               httpMethod: 'DELETE',
-              s3Bucket: s3Bucket,
+              s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
@@ -286,7 +282,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               trainingTable: props.database.trainingTable,
               httpMethod: 'DELETE',
-              s3Bucket: s3Bucket,
+              s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
@@ -300,7 +296,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               trainingTable: props.database.trainingTable,
               httpMethod: 'GET',
-              s3Bucket: s3Bucket,
+              s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
