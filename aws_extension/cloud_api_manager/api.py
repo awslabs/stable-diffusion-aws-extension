@@ -10,7 +10,7 @@ from utils import get_variable_from_json
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-client_api_version = "1.4.0"
+client_api_version = "1.3.0"
 
 
 def upgrade_info(resp):
