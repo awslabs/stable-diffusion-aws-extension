@@ -1,4 +1,4 @@
-import {App, Aspects, CfnOutput, CfnParameter, Stack, StackProps, Tags} from 'aws-cdk-lib';
+import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
@@ -76,10 +76,6 @@ export class Middleware extends Stack {
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
-
-    // Add stackName tag to all resources
-    const stackName = Stack.of(this).stackName;
-    Tags.of(this).add('stackName', stackName);
 
     // Create resources here
 
@@ -168,9 +164,9 @@ export class Middleware extends Stack {
 
     // Add ResourcesProvider dependency to all resources
     const resourceProvider = new ResourceProvider(
-        this,
-        'ResourcesProvider',
-        `${s3BucketName.valueAsString}`
+      this,
+      'ResourcesProvider',
+      `${s3BucketName.valueAsString}`,
     );
 
     for (const resource of this.node.children) {
@@ -178,6 +174,10 @@ export class Middleware extends Stack {
         resource.node.addDependency(resourceProvider.resources);
       }
     }
+
+    // Add stackName tag to all resources
+    const stackName = Stack.of(this).stackName;
+    Tags.of(this).add('stackName', stackName);
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {

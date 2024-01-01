@@ -9,6 +9,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
 
+export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -164,16 +165,16 @@ export class CreateEndpointApi {
         'iam:PassRole',
       ],
       resources: [
-        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/ESDRoleForEndpoint-${Aws.REGION}`,
+        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/${ESDRoleForEndpoint}-${Aws.REGION}`,
       ],
     });
 
-    const lambdaStartDeployRole = new Role(this.scope, 'ESDRoleForEndpoint', {
+    const lambdaStartDeployRole = new Role(this.scope, ESDRoleForEndpoint, {
       assumedBy: new CompositePrincipal(
         new ServicePrincipal('lambda.amazonaws.com'),
         new ServicePrincipal('sagemaker.amazonaws.com'),
       ),
-      roleName: `ESDRoleForEndpoint-${Aws.REGION}`,
+      roleName: `${ESDRoleForEndpoint}-${Aws.REGION}`,
     });
 
     lambdaStartDeployRole.addToPolicy(snsStatement);

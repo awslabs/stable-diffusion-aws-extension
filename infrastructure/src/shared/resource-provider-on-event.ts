@@ -1,6 +1,12 @@
 import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
-import { IAMClient, ListRolePoliciesCommand, PutRolePolicyCommand, GetRoleCommand } from '@aws-sdk/client-iam';
+import {
+  GetRoleCommand,
+  GetRoleCommandOutput,
+  IAMClient,
+  ListRolePoliciesCommand,
+  PutRolePolicyCommand,
+} from '@aws-sdk/client-iam';
 import {
   CreateAliasCommand,
   CreateKeyCommand,
@@ -450,18 +456,27 @@ async function createPolicyForOldRole() {
 async function checkDeploy() {
   const roleName = `ESDRoleForEndpoint-${process.env.AWS_REGION}`;
 
+  let resp: GetRoleCommandOutput | undefined = undefined;
+
   try {
 
     const getRoleCommand = new GetRoleCommand({
       RoleName: roleName,
     });
 
-    const resp = await iamClient.send(getRoleCommand);
-
-    console.log(resp);
+    resp = await iamClient.send(getRoleCommand);
 
   } catch (err: any) {
     console.log(err);
+  }
+
+  if (resp && resp.Role) {
+    const stackNameTag = resp.Role.Tags?.find(tag => tag.Key === 'stackName');
+    if (stackNameTag) {
+      throw new Error(`The solution has been deployed in stack: ${stackNameTag.Value}.`);
+    }
+
+    throw new Error('The solution has been deployed.');
   }
 
 }
