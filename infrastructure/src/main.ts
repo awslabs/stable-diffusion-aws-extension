@@ -1,4 +1,4 @@
-import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import {App, Aspects, CfnOutput, CfnParameter, Stack, StackProps, Tags} from 'aws-cdk-lib';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
@@ -8,11 +8,11 @@ import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
+import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
-import { ResourceProvider } from './shared/resource-provider';
 
 const app = new App();
 
@@ -77,23 +77,24 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
-    const resourceProvider = new ResourceProvider(this, 'ResourcesProvider', `${s3BucketName.valueAsString}`);
+    // Add stackName tag to all resources
+    const stackName = Stack.of(this).stackName;
+    Tags.of(this).add('stackName', stackName);
 
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
     // Therefore, this resource is prioritized to save time.
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', resourceProvider, s3BucketName.valueAsString);
+    const s3BucketStore = new S3BucketStore(this, 'sd-s3', s3BucketName.valueAsString);
 
-    const ddbTables = new Database(this, 'sd-ddb', resourceProvider);
+    const ddbTables = new Database(this, 'sd-ddb');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
     const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
-      resourceProvider,
     });
 
 
@@ -115,7 +116,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      resourceProvider,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
       logLevel,
@@ -129,7 +129,7 @@ export class Middleware extends Stack {
       logLevel,
     });
 
-    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, resourceProvider);
+    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
     new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
@@ -147,7 +147,6 @@ export class Middleware extends Stack {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
-      resourceProvider,
       logLevel,
     });
 
@@ -166,6 +165,19 @@ export class Middleware extends Stack {
       authorizer: authorizerLambda.authorizer,
       logLevel,
     });
+
+    // Add ResourcesProvider dependency to all resources
+    const resourceProvider = new ResourceProvider(
+        this,
+        'ResourcesProvider',
+        `${s3BucketName.valueAsString}`
+    );
+
+    for (const resource of this.node.children) {
+      if (!resourceProvider.instanceof(resource)) {
+        resource.node.addDependency(resourceProvider.resources);
+      }
+    }
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {

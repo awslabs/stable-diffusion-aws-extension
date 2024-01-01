@@ -8,14 +8,12 @@ import { ListRolesApi } from '../api/roles/list-roles';
 import { CreateUserApi } from '../api/users/create-user';
 import { DeleteUsersApi } from '../api/users/delete-users';
 import { ListUsersApi } from '../api/users/list-users';
-import { ResourceProvider } from '../shared/resource-provider';
 
 
 export interface MultiUsersStackProps extends StackProps {
   multiUserTable: aws_dynamodb.Table;
   routers: { [key: string]: Resource };
   commonLayer: PythonLayerVersion;
-  resourceProvider: ResourceProvider;
   passwordKeyAlias: aws_kms.IKey;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;

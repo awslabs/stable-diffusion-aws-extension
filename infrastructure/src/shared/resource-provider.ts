@@ -1,91 +1,107 @@
-import {CustomResource, Duration} from 'aws-cdk-lib';
-import {Effect, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
-import {Runtime} from 'aws-cdk-lib/aws-lambda';
-import {NodejsFunction} from 'aws-cdk-lib/aws-lambda-nodejs';
-import {RetentionDays} from 'aws-cdk-lib/aws-logs';
-import {Provider} from 'aws-cdk-lib/custom-resources';
-import {Construct} from 'constructs';
+import { CustomResource, Duration } from 'aws-cdk-lib';
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Provider } from 'aws-cdk-lib/custom-resources';
+import { Construct } from 'constructs';
 
 
 export class ResourceProvider extends Construct {
 
-    public readonly resources: CustomResource;
+  public readonly resources: CustomResource;
+  public readonly role: Role;
+  public readonly handler: NodejsFunction;
+  public readonly provider: Provider;
 
-    constructor(scope: Construct, id: string, bucketName: string) {
-        super(scope, id);
-        const role = this.iamRole();
+  constructor(scope: Construct, id: string, bucketName: string) {
+    super(scope, id);
 
-        const onEventHandler = new NodejsFunction(scope, 'onEventHandler', {
-            runtime: Runtime.NODEJS_18_X,
-            handler: 'handler',
-            entry: 'src/shared/resource-provider-on-event.ts',
-            bundling: {
-                minify: true,
-                externalModules: ['aws-cdk-lib'],
-            },
-            timeout: Duration.seconds(900),
-            role,
-            memorySize: 4048,
-        });
+    this.role = this.iamRole();
 
-        const provider = new Provider(scope, 'ResourceProvider', {
-            onEventHandler: onEventHandler,
-            logRetention: RetentionDays.ONE_DAY,
-        });
+    this.handler = new NodejsFunction(scope, 'ResourceManagerHandler', {
+      runtime: Runtime.NODEJS_18_X,
+      handler: 'handler',
+      entry: 'src/shared/resource-provider-on-event.ts',
+      bundling: {
+        minify: true,
+        externalModules: ['aws-cdk-lib'],
+      },
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 4048,
+    });
 
-        this.resources = new CustomResource(scope, 'CustomResourceManager', {
-            serviceToken: provider.serviceToken,
-            properties: {bucketName},
-        });
+    this.provider = new Provider(scope, 'ResourceProvider', {
+      onEventHandler: this.handler,
+      logRetention: RetentionDays.ONE_DAY,
+    });
 
-    }
+    this.resources = new CustomResource(scope, 'ResourceManager', {
+      serviceToken: this.provider.serviceToken,
+      properties: { bucketName },
+    });
 
-    private iamRole(): Role {
+  }
 
-        const newRole = new Role(this, 'deploy-check-role', {
-            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
-        });
+  public instanceof(resource: any) {
+    return [
+      this,
+      this.role,
+      this.provider,
+      this.handler,
+      this.resources,
+    ].includes(resource);
+  }
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'dynamodb:CreateTable',
-                'sns:CreateTopic',
-                "iam:ListRolePolicies",
-                "iam:PutRolePolicy",
-                'kms:CreateKey',
-                'kms:CreateAlias',
-                'kms:DisableKeyRotation',
-                'kms:ListAliases',
-            ],
-            resources: [
-                '*',
-            ],
-        }));
+  private iamRole(): Role {
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                's3:ListBucket',
-                's3:CreateBucket',
-                's3:PutBucketCORS',
-            ],
-            resources: [
-                'arn:aws:s3:::*',
-            ],
-        }));
+    const newRole = new Role(this, 'deploy-check-role', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+    });
 
-        newRole.addToPolicy(new PolicyStatement({
-            effect: Effect.ALLOW,
-            actions: [
-                'logs:CreateLogGroup',
-                'logs:CreateLogStream',
-                'logs:PutLogEvents',
-                'kms:Decrypt',
-            ],
-            resources: ['*'],
-        }));
-        return newRole;
-    }
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'dynamodb:CreateTable',
+        'sns:CreateTopic',
+        'iam:ListRolePolicies',
+        'iam:PutRolePolicy',
+        'iam:GetRole',
+        'kms:CreateKey',
+        'kms:CreateAlias',
+        'kms:DisableKeyRotation',
+        'kms:ListAliases',
+      ],
+      resources: [
+        '*',
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        's3:ListBucket',
+        's3:CreateBucket',
+        's3:PutBucketCORS',
+      ],
+      resources: [
+        'arn:aws:s3:::*',
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'logs:CreateLogGroup',
+        'logs:CreateLogStream',
+        'logs:PutLogEvents',
+        'kms:Decrypt',
+      ],
+      resources: ['*'],
+    }));
+
+    return newRole;
+  }
 
 }

@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {aws_apigateway, aws_s3, aws_sns, CfnParameter, StackProps} from 'aws-cdk-lib';
+import { aws_apigateway, aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
@@ -228,12 +228,12 @@ export class SdTrainDeployStack {
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
-        logLevel: props.logLevel,
+      logLevel: props.logLevel,
     });
 
     // DELETE /checkpoints
     new DeleteCheckpointsApi(
-        scope, 'DeleteCheckpoints',
+      scope, 'DeleteCheckpoints',
             <DeleteCheckpointsApiProps>{
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
@@ -247,7 +247,7 @@ export class SdTrainDeployStack {
 
     // DELETE /datasets
     new DeleteDatasetsApi(
-        scope, 'DeleteDatasets',
+      scope, 'DeleteDatasets',
             <DeleteDatasetsApiProps>{
               router: props.routers.datasets,
               commonLayer: props.commonLayer,
@@ -262,7 +262,7 @@ export class SdTrainDeployStack {
 
     // DELETE /models
     new DeleteModelsApi(
-        scope, 'DeleteModels',
+      scope, 'DeleteModels',
             <DeleteModelsApiProps>{
               router: props.routers.models,
               commonLayer: props.commonLayer,
@@ -276,7 +276,7 @@ export class SdTrainDeployStack {
 
     // DELETE /trainings
     new DeleteTrainingJobsApi(
-        scope, 'DeleteTrainingJobs',
+      scope, 'DeleteTrainingJobs',
             <DeleteTrainingJobsApiProps>{
               router: props.routers.trainings,
               commonLayer: props.commonLayer,
@@ -290,7 +290,7 @@ export class SdTrainDeployStack {
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(
-        scope, 'GetTrainingJob',
+      scope, 'GetTrainingJob',
             <GetTrainingJobApiProps>{
               router: trainJobRouter,
               commonLayer: props.commonLayer,

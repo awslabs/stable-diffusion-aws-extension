@@ -2,16 +2,16 @@ import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
-    Aws,
-    aws_apigateway,
-    aws_dynamodb,
-    aws_ecr,
-    aws_sns,
-    CfnParameter,
-    CustomResource,
-    Duration,
-    RemovalPolicy,
-    StackProps
+  Aws,
+  aws_apigateway,
+  aws_dynamodb,
+  aws_ecr,
+  aws_sns,
+  CfnParameter,
+  CustomResource,
+  Duration,
+  RemovalPolicy,
+  StackProps,
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
@@ -25,6 +25,7 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
@@ -37,8 +38,6 @@ import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferenc
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
-import {Size} from "aws-cdk-lib/core";
-import {ResourceProvider} from "../shared/resource-provider";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -59,7 +58,6 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  resourceProvider: ResourceProvider;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
@@ -81,7 +79,7 @@ export class SDAsyncInferenceStack {
     const srcRoot = '../middleware_api/lambda';
 
     new CreateInferenceJobApi(
-        scope, 'CreateInferenceJob',
+      scope, 'CreateInferenceJob',
             <CreateInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
@@ -97,7 +95,7 @@ export class SDAsyncInferenceStack {
     );
 
     new StartInferenceJobApi(
-        scope, 'StartInferenceJob',
+      scope, 'StartInferenceJob',
             <StartInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
@@ -112,7 +110,7 @@ export class SDAsyncInferenceStack {
     );
 
     new ListEndpointsApi(
-        scope, 'ListEndpoints',
+      scope, 'ListEndpoints',
             <ListEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
@@ -126,7 +124,7 @@ export class SDAsyncInferenceStack {
     );
 
     new DeleteEndpointsApi(
-        scope, 'DeleteEndpoints',
+      scope, 'DeleteEndpoints',
             <DeleteEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
@@ -140,7 +138,7 @@ export class SDAsyncInferenceStack {
     );
 
     new SagemakerEndpointEvents(
-        scope, 'EndpointEvents',
+      scope, 'EndpointEvents',
             <SagemakerEndpointEventsProps>{
               commonLayer: props.commonLayer,
               endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
@@ -151,7 +149,7 @@ export class SDAsyncInferenceStack {
     );
 
     new ListInferencesApi(
-        scope, 'ListInferenceJobs',
+      scope, 'ListInferenceJobs',
       {
         inferenceJobTable: props.sd_inference_job_table,
         authorizer: props.authorizer,
@@ -166,7 +164,7 @@ export class SDAsyncInferenceStack {
     );
 
     new CreateEndpointApi(
-        scope, 'CreateEndpoint',
+      scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
@@ -198,7 +196,7 @@ export class SDAsyncInferenceStack {
 
     // Create a Lambda function for inference
     const inferenceLambda = new lambda.DockerImageFunction(
-        scope,
+      scope,
       'InferenceLambda',
       {
         code: lambda.DockerImageCode.fromImageAsset(
@@ -258,8 +256,8 @@ export class SDAsyncInferenceStack {
         'dynamodb:Scan',
       ],
       resources: [
-          props.sd_endpoint_deployment_job_table.tableArn,
-          props.sd_inference_job_table.tableArn
+        props.sd_endpoint_deployment_job_table.tableArn,
+        props.sd_inference_job_table.tableArn,
       ],
     });
     const s3Statement = new iam.PolicyStatement({
@@ -281,9 +279,9 @@ export class SDAsyncInferenceStack {
         'sns:ListTopics',
       ],
       resources: [
-          props?.snsTopic.topicArn,
-          props.inferenceErrorTopic.topicArn,
-          props.inferenceResultTopic.topicArn
+        props?.snsTopic.topicArn,
+        props.inferenceErrorTopic.topicArn,
+        props.inferenceResultTopic.topicArn,
       ],
     });
     inferenceLambda.addToRolePolicy(ddbStatement);
@@ -294,7 +292,7 @@ export class SDAsyncInferenceStack {
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
     new GetInferenceJobApi(
-        scope, 'GetInferenceJob',
+      scope, 'GetInferenceJob',
             <GetInferenceJobApiProps>{
               router: inferV2Router,
               commonLayer: props.commonLayer,
@@ -307,7 +305,7 @@ export class SDAsyncInferenceStack {
     );
 
     new DeleteInferenceJobsApi(
-        scope, 'DeleteInferenceJobs',
+      scope, 'DeleteInferenceJobs',
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
               commonLayer: props.commonLayer,
@@ -332,7 +330,7 @@ export class SDAsyncInferenceStack {
     });
 
     const handler = new python.PythonFunction(
-        scope,
+      scope,
       'InferenceResultNotification',
       {
         entry: path.join(
@@ -368,8 +366,6 @@ export class SDAsyncInferenceStack {
       },
     );
 
-    handler.node.addDependency(props.resourceProvider.resources);
-
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
@@ -390,7 +386,7 @@ export class SDAsyncInferenceStack {
 
   private createInferenceECR(scope: Construct, srcImg: string) {
     const dockerRepo = new aws_ecr.Repository(
-        scope,
+      scope,
       'aigc-webui-inference-repo',
       {
         repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
@@ -399,7 +395,7 @@ export class SDAsyncInferenceStack {
     );
 
     const ecrDeployment = new ECRDeployment(
-        scope,
+      scope,
       'aigc-webui-inference-ecr-deploy',
       {
         src: new DockerImageName(srcImg),
@@ -409,7 +405,7 @@ export class SDAsyncInferenceStack {
 
     // trigger the custom resource lambda
     const customJob = new CustomResource(
-        scope,
+      scope,
       'aigc-webui-inference-ecr-cr-image',
       {
         serviceToken: ecrDeployment.serviceToken,

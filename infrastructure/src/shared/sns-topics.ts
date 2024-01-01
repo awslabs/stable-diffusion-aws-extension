@@ -1,7 +1,6 @@
 import { Aws, CfnParameter } from 'aws-cdk-lib';
-import {Topic} from 'aws-cdk-lib/aws-sns';
+import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { ResourceProvider } from './resource-provider';
 
 
 export class SnsTopics {
@@ -13,13 +12,11 @@ export class SnsTopics {
   public readonly inferenceResultErrorTopic: Topic;
   private readonly scope: Construct;
   private readonly id: string;
-  private readonly resourceProvider: ResourceProvider;
 
-  constructor(scope: Construct, id: string, emailParam: CfnParameter, resourceProvider: ResourceProvider) {
+  constructor(scope: Construct, id: string, emailParam: CfnParameter) {
 
     this.scope = scope;
     this.id = id;
-    this.resourceProvider = resourceProvider;
 
     // Check that props.emailParam and props.bucketName are not undefined
     if (!emailParam) {
@@ -91,10 +88,8 @@ export class SnsTopics {
     const topic = <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,
-        `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`,
+      `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`,
     );
-
-    topic.node.addDependency(this.resourceProvider.resources);
 
     return topic;
   }

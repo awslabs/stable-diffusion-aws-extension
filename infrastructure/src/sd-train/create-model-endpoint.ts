@@ -8,7 +8,7 @@ import {
   aws_s3,
   aws_sagemaker,
   aws_sns,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
