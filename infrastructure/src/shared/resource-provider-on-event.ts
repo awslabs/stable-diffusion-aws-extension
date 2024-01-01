@@ -58,7 +58,6 @@ async function createAndCheckResources(event: Event) {
     'sd-extension-password-key',
     'a custom key to encrypt and decrypt password',
   );
-  // await createKms('sd-extension-topic-key', 'a custom key for sd extension to encrypt and decrypt topic');
   await createTopics();
   await createPolicyForOldRole();
   return response(event, true);
@@ -152,20 +151,20 @@ async function createTables() {
   };
 
   for (let tableName in tables) {
-    const val = tables[tableName];
+    const config = tables[tableName];
 
     try {
       const KeySchema: KeySchemaElement[] = [
-        { AttributeName: val.partitionKey.name, KeyType: 'HASH' },
+        { AttributeName: config.partitionKey.name, KeyType: 'HASH' },
       ];
 
       const AttributeDefinitions: AttributeDefinition[] = [
-        { AttributeName: val.partitionKey.name, AttributeType: val.partitionKey.type },
+        { AttributeName: config.partitionKey.name, AttributeType: config.partitionKey.type },
       ];
 
-      if (val.sortKey) {
-        KeySchema.push({ AttributeName: val.sortKey.name, KeyType: 'RANGE' });
-        AttributeDefinitions.push({ AttributeName: val.sortKey.name, AttributeType: val.sortKey.type });
+      if (config.sortKey) {
+        KeySchema.push({ AttributeName: config.sortKey.name, KeyType: 'RANGE' });
+        AttributeDefinitions.push({ AttributeName: config.sortKey.name, AttributeType: config.sortKey.type });
       }
 
       const createTableInput: CreateTableCommandInput = {
@@ -199,9 +198,7 @@ async function createBucket(event: Event) {
 
     await s3Client.send(createBucketCommand);
 
-
     console.log(`Bucket ${bucketName} created.`);
-
 
   } catch (err: any) {
 
@@ -209,7 +206,7 @@ async function createBucket(event: Event) {
       console.log(`Bucket ${bucketName} exists.`);
     } else if (err.Code === 'BucketAlreadyExists') {
       console.log(`Bucket ${bucketName} exists.`);
-      throw new Error(`Bucket ${bucketName} exists. ${err.message}`);
+      throw new Error(`${err.message}`);
     } else {
       throw err;
     }
@@ -229,7 +226,6 @@ async function createBucket(event: Event) {
       ],
     },
   });
-
 
   await s3Client.send(putBucketCorsCommand);
 
@@ -260,7 +256,6 @@ async function createTopics() {
     console.log(`Topic ${Name} created.`);
   }
 
-
 }
 
 async function createKms(aliasName: string, description: string) {
@@ -279,7 +274,6 @@ async function createKms(aliasName: string, description: string) {
     Description: description,
   });
   const key = await kmsClient.send(createKeyCommand);
-
 
   const disableKeyRotationCommand = new DisableKeyRotationCommand({
     KeyId: key.KeyMetadata?.KeyId,
