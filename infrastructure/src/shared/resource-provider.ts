@@ -6,6 +6,10 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
+interface ResourceProviderProps {
+  bucketName: string;
+  emailAddress: string;
+}
 
 export class ResourceProvider extends Construct {
 
@@ -14,7 +18,7 @@ export class ResourceProvider extends Construct {
   public readonly handler: NodejsFunction;
   public readonly provider: Provider;
 
-  constructor(scope: Construct, id: string, bucketName: string) {
+  constructor(scope: Construct, id: string, props: ResourceProviderProps) {
     super(scope, id);
 
     this.role = this.iamRole();
@@ -39,7 +43,7 @@ export class ResourceProvider extends Construct {
 
     this.resources = new CustomResource(scope, 'ResourceManager', {
       serviceToken: this.provider.serviceToken,
-      properties: { bucketName },
+      properties: props,
     });
 
   }

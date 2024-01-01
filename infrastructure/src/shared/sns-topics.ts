@@ -1,5 +1,6 @@
 import { Aws, CfnParameter } from 'aws-cdk-lib';
 import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 import { Construct } from 'constructs';
 
 
@@ -18,65 +19,10 @@ export class SnsTopics {
     this.scope = scope;
     this.id = id;
 
-    // Check that props.emailParam and props.bucketName are not undefined
-    if (!emailParam) {
-      throw new Error('emailParam and bucketName must be provided');
-    }
-
-    // CDK parameters for SNS email address
-    // Create SNS topic for notifications
-    // const snsKmsKey = new kms.Key(this, 'SNSTrainEncryptionKey');
-    // const newSnsKey = new aws_kms.Key(scope, `${id}-KmsMasterKey`, {
-    //   enableKeyRotation: true,
-    //   removalPolicy: RemovalPolicy.RETAIN,
-    //   policy: new aws_iam.PolicyDocument({
-    //     assignSids: true,
-    //     statements: [
-    //       new aws_iam.PolicyStatement({
-    //         actions: ['kms:GenerateDataKey*', 'kms:Decrypt', 'kms:Encrypt'],
-    //         resources: ['*'],
-    //         effect: aws_iam.Effect.ALLOW,
-    //         principals: [
-    //           new aws_iam.ServicePrincipal('sns.amazonaws.com'),
-    //           new aws_iam.ServicePrincipal('cloudwatch.amazonaws.com'),
-    //           new aws_iam.ServicePrincipal('events.amazonaws.com'),
-    //           new aws_iam.ServicePrincipal('sagemaker.amazonaws.com'),
-    //         ],
-    //       }),
-    //       new aws_iam.PolicyStatement({
-    //         actions: [
-    //           'kms:Create*',
-    //           'kms:Describe*',
-    //           'kms:Enable*',
-    //           'kms:List*',
-    //           'kms:Put*',
-    //           'kms:Update*',
-    //           'kms:Revoke*',
-    //           'kms:Disable*',
-    //           'kms:Get*',
-    //           'kms:Delete*',
-    //           'kms:ScheduleKeyDeletion',
-    //           'kms:CancelKeyDeletion',
-    //           'kms:GenerateDataKey',
-    //           'kms:TagResource',
-    //           'kms:UntagResource',
-    //         ],
-    //         resources: ['*'],
-    //         effect: aws_iam.Effect.ALLOW,
-    //         principals: [new aws_iam.AccountRootPrincipal()],
-    //       }),
-    //     ],
-    //   }),
-    // });
-
-    // (newSnsKey.node.defaultChild as aws_kms.CfnKey).cfnOptions.condition = shouldCreateSnsTopicCondition;
-    // Subscribe user to SNS notifications
-    // this.snsTopic.addSubscription(
-    //   new sns_subscriptions.EmailSubscription(emailParam.valueAsString),
-    // );
-
     // Create an SNS topic to get async inference result
     this.snsTopic = this.createOrImportTopic('StableDiffusionSnsUserTopic');
+    this.snsTopic.addSubscription(new EmailSubscription(emailParam.valueAsString));
+
     this.inferenceResultTopic = this.createOrImportTopic('ReceiveSageMakerInferenceSuccess');
     this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
     this.createModelSuccessTopic = this.createOrImportTopic('successCreateModel');
@@ -84,13 +30,10 @@ export class SnsTopics {
   }
 
   private createOrImportTopic(topicName: string): Topic {
-
-    const topic = <Topic>Topic.fromTopicArn(
+    return <Topic>Topic.fromTopicArn(
       this.scope,
       `${this.id}-${topicName}`,
       `arn:${Aws.PARTITION}:sns:${Aws.REGION}:${Aws.ACCOUNT_ID}:${topicName}`,
     );
-
-    return topic;
   }
 }

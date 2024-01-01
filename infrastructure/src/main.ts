@@ -166,7 +166,10 @@ export class Middleware extends Stack {
     const resourceProvider = new ResourceProvider(
       this,
       'ResourcesProvider',
-      `${s3BucketName.valueAsString}`,
+      {
+        bucketName: s3BucketName.valueAsString,
+        emailAddress: emailParam.valueAsString,
+      },
     );
 
     for (const resource of this.node.children) {
