@@ -22,7 +22,6 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { Aws } from 'aws-cdk-lib';
 import { ResourceProviderProps } from './resource-provider';
 
 
@@ -65,7 +64,7 @@ async function createAndCheckResources(event: Event) {
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
-  await createPolicyForOldRole();
+  await createPolicyForOldRole(event);
   return response(event, true);
 }
 
@@ -360,8 +359,9 @@ async function findKeyByAlias(aliasName: string) {
   return null;
 }
 
-async function createPolicyForOldRole() {
+async function createPolicyForOldRole(event: Event) {
   const name = 'LambdaStartDeployRole';
+  const partition = event.ResourceProperties.region.startsWith('cn-') ? 'aws-cn' : 'aws';
 
   try {
 
@@ -403,8 +403,8 @@ async function createPolicyForOldRole() {
               's3:GetObject',
             ],
             Resource: [
-              `arn:${Aws.PARTITION}:s3:::*`,
-              `arn:${Aws.PARTITION}:s3:::*/*`,
+              `arn:${partition}:s3:::*`,
+              `arn:${partition}:s3:::*/*`,
             ],
             Effect: 'Allow',
           },
