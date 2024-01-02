@@ -3,8 +3,8 @@ import os
 from datetime import datetime
 
 import boto3
-
 from common.ddb_service.client import DynamoDbUtilsService
+from endpoints.delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -62,12 +62,12 @@ def handler(event, context):
             logger.error(f"error deleting endpoint config and model with exception: {e}")
 
     if business_status == EndpointStatus.IN_SERVICE.value:
+        current_time = str(datetime.now())
+        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
+
         # if it is the first time in service
         if 'endTime' not in endpoint:
             check_and_enable_autoscaling(endpoint, 'prod')
-
-        current_time = str(datetime.now())
-        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
 
     if business_status == EndpointStatus.FAILED.value:
         update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
@@ -78,7 +78,7 @@ def handler(event, context):
 def check_and_enable_autoscaling(item, variant_name):
     autoscaling = item['autoscaling']['BOOL']
     endpoint_name = item['endpoint_name']['S']
-    max_instance_number = item['max_instance_number']['S']
+    max_instance_number = item['max_instance_number']['N']
 
     logger.info(f"autoscaling: {autoscaling}")
     logger.info(f"endpoint_name: {endpoint_name}")
@@ -183,23 +183,6 @@ def update_endpoint_field(endpoint_deployment_job_id, field_name, field_value):
         field_name=field_name,
         value=field_value
     )
-
-
-def get_endpoint_with_endpoint_name(endpoint_name):
-    try:
-        record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
-            'endpoint_name': endpoint_name,
-        })
-
-        if len(record_list) == 0:
-            logger.error("There is no endpoint deployment job info item with endpoint name: " + endpoint_name)
-            return {}
-
-        logger.info(record_list[0])
-        return record_list[0]
-    except Exception as e:
-        logger.error(e)
-        return {}
 
 
 def get_business_status(status):

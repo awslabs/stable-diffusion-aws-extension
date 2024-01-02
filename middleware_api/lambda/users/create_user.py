@@ -68,7 +68,7 @@ def handler(raw_event, ctx):
             }
             resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
 
-            if resp['statusCode'] != 200:
+            if resp['statusCode'] != 201:
                 return resp
 
         data = {

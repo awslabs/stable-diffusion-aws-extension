@@ -30,8 +30,9 @@ success_topic_arn = os.environ.get('SUCCESS_TOPIC_ARN')
 error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
 user_topic_arn = os.environ.get('USER_TOPIC_ARN')
 
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

@@ -19,7 +19,7 @@ sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
 # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 region = os.environ.get('REGION')

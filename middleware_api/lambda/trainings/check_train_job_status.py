@@ -9,7 +9,7 @@ from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStat
 
 train_table = os.environ.get('TRAIN_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 boto3_sagemaker = boto3.client('sagemaker')

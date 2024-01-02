@@ -8,7 +8,7 @@ from libs.utils import get_permissions_by_username, get_user_roles, check_user_p
 
 train_table = os.environ.get('TRAIN_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 

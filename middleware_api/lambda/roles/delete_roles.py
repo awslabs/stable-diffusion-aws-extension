@@ -8,7 +8,7 @@ import boto3
 from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
 
-logger = logging.getLogger('delete_roles')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')

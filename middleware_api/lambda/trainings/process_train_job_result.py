@@ -7,7 +7,7 @@ from libs.data_types import TrainJob
 
 train_table = os.environ.get('TRAIN_TABLE')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
