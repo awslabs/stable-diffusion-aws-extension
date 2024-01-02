@@ -530,6 +530,7 @@ def get_file_md5_dict(path):
 
 def move_model_to_tmp(_, app: FastAPI):
     # Move model dir to /tmp
+    print('!!!!!!!!!!!!!')
     logging.info("Copy model dir to tmp")
     model_tmp_dir = f"models_{time.time()}"
     os.system(f"cp -rL models /tmp/{model_tmp_dir}")
@@ -554,10 +555,12 @@ def move_model_to_tmp(_, app: FastAPI):
     os.system("df -h")
 
 try:
+    print('!!!!!!!!! on docker decision')
     import modules.script_callbacks as script_callbacks
-
+    print('!!!!!!!!! on docker condition')
     on_docker = os.environ.get('ON_DOCKER', "false")
     if on_docker == "true":
+        print('!!!!!!!!! move model to tmp')
         from modules import shared
         shared.opts.data.update(control_net_max_models_num=10)
         script_callbacks.on_app_started(move_model_to_tmp)
