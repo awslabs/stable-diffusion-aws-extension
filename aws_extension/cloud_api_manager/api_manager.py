@@ -167,10 +167,6 @@ class CloudApiManager:
                         endpoint_name = obj["EndpointDeploymentJobId"]
                         endpoint_status = obj["status"]
 
-                    # Skip if status is 'Creating'
-                    if endpoint_status == 'Creating':
-                        continue
-
                     if "endTime" in obj:
                         endpoint_time = obj["endTime"]
                     else:
