@@ -22,7 +22,7 @@ from aws_extension.sagemaker_ui_tab import on_ui_tabs
 from aws_extension.sagemaker_ui_utils import on_after_component_callback
 from modules.ui_components import ToolButton
 from scripts import global_state
-from scripts.xyz_grid import do_nothing, format_nothing, list_to_csv_string, csv_string_to_list_strip
+from scripts.xyz_grid import list_to_csv_string, csv_string_to_list_strip
 
 dreambooth_available = True
 logger = logging.getLogger(__name__)
@@ -154,9 +154,9 @@ class SageMakerUI(scripts.Script):
 
     def after_component(self, component, **kwargs):
         if type(component) is gr.Button:
-            if self.is_txt2img and getattr(component, 'elem_id', None) == f'txt2img_generate':
+            if self.is_txt2img and getattr(component, 'elem_id', None) == 'txt2img_generate':
                 self.txt2img_generate_btn = component
-            elif self.is_img2img and getattr(component, 'elem_id', None) == f'img2img_generate':
+            elif self.is_img2img and getattr(component, 'elem_id', None) == 'img2img_generate':
                 self.img2img_generate_btn = component
 
         base_model_component = self.txt2img_model_on_cloud if self.is_txt2img else self.img2img_model_on_cloud
@@ -242,8 +242,7 @@ class SageMakerUI(scripts.Script):
                 else:
                     self.xyz_components['img_xyz_grid_fill_z_tool_button'] = component
 
-        if type(component) is gr.Checkbox and getattr(component, 'elem_id',
-                                                      '') == f'script_{type_pre_str}_xyz_plot_csv_mode':
+        if type(component) is gr.Checkbox and getattr(component, 'elem_id', '') == f'script_{type_pre_str}_xyz_plot_csv_mode':
             if self.is_txt2img:
                 self.xyz_components['txt2img_xyz_csv_mode'] = component
             else:
@@ -352,10 +351,10 @@ class SageMakerUI(scripts.Script):
 
         def change_decorator(original_change, fn, inputs, outputs):
             def wrapper(*args, **kwargs):
-                logger.info("Executing extra logic before original change method")
+                logger.debug("Executing extra logic before original change method")
                 kwargs['fn'] = fn
                 result = original_change(*args, **kwargs)
-                logger.info("Executing extra logic after original change method")
+                logger.debug("Executing extra logic after original change method")
                 return result
 
             return wrapper
@@ -363,7 +362,7 @@ class SageMakerUI(scripts.Script):
         def select_axis(xyz_type_component, axis_values, axis_values_dropdown, csv_mode, model_selected, model_state):
             if not model_selected or not model_state:
                 return gr.skip(), gr.skip(), gr.skip()
-            logger.info(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
+            logger.debug(f"_change_xyz_models {model_selected} {model_state} {xyz_type_component}")
             on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
             axis_options = shared.axis_options_aws
             from scripts.xyz_grid import AxisOption
@@ -377,33 +376,33 @@ class SageMakerUI(scripts.Script):
             elif self.is_txt2img and (xyz_type_component == TXT_XYZ_CHECKPOINT_INDEX
                                       or xyz_type_component == TXT_XYZ_REFINER_CHECKPOINT_INDEX):
                 sd_model_list = model_state['sd']
-                logger.info(f"sd processed {sd_model_list}")
+                logger.debug(f"sd processed {sd_model_list}")
                 choices = sd_model_list
                 has_choices = choices is not None
             elif not self.is_txt2img and (xyz_type_component == IMG_XYZ_CHECKPOINT_INDEX
                                           or xyz_type_component == IMG_XYZ_REFINER_CHECKPOINT_INDEX):
                 sd_model_list = model_state['sd']
-                logger.info(f"sd processed {sd_model_list}")
+                logger.debug(f"sd processed {sd_model_list}")
                 choices = sd_model_list
                 has_choices = choices is not None
             elif self.is_txt2img and xyz_type_component == TXT_XYZ_VAE_INDEX:
                 vae_model_list = model_state['vae']
-                logger.info(f"vae processed {vae_model_list}")
+                logger.debug(f"vae processed {vae_model_list}")
                 choices = vae_model_list
                 has_choices = choices is not None
             elif not self.is_txt2img and xyz_type_component == IMG_XYZ_VAE_INDEX:
                 vae_model_list = model_state['vae']
-                logger.info(f"vae processed {vae_model_list}")
+                logger.debug(f"vae processed {vae_model_list}")
                 choices = vae_model_list
                 has_choices = choices is not None
             elif self.is_txt2img and xyz_type_component == TXT_XYZ_CONTROLNET_INDEX:
                 controlnet_model_list = model_state['controlnet_xyz']
-                logger.info(f"controlnet processed {controlnet_model_list}")
+                logger.debug(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
                 has_choices = choices is not None
             elif not self.is_txt2img and xyz_type_component == IMG_XYZ_CONTROLNET_INDEX:
                 controlnet_model_list = model_state['controlnet_xyz']
-                logger.info(f"controlnet processed {controlnet_model_list}")
+                logger.debug(f"controlnet processed {controlnet_model_list}")
                 choices = controlnet_model_list
                 has_choices = choices is not None
             else:
@@ -481,12 +480,11 @@ class SageMakerUI(scripts.Script):
                                                                         model_selected, model_state)
             return _fill_x_button, _x_values, _x_values_dropdown, _fill_y_button, _y_values, _y_values_dropdown, _fill_z_button, _z_values, _z_values_dropdown
 
-
         if cn_list and base_model_component:
             if 'txt2img_xyz_type_x_dropdown' not in self.xyz_set_components and self.xyz_components[
                 'txt2img_xyz_type_x_dropdown'] and self.xyz_components['txt2img_xyz_value_x_dropdown'] and \
-                    self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components[
-                'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_x_tool_button']:
+                    self.xyz_components['txt2img_xyz_value_x_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and \
+                    self.xyz_components['xyz_grid_fill_x_tool_button']:
                 self.xyz_components['txt2img_xyz_type_x_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_x_dropdown'],
                     self.xyz_components['txt2img_xyz_value_x_textbox'],
@@ -564,10 +562,11 @@ class SageMakerUI(scripts.Script):
                                 self.xyz_components['txt2img_xyz_value_z_dropdown']])
 
                 self.xyz_set_components['txt2img_xyz_type_x_dropdown'] = True
-            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and self.xyz_components[
-                'txt2img_xyz_type_y_dropdown'] and self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
-                    self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components[
-                'txt2img_xyz_csv_mode'] and self.xyz_components['xyz_grid_fill_y_tool_button']:
+            if 'txt2img_xyz_type_y_dropdown' not in self.xyz_set_components and \
+                    self.xyz_components['txt2img_xyz_type_y_dropdown'] and \
+                    self.xyz_components['txt2img_xyz_value_y_dropdown'] and \
+                    self.xyz_components['txt2img_xyz_value_y_textbox'] and self.xyz_components['txt2img_xyz_csv_mode'] and \
+                    self.xyz_components['xyz_grid_fill_y_tool_button']:
                 self.xyz_components['txt2img_xyz_type_y_dropdown'].change(fn=select_axis, inputs=[
                     self.xyz_components['txt2img_xyz_type_y_dropdown'],
                     self.xyz_components['txt2img_xyz_value_y_textbox'],
@@ -798,9 +797,12 @@ class SageMakerUI(scripts.Script):
                                                                                           'img2img_xyz_value_z_dropdown']])
                 self.xyz_set_components['img2img_xyz_type_z_dropdown'] = True
 
+    txt2img_script_runner = None
+    img2img_script_runner = None
+
     def ui(self, is_img2img):
         def _check_generate(model_selected, pr: gr.Request):
-            on_cloud = model_selected and model_selected != None_Option_For_On_Cloud_Model
+            on_cloud = model_selected and (model_selected != None_Option_For_On_Cloud_Model or 'sd_model_checkpoint' not in opts.quicksettings_list)
             result = [f'Generate{" on Cloud" if on_cloud else ""}', gr.update(visible=not on_cloud)]
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
@@ -811,6 +813,29 @@ class SageMakerUI(scripts.Script):
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
+
+            from modules.scripts import scripts_txt2img, scripts_img2img
+            if not self.txt2img_script_runner and scripts_txt2img:
+                self.txt2img_script_runner = scripts_txt2img.run
+
+                def runner_wrapper(p, *args):
+                    if on_cloud:
+                        return None
+
+                    return self.txt2img_script_runner(p, *args)
+
+                setattr(scripts_txt2img, 'run', runner_wrapper)
+
+            if not self.img2img_script_runner and scripts_img2img:
+                self.img2img_script_runner = scripts_img2img.run
+
+                def runner_wrapper(p, *args):
+                    if on_cloud:
+                        return None
+
+                    return self.img2img_script_runner(p, *args)
+
+                setattr(scripts_img2img, 'run', runner_wrapper)
 
             return result
 
@@ -826,8 +851,10 @@ class SageMakerUI(scripts.Script):
                 if value:
                     outputs.append(value[0])
 
-            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud,
-                                  outputs=outputs)
+            self.img2img_model_on_cloud.change(_check_generate, inputs=self.img2img_model_on_cloud, outputs=outputs)
+
+            if 'sd_model_checkpoint' not in opts.quicksettings_list:
+                self.img2img_generate_btn.value = 'Generate on Cloud'
 
             sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
@@ -844,52 +871,15 @@ class SageMakerUI(scripts.Script):
                     outputs.append(value[0])
 
             self.txt2img_model_on_cloud.change(_check_generate, inputs=self.txt2img_model_on_cloud, outputs=outputs)
+
+            if 'sd_model_checkpoint' not in opts.quicksettings_list:
+                self.txt2img_generate_btn.value = 'Generate on Cloud'
+
             sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.txt2img_lora_and_hypernet_models_state]
 
         return sagemaker_inputs_components
-
-
-    original_selectable_scripts = {
-        'original_txt2img_selectable_scripts': None,
-        'original_img2img_selectable_scripts': None
-    }
-
-    def setup(self, p, *args):
-        on_docker = os.environ.get('ON_DOCKER', "false")
-        if on_docker == "true":
-            return
-
-        cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
-        selected_script_index = p.script_args[0] - 1
-        # check if endpoint is inService
-        sd_model_on_cloud = args[0]
-        if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
-            if self.is_txt2img and selected_script_index == TXT_SCRIPT_IDX \
-                    and self.original_selectable_scripts[cache_name] != None:
-                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
-
-            if self.is_img2img and selected_script_index == IMG_SCRIPT_IDX and \
-                    self.original_selectable_scripts[cache_name]!= None:
-                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = self.original_selectable_scripts[cache_name].name
-            return
-
-        if self.is_txt2img:
-            if selected_script_index == TXT_SCRIPT_IDX:
-                if not self.original_selectable_scripts[cache_name]:
-                    self.original_selectable_scripts[cache_name] = \
-                        scripts.scripts_txt2img.selectable_scripts[selected_script_index]
-
-                scripts.scripts_txt2img.selectable_scripts[selected_script_index].name = None
-
-        if self.is_img2img:
-            if selected_script_index == IMG_SCRIPT_IDX:
-                if not self.original_selectable_scripts[cache_name]:
-                    self.original_selectable_scripts[cache_name] = \
-                        scripts.scripts_img2img.selectable_scripts[selected_script_index]
-
-                scripts.scripts_img2img.selectable_scripts[selected_script_index].name = None
 
     def before_process(self, p, *args):
         on_docker = os.environ.get('ON_DOCKER', "false")
@@ -898,15 +888,13 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is InService
         sd_model_on_cloud = args[0]
-        if sd_model_on_cloud == None_Option_For_On_Cloud_Model:
+        always_on_cloud = 'sd_model_checkpoint' not in opts.quicksettings_list
+        if sd_model_on_cloud == None_Option_For_On_Cloud_Model and not always_on_cloud:
             return
 
-        current_model = sd_models.select_checkpoint()
-        logger.debug(current_model.name)
         models = {'Stable-diffusion': [sd_model_on_cloud]}
 
         api_param_cls = None
-
         if self.is_img2img:
             api_param_cls = StableDiffusionImg2ImgProcessingAPI
 
@@ -923,11 +911,8 @@ class SageMakerUI(scripts.Script):
             api_param.mask = p.image_mask
 
         selected_script_index = p.script_args[0] - 1
-        scripts_cache_name = f'original_{"txt2img" if self.is_txt2img else "img2img"}_selectable_scripts'
-        selected_script_name = None if selected_script_index < 0 else \
-            self.original_selectable_scripts[scripts_cache_name].name
-        # selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[
-        #     selected_script_index].name
+        selected_script_name = None if selected_script_index < 0 else p.scripts.selectable_scripts[selected_script_index].name
+
         api_param.script_args = []
         for sid, script in enumerate(p.scripts.scripts):
             # escape sagemaker plugin
@@ -960,11 +945,9 @@ class SageMakerUI(scripts.Script):
                             if val not in models[key] and val != None_Option_For_On_Cloud_Model:
                                 models[key].append(val)
 
-        # fixme: not handle batches yet
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        if 'sd_vae' in opts.quicksettings_list:
-            models['VAE'] = [args[1]]
+        models['VAE'] = [args[1]]
 
         from modules.processing import get_fixed_seed
 
@@ -1029,6 +1012,9 @@ class SageMakerUI(scripts.Script):
 
         err = None
         try:
+            if sd_model_on_cloud == None_Option_For_On_Cloud_Model and always_on_cloud:
+                raise Exception('Cloud Plugin is still loading and not ready to use, please wait and retry later.')
+
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
@@ -1060,17 +1046,6 @@ class SageMakerUI(scripts.Script):
 
             image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(
                 inference_id)
-
-            # yield Processed(
-            #     p,
-            #     images_list=image_list,
-            #     seed=0,
-            #     # info=f'Inference job with id {inference_id} has created and running on cloud now. Use Inference job in the SageMaker part to see the result.',
-            #     info=info_text,
-            #     subseed=0,
-            #     index_of_first_image=0,
-            #     infotexts=info_text,
-            # )
 
             processed = Processed(
                 p,

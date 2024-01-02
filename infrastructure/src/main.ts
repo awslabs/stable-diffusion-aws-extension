@@ -1,26 +1,17 @@
-import {
-  App,
-  Stack,
-  StackProps,
-  Aspects,
-  CfnParameter,
-  CfnOutput,
-} from 'aws-cdk-lib';
-import {
-  BootstraplessStackSynthesizer,
-  CompositeECRRepositoryAspect,
-} from 'cdk-bootstrapless-synthesizer';
+import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { PingApi } from './api/service/ping';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
-import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
+import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
+import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
-import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -87,6 +78,13 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
+    const logLevel = new CfnParameter(this, 'LogLevel', {
+      type: 'String',
+      description: 'Log level, example: ERROR|INFO|DEBUG',
+      default: 'ERROR',
+      allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
@@ -105,27 +103,18 @@ export class Middleware extends Stack {
       useExist: useExist,
     });
 
-    const api_train_path = 'train-api/train';
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
-      'model',
+      'ping',
       'models',
-      'upload_checkpoint',
-      'checkpoint',
       'checkpoints',
-      'train',
-      'trains',
-      'dataset',
       'datasets',
       'inference',
-      'inference-api',
-      'user',
       'users',
-      'role',
       'roles',
       'endpoints',
       'inferences',
-      api_train_path,
+      'trainings',
     ]);
 
     new MultiUsersStack(this, 'multiUserSt', {
@@ -136,6 +125,15 @@ export class Middleware extends Stack {
       useExist: useExist,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
+    });
+
+    new PingApi(this, 'Ping', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      router: restApi.routers.ping,
+      srcRoot: '../middleware_api/lambda',
+      logLevel,
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
@@ -157,6 +155,7 @@ export class Middleware extends Stack {
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
       useExist: useExist,
+      logLevel,
     });
 
     new SdTrainDeployStack(this, 'SdDBTrainStack', {
@@ -172,6 +171,7 @@ export class Middleware extends Stack {
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
     });
 
     // Adding Outputs for apiGateway and s3Bucket

@@ -1,29 +1,27 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_s3,
-  aws_sns,
-  NestedStack,
-  StackProps,
-} from 'aws-cdk-lib';
+import {aws_apigateway, aws_s3, aws_sns, CfnParameter, NestedStack, StackProps} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
-import { UploadCheckPointApi } from './checkpoint-upload-api';
-import { CreateCheckPointApi } from './chekpoint-create-api';
-import { UpdateCheckPointApi } from './chekpoint-update-api';
-import { ListAllCheckPointsApi } from './chekpoints-listall-api';
-import { CreateDatasetApi } from './dataset-create-api';
-import { UpdateDatasetApi } from './dataset-update-api';
-import { ListAllDatasetItemsApi } from './datasets-item-listall-api';
-import { ListAllDatasetsApi } from './datasets-listall-api';
-import { CreateModelJobApi } from './model-job-create-api';
-import { ListAllModelJobApi } from './model-job-listall-api';
-import { UpdateModelStatusRestApi } from './model-update-status-api';
-import { CreateTrainJobApi } from './train-job-create-api';
-import { ListAllTrainJobsApi } from './train-job-listall-api';
-import { UpdateTrainJobApi } from './train-job-update-api';
+import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
+import { DeleteCheckpointsApi, DeleteCheckpointsApiProps } from '../api/checkpoints/delete-checkpoints';
+import { ListCheckPointsApi } from '../api/checkpoints/list-chekpoints';
+import { UpdateCheckPointApi } from '../api/checkpoints/update-chekpoint';
+import { CreateDatasetApi } from '../api/datasets/create-dataset';
+import { DeleteDatasetsApi, DeleteDatasetsApiProps } from '../api/datasets/delete-datasets';
+import { GetDatasetApi } from '../api/datasets/get-dataset';
+import { ListDatasetsApi } from '../api/datasets/list-datasets';
+import { UpdateDatasetApi } from '../api/datasets/update-dataset';
+import { CreateModelJobApi } from '../api/models/create-model';
+import { DeleteModelsApi, DeleteModelsApiProps } from '../api/models/delete-models';
+import { ListModelsApi } from '../api/models/list-models';
+import { UpdateModelApi } from '../api/models/update-model';
+import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
+import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/trainings/delete-training-jobs';
+import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
+import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
+import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { Database } from '../shared/database';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -33,15 +31,16 @@ export interface SdTrainDeployStackProps extends StackProps {
   modelInfInstancetype: string;
   ecr_image_tag: string;
   database: Database;
-  routers: {[key: string]: Resource};
+  routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class SdTrainDeployStack extends NestedStack {
-  private readonly srcRoot='../middleware_api/lambda';
+  private readonly srcRoot = '../middleware_api/lambda';
 
   constructor(scope: Construct, id: string, props: SdTrainDeployStackProps) {
     super(scope, id, props);
@@ -62,48 +61,53 @@ export class SdTrainDeployStack extends NestedStack {
     const checkPointTable = props.database.checkpointTable;
     const multiUserTable = props.database.multiUserTable;
 
-    // GET /trains
-    new ListAllTrainJobsApi(this, 'sdExtn-trains', {
+    // GET /trainings
+    new ListTrainingJobsApi(this, 'ListTrainingJobs', {
       commonLayer: commonLayer,
       httpMethod: 'GET',
-      router: routers.trains,
+      router: routers.trainings,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
-    // POST /train
-    new CreateTrainJobApi(this, 'sdExtn-createTrain', {
+    // POST /trainings
+    new CreateTrainingJobApi(this, 'CreateTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
       modelTable: props.database.modelTable,
-      router: [routers.train, routers['train-api/train']],
+      router: routers.trainings,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
-    // PUT /train
-    new UpdateTrainJobApi(this, 'sdExtn-putTrain', {
+    const trainJobRouter = routers.trainings.addResource('{id}');
+
+    // PUT /trainings/{id}
+    new StartTrainingJobApi(this, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       modelTable: props.database.modelTable,
-      router: routers.train,
+      router: trainJobRouter,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       userTopic: snsTopic,
       ecr_image_tag: props.ecr_image_tag,
+      logLevel: props.logLevel,
     });
 
-    // POST /model
-    new CreateModelJobApi(this, 'sdExtn-createModel', {
-      router: routers.model,
+    // POST /models
+    new CreateModelJobApi(this, 'CreateModel', {
+      router: routers.models,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -111,10 +115,11 @@ export class SdTrainDeployStack extends NestedStack {
       httpMethod: 'POST',
       checkpointTable: checkPointTable,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
     // GET /models
-    new ListAllModelJobApi(this, 'sdExtn-listallModel', {
+    new ListModelsApi(this, 'ListModels', {
       router: routers.models,
       srcRoot: this.srcRoot,
       modelTable: props.database.modelTable,
@@ -122,12 +127,13 @@ export class SdTrainDeployStack extends NestedStack {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
-    // PUT /model
-    new UpdateModelStatusRestApi(this, 'sdExtn-updateModel', {
+    // PUT /models/{id}
+    new UpdateModelApi(this, 'UpdateModel', {
       s3Bucket: s3Bucket,
-      router: routers.model,
+      router: routers.models,
       httpMethod: 'PUT',
       commonLayer: commonLayer,
       srcRoot: this.srcRoot,
@@ -138,12 +144,11 @@ export class SdTrainDeployStack extends NestedStack {
       ecr_image_tag: props.ecr_image_tag,
       createModelFailureTopic: props.createModelFailureTopic,
       createModelSuccessTopic: props.createModelSuccessTopic,
+      logLevel: props.logLevel,
     });
 
-    // this.default_endpoint_name = modelStatusRestApi.sagemakerEndpoint.modelEndpoint.attrEndpointName;
-
     // GET /checkpoints
-    new ListAllCheckPointsApi(this, 'sdExtn-listAllCkpts', {
+    new ListCheckPointsApi(this, 'ListCheckPoints', {
       s3Bucket: s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -152,66 +157,59 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
-
-    // POST /upload_checkpoint
-    new UploadCheckPointApi(this, 'sdExtn-uploadCkpt', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'POST',
-      router: routers.upload_checkpoint,
-      s3Bucket: s3Bucket,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
-    });
-
 
     // POST /checkpoint
-    new CreateCheckPointApi(this, 'sdExtn-createCkpt', {
+    new CreateCheckPointApi(this, 'CreateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
-      router: routers.checkpoint,
+      router: routers.checkpoints,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
-    // PUT /checkpoint
-    new UpdateCheckPointApi(this, 'sdExtn-updateCkpt', {
+    // PUT /checkpoints/{id}
+    new UpdateCheckPointApi(this, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
-      router: routers.checkpoint,
+      router: routers.checkpoints,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
     });
 
-    // POST /dataset
-    new CreateDatasetApi(this, 'sdExtn-createDataset', {
+    // POST /datasets
+    new CreateDatasetApi(this, 'CreateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'POST',
-      router: routers.dataset,
+      router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
-    // PUT /dataset
-    new UpdateDatasetApi(this, 'sdExtn-updateDataset', {
+    // PUT /datasets/{id}
+    const updateDataset = new UpdateDatasetApi(this, 'UpdateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',
-      router: routers.dataset,
+      router: routers.datasets,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
     });
 
     // GET /datasets
-    new ListAllDatasetsApi(this, 'sdExtn-listallDatasets', {
+    new ListDatasetsApi(this, 'ListDatasets', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
@@ -220,19 +218,93 @@ export class SdTrainDeployStack extends NestedStack {
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
       multiUserTable: multiUserTable,
+      logLevel: props.logLevel,
     });
 
-    // GET /dataset/{dataset_name}/data
-    new ListAllDatasetItemsApi(this, 'sdExtn-listallDsItems', {
+    // GET /dataset/{dataset_name}
+    new GetDatasetApi(this, 'GetDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,
       multiUserTable: multiUserTable,
       httpMethod: 'GET',
-      router: routers.dataset,
+      router: updateDataset.router,
       s3Bucket: s3Bucket,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
+        logLevel: props.logLevel,
     });
+
+    // DELETE /checkpoints
+    new DeleteCheckpointsApi(
+      this, 'DeleteCheckpoints',
+            <DeleteCheckpointsApiProps>{
+              router: props.routers.checkpoints,
+              commonLayer: props.commonLayer,
+              checkPointsTable: checkPointTable,
+              httpMethod: 'DELETE',
+              s3Bucket: s3Bucket,
+              srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
+            },
+    );
+
+    // DELETE /datasets
+    new DeleteDatasetsApi(
+      this, 'DeleteDatasets',
+            <DeleteDatasetsApiProps>{
+              router: props.routers.datasets,
+              commonLayer: props.commonLayer,
+              datasetInfoTable: props.database.datasetInfoTable,
+              datasetItemTable: props.database.datasetItemTable,
+              httpMethod: 'DELETE',
+              s3Bucket: s3Bucket,
+              srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
+            },
+    );
+
+    // DELETE /models
+    new DeleteModelsApi(
+      this, 'DeleteModels',
+            <DeleteModelsApiProps>{
+              router: props.routers.models,
+              commonLayer: props.commonLayer,
+              modelTable: props.database.modelTable,
+              httpMethod: 'DELETE',
+              s3Bucket: s3Bucket,
+              srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
+            },
+    );
+
+    // DELETE /trainings
+    new DeleteTrainingJobsApi(
+      this, 'DeleteTrainingJobs',
+            <DeleteTrainingJobsApiProps>{
+              router: props.routers.trainings,
+              commonLayer: props.commonLayer,
+              trainingTable: props.database.trainingTable,
+              httpMethod: 'DELETE',
+              s3Bucket: s3Bucket,
+              srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
+            },
+    );
+
+    // DELETE /trainings/{id}
+    new GetTrainingJobApi(
+      this, 'GetTrainingJob',
+            <GetTrainingJobApiProps>{
+              router: trainJobRouter,
+              commonLayer: props.commonLayer,
+              trainingTable: props.database.trainingTable,
+              httpMethod: 'GET',
+              s3Bucket: s3Bucket,
+              srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
+            },
+    );
+
   }
 }

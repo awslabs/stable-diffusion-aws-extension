@@ -1,12 +1,24 @@
 import json
-from typing import Dict
-import os
-import tarfile
-import boto3
 import logging
+import os
+from typing import Dict
+
+import boto3
 
 s3 = boto3.client('s3')
-logger = logging.getLogger('util')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
+
+def get_multi_query_params(event, param_name: str, default=None):
+    value = default
+    if 'multiValueQueryStringParameters' in event:
+        multi_query = event['multiValueQueryStringParameters']
+        if multi_query and param_name in multi_query and len(multi_query[param_name]) > 0:
+            value = multi_query[param_name]
+
+    return value
 
 
 def publish_msg(topic_arn, msg, subject):
@@ -87,4 +99,3 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
-

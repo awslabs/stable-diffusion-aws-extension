@@ -12,12 +12,18 @@ export class Database {
       sortKey?: Attribute;
     }
 
-    const tables: {[key: string]: tableProperties} = {
+    const tables: { [key: string]: tableProperties } = {
       ModelTable: {
-        partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+        partitionKey: {
+          name: 'id',
+          type: aws_dynamodb.AttributeType.STRING,
+        },
       },
       TrainingTable: {
-        partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+        partitionKey: {
+          name: 'id',
+          type: aws_dynamodb.AttributeType.STRING,
+        },
       },
       CheckpointTable: {
         partitionKey: {
@@ -87,7 +93,7 @@ export class Database {
 
       (newTable.node.defaultChild as aws_dynamodb.CfnTable).cfnOptions.condition = shouldCreateDDBTableCondition;
 
-      this[key.charAt(0).toLocaleLowerCase() + key.slice(1)] = <aws_dynamodb.Table> aws_dynamodb.Table.fromTableName(scope, `${baseId}-${key}`, key);
+      this[key.charAt(0).toLocaleLowerCase() + key.slice(1)] = <aws_dynamodb.Table>aws_dynamodb.Table.fromTableName(scope, `${baseId}-${key}`, key);
     }
   }
 }
