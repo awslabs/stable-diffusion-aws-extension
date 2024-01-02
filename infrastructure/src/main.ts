@@ -130,7 +130,8 @@ export class Middleware extends Stack {
       'trainings',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    cfnApi.addPropertyOverride('endpointConfiguration', 'REGIONAL');
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+    cfnApi.endpointConfiguration = Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString();
 
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,
