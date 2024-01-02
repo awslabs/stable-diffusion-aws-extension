@@ -37,7 +37,7 @@ last_warning_time = None
 warning_lock = threading.Lock()
 
 
-def warning(msg, seconds: int = 5):
+def warning(msg, seconds: int = 3600):
     global last_warning_time
     with warning_lock:
         current_time = time.time()
