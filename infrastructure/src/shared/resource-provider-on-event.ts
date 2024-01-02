@@ -22,6 +22,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
+import { Aws } from 'aws-cdk-lib';
 import { ResourceProviderProps } from './resource-provider';
 
 
@@ -402,8 +403,8 @@ async function createPolicyForOldRole() {
               's3:GetObject',
             ],
             Resource: [
-              'arn:aws:s3:::*',
-              'arn:aws:s3:::*/*',
+              `arn:${Aws.PARTITION}:s3:::*`,
+              `arn:${Aws.PARTITION}:s3:::*/*`,
             ],
             Effect: 'Allow',
           },
