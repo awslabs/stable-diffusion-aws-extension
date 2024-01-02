@@ -284,7 +284,6 @@ export class StartTrainingJobApi {
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
         TRAINING_SAGEMAKER_ARN: this.trainingStateMachine.stateMachineArn,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
-        REGION: Aws.REGION,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-region = os.environ.get('REGION')
+region = os.environ.get('AWS_REGION')
 
 # PUT /train used to kickoff a train job step function
 def handler(event, context):
