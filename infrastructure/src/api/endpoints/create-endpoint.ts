@@ -3,13 +3,13 @@ import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
 import { IAuthorizer, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Effect, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { LAMBDA_START_DEPLOY_ROLE_NAME } from '../../shared/deploy-role';
 
+export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -29,7 +29,7 @@ export interface CreateEndpointApiProps {
 }
 
 export class CreateEndpointApi {
-  private readonly src;
+  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -150,12 +150,6 @@ export class CreateEndpointApi {
       ],
     });
 
-    const lambdaStartDeployRole = <Role>Role.fromRoleName(
-      this.scope,
-      'createSagemakerEpRole',
-      LAMBDA_START_DEPLOY_ROLE_NAME,
-    );
-
     const logStatement = new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -170,7 +164,17 @@ export class CreateEndpointApi {
       actions: [
         'iam:PassRole',
       ],
-      resources: [`arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/LambdaStartDeployRole`],
+      resources: [
+        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/${ESDRoleForEndpoint}-${Aws.REGION}`,
+      ],
+    });
+
+    const lambdaStartDeployRole = new Role(this.scope, ESDRoleForEndpoint, {
+      assumedBy: new CompositePrincipal(
+        new ServicePrincipal('lambda.amazonaws.com'),
+        new ServicePrincipal('sagemaker.amazonaws.com'),
+      ),
+      roleName: `${ESDRoleForEndpoint}-${Aws.REGION}`,
     });
 
     lambdaStartDeployRole.addToPolicy(snsStatement);

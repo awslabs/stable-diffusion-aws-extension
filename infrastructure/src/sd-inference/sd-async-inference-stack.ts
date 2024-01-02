@@ -10,7 +10,6 @@ import {
     CfnParameter,
     CustomResource,
     Duration,
-    NestedStack,
     RemovalPolicy,
     StackProps
 } from 'aws-cdk-lib';
@@ -59,39 +58,34 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  useExist: string;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
-export class SDAsyncInferenceStack extends NestedStack {
+export class SDAsyncInferenceStack {
   constructor(
     scope: Construct,
-    id: string,
     props: SDAsyncInferenceStackProps,
   ) {
-    super(scope, id, props);
     if (!props?.ecr_image_tag) {
-      throw new Error('default_inference_ecr_image is required');
+      throw new Error('ecr_image_tag is required');
     }
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
-    const inferenceECR_url = this.createInferenceECR(srcImg);
+    const inferenceECR_url = this.createInferenceECR(scope, srcImg);
 
-    const sd_inference_job_table = props.sd_inference_job_table;
-    const sd_endpoint_deployment_job_table = props.sd_endpoint_deployment_job_table;
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
 
     new CreateInferenceJobApi(
-      this, 'CreateInferenceJob',
+      scope, 'CreateInferenceJob',
             <CreateInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               httpMethod: 'POST',
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               router: props.routers.inferences,
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -101,13 +95,13 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new StartInferenceJobApi(
-      this, 'StartInferenceJob',
+      scope, 'StartInferenceJob',
             <StartInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               httpMethod: 'PUT',
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               router: inferV2Router,
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -116,11 +110,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new ListEndpointsApi(
-      this, 'ListEndpoints',
+      scope, 'ListEndpoints',
             <ListEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               httpMethod: 'GET',
               srcRoot: srcRoot,
@@ -130,11 +124,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new DeleteEndpointsApi(
-      this, 'DeleteEndpoints',
+      scope, 'DeleteEndpoints',
             <DeleteEndpointsApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               httpMethod: 'DELETE',
               srcRoot: srcRoot,
@@ -144,10 +138,10 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new SagemakerEndpointEvents(
-      this, 'EndpointEvents',
+      scope, 'EndpointEvents',
             <SagemakerEndpointEventsProps>{
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
               srcRoot: srcRoot,
               logLevel: props.logLevel,
@@ -155,12 +149,12 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new ListInferencesApi(
-      this, 'ListInferenceJobs',
+      scope, 'ListInferenceJobs',
       {
-        inferenceJobTable: sd_inference_job_table,
+        inferenceJobTable: props.sd_inference_job_table,
         authorizer: props.authorizer,
         commonLayer: props.commonLayer,
-        endpointDeploymentTable: sd_endpoint_deployment_job_table,
+        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
         multiUserTable: props.multiUserTable,
         httpMethod: 'GET',
         router: props.routers.inferences,
@@ -169,32 +163,27 @@ export class SDAsyncInferenceStack extends NestedStack {
       },
     );
 
-    // Create an SNS topic to get async inference result
-    const inference_result_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-tp`, props.inferenceResultTopic.topicArn);
-
-    const inference_result_error_topic = aws_sns.Topic.fromTopicArn(scope, `${id}-infer-result-err-tp`, props.inferenceErrorTopic.topicArn);
-
     new CreateEndpointApi(
-      this, 'CreateEndpoint',
+      scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: sd_endpoint_deployment_job_table,
+              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
               multiUserTable: props.multiUserTable,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'POST',
               srcRoot: srcRoot,
               authorizer: props.authorizer,
               s3Bucket: props.s3_bucket,
               userNotifySNS: props.snsTopic,
               inferenceECRUrl: inferenceECR_url,
-              inferenceResultTopic: inference_result_topic,
-              inferenceResultErrorTopic: inference_result_error_topic,
+              inferenceResultTopic: props.inferenceResultTopic,
+              inferenceResultErrorTopic: props.inferenceErrorTopic,
               logLevel: props.logLevel,
             },
     );
 
-    const inferenceLambdaRole = new iam.Role(this, 'InferenceLambdaRole', {
+    const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal('sagemaker.amazonaws.com'),
         new iam.ServicePrincipal('lambda.amazonaws.com'),
@@ -207,7 +196,7 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     // Create a Lambda function for inference
     const inferenceLambda = new lambda.DockerImageFunction(
-      this,
+      scope,
       'InferenceLambda',
       {
         code: lambda.DockerImageCode.fromImageAsset(
@@ -216,16 +205,14 @@ export class SDAsyncInferenceStack extends NestedStack {
         timeout: Duration.minutes(15),
         memorySize: 3008,
         environment: {
-          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
-          DDB_TRAINING_TABLE_NAME:
-                        props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME:
-                    sd_endpoint_deployment_job_table.tableName,
+          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
+          DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
+          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+          SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
+          SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           LOG_LEVEL: props.logLevel.valueAsString,
@@ -268,7 +255,10 @@ export class SDAsyncInferenceStack extends NestedStack {
         'dynamodb:List*',
         'dynamodb:Scan',
       ],
-      resources: [sd_endpoint_deployment_job_table.tableArn, sd_inference_job_table.tableArn],
+      resources: [
+        props.sd_endpoint_deployment_job_table.tableArn,
+        props.sd_inference_job_table.tableArn,
+      ],
     });
     const s3Statement = new iam.PolicyStatement({
       actions: [
@@ -288,7 +278,11 @@ export class SDAsyncInferenceStack extends NestedStack {
         'sns:Publish',
         'sns:ListTopics',
       ],
-      resources: [props?.snsTopic.topicArn, inference_result_error_topic.topicArn, inference_result_topic.topicArn],
+      resources: [
+        props?.snsTopic.topicArn,
+        props.inferenceErrorTopic.topicArn,
+        props.inferenceResultTopic.topicArn,
+      ],
     });
     inferenceLambda.addToRolePolicy(ddbStatement);
     inferenceLambda.addToRolePolicy(s3Statement);
@@ -298,11 +292,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
     new GetInferenceJobApi(
-      this, 'GetInferenceJob',
+      scope, 'GetInferenceJob',
             <GetInferenceJobApiProps>{
               router: inferV2Router,
               commonLayer: props.commonLayer,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'GET',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -311,11 +305,11 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     new DeleteInferenceJobsApi(
-      this, 'DeleteInferenceJobs',
+      scope, 'DeleteInferenceJobs',
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
               commonLayer: props.commonLayer,
-              inferenceJobTable: sd_inference_job_table,
+              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'DELETE',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -336,7 +330,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     });
 
     const handler = new python.PythonFunction(
-      this,
+      scope,
       'InferenceResultNotification',
       {
         entry: path.join(
@@ -350,14 +344,14 @@ export class SDAsyncInferenceStack extends NestedStack {
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
-          DDB_INFERENCE_TABLE_NAME: sd_inference_job_table.tableName,
+          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: sd_endpoint_deployment_job_table.tableName,
+          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: inference_result_topic.topicName,
-          SNS_INFERENCE_ERROR: inference_result_error_topic.topicName,
+          SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
+          SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
           NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           LOG_LEVEL: props.logLevel.valueAsString,
@@ -378,21 +372,21 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     //adding model to data directory of s3 bucket
     if (props?.s3_bucket != undefined) {
-      this.uploadModelToS3(props.s3_bucket);
+      this.uploadModelToS3(scope, props.s3_bucket);
     }
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
-      new eventSources.SnsEventSource(inference_result_topic),
+      new eventSources.SnsEventSource(props.inferenceResultTopic),
     );
     handler.addEventSource(
-      new eventSources.SnsEventSource(inference_result_error_topic),
+      new eventSources.SnsEventSource(props.inferenceErrorTopic),
     );
   }
 
-  private createInferenceECR(srcImg: string) {
+  private createInferenceECR(scope: Construct, srcImg: string) {
     const dockerRepo = new aws_ecr.Repository(
-      this,
+      scope,
       'aigc-webui-inference-repo',
       {
         repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
@@ -401,7 +395,7 @@ export class SDAsyncInferenceStack extends NestedStack {
     );
 
     const ecrDeployment = new ECRDeployment(
-      this,
+      scope,
       'aigc-webui-inference-ecr-deploy',
       {
         src: new DockerImageName(srcImg),
@@ -411,7 +405,7 @@ export class SDAsyncInferenceStack extends NestedStack {
 
     // trigger the custom resource lambda
     const customJob = new CustomResource(
-      this,
+      scope,
       'aigc-webui-inference-ecr-cr-image',
       {
         serviceToken: ecrDeployment.serviceToken,
@@ -429,14 +423,14 @@ export class SDAsyncInferenceStack extends NestedStack {
     return dockerRepo.repositoryUri;
   }
 
-  private uploadModelToS3(s3_bucket: s3.Bucket) {
+  private uploadModelToS3(scope: Construct, s3_bucket: s3.Bucket) {
     // Create a folder in the bucket
     const folderKey = 'data/';
 
     // Upload a local file to the created folder
     console.log(__dirname);
     const modelPath = path.resolve(__dirname, '../', '../', 'models', 'model.zip');
-    new s3deploy.BucketDeployment(this, 'DeployLocalFile', {
+    new s3deploy.BucketDeployment(scope, 'DeployLocalFile', {
       sources: [s3deploy.Source.asset(modelPath)],
       destinationBucket: s3_bucket,
       destinationKeyPrefix: folderKey,
