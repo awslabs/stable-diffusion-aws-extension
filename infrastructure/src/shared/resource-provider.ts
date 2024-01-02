@@ -11,6 +11,7 @@ export interface ResourceProviderProps {
   region: string;
   bucketName?: string;
   emailAddress: string;
+  partition: string;
 }
 
 export class ResourceProvider extends Construct {

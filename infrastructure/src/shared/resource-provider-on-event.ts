@@ -361,7 +361,7 @@ async function findKeyByAlias(aliasName: string) {
 
 async function createPolicyForOldRole(event: Event) {
   const name = 'LambdaStartDeployRole';
-  const partition = event.ResourceProperties.region.startsWith('cn-') ? 'aws-cn' : 'aws';
+  const partition = event.ResourceProperties.partition;
 
   try {
 
