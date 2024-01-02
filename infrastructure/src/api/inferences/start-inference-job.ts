@@ -8,7 +8,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration,
+  Duration
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';

@@ -8,7 +8,7 @@ import {
   aws_s3,
   aws_sagemaker,
   aws_sns,
-  Duration,
+  Duration
 } from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -30,7 +30,7 @@ export interface CreateModelSageMakerEndpointProps {
 
 export class CreateModelSageMakerEndpoint {
 
-  private readonly id: string;
+  private readonly id;
 
   private readonly rootSrc: string;
   private readonly modelTable: aws_dynamodb.Table;

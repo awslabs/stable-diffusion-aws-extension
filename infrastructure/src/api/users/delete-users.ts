@@ -6,7 +6,7 @@ import {
   aws_iam,
   aws_lambda,
   CfnParameter,
-  Duration,
+  Duration
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';

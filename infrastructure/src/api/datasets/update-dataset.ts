@@ -6,9 +6,8 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
+  aws_s3, CfnParameter,
+  Duration
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';

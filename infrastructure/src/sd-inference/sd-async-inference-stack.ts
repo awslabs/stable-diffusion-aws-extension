@@ -2,16 +2,16 @@ import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_ecr,
-  aws_sns,
-  CfnParameter,
-  CustomResource,
-  Duration,
-  RemovalPolicy,
-  StackProps,
+    Aws,
+    aws_apigateway,
+    aws_dynamodb,
+    aws_ecr,
+    aws_sns,
+    CfnParameter,
+    CustomResource,
+    Duration,
+    RemovalPolicy,
+    StackProps
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
@@ -25,7 +25,6 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
-import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
@@ -38,6 +37,7 @@ import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferenc
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
+import {Size} from "aws-cdk-lib/core";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference

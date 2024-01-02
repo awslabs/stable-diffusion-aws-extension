@@ -7,7 +7,7 @@ import {
   aws_kms,
   aws_lambda,
   CfnParameter,
-  Duration,
+  Duration
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
