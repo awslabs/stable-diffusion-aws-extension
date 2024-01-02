@@ -1,4 +1,14 @@
-import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import {
+  App,
+  Aspects,
+  Aws,
+  CfnCondition,
+  CfnOutput,
+  CfnParameter,
+  Fn,
+  Stack,
+  StackProps,
+} from 'aws-cdk-lib';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
@@ -13,6 +23,7 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 
 const app = new App();
 
@@ -102,8 +113,6 @@ export class Middleware extends Stack {
       multiUserTable: ddbTables.multiUserTable,
       useExist: useExist,
     });
-
-
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
       'models',
@@ -116,6 +125,11 @@ export class Middleware extends Stack {
       'inferences',
       'trainings',
     ]);
+    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+    cfnApi.addPropertyOverride('EndpointConfiguration', {
+      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+    });
 
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,
