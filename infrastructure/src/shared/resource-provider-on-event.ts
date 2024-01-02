@@ -238,7 +238,8 @@ async function createBucket(event: Event) {
   const bucketLocation = await s3Client.send(new GetBucketLocationCommand({
     Bucket: bucketName,
   }));
-  if (bucketLocation.LocationConstraint !== region) {
+  console.log(bucketLocation);
+  if (bucketLocation.LocationConstraint && bucketLocation.LocationConstraint !== region) {
     throw new Error(`Bucket ${bucketName} must be in ${region}, but it's in ${bucketLocation.LocationConstraint}.`);
   }
 
