@@ -208,8 +208,8 @@ async function createTables() {
 }
 
 async function createBucket(event: Event) {
-  const { region } = event.ResourceProperties;
   const bucketName = getBucketName(event);
+  let createNew = false;
   try {
 
     const createBucketCommand = new CreateBucketCommand({
@@ -218,6 +218,7 @@ async function createBucket(event: Event) {
     });
 
     await s3Client.send(createBucketCommand);
+    createNew = true;
 
     console.log(`Bucket ${bucketName} created.`);
 
@@ -234,15 +235,43 @@ async function createBucket(event: Event) {
 
   }
 
-  // check bucket must be the current region
+  if (createNew) {
+    await putBucketCors(bucketName);
+  } else {
+    await checkBucketLocation(event);
+    await checkBucketPermission(bucketName);
+  }
+
+}
+
+async function checkBucketPermission(bucketName: string) {
+  try {
+    const headBucketCommand = new HeadBucketCommand({ Bucket: bucketName });
+    await s3Client.send(headBucketCommand);
+  } catch (err: any) {
+    console.log(err);
+    throw new Error(`bucket ${bucketName} permission check failed.`);
+  }
+}
+
+async function checkBucketLocation(event: Event) {
+  const { region } = event.ResourceProperties;
+  const bucketName = getBucketName(event);
   const bucketLocation = await s3Client.send(new GetBucketLocationCommand({
     Bucket: bucketName,
   }));
-  console.log(bucketLocation);
-  if (bucketLocation.LocationConstraint && bucketLocation.LocationConstraint !== region) {
+
+  if (!bucketLocation.LocationConstraint) {
+    throw new Error(`Can not get bucket ${bucketName} location. GetBucketLocationCommandOutput is ${JSON.stringify(bucketLocation)}`);
+  }
+
+  if (bucketLocation.LocationConstraint !== region) {
     throw new Error(`Bucket ${bucketName} must be in ${region}, but it's in ${bucketLocation.LocationConstraint}.`);
   }
 
+}
+
+async function putBucketCors(bucketName: string) {
   const putBucketCorsCommand = new PutBucketCorsCommand({
     Bucket: bucketName,
     CORSConfiguration: {
@@ -258,15 +287,6 @@ async function createBucket(event: Event) {
   });
 
   await s3Client.send(putBucketCorsCommand);
-
-  try {
-    const headBucketCommand = new HeadBucketCommand({ Bucket: bucketName });
-    await s3Client.send(headBucketCommand);
-  } catch (err: any) {
-    console.log(err);
-    throw new Error(`bucket ${bucketName} permission check failed.`);
-  }
-
 }
 
 async function createTopics() {
