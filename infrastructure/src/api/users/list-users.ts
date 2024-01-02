@@ -1,5 +1,14 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_kms,
+  aws_lambda,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -14,6 +23,7 @@ export interface ListUsersApiProps {
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class ListUsersApi {
@@ -26,6 +36,7 @@ export class ListUsersApi {
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
   private readonly authorizer: aws_apigateway.IAuthorizer;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: ListUsersApiProps) {
     this.scope = scope;
@@ -37,6 +48,7 @@ export class ListUsersApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.authorizer = props.authorizer;
+    this.logLevel = props.logLevel;
 
     this.listUsersApi();
   }
@@ -95,6 +107,7 @@ export class ListUsersApi {
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

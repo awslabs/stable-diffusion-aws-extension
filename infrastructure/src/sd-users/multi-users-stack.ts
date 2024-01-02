@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_kms, NestedStack, StackProps } from 'aws-cdk-lib';
+import {aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, NestedStack, StackProps} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { CreateRoleApi } from '../api/roles/create-role';
@@ -17,6 +17,7 @@ export interface MultiUsersStackProps extends StackProps {
   useExist: string;
   passwordKeyAlias: aws_kms.IKey;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class MultiUsersStack extends NestedStack {
@@ -32,6 +33,7 @@ export class MultiUsersStack extends NestedStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
       srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
     });
 
     // GET /roles
@@ -42,6 +44,7 @@ export class MultiUsersStack extends NestedStack {
       router: props.routers.roles,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // POST /users
@@ -53,6 +56,7 @@ export class MultiUsersStack extends NestedStack {
       router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // DELETE /users
@@ -63,6 +67,7 @@ export class MultiUsersStack extends NestedStack {
       router: props.routers.users,
       srcRoot: this.srcRoot,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // GET /roles
@@ -74,6 +79,7 @@ export class MultiUsersStack extends NestedStack {
       srcRoot: this.srcRoot,
       passwordKey: props.passwordKeyAlias,
       authorizer: props.authorizer,
+      logLevel: props.logLevel,
     });
 
     // DELETE /roles
@@ -84,6 +90,7 @@ export class MultiUsersStack extends NestedStack {
               multiUserTable: props.multiUserTable,
               httpMethod: 'DELETE',
               srcRoot: this.srcRoot,
+              logLevel: props.logLevel,
             },
     );
 

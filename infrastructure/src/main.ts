@@ -78,6 +78,13 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
+    const logLevel = new CfnParameter(this, 'LogLevel', {
+      type: 'String',
+      description: 'Log level, example: ERROR|INFO|DEBUG',
+      default: 'ERROR',
+      allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
@@ -118,6 +125,7 @@ export class Middleware extends Stack {
       useExist: useExist,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
     });
 
     new PingApi(this, 'Ping', {
@@ -125,6 +133,7 @@ export class Middleware extends Stack {
       httpMethod: 'GET',
       router: restApi.routers.ping,
       srcRoot: '../middleware_api/lambda',
+      logLevel,
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
@@ -146,6 +155,7 @@ export class Middleware extends Stack {
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
       useExist: useExist,
+      logLevel,
     });
 
     new SdTrainDeployStack(this, 'SdDBTrainStack', {
@@ -161,6 +171,7 @@ export class Middleware extends Stack {
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
     });
 
     // Adding Outputs for apiGateway and s3Bucket
