@@ -127,7 +127,7 @@ INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 # deploy endpoint
 print(f"start deploy endpoint")
 
-endpoint_deployment_id = "test-private-bucket-no-so"
+endpoint_deployment_id = "test-private-no-sd15-model"
 sagemaker_model_name = f"infer-model-{endpoint_deployment_id}"
 sagemaker_endpoint_config = f"infer-config-{endpoint_deployment_id}"
 sagemaker_endpoint_name = f"infer-endpoint-{endpoint_deployment_id}"

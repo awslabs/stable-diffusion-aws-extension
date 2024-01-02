@@ -2,15 +2,15 @@
 #change image to pytorch 2.0.1
 FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 # update environment
-RUN apt-get update -y
-RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y torchaudio
+RUN apt-get update -y && \
+apt-get install -y pkg-config && \
+apt-get install -y libcairo2-dev && \
+apt-get install -y file && \
+apt-get install -y libtcmalloc-minimal4
 
-# # install pkg lib for proprocess in controlnet
-# RUN apt-get install -y pkg-config
-# RUN apt-get install -y libcairo2-dev
-# 
-# # install file cmd
-# RUN apt-get install -y file
+# install pkg lib for proprocess in controlnet
+# RUN apt-get install -y pkg-config && libcairo2-dev && file
+# RUN apt-get install -y libtcmalloc-minimal4
 # 
 # COPY stable-diffusion-webui /opt/ml/code/
 COPY inference/quick_serve /opt/ml/code/
@@ -33,6 +33,7 @@ RUN mkdir -p /opt/ml/code/tools && wget https://github.com/peak/s5cmd/releases/d
 # RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformer_name.txt
 # RUN URL=$(cat xformer_name.txt) && wget $URL
 # RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('''$URL'''))") && pip install $(basename $decoded)
+RUN pip uninstall -y torch && pip uninstall -y torchvision && pip uninstall -y torchaudio
 
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
@@ -42,7 +43,7 @@ ENV ON_DOCKER true
 
 # install libtcmalloc to solve memory leak for multi model switch 
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-RUN apt-get install -y libtcmalloc-minimal4
+# RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 #uninstall 
 # RUN pip uninstall -y awscli
