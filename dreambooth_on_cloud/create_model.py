@@ -117,7 +117,6 @@ def async_create_model_on_sagemaker(
             json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             payload = {
-                "model_id": model_id,
                 "status": "Creating",
                 "multi_parts_tags": {}
             }
@@ -164,7 +163,6 @@ def async_create_model_on_sagemaker(
                     part_size
                 )
                 payload = {
-                    "model_id": model_id,
                     "status": "Creating",
                     "multi_parts_tags": {local_tar_path: multiparts_tags}
                 }
@@ -182,11 +180,10 @@ def async_create_model_on_sagemaker(
         if not integral_check:
             if model_id:
                 payload = {
-                    "model_id": model_id,
                     "status": "Fail",
-                    "multi_parts_tags": {local_tar_path: {}}
+                    "multi_parts_tags": {local_tar_path: []}
                 }
-                response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                response = requests.put(url=f"{url}/{model_id}", json=payload, headers={'x-api-key': api_key})
                 print(response)
             else:
                 gr.Error(f'model {new_model_name} not created, please try again')

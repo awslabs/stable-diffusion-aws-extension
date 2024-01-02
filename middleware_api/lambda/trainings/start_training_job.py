@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-
+region = os.environ.get('REGION')
 
 # PUT /train used to kickoff a train job step function
 def handler(event, context):
@@ -65,11 +65,14 @@ def _start_train_job(train_job_id: str):
         def json_encode_hyperparameters(hyperparameters):
             new_params = {}
             for k, v in hyperparameters.items():
-                json_v = json.dumps(v, cls=DecimalEncoder)
-                v_bytes = json_v.encode('ascii')
-                base64_bytes = base64.b64encode(v_bytes)
-                base64_v = base64_bytes.decode('ascii')
-                new_params[k] = base64_v
+                if region.startswith("cn"):
+                    new_params[k] = json.dumps(v, cls=DecimalEncoder)
+                else:
+                    json_v = json.dumps(v, cls=DecimalEncoder)
+                    v_bytes = json_v.encode('ascii')
+                    base64_bytes = base64.b64encode(v_bytes)
+                    base64_v = base64_bytes.decode('ascii')
+                    new_params[k] = base64_v
             return new_params
 
         hyperparameters = json_encode_hyperparameters({

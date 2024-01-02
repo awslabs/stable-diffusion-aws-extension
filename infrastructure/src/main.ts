@@ -1,4 +1,5 @@
-import { App, Aspects, Aws, CfnOutput, CfnParameter, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { App, Aspects, Aws, CfnOutput, CfnParameter, Stack, StackProps, Tags, CfnCondition, Fn } from 'aws-cdk-lib';
+import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
@@ -120,6 +121,11 @@ export class Middleware extends Stack {
       'inferences',
       'trainings',
     ]);
+    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+    cfnApi.addPropertyOverride('EndpointConfiguration', {
+      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+    });
 
     new MultiUsersStack(this, {
       synthesizer: props.synthesizer,
