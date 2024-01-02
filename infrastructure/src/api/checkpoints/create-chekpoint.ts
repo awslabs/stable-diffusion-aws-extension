@@ -1,10 +1,20 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
+import {
+  Aws,
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  aws_s3,
+  Duration
+} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {Size} from "aws-cdk-lib/core";
 
 
 export interface CreateCheckPointApiProps {
@@ -26,6 +36,8 @@ export class CreateCheckPointApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
+  private readonly uploadByUrlLambda: PythonFunction;
+  private readonly role: aws_iam.Role;
 
   private readonly baseId: string;
 
@@ -39,8 +51,30 @@ export class CreateCheckPointApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-
+    this.role = this.iamRole();
+    this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
     this.createCheckpointApi();
+  }
+
+  private uploadByUrlLambdaFunction() {
+    return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, <PythonFunctionProps>{
+      functionName: `${this.baseId}-create-checkpoint-by-url`,
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'update_checkpoint_by_url.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 10240,
+      ephemeralStorageSize: Size.mebibytes(10240),
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+      },
+      layers: [this.layer],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -75,9 +109,9 @@ export class CreateCheckPointApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -91,6 +125,17 @@ export class CreateCheckPointApi {
       ],
       resources: ['*'],
     }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'lambda:invokeFunction',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:lambda:${Aws.REGION}:${Aws.ACCOUNT_ID}:function:*${this.baseId}*`,
+      ],
+    }));
+
     return newRole;
   }
 
@@ -102,12 +147,13 @@ export class CreateCheckPointApi {
       index: 'create_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
-      role: this.iamRole(),
+      role: this.role,
       memorySize: 1024,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
       },
       layers: [this.layer],
     });

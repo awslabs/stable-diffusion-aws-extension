@@ -11,7 +11,9 @@ dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

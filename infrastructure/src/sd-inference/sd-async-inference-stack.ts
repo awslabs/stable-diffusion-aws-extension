@@ -258,7 +258,7 @@ export class SDAsyncInferenceStack extends NestedStack {
       resources: [
         props.s3_bucket.bucketArn,
         `${props.s3_bucket.bucketArn}/*`,
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     });
     const snsStatement = new iam.PolicyStatement(<PolicyStatementProps>{

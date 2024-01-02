@@ -5,6 +5,8 @@ from unittest import TestCase
 
 import requests
 
+from checkpoints.create_checkpoint import get_real_url
+
 os.environ.setdefault('AWS_PROFILE', 'aws_profile')
 os.environ.setdefault('S3_BUCKET', 'bucket')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
@@ -21,6 +23,16 @@ class MockContext:
 
 
 class ModelsApiTest(TestCase):
+
+    def test_get_real_url(self):
+        real_url = get_real_url(
+            "https://civitai.com/api/download/models/275491?type=Model&format=SafeTensor&size=full&fp=fp16")
+        assert 'civitai-delivery-worker-prod' in real_url
+
+    def test_get_real_url_file(self):
+        url = "https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/models/v1-5-pruned-emaonly.safetensors"
+        real_url = get_real_url(url)
+        assert real_url == url
 
     def test_upload(self):
         from models.model_api import create_model_api
@@ -103,7 +115,7 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_list_train_jobs(self):
-        from trainings.train_api import list_all_train_jobs_api
+        from trainings.process_train_job_result import list_all_train_jobs_api
         resp = list_all_train_jobs_api({
             'queryStringParameters': {
             },
@@ -136,14 +148,14 @@ class ModelsApiTest(TestCase):
         print(resp)
 
     def test_update_train_job_api(self):
-        from trainings.train_api import update_train_job_api
+        from trainings.process_train_job_result import update_train_job_api
         update_train_job_api({
             "train_job_id": "asdfasdf",
             "status": "Training"
         }, {})
 
     def test_check_train_job_status(self):
-        from trainings.train_api import check_train_job_status
+        from trainings.process_train_job_result import check_train_job_status
         event = {'train_job_id': 'd0c19f0a-1c0f-4ac9-b7ea-6b0be8a889d0',
                  'train_job_name': 'test-new-local-2023-07-14-06-15-59-724'}
         check_train_job_status(event, {})

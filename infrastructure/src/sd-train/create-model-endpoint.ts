@@ -1,5 +1,15 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_iam, aws_lambda, aws_lambda_event_sources, aws_s3, aws_sagemaker, aws_sns, Duration } from 'aws-cdk-lib';
+import {
+  Aws,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  aws_lambda_event_sources,
+  aws_s3,
+  aws_sagemaker,
+  aws_sns,
+  Duration
+} from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { CfnEndpointConfigProps, CfnEndpointProps, CfnModelProps } from 'aws-cdk-lib/aws-sagemaker';
@@ -189,9 +199,9 @@ export class CreateModelSageMakerEndpoint {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({

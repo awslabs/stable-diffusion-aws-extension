@@ -9,6 +9,7 @@ env:
     - GLOBAL_ASSETS
     - ECR_REPOS
     - CN_ECR_REPOS
+    - TAG_NUMBER
 
 phases:
   install:
@@ -43,6 +44,7 @@ phases:
         fi
       - export BUILD_VERSION=${TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
       - export CN_ASSETS='cn/'
+      - export TAG_NUMBER="${TAG_NAME#v}"
       - |-
         set -euxo pipefail
         __dir="${CODEBUILD_SRC_DIR}/deployment"
@@ -68,6 +70,10 @@ phases:
       - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts 
       - echo "checking the updated image name"
       - cat ../infrastructure/src/common/dockerImageTag.ts
+      - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
+      - cat ../aws_extension/cloud_api_manager/api.py
+      - sed -i "s/x_api_version = \"[0-9.]*\"/x_api_version = \"$TAG_NUMBER\"/" ../middleware_api/lambda/common/response.py
+      - cat ../middleware_api/lambda/common/response.py
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"

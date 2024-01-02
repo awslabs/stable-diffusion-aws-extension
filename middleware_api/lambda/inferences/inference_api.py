@@ -24,7 +24,8 @@ sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
-logger = logging.getLogger('inference_v2')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

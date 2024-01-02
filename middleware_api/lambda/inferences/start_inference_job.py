@@ -7,12 +7,13 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import accepted
 from libs.data_types import InferenceJob, InvocationsRequest
 
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 
-logger = logging.getLogger('inference_v2')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
@@ -65,4 +66,4 @@ def handler(event, _):
         }
     }
 
-    return ok(data=data)
+    return accepted(data=data)

@@ -16,7 +16,6 @@ import {
   Duration,
   RemovalPolicy,
 } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -27,7 +26,7 @@ import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../../common/dockerImages';
 
-export interface UpdateTrainJobApiProps {
+export interface StartTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   modelTable: aws_dynamodb.Table;
@@ -40,7 +39,7 @@ export interface UpdateTrainJobApiProps {
   ecr_image_tag: string;
 }
 
-export class UpdateTrainingJobApi {
+export class StartTrainingJobApi {
 
   private readonly id: string;
   private readonly scope: Construct;
@@ -61,7 +60,7 @@ export class UpdateTrainingJobApi {
   private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
-  constructor(scope: Construct, id: string, props: UpdateTrainJobApiProps) {
+  constructor(scope: Construct, id: string, props: StartTrainingJobApiProps) {
     this.id = id;
     this.scope = scope;
     this.srcRoot = props.srcRoot;
@@ -81,7 +80,7 @@ export class UpdateTrainingJobApi {
     this.trainingStateMachine = this.sagemakerStepFunction(this.userSnsTopic);
     this.trainingStateMachine.node.addDependency(this.customJob);
 
-    this.updateTrainJobLambda();
+    this.startTrainJobLambda();
   }
 
   private sageMakerTrainRole(): aws_iam.Role {
@@ -98,9 +97,9 @@ export class UpdateTrainingJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -150,8 +149,7 @@ export class UpdateTrainingJobApi {
       actions: [
         'sagemaker:CreateTrainingJob',
       ],
-      // resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -172,9 +170,9 @@ export class UpdateTrainingJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -221,7 +219,6 @@ export class UpdateTrainingJobApi {
         'sns:ListSubscriptionsByTopic',
         'sns:Receive',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [this.userSnsTopic.topicArn],
     }));
 
@@ -230,8 +227,7 @@ export class UpdateTrainingJobApi {
       actions: [
         'sagemaker:DescribeTrainingJob',
       ],
-      // resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/${this.sagemakerEndpoint.modelEndpoint.attrEndpointName}`],
-      resources: [`arn:aws:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -245,9 +241,9 @@ export class UpdateTrainingJobApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `${this.s3Bucket.bucketArn}`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*',
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -265,12 +261,12 @@ export class UpdateTrainingJobApi {
     return newRole;
   }
 
-  private updateTrainJobLambda(): aws_lambda.IFunction {
+  private startTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'update_training_job.py',
+      index: 'start_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
@@ -290,50 +286,18 @@ export class UpdateTrainingJobApi {
     });
     lambdaFunction.node.addDependency(this.customJob);
 
-    const requestModel = new Model(this.scope, `${this.id}-model`, {
-      restApi: this.router.api,
-      modelName: this.id,
-      description: `${this.id} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.id,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-        },
-        required: [
-          'status',
-        ],
-      },
-      contentType: 'application/json',
-    });
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.id}-validator`,
-      {
-        restApi: this.router.api,
-        requestValidatorName: this.id,
-        validateRequestBody: true,
-      });
-
-
-    const createTrainJobIntegration = new apigw.LambdaIntegration(
+    const startTrainJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, startTrainJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
-      requestModels: {
-        'application/json': requestModel,
-      },
     });
+
     return lambdaFunction;
   }
 
@@ -342,9 +306,9 @@ export class UpdateTrainingJobApi {
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
-      index: 'train_api.py',
+      index: 'check_train_job_status.py',
       role: this.sfnLambdaRole,
-      handler: 'check_train_job_status',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       memorySize: 1024,
       environment: {
@@ -367,8 +331,8 @@ export class UpdateTrainingJobApi {
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       role: this.sfnLambdaRole,
-      index: 'train_api.py',
-      handler: 'process_train_job_result',
+      index: 'process_train_job_result.py',
+      handler: 'handler',
       timeout: Duration.seconds(900),
       memorySize: 1024,
       environment: {
@@ -517,7 +481,7 @@ export class UpdateTrainingJobApi {
         resources: [
           `${this.s3Bucket.bucketArn}/*`,
           `${this.s3Bucket.bucketArn}`,
-          'arn:aws:s3:::*sagemaker*',
+          `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
         ],
       }),
     );

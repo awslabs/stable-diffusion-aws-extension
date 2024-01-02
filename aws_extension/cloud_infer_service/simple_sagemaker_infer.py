@@ -43,11 +43,10 @@ class SimpleSagemakerInfer(InferManager):
 
         response = requests.post(f'{url}inferences', json=payload, headers={'x-api-key': api_key})
         logger.info(response.json())
-        response.raise_for_status()
-        upload_param_response = response.json()['data']
-        if response.status_code != 200:
-            raise Exception(upload_param_response['message'])
+        if response.status_code != 201:
+            raise Exception(response.json()['message'])
 
+        upload_param_response = response.json()['data']
         if 'inference' in upload_param_response and \
                 'api_params_s3_upload_url' in upload_param_response['inference']:
             upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],

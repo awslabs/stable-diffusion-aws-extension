@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, ok
+from common.response import bad_request, created
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import check_user_existence, get_permissions_by_username
 
@@ -25,7 +25,7 @@ class UpsertRoleEvent:
 def handler(raw_event, ctx):
     event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
-    # check if creator exist
+    # check if the creator exists
     if check_user_existence(ddb_service=ddb_service, user_table=user_table, username=event.creator):
         return bad_request(message=f'creator {event.creator} not exist')
 
@@ -64,4 +64,16 @@ def handler(raw_event, ctx):
         'creator': event.creator,
     }
 
-    return ok(message='role created', data=data)
+    return created(message='role created', data=data)
+
+
+def _get_role_by_name(role_name):
+    role_raw = ddb_service.query_items(table=user_table, key_values={
+        'kind': PARTITION_KEYS.role,
+        'sort_key': role_name,
+    })
+
+    if not role_raw or len(role_raw) == 0:
+        return None
+
+    return Role(**(ddb_service.deserialize(role_raw)))

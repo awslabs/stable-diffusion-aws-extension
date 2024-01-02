@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
-logger = logging.getLogger('delete_checkpoints')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
@@ -49,4 +49,4 @@ def handler(event, ctx):
 
         checkpoints_table.delete_item(Key={'id': checkpoint_id})
 
-    return ok(message='checkpoints deleted')
+    return no_content(message='checkpoints deleted')

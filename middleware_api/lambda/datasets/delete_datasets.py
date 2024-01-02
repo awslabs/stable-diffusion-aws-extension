@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.response import ok
+from common.response import no_content
 
-logger = logging.getLogger('delete_datasets')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
@@ -61,4 +61,4 @@ def handler(event, ctx):
 
         dataset_info_table.delete_item(Key={'dataset_name': dataset_name})
 
-    return ok(message='datasets deleted')
+    return no_content(message='datasets deleted')

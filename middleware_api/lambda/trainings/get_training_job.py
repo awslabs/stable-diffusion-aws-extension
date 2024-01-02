@@ -5,7 +5,7 @@ import boto3
 
 from common.response import ok, not_found
 
-logger = logging.getLogger('get_training_job')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')

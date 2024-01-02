@@ -17,8 +17,9 @@ model_table = os.environ.get('DYNAMODB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 endpoint_name = os.environ.get('SAGEMAKER_ENDPOINT_NAME')
 
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

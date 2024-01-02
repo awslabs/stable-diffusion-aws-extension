@@ -10,7 +10,9 @@ from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 
-logger = logging.getLogger('boto3')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
