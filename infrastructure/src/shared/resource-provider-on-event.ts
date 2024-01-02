@@ -14,8 +14,15 @@ import {
   KMSClient,
   ListAliasesCommand,
 } from '@aws-sdk/client-kms';
-import { CreateBucketCommand, HeadBucketCommand, PutBucketCorsCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  CreateBucketCommand,
+  GetBucketLocationCommand,
+  HeadBucketCommand,
+  PutBucketCorsCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
+import { ResourceProviderProps } from './resource-provider';
 
 
 const s3Client = new S3Client({});
@@ -27,9 +34,7 @@ const iamClient = new IAMClient({});
 interface Event {
   RequestType: string;
   PhysicalResourceId: string;
-  ResourceProperties: {
-    bucketName: string;
-  };
+  ResourceProperties: ResourceProviderProps;
 }
 
 export async function handler(event: Event, context: Object) {
@@ -39,7 +44,7 @@ export async function handler(event: Event, context: Object) {
 
   switch (event.RequestType) {
     case 'Create':
-      await checkDeploy();
+      await checkDeploy(event);
       return createAndCheckResources(event);
     case 'Update':
       return createAndCheckResources(event);
@@ -63,14 +68,29 @@ async function createAndCheckResources(event: Event) {
   return response(event, true);
 }
 
+export interface ResourceManagerResponse {
+  Result: string;
+  BucketName: string;
+}
+
 function response(event: Event, isComplete: boolean) {
   return {
     PhysicalResourceId: event.PhysicalResourceId,
     IsComplete: isComplete,
     Data: {
-      Response: 'Success',
-    },
+      Result: 'Success',
+      BucketName: getBucketName(event),
+    } as ResourceManagerResponse,
   };
+}
+
+function getBucketName(event: Event) {
+  const { bucketName, accountId, region } = event.ResourceProperties;
+  if (bucketName) {
+    return bucketName;
+  }
+
+  return `ESD-${accountId}-${region}`;
 }
 
 async function createTables() {
@@ -188,7 +208,8 @@ async function createTables() {
 }
 
 async function createBucket(event: Event) {
-  const { bucketName } = event.ResourceProperties;
+  const { region } = event.ResourceProperties;
+  const bucketName = getBucketName(event);
   try {
 
     const createBucketCommand = new CreateBucketCommand({
@@ -211,6 +232,14 @@ async function createBucket(event: Event) {
       throw err;
     }
 
+  }
+
+  // check bucket must be the current region
+  const bucketLocation = await s3Client.send(new GetBucketLocationCommand({
+    Bucket: bucketName,
+  }));
+  if (bucketLocation.LocationConstraint !== region) {
+    throw new Error(`Bucket ${bucketName} must be in ${region}, but it's in ${bucketLocation.LocationConstraint}.`);
   }
 
   const putBucketCorsCommand = new PutBucketCorsCommand({
@@ -447,8 +476,8 @@ async function createPolicyForOldRole() {
 
 }
 
-async function checkDeploy() {
-  const roleName = `ESDRoleForEndpoint-${process.env.AWS_REGION}`;
+async function checkDeploy(event: Event) {
+  const roleName = `ESDRoleForEndpoint-${event.ResourceProperties.region}`;
 
   let resp: GetRoleCommandOutput | undefined = undefined;
 

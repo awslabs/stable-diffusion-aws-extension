@@ -1,4 +1,5 @@
-import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { App, Aspects, Aws, CfnOutput, CfnParameter, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
@@ -10,7 +11,6 @@ import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
-import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
 
@@ -82,7 +82,22 @@ export class Middleware extends Stack {
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
     // Therefore, this resource is prioritized to save time.
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', s3BucketName.valueAsString);
+    const resourceProvider = new ResourceProvider(
+      this,
+      'ResourcesProvider',
+      {
+        accountId: Aws.ACCOUNT_ID,
+        region: Aws.REGION,
+        bucketName: s3BucketName.valueAsString,
+        emailAddress: emailParam.valueAsString,
+      },
+    );
+
+    const s3Bucket = <Bucket>Bucket.fromBucketName(
+      this,
+      'aigc-bucket',
+      resourceProvider.bucketName,
+    );
 
     const ddbTables = new Database(this, 'sd-ddb');
 
@@ -92,7 +107,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
     });
-
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
@@ -130,7 +144,7 @@ export class Middleware extends Stack {
     new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
-      s3_bucket: s3BucketStore.s3Bucket,
+      s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
       ecr_image_tag: ecrImageTagParam.valueAsString,
@@ -154,7 +168,7 @@ export class Middleware extends Stack {
       ecr_image_tag: ecrImageTagParam.valueAsString,
       database: ddbTables,
       routers: restApi.routers,
-      s3Bucket: s3BucketStore.s3Bucket,
+      s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
@@ -163,15 +177,6 @@ export class Middleware extends Stack {
     });
 
     // Add ResourcesProvider dependency to all resources
-    const resourceProvider = new ResourceProvider(
-      this,
-      'ResourcesProvider',
-      {
-        bucketName: s3BucketName.valueAsString,
-        emailAddress: emailParam.valueAsString,
-      },
-    );
-
     for (const resource of this.node.children) {
       if (!resourceProvider.instanceof(resource)) {
         resource.node.addDependency(resourceProvider.resources);
@@ -194,7 +199,7 @@ export class Middleware extends Stack {
     });
 
     new CfnOutput(this, 'S3BucketName', {
-      value: s3BucketStore.s3Bucket.bucketName,
+      value: s3Bucket.bucketName,
       description: 'S3 Bucket Name',
     });
 

@@ -6,8 +6,10 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
-interface ResourceProviderProps {
-  bucketName: string;
+export interface ResourceProviderProps {
+  accountId: string;
+  region: string;
+  bucketName?: string;
   emailAddress: string;
 }
 
@@ -17,6 +19,7 @@ export class ResourceProvider extends Construct {
   public readonly role: Role;
   public readonly handler: NodejsFunction;
   public readonly provider: Provider;
+  public readonly bucketName: string;
 
   constructor(scope: Construct, id: string, props: ResourceProviderProps) {
     super(scope, id);
@@ -45,6 +48,8 @@ export class ResourceProvider extends Construct {
       serviceToken: this.provider.serviceToken,
       properties: props,
     });
+
+    this.bucketName = this.resources.getAtt('BucketName').toString();
 
   }
 
@@ -88,6 +93,7 @@ export class ResourceProvider extends Construct {
         's3:ListBucket',
         's3:CreateBucket',
         's3:PutBucketCORS',
+        's3:GetBucketLocation',
       ],
       resources: [
         'arn:aws:s3:::*',
