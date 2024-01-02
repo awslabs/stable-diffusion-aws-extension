@@ -323,8 +323,9 @@ def get_train_job_list(pr: gr.Request):
             'x-api-key': api_key,
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}',
         }).json()
-        if 'trainJobs' in response['data']:
-            response['trainJobs'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+        if 'trainJobs' in response['data'] and response['data']['trainJobs']:
+            response['data']['trainJobs'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max,
+                                               reverse=True)
             for trainJob in response['trainJobs']:
                 table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
     except requests.exceptions.RequestException as e:
