@@ -15,8 +15,10 @@ from libs.data_types import CheckPoint, CheckPointStatus
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 rename_lambda_name = os.environ.get('RENAME_LAMBDA_NAME')
 bucket_name = os.environ.get('S3_BUCKET')
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 lambda_client = boto3.client('lambda')
 

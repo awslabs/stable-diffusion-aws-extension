@@ -6,7 +6,7 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3,
+  aws_s3, CfnParameter,
   Duration
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -24,6 +24,7 @@ export interface UpdateDatasetApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
+  logLevel: CfnParameter;
 }
 
 export class UpdateDatasetApi {
@@ -35,7 +36,7 @@ export class UpdateDatasetApi {
   private readonly datasetItemTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: UpdateDatasetApiProps) {
@@ -48,6 +49,7 @@ export class UpdateDatasetApi {
     this.datasetItemTable = props.datasetItemTable;
     this.httpMethod = props.httpMethod;
     this.s3Bucket = props.s3Bucket;
+    this.logLevel = props.logLevel;
 
     this.updateDatasetApi();
   }
@@ -116,6 +118,7 @@ export class UpdateDatasetApi {
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

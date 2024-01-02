@@ -15,7 +15,8 @@ sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -41,30 +42,7 @@ def handler(raw_event, ctx):
         for endpoint_name in event.endpoint_name_list:
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
             if endpoint_item:
-                logger.info("endpoint_name")
-                logger.info(json.dumps(endpoint_item))
-                delete_forbidden(endpoint_item)
-                # delete sagemaker endpoint
-                try:
-                    endpoint = sagemaker.describe_endpoint(EndpointName=endpoint_name)
-                    if endpoint:
-                        logger.info("endpoint")
-                        logger.info(endpoint)
-                        sagemaker.delete_endpoint(EndpointName=endpoint_name)
-                        config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-                        if config:
-                            logger.info("config")
-                            logger.info(config)
-                            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
-                            for ProductionVariant in config['ProductionVariants']:
-                                sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
-                except (BotoCoreError, ClientError) as error:
-                    logger.error(error)
-                # delete ddb item
-                ddb_service.delete_item(
-                    table=sagemaker_endpoint_table,
-                    keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
-                )
+                delete_endpoint(endpoint_item)
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
@@ -72,11 +50,47 @@ def handler(raw_event, ctx):
         return bad_request(message=f"{e}")
 
 
-def delete_forbidden(endpoint_item):
-    forbidden_list = [EndpointStatus.CREATING.value, EndpointStatus.UPDATING.value]
-    endpoint_status = endpoint_item['endpoint_status']['S']
-    if endpoint_status in forbidden_list:
-        raise Exception(f"endpoint status is {endpoint_status}, can not delete")
+def delete_endpoint(endpoint_item):
+    logger.info("endpoint_name")
+    logger.info(json.dumps(endpoint_item))
+
+    endpoint_name = endpoint_item['endpoint_name']['S']
+
+    endpoint = get_endpoint_in_sagemaker(endpoint_name)
+
+    if endpoint is None:
+        delete_endpoint_item(endpoint_item)
+        return
+
+    # delete sagemaker endpoint
+    logger.info("endpoint")
+    logger.info(endpoint)
+    sagemaker.delete_endpoint(EndpointName=endpoint_name)
+    config = sagemaker.describe_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+    if config:
+        logger.info("config")
+        logger.info(config)
+        sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
+        for ProductionVariant in config['ProductionVariants']:
+            sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
+
+    # delete ddb item
+    delete_endpoint_item(endpoint_item)
+
+
+def get_endpoint_in_sagemaker(endpoint_name):
+    try:
+        return sagemaker.describe_endpoint(EndpointName=endpoint_name)
+    except (BotoCoreError, ClientError) as error:
+        logger.error(error)
+        return None
+
+
+def delete_endpoint_item(endpoint_item):
+    ddb_service.delete_item(
+        table=sagemaker_endpoint_table,
+        keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
+    )
 
 
 def get_endpoint_with_endpoint_name(endpoint_name: str):

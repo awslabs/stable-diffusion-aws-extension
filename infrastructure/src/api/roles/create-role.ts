@@ -1,5 +1,13 @@
 import {PythonFunction, PythonFunctionProps} from '@aws-cdk/aws-lambda-python-alpha';
-import {aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration} from 'aws-cdk-lib';
+import {
+    aws_apigateway,
+    aws_apigateway as apigw,
+    aws_dynamodb,
+    aws_iam,
+    aws_lambda,
+    CfnParameter,
+    Duration
+} from 'aws-cdk-lib';
 import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from 'aws-cdk-lib/aws-apigateway';
 import {MethodOptions} from 'aws-cdk-lib/aws-apigateway/lib/method';
 import {Effect} from 'aws-cdk-lib/aws-iam';
@@ -13,6 +21,7 @@ export interface CreateRoleApiProps {
     multiUserTable: aws_dynamodb.Table;
     srcRoot: string;
     commonLayer: aws_lambda.LayerVersion;
+    logLevel: CfnParameter;
 }
 
 export class CreateRoleApi {
@@ -22,6 +31,7 @@ export class CreateRoleApi {
     private readonly scope: Construct;
     private readonly layer: aws_lambda.LayerVersion;
     private readonly multiUserTable: aws_dynamodb.Table;
+    private readonly logLevel: CfnParameter;
 
     private readonly baseId: string;
 
@@ -33,6 +43,7 @@ export class CreateRoleApi {
         this.src = props.srcRoot;
         this.layer = props.commonLayer;
         this.multiUserTable = props.multiUserTable;
+        this.logLevel = props.logLevel;
 
         this.createRoleApi();
     }
@@ -82,6 +93,7 @@ export class CreateRoleApi {
             memorySize: 1024,
             environment: {
                 MULTI_USER_TABLE: this.multiUserTable.tableName,
+                LOG_LEVEL: this.logLevel.valueAsString,
             },
             layers: [this.layer],
         });

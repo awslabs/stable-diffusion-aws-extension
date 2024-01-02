@@ -31,7 +31,7 @@ error_topic_arn = os.environ.get('ERROR_TOPIC_ARN')
 user_topic_arn = os.environ.get('USER_TOPIC_ARN')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 

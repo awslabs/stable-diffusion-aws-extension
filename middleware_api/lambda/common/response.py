@@ -1,12 +1,14 @@
 import json
 import logging
+import os
 from decimal import Decimal
 from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 x_api_version = "1.4.0"
+
 
 class HttpStatusCode:
     OK = 200

@@ -1,5 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
 import { IAuthorizer, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
@@ -15,6 +15,7 @@ export interface DeleteEndpointsApiProps {
   srcRoot: string;
   commonLayer: LayerVersion;
   authorizer: IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class DeleteEndpointsApi {
@@ -27,6 +28,7 @@ export class DeleteEndpointsApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly authorizer: IAuthorizer;
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
     this.scope = scope;
@@ -38,6 +40,7 @@ export class DeleteEndpointsApi {
     this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.logLevel = props.logLevel;
 
     this.deleteEndpointsApi();
   }
@@ -117,6 +120,7 @@ export class DeleteEndpointsApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
