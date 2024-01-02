@@ -1,4 +1,4 @@
-import { CustomResource, Duration } from 'aws-cdk-lib';
+import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -11,6 +11,7 @@ export interface ResourceProviderProps {
   region: string;
   bucketName?: string;
   emailAddress: string;
+  partition: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -96,7 +97,7 @@ export class ResourceProvider extends Construct {
         's3:GetBucketLocation',
       ],
       resources: [
-        'arn:aws:s3:::*',
+        `arn:${Aws.PARTITION}:s3:::*`,
       ],
     }));
 
