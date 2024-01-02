@@ -113,10 +113,6 @@ export class Middleware extends Stack {
       multiUserTable: ddbTables.multiUserTable,
       useExist: useExist,
     });
-
-    new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
-    const endpointConfiguration = Fn.conditionIf('IsChina', 'REGIONAL', 'EDGE');
-    console.log('endpointConfiguration param is ', endpointConfiguration);
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
       'models',
