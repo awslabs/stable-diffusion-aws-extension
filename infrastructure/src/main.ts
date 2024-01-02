@@ -130,7 +130,7 @@ export class Middleware extends Stack {
       'trainings',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    cfnApi.addPropertyOverride('endpointConfiguration', endpointConfiguration.toString());
+    cfnApi.addPropertyOverride('endpointConfiguration', 'REGIONAL');
 
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,
