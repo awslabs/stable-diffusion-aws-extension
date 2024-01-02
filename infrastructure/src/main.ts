@@ -1,4 +1,14 @@
-import { App, Aspects, CfnOutput, CfnParameter, Stack, StackProps } from 'aws-cdk-lib';
+import {
+  App,
+  Aspects,
+  Aws,
+  CfnCondition,
+  CfnOutput,
+  CfnParameter,
+  Fn,
+  Stack,
+  StackProps
+} from 'aws-cdk-lib';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
@@ -96,7 +106,8 @@ export class Middleware extends Stack {
       useExist: useExist,
     });
 
-
+    new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+    const isChina = Fn.conditionIf('IsChina', 'YES', 'NO');
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
       'models',
@@ -108,7 +119,7 @@ export class Middleware extends Stack {
       'endpoints',
       'inferences',
       'trainings',
-    ]);
+    ], isChina.toString());
 
     new MultiUsersStack(this, 'multiUserSt', {
       synthesizer: props.synthesizer,

@@ -1,4 +1,4 @@
-import { Aws, aws_apigateway as apigw, CfnOutput} from 'aws-cdk-lib';
+import {aws_apigateway as apigw, CfnOutput} from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -10,9 +10,9 @@ export class RestApiGateway {
   public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
 
-  constructor(scope: Construct, apiKey: string, routes: string[]) {
+  constructor(scope: Construct, apiKey: string, routes: string[], isChina: string) {
     this.scope = scope;
-    [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
+    [this.apiGateway, this.apiKey] = this.createApigw(apiKey, isChina);
     for (let route of routes) {
       const pathList: string[] = route.split('/');
       // pathList has at least one item
@@ -25,13 +25,13 @@ export class RestApiGateway {
     }
   }
 
-  private createApigw(apiKeyStr: string): [apigw.RestApi, string] {
+  private createApigw(apiKeyStr: string, isChina: string): [apigw.RestApi, string] {
     const apiAccessLogGroup = new logs.LogGroup(
       this.scope,
       'aigc-api-logs',
     );
     let endpointType;
-    if (Aws.PARTITION === 'aws-cn') {
+    if (isChina === 'YES') {
       endpointType = apigw.EndpointType.REGIONAL;
     } else {
       endpointType = apigw.EndpointType.EDGE;
