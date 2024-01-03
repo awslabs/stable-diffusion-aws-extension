@@ -11,7 +11,6 @@ from common.response import not_found, internal_server_error, accepted
 from common.stepfunction_service.client import StepFunctionUtilsService
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
-from botocore.session import Session
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
@@ -20,6 +19,7 @@ instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
 # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
+region = os.environ.get('AWS_REGION')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 
 logger = logging.getLogger(__name__)
@@ -61,14 +61,12 @@ def _start_train_job(train_job_id: str):
     checkpoint = CheckPoint(**raw_checkpoint)
 
     try:
-        session = Session()
-        current_region = session.region_name
-        logger.info("Current Region:", current_region)
+        logger.info("Current Region:", region)
         # JSON encode hyperparameters
         def json_encode_hyperparameters(hyperparameters):
             new_params = {}
             for k, v in hyperparameters.items():
-                if current_region.startswith("cn"):
+                if region.startswith("cn"):
                     new_params[k] = json.dumps(v, cls=DecimalEncoder)
                 else:
                     json_v = json.dumps(v, cls=DecimalEncoder)
