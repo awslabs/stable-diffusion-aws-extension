@@ -156,7 +156,7 @@ def async_create_model_on_sagemaker(
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")
                 # Upload src model to S3.
-                s3_signed_urls_resp = response.json()["s3PresignUrl"][local_tar_path]
+                s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
                 multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                     local_tar_path,
                     s3_signed_urls_resp,

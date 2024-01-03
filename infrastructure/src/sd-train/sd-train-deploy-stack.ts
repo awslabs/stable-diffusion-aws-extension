@@ -22,6 +22,7 @@ import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/traini
 import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StartTrainingJobApi } from '../api/trainings/start-training-job';
+import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { Database } from '../shared/database';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -86,7 +87,7 @@ export class SdTrainDeployStack {
 
     const trainJobRouter = routers.trainings.addResource('{id}');
 
-    // PUT /trainings/{id}
+    // PUT /trainings/{id}/start
     new StartTrainingJobApi(scope, 'StartTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -98,6 +99,16 @@ export class SdTrainDeployStack {
       trainTable: props.database.trainingTable,
       userTopic: props.snsTopic,
       ecr_image_tag: props.ecr_image_tag,
+      logLevel: props.logLevel,
+    });
+
+    // PUT /trainings/{id}/stop
+    new StopTrainingJobApi(scope, 'StopTrainingJob', {
+      commonLayer: commonLayer,
+      httpMethod: 'PUT',
+      router: trainJobRouter,
+      srcRoot: this.srcRoot,
+      trainTable: props.database.trainingTable,
       logLevel: props.logLevel,
     });
 

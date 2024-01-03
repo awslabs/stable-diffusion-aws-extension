@@ -298,9 +298,10 @@ export class StartTrainingJobApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, startTrainJobIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
+    this.router.addResource('start')
+      .addMethod(this.httpMethod, startTrainJobIntegration, <MethodOptions>{
+        apiKeyRequired: true,
+      });
 
     return lambdaFunction;
   }
