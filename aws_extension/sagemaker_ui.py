@@ -863,50 +863,13 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings',
-                                           with_angle_brackets=False):
-    logger.debug(selected_items)  # example ['FastNegativeV2.pt']
-    logger.debug(txt2img_prompt)
-    logger.debug(get_model_list_by_type('embeddings'))
-    full_dropdown_items = get_model_list_by_type(model_name)  # example ['FastNegativeV2.pt', 'okuryl3nko.pt']
-
-    # Remove extensions from selected_items and full_dropdown_items
-    selected_items = [item.split('.')[0] for item in selected_items]
-    full_dropdown_items = [item.split('.')[0] for item in full_dropdown_items]
-
-    # Loop over each item in full_dropdown_items and remove it from txt2img_prompt
-    type_str = ''
-    if model_name == 'Lora':
-        type_str = 'lora:'
-    elif model_name == 'hypernetworks':
-        type_str = 'hypernet:'
-    for item in full_dropdown_items:
-        if with_angle_brackets:
-            txt2img_prompt = re.sub(f'<{type_str}{item}:\d+>', "", txt2img_prompt).strip()
-        else:
-            txt2img_prompt = txt2img_prompt.replace(item, "").strip()
-
-    # Loop over each item in selected_items and append it to txt2img_prompt
-    for item in selected_items:
-        if with_angle_brackets:
-            txt2img_prompt += ' ' + '<' + type_str + item + ':1>'
-        else:
-            txt2img_prompt += ' ' + item
-
-    # Remove any leading or trailing whitespace
-    txt2img_prompt = txt2img_prompt.strip()
-
-    return txt2img_prompt
-
-
-# def update_prompt_with_selected_model(selected_value: gr.Dropdown, original_prompt: gr.Textbox, type: str):
 def update_prompt_with_selected_model(selected_value, original_prompt, type):    
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
         selected_value (gr.Dropdown): the selected dropdown
         original_prompt (gr.Textbox): the original prompt before updating
-        type (str): the model type, embedding|lora|hypernetwork
+        type: the model type, embedding|lora|hypernetwork
 
     Returns:
         gr.Textbox: The updated prompt
@@ -931,19 +894,24 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type):
             continue
         
         existed_item.append(model_prompt)
-
         if model_prompt not in original_prompt:
             if 0 == len(original_prompt.strip()):
                 prompt_txt = model_prompt
             else:
                 prompt_txt += f" {model_prompt}"
 
-    # Remove Lora/Hypernetwork string which is not selected
+    # Remove Embedding/Lora/Hypernetwork string which is not selected
     pattern = ""
     if MODEL_TYPE.LORA == type:
         pattern = r"<lora:[^>]*:1>"
     elif MODEL_TYPE.HYPER_NETWORK == type:
         pattern = r"<hypernet:[^>]*:1>"
+    elif MODEL_TYPE.EMBEDDING == type:
+        pass
+    else:
+        logger.warning(f"The type {type} is not supported, skip it")
+        return prompt_txt
+       
     matches = re.findall(pattern, prompt_txt)
     for match in matches:
         if match not in existed_item:
@@ -1164,52 +1132,57 @@ def create_ui(is_img2img):
                                               }, 'refresh_cloud_model_down')
 
             with gr.Row():
-                sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
-                                                       label='SD Vae on Cloud')
+                with gr.Column():
+                    with gr.Row():
+                        sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
+                                                            label='SD Vae on Cloud')
 
-                create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_vae_list(username, username)
-                                              }, 'refresh_cloud_vae_down')
-            with gr.Row():
-                # Lora model
-                global lora_dropdown
-                lora_dropdown_local = gr.Dropdown(choices=[],
-                                                  label="Lora model on cloud",
-                                                  multiselect=True)
-                create_refresh_button_by_user(lora_dropdown_local,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_lora_models(username, username)
-                                              }, 'refresh_lora_dropdown')
-                lora_dropdown = lora_dropdown_local
-
-            with gr.Row():
-                # Hypernetwork model
-                global hypernet_dropdown
-                hypernet_dropdown_local = gr.Dropdown(choices=[],
-                                                  label="Hypernetwork on cloud",
-                                                  multiselect=True)
-                create_refresh_button_by_user(hypernet_dropdown_local,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_hypernetworks_models(username, username)
-                                              }, 'refresh_hypernet_dropdown')
-                hypernet_dropdown = hypernet_dropdown_local
+                        create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_vae_list(username, username)
+                                                    }, 'refresh_cloud_vae_down')
+                with gr.Column():
+                    with gr.Row():
+                        # Lora model
+                        global lora_dropdown
+                        lora_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Lora model on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(lora_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_lora_models(username, username)
+                                                    }, 'refresh_lora_dropdown')
+                        lora_dropdown = lora_dropdown_local
 
             with gr.Row():
-                # Embedding model
-                global embedding_dropdown
-                embedding_dropdown_local = gr.Dropdown(choices=[],
-                                                  label="Embedding on cloud",
-                                                  multiselect=True)
-                create_refresh_button_by_user(embedding_dropdown_local,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_embeddings_list(username, username)
-                                              }, 'refresh_embedding_dropdown')
-                embedding_dropdown = embedding_dropdown_local
+                with gr.Column():
+                    with gr.Row():
+                        # Embedding model
+                        global embedding_dropdown
+                        embedding_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Embedding on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(embedding_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_embeddings_list(username, username)
+                                                    }, 'refresh_embedding_dropdown')
+                        embedding_dropdown = embedding_dropdown_local
+                with gr.Column():
+                    with gr.Row():
+                        # Hypernetwork model
+                        global hypernet_dropdown
+                        hypernet_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Hypernetwork on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(hypernet_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_hypernetworks_models(username, username)
+                                                    }, 'refresh_hypernet_dropdown')
+                        hypernet_dropdown = hypernet_dropdown_local
 
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')

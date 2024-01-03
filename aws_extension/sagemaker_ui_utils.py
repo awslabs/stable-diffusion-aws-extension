@@ -153,6 +153,17 @@ def on_after_component_callback(component, **_kwargs):
         )
         sagemaker_ui.hypernet_dropdown = None
 
+    if sagemaker_ui.embedding_dropdown is not None and \
+            txt2img_embedding_show_hook is None and \
+            txt2img_prompt is not None:
+        txt2img_embedding_show_hook = "finish"
+        sagemaker_ui.embedding_dropdown.change(
+            fn=sagemaker_ui.update_prompt_with_embedding,
+            inputs=[sagemaker_ui.embedding_dropdown, txt2img_prompt],
+            outputs=[txt2img_prompt]
+        )
+        sagemaker_ui.embedding_dropdown = None
+
     global img2img_gallery, img2img_generation_info, img2img_html_info, img2img_show_hook, \
         img2img_prompt, \
         init_img, \
@@ -236,6 +247,16 @@ def on_after_component_callback(component, **_kwargs):
         )
         sagemaker_ui.hypernet_dropdown = None
 
+    if sagemaker_ui.embedding_dropdown is not None and \
+            img2img_embedding_show_hook is None and \
+            img2img_prompt is not None:
+        img2img_embedding_show_hook = "finish"
+        sagemaker_ui.embedding_dropdown.change(
+            fn=sagemaker_ui.update_prompt_with_embedding,
+            inputs=[sagemaker_ui.embedding_dropdown, img2img_prompt],
+            outputs=[img2img_prompt]
+        )
+        sagemaker_ui.embedding_dropdown = None
 
 def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_args, elem_id):
     def refresh(pr: gradio.Request):
