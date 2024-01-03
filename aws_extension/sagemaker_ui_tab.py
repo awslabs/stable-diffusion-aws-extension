@@ -110,7 +110,7 @@ def on_ui_tabs():
                 _list_models(req.username, req.username)[0:10], \
                 _list_sagemaker_endpoints(req.username), \
                 req.username, \
-                _list_users(req.username)[:user_table_size], \
+                _list_users(req.username, None, None)[:user_table_size], \
                 _get_roles_table(req.username)[:10], \
                 gr.update(choices=roles(req.username)), \
                 f'Welcome, {req.username}'
@@ -285,24 +285,39 @@ def user_settings_tab():
                 user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
                 return user['username'], user['password'], user['roles']
 
+            def search_users(name: str, role: str, paging, rq: gr.Request):
+                result = _list_users(rq.username, name, role)
+                if len(result) == 0:
+                    return None, gr.skip()
+                if paging >= len(result):
+                    return gr.skip(), gr.skip()
+                start = paging + user_table_size if paging + user_table_size < len(result) else paging
+                end = start + user_table_size if start + user_table_size < len(result) else len(result)
+                return result[start: end], start
+
             user_table.select(fn=choose_user, inputs=[], outputs=[username_textbox, pwd_textbox, user_roles_dropdown])
+            with gr.Accordion("Users Table Filter", open=False):
+                name_search_textbox = gr.Textbox(ele_id="name_search_txt", label="search by name",
+                                                 placeholder="role name")
+                role_search_dropdown = gr.Dropdown(ele_id="role_search_drop", label="search by role",
+                                                   choices=[''] + roles(cloud_auth_manager.username))
 
             with gr.Row():
                 current_page = gr.State(0)
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary')
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
-                def list_users_prev(paging, rq: gr.Request):
+                def list_users_prev(name, role, paging, rq: gr.Request):
                     if paging == 0:
                         return gr.skip(), gr.skip()
 
-                    result = _list_users(rq.username)
+                    result = _list_users(rq.username, name, role)
                     start = paging - user_table_size if paging - user_table_size >= 0 else 0
                     end = start + user_table_size
                     return result[start: end], start
 
-                def list_users_next(paging, rq: gr.Request):
-                    result = _list_users(rq.username)
+                def list_users_next(name, role, paging, rq: gr.Request):
+                    result = _list_users(rq.username, name, role)
                     if paging >= len(result):
                         return gr.skip(), gr.skip()
 
@@ -310,8 +325,17 @@ def user_settings_tab():
                     end = start + user_table_size if start + user_table_size < len(result) else len(result)
                     return result[start: end], start
 
-                next_page_btn.click(fn=list_users_next, inputs=[current_page], outputs=[user_table, current_page])
-                previous_page_btn.click(fn=list_users_prev, inputs=[current_page],
+                next_page_btn.click(fn=list_users_next,
+                                    inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                    outputs=[user_table, current_page])
+                previous_page_btn.click(fn=list_users_prev,
+                                        inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                        outputs=[user_table, current_page])
+            name_search_textbox.submit(fn=search_users,
+                                       inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                       outputs=[user_table, current_page])
+            role_search_dropdown.change(fn=search_users,
+                                        inputs=[name_search_textbox, role_search_dropdown, current_page],
                                         outputs=[user_table, current_page])
 
     return user_tab, user_table, user_roles_dropdown
@@ -409,13 +433,17 @@ def _get_roles_table(username):
     return table
 
 
-def _list_users(username):
+def _list_users(username, name, role):
     resp = api_manager.list_users(user_token=username)
     if not resp['users']:
         return []
 
     table = []
     for user in resp['users']:
+        if name and name != user['username']:
+            continue
+        if role and role not in user['roles']:
+            continue
         table.append([user['username'], ', '.join(user['roles']), user['creator']])
 
     return table
