@@ -42,7 +42,7 @@ def _stop_train_job(train_job_id: str):
             sfn_client.stop_execution(
                 executionArn=train_job.sagemaker_sfn_arn,
                 error='user stop',
-                cause='Explanation about why the execution is being stopped'
+                cause='api stop'
             )
 
         ddb_service.update_item(
