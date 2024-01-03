@@ -34,7 +34,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 None_Option_For_On_Cloud_Model = "don't use on cloud inference"
 
 inference_job_dropdown = None
-textual_inversion_dropdown = None
+embedding_dropdown = None
 hypernet_dropdown = None
 lora_dropdown = None
 # sagemaker_endpoint = None
@@ -1137,9 +1137,8 @@ def load_xyz_controlnet_list(username, user_token):
 
 
 def load_embeddings_list(username, user_token):
-    # vae_model_on_cloud = ['None']
-    vae_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
-    return vae_model_on_cloud
+    embedding_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+    return embedding_model_on_cloud
 
 
 def create_ui(is_img2img):
@@ -1184,9 +1183,7 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_lora_models(username, username)
                                               }, 'refresh_lora_dropdown')
-
                 lora_dropdown = lora_dropdown_local
-
 
             with gr.Row():
                 # Hypernetwork model
@@ -1199,9 +1196,20 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_hypernetworks_models(username, username)
                                               }, 'refresh_hypernet_dropdown')
-
                 hypernet_dropdown = hypernet_dropdown_local
 
+            with gr.Row():
+                # Embedding model
+                global embedding_dropdown
+                embedding_dropdown_local = gr.Dropdown(choices=[],
+                                                  label="Embedding on cloud",
+                                                  multiselect=True)
+                create_refresh_button_by_user(embedding_dropdown_local,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_embeddings_list(username, username)
+                                              }, 'refresh_embedding_dropdown')
+                embedding_dropdown = embedding_dropdown_local
 
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
@@ -1250,17 +1258,19 @@ def create_ui(is_img2img):
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
+                    embedding_model_on_cloud = load_embeddings_list(pr.username, pr.username)
                     controlnet_list = load_controlnet_list(pr.username, pr.username)
                     controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
 
                     inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
                     lora_hypernets = {
-                        'lora': lora_models_on_cloud,
-                        'hypernet': hypernetworks_models_on_cloud,
-                        'controlnet': controlnet_list,
-                        'controlnet_xyz': controlnet_xyz_list,
-                        'vae': vae_model_on_cloud,
-                        'sd': models_on_cloud,
+                        "lora": lora_models_on_cloud,
+                        "hypernet": hypernetworks_models_on_cloud,
+                        "controlnet": controlnet_list,
+                        "controlnet_xyz": controlnet_xyz_list,
+                        "vae": vae_model_on_cloud,
+                        "sd": models_on_cloud,
+                        "embedding": embedding_model_on_cloud
                     }
 
                     return lora_hypernets, \
@@ -1268,7 +1278,8 @@ def create_ui(is_img2img):
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud), \
                         gr.update(choices=lora_models_on_cloud), \
-                        gr.update(choices=hypernetworks_models_on_cloud)
+                        gr.update(choices=hypernetworks_models_on_cloud), \
+                        gr.update(choices=embedding_model_on_cloud)
 
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
@@ -1277,7 +1288,8 @@ def create_ui(is_img2img):
                                                  inference_job_dropdown,
                                                  sd_vae_on_cloud_dropdown,
                                                  lora_dropdown_local,
-                                                 hypernet_dropdown_local
+                                                 hypernet_dropdown_local,
+                                                 embedding_dropdown_local
                                              ])
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
