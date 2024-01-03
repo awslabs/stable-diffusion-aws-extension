@@ -281,11 +281,7 @@ def cloud_train(
         if not integral_check:
             if job_id:
                 gr.Error(f'train job {train_model_name} failed')
-                payload = {
-                    "status": "Fail"
-                }
-                # update train job status
-                response = requests.put(url=f"{url}/{job_id}/stop", json=payload, headers={'x-api-key': api_key})
+                response = requests.put(url=f"{url}/{job_id}/stop", headers={'x-api-key': api_key})
                 print(f'training job failed but updated the job status {response.json()}')
 
 
