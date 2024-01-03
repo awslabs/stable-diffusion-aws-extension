@@ -332,7 +332,15 @@ class Api:
     def start_training_job(self, training_id: str, headers=None, data=None):
         return self.req(
             "PUT",
-            f"trainings/{training_id}",
+            f"trainings/{training_id}/start",
+            headers=headers,
+            data=data
+        )
+
+    def stop_training_job(self, training_id: str, headers=None, data=None):
+        return self.req(
+            "PUT",
+            f"trainings/{training_id}/stop",
             headers=headers,
             data=data
         )

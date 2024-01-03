@@ -181,7 +181,7 @@ def async_prepare_for_training_on_sagemaker(
     response.raise_for_status()
     json_response = response.json()
     print(json_response)
-    for local_tar_path, s3_presigned_url in response.json()['data']["s3PresignUrl"].items():
+    for local_tar_path, s3_presigned_url in json_response['data']["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
 
@@ -266,12 +266,12 @@ def cloud_train(
         response = async_prepare_for_training_on_sagemaker(
             model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
             new_db_config_path, model_type, training_instance_type, creator)
-        job_id = response["job"]["id"]
+        job_id = response['data']["job"]["id"]
 
         payload = {
             "status": "Training"
         }
-        response = requests.put(url=f"{url}/{job_id}", json=payload, headers={'x-api-key': api_key})
+        response = requests.put(url=f"{url}/{job_id}/start", json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
         print(f"Start training response:\n{response.json()}")
         integral_check = True
@@ -284,7 +284,8 @@ def cloud_train(
                 payload = {
                     "status": "Fail"
                 }
-                response = requests.put(url=f"{url}/{job_id}", json=payload, headers={'x-api-key': api_key})
+                # update train job status
+                response = requests.put(url=f"{url}/{job_id}/stop", json=payload, headers={'x-api-key': api_key})
                 print(f'training job failed but updated the job status {response.json()}')
 
 
