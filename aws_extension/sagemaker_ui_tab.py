@@ -297,10 +297,11 @@ def user_settings_tab():
 
             user_table.select(fn=choose_user, inputs=[], outputs=[username_textbox, pwd_textbox, user_roles_dropdown])
             with gr.Accordion("Users Table Filter", open=False):
-                name_search_textbox = gr.Textbox(ele_id="name_search_txt", label="search by name",
-                                                 placeholder="role name")
-                role_search_dropdown = gr.Dropdown(ele_id="role_search_drop", label="search by role",
-                                                   choices=[''] + roles(cloud_auth_manager.username))
+                with gr.Row():
+                    name_search_textbox = gr.Textbox(ele_id="name_search_txt", label="Search by Name",
+                                                     placeholder="role name")
+                    role_search_dropdown = gr.Dropdown(ele_id="role_search_drop", label="Search by Role",
+                                                       choices=[''] + roles(cloud_auth_manager.username))
 
             with gr.Row():
                 current_page = gr.State(0)
@@ -440,7 +441,7 @@ def _list_users(username, name, role):
 
     table = []
     for user in resp['users']:
-        if name and name != user['username']:
+        if name and name not in user['username']:
             continue
         if role and role not in user['roles']:
             continue
