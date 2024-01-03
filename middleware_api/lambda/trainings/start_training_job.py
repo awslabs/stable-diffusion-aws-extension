@@ -11,6 +11,7 @@ from common.response import not_found, internal_server_error, accepted
 from common.stepfunction_service.client import StepFunctionUtilsService
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
+from botocore.session import Session
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
@@ -25,7 +26,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-region = os.environ.get('REGION')
 
 # PUT /train used to kickoff a train job step function
 def handler(event, context):
@@ -61,11 +61,14 @@ def _start_train_job(train_job_id: str):
     checkpoint = CheckPoint(**raw_checkpoint)
 
     try:
+        session = Session()
+        current_region = session.region_name
+        logger.info("Current Region:", current_region)
         # JSON encode hyperparameters
         def json_encode_hyperparameters(hyperparameters):
             new_params = {}
             for k, v in hyperparameters.items():
-                if region.startswith("cn"):
+                if current_region.startswith("cn"):
                     new_params[k] = json.dumps(v, cls=DecimalEncoder)
                 else:
                     json_v = json.dumps(v, cls=DecimalEncoder)
