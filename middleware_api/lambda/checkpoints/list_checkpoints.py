@@ -4,7 +4,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.util import get_multi_query_params
+from common.schemas.checkpoints import CheckpointItem, CheckpointLink
+from common.util import get_multi_query_params, generate_url
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
@@ -82,26 +83,34 @@ def handler(event, context):
             if check_user_permissions(ckpt.allowed_roles_or_users, user_roles, username) or (
                     'user' in requestor_permissions and 'all' in requestor_permissions['user']
             ):
-                ckpts.append({
-                    'id': ckpt.id,
-                    's3Location': ckpt.s3_location,
-                    'type': ckpt.checkpoint_type,
-                    'status': ckpt.checkpoint_status.value,
-                    'name': ckpt.checkpoint_names,
-                    'created': ckpt.timestamp,
-                    'params': ckpt.params,
-                    'allowed_roles_or_users': ckpt.allowed_roles_or_users
-                })
+                checkpoint_item = CheckpointItem(
+                    id=ckpt.id,
+                    type=ckpt.checkpoint_type,
+                    allowed_roles_or_users=ckpt.allowed_roles_or_users,
+                    name=ckpt.checkpoint_names,
+                    s3_location=ckpt.s3_location,
+                    status=ckpt.checkpoint_status.value,
+                    params=ckpt.params,
+                    links=[
+                        CheckpointLink(href=generate_url(event, f'checkpoints/{ckpt.id}'), rel="update", type="PUT").dict()
+                    ]
+                )
+                logger.info(checkpoint_item)
+                ckpts.append(checkpoint_item.dict())
 
         data = {
             'page': page,
             'per_page': per_page,
             'pages': int(len(ckpts) / per_page) + 1,
             'total': len(ckpts),
+            'links': [
+                CheckpointLink(href=generate_url(event, f'checkpoints'), rel="self", type="GET").dict(),
+                CheckpointLink(href=generate_url(event, f'checkpoints'), rel="create", type="POST").dict()
+            ],
             'checkpoints': page_data(ckpts, page, per_page),
         }
 
-        return ok(data=data, decimal=True)
+        return ok(data=data)
     except Exception as e:
         logger.error(e)
         return bad_request(data=str(e))

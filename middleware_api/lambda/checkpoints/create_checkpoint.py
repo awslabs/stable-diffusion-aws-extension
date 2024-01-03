@@ -11,10 +11,12 @@ import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, accepted
+from common.util import generate_url
 from libs.common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
 from libs.utils import get_user_roles, get_permissions_by_username
+from common.schemas.checkpoints import CheckpointItem, CheckpointLink
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -110,14 +112,20 @@ def handler(raw_event, context):
             allowed_roles_or_users=user_roles
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
+        checkpoint_item = CheckpointItem(
+            id=request_id,
+            type=_type,
+            allowed_roles_or_users=user_roles,
+            name=filenames_only,
+            s3_location=checkpoint.s3_location,
+            status=checkpoint.checkpoint_status.value,
+            params=checkpoint_params,
+            links=[
+                CheckpointLink(href=generate_url(raw_event, f'checkpoints/{request_id}'), rel="update", type="PUT")
+            ]
+        )
         data = {
-            'checkpoint': {
-                'id': request_id,
-                'type': _type,
-                's3_location': checkpoint.s3_location,
-                'status': checkpoint.checkpoint_status.value,
-                'params': checkpoint.params
-            },
+            'checkpoint': checkpoint_item.dict(),
             's3PresignUrl': multiparts_resp
         }
         return created(data=data, headers=headers)

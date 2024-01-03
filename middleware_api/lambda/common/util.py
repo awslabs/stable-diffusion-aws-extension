@@ -99,3 +99,13 @@ def split_s3_path(s3_path):
     bucket = path_parts.pop(0)
     key = "/".join(path_parts)
     return bucket, key
+
+
+def current_base_url(raw_event):
+    domain_name = raw_event['requestContext']['domainName']
+    stage = raw_event['requestContext']['stage']
+    return f'https://{domain_name}/{stage}/'
+
+
+def generate_url(raw_event, path: str):
+    return current_base_url(raw_event) + path
