@@ -8,6 +8,7 @@ import gradio
 import requests
 import base64
 import gradio as gr
+from aws_extension.constant import MODEL_TYPE
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -34,7 +35,7 @@ None_Option_For_On_Cloud_Model = "don't use on cloud inference"
 
 inference_job_dropdown = None
 textual_inversion_dropdown = None
-hyperNetwork_dropdown = None
+hypernet_dropdown = None
 lora_dropdown = None
 # sagemaker_endpoint = None
 modelmerger_merge_on_cloud = None
@@ -850,16 +851,16 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 #     pass
 
 
-def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'embeddings', False)
+def update_prompt_with_embedding(selected_items, prompt):
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.EMBEDDING)
 
 
-def update_txt2imgPrompt_from_Hypernetworks(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'hypernetworks', True)
+def update_prompt_with_hypernetwork(selected_items, prompt):
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.HYPER_NETWORK)
 
 
-def update_txt2imgPrompt_from_Lora(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'Lora', True)
+def update_prompt_with_lora(selected_items, prompt):
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
 def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings',
@@ -896,6 +897,59 @@ def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model
     txt2img_prompt = txt2img_prompt.strip()
 
     return txt2img_prompt
+
+
+# def update_prompt_with_selected_model(selected_value: gr.Dropdown, original_prompt: gr.Textbox, type: str):
+def update_prompt_with_selected_model(selected_value, original_prompt, type):    
+    """Update txt2img or img2img prompt with selecte model name
+
+    Args:
+        selected_value (gr.Dropdown): the selected dropdown
+        original_prompt (gr.Textbox): the original prompt before updating
+        type (str): the model type, embedding|lora|hypernetwork
+
+    Returns:
+        gr.Textbox: The updated prompt
+    """
+    logger.info(f"Selected value is {selected_value}, \
+                original prompt is {original_prompt}, \
+                type is {type}")
+    prompt_txt = original_prompt
+    existed_item = []
+
+    for item in selected_value:
+        # Compose prompt for Embedding/Lora/Hypernetwork
+        model_name = item.split(".")[0]
+        if MODEL_TYPE.LORA == type:
+            model_prompt = f"<lora:{model_name}:1>"
+        elif MODEL_TYPE.HYPER_NETWORK == type:
+            model_prompt = f"<hypernet:{model_name}:1>"
+        elif MODEL_TYPE.EMBEDDING == type:
+            model_prompt = model_name
+        else:
+            logger.warning(f"The type {type} is not supported, skip it")
+            continue
+        
+        existed_item.append(model_prompt)
+
+        if model_prompt not in original_prompt:
+            if 0 == len(original_prompt.strip()):
+                prompt_txt = model_prompt
+            else:
+                prompt_txt += f" {model_prompt}"
+
+    # Remove Lora/Hypernetwork string which is not selected
+    pattern = ""
+    if MODEL_TYPE.LORA == type:
+        pattern = r"<lora:[^>]*:1>"
+    elif MODEL_TYPE.HYPER_NETWORK == type:
+        pattern = r"<hypernet:[^>]*:1>"
+    matches = re.findall(pattern, prompt_txt)
+    for match in matches:
+        if match not in existed_item:
+            prompt_txt = prompt_txt.replace(match, "")
+
+    return prompt_txt
 
 
 def add_lora_to_prompt(selected_value, original_prompt):
@@ -1129,9 +1183,26 @@ def create_ui(is_img2img):
                                               lambda *args: None,
                                               lambda username: {
                                                   'choices': load_lora_models(username, username)
-                                              }, 'refresh_lora_down')
+                                              }, 'refresh_lora_dropdown')
 
                 lora_dropdown = lora_dropdown_local
+
+
+            with gr.Row():
+                # Hypernetwork model
+                global hypernet_dropdown
+                hypernet_dropdown_local = gr.Dropdown(choices=[],
+                                                  label="Hypernetwork on cloud",
+                                                  multiselect=True)
+                create_refresh_button_by_user(hypernet_dropdown_local,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_hypernetworks_models(username, username)
+                                              }, 'refresh_hypernet_dropdown')
+
+                hypernet_dropdown = hypernet_dropdown_local
+
+
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
@@ -1196,7 +1267,8 @@ def create_ui(is_img2img):
                         gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud), \
-                        gr.update(choices=lora_models_on_cloud)
+                        gr.update(choices=lora_models_on_cloud), \
+                        gr.update(choices=hypernetworks_models_on_cloud)
 
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
@@ -1204,7 +1276,8 @@ def create_ui(is_img2img):
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
                                                  sd_vae_on_cloud_dropdown,
-                                                 lora_dropdown_local
+                                                 lora_dropdown_local,
+                                                 hypernet_dropdown_local
                                              ])
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):

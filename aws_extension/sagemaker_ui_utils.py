@@ -5,6 +5,7 @@ import time
 from aws_extension import sagemaker_ui
 from dreambooth_on_cloud.train import async_cloud_train
 from modules.ui_components import ToolButton
+from aws_extension.constant import MODEL_TYPE
 
 training_job_dashboard = None
 txt2img_show_hook = None
@@ -129,7 +130,9 @@ def on_after_component_callback(component, **_kwargs):
             txt2img_prompt is not None:
         txt2img_lora_show_hook = "finish"
         sagemaker_ui.lora_dropdown.change(
-            fn=sagemaker_ui.add_lora_to_prompt,
+            # fn=sagemaker_ui.add_lora_to_prompt,
+            # inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
+            fn=sagemaker_ui.update_prompt_with_lora,
             inputs=[sagemaker_ui.lora_dropdown, txt2img_prompt],
             outputs=[txt2img_prompt]
         )
@@ -199,7 +202,9 @@ def on_after_component_callback(component, **_kwargs):
             img2img_prompt is not None:
         img2img_lora_show_hook = "finish"
         sagemaker_ui.lora_dropdown.change(
-            fn=sagemaker_ui.add_lora_to_prompt,
+            # fn=sagemaker_ui.add_lora_to_prompt,
+            # inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
+            fn=sagemaker_ui.update_prompt_with_lora,
             inputs=[sagemaker_ui.lora_dropdown, img2img_prompt],
             outputs=[img2img_prompt]
         )
