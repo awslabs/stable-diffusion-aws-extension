@@ -1019,6 +1019,15 @@ def delete_dataset(selected_value):
 
 
 def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
+    if api_url == 'cancelled':
+        return "cancelled"
+
+    if not api_url:
+        return "Please input api url"
+
+    if not api_token:
+        return "Please input api token"
+
     # Check if api_url ends with '/', if not append it
     if not api_url.endswith('/'):
         api_url += '/'
