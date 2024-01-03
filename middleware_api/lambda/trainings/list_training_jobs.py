@@ -1,8 +1,10 @@
+import json
 import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
+from common.util import get_multi_query_params
 from libs.data_types import TrainJob
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
@@ -17,15 +19,17 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /trains
 def handler(event, context):
+    logger.info(json.dumps(event))
+
     _filter = {}
 
-    parameters = event['queryStringParameters']
-    if parameters:
-        if 'types' in parameters and len(parameters['types']) > 0:
-            _filter['train_type'] = parameters['types']
+    types = get_multi_query_params(event, 'types')
+    if types:
+        _filter['train_type'] = types
 
-        if 'status' in parameters and len(parameters['status']) > 0:
-            _filter['job_status'] = parameters['status']
+    status = get_multi_query_params(event, 'status')
+    if status:
+        _filter['job_status'] = status
 
     resp = ddb_service.scan(table=train_table, filters=_filter)
     if resp is None or len(resp) == 0:
