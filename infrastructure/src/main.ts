@@ -87,6 +87,7 @@ export class Middleware extends Stack {
       this,
       'ResourcesProvider',
       {
+        partition: Aws.PARTITION,
         accountId: Aws.ACCOUNT_ID,
         region: Aws.REGION,
         bucketName: s3BucketName.valueAsString,

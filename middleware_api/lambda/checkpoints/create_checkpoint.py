@@ -127,7 +127,6 @@ def handler(raw_event, context):
 
 
 def invoke_url_lambda(event: CreateCheckPointEvent):
-
     urls = list(set(event.urls))
 
     for url in urls:
@@ -169,6 +168,10 @@ def check_ckpt_name_unique(names: [str]):
     ckpts = ddb_service.scan(table=checkpoint_table)
     exists_names = []
     for ckpt in ckpts:
+        if 'checkpoint_names' not in ckpt:
+            continue
+        if 'L' not in ckpt['checkpoint_names']:
+            continue
         for name in ckpt['checkpoint_names']['L']:
             exists_names.append(name['S'])
 

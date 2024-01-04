@@ -64,7 +64,7 @@ async function createAndCheckResources(event: Event) {
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
-  await createPolicyForOldRole();
+  await createPolicyForOldRole(event);
   return response(event, true);
 }
 
@@ -359,8 +359,9 @@ async function findKeyByAlias(aliasName: string) {
   return null;
 }
 
-async function createPolicyForOldRole() {
+async function createPolicyForOldRole(event: Event) {
   const name = 'LambdaStartDeployRole';
+  const partition = event.ResourceProperties.partition;
 
   try {
 
@@ -388,9 +389,9 @@ async function createPolicyForOldRole() {
               'sns:ListTopics',
             ],
             Resource: [
-              'arn:aws:sns:*:*:StableDiffusionSnsUserTopic',
-              'arn:aws:sns:*:*:ReceiveSageMakerInferenceSuccess',
-              'arn:aws:sns:*:*:ReceiveSageMakerInferenceError',
+              `arn:${partition}:sns:*:*:StableDiffusionSnsUserTopic`,
+              `arn:${partition}:sns:*:*:ReceiveSageMakerInferenceSuccess`,
+              `arn:${partition}:sns:*:*:ReceiveSageMakerInferenceError`,
             ],
             Effect: 'Allow',
           },
@@ -402,8 +403,8 @@ async function createPolicyForOldRole() {
               's3:GetObject',
             ],
             Resource: [
-              'arn:aws:s3:::*',
-              'arn:aws:s3:::*/*',
+              `arn:${partition}:s3:::*`,
+              `arn:${partition}:s3:::*/*`,
             ],
             Effect: 'Allow',
           },
@@ -455,9 +456,9 @@ async function createPolicyForOldRole() {
               'dynamodb:Scan',
             ],
             Resource: [
-              'arn:aws:dynamodb:*:*:table/SDEndpointDeploymentJobTable',
-              'arn:aws:dynamodb:*:*:table/MultiUserTable',
-              'arn:aws:dynamodb:*:*:table/SDInferenceJobTable',
+              `arn:${partition}:dynamodb:*:*:table/SDEndpointDeploymentJobTable`,
+              `arn:${partition}:dynamodb:*:*:table/MultiUserTable`,
+              `arn:${partition}:dynamodb:*:*:table/SDInferenceJobTable`,
             ],
             Effect: 'Allow',
           },
@@ -467,12 +468,12 @@ async function createPolicyForOldRole() {
               'logs:CreateLogStream',
               'logs:PutLogEvents',
             ],
-            Resource: 'arn:aws:logs:*:*:log-group:*:*',
+            Resource: `arn:${partition}:logs:*:*:log-group:*:*`,
             Effect: 'Allow',
           },
           {
             Action: 'iam:PassRole',
-            Resource: 'arn:aws:iam::*:role/ESDRoleForEndpoint-*',
+            Resource: `arn:${partition}:iam::*:role/ESDRoleForEndpoint-*`,
             Effect: 'Allow',
           },
         ],

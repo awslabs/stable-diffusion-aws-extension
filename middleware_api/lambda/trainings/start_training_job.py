@@ -19,15 +19,16 @@ instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
 # e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
+region = os.environ.get('AWS_REGION')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-region = os.environ.get('REGION')
 
-# PUT /train used to kickoff a train job step function
+
+# PUT /trainings/{id}/start
 def handler(event, context):
     logger.info(json.dumps(event))
     train_job_id = event['pathParameters']['id']
@@ -61,6 +62,7 @@ def _start_train_job(train_job_id: str):
     checkpoint = CheckPoint(**raw_checkpoint)
 
     try:
+        logger.info("Current Region:", region)
         # JSON encode hyperparameters
         def json_encode_hyperparameters(hyperparameters):
             new_params = {}
@@ -147,5 +149,5 @@ def _start_train_job(train_job_id: str):
 
         return accepted(data=data, decimal=True)
     except Exception as e:
-        print(e)
+        logger.error(e)
         return internal_server_error(message=str(e))

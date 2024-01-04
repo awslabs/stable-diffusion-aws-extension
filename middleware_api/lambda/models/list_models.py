@@ -3,6 +3,7 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
+from common.util import get_multi_query_params
 from libs.data_types import Model
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
@@ -18,13 +19,13 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 def handler(event, context):
     _filter = {}
 
-    parameters = event['queryStringParameters']
-    if parameters:
-        if 'types' in parameters and len(parameters['types']) > 0:
-            _filter['model_type'] = parameters['types']
+    types = get_multi_query_params(event, 'types')
+    if types:
+        _filter['model_type'] = types
 
-        if 'status' in parameters and len(parameters['status']) > 0:
-            _filter['job_status'] = parameters['status']
+    status = get_multi_query_params(event, 'status')
+    if status:
+        _filter['job_status'] = status
 
     resp = ddb_service.scan(table=model_table, filters=_filter)
 
