@@ -1117,8 +1117,6 @@ def create_ui(is_img2img):
             with gr.Row():
                 global lora_and_hypernet_models_state
                 lora_and_hypernet_models_state = gr.State({})
-                print("===================in UI======")
-                print(str(lora_and_hypernet_models_state))
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
 
