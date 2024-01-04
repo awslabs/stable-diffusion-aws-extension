@@ -27,7 +27,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-# PUT /train used to kickoff a train job step function
+
+# PUT /trainings/{id}/start
 def handler(event, context):
     logger.info(json.dumps(event))
     train_job_id = event['pathParameters']['id']
@@ -148,5 +149,5 @@ def _start_train_job(train_job_id: str):
 
         return accepted(data=data, decimal=True)
     except Exception as e:
-        print(e)
+        logger.error(e)
         return internal_server_error(message=str(e))
