@@ -7,7 +7,7 @@ import time
 import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import not_found, internal_server_error, accepted
+from common.response import not_found, accepted, internal_server_error
 from common.stepfunction_service.client import StepFunctionUtilsService
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
@@ -27,7 +27,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-# PUT /train used to kickoff a train job step function
+
+# PUT /trainings/{id}/start
 def handler(event, context):
     logger.info(json.dumps(event))
     train_job_id = event['pathParameters']['id']
@@ -62,6 +63,7 @@ def _start_train_job(train_job_id: str):
 
     try:
         logger.info("Current Region:", region)
+
         # JSON encode hyperparameters
         def json_encode_hyperparameters(hyperparameters):
             new_params = {}
@@ -148,5 +150,5 @@ def _start_train_job(train_job_id: str):
 
         return accepted(data=data, decimal=True)
     except Exception as e:
-        print(e)
+        logger.error(e)
         return internal_server_error(message=str(e))
