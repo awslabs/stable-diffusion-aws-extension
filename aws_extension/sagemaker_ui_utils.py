@@ -159,7 +159,7 @@ def on_after_component_callback(component, **_kwargs):
         txt2img_embedding_show_hook = "finish"
         sagemaker_ui.embedding_dropdown.change(
             fn=sagemaker_ui.update_prompt_with_embedding,
-            inputs=[sagemaker_ui.embedding_dropdown, txt2img_prompt],
+            inputs=[sagemaker_ui.embedding_dropdown, txt2img_prompt, sagemaker_ui.lora_and_hypernet_models_state],
             outputs=[txt2img_prompt]
         )
         sagemaker_ui.embedding_dropdown = None
@@ -253,7 +253,7 @@ def on_after_component_callback(component, **_kwargs):
         img2img_embedding_show_hook = "finish"
         sagemaker_ui.embedding_dropdown.change(
             fn=sagemaker_ui.update_prompt_with_embedding,
-            inputs=[sagemaker_ui.embedding_dropdown, img2img_prompt],
+            inputs=[sagemaker_ui.embedding_dropdown, img2img_prompt, sagemaker_ui.lora_and_hypernet_models_state],
             outputs=[img2img_prompt]
         )
         sagemaker_ui.embedding_dropdown = None

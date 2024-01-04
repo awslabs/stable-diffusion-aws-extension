@@ -851,7 +851,15 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 #     pass
 
 
-def update_prompt_with_embedding(selected_items, prompt):
+def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
+    if MODEL_TYPE.EMBEDDING.value in lora_and_hypernet_models_state:
+        return update_prompt_with_selected_model(
+            selected_items, 
+            prompt, 
+            MODEL_TYPE.EMBEDDING, 
+            lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
+            )
+
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.EMBEDDING)
 
 
@@ -863,7 +871,7 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_prompt_with_selected_model(selected_value, original_prompt, type):    
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):    
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
@@ -874,14 +882,31 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type):
     Returns:
         gr.Textbox: The updated prompt
     """
+
+    def _remove_embedding_prompt(state_value, selected_value, prompt_txt):
+        if state_value:
+            for embedding in state_value:
+                if embedding not in selected_value:
+                    prompt_txt = prompt_txt.replace(embedding.split(".")[0], "")
+        
+        return prompt_txt
+
+    def _remove_prompt_by_regex(pattern, prompt_txt):
+        matches = re.findall(pattern, prompt_txt)
+        for match in matches:
+            if match not in existed_item:
+                prompt_txt = prompt_txt.replace(match, "")
+
+        return prompt_txt       
+
     logger.info(f"Selected value is {selected_value}, \
                 original prompt is {original_prompt}, \
                 type is {type}")
     prompt_txt = original_prompt
     existed_item = []
-
+    
+    # Compose prompt for Embedding/Lora/Hypernetwork
     for item in selected_value:
-        # Compose prompt for Embedding/Lora/Hypernetwork
         model_name = item.split(".")[0]
         if MODEL_TYPE.LORA == type:
             model_prompt = f"<lora:{model_name}:1>"
@@ -904,46 +929,15 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type):
     pattern = ""
     if MODEL_TYPE.LORA == type:
         pattern = r"<lora:[^>]*:1>"
+        prompt_txt = _remove_prompt_by_regex(pattern, prompt_txt)
     elif MODEL_TYPE.HYPER_NETWORK == type:
         pattern = r"<hypernet:[^>]*:1>"
+        prompt_txt = _remove_prompt_by_regex(pattern, prompt_txt)
     elif MODEL_TYPE.EMBEDDING == type:
-        pass
+        prompt_txt = _remove_embedding_prompt(state_value, selected_value, prompt_txt)
     else:
         logger.warning(f"The type {type} is not supported, skip it")
         return prompt_txt
-       
-    matches = re.findall(pattern, prompt_txt)
-    for match in matches:
-        if match not in existed_item:
-            prompt_txt = prompt_txt.replace(match, "")
-
-    return prompt_txt
-
-
-def add_lora_to_prompt(selected_value, original_prompt):
-    logger.info(f"selected value is {selected_value}")
-    logger.info(f"original prompt is {original_prompt}")
-    prompt_txt = original_prompt
-    existed_item = []
-
-    for item in selected_value:
-        # Compose Lora prompt
-        lora_name = item.split(".")[0]
-        lora_prompt = f"<lora:{lora_name}:1>"
-        existed_item.append(lora_prompt)
-
-        if lora_prompt not in original_prompt:
-            if 0 == len(original_prompt.strip()):
-                prompt_txt = lora_prompt
-            else:
-                prompt_txt += f" {lora_prompt}"
-
-    # Remove Lora string which is not selected
-    pattern = r"<lora:[^>]*:1>"
-    matches = re.findall(pattern, prompt_txt)
-    for match in matches:
-        if match not in existed_item:
-            prompt_txt = prompt_txt.replace(match, "")
 
     return prompt_txt
 
@@ -1121,7 +1115,10 @@ def create_ui(is_img2img):
         inference_task_type = 'txt2img' if not is_img2img else 'img2img'
         with gr.Column():
             with gr.Row():
+                global lora_and_hypernet_models_state
                 lora_and_hypernet_models_state = gr.State({})
+                print("===================in UI======")
+                print(str(lora_and_hypernet_models_state))
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
 
@@ -1208,8 +1205,6 @@ def create_ui(is_img2img):
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                      label="Inference Job: Time-Type-Status-Uuid")
-
-
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
