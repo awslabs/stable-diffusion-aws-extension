@@ -22,12 +22,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 ddb_service = DynamoDbUtilsService(logger=logger)
 lambda_client = boto3.client('lambda')
 
-headers = {
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-}
-
 
 @dataclass
 class UpdateCheckPointEvent:
@@ -56,15 +50,15 @@ def handler(raw_event, context):
             return update_status(event, checkpoint)
         if event.name:
             return update_name(event, checkpoint)
-        return ok(headers=headers)
+        return ok()
     except Exception as e:
         logger.error(e)
-        return internal_server_error(headers=headers, message=str(e))
+        return internal_server_error(message=str(e))
 
 
 def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if event.multi_parts_tags is None or len(event.multi_parts_tags) == 0:
-        return bad_request(message='multi parts tags is empty', headers=headers)
+        return bad_request(message='multi parts tags is empty')
     new_status = CheckPointStatus[event.status]
     complete_multipart_upload(checkpoint, event.multi_parts_tags)
     # if complete part failed, then no update
@@ -85,18 +79,18 @@ def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
             'params': checkpoint.params
         }
     }
-    return ok(data=data, headers=headers)
+    return ok(data=data)
 
 
 def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if checkpoint.checkpoint_status != CheckPointStatus.Active:
-        return bad_request(message='only active can update name', headers=headers)
+        return bad_request(message='only active can update name')
 
     old_name = checkpoint.checkpoint_names[0]
     new_name = event.name
 
     if old_name == new_name:
-        return ok(headers=headers, message='no need to update')
+        return ok(message='no need to update')
 
     check_ckpt_name_unique([event.name])
 
@@ -113,4 +107,4 @@ def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
         })
     )
 
-    return accepted(headers=headers, message='rename is processing, please wait')
+    return accepted(message='rename is processing, please wait')
