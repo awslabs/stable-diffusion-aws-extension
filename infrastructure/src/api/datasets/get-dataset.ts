@@ -6,7 +6,7 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3,
+  aws_s3, CfnParameter,
   Duration
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -25,6 +25,7 @@ export interface GetDatasetApiProps {
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class GetDatasetApi {
@@ -38,7 +39,7 @@ export class GetDatasetApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly authorizer: aws_apigateway.IAuthorizer;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: GetDatasetApiProps) {
@@ -53,6 +54,7 @@ export class GetDatasetApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.authorizer = props.authorizer;
+    this.logLevel = props.logLevel;
 
     this.getDatasetApi();
   }
@@ -116,6 +118,7 @@ export class GetDatasetApi {
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

@@ -8,8 +8,10 @@ from common.response import ok
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 s3_client = boto3.client('s3')
 

@@ -13,7 +13,8 @@ from libs.data_types import InferenceJob, InvocationsRequest
 inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

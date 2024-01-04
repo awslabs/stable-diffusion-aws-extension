@@ -7,7 +7,7 @@ import {
   aws_iam,
   aws_lambda,
   aws_s3,
-  aws_sns,
+  aws_sns, CfnParameter,
   CustomResource,
   Duration,
   RemovalPolicy,
@@ -36,6 +36,7 @@ export interface UpdateModelApiProps {
   checkpointTable: aws_dynamodb.Table;
   trainMachineType: string;
   ecr_image_tag: string;
+  logLevel: CfnParameter;
 }
 
 export class UpdateModelApi {
@@ -53,7 +54,7 @@ export class UpdateModelApi {
   private readonly httpMethod: string;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly dockerRepo: aws_ecr.Repository;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: UpdateModelApiProps) {
@@ -68,6 +69,7 @@ export class UpdateModelApi {
     this.s3Bucket = props.s3Bucket;
     this.checkpointTable = props.checkpointTable;
     this.imageUrl = AIGC_WEBUI_UTILS + props.ecr_image_tag;
+    this.logLevel = props.logLevel;
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
@@ -165,6 +167,7 @@ export class UpdateModelApi {
         S3_BUCKET: this.s3Bucket.bucketName,
         SAGEMAKER_ENDPOINT_NAME: this.sagemakerEndpoint.modelEndpoint.attrEndpointName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

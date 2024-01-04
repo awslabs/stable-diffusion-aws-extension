@@ -21,7 +21,8 @@ ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -129,7 +130,8 @@ def _create_sagemaker_model(name, image_url, model_data_url):
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
-            'EndpointID': 'OUR_ID'
+            'EndpointID': 'OUR_ID',
+            'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR
         },
     }
 

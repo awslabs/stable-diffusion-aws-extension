@@ -28,6 +28,7 @@ class TrainJobStatus(Enum):
     Training = 'Training'
     Complete = 'Complete'
     Fail = 'Fail'
+    Stopped = 'Stopped'
 
 
 class DataStatus(Enum):

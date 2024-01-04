@@ -7,8 +7,10 @@ from libs.data_types import TrainJob
 
 train_table = os.environ.get('TRAIN_TABLE')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 

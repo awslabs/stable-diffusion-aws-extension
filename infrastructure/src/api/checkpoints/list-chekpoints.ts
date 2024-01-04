@@ -1,5 +1,14 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  aws_s3,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -15,6 +24,7 @@ export interface ListCheckPointsApiProps {
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class ListCheckPointsApi {
@@ -27,7 +37,7 @@ export class ListCheckPointsApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly authorizer: aws_apigateway.IAuthorizer;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: ListCheckPointsApiProps) {
@@ -41,6 +51,7 @@ export class ListCheckPointsApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.authorizer = props.authorizer;
+    this.logLevel = props.logLevel;
 
     this.listCheckpointsApi();
   }
@@ -87,6 +98,7 @@ export class ListCheckPointsApi {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

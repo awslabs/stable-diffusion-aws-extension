@@ -24,7 +24,8 @@ upload_by_url_lambda_name = os.environ.get('UPLOAD_BY_URL_LAMBDA_NAME')
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 
@@ -126,7 +127,6 @@ def handler(raw_event, context):
 
 
 def invoke_url_lambda(event: CreateCheckPointEvent):
-
     urls = list(set(event.urls))
 
     for url in urls:
@@ -168,6 +168,10 @@ def check_ckpt_name_unique(names: [str]):
     ckpts = ddb_service.scan(table=checkpoint_table)
     exists_names = []
     for ckpt in ckpts:
+        if 'checkpoint_names' not in ckpt:
+            continue
+        if 'L' not in ckpt['checkpoint_names']:
+            continue
         for name in ckpt['checkpoint_names']['L']:
             exists_names.append(name['S'])
 

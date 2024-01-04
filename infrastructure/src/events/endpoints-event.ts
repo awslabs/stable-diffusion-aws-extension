@@ -1,5 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_iam, Duration } from 'aws-cdk-lib';
+import {aws_iam, CfnParameter, Duration} from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -12,6 +12,7 @@ export interface SagemakerEndpointEventsProps {
   multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
+  logLevel: CfnParameter;
 }
 
 export class SagemakerEndpointEvents {
@@ -21,7 +22,7 @@ export class SagemakerEndpointEvents {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: SagemakerEndpointEventsProps) {
     this.scope = scope;
@@ -30,6 +31,7 @@ export class SagemakerEndpointEvents {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
+    this.logLevel = props.logLevel;
 
     this.createEndpointEventBridge();
   }
@@ -96,6 +98,7 @@ export class SagemakerEndpointEvents {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

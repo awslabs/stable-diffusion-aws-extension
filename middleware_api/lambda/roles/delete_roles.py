@@ -9,7 +9,7 @@ from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 dynamodb = boto3.resource('dynamodb')
 user_table = dynamodb.Table(os.environ.get('MULTI_USER_TABLE'))

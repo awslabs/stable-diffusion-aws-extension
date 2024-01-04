@@ -1,5 +1,14 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  aws_s3,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -16,6 +25,7 @@ export interface CreateModelJobApiProps {
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
+  logLevel: CfnParameter;
 }
 
 export class CreateModelJobApi {
@@ -28,7 +38,7 @@ export class CreateModelJobApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly layer: aws_lambda.LayerVersion;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: CreateModelJobApiProps) {
@@ -42,6 +52,7 @@ export class CreateModelJobApi {
     this.layer = props.commonLayer;
     this.checkpointTable = props.checkpointTable;
     this.multiUserTable = props.multiUserTable;
+    this.logLevel = props.logLevel;
 
     this.createModelJobApi();
   }
@@ -109,6 +120,7 @@ export class CreateModelJobApi {
         S3_BUCKET: this.s3Bucket.bucketName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

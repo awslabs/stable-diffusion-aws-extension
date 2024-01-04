@@ -8,7 +8,7 @@ import boto3
 from common.response import no_content
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 dynamodb = boto3.resource('dynamodb')
 dataset_info_table = dynamodb.Table(os.environ.get('DATASET_INFO_TABLE'))

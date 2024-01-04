@@ -1,9 +1,10 @@
 import logging
+import os
 
 from common.response import ok
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 
 def handler(event, ctx):

@@ -1,5 +1,13 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import {
+  aws_apigateway,
+  aws_apigateway as apigw,
+  aws_dynamodb,
+  aws_iam,
+  aws_lambda,
+  CfnParameter,
+  Duration
+} from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -14,6 +22,7 @@ export interface ListModelsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
+  logLevel: CfnParameter;
 }
 
 export class ListModelsApi {
@@ -25,7 +34,7 @@ export class ListModelsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly authorizer: aws_apigateway.IAuthorizer;
-
+  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: ListModelsApiProps) {
@@ -38,6 +47,7 @@ export class ListModelsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.authorizer = props.authorizer;
+    this.logLevel = props.logLevel;
 
     this.listAllModelJobApi();
   }
@@ -86,6 +96,7 @@ export class ListModelsApi {
       environment: {
         DYNAMODB_TABLE: this.modelTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

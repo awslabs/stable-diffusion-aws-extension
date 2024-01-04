@@ -1,4 +1,3 @@
-#import sagemaker
 import base64
 import re
 import math
@@ -13,6 +12,7 @@ from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
 from utils import tar
 import gradio as gr
+
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,6 @@ def async_create_model_on_sagemaker(
             json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             payload = {
-                "model_id": model_id,
                 "status": "Creating",
                 "multi_parts_tags": {}
             }
@@ -157,14 +156,13 @@ def async_create_model_on_sagemaker(
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")
                 # Upload src model to S3.
-                s3_signed_urls_resp = response.json()["s3PresignUrl"][local_tar_path]
+                s3_signed_urls_resp = json_response["s3PresignUrl"][local_tar_path]
                 multiparts_tags = upload_multipart_files_to_s3_by_signed_url(
                     local_tar_path,
                     s3_signed_urls_resp,
                     part_size
                 )
                 payload = {
-                    "model_id": model_id,
                     "status": "Creating",
                     "multi_parts_tags": {local_tar_path: multiparts_tags}
                 }
@@ -182,11 +180,10 @@ def async_create_model_on_sagemaker(
         if not integral_check:
             if model_id:
                 payload = {
-                    "model_id": model_id,
                     "status": "Fail",
-                    "multi_parts_tags": {local_tar_path: {}}
+                    "multi_parts_tags": {local_tar_path: []}
                 }
-                response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                response = requests.put(url=f"{url}/{model_id}", json=payload, headers={'x-api-key': api_key})
                 print(response)
             else:
                 gr.Error(f'model {new_model_name} not created, please try again')
@@ -240,8 +237,8 @@ def get_create_model_job_list(pr: gr.Request):
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}'
         }).json()
 
-        response['models'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-        for model in response['models']:
+        response['data']['models'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+        for model in response['data']['models']:
             if model['model_name'] in local_job_cache['create_model']:
                 del local_job_cache['create_model'][model['model_name']]
 

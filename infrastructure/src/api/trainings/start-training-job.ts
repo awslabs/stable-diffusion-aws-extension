@@ -11,7 +11,7 @@ import {
   aws_s3,
   aws_sns,
   aws_stepfunctions as sfn,
-  aws_stepfunctions_tasks as sfn_tasks,
+  aws_stepfunctions_tasks as sfn_tasks, CfnParameter,
   CustomResource,
   Duration,
   RemovalPolicy,
@@ -37,6 +37,7 @@ export interface StartTrainingJobApiProps {
   checkpointTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
   ecr_image_tag: string;
+  logLevel: CfnParameter;
 }
 
 export class StartTrainingJobApi {
@@ -59,6 +60,7 @@ export class StartTrainingJobApi {
   private readonly sfnLambdaRole: aws_iam.Role;
   private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
+  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: StartTrainingJobApiProps) {
     this.id = id;
@@ -72,6 +74,7 @@ export class StartTrainingJobApi {
     this.httpMethod = props.httpMethod;
     this.router = props.router;
     this.trainTable = props.trainTable;
+    this.logLevel = props.logLevel;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
     this.sfnLambdaRole = this.getStepFunctionLambdaRole();
     this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + props.ecr_image_tag;
@@ -281,6 +284,7 @@ export class StartTrainingJobApi {
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
         TRAINING_SAGEMAKER_ARN: this.trainingStateMachine.stateMachineArn,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -294,9 +298,10 @@ export class StartTrainingJobApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, startTrainJobIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
+    this.router.addResource('start')
+      .addMethod(this.httpMethod, startTrainJobIntegration, <MethodOptions>{
+        apiKeyRequired: true,
+      });
 
     return lambdaFunction;
   }
@@ -320,6 +325,7 @@ export class StartTrainingJobApi {
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -344,6 +350,7 @@ export class StartTrainingJobApi {
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
+        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 import boto3
+
 from common.ddb_service.client import DynamoDbUtilsService
 from endpoints.delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus
@@ -15,7 +16,8 @@ ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 

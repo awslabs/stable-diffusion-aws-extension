@@ -1,0 +1,65 @@
+# FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
+# FROM 727897471807.dkr.ecr.cn-north-1.amazonaws.com.cn/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
+FROM 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn/pytorch-training:2.0.1-cpu-py310-ubuntu20.04-sagemaker
+
+RUN apt-get update -y
+
+# install pkg lib for proprocess in controlnet
+RUN apt-get install -y pkg-config
+RUN apt-get install -y libcairo2-dev
+
+COPY stable-diffusion-webui /opt/ml/code/
+COPY utils/cn_serve /opt/ml/code
+
+# add accelerate
+RUN mkdir -p /root/.cache/huggingface/accelerate
+COPY utils/default_config.yaml /root/.cache/huggingface/accelerate/
+
+# download s5cmd
+RUN mkdir -p /opt/ml/code/tools
+RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
+RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
+
+RUN pip install --upgrade pip
+
+# patch for opencv 4.7
+# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+RUN pip install trash-cli
+RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
+
+RUN pip install -r /opt/ml/code/extensions/sd_dreambooth_extension/requirements.txt && \
+    pip install -r /opt/ml/code/extensions/sd-webui-controlnet/requirements.txt && \
+    pip install segment_anything && \
+    apt-get install -y google-perftools
+
+# prepare environment fow webui
+RUN pip install -r /opt/ml/code/requirements_versions.txt && \
+    pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
+    pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
+    pip install -U -I --no-deps xformers==0.0.20 && \
+    pip install ngrok
+
+RUN mkdir /opt/ml/code/repositories
+RUN git clone https://github.com/Stability-AI/stablediffusion.git /opt/ml/code/repositories/stable-diffusion-stability-ai && \
+    git -C /opt/ml/code/repositories/stable-diffusion-stability-ai checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf && \
+    git clone https://github.com/Stability-AI/generative-models.git /opt/ml/code/repositories/generative-models && \
+    git -C /opt/ml/code/repositories/generative-models checkout 45c443b316737a4ab6e40413d7794a7f5657c19f && \
+    git clone https://github.com/crowsonkb/k-diffusion.git /opt/ml/code/repositories/k-diffusion && \
+    git -C /opt/ml/code/repositories/k-diffusion checkout ab527a9a6d347f364e3d185ba6d714e22d80cb3c && \
+    git clone https://github.com/sczhou/CodeFormer.git /opt/ml/code/repositories/CodeFormer && \
+    git -C /opt/ml/code/repositories/CodeFormer checkout c5b4593074ba6214284d6acd5f1719b6c5d739af && \
+    git clone https://github.com/salesforce/BLIP.git /opt/ml/code/repositories/BLIP && \
+    git -C /opt/ml/code/repositories/BLIP checkout 48211a1594f1321b00f14c9f7a5b4813144b2fb9 && \
+    pip install -r /opt/ml/code/repositories/CodeFormer/requirements.txt
+
+COPY inference/clip_init.py /opt/ml/code
+RUN python /opt/ml/code/clip_init.py
+
+
+WORKDIR /opt/ml/code
+
+ENV ON_DOCKER true
+
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
+
+ENTRYPOINT ["python", "/opt/ml/code/cn_serve"]
