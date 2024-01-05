@@ -63,6 +63,12 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
         headers['Content-Type'] = 'application/json'
 
     headers['x-api-version'] = x_api_version
+
+    headers['Access-Control-Allow-Origin'] = '*'
+    headers['Access-Control-Allow-Headers'] = '*'
+    headers['Access-Control-Allow-Methods'] = '*'
+    headers['Access-Control-Allow-Credentials'] = True
+
     payload['headers'] = headers
 
     body = {
