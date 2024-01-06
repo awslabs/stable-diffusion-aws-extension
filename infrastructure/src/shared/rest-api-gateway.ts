@@ -32,7 +32,7 @@ export class RestApiGateway {
     );
 
     // Create an API Gateway, will merge with existing API Gateway
-    const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
+    const api = new apigw.RestApi(this.scope, 'esd-api', {
       restApiName: this.scope.node.id,
       description: `Extension for Stable Diffusion on AWS API`,
       deployOptions: {
@@ -79,12 +79,12 @@ export class RestApiGateway {
     });
 
     // Add API Key to the API Gateway
-    const apiKey = api.addApiKey('sd-extension-api-key', {
-      apiKeyName: 'sd-extension-api-key',
+    const apiKey = api.addApiKey('esd-api-key', {
+      apiKeyName: 'esd-api-key',
       value: apiKeyStr,
     });
 
-    const usagePlan = api.addUsagePlan('sd-extension-api-usage-plan', {});
+    const usagePlan = api.addUsagePlan('esd-api-usage-plan', {});
     usagePlan.addApiKey(apiKey);
     usagePlan.addApiStage({
       stage: api.deploymentStage,
