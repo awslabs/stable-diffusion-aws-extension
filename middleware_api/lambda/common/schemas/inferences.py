@@ -19,11 +19,11 @@ class InferenceModel(BaseModel):
 
 
 class InferenceParams(BaseModel):
-    input_body_presign_url: str
-    input_body_s3: str
-    output_path: str
-    sagemaker_inference_endpoint_id: str
-    sagemaker_inference_endpoint_name: str
+    input_body_presign_url: Optional[str]
+    input_body_s3: Optional[str]
+    output_path: Optional[str]
+    sagemaker_inference_endpoint_id: Optional[str]
+    sagemaker_inference_endpoint_name: Optional[str]
     used_models: Dict[str, List[InferenceModel]]
 
 
