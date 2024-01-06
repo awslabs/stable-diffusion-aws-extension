@@ -4,6 +4,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.schemas.users import UserCollection, UserLink, UserItem
+from common.util import generate_url
 from libs.data_types import User, PARTITION_KEYS, Role
 from libs.utils import KeyEncryptService, get_permissions_by_username
 
@@ -56,39 +58,41 @@ def handler(event, ctx):
         r = Role(**(ddb_service.deserialize(role_row)))
         roles_permission_lookup[r.sort_key] = r.permissions
 
-    result = []
+    user_collection = UserCollection(
+        items=[],
+        links=[
+            UserLink(href=generate_url(event, f'users'), rel="self", type="GET"),
+            UserLink(href=generate_url(event, f'users'), rel="create", type="POST"),
+            UserLink(href=generate_url(event, f'users'), rel="delete", type="DELETE"),
+        ]
+    )
+
     for row in scan_rows:
         user = User(**(ddb_service.deserialize(row)))
-        user_resp = {
-            'username': user.sort_key,
-            'roles': user.roles,
-            'creator': user.creator,
-            'permissions': set(),
-            'password': '*' * 8 if not show_password else password_encryptor.decrypt(
-                key_id=kms_key_id, cipher_text=user.password).decode(),
-        }
+
+        item = UserItem(
+            name=user.sort_key,
+            creator=user.creator,
+            roles=user.roles,
+            permissions=[],
+        )
+
         for role in user.roles:
             if role in roles_permission_lookup:
-                user_resp['permissions'].update(roles_permission_lookup[role])
+                item.permissions = roles_permission_lookup[role]
             else:
                 print(f'role {role} not found and no permission is attached')
-
-        user_resp['permissions'] = list(user_resp['permissions'])
-        user_resp['permissions'].sort()
 
         # only show user to requester if requester has 'user:all' permission
         # or requester has 'user:list' permission and the user is created by the requester
         if 'user' in requester_permissions and ('all' in requester_permissions['user'] or
                                                 ('list' in requester_permissions['user'] and
                                                  user.creator == requester_name)):
-            result.append(user_resp)
+            user_collection.items.append(item)
         elif user.sort_key == requester_name:
-            result.append(user_resp)
+            user_collection.items.append(item)
 
-    data = {
-        'users': result,
-        'previous_evaluated_key': "not_applicable",
-        'last_evaluated_key': "not_applicable"
-    }
+    user_collection.previous_evaluated_key = "not_applicable"
+    user_collection.last_evaluated_key = "not_applicable"
 
-    return ok(data=data)
+    return ok(data=user_collection.dict())

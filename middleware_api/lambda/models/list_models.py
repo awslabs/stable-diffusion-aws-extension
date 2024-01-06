@@ -3,7 +3,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.util import get_multi_query_params
+from common.schemas.models import ModelCollection, ModelLink, ModelItem
+from common.util import get_multi_query_params, generate_url
 from libs.data_types import Model
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
@@ -32,7 +33,14 @@ def handler(event, context):
     if resp is None or len(resp) == 0:
         return ok(data={'models': []})
 
-    models = []
+    model_collection = ModelCollection(
+        items=[],
+        links=[
+            ModelLink(href=generate_url(event, f'models'), rel="self", type="GET"),
+            ModelLink(href=generate_url(event, f'models'), rel="create", type="POST"),
+            ModelLink(href=generate_url(event, f'models'), rel="delete", type="DELETE"),
+        ]
+    )
 
     try:
         requestor_name = event['requestContext']['authorizer']['username']
@@ -44,24 +52,27 @@ def handler(event, context):
 
         for r in resp:
             model = Model(**(ddb_service.deserialize(r)))
-            model_dto = {
-                'id': model.id,
-                'model_name': model.name,
-                'created': model.timestamp,
-                'params': model.params,
-                'status': model.job_status.value,
-                'output_s3_location': model.output_s3_location
-            }
+
+            item = ModelItem(
+                id=model.id,
+                type=model.model_type,
+                name=model.name,
+                status=model.job_status.value,
+                s3_location=model.output_s3_location,
+                params=model.params,
+                created=model.timestamp,
+            )
+
             if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles,
                                                                        requestor_name):
-                models.append(model_dto)
+                model_collection.items.append(item)
             elif not model.allowed_roles_or_users and \
                     'user' in requestor_permissions and \
                     'all' in requestor_permissions['user']:
                 # superuser can view the legacy data
-                models.append(model_dto)
+                model_collection.items.append(item)
 
-        return ok(data={'models': models}, decimal=True)
+        return ok(data=model_collection.dict(), decimal=True)
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))

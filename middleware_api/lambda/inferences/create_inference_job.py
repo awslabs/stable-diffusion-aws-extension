@@ -121,8 +121,10 @@ def handler(raw_event, context):
                                            for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
+        logger.info(resp)
         return created(data=resp)
     except Exception as e:
+        logger.error(e)
         return bad_request(message=str(e))
 
 

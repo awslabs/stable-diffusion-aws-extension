@@ -22,9 +22,11 @@ class RoleItem(BaseModel):
         }
 
 
-class UserCollection(BaseModel):
+class RoleCollection(BaseModel):
     items: List[RoleItem]
     links: Optional[List[RoleLink]]
+    previous_evaluated_key: Optional[str]
+    last_evaluated_key: Optional[str]
 
     class Config:
         json_encoders = {

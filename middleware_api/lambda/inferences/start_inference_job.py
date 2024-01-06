@@ -67,4 +67,6 @@ def handler(event, _):
         }
     }
 
+    logger.info(data)
+
     return accepted(data=data)

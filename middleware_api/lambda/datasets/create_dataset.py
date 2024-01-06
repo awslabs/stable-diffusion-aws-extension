@@ -96,7 +96,7 @@ def handler(raw_event, context):
         })
 
         data = {
-            'datasetName': new_dataset_info.dataset_name,
+            'dataset_name': new_dataset_info.dataset_name,
             's3PresignUrl': presign_url_map
         }
 

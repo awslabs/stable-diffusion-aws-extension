@@ -2,6 +2,8 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.schemas.endpoints import EndpointCollection, EndpointItem, EndpointLink
+from common.util import generate_url
 from libs.enums import EndpointStatus
 from common.response import ok, bad_request
 from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
@@ -37,7 +39,14 @@ def handler(event, ctx):
     else:
         scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
 
-    results = []
+    endpoint_collection = EndpointCollection(
+        items=[],
+        links=[
+            EndpointLink(href=generate_url(event, f'endpoints'), rel="self", type="GET"),
+            EndpointLink(href=generate_url(event, f'endpoints'), rel="create", type="POST"),
+            EndpointLink(href=generate_url(event, f'endpoints'), rel="delete", type="DELETE"),
+        ]
+    )
     user_roles = []
 
     try:
@@ -55,28 +64,33 @@ def handler(event, ctx):
             user_roles.append(role.sort_key)
 
         for row in scan_rows:
+
             # Compatible with fields used in older data, must be 'deleted'
             if 'status' in row and row['status']['S'] == 'deleted':
                 row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
             endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
+
+            endpoint_item = EndpointItem(
+                id=endpoint.EndpointDeploymentJobId,
+                autoscaling=endpoint.autoscaling,
+                current_instance_count=endpoint.current_instance_count,
+                name=endpoint.endpoint_name,
+                status=endpoint.endpoint_status,
+                start_time=endpoint.startTime,
+                max_instance_number=endpoint.max_instance_number,
+                owner_group_or_role=endpoint.owner_group_or_role,
+            )
+
             if 'sagemaker_endpoint' in requestor_permissions and \
                     'list' in requestor_permissions['sagemaker_endpoint'] and \
                     endpoint.owner_group_or_role and \
                     username and check_user_permissions(endpoint.owner_group_or_role, user_roles, username):
-                results.append(endpoint.__dict__)
+                endpoint_collection.items.append(endpoint_item)
             elif 'sagemaker_endpoint' in requestor_permissions and 'all' in requestor_permissions['sagemaker_endpoint']:
-                results.append(endpoint.__dict__)
+                endpoint_collection.items.append(endpoint_item)
 
-        # Old data may never update the count of instances
-        for result in results:
-            if 'current_instance_count' not in result:
-                result['current_instance_count'] = 'N/A'
-
-        data = {
-            'endpoints': results
-        }
-
-        return ok(data=data, decimal=True)
+        return ok(data=endpoint_collection.dict(), decimal=True)
     except Exception as e:
+        logger.error(e)
         return bad_request(message=str(e))

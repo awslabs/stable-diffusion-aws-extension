@@ -52,13 +52,17 @@ def handler(event, context):
 
     requestor_name = event['requestContext']['authorizer']['username']
 
-    ckpt_list = CheckpointCollection(
+    checkpoint_collection = CheckpointCollection(
         items=[],
         links=[
-            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="self", type="GET").dict(),
-            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="create", type="POST").dict(),
-            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="delete", type="DELETE").dict(),
-        ]
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="self", type="GET"),
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="create", type="POST"),
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="delete", type="DELETE"),
+        ],
+        page=page,
+        per_page=per_page,
+        pages=0,
+        total=0,
     )
 
     try:
@@ -73,15 +77,7 @@ def handler(event, context):
 
         raw_ckpts = ddb_service.scan(table=checkpoint_table, filters=_filter)
         if raw_ckpts is None or len(raw_ckpts) == 0:
-            data = {
-                'page': page,
-                'per_page': per_page,
-                'pages': 0,
-                'total': 0,
-                'checkpoints': [],
-                'links': ckpt_list.links,
-            }
-            return ok(data=data)
+            return ok(data=checkpoint_collection.dict())
 
         for r in raw_ckpts:
             ckpt = CheckPoint(**(ddb_service.deserialize(r)))
@@ -103,22 +99,19 @@ def handler(event, context):
                     params=ckpt.params,
                     created=ckpt.timestamp,
                     links=[
-                        CheckpointLink(href=generate_url(event, f'checkpoints/{ckpt.id}'), rel="update", type="PUT").dict()
+                        CheckpointLink(href=generate_url(event, f'checkpoints/{ckpt.id}'), rel="update", type="PUT")
                     ]
                 )
                 logger.info(checkpoint_item)
-                ckpt_list.items.append(checkpoint_item.dict())
+                checkpoint_collection.items.append(checkpoint_item.dict())
 
-        data = {
-            'page': page,
-            'per_page': per_page,
-            'pages': int(len(ckpt_list.items) / per_page) + 1,
-            'total': len(ckpt_list.items),
-            'checkpoints': page_data(ckpt_list.items, page, per_page),
-            'links': ckpt_list.links,
-        }
+        checkpoint_collection.page = page
+        checkpoint_collection.per_page = per_page
+        checkpoint_collection.pages = int(len(checkpoint_collection.items) / per_page) + 1
+        checkpoint_collection.total = len(checkpoint_collection.items)
+        checkpoint_collection.items = page_data(checkpoint_collection.items, page, per_page)
 
-        return ok(data=data)
+        return ok(data=checkpoint_collection.dict())
     except Exception as e:
         logger.error(e)
         return bad_request(data=str(e))

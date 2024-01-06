@@ -35,14 +35,16 @@ class ModelParams(BaseModel):
 
 class ModelItem(BaseModel):
     id: str
-    allowed_roles_or_users: List[str]
-    checkpoint_id: str
-    job_status: str
-    model_type: str
+    type: str
     name: str
-    output_s3_location: str
-    params: ModelParams
-    timestamp: str
+    status: str
+    allowed_roles_or_users: List[str]
+    output_s3_location: Optional[str]
+    params: Optional[ModelParams]
+    timestamp: Optional[str]
+    s3_location: Optional[str]
+    created: Optional[str]
+    checkpoint_id: Optional[str]
     links: Optional[List[ModelLink]]
 
     class Config:
@@ -54,6 +56,8 @@ class ModelItem(BaseModel):
 class ModelCollection(BaseModel):
     items: List[ModelItem]
     links: Optional[List[ModelLink]]
+    previous_evaluated_key: Optional[str]
+    last_evaluated_key: Optional[str]
 
     class Config:
         json_encoders = {

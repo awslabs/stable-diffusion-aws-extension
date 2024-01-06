@@ -119,15 +119,7 @@ def handler(raw_event, ctx):
         creator=event.creator,
     ).__dict__)
 
-    data = {
-        'user': {
-            'username': event.username,
-            'roles': event.roles,
-            'creator': event.creator,
-        }
-    }
-
-    return created(data=data)
+    return created()
 
 
 def _check_action_permission(creator_username, target_username):

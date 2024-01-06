@@ -4,6 +4,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.schemas.roles import RoleCollection, RoleLink, RoleItem
+from common.util import generate_url
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import get_permissions_by_username, get_user_roles
 
@@ -46,28 +48,34 @@ def handler(event, ctx):
             'sort_key': role
         })
 
-    result = []
+    role_collection = RoleCollection(
+        items=[],
+        links=[
+            RoleLink(href=generate_url(event, f'roles'), rel="self", type="GET"),
+            RoleLink(href=generate_url(event, f'roles'), rel="create", type="POST"),
+            RoleLink(href=generate_url(event, f'roles'), rel="delete", type="DELETE"),
+        ]
+    )
+
     for row in scan_rows:
         r = Role(**(ddb_service.deserialize(row)))
-        role_dto = {
-            'role_name': r.sort_key,
-            'creator': r.creator,
-            'permissions': r.permissions
-        }
+
+        item = RoleItem(
+            name=r.sort_key,
+            creator=r.creator,
+            permissions=r.permissions,
+        )
 
         if 'role' in requestor_permissions and 'all' in requestor_permissions['role']:
-            result.append(role_dto)
+            role_collection.items.append(item)
         elif 'role' in requestor_permissions and \
                 'list' in requestor_permissions['role'] and r.creator == requestor_name:
-            result.append(role_dto)
+            role_collection.items.append(item)
         elif r.sort_key in requestor_roles and 'role' in requestor_permissions and \
                 'list' in requestor_permissions['role']:
-            result.append(role_dto)
+            role_collection.items.append(item)
 
-    data = {
-        'roles': result,
-        'previous_evaluated_key': 'not_applicable',
-        'last_evaluated_key': last_token
-    }
+    role_collection.previous_evaluated_key = "not_applicable"
+    role_collection.last_evaluated_key = last_token
 
-    return ok(data=data)
+    return ok(data=role_collection.dict())

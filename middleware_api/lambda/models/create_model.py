@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, internal_server_error, created
+from common.schemas.models import ModelItem
 from libs.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
@@ -44,7 +45,7 @@ def handler(raw_event, context):
     _type = event.model_type
 
     try:
-        # check if roles has already linked to an endpoint?
+        # check if roles have already linked to an endpoint?
         creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
         if 'train' not in creator_permissions \
                 or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
@@ -133,15 +134,18 @@ def handler(raw_event, context):
         logger.error(e)
         return internal_server_error(message=str(e))
 
+    item = ModelItem(
+        id=model_job.id,
+        type=model_job.model_type,
+        name=model_job.name,
+        status=model_job.job_status.value,
+        s3_location=checkpoint.s3_location,
+        params=model_job.params,
+    )
+
     data = {
-        'job': {
-            'id': model_job.id,
-            'status': model_job.job_status.value,
-            's3_base': checkpoint.s3_location,
-            'model_type': model_job.model_type,
-            'params': model_job.params  # not safe if not json serializable type
-        },
-        's3PresignUrl': multiparts_resp
+        's3PresignUrl': multiparts_resp,
+        'model': item.dict(),
     }
 
     return created(data=data)

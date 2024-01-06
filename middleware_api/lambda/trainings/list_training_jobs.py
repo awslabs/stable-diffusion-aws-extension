@@ -4,7 +4,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.util import get_multi_query_params
+from common.schemas.trainings import TrainingCollection, TrainingLink, TrainingItem
+from common.util import get_multi_query_params, generate_url
 from libs.data_types import TrainJob
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
@@ -43,31 +44,40 @@ def handler(event, context):
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
             return bad_request(message='user has no permission to train')
 
-        train_jobs = []
+        training_collection = TrainingCollection(
+            items=[],
+            links=[
+                TrainingLink(href=generate_url(event, f'trainings'), rel="self", type="GET"),
+                TrainingLink(href=generate_url(event, f'trainings'), rel="create", type="POST"),
+                TrainingLink(href=generate_url(event, f'trainings'), rel="delete", type="DELETE"),
+            ]
+        )
+
         for tr in resp:
             train_job = TrainJob(**(ddb_service.deserialize(tr)))
             model_name = 'not_applied'
             if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
                 model_name = train_job.params['training_params']['model_name']
 
-            train_job_dto = {
-                'id': train_job.id,
-                'modelName': model_name,
-                'status': train_job.job_status.value,
-                'trainType': train_job.train_type,
-                'created': train_job.timestamp,
-                'sagemakerTrainName': train_job.sagemaker_train_name,
-            }
+            item = TrainingItem(
+                id=train_job.id,
+                model_name=model_name,
+                status=train_job.job_status.value,
+                type=train_job.train_type,
+                timestamp=train_job.timestamp,
+                sagemaker_train_name=train_job.sagemaker_train_name,
+            )
+
             if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users,
                                                                            requestor_roles, requestor_name):
-                train_jobs.append(train_job_dto)
+                training_collection.items.append(item)
             elif not train_job.allowed_roles_or_users and \
                     'user' in requestor_permissions and \
                     'all' in requestor_permissions['user']:
                 # superuser can view the legacy data
-                train_jobs.append(train_job_dto)
+                training_collection.items.append(item)
 
-        return ok(data={'trainJobs': train_jobs}, decimal=True)
+        return ok(data=training_collection.dict(), decimal=True)
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))

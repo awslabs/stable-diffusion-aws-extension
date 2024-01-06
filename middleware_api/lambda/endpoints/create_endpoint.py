@@ -9,6 +9,7 @@ import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, accepted
+from common.schemas.endpoints import EndpointItem
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus
 from libs.utils import get_permissions_by_username
@@ -116,9 +117,19 @@ def handler(raw_event, ctx):
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
 
+        endpoint_item = EndpointItem(
+            id=endpoint_deployment_id,
+            autoscaling=event.autoscaling_enabled,
+            current_instance_count=0,
+            name=endpoint_name,
+            status=EndpointStatus.CREATING.value,
+            start_time=str(datetime.now()),
+            max_instance_number=event.initial_instance_count,
+            owner_group_or_role=event.assign_to_roles,
+        )
         return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
-            data=data
+            data=endpoint_item.dict()
         )
     except Exception as e:
         logger.error(e)

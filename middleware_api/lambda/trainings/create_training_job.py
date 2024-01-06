@@ -10,6 +10,7 @@ import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, not_found, forbidden, internal_server_error, created
+from common.schemas.trainings import TrainingItem
 from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, save_json_to_file
 from libs.data_types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
@@ -123,14 +124,16 @@ def handler(raw_event, context):
         )
         ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
+        item = TrainingItem(
+            id=train_job.id,
+            status=train_job.job_status.value,
+            type=train_job.train_type,
+            params=train_job.params,
+            input_s3_location=train_input_s3_location,
+        )
+
         data = {
-            'job': {
-                'id': train_job.id,
-                'status': train_job.job_status.value,
-                'trainType': train_job.train_type,
-                'params': train_job.params,
-                'input_location': train_input_s3_location,
-            },
+            'training': item.dict(),
             's3PresignUrl': presign_url_map
         }
 

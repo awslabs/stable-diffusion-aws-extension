@@ -5,6 +5,7 @@ import os
 import boto3
 
 from common.response import ok, not_found
+from common.schemas.inferences import InferenceItem
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -42,13 +43,22 @@ def handler(event, ctx):
         s3_bucket_name,
         f"out/{inference_id}/result/{inference_id}_param.json")
 
-    data = {
-        "img_presigned_urls": img_presigned_urls,
-        "output_presigned_urls": [output_presigned_urls],
-        **item,
-    }
+    item = InferenceItem(
+        id=item.InferenceJobId,
+        task_type=item.taskType,
+        status=item.status,
+        owner_group_or_role=item.owner_group_or_role,
+        params=item.params,
+        sagemakerfchbc_raw=item.sagemakerRaw,
+        start_time=item.startTime,
+        complete_time=item.completeTime,
+        img_presigned_urls=img_presigned_urls,
+        output_presigned_urls=[output_presigned_urls]
+    )
 
-    return ok(data=data)
+    logger.info(item)
+
+    return ok(data=item.dict())
 
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:

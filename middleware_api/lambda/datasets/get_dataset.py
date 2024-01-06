@@ -2,7 +2,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, not_found, forbidden
+from common.response import ok, not_found, forbidden, bad_request
 from common.schemas.datasets import DatasetInfoItem, DatasetItem as DatasetItemSchema
 from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
@@ -47,26 +47,30 @@ def handler(event, context):
     ):
         return forbidden(message='no permission to view dataset')
 
-    rows = ddb_service.query_items(table=dataset_item_table, key_values={
-        'dataset_name': dataset_name
-    })
+    try:
+        rows = ddb_service.query_items(table=dataset_item_table, key_values={
+            'dataset_name': dataset_name
+        })
 
-    dataset = DatasetItemSchema(
-        name=dataset_name,
-        status=dataset_info.dataset_status.value,
-        s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-        description=dataset_info.params.get('description'),
-        items=[],
-    )
+        dataset = DatasetItemSchema(
+            name=dataset_name,
+            status=dataset_info.dataset_status.value,
+            s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
+            description=dataset_info.params.get('description'),
+            items=[],
+        )
 
-    for row in rows:
-        item = DatasetItem(**ddb_service.deserialize(row))
-        dataset.items.append(DatasetInfoItem(
-            name=item.name,
-            type=item.type,
-            status=item.data_status.value,
-            original_file_name=item.params.get('original_file_name'),
-            preview_url=generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
-        ))
+        for row in rows:
+            item = DatasetItem(**ddb_service.deserialize(row))
+            dataset.items.append(DatasetInfoItem(
+                name=item.name,
+                type=item.type,
+                status=item.data_status.value,
+                original_file_name=item.params.get('original_file_name'),
+                preview_url=generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
+            ))
 
-    return ok(data=dataset.dict())
+        return ok(data=dataset.dict())
+    except Exception as e:
+        logger.error(e)
+        return bad_request(message=str(e))

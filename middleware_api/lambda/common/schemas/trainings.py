@@ -17,16 +17,17 @@ class TrainingParams(BaseModel):
 
 class TrainingItem(BaseModel):
     id: str
-    allowed_roles_or_users: List[str]
-    checkpoint_id: str
-    input_s3_location: str
-    job_status: str
-    model_id: str
-    sagemaker_sfn_arn: str
-    sagemaker_train_name: str
+    type: str
+    status: str
     timestamp: str
-    train_type: str
-    params: TrainingParams
+    checkpoint_id: Optional[str]
+    model_id: Optional[str]
+    model_name: Optional[str]
+    input_s3_location: Optional[str]
+    sagemaker_sfn_arn: Optional[str]
+    sagemaker_train_name: Optional[str]
+    allowed_roles_or_users: Optional[List[str]]
+    params: Optional[TrainingParams]
     links: Optional[List[TrainingLink]]
 
     class Config:
@@ -36,8 +37,10 @@ class TrainingItem(BaseModel):
 
 
 class TrainingCollection(BaseModel):
-    items: List[TrainingItem]
+    items: Optional[List[TrainingItem]]
     links: Optional[List[TrainingLink]]
+    previous_evaluated_key: Optional[str]
+    last_evaluated_key: Optional[str]
 
     class Config:
         json_encoders = {

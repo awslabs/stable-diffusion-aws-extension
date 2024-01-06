@@ -3,6 +3,8 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.schemas.inferences import InferenceCollection, InferenceLink, InferenceItem
+from common.util import generate_url
 from libs.data_types import InferenceJob
 from libs.utils import get_user_roles, check_user_permissions
 
@@ -35,21 +37,36 @@ def handler(event, ctx):
         username = parameters['username'] if 'username' in parameters and parameters['username'] else None
 
     scan_rows = ddb_service.scan(inference_table_name, filters=None)
-    results = []
+    inference_collection = InferenceCollection(
+        items=[],
+        links=[
+            InferenceLink(href=generate_url(event, f'inferences'), rel="self", type="GET"),
+            InferenceLink(href=generate_url(event, f'inferences'), rel="create", type="POST"),
+            InferenceLink(href=generate_url(event, f'inferences'), rel="delete", type="DELETE"),
+        ]
+    )
     user_roles = []
     if username:
         user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
     for row in scan_rows:
         inference = InferenceJob(**(ddb_service.deserialize(row)))
+
+        item = InferenceItem(
+            id=inference.InferenceJobId,
+            task_type=inference.taskType,
+            status=inference.status,
+            owner_group_or_role=inference.owner_group_or_role,
+            params=inference.params,
+            sagemakerfchbc_raw=inference.sagemakerRaw,
+            start_time=inference.startTime,
+            complete_time=inference.completeTime,
+        )
+
         if username:
             if check_user_permissions(inference.owner_group_or_role, user_roles, username):
-                results.append(inference.__dict__)
+                inference_collection.items.append(item)
         else:
-            results.append(inference.__dict__)
+            inference_collection.items.append(item)
 
-    data = {
-        'inferences': results
-    }
-
-    return ok(data=data, decimal=True)
+    return ok(data=inference_collection.dict(), decimal=True)

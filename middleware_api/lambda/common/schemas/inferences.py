@@ -28,16 +28,17 @@ class InferenceParams(BaseModel):
 
 
 class InferenceItem(BaseModel):
-    InferenceJobId: str
-    completeTime: str
-    image_names: List[str]
-    inference_info_name: str
-    owner_group_or_role: List[str]
-    params: InferenceParams
-    sagemakerRaw: str
-    startTime: str
+    id: str
+    task_type: str
     status: str
-    taskType: str
+    owner_group_or_role: List[str]
+    img_presigned_urls: Optional[List[str]]
+    output_presigned_urls: Optional[List[str]]
+    params: Optional[InferenceParams]
+    sagemaker_raw: Optional[str]
+    start_time: Optional[str]
+    complete_time: Optional[str]
+    endpoint_name: Optional[str]
     links: Optional[List[InferenceLink]]
 
     class Config:
@@ -47,8 +48,10 @@ class InferenceItem(BaseModel):
 
 
 class InferenceCollection(BaseModel):
-    items: List[InferenceItem]
+    items: Optional[List[InferenceItem]]
     links: Optional[List[InferenceLink]]
+    previous_evaluated_key: Optional[str]
+    last_evaluated_key: Optional[str]
 
     class Config:
         json_encoders = {

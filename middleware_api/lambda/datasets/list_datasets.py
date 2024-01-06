@@ -25,9 +25,9 @@ def handler(event, context):
     datasets = DatasetCollection(
         items=[],
         links=[
-            DatasetLink(href=generate_url(event, f'datasets'), rel="self", type="GET").dict(),
-            DatasetLink(href=generate_url(event, f'datasets'), rel="create", type="POST").dict(),
-            DatasetLink(href=generate_url(event, f'datasets'), rel="delete", type="DELETE").dict(),
+            DatasetLink(href=generate_url(event, f'datasets'), rel="self", type="GET"),
+            DatasetLink(href=generate_url(event, f'datasets'), rel="create", type="POST"),
+            DatasetLink(href=generate_url(event, f'datasets'), rel="delete", type="DELETE"),
         ]
     )
 

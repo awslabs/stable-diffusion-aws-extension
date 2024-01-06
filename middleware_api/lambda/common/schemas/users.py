@@ -11,9 +11,10 @@ class UserLink(BaseModel):
 
 
 class UserItem(BaseModel):
-    username: str
+    name: str
     creator: str
     roles: List[str]
+    permissions: List[str]
     links: Optional[List[UserLink]]
 
     class Config:
@@ -25,6 +26,8 @@ class UserItem(BaseModel):
 class UserCollection(BaseModel):
     items: List[UserItem]
     links: Optional[List[UserLink]]
+    previous_evaluated_key: Optional[str]
+    last_evaluated_key: Optional[str]
 
     class Config:
         json_encoders = {
