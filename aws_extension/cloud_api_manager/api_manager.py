@@ -339,7 +339,7 @@ class CloudApiManager:
                     checkpoints.append({
                         'name': name,
                         'id': ckpt['id'],
-                        's3Location': ckpt['s3Location'],
+                        's3_location': ckpt['s3_location'],
                         'type': ckpt['type'],
                         'status': ckpt['status'],
                         'created': float(ckpt['created']),

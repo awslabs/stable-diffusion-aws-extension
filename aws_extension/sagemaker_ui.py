@@ -378,7 +378,7 @@ def get_model_list_by_type(model_type, username=""):
                 continue
             ckpt_type = ckpt["type"]
             for ckpt_name in ckpt["name"]:
-                ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name}"
+                ckpt_s3_pos = f"{ckpt['s3_location']}/{ckpt_name}"
                 checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
                 checkpoint_list.append(ckpt_name)
 
@@ -470,7 +470,7 @@ def refresh_all_models(username):
                 ckpt_type = ckpt["type"]
                 checkpoint_info[ckpt_type] = {}
                 for ckpt_name in ckpt["name"]:
-                    ckpt_s3_pos = f"{ckpt['s3Location']}/{ckpt_name.split(os.sep)[-1]}"
+                    ckpt_s3_pos = f"{ckpt['s3_location']}/{ckpt_name.split(os.sep)[-1]}"
                     checkpoint_info[ckpt_type][ckpt_name] = ckpt_s3_pos
     except Exception as e:
         logger.error(f"Error refresh all models: {e}")
@@ -854,9 +854,9 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
     if MODEL_TYPE.EMBEDDING.value in lora_and_hypernet_models_state:
         return update_prompt_with_selected_model(
-            selected_items, 
-            prompt, 
-            MODEL_TYPE.EMBEDDING, 
+            selected_items,
+            prompt,
+            MODEL_TYPE.EMBEDDING,
             lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
             )
 
@@ -871,7 +871,7 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):    
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
@@ -888,7 +888,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             for embedding in state_value:
                 if embedding not in selected_value:
                     prompt_txt = prompt_txt.replace(embedding.split(".")[0], "")
-        
+
         return prompt_txt
 
     def _remove_prompt_by_regex(pattern, prompt_txt):
@@ -897,14 +897,14 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             if match not in existed_item:
                 prompt_txt = prompt_txt.replace(match, "")
 
-        return prompt_txt       
+        return prompt_txt
 
     logger.info(f"Selected value is {selected_value}, \
                 original prompt is {original_prompt}, \
                 type is {type}")
     prompt_txt = original_prompt
     existed_item = []
-    
+
     # Compose prompt for Embedding/Lora/Hypernetwork
     for item in selected_value:
         model_name = item.split(".")[0]
@@ -917,7 +917,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
         else:
             logger.warning(f"The type {type} is not supported, skip it")
             continue
-        
+
         existed_item.append(model_prompt)
         if model_prompt not in original_prompt:
             if 0 == len(original_prompt.strip()):

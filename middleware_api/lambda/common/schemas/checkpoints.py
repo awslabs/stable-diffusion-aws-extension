@@ -18,13 +18,14 @@ class CheckpointParams(BaseModel):
 
 class CheckpointItem(BaseModel):
     id: str
-    allowed_roles_or_users: List[str]
-    name: List[str]
     status: str
-    params: CheckpointParams
-    s3_location: str
     type: str
     links: Optional[List[CheckpointLink]]
+    allowed_roles_or_users: List[str]
+    name: Optional[List[str]]
+    params: Optional[CheckpointParams]
+    s3_location: Optional[str]
+    created: Optional[str]
 
     class Config:
         json_encoders = {

@@ -76,6 +76,7 @@ def handler(event, context):
         ckpts = []
         for r in raw_ckpts:
             ckpt = CheckPoint(**(ddb_service.deserialize(r)))
+            logger.info(ckpt.__dict__)
 
             if len(roles) > 0 and set(roles).isdisjoint(set(ckpt.allowed_roles_or_users)):
                 continue
@@ -91,6 +92,7 @@ def handler(event, context):
                     s3_location=ckpt.s3_location,
                     status=ckpt.checkpoint_status.value,
                     params=ckpt.params,
+                    created=ckpt.timestamp,
                     links=[
                         CheckpointLink(href=generate_url(event, f'checkpoints/{ckpt.id}'), rel="update", type="PUT").dict()
                     ]

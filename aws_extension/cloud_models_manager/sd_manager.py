@@ -66,7 +66,7 @@ class CloudSDModelsManager:
     def get_ckpt_s3_by_name(self, name):
         ckpt = self.ckpt_lookup_by_name[name]
         if ckpt:
-            return f'{ckpt["s3Location"]}/{ckpt["name"]}'
+            return f'{ckpt["s3_location"]}/{ckpt["name"]}'
 
         return ""
 
