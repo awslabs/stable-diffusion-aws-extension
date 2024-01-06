@@ -21,8 +21,8 @@ class DatasetInfoItem(BaseModel):
 class DatasetItem(BaseModel):
     name: str
     status: str
-    timestamp: str
     s3_location: str
+    timestamp: Optional[str]
     description: Optional[str]
     items: Optional[List[DatasetInfoItem]]
     links: Optional[List[DatasetLink]]

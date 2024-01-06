@@ -1,11 +1,11 @@
 import logging
 import os
 
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, bad_request, forbidden
 from common.schemas.datasets import DatasetCollection, DatasetItem, DatasetLink
 from common.util import generate_url
 from libs.data_types import DatasetInfo
-from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -42,7 +42,7 @@ def handler(event, context):
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
         if 'train' not in requestor_permissions or \
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-            return bad_request(message='user has no permission to train')
+            return forbidden(message='user has no permission to train')
 
         resp = ddb_service.scan(table=dataset_info_table, filters=_filter)
         if not resp or len(resp) == 0:
@@ -68,7 +68,7 @@ def handler(event, context):
                 # superuser can view the legacy data
                 datasets.items.append(dataset_info_dto)
 
-        return ok(data=datasets, decimal=True)
+        return ok(data=datasets.dict())
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))

@@ -55,8 +55,8 @@ def handler(event, context):
         name=dataset_name,
         status=dataset_info.dataset_status.value,
         s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-        items=[],
         description=dataset_info.params.get('description'),
+        items=[],
     )
 
     for row in rows:
@@ -69,4 +69,4 @@ def handler(event, context):
             preview_url=generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
         ))
 
-    return ok(data=dataset, decimal=True)
+    return ok(data=dataset.dict())

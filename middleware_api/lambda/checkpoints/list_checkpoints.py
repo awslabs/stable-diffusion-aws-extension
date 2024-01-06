@@ -83,7 +83,6 @@ def handler(event, context):
             }
             return ok(data=data)
 
-        ckpts = []
         for r in raw_ckpts:
             ckpt = CheckPoint(**(ddb_service.deserialize(r)))
             logger.info(ckpt.__dict__)
@@ -108,14 +107,14 @@ def handler(event, context):
                     ]
                 )
                 logger.info(checkpoint_item)
-                ckpts.append(checkpoint_item.dict())
+                ckpt_list.items.append(checkpoint_item.dict())
 
         data = {
             'page': page,
             'per_page': per_page,
-            'pages': int(len(ckpts) / per_page) + 1,
-            'total': len(ckpts),
-            'checkpoints': page_data(ckpts, page, per_page),
+            'pages': int(len(ckpt_list.items) / per_page) + 1,
+            'total': len(ckpt_list.items),
+            'checkpoints': page_data(ckpt_list.items, page, per_page),
             'links': ckpt_list.links,
         }
 
