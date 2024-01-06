@@ -171,7 +171,7 @@ export class CreateDatasetApi {
               },
             },
             minItems: 1,
-            maxItems: 100,
+            maxItems: 24,
           },
           creator: {
             type: JsonSchemaType.STRING,

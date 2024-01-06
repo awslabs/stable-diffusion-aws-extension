@@ -19,15 +19,15 @@ class TrainingParamsResp(BaseModel):
 
 
 class TrainingParams(BaseModel):
-    training_params: TrainingParamsTraining
-    resp: TrainingParamsResp
+    training_params: Optional[TrainingParamsTraining]
+    resp: Optional[TrainingParamsResp]
 
 
 class TrainingItem(BaseModel):
     id: str
     type: str
     status: str
-    timestamp: str
+    timestamp: Optional[str]
     checkpoint_id: Optional[str]
     model_id: Optional[str]
     model_name: Optional[str]
