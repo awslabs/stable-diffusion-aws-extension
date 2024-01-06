@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
+import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -76,7 +76,7 @@ export class DeleteTrainingJobsApi {
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
-            training_job_list: {
+            training_id_list: {
               type: JsonSchemaType.ARRAY,
               items: {
                 type: JsonSchemaType.STRING,
@@ -87,7 +87,7 @@ export class DeleteTrainingJobsApi {
             },
           },
           required: [
-            'training_job_list',
+            'training_id_list',
           ],
         },
         contentType: 'application/json',

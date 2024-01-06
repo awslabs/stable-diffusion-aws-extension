@@ -24,6 +24,15 @@ def handler(event, context):
 
     _filter = {}
 
+    training_collection = TrainingCollection(
+        items=[],
+        links=[
+            TrainingLink(href=generate_url(event, f'trainings'), rel="self", type="GET"),
+            TrainingLink(href=generate_url(event, f'trainings'), rel="create", type="POST"),
+            TrainingLink(href=generate_url(event, f'trainings'), rel="delete", type="DELETE"),
+        ]
+    )
+
     types = get_multi_query_params(event, 'types')
     if types:
         _filter['train_type'] = types
@@ -34,7 +43,7 @@ def handler(event, context):
 
     resp = ddb_service.scan(table=train_table, filters=_filter)
     if resp is None or len(resp) == 0:
-        return ok(data={'trainJobs': []})
+        return ok(data=training_collection.dict(), decimal=True)
 
     requestor_name = event['requestContext']['authorizer']['username']
     try:
@@ -43,15 +52,6 @@ def handler(event, context):
         if 'train' not in requestor_permissions or \
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
             return bad_request(message='user has no permission to train')
-
-        training_collection = TrainingCollection(
-            items=[],
-            links=[
-                TrainingLink(href=generate_url(event, f'trainings'), rel="self", type="GET"),
-                TrainingLink(href=generate_url(event, f'trainings'), rel="create", type="POST"),
-                TrainingLink(href=generate_url(event, f'trainings'), rel="delete", type="DELETE"),
-            ]
-        )
 
         for tr in resp:
             train_job = TrainJob(**(ddb_service.deserialize(tr)))
