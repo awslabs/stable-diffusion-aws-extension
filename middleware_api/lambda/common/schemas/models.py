@@ -11,21 +11,19 @@ class ModelLink(BaseModel):
 
 
 class CreateModelParams(BaseModel):
-    ckpt_path: str
-    extra: bool
-    from_hub: bool
-    is_512: bool
-    new_model_name: str
-    new_model_token: str
-    new_model_url: str
-    shared_src: str
-    train_unfrozen: str
+    ckpt_path: Optional[str]
+    extra: Optional[bool]
+    from_hub: Optional[bool]
+    is_512: Optional[bool]
+    new_model_name: Optional[str]
+    new_model_token: Optional[str]
+    new_model_url: Optional[str]
+    shared_src: Optional[str]
+    train_unfrozen: Optional[str]
 
 
 class Resp(BaseModel):
-    config_dict: map
-    response: map
-    s3_output_location: str
+    s3_output_location: Optional[str]
 
 
 class ModelParams(BaseModel):
@@ -38,7 +36,7 @@ class ModelItem(BaseModel):
     type: str
     name: str
     status: str
-    allowed_roles_or_users: List[str]
+    allowed_roles_or_users: Optional[List[str]]
     output_s3_location: Optional[str]
     params: Optional[ModelParams]
     timestamp: Optional[str]
