@@ -34,5 +34,5 @@ class CheckpointItem(BaseModel):
 
 
 class CheckpointCollection(BaseModel):
-    items: List[CheckpointItem]
+    items: Optional[List[CheckpointItem]]
     links: Optional[List[CheckpointLink]]

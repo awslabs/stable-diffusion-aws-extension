@@ -4,7 +4,7 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
-from common.schemas.checkpoints import CheckpointItem, CheckpointLink
+from common.schemas.checkpoints import CheckpointItem, CheckpointLink, CheckpointCollection
 from common.util import get_multi_query_params, generate_url
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
@@ -52,6 +52,15 @@ def handler(event, context):
 
     requestor_name = event['requestContext']['authorizer']['username']
 
+    ckpt_list = CheckpointCollection(
+        items=[],
+        links=[
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="self", type="GET").dict(),
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="create", type="POST").dict(),
+            CheckpointLink(href=generate_url(event, f'checkpoints'), rel="delete", type="DELETE").dict(),
+        ]
+    )
+
     try:
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
@@ -69,7 +78,8 @@ def handler(event, context):
                 'per_page': per_page,
                 'pages': 0,
                 'total': 0,
-                'checkpoints': []
+                'checkpoints': [],
+                'links': ckpt_list.links,
             }
             return ok(data=data)
 
@@ -105,11 +115,8 @@ def handler(event, context):
             'per_page': per_page,
             'pages': int(len(ckpts) / per_page) + 1,
             'total': len(ckpts),
-            'links': [
-                CheckpointLink(href=generate_url(event, f'checkpoints'), rel="self", type="GET").dict(),
-                CheckpointLink(href=generate_url(event, f'checkpoints'), rel="create", type="POST").dict()
-            ],
             'checkpoints': page_data(ckpts, page, per_page),
+            'links': ckpt_list.links,
         }
 
         return ok(data=data)

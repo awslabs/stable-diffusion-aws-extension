@@ -1,13 +1,13 @@
 import logging
 import os
 
-from common.schemas.datasets import DatasetCollection, DatasetItem
+from common.schemas.datasets import DatasetCollection, DatasetItem, DatasetLink
+from common.util import generate_url
 from libs.data_types import DatasetInfo
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
 
-dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -21,6 +21,15 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 # GET /datasets
 def handler(event, context):
     _filter = {}
+
+    datasets = DatasetCollection(
+        items=[],
+        links=[
+            DatasetLink(href=generate_url(event, f'datasets'), rel="self", type="GET").dict(),
+            DatasetLink(href=generate_url(event, f'datasets'), rel="create", type="POST").dict(),
+            DatasetLink(href=generate_url(event, f'datasets'), rel="delete", type="DELETE").dict(),
+        ]
+    )
 
     parameters = event['queryStringParameters']
     if parameters:
@@ -37,9 +46,8 @@ def handler(event, context):
 
         resp = ddb_service.scan(table=dataset_info_table, filters=_filter)
         if not resp or len(resp) == 0:
-            return ok(data={'datasets': []})
+            return ok(data=datasets)
 
-        datasets = DatasetCollection()
         for tr in resp:
             dataset_info = DatasetInfo(**(ddb_service.deserialize(tr)))
 
@@ -60,7 +68,7 @@ def handler(event, context):
                 # superuser can view the legacy data
                 datasets.items.append(dataset_info_dto)
 
-        return ok(data={'datasets': datasets}, decimal=True)
+        return ok(data=datasets, decimal=True)
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))

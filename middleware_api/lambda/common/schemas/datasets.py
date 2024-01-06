@@ -34,5 +34,5 @@ class DatasetItem(BaseModel):
 
 
 class DatasetCollection(BaseModel):
-    items: List[DatasetItem]
+    items: Optional[List[DatasetItem]]
     links: Optional[List[DatasetLink]]
