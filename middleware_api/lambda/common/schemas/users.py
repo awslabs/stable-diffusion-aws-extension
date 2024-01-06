@@ -25,3 +25,8 @@ class UserItem(BaseModel):
 class UserCollection(BaseModel):
     items: List[UserItem]
     links: Optional[List[UserLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

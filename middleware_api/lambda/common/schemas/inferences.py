@@ -49,3 +49,8 @@ class InferenceItem(BaseModel):
 class InferenceCollection(BaseModel):
     items: List[InferenceItem]
     links: Optional[List[InferenceLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

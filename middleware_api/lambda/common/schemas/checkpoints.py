@@ -36,3 +36,8 @@ class CheckpointItem(BaseModel):
 class CheckpointCollection(BaseModel):
     items: Optional[List[CheckpointItem]]
     links: Optional[List[CheckpointLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

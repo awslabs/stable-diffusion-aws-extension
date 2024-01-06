@@ -31,3 +31,8 @@ class EndpointItem(BaseModel):
 class EndpointCollection(BaseModel):
     items: List[EndpointItem]
     links: Optional[List[EndpointLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

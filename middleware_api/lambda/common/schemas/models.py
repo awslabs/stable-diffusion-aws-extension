@@ -54,3 +54,8 @@ class ModelItem(BaseModel):
 class ModelCollection(BaseModel):
     items: List[ModelItem]
     links: Optional[List[ModelLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

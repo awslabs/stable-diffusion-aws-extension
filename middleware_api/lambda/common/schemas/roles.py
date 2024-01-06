@@ -25,3 +25,8 @@ class RoleItem(BaseModel):
 class UserCollection(BaseModel):
     items: List[RoleItem]
     links: Optional[List[RoleLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

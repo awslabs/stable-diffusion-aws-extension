@@ -38,3 +38,8 @@ class TrainingItem(BaseModel):
 class TrainingCollection(BaseModel):
     items: List[TrainingItem]
     links: Optional[List[TrainingLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

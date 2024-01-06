@@ -36,3 +36,8 @@ class DatasetItem(BaseModel):
 class DatasetCollection(BaseModel):
     items: Optional[List[DatasetItem]]
     links: Optional[List[DatasetLink]]
+
+    class Config:
+        json_encoders = {
+            Decimal: lambda v: str(v)
+        }

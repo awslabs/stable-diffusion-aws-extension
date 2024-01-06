@@ -51,23 +51,22 @@ def handler(event, context):
         'dataset_name': dataset_name
     })
 
-    items = []
+    dataset = DatasetItemSchema(
+        name=dataset_name,
+        status=dataset_info.dataset_status.value,
+        s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
+        items=[],
+        description=dataset_info.params.get('description'),
+    )
+
     for row in rows:
         item = DatasetItem(**ddb_service.deserialize(row))
-        items.append(DatasetInfoItem(
+        dataset.items.append(DatasetInfoItem(
             name=item.name,
             type=item.type,
             status=item.data_status.value,
             original_file_name=item.params.get('original_file_name'),
             preview_url=generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
         ))
-
-    dataset = DatasetItemSchema(
-        name=dataset_name,
-        status=dataset_info.dataset_status.value,
-        s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-        items=items,
-        description=dataset_info.params.get('description'),
-    )
 
     return ok(data=dataset, decimal=True)
