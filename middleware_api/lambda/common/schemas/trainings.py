@@ -10,9 +10,17 @@ class TrainingLink(BaseModel):
     type: str
 
 
+class TrainingParamsTraining(BaseModel):
+    ckpt_path: Optional[str]
+
+
+class TrainingParamsResp(BaseModel):
+    s3_output_location: Optional[str]
+
+
 class TrainingParams(BaseModel):
-    resp: map
-    training_params: map
+    training_params: TrainingParamsTraining
+    resp: TrainingParamsResp
 
 
 class TrainingItem(BaseModel):
