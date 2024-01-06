@@ -3,6 +3,7 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, forbidden
+from common.schemas.datasets import DatasetInfoItem, DatasetItem as DatasetItemSchema
 from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
@@ -50,24 +51,23 @@ def handler(event, context):
         'dataset_name': dataset_name
     })
 
-    resp = []
+    items = []
     for row in rows:
         item = DatasetItem(**ddb_service.deserialize(row))
-        resp.append({
-            'key': item.sort_key,
-            'name': item.name,
-            'type': item.type,
-            'preview_url': generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
-            'dataStatus': item.data_status.value,
-            **item.params
-        })
+        items.append(DatasetInfoItem(
+            name=item.name,
+            type=item.type,
+            status=item.data_status.value,
+            original_file_name=item.params.get('original_file_name'),
+            preview_url=generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
+        ))
 
-    return ok(data={
-        'dataset_name': dataset_name,
-        'datasetName': dataset_info.dataset_name,
-        's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-        'status': dataset_info.dataset_status.value,
-        'timestamp': dataset_info.timestamp,
-        'data': resp,
-        **dataset_info.params
-    }, decimal=True)
+    dataset = DatasetItemSchema(
+        name=dataset_name,
+        status=dataset_info.dataset_status.value,
+        s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
+        items=items,
+        description=dataset_info.params.get('description'),
+    )
+
+    return ok(data=dataset, decimal=True)

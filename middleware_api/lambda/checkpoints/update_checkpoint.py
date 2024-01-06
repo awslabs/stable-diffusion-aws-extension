@@ -41,8 +41,7 @@ def handler(raw_event, context):
         })
         if raw_checkpoint is None or len(raw_checkpoint) == 0:
             return not_found(
-                message=f'checkpoint not found with id {checkpoint_id}',
-                headers=headers
+                message=f'checkpoint not found with id {checkpoint_id}'
             )
 
         checkpoint = CheckPoint(**raw_checkpoint)
@@ -70,16 +69,8 @@ def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
         field_name='checkpoint_status',
         value=new_status
     )
-    data = {
-        'checkpoint': {
-            'id': checkpoint.id,
-            'type': checkpoint.checkpoint_type,
-            's3_location': checkpoint.s3_location,
-            'status': checkpoint.checkpoint_status.value,
-            'params': checkpoint.params
-        }
-    }
-    return ok(data=data)
+
+    return ok()
 
 
 def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):

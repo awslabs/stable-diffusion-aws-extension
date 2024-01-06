@@ -1,6 +1,7 @@
 import logging
 import os
 
+from common.schemas.datasets import DatasetCollection, DatasetItem
 from libs.data_types import DatasetInfo
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
@@ -38,25 +39,26 @@ def handler(event, context):
         if not resp or len(resp) == 0:
             return ok(data={'datasets': []})
 
-        datasets = []
+        datasets = DatasetCollection()
         for tr in resp:
             dataset_info = DatasetInfo(**(ddb_service.deserialize(tr)))
-            dataset_info_dto = {
-                'datasetName': dataset_info.dataset_name,
-                's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
-                'status': dataset_info.dataset_status.value,
-                'timestamp': dataset_info.timestamp,
-                **dataset_info.params
-            }
+
+            dataset_info_dto = DatasetItem(
+                name=dataset_info.dataset_name,
+                s3_location=f's3://{bucket_name}/{dataset_info.get_s3_key()}',
+                timestamp=dataset_info.timestamp,
+                status=dataset_info.dataset_status.value,
+                description=dataset_info.params.get('description', ''),
+            )
 
             if dataset_info.allowed_roles_or_users \
                     and check_user_permissions(dataset_info.allowed_roles_or_users, requestor_roles, requestor_name):
-                datasets.append(dataset_info_dto)
+                datasets.items.append(dataset_info_dto)
             elif not dataset_info.allowed_roles_or_users and \
                     'user' in requestor_permissions and \
                     'all' in requestor_permissions['user']:
                 # superuser can view the legacy data
-                datasets.append(dataset_info_dto)
+                datasets.items.append(dataset_info_dto)
 
         return ok(data={'datasets': datasets}, decimal=True)
     except Exception as e:

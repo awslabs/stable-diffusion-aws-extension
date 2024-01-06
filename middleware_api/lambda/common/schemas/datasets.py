@@ -10,16 +10,21 @@ class DatasetLink(BaseModel):
     type: str
 
 
-class DatasetParams(BaseModel):
-    description: str
+class DatasetInfoItem(BaseModel):
+    name: str
+    type: str
+    status: str
+    preview_url: str
+    original_file_name: str
 
 
 class DatasetItem(BaseModel):
-    dataset_name: str
-    allowed_roles_or_users: List[str]
-    dataset_status: str
-    params: DatasetParams
+    name: str
+    status: str
     timestamp: str
+    s3_location: str
+    description: Optional[str]
+    items: Optional[List[DatasetInfoItem]]
     links: Optional[List[DatasetLink]]
 
     class Config:
@@ -31,20 +36,3 @@ class DatasetItem(BaseModel):
 class DatasetCollection(BaseModel):
     items: List[DatasetItem]
     links: Optional[List[DatasetLink]]
-
-
-class DatasetItemParams(BaseModel):
-    original_file_name: str
-
-
-class DatasetInfoItem(BaseModel):
-    dataset_name: str
-    sort_key: str
-    data_status: str
-    name: str
-    type: str
-    params: DatasetItemParams
-
-
-class DatasetInfoItemCollection(BaseModel):
-    items: List[DatasetInfoItem]
