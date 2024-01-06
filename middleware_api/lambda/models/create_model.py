@@ -143,7 +143,7 @@ def handler(raw_event, context):
         s3_location=checkpoint.s3_location,
         params=model_job.params,
         links=[
-            ModelLink(href=generate_url(event, f'models/{model_job.id}'), rel="update", type="PUT"),
+            ModelLink(href=generate_url(raw_event, f'models/{model_job.id}'), rel="update", type="PUT"),
         ]
     )
 
