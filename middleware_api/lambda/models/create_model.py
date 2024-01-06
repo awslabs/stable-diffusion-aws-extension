@@ -9,7 +9,8 @@ from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, internal_server_error, created
-from common.schemas.models import ModelItem
+from common.schemas.models import ModelItem, ModelLink
+from common.util import generate_url
 from libs.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
@@ -141,6 +142,9 @@ def handler(raw_event, context):
         status=model_job.job_status.value,
         s3_location=checkpoint.s3_location,
         params=model_job.params,
+        links=[
+            ModelLink(href=generate_url(event, f'models/{model_job.id}'), rel="update", type="PUT"),
+        ]
     )
 
     data = {

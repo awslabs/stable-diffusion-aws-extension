@@ -15,11 +15,10 @@ class CreateModelParams(BaseModel):
     extra: Optional[bool]
     from_hub: Optional[bool]
     is_512: Optional[bool]
-    new_model_name: Optional[str]
     new_model_token: Optional[str]
     new_model_url: Optional[str]
     shared_src: Optional[str]
-    train_unfrozen: Optional[str]
+    train_unfrozen: Optional[bool]
 
 
 class Resp(BaseModel):
@@ -27,8 +26,8 @@ class Resp(BaseModel):
 
 
 class ModelParams(BaseModel):
-    create_model_params: CreateModelParams
-    resp: Resp
+    create_model_params: Optional[CreateModelParams]
+    resp: Optional[Resp]
 
 
 class ModelItem(BaseModel):

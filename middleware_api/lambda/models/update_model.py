@@ -10,7 +10,7 @@ from sagemaker.predictor_async import AsyncPredictor
 
 from libs.common_tools import complete_multipart_upload, DecimalEncoder
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
+from common.response import ok, bad_request, internal_server_error, accepted
 from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus
 
 model_table = os.environ.get('DYNAMODB_TABLE')
@@ -57,14 +57,14 @@ def handler(raw_event, context):
                 value=CheckPointStatus.Active.value
             )
 
-        data = _exec(model_job, CreateModelStatus[event.status])
+        _exec(model_job, CreateModelStatus[event.status])
         ddb_service.update_item(
             table=model_table,
             key={'id': model_job.id},
             field_name='job_status',
             value=event.status
         )
-        return ok(data=data)
+        return accepted( message=f"model creation started: {model_job.name}")
     except ClientError as e:
         logger.error(e)
         return internal_server_error(message=str(e))
