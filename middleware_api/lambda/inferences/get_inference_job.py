@@ -43,22 +43,26 @@ def handler(event, ctx):
         s3_bucket_name,
         f"out/{inference_id}/result/{inference_id}_param.json")
 
-    item = InferenceItem(
-        id=item.InferenceJobId,
-        task_type=item.taskType,
-        status=item.status,
-        owner_group_or_role=item.owner_group_or_role,
-        params=item.params,
-        sagemakerfchbc_raw=item.sagemakerRaw,
-        start_time=item.startTime,
-        complete_time=item.completeTime,
+    infer = InferenceItem(
+        id=item['InferenceJobId'],
+        task_type=item['taskType'],
+        status=item['status'],
+        owner_group_or_role=item['owner_group_or_role'],
+        params=item['params'],
+        start_time=item['startTime'],
         img_presigned_urls=img_presigned_urls,
         output_presigned_urls=[output_presigned_urls]
     )
 
-    logger.info(item)
+    if 'sagemakerRaw' in item:
+        infer.sagemaker_raw = item['sagemakerRaw']
 
-    return ok(data=item.dict())
+    if 'completeTime' in item:
+        infer.complete_time = item['completeTime']
+
+    logger.info(infer)
+
+    return ok(data=infer.dict())
 
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
