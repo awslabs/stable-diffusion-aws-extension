@@ -8,7 +8,6 @@ import sagemaker
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import not_found, accepted, bad_request
-from common.stepfunction_service.client import StepFunctionUtilsService
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
 from libs.utils import log_json
@@ -18,7 +17,6 @@ model_table = os.environ.get('MODEL_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
-# e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
 region = os.environ.get('AWS_REGION')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
@@ -109,13 +107,7 @@ def _start_train_job(train_job_id: str):
             time.sleep(1)
 
         train_job.sagemaker_train_name = est._current_job_name
-        # trigger stepfunction
-        stepfunctions_client = StepFunctionUtilsService(logger=logger)
-        sfn_input = {
-            'train_job_id': train_job.id,
-            'train_job_name': train_job.sagemaker_train_name
-        }
-        sfn_arn = stepfunctions_client.invoke_step_function(training_stepfunction_arn, sfn_input)
+
         # todo: use batch update, this is ugly!!!
         search_key = {'id': train_job.id}
         ddb_service.update_item(
@@ -130,13 +122,6 @@ def _start_train_job(train_job_id: str):
             key=search_key,
             field_name='job_status',
             value=TrainJobStatus.Training.value
-        )
-        train_job.sagemaker_sfn_arn = sfn_arn
-        ddb_service.update_item(
-            table=train_table,
-            key=search_key,
-            field_name='sagemaker_sfn_arn',
-            value=sfn_arn
         )
 
         return accepted()
