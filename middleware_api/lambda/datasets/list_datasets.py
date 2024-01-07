@@ -22,7 +22,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 def handler(event, context):
     _filter = {}
 
-    datasets = DatasetCollection(
+    dataset_collection = DatasetCollection(
         items=[],
         links=[
             DatasetLink(href=generate_url(event, f'datasets'), rel="self", type="GET"),
@@ -46,7 +46,7 @@ def handler(event, context):
 
         resp = ddb_service.scan(table=dataset_info_table, filters=_filter)
         if not resp or len(resp) == 0:
-            return ok(data=datasets)
+            return ok(data=dataset_collection.dict())
 
         for tr in resp:
             dataset_info = DatasetInfo(**(ddb_service.deserialize(tr)))
@@ -61,14 +61,14 @@ def handler(event, context):
 
             if dataset_info.allowed_roles_or_users \
                     and check_user_permissions(dataset_info.allowed_roles_or_users, requestor_roles, requestor_name):
-                datasets.items.append(dataset_info_dto)
+                dataset_collection.items.append(dataset_info_dto)
             elif not dataset_info.allowed_roles_or_users and \
                     'user' in requestor_permissions and \
                     'all' in requestor_permissions['user']:
                 # superuser can view the legacy data
-                datasets.items.append(dataset_info_dto)
+                dataset_collection.items.append(dataset_info_dto)
 
-        return ok(data=datasets.dict())
+        return ok(data=dataset_collection.dict())
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))
