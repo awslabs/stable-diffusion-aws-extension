@@ -5,7 +5,7 @@ import logging
 import requests
 
 from aws_extension.sagemaker_ui_utils import warning
-from utils import get_variable_from_json
+from utils import host_url, api_key
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -30,18 +30,6 @@ def upgrade_info(resp):
         warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
                 f"Please update the extension.")
         return
-
-
-def host_url():
-    return get_variable_from_json('api_gateway_url')
-
-
-def api_key():
-    return get_variable_from_json('api_token')
-
-
-def has_config():
-    return host_url() and api_key()
 
 
 class Api:
