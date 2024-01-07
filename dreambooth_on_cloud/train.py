@@ -320,15 +320,15 @@ def get_train_job_list(pr: gr.Request):
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}',
         }).json()
         logger.info(f"trainings response: {response}")
-        if 'trainJobs' in response['data'] and response['data']['trainJobs']:
-            train_jobs = response['data']['trainJobs']
+        if 'items' in response['data'] and response['data']['items']:
+            train_jobs = response['data']['items']
             train_jobs.sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
             for trainJob in train_jobs:
                 table.append([
                     trainJob['id'][:6],
-                    trainJob['modelName'],
+                    trainJob['model_name'],
                     trainJob["status"],
-                    trainJob['sagemakerTrainName']
+                    trainJob['sagemaker_train_name']
                 ])
     except requests.exceptions.RequestException as e:
         print(f"exception {e}")
@@ -352,7 +352,7 @@ def get_sorted_cloud_dataset(username):
         raw_response.raise_for_status()
         response = raw_response.json()
         logger.info(f"datasets response: {response}")
-        datasets = response['data']['datasets']
+        datasets = response['data']['items']
         datasets.sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
         return datasets
     except Exception as e:

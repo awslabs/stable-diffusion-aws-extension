@@ -237,12 +237,12 @@ def get_create_model_job_list(pr: gr.Request):
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}'
         }).json()
 
-        response['data']['models'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-        for model in response['data']['models']:
-            if model['model_name'] in local_job_cache['create_model']:
-                del local_job_cache['create_model'][model['model_name']]
+        response['data']['items'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+        for model in response['data']['items']:
+            if model['name'] in local_job_cache['create_model']:
+                del local_job_cache['create_model'][model['name']]
 
-            dashboard_list.append([model['id'][:6], model['model_name'], model["status"]])
+            dashboard_list.append([model['id'][:6], model['name'], model["status"]])
 
         if local_job_cache is not None and len(local_job_cache['create_model']) > 0:
             dashboard_list = [['', item, 'Initialed at Local'] for item in local_job_cache['create_model']] + dashboard_list

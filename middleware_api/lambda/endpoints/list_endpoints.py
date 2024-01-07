@@ -78,6 +78,7 @@ def handler(event, ctx):
                 name=endpoint.endpoint_name,
                 status=endpoint.endpoint_status,
                 start_time=endpoint.startTime,
+                end_time=endpoint.endTime,
                 max_instance_number=endpoint.max_instance_number,
                 owner_group_or_role=endpoint.owner_group_or_role,
             )

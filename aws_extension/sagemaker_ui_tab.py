@@ -1013,7 +1013,7 @@ def dataset_tab():
                     cloud_dataset_name,
                     lambda *args: None,
                     lambda username: {
-                        'choices': [ds['datasetName'] for ds in get_sorted_cloud_dataset(username)]
+                        'choices': [ds['name'] for ds in get_sorted_cloud_dataset(username)]
                     },
                     "refresh_cloud_dataset",
                 )
@@ -1038,9 +1038,9 @@ def dataset_tab():
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
                     resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)
-                    dataset_items = [(item['preview_url'], item['key']) for item in
-                                     resp['data']]
-                    return resp['s3'], resp['description'], dataset_items
+                    logger.info(f"get dataset items response:\n{resp}")
+                    dataset_items = [(item['preview_url'], item['name']) for item in resp['items']]
+                    return resp['s3_location'], resp['description'], dataset_items
 
                 cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name],
                                           outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
