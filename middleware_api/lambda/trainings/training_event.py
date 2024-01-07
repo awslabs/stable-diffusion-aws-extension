@@ -13,7 +13,7 @@ from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStat
 from libs.utils import log_json
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 dynamodb = boto3.resource('dynamodb')
 
@@ -41,7 +41,7 @@ def handler(event, ctx):
     if not rows or len(rows) == 0:
         return not_found(message=f'training job {train_job_name} is not found')
 
-    training_job = TrainJob(**rows[0])
+    training_job = TrainJob(**(ddb_service.deserialize(rows[0])))
 
     check_status(training_job)
 

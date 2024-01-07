@@ -323,6 +323,7 @@ export class SdTrainDeployStack {
           srcRoot: this.srcRoot,
           userTopic: props.snsTopic,
           s3Bucket: props.s3Bucket,
+          logLevel: props.logLevel,
         },
     );
 

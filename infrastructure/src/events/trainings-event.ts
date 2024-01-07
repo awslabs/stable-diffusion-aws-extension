@@ -1,5 +1,5 @@
 import {PythonFunction, PythonFunctionProps} from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_iam, aws_s3, aws_sns, Duration} from 'aws-cdk-lib';
+import {Aws, aws_iam, aws_s3, aws_sns, CfnParameter, Duration} from 'aws-cdk-lib';
 import {Table} from 'aws-cdk-lib/aws-dynamodb';
 import {Rule} from 'aws-cdk-lib/aws-events';
 import {LambdaFunction} from 'aws-cdk-lib/aws-events-targets';
@@ -14,6 +14,7 @@ export interface SagemakerTrainingEventsProps {
     commonLayer: LayerVersion;
     userTopic: aws_sns.Topic;
     s3Bucket: aws_s3.Bucket;
+    logLevel: CfnParameter;
 }
 
 export class SagemakerTrainingEvents {
@@ -25,6 +26,7 @@ export class SagemakerTrainingEvents {
     private readonly baseId: string;
     private readonly userSnsTopic: aws_sns.Topic;
     private readonly s3Bucket: aws_s3.Bucket;
+    private readonly logLevel: CfnParameter;
 
 
     constructor(scope: Construct, id: string, props: SagemakerTrainingEventsProps) {
@@ -36,6 +38,7 @@ export class SagemakerTrainingEvents {
         this.layer = props.commonLayer;
         this.userSnsTopic = props.userTopic;
         this.s3Bucket = props.s3Bucket;
+        this.logLevel = props.logLevel;
 
         this.createTrainingEventsBridge();
     }
@@ -141,6 +144,7 @@ export class SagemakerTrainingEvents {
                 TRAINING_JOB_TABLE: this.trainingTable.tableName,
                 CHECKPOINT_TABLE: this.checkpointTable.tableName,
                 USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
+                LOG_LEVEL: this.logLevel.valueAsString,
             },
             layers: [this.layer],
         });
