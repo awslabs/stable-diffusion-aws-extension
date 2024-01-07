@@ -130,7 +130,7 @@ def async_create_model_on_sagemaker(
             # The ckpt path has a hash suffix?
             params["ckpt_path"] = " ".join(params["ckpt_path"].split(" ")[:1])
             params["ckpt_path"] = params["ckpt_path"].lstrip("local-")
-            # Prepare for creating model on cloud.
+            # Prepare for creating model on the cloud.
             local_model_path = f'models/Stable-diffusion/{params["ckpt_path"]}'
             local_tar_path = f'{params["ckpt_path"]}'
 

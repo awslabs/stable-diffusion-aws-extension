@@ -174,7 +174,7 @@ def async_prepare_for_training_on_sagemaker(
         },
         'creator': creator,
     }
-    print("Post request for upload s3 presign url.")
+    print("Post request for upload s3 presign url for train.")
     response = requests.post(url=url, json=payload, headers={
         'x-api-key': api_key
     })

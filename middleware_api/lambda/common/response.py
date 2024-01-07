@@ -77,6 +77,8 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
         'statusCode': status_code,
     }
 
+    log_json(payload, 'payload')
+
     if data:
         body['data'] = data
     if message:
@@ -87,7 +89,7 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         payload['body'] = json.dumps(body)
 
-    log_json(payload, 'payload')
+    log_json(body, 'body')
 
     return payload
 

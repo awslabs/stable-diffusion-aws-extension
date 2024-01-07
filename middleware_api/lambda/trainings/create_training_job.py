@@ -62,7 +62,7 @@ def handler(raw_event, context):
             return bad_request(
                 message=f'model {model.id} is in {model.job_status.value} state, not valid to be used for train')
 
-        log_json(model, 'model')
+        log_json(model_raw, 'model')
 
         base_key = f'{_type}/train/{model.name}/{request_id}'
         input_location = f'{base_key}/input'
@@ -110,7 +110,8 @@ def handler(raw_event, context):
             s3_location=f's3://{bucket_name}/{base_key}/output',
             checkpoint_status=CheckPointStatus.Initial,
             timestamp=datetime.datetime.now().timestamp(),
-            allowed_roles_or_users=user_roles
+            allowed_roles_or_users=user_roles,
+            checkpoint_names=[model.name]
         )
         ddb_service.put_items(table=checkpoint_table, entries=checkpoint.__dict__)
         train_input_s3_location = f's3://{bucket_name}/{input_location}'

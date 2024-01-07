@@ -53,7 +53,7 @@ def _start_train_job(train_job_id: str):
         return not_found(message=f'model with id {train_job.model_id} is not found')
 
     model = Model(**model_raw)
-    log_json(model, 'model')
+    log_json(model_raw, 'model')
 
     raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
         'id': train_job.checkpoint_id
