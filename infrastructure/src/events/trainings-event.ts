@@ -52,6 +52,7 @@ export class SagemakerTrainingEvents {
                 'dynamodb:UpdateItem',
                 'dynamodb:Scan',
                 'dynamodb:GetItem',
+                'dynamodb:Query',
             ],
             resources: [
                 this.trainingTable.tableArn,
