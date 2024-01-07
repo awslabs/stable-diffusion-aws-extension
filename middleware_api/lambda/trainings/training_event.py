@@ -32,7 +32,7 @@ def handler(event, ctx):
     logger.info(json.dumps(event))
     train_job_name = event['detail']['TrainingJobName']
 
-    rows = ddb_service.query_items(table=train_table, key_values={
+    rows = ddb_service.scan(train_table, filters={
         'sagemaker_train_name': train_job_name,
     })
 
@@ -41,16 +41,17 @@ def handler(event, ctx):
     if not rows or len(rows) == 0:
         return not_found(message=f'training job {train_job_name} is not found')
 
-    # training_job = TrainJob(**raw_train_job)
+    training_job = TrainJob(**rows[0])
+
+    check_status(training_job)
 
     return ok()
 
 # sfn
 def check_status(training_job: TrainJob):
-    train_job_name = training_job.sagemaker_train_name
 
     resp = sagemaker.describe_training_job(
-        TrainingJobName=train_job_name
+        TrainingJobName=training_job.sagemaker_train_name
     )
 
     training_job_status = resp['TrainingJobStatus']
