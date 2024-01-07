@@ -54,6 +54,9 @@ def handler(raw_event, context):
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
 
+        # todo model name must be unique
+        # event.name
+
         # todo: check if duplicated name and new_model_name only for Completed and Model
         if not event.checkpoint_id and len(event.filenames) == 0:
             return bad_request(message='either checkpoint_id or filenames need to be provided')

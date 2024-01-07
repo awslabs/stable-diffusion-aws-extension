@@ -1,4 +1,5 @@
 import base64
+import json
 import re
 import math
 import threading
@@ -112,15 +113,15 @@ def async_create_model_on_sagemaker(
                 },
                 "creator": creator,
             }
-            logger.debug("Post request for upload s3 presign url.")
+            print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
-            logger.debug(response.json())
+            print(response.json())
 
             response.raise_for_status()
 
             json_response = response.json()['data']
-            model_id = json_response["job"]["id"]
+            model_id = json_response["model"]["id"]
             payload = {
                 "status": "Creating",
                 "multi_parts_tags": {}
@@ -147,21 +148,21 @@ def async_create_model_on_sagemaker(
                 "params": {"create_model_params": params},
                 "creator": creator,
             }
-            logger.debug("Post request for upload s3 presign url.")
+            print('Post request for upload s3 presign url.')
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
-            logger.debug(response.json())
+            print(json.dumps(response.json(), indent=4))
 
             response.raise_for_status()
 
             json_response = response.json()['data']
-            model_id = json_response["job"]["id"]
+            model_id = json_response["model"]["id"]
             multiparts_tags=[]
             if not from_hub:
                 print("Pack the model file.")
                 # os.system(f"tar cvf {local_tar_path} {local_model_path}")
                 tar(mode='c', archive=local_tar_path, sfiles=[local_model_path], verbose=True)
-                s3_base = json_response["job"]["s3_base"]
+                s3_base = json_response["model"]["s3_location"]
                 print(f"Upload to S3 {s3_base}")
                 print(f"Model ID: {model_id}")
                 # Upload src model to S3.
