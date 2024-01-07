@@ -15,6 +15,7 @@ import gradio as gr
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 job_link_list = []
 ckpt_dict = {}
@@ -111,9 +112,13 @@ def async_create_model_on_sagemaker(
                 },
                 "creator": creator,
             }
-            print("Post request for upload s3 presign url.")
+            logger.debug("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+
+            logger.debug(response.json())
+
             response.raise_for_status()
+
             json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             payload = {
@@ -142,9 +147,13 @@ def async_create_model_on_sagemaker(
                 "params": {"create_model_params": params},
                 "creator": creator,
             }
-            print("Post request for upload s3 presign url.")
+            logger.debug("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+
+            logger.debug(response.json())
+
             response.raise_for_status()
+
             json_response = response.json()['data']
             model_id = json_response["job"]["id"]
             multiparts_tags=[]

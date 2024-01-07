@@ -548,6 +548,8 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
+        logger.debug(f"Response json {response.json()}")
+
         if response.status_code not in [201, 202]:
             return response.json()['message'], None, None, None, None, None, None
 
@@ -1055,10 +1057,10 @@ def load_inference_job_list(target_task_type, username, usertoken):
 
     temp_list = []
     for obj in inferences_jobs_list:
-        if obj.get('completeTime') is None:
-            complete_time = obj.get('startTime')
+        if obj.get('complete_time') is None:
+            complete_time = obj.get('start_time')
         else:
-            complete_time = obj.get('completeTime')
+            complete_time = obj.get('complete_time')
         status = obj.get('status')
         task_type = obj.get('task_type', 'txt2img')
         inference_job_id = obj.get('id')
