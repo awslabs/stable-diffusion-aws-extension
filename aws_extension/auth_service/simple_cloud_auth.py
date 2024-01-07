@@ -61,7 +61,7 @@ class CloudAuthLoader:
         raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
         raw_resp.raise_for_status()
         resp = raw_resp.json()['data']
-        return ','.join([f"{user['username']}:{user['password']}" for user in resp['users']])
+        return ','.join([f"{user['name']}:{user['password']}" for user in resp['items']])
 
     def refresh(self):
         if not check_config_json_exist():

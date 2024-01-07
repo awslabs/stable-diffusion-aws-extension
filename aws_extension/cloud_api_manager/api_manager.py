@@ -161,17 +161,17 @@ class CloudApiManager:
                 return []
 
             sagemaker_raw_endpoints = []
-            for obj in r['data']['endpoints']:
-                if "EndpointDeploymentJobId" in obj:
-                    if "endpoint_name" in obj:
-                        endpoint_name = obj["endpoint_name"]
-                        endpoint_status = obj["endpoint_status"]
+            for obj in r['data']['items']:
+                if "id" in obj:
+                    if "name" in obj:
+                        endpoint_name = obj["name"]
+                        endpoint_status = obj["status"]
                     else:
-                        endpoint_name = obj["EndpointDeploymentJobId"]
+                        endpoint_name = obj["id"]
                         endpoint_status = obj["status"]
 
-                    if "endTime" in obj:
-                        endpoint_time = obj["endTime"]
+                    if "end_time" in obj:
+                        endpoint_time = obj["end_time"]
                     else:
                         endpoint_time = "N/A"
 
@@ -182,7 +182,7 @@ class CloudApiManager:
             return sorted(sagemaker_raw_endpoints, key=lambda x: x.split('+')[-1], reverse=True)
 
         except Exception as e:
-            logger.error(f"An error occurred while updating SageMaker endpoints: {e}")
+            logger.error(f"list_all_sagemaker_endpoints error: {e}")
             return []
 
     def list_all_ckpts(self, username=None, user_token=""):

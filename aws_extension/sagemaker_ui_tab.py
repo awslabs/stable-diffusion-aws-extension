@@ -221,7 +221,7 @@ def ui_user_settings_tab():
 
 def roles(user_token):
     resp = api_manager.list_roles(user_token=user_token)
-    return [role['role_name'] for role in resp['roles']]
+    return [role['name'] for role in resp['items']]
 
 
 def user_settings_tab():

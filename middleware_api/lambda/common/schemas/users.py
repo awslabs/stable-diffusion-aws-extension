@@ -15,6 +15,7 @@ class UserItem(BaseModel):
     creator: str
     roles: List[str]
     permissions: List[str]
+    password: Optional[str]
     links: Optional[List[UserLink]]
 
     class Config:
