@@ -30,9 +30,6 @@ def handler(event, context):
 
     resp = ddb_service.scan(table=model_table, filters=_filter)
 
-    if resp is None or len(resp) == 0:
-        return ok(data={'models': []})
-
     model_collection = ModelCollection(
         items=[],
         links=[
@@ -41,6 +38,9 @@ def handler(event, context):
             ModelLink(href=generate_url(event, f'models'), rel="delete", type="DELETE"),
         ]
     )
+
+    if resp is None or len(resp) == 0:
+        return ok(data=model_collection.dict())
 
     try:
         requestor_name = event['requestContext']['authorizer']['username']
