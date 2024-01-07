@@ -177,7 +177,7 @@ def api_setting_tab():
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
 
-    with gr.Row(visible=bool(api_gateway_url)) as disclaimer_tab:
+    with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
             gr.HTML(
                 value=
@@ -189,10 +189,10 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    with gr.Row(visible=bool(api_gateway_url)):
+    with gr.Row(visible=has_config()):
         whoami_label = gr.Label(label='whoami')
 
-    with gr.Row(visible=bool(api_gateway_url)):
+    with gr.Row(visible=has_config()):
         logout_btn = gr.Button(value='Logout')
         logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
@@ -950,7 +950,7 @@ def dataset_tab():
                 url = get_variable_from_json('api_gateway_url') + 'datasets'
                 api_key = get_variable_from_json('api_token')
 
-                if not api_key:
+                if not has_config():
                     return f'Please config api url and token', None, None, None, None
 
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})

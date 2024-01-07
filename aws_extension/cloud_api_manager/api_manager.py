@@ -6,6 +6,7 @@ import requests
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
 from aws_extension.cloud_api_manager.api import api
+from utils import has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -150,7 +151,7 @@ class CloudApiManager:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
-            if not self.auth_manger.api_url:
+            if not has_config():
                 return []
 
             response = requests.get(f'{self.auth_manger.api_url}endpoints',
@@ -194,7 +195,7 @@ class CloudApiManager:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
-            if not self.auth_manger.api_key:
+            if not has_config():
                 return []
 
             params = {
@@ -249,7 +250,7 @@ class CloudApiManager:
         return raw_resp.json()['data']
 
     def list_roles(self, user_token=""):
-        if not self.auth_manger.enableAuth or not self.auth_manger.api_url:
+        if not self.auth_manger.enableAuth or not has_config():
             return {
                 'items': []
             }
