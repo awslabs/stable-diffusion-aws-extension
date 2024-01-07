@@ -248,6 +248,8 @@ def user_settings_tab():
                         return f'Username should not be none.'
                     if not password or len(password) < 1:
                         return f'Password should not be none.'
+                    if not user_roles or len(user_roles) < 1:
+                        return f'Role should not be none.'
                     resp = api_manager.upsert_user(username=username.rstrip(), password=password,
                                                    roles=user_roles, creator=pr.username,
                                                    user_token=pr.username)
