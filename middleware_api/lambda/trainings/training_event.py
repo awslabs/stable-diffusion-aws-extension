@@ -1,21 +1,34 @@
+import json
 import logging
 import os
 
+import boto3
+
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok
 from common.util import publish_msg
 from libs.data_types import TrainJob
 
-train_table = os.environ.get('TRAIN_TABLE')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+dynamodb = boto3.resource('dynamodb')
+
+train_table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
+checkpoint_table = dynamodb.Table(os.environ.get('CHECKPOINT_TABLE'))
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 
-logger = logging.getLogger(__name__)
-logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+sagemaker = boto3.client('sagemaker')
+s3 = boto3.client('s3')
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+def handler(event, ctx):
+    logger.info(json.dumps(event))
 
-# sfn
-def handler(event, context):
+    return ok()
+
+def notify_user(event):
     train_job_id = event['train_job_id']
 
     raw_train_job = ddb_service.get_item(table=train_table, key_values={

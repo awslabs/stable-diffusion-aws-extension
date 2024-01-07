@@ -331,31 +331,6 @@ export class StartTrainingJobApi {
     });
   }
 
-  private processTrainingJobResultLambda(): aws_lambda.IFunction {
-    return new PythonFunction(this.scope, `${this.id}-processTrainingJobResult`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      role: this.sfnLambdaRole,
-      index: 'process_train_job_result.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      memorySize: 1024,
-      environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        INSTANCE_TYPE: this.instanceType,
-        TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
-        USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-  }
-
   private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
     const dockerRepo = new aws_ecr.Repository(this.scope, `${this.id}-repo`, {
       repositoryName: 'stable-diffusion-aws-extension/aigc-webui-dreambooth-training',
@@ -392,15 +367,6 @@ export class StartTrainingJobApi {
             },
     );
 
-    const processJobResult = new sfn_tasks.LambdaInvoke(
-      this.scope,
-      `${this.id}-processJobResult`,
-            <LambdaInvokeProps>{
-              lambdaFunction: this.processTrainingJobResultLambda(),
-              outputPath: '$.Payload',
-            },
-    );
-
     const checkTrainingBranch = new stepfunctions.Choice(
       this.scope,
       'CheckTrainingBranch',
@@ -410,7 +376,7 @@ export class StartTrainingJobApi {
       this.scope,
       'WaitTrainingJobStatus',
       {
-        time: stepfunctions.WaitTime.duration(Duration.minutes(2)),
+        time: stepfunctions.WaitTime.duration(Duration.minutes(1)),
       },
     );
 
@@ -428,8 +394,6 @@ export class StartTrainingJobApi {
                 'Stopping',
               )),
               waitStatusDeploymentTask.next(trainingJobCheckState),
-            ).otherwise(
-              processJobResult,
             )
             .afterwards(),
         ),

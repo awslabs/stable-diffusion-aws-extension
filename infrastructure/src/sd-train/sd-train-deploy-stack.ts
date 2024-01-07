@@ -24,6 +24,7 @@ import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { Database } from '../shared/database';
+import {SagemakerTrainingEvents, SagemakerTrainingEventsProps} from "../events/trainings-event";
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
@@ -311,6 +312,18 @@ export class SdTrainDeployStack {
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
+    );
+
+    new SagemakerTrainingEvents(
+        scope, 'SagemakerTrainingEvents',
+        <SagemakerTrainingEventsProps>{
+          commonLayer: props.commonLayer,
+          trainingTable: props.database.trainingTable,
+          checkpointTable: props.database.checkpointTable,
+          srcRoot: this.srcRoot,
+          userTopic: props.snsTopic,
+          s3Bucket: props.s3Bucket,
+        },
     );
 
   }
