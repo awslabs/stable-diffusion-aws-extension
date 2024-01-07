@@ -8,7 +8,6 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from common.util import publish_msg
 from libs.common_tools import split_s3_path
-
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 from libs.utils import log_json
 
@@ -27,7 +26,6 @@ s3 = boto3.client('s3')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
-
 def handler(event, ctx):
     logger.info(json.dumps(event))
     train_job_name = event['detail']['TrainingJobName']
@@ -36,7 +34,7 @@ def handler(event, ctx):
         'sagemaker_train_name': train_job_name,
     })
 
-    log_json(rows,'rows')
+    log_json(rows, 'rows')
 
     if not rows or len(rows) == 0:
         return not_found(message=f'training job {train_job_name} is not found')
@@ -47,9 +45,9 @@ def handler(event, ctx):
 
     return ok()
 
+
 # sfn
 def check_status(training_job: TrainJob):
-
     resp = sagemaker.describe_training_job(
         TrainingJobName=training_job.sagemaker_train_name
     )
@@ -137,7 +135,6 @@ def check_status(training_job: TrainJob):
 
 
 def notify_user(train_job: TrainJob):
-
     publish_msg(
         topic_arn=user_topic_arn,
         subject=f'Create Model Job {train_job.sagemaker_train_name} {train_job.job_status}',
