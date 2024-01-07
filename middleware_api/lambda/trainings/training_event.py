@@ -59,6 +59,13 @@ def check_status(training_job: TrainJob):
     training_job_status = resp['TrainingJobStatus']
     secondary_status = resp['SecondaryStatus']
 
+    ddb_service.update_item(
+        table=train_table,
+        key={'id': training_job.id},
+        field_name='job_status',
+        value=secondary_status
+    )
+
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
         training_job.job_status = TrainJobStatus.Fail
         if 'FailureReason' in resp:
@@ -117,13 +124,6 @@ def check_status(training_job: TrainJob):
         training_job.params['resp'] = {
             'raw_resp': resp
         }
-
-    ddb_service.update_item(
-        table=train_table,
-        key={'id': training_job.id},
-        field_name='job_status',
-        value=secondary_status
-    )
 
     ddb_service.update_item(
         table=train_table,
