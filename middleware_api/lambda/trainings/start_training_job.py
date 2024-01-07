@@ -11,6 +11,7 @@ from common.response import not_found, accepted, bad_request
 from common.stepfunction_service.client import StepFunctionUtilsService
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
+from libs.utils import log_json
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
@@ -30,7 +31,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # PUT /trainings/{id}/start
 def handler(event, context):
-    logger.info(json.dumps(event))
+    log_json(event, 'event')
     train_job_id = event['pathParameters']['id']
 
     return _start_train_job(train_job_id)
@@ -52,6 +53,7 @@ def _start_train_job(train_job_id: str):
         return not_found(message=f'model with id {train_job.model_id} is not found')
 
     model = Model(**model_raw)
+    log_json(model, 'model')
 
     raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
         'id': train_job.checkpoint_id

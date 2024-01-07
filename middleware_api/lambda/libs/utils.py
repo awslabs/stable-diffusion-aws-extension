@@ -121,7 +121,10 @@ def get_permissions_by_username(ddb_service, user_table, username):
 
 
 # for cloudwatch visualization
-def log_json(json_obj, title: str = None, level=logging.INFO):
-    if title is None:
+def log_json(data, title: str = None, level=logging.INFO):
+    if title is not None:
         logger.log(level, title)
-    logger.log(level, json.dumps(json_obj, indent=2, default=str))
+    try:
+        logger.log(level, json.dumps(data, indent=2))
+    except TypeError:
+        logger.log(level, data)
