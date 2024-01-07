@@ -15,7 +15,7 @@ from libs.common_tools import complete_multipart_upload, split_s3_path, DecimalE
 from libs.common_tools import get_base_model_s3_key, get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, internal_server_error
+from common.response import ok, bad_request, internal_server_error, forbidden
 from libs.data_types import Model, CreateModelStatus, CheckPoint, CheckPointStatus, MultipartFileReq
 from common.util import publish_msg
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
@@ -182,7 +182,7 @@ def list_all_models_api(event, context):
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
         if 'train' not in requestor_permissions or \
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-            return bad_request(message='user has no permission to train')
+            return forbidden(message='user has no permission to train')
 
         for r in resp:
             model = Model(**(ddb_service.deserialize(r)))

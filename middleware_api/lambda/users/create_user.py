@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, created
+from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
 from roles.create_role import handler as upsert_role
@@ -103,7 +103,7 @@ def handler(raw_event, ctx):
             resource = permission_parts[0]
             action = permission_parts[1]
             if 'all' not in creator_permissions[resource] and action not in creator_permissions[resource]:
-                return bad_request(message=f'creator has no permission to assign permission [{permission}] to others')
+                return forbidden(message=f'creator has no permission to assign permission [{permission}] to others')
 
         roles_pool.append(role.sort_key)
 
@@ -133,7 +133,7 @@ def _check_action_permission(creator_username, target_username):
 
     if 'user' not in creator_permissions or \
             ('all' not in creator_permissions['user'] and 'create' not in creator_permissions['user']):
-        return bad_request(message=f'creator {creator_username} does not have permission to manage the user')
+        return forbidden(message=f'creator {creator_username} does not have permission to manage the user')
 
     # if the creator has no permission (not created by creator),
     # make sure the creator doesn't change the existed user (created by others)

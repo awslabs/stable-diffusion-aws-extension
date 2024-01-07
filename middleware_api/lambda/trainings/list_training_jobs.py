@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok, bad_request, forbidden
 from common.schemas.trainings import TrainingCollection, TrainingLink, TrainingItem
 from common.util import get_multi_query_params, generate_url
 from libs.data_types import TrainJob
@@ -51,7 +51,7 @@ def handler(event, context):
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
         if 'train' not in requestor_permissions or \
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-            return bad_request(message='user has no permission to train')
+            return forbidden(message='user has no permission to train')
 
         for tr in resp:
             train_job = TrainJob(**(ddb_service.deserialize(tr)))

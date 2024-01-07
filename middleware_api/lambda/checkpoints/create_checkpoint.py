@@ -10,7 +10,7 @@ import boto3
 import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, created, accepted
+from common.response import bad_request, created, accepted, forbidden
 from common.util import generate_url
 from libs.common_tools import get_base_checkpoint_s3_key, \
     batch_get_s3_multipart_signed_urls
@@ -94,7 +94,7 @@ def handler(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return bad_request(message='user has no permissions to create a model')
+            return forbidden(message='user has no permissions to create a model')
 
         checkpoint = CheckPoint(
             id=request_id,
