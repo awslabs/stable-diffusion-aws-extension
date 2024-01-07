@@ -26,7 +26,7 @@ def get_cloud_ckpts():
     ckpt_dict = {}
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
+        if not api_gateway_url:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
 

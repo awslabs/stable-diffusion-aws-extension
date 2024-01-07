@@ -12,7 +12,7 @@ from modules.ui_components import ToolButton
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-from aws_extension.cloud_api_manager.api import api
+from aws_extension.cloud_api_manager.api import api, has_config
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
@@ -667,6 +667,10 @@ def model_upload_tab():
                 'username': rq.username,
             }
             api.set_username(rq.username)
+
+            if not has_config():
+                return [], 'Please config api url and token first'
+
             resp = api.list_checkpoints(params=params)
             models = []
             page = resp.json()['data']['page']
@@ -1012,13 +1016,14 @@ def dataset_tab():
                 )
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
-                                               type='text').style(show_copy_button=True)
+                                               type='text', show_copy_button=True)
             with gr.Row():
                 dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
             with gr.Row():
                 dataset_gallery = gr.Gallery(
                     label="Dataset images", show_label=False, elem_id="gallery",
-                ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
+                    columns=[2], rows=[2], object_fit="contain", height="auto"
+                )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
                     resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)

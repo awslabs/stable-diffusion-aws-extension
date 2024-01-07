@@ -146,6 +146,9 @@ class CloudApiManager:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
+            if not self.auth_manger.api_url:
+                return []
+
             response = requests.get(f'{self.auth_manger.api_url}endpoints',
                                     params={
                                         'username': username,
@@ -185,6 +188,9 @@ class CloudApiManager:
     def list_all_ckpts(self, username=None, user_token=""):
         try:
             if self.auth_manger.enableAuth and not user_token:
+                return []
+
+            if not self.auth_manger.api_key:
                 return []
 
             params = {

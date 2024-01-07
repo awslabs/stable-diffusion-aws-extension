@@ -149,6 +149,8 @@ def get_current_date():
 
 def server_request(path):
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    if not api_gateway_url:
+        return []
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
         api_gateway_url += '/'
@@ -342,7 +344,7 @@ def get_model_list_by_type(model_type, username=""):
     api_key = get_variable_from_json('api_token')
 
     # check if api_gateway_url and api_key are set
-    if api_gateway_url is None or api_key is None:
+    if not api_gateway_url or not api_key:
         logger.info("api_gateway_url or api_key is not set")
         return []
 
@@ -448,6 +450,10 @@ def get_controlnet_model_list():
 def refresh_all_models(username):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
+
+    if not api_gateway_url:
+        return []
+
     encode_type = "utf-8"
 
     try:
