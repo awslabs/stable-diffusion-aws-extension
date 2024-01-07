@@ -5,19 +5,20 @@ import os
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import ok, not_found
 from common.util import publish_msg
 from libs.common_tools import split_s3_path
 
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
+from libs.utils import log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 dynamodb = boto3.resource('dynamodb')
 
-train_table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
-checkpoint_table = dynamodb.Table(os.environ.get('CHECKPOINT_TABLE'))
+train_table = os.environ.get('TRAINING_JOB_TABLE')
+checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
 
 sagemaker = boto3.client('sagemaker')
@@ -29,35 +30,33 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 def handler(event, ctx):
     logger.info(json.dumps(event))
+    train_job_name = event['detail']['TrainingJobName']
+
+    rows = ddb_service.query_items(table=train_table, key_values={
+        'sagemaker_train_name': train_job_name,
+    })
+
+    log_json(rows,'rows')
+
+    if not rows or len(rows) == 0:
+        return not_found(message=f'training job {train_job_name} is not found')
+
+    # training_job = TrainJob(**raw_train_job)
 
     return ok()
 
 # sfn
-def check_status(event, context):
-    train_job_name = event['train_job_name']
-    train_job_id = event['train_job_id']
+def check_status(training_job: TrainJob):
+    train_job_name = training_job.sagemaker_train_name
 
     resp = sagemaker.describe_training_job(
         TrainingJobName=train_job_name
     )
 
     training_job_status = resp['TrainingJobStatus']
-    event['status'] = training_job_status
 
-    raw_train_job = ddb_service.get_item(table=train_table, key_values={
-        'id': train_job_id,
-    })
-
-    if raw_train_job is None or len(raw_train_job) == 0:
-        event['status'] = 'Failed'
-        return {
-            'statusCode': 500,
-            'msg': f'no such training job find in ddb id[{train_job_id}]'
-        }
-
-    training_job = TrainJob(**raw_train_job)
     if training_job_status == 'InProgress' or training_job_status == 'Stopping':
-        return event
+        return
 
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
         training_job.job_status = TrainJobStatus.Fail
@@ -70,6 +69,7 @@ def check_status(event, context):
             }
 
     if training_job_status == 'Completed':
+        notify_user(training_job)
         training_job.job_status = TrainJobStatus.Complete
         # todo: update checkpoints
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
@@ -132,23 +132,10 @@ def check_status(event, context):
         value=training_job.params
     )
 
-    return event
+    return
 
 
-def notify_user(event):
-    train_job_id = event['train_job_id']
-
-    raw_train_job = ddb_service.get_item(table=train_table, key_values={
-        'id': train_job_id,
-    })
-
-    if raw_train_job is None or len(raw_train_job) == 0:
-        return {
-            'statusCode': 500,
-            'msg': f'no such training job find in ddb id[{train_job_id}]'
-        }
-
-    train_job = TrainJob(**raw_train_job)
+def notify_user(train_job: TrainJob):
 
     publish_msg(
         topic_arn=user_topic_arn,

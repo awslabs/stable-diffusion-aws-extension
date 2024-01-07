@@ -75,7 +75,6 @@ export class SagemakerTrainingEvents {
             resources: ['*'],
         }));
 
-
         newRole.addToPolicy(new aws_iam.PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
