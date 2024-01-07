@@ -177,7 +177,7 @@ def api_setting_tab():
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
 
-    with gr.Row() as disclaimer_tab:
+    with gr.Row(visible=bool(api_gateway_url)) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
             gr.HTML(
                 value=
@@ -189,11 +189,11 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    with gr.Row():
+    with gr.Row(visible=bool(api_gateway_url)):
         whoami_label = gr.Label(label='whoami')
 
-    with gr.Row():
-        logout_btn = gr.Button(value='logout')
+    with gr.Row(visible=bool(api_gateway_url)):
+        logout_btn = gr.Button(value='Logout')
         logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
     return api_setting, disclaimer_tab, whoami_label
@@ -245,7 +245,7 @@ def user_settings_tab():
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 try:
                     if not username.rstrip() or len(username.rstrip()) < 1:
-                        return f'Please trim trailing spaces. Username should not be none.'
+                        return f'Username should not be none.'
                     if not password or len(password) < 1:
                         return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username.rstrip(), password=password,
@@ -260,6 +260,9 @@ def user_settings_tab():
                                      outputs=[user_setting_out_textbox])
 
             def delete_user(username):
+                if not username or len(username) < 1:
+                    return f'Username should not be none.'
+
                 try:
                     resp = api_manager.delete_user(username=username, user_token=cloud_auth_manager.username)
                     if resp:
