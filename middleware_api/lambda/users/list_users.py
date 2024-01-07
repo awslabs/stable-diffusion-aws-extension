@@ -75,6 +75,8 @@ def handler(event, ctx):
             creator=user.creator,
             roles=user.roles,
             permissions=[],
+            password='*' * 8 if not show_password else password_encryptor.decrypt(
+                key_id=kms_key_id, cipher_text=user.password).decode(),
         )
 
         for role in user.roles:

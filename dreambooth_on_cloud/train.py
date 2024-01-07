@@ -41,7 +41,7 @@ base_model_folder = "models/sagemaker_dreambooth/"
 def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
+        if not api_gateway_url:
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
         url = f"{api_gateway_url}models?"
@@ -76,8 +76,7 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""
                     json.dump(db_config, db_config_file)
         return model_list
     except Exception as e:
-        print('Failed to get cloud models.')
-        print(e)
+        logger.error(f"Failed to get cloud models {e}")
         return []
 
 

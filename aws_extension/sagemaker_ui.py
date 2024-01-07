@@ -255,7 +255,7 @@ def query_inference_job_list(task_type: str = '', status: str = '',
             body_params['checkpoint'] = checkpoint
         body_params['limit'] = -1 if show_all_inference_job else 10
         response = server_request_get(f'inferences', body_params)
-        r = response.json()['data']['inferences']
+        r = response.json()['data']['items']
         logger.debug(r)
         if r:
             txt2img_inference_job_ids.clear()  # Clear the existing list before appending new values
@@ -484,6 +484,10 @@ def refresh_all_models(username):
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path,
                               controlnet_model_path, vae_path, pr: gradio.Request):
+
+    if not get_variable_from_json('api_gateway_url'):
+        return "Please config api url and token", None, None, None, None, None, None
+
     log = "start upload model to s3:"
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
@@ -616,6 +620,9 @@ def check_url(url: str):
 
 
 def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: str, pr: gradio.Request):
+    if not url_list:
+        return "Please fill the url."
+
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."

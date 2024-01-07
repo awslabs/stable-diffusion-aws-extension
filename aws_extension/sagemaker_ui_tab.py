@@ -283,7 +283,7 @@ def user_settings_tab():
 
                 # todo: to be done
                 user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
-                return user['username'], user['password'], user['roles']
+                return user['name'], user['password'], user['roles']
 
             def search_users(name: str, role: str, paging, rq: gr.Request):
                 result = _list_users(rq.username, name, role)
@@ -429,23 +429,23 @@ def _list_models(username, user_token):
 def _get_roles_table(username):
     resp = api_manager.list_roles(user_token=username)
     table = []
-    for role in resp['roles']:
-        table.append([role['role_name'], ', '.join(role['permissions']), role['creator']])
+    for role in resp['items']:
+        table.append([role['name'], ', '.join(role['permissions']), role['creator']])
     return table
 
 
 def _list_users(username, name, role):
     resp = api_manager.list_users(user_token=username)
-    if not resp['users']:
+    if not resp['items']:
         return []
 
     table = []
-    for user in resp['users']:
-        if name and name not in user['username']:
+    for user in resp['items']:
+        if name and name not in user['name']:
             continue
         if role and role not in user['roles']:
             continue
-        table.append([user['username'], ', '.join(user['roles']), user['creator']])
+        table.append([user['name'], ', '.join(user['roles']), user['creator']])
 
     return table
 
@@ -677,7 +677,7 @@ def model_upload_tab():
             per_page = resp.json()['data']['per_page']
             total = resp.json()['data']['total']
             pages = resp.json()['data']['pages']
-            for model in resp.json()['data']['checkpoints']:
+            for model in resp.json()['data']['items']:
                 allowed = ''
                 if model['allowed_roles_or_users']:
                     allowed = ', '.join(model['allowed_roles_or_users'])
@@ -941,6 +941,9 @@ def dataset_tab():
 
                 url = get_variable_from_json('api_gateway_url') + 'datasets'
                 api_key = get_variable_from_json('api_token')
+
+                if not api_key:
+                    return f'Please config api url and token', None, None, None, None
 
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())

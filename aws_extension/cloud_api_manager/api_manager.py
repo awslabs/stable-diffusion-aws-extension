@@ -139,7 +139,7 @@ class CloudApiManager:
             logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['message']}")
             return []
 
-        return r['data']['endpoints']
+        return r['data']['items']
 
     def list_all_sagemaker_endpoints(self, username=None, user_token=""):
         try:
@@ -206,7 +206,7 @@ class CloudApiManager:
                 return []
 
             ckpts_list = []
-            for ckpt in r['data']['checkpoints']:
+            for ckpt in r['data']['items']:
                 ckpt_name = ckpt['name'][0]
                 option_value = f"{ckpt_name}{string_separator}{ckpt['status']}{string_separator}{ckpt['id']}"
                 ckpts_list.append(option_value)
@@ -219,9 +219,7 @@ class CloudApiManager:
 
     def get_user_by_username(self, username='', user_token='', show_password=False):
         if not self.auth_manger.enableAuth:
-            return {
-                'users': []
-            }
+            return {}
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
                                 params={
@@ -232,12 +230,12 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         logger.debug(raw_resp.json())
         resp = raw_resp.json()['data']
-        return resp['users'][0]
+        return resp['items'][0]
 
     def list_users(self, user_token=""):
         if not self.auth_manger.enableAuth:
             return {
-                'users': []
+                'items': []
             }
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
@@ -247,9 +245,9 @@ class CloudApiManager:
         return raw_resp.json()['data']
 
     def list_roles(self, user_token=""):
-        if not self.auth_manger.enableAuth:
+        if not self.auth_manger.enableAuth or not self.auth_manger.api_url:
             return {
-                'roles': []
+                'items': []
             }
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
@@ -363,7 +361,7 @@ class CloudApiManager:
         }, headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
-        return resp['data']['inferences']
+        return resp['data']['items']
 
     def get_dataset_items_from_dataset(self, dataset_name, user_token=""):
         if not self.auth_manger.enableAuth:
