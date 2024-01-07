@@ -55,6 +55,7 @@ def check_status(training_job: TrainJob):
     )
 
     training_job_status = resp['TrainingJobStatus']
+    secondary_status = resp['SecondaryStatus']
 
     if training_job_status == 'InProgress' or training_job_status == 'Stopping':
         return
@@ -118,12 +119,11 @@ def check_status(training_job: TrainJob):
             'raw_resp': resp
         }
 
-    # fixme: this is ugly
     ddb_service.update_item(
         table=train_table,
         key={'id': training_job.id},
         field_name='job_status',
-        value=training_job.job_status.value
+        value=secondary_status
     )
 
     ddb_service.update_item(
