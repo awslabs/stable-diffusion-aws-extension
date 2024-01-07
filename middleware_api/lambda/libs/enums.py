@@ -29,6 +29,10 @@ class TrainJobStatus(Enum):
     Complete = 'Complete'
     Fail = 'Fail'
     Stopped = 'Stopped'
+    Starting = 'Starting'
+    Downloading = 'Downloading'
+    Uploading = 'Uploading'
+    Completed = 'Completed'
 
 
 class DataStatus(Enum):
