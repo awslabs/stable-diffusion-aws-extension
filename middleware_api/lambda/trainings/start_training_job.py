@@ -137,18 +137,7 @@ def _start_train_job(train_job_id: str):
             value=sfn_arn
         )
 
-        data = {
-            'job': {
-                'id': train_job.id,
-                'status': train_job.job_status.value,
-                'created': train_job.timestamp,
-                'trainType': train_job.train_type,
-                'params': train_job.params,
-                'input_location': train_job.input_s3_location
-            },
-        }
-
-        return accepted(data=data, decimal=True)
+        return accepted()
     except Exception as e:
         logger.error(e)
         return bad_request(message=str(e))

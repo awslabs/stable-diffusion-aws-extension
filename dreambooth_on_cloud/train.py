@@ -56,15 +56,16 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""
             'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
         }).json()
         model_list = []
-        if "models" not in response['data']:
+        if "items" not in response['data']:
             return []
-        for model in response['data']["models"]:
+        for model in response['data']["items"]:
+            print(json.dumps(model, indent=4))
             model_list.append(model)
             params = model['params']
             if 'resp' in params:
                 db_config = params['resp']['config_dict']
                 # TODO:
-                model_dir = f"{base_model_folder}/{model['model_name']}"
+                model_dir = f"{base_model_folder}/{model['name']}"
                 for k in db_config:
                     if type(db_config[k]) is str:
                         db_config[k] = db_config[k].replace("/opt/ml/code/", "")
@@ -85,7 +86,7 @@ def get_cloud_db_model_name_list(username):
     if model_list is None:
         model_name_list = []
     else:
-        model_name_list = [model['model_name'] for model in model_list]
+        model_name_list = [model['name'] for model in model_list]
     return model_name_list
 
 
@@ -257,7 +258,7 @@ def cloud_train(
         # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
         # os.system(f"cp {dummy_db_config_path} {db_config_path}")
         for model in model_list:
-            if model["model_name"] == train_model_name:
+            if model["name"] == train_model_name:
                 model_id = model["id"]
                 model_s3_path = model["output_s3_location"]
                 break
@@ -265,7 +266,7 @@ def cloud_train(
         response = async_prepare_for_training_on_sagemaker(
             model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
             new_db_config_path, model_type, training_instance_type, creator)
-        job_id = response['data']["job"]["id"]
+        job_id = response['data']["training"]["id"]
 
         payload = {
             "status": "Training"

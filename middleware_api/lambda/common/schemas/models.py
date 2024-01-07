@@ -23,6 +23,7 @@ class CreateModelParams(BaseModel):
 
 class Resp(BaseModel):
     s3_output_location: Optional[str]
+    config_dict: Optional[dict]
 
 
 class ModelParams(BaseModel):
