@@ -334,7 +334,7 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         checkpoints = []
         resp = raw_resp.json()['data']
-        for ckpt in resp['checkpoints']:
+        for ckpt in resp['items']:
             if not ckpt or 'name' not in ckpt or not ckpt['name']:
                 continue
 

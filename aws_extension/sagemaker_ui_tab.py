@@ -356,6 +356,9 @@ def role_settings_tab():
                 role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
+                    if not role_name or not permissions:
+                        return 'Please input role name and permissions.'
+
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
                                                        creator=pr.username,
@@ -850,12 +853,12 @@ def _list_sagemaker_endpoints(username):
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
-                endpoint['endpoint_name'],
+                endpoint['name'],
                 endpoint_roles,
                 endpoint['autoscaling'],
-                endpoint['endpoint_status'],
+                endpoint['status'],
                 endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
-                endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
+                endpoint['start_time'].split(' ')[0] if endpoint['start_time'] else "",
             ])
     return endpoints
 
