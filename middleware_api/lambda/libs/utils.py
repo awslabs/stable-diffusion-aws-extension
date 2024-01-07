@@ -1,10 +1,15 @@
+import json
 import logging
+import os
 
 import boto3
 from botocore.exceptions import ClientError
 
 from libs.data_types import PARTITION_KEYS, User, Role
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 class KeyEncryptService:
 
@@ -113,3 +118,10 @@ def get_permissions_by_username(ddb_service, user_table, username):
             permissions[resource].add(action)
 
     return permissions
+
+
+# for cloudwatch visualization
+def log_json(json_obj, title: str = None, level=logging.INFO):
+    if title is None:
+        logger.log(level, title)
+    logger.log(level, json.dumps(json_obj, indent=2, default=str))

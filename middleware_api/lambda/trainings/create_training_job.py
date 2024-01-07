@@ -14,7 +14,7 @@ from common.schemas.trainings import TrainingItem
 from common.util import get_s3_presign_urls
 from common.util import load_json_from_s3, save_json_to_file
 from libs.data_types import TrainJob, TrainJobStatus, Model, CreateModelStatus, CheckPoint, CheckPointStatus
-from libs.utils import get_permissions_by_username, get_user_roles
+from libs.utils import get_permissions_by_username, get_user_roles, log_json
 
 bucket_name = os.environ.get('S3_BUCKET')
 train_table = os.environ.get('TRAIN_TABLE')
@@ -38,6 +38,8 @@ class Event:
 
 
 def handler(raw_event, context):
+    log_json(raw_event, 'raw_event')
+
     request_id = context.aws_request_id
     event = Event(**json.loads(raw_event['body']))
     _type = event.train_type
@@ -59,6 +61,8 @@ def handler(raw_event, context):
         if model.job_status != CreateModelStatus.Complete:
             return bad_request(
                 message=f'model {model.id} is in {model.job_status.value} state, not valid to be used for train')
+
+        log_json(model, 'model')
 
         base_key = f'{_type}/train/{model.name}/{request_id}'
         input_location = f'{base_key}/input'

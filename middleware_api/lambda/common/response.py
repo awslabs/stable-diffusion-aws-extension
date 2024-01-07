@@ -4,6 +4,8 @@ import os
 from decimal import Decimal
 from typing import Optional, Any
 
+from libs.utils import log_json
+
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -85,8 +87,7 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         payload['body'] = json.dumps(body)
 
-    logger.info(f"response:")
-    logger.info(payload['body'])
+    log_json(payload, 'payload')
 
     return payload
 
