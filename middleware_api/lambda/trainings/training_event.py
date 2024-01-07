@@ -67,7 +67,6 @@ def check_status(training_job: TrainJob):
     )
 
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
-        training_job.job_status = TrainJobStatus.Fail
         if 'FailureReason' in resp:
             err_msg = resp['FailureReason']
             training_job.params['resp'] = {
@@ -78,7 +77,6 @@ def check_status(training_job: TrainJob):
 
     if training_job_status == 'Completed':
         notify_user(training_job)
-        training_job.job_status = TrainJobStatus.Complete
         # todo: update checkpoints
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': training_job.checkpoint_id
@@ -101,8 +99,13 @@ def check_status(training_job: TrainJob):
                 checkpoint_name = obj['Key'].replace(f'{key}/', "")
                 checkpoint.checkpoint_names.append(checkpoint_name)
         else:
-            training_job.job_status = TrainJobStatus.Fail
             checkpoint.checkpoint_status = CheckPointStatus.Initial
+            ddb_service.update_item(
+                table=train_table,
+                key={'id': training_job.id},
+                field_name='job_status',
+                value=TrainJobStatus.Fail
+            )
 
         ddb_service.update_item(
             table=checkpoint_table,
