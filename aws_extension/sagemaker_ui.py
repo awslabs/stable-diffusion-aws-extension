@@ -610,6 +610,9 @@ def check_url(url: str):
 
 
 def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: str, pr: gradio.Request):
+    if not url_list:
+        return "Please fill the url."
+
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
@@ -854,9 +857,9 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
     if MODEL_TYPE.EMBEDDING.value in lora_and_hypernet_models_state:
         return update_prompt_with_selected_model(
-            selected_items, 
-            prompt, 
-            MODEL_TYPE.EMBEDDING, 
+            selected_items,
+            prompt,
+            MODEL_TYPE.EMBEDDING,
             lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
             )
 
@@ -871,7 +874,7 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):    
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
@@ -888,7 +891,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             for embedding in state_value:
                 if embedding not in selected_value:
                     prompt_txt = prompt_txt.replace(embedding.split(".")[0], "")
-        
+
         return prompt_txt
 
     def _remove_prompt_by_regex(pattern, prompt_txt):
@@ -897,14 +900,14 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             if match not in existed_item:
                 prompt_txt = prompt_txt.replace(match, "")
 
-        return prompt_txt       
+        return prompt_txt
 
     logger.info(f"Selected value is {selected_value}, \
                 original prompt is {original_prompt}, \
                 type is {type}")
     prompt_txt = original_prompt
     existed_item = []
-    
+
     # Compose prompt for Embedding/Lora/Hypernetwork
     for item in selected_value:
         model_name = item.split(".")[0]
@@ -917,7 +920,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
         else:
             logger.warning(f"The type {type} is not supported, skip it")
             continue
-        
+
         existed_item.append(model_prompt)
         if model_prompt not in original_prompt:
             if 0 == len(original_prompt.strip()):
