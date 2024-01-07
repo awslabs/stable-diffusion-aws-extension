@@ -266,8 +266,8 @@ def query_inference_job_list(task_type: str = '', status: str = '',
                 else:
                     complete_time = obj.get('completeTime')
                 status = obj.get('status')
-                task_type = obj.get('taskType', 'txt2img')
-                inference_job_id = obj.get('InferenceJobId')
+                task_type = obj.get('task_type', 'txt2img')
+                inference_job_id = obj.get('id')
                 combined_string = f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"
                 temp_list.append((complete_time, combined_string))
             # Sort the list based on completeTime in ascending order
@@ -783,10 +783,10 @@ def process_result_by_inference_id(inference_id):
         return image_list, info_text, plaintext_to_html(infotexts), infotexts
     else:
         logger.debug(f"get_inference_job resp is {resp}")
-        if 'taskType' not in resp:
+        if 'task_type' not in resp:
             raise Exception(resp)
 
-        if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
+        if resp['task_type'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
             while resp and resp['status'] == "inprogress":
                 time.sleep(3)
                 resp = get_inference_job(inference_id)
@@ -797,14 +797,14 @@ def process_result_by_inference_id(inference_id):
                 infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
             elif resp['status'] == "succeed":
-                if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
+                if resp['task_type'] in ['interrogate_clip', 'interrogate_deepbooru']:
                     prompt_txt = resp['caption']
                     # return with default value, including image_list, info_text, infotexts
                     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
                 images = resp['img_presigned_urls']
                 inference_param_json_list = resp['output_presigned_urls']
                 # todo: these not need anymore
-                if resp['taskType'] in ['txt2img', 'img2img']:
+                if resp['task_type'] in ['txt2img', 'img2img']:
                     image_list = download_images_to_pil(images)
                     json_file = download_images_to_json(inference_param_json_list)[0]
 
@@ -961,7 +961,7 @@ def fake_gan(selected_value, original_prompt):
     if selected_value and selected_value != None_Option_For_On_Cloud_Model:
         delimiter = "-->"
         parts = selected_value.split(delimiter)
-        # Extract the InferenceJobId value
+        # Extract the InferenceJob value
         inference_job_id = parts[3].strip()
         inference_job_status = parts[2].strip()
         inference_job_taskType = parts[1].strip()
@@ -1008,7 +1008,7 @@ def delete_inference_job(selected_value):
             return
         delimiter = "-->"
         parts = selected_value.split(delimiter)
-        # Extract the InferenceJobId value
+        # Extract the InferenceJob value
         inference_job_id = parts[3].strip()
         resp = api.delete_inferences(data={
             "inference_id_list": [inference_job_id],
@@ -1060,8 +1060,8 @@ def load_inference_job_list(target_task_type, username, usertoken):
         else:
             complete_time = obj.get('completeTime')
         status = obj.get('status')
-        task_type = obj.get('taskType', 'txt2img')
-        inference_job_id = obj.get('InferenceJobId')
+        task_type = obj.get('task_type', 'txt2img')
+        inference_job_id = obj.get('id')
         # if filter_checkbox and task_type not in selected_types:
         #     continue
         if target_task_type == task_type:
