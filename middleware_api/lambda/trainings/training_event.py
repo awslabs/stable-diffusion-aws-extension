@@ -52,6 +52,8 @@ def check_status(training_job: TrainJob):
         TrainingJobName=training_job.sagemaker_train_name
     )
 
+    log_json(resp, 'describe_training_job')
+
     training_job_status = resp['TrainingJobStatus']
     secondary_status = resp['SecondaryStatus']
 
