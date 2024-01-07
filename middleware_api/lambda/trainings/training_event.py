@@ -41,6 +41,8 @@ def handler(event, ctx):
 
     training_job = TrainJob(**(ddb_service.deserialize(rows[0])))
 
+    log_json(training_job, 'training_job')
+
     check_status(training_job)
 
     return ok()
@@ -56,9 +58,6 @@ def check_status(training_job: TrainJob):
 
     training_job_status = resp['TrainingJobStatus']
     secondary_status = resp['SecondaryStatus']
-
-    if training_job_status == 'InProgress' or training_job_status == 'Stopping':
-        return
 
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
         training_job.job_status = TrainJobStatus.Fail
