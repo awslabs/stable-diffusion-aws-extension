@@ -257,11 +257,18 @@ def cloud_train(
         # db_config_path = f"models/dreambooth/{model_name}/db_config.json"
         # os.makedirs(os.path.dirname(db_config_path), exist_ok=True)
         # os.system(f"cp {dummy_db_config_path} {db_config_path}")
+        model_id = ""
+        model_s3_path = ""
         for model in model_list:
             if model["name"] == train_model_name:
                 model_id = model["id"]
                 model_s3_path = model["output_s3_location"]
                 break
+
+        if not model_id:
+            raise Exception(f"Can not find the model {train_model_name} in cloud.")
+        if not model_s3_path:
+            raise Exception(f"Can not find the model {train_model_name} s3 path in cloud.")
 
         response = async_prepare_for_training_on_sagemaker(
             model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,

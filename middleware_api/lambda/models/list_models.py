@@ -58,9 +58,11 @@ def handler(event, context):
                 type=model.model_type,
                 name=model.name,
                 status=model.job_status.value,
-                s3_location=model.output_s3_location,
+                output_s3_location=model.output_s3_location,
                 params=model.params,
                 created=model.timestamp,
+                allowed_roles_or_users=model.allowed_roles_or_users,
+                checkpoint_id=model.checkpoint_id,
             )
 
             if model.allowed_roles_or_users and check_user_permissions(model.allowed_roles_or_users, requestor_roles,
