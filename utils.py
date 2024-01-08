@@ -268,6 +268,17 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
 
     return variable_value
 
+def host_url():
+    return get_variable_from_json('api_gateway_url')
+
+
+def api_key():
+    return get_variable_from_json('api_token')
+
+
+def has_config():
+    return host_url() and api_key()
+
 """
     Description: Below functions are used to replace existing shell command implementation with os.system method, which is not os agonostic and not recommended.
 """
