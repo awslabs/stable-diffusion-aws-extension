@@ -17,7 +17,7 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from utils import get_variable_from_json, save_variable_to_json
+from utils import get_variable_from_json, save_variable_to_json, has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -667,6 +667,10 @@ def model_upload_tab():
                 'username': rq.username,
             }
             api.set_username(rq.username)
+
+            if not has_config():
+                return [], 'Please config api url and token first'
+
             resp = api.list_checkpoints(params=params)
             models = []
             page = resp.json()['data']['page']
@@ -937,6 +941,9 @@ def dataset_tab():
 
                 url = get_variable_from_json('api_gateway_url') + 'datasets'
                 api_key = get_variable_from_json('api_token')
+
+                if not has_config():
+                    return f'Please config api url and token', None, None, None, None
 
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())

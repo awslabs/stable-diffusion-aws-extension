@@ -10,7 +10,7 @@ import logging
 from modules import sd_models
 from utils import upload_multipart_files_to_s3_by_signed_url
 from utils import get_variable_from_json
-from utils import tar
+from utils import tar, has_config
 import gradio as gr
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -26,7 +26,7 @@ def get_cloud_ckpts():
     ckpt_dict = {}
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
+        if not has_config():
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
 
@@ -76,7 +76,7 @@ def async_create_model_on_sagemaker(
     url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
 
-    if url is None or api_key is None:
+    if not has_config():
         logger.debug("Url or API-Key is not setting.")
         return
     url += "models"

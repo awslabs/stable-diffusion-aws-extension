@@ -4,8 +4,7 @@ import shutil
 
 import requests
 from modules import scripts, sd_models, shared
-from utils import get_variable_from_json
-
+from utils import get_variable_from_json, has_config
 
 postfix = 'SageMaker'
 sapi_dir = os.path.join(scripts.basedir(), 'aws_extension', 'cloud_models_manager')
@@ -36,7 +35,7 @@ class CloudSDModelsManager:
     def _fetch_models_list(self):
         try:
             api_gateway_url = get_variable_from_json('api_gateway_url')
-            if api_gateway_url is None:
+            if not has_config():
                 print(f"failed to get the api_gateway_url, can not fetch date from remote")
                 return []
             api_url = f'{api_gateway_url}checkpoints?status=Active&types={self.model_type}'

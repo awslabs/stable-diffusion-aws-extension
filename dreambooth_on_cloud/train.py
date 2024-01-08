@@ -8,7 +8,7 @@ import os
 import sys
 import logging
 from utils import upload_file_to_s3_by_presign_url
-from utils import get_variable_from_json
+from utils import get_variable_from_json, has_config
 from utils import tar
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,7 +41,7 @@ base_model_folder = "models/sagemaker_dreambooth/"
 def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
+        if not has_config():
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
         url = f"{api_gateway_url}models?"
