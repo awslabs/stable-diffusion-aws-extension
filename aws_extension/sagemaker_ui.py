@@ -17,7 +17,7 @@ from aws_extension.cloud_api_manager.api import api
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from modules.shared import opts
 from modules.ui_components import FormRow
-from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url
+from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url, has_config
 from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
@@ -149,6 +149,8 @@ def get_current_date():
 
 def server_request(path):
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    if not has_config():
+        return []
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
         api_gateway_url += '/'
@@ -342,7 +344,7 @@ def get_model_list_by_type(model_type, username=""):
     api_key = get_variable_from_json('api_token')
 
     # check if api_gateway_url and api_key are set
-    if api_gateway_url is None or api_key is None:
+    if not has_config():
         logger.info("api_gateway_url or api_key is not set")
         return []
 
@@ -448,6 +450,10 @@ def get_controlnet_model_list():
 def refresh_all_models(username):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
+
+    if not has_config():
+        return []
+
     encode_type = "utf-8"
 
     try:
@@ -478,6 +484,10 @@ def refresh_all_models(username):
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path,
                               controlnet_model_path, vae_path, pr: gradio.Request):
+
+    if not has_config():
+        return "Please config api url and token", None, None, None, None, None, None
+
     log = "start upload model to s3:"
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
@@ -854,9 +864,9 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
     if MODEL_TYPE.EMBEDDING.value in lora_and_hypernet_models_state:
         return update_prompt_with_selected_model(
-            selected_items, 
-            prompt, 
-            MODEL_TYPE.EMBEDDING, 
+            selected_items,
+            prompt,
+            MODEL_TYPE.EMBEDDING,
             lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
             )
 
@@ -871,7 +881,7 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):    
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
@@ -888,7 +898,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             for embedding in state_value:
                 if embedding not in selected_value:
                     prompt_txt = prompt_txt.replace(embedding.split(".")[0], "")
-        
+
         return prompt_txt
 
     def _remove_prompt_by_regex(pattern, prompt_txt):
@@ -897,14 +907,14 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
             if match not in existed_item:
                 prompt_txt = prompt_txt.replace(match, "")
 
-        return prompt_txt       
+        return prompt_txt
 
     logger.info(f"Selected value is {selected_value}, \
                 original prompt is {original_prompt}, \
                 type is {type}")
     prompt_txt = original_prompt
     existed_item = []
-    
+
     # Compose prompt for Embedding/Lora/Hypernetwork
     for item in selected_value:
         model_name = item.split(".")[0]
@@ -917,7 +927,7 @@ def update_prompt_with_selected_model(selected_value, original_prompt, type, sta
         else:
             logger.warning(f"The type {type} is not supported, skip it")
             continue
-        
+
         existed_item.append(model_prompt)
         if model_prompt not in original_prompt:
             if 0 == len(original_prompt.strip()):
