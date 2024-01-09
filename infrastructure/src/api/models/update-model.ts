@@ -21,6 +21,7 @@ import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_UTILS } from '../../common/dockerImages';
 import { CreateModelSageMakerEndpoint } from '../../sd-train/create-model-endpoint';
+import { ResourceProvider } from '../../shared/resource-provider';
 
 
 export interface UpdateModelApiProps {
@@ -37,6 +38,7 @@ export interface UpdateModelApiProps {
   trainMachineType: string;
   ecr_image_tag: string;
   logLevel: CfnParameter;
+  resourceProvider: ResourceProvider;
 }
 
 export class UpdateModelApi {
@@ -44,6 +46,7 @@ export class UpdateModelApi {
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
   private readonly imageUrl: string;
   private readonly machineType: string;
+  private readonly resourceProvider: ResourceProvider;
 
   private readonly src;
   private readonly scope: Construct;
@@ -70,6 +73,7 @@ export class UpdateModelApi {
     this.checkpointTable = props.checkpointTable;
     this.imageUrl = AIGC_WEBUI_UTILS + props.ecr_image_tag;
     this.logLevel = props.logLevel;
+    this.resourceProvider = props.resourceProvider;
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
@@ -86,6 +90,7 @@ export class UpdateModelApi {
       userSnsTopic: props.snsTopic,
       successTopic: props.createModelSuccessTopic,
       failureTopic: props.createModelFailureTopic,
+      resourceProvider: this.resourceProvider,
     });
     this.sagemakerEndpoint.model.node.addDependency(dockerDeployment.customJob);
     // create lambda to trigger

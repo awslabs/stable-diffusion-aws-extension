@@ -34,7 +34,7 @@ export class RestApiGateway {
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'esd-api', {
       restApiName: this.scope.node.id,
-      description: `Extension for Stable Diffusion on AWS API`,
+      description: 'Extension for Stable Diffusion on AWS API',
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(apiAccessLogGroup),
         accessLogFormat: AccessLogFormat.clf(),

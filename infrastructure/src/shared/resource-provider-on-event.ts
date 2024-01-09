@@ -1,3 +1,5 @@
+import { execFile } from 'child_process';
+import { promisify } from 'util';
 import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import {
@@ -22,8 +24,9 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { ResourceProviderProps } from './resource-provider';
+import { promises as fsPromises } from 'fs';
 
+const execFilePromise = promisify(execFile);
 
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
@@ -31,10 +34,19 @@ const snsClient = new SNSClient({});
 const kmsClient = new KMSClient({});
 const iamClient = new IAMClient({});
 
+
+const {
+  AWS_REGION,
+  ROLE_ARN,
+  BUCKET_NAME,
+  ESD_VERSION,
+} = process.env;
+const partition = AWS_REGION?.startsWith('cn-') ? 'aws-cn' : 'aws';
+const accountId = ROLE_ARN?.split(':')[4] || '';
+
 interface Event {
   RequestType: string;
   PhysicalResourceId: string;
-  ResourceProperties: ResourceProviderProps;
 }
 
 export async function handler(event: Event, context: Object) {
@@ -44,29 +56,72 @@ export async function handler(event: Event, context: Object) {
 
   switch (event.RequestType) {
     case 'Create':
-      await checkDeploy(event);
-      return createAndCheckResources(event);
+      await checkDeploy();
+      await createAndCheckResources();
+      return response(event, true);
     case 'Update':
-      return createAndCheckResources(event);
-    case 'Delete':
+      await createAndCheckResources();
       return response(event, true);
     default:
       throw new Error(`Invalid request type: ${event.RequestType}`);
   }
 
+
 }
 
-async function createAndCheckResources(event: Event) {
+async function createAndCheckResources() {
+  await createBucket();
+  await copyFiles();
   await createTables();
-  await createBucket(event);
   await createKms(
     'sd-extension-password-key',
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
-  await createPolicyForOldRole(event);
-  return response(event, true);
+  await createPolicyForOldRole();
 }
+
+
+async function copyFiles() {
+
+  const bucketName = getBucketName();
+
+  const start_time = new Date().getTime();
+
+  const binaryPath = '/opt/s5cmd';
+
+  const source_path = AWS_REGION?.startsWith('cn-') ?
+    'aws-gcr-solutions/extension-for-stable-diffusion-on-aws'
+    : 'aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws';
+
+  const source_region = AWS_REGION?.startsWith('cn-') ?
+    'cn-north-1'
+    : 'us-west-2';
+
+  const destination_region = AWS_REGION || '';
+
+  const commands = `cp --source-region ${source_region} --destination-region ${destination_region} "s3://${source_path}/${ESD_VERSION}-g4/*" "s3://${bucketName}/${ESD_VERSION}-g4/"
+  cp --source-region ${source_region} --destination-region ${destination_region} "s3://${source_path}/${ESD_VERSION}-g5/*" "s3://${bucketName}/${ESD_VERSION}-g5/"`;
+
+  await fsPromises.writeFile('/tmp/commands.txt', commands);
+
+  const args = [
+    '--log=error',
+    'run',
+    '/tmp/commands.txt',
+  ];
+
+  const { stdout, stderr } = await execFilePromise(binaryPath, args);
+  console.log('s5cmd cp output:', stdout);
+  if (stderr) {
+    throw new Error(stderr);
+  }
+
+  const end_time = new Date().getTime();
+  const cost = (end_time - start_time) / 1000;
+  console.log(`Sync files cost ${cost} seconds.`);
+}
+
 
 export interface ResourceManagerResponse {
   Result: string;
@@ -79,18 +134,17 @@ function response(event: Event, isComplete: boolean) {
     IsComplete: isComplete,
     Data: {
       Result: 'Success',
-      BucketName: getBucketName(event),
+      BucketName: getBucketName(),
     } as ResourceManagerResponse,
   };
 }
 
-function getBucketName(event: Event) {
-  const { bucketName, accountId, region } = event.ResourceProperties;
-  if (bucketName) {
-    return bucketName;
+function getBucketName() {
+  if (BUCKET_NAME) {
+    return BUCKET_NAME;
   }
 
-  return `ESD-${accountId}-${region}`;
+  return `ESD-${accountId}-${AWS_REGION}`;
 }
 
 async function createTables() {
@@ -207,8 +261,8 @@ async function createTables() {
 
 }
 
-async function createBucket(event: Event) {
-  const bucketName = getBucketName(event);
+async function createBucket() {
+  const bucketName = getBucketName();
   let createNew = false;
   try {
 
@@ -238,7 +292,7 @@ async function createBucket(event: Event) {
   if (createNew) {
     await putBucketCors(bucketName);
   } else {
-    await checkBucketLocation(event);
+    await checkBucketLocation();
     await checkBucketPermission(bucketName);
   }
 
@@ -254,9 +308,8 @@ async function checkBucketPermission(bucketName: string) {
   }
 }
 
-async function checkBucketLocation(event: Event) {
-  const { region } = event.ResourceProperties;
-  const bucketName = getBucketName(event);
+async function checkBucketLocation() {
+  const bucketName = getBucketName();
   const bucketLocation = await s3Client.send(new GetBucketLocationCommand({
     Bucket: bucketName,
   }));
@@ -265,8 +318,8 @@ async function checkBucketLocation(event: Event) {
     throw new Error(`Can not get bucket ${bucketName} location. GetBucketLocationCommandOutput is ${JSON.stringify(bucketLocation)}`);
   }
 
-  if (bucketLocation.LocationConstraint !== region) {
-    throw new Error(`Bucket ${bucketName} must be in ${region}, but it's in ${bucketLocation.LocationConstraint}.`);
+  if (bucketLocation.LocationConstraint !== AWS_REGION) {
+    throw new Error(`Bucket ${bucketName} must be in ${AWS_REGION}, but it's in ${bucketLocation.LocationConstraint}.`);
   }
 
 }
@@ -359,9 +412,8 @@ async function findKeyByAlias(aliasName: string) {
   return null;
 }
 
-async function createPolicyForOldRole(event: Event) {
+async function createPolicyForOldRole() {
   const name = 'LambdaStartDeployRole';
-  const partition = event.ResourceProperties.partition;
 
   try {
 
@@ -498,8 +550,8 @@ async function createPolicyForOldRole(event: Event) {
 
 }
 
-async function checkDeploy(event: Event) {
-  const roleName = `ESDRoleForEndpoint-${event.ResourceProperties.region}`;
+async function checkDeploy() {
+  const roleName = `ESDRoleForEndpoint-${AWS_REGION}`;
 
   let resp: GetRoleCommandOutput | undefined = undefined;
 

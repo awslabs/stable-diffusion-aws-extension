@@ -87,11 +87,7 @@ export class Middleware extends Stack {
       this,
       'ResourcesProvider',
       {
-        partition: Aws.PARTITION,
-        accountId: Aws.ACCOUNT_ID,
-        region: Aws.REGION,
         bucketName: s3BucketName.valueAsString,
-        emailAddress: emailParam.valueAsString,
       },
     );
 
@@ -165,6 +161,7 @@ export class Middleware extends Stack {
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
       logLevel,
+      resourceProvider,
     });
 
     new SdTrainDeployStack(this, {
@@ -181,6 +178,7 @@ export class Middleware extends Stack {
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       authorizer: authorizerLambda.authorizer,
       logLevel,
+      resourceProvider,
     });
 
     // Add ResourcesProvider dependency to all resources

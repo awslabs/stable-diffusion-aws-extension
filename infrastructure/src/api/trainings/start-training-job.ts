@@ -14,6 +14,7 @@ import {
     Duration,
     RemovalPolicy,
 } from 'aws-cdk-lib';
+
 import {MethodOptions} from 'aws-cdk-lib/aws-apigateway/lib/method';
 import {Effect} from 'aws-cdk-lib/aws-iam';
 import {Architecture, Runtime} from 'aws-cdk-lib/aws-lambda';
@@ -33,9 +34,11 @@ export interface StartTrainingJobApiProps {
     userTopic: aws_sns.Topic;
     ecr_image_tag: string;
     logLevel: CfnParameter;
+
 }
 
 export class StartTrainingJobApi {
+
 
     private readonly id: string;
     private readonly scope: Construct;
@@ -71,6 +74,7 @@ export class StartTrainingJobApi {
         this.sagemakerTrainRole = this.sageMakerTrainRole();
         this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + props.ecr_image_tag;
         [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
+
 
         this.startTrainJobLambda();
     }
@@ -170,6 +174,7 @@ export class StartTrainingJobApi {
 
         return newRole;
     }
+
 
 
     private startTrainJobLambda(): aws_lambda.IFunction {

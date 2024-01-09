@@ -44,8 +44,8 @@ def handler(raw_event, ctx):
     logger.info(f"Received ctx: {ctx}")
     event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
-    endpoint_deployment_id = str(uuid.uuid4())
-    short_id = endpoint_deployment_id[:7]
+    endpoint_id = str(uuid.uuid4())
+    short_id = endpoint_id[:7]
 
     if event.endpoint_name:
         short_id = event.endpoint_name
@@ -81,7 +81,7 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url)
+        _create_sagemaker_model(model_name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id)
 
         try:
             _create_sagemaker_endpoint_config(endpoint_config_name, s3_output_path, model_name,
@@ -104,7 +104,7 @@ def handler(raw_event, ctx):
             return bad_request(message=str(e))
 
         data = EndpointDeploymentJob(
-            EndpointDeploymentJobId=endpoint_deployment_id,
+            EndpointDeploymentJobId=endpoint_id,
             endpoint_name=endpoint_name,
             startTime=str(datetime.now()),
             endpoint_status=EndpointStatus.CREATING.value,
@@ -136,13 +136,18 @@ def handler(raw_event, ctx):
         return bad_request(message=str(e))
 
 
-def _create_sagemaker_model(name, image_url, model_data_url):
+def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id):
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
             'EndpointID': 'OUR_ID',
-            'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR
+            'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
+            'BUCKET_NAME': S3_BUCKET_NAME,
+            'INSTANCE_TYPE': instance_type,
+            'ENDPOINT_NAME': endpoint_name,
+            'ENDPOINT_ID': endpoint_id,
+            'CREATED_AT': datetime.utcnow().isoformat(),
         },
     }
 
