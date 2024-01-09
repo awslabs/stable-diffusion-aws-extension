@@ -17,7 +17,7 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from utils import get_variable_from_json, save_variable_to_json
+from utils import get_variable_from_json, save_variable_to_json, has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -177,7 +177,7 @@ def api_setting_tab():
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
 
-    with gr.Row() as disclaimer_tab:
+    with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
             gr.HTML(
                 value=
@@ -189,11 +189,11 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    with gr.Row():
+    with gr.Row(visible=has_config()):
         whoami_label = gr.Label(label='whoami')
 
-    with gr.Row():
-        logout_btn = gr.Button(value='logout')
+    with gr.Row(visible=has_config()):
+        logout_btn = gr.Button(value='Logout')
         logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
     return api_setting, disclaimer_tab, whoami_label
@@ -260,6 +260,9 @@ def user_settings_tab():
                                      outputs=[user_setting_out_textbox])
 
             def delete_user(username):
+                if not username or len(username) < 1:
+                    return f'Username should not be none.'
+
                 try:
                     resp = api_manager.delete_user(username=username, user_token=cloud_auth_manager.username)
                     if resp:
@@ -356,6 +359,9 @@ def role_settings_tab():
                 role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
+                    if not role_name or not permissions:
+                        return 'Please input role name and permissions.'
+
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
                                                        creator=pr.username,
@@ -667,6 +673,10 @@ def model_upload_tab():
                 'username': rq.username,
             }
             api.set_username(rq.username)
+
+            if not has_config():
+                return [], 'Please config api url and token first'
+
             resp = api.list_checkpoints(params=params)
             models = []
             page = resp.json()['data']['page']
@@ -938,6 +948,9 @@ def dataset_tab():
                 url = get_variable_from_json('api_gateway_url') + 'datasets'
                 api_key = get_variable_from_json('api_token')
 
+                if not has_config():
+                    return f'Please config api url and token', None, None, None, None
+
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
                 logger.info(raw_response.json())
 
@@ -1012,13 +1025,14 @@ def dataset_tab():
                 )
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
-                                               type='text').style(show_copy_button=True)
+                                               type='text', show_copy_button=True)
             with gr.Row():
                 dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
             with gr.Row():
                 dataset_gallery = gr.Gallery(
                     label="Dataset images", show_label=False, elem_id="gallery",
-                ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
+                    columns=[2], rows=[2], object_fit="contain", height="auto"
+                )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
                     resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)

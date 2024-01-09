@@ -24,6 +24,7 @@ import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { Database } from '../shared/database';
+import { ResourceProvider } from '../shared/resource-provider';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
@@ -38,12 +39,16 @@ export interface SdTrainDeployStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
+  resourceProvider: ResourceProvider;
 }
 
 export class SdTrainDeployStack {
   private readonly srcRoot = '../middleware_api/lambda';
+  private readonly resourceProvider: ResourceProvider;
 
   constructor(scope: Construct, props: SdTrainDeployStackProps) {
+
+    this.resourceProvider = props.resourceProvider;
 
     // Upload api template file to the S3 bucket
     new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', <BucketDeploymentProps>{
@@ -100,6 +105,7 @@ export class SdTrainDeployStack {
       userTopic: props.snsTopic,
       ecr_image_tag: props.ecr_image_tag,
       logLevel: props.logLevel,
+      resourceProvider: this.resourceProvider,
     });
 
     // PUT /trainings/{id}/stop
@@ -152,6 +158,7 @@ export class SdTrainDeployStack {
       createModelFailureTopic: props.createModelFailureTopic,
       createModelSuccessTopic: props.createModelSuccessTopic,
       logLevel: props.logLevel,
+      resourceProvider: this.resourceProvider,
     });
 
     // GET /checkpoints

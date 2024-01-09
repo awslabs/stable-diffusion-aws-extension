@@ -2,16 +2,16 @@ import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
-    Aws,
-    aws_apigateway,
-    aws_dynamodb,
-    aws_ecr,
-    aws_sns,
-    CfnParameter,
-    CustomResource,
-    Duration,
-    RemovalPolicy,
-    StackProps
+  Aws,
+  aws_apigateway,
+  aws_dynamodb,
+  aws_ecr,
+  aws_sns,
+  CfnParameter,
+  CustomResource,
+  Duration,
+  RemovalPolicy,
+  StackProps,
 } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
@@ -25,6 +25,7 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
@@ -37,7 +38,7 @@ import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferenc
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
-import {Size} from "aws-cdk-lib/core";
+import { ResourceProvider } from '../shared/resource-provider';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -60,9 +61,13 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
+  resourceProvider: ResourceProvider;
 }
 
 export class SDAsyncInferenceStack {
+
+  private resourceProvider: ResourceProvider;
+
   constructor(
     scope: Construct,
     props: SDAsyncInferenceStackProps,
@@ -70,6 +75,9 @@ export class SDAsyncInferenceStack {
     if (!props?.ecr_image_tag) {
       throw new Error('ecr_image_tag is required');
     }
+
+    this.resourceProvider = props.resourceProvider;
+
     const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
 
     const inferenceECR_url = this.createInferenceECR(scope, srcImg);
@@ -400,6 +408,9 @@ export class SDAsyncInferenceStack {
       {
         src: new DockerImageName(srcImg),
         dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
+        environment: {
+          BUCKET_NAME: this.resourceProvider.bucketName,
+        },
       },
     );
 
