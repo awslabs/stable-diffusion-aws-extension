@@ -6,8 +6,9 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3, CfnParameter,
-  Duration
+  aws_s3,
+  CfnParameter,
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -28,8 +29,8 @@ export interface UpdateDatasetApiProps {
 }
 
 export class UpdateDatasetApi {
-  private readonly src;
   public readonly router: aws_apigateway.Resource;
+  private readonly src;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly datasetInfoTable: aws_dynamodb.Table;

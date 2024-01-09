@@ -1,6 +1,14 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
-import { IAuthorizer, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import {
+  IAuthorizer,
+  JsonSchemaType,
+  JsonSchemaVersion,
+  LambdaIntegration,
+  Model,
+  RequestValidator,
+  Resource,
+} from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';

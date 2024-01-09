@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Runtime, Code, LayerVersion } from 'aws-cdk-lib/aws-lambda';
+import { Code, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Size } from 'aws-cdk-lib/core';

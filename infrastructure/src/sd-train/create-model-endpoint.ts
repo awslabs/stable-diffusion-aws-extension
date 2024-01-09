@@ -32,21 +32,18 @@ export interface CreateModelSageMakerEndpointProps {
 
 export class CreateModelSageMakerEndpoint {
 
+  public readonly model: aws_sagemaker.CfnModel;
+  public readonly modelConfig: aws_sagemaker.CfnEndpointConfig;
+  public readonly modelEndpoint: aws_sagemaker.CfnEndpoint;
+  public readonly successTopic: aws_sns.Topic;
+  public readonly failureTopic: aws_sns.Topic;
   private readonly id: string;
   private readonly resourceProvider: ResourceProvider;
-
   private readonly rootSrc: string;
   private readonly modelTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly userSnsTopic: aws_sns.Topic;
-
   private readonly s3Bucket: aws_s3.Bucket;
-  public readonly model: aws_sagemaker.CfnModel;
-  public readonly modelConfig: aws_sagemaker.CfnEndpointConfig;
-  public readonly modelEndpoint: aws_sagemaker.CfnEndpoint;
-
-  public readonly successTopic: aws_sns.Topic;
-  public readonly failureTopic: aws_sns.Topic;
 
   constructor(scope: Construct, id: string, props: CreateModelSageMakerEndpointProps) {
     this.s3Bucket = props.s3OutputBucket;
