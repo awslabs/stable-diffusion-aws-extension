@@ -36,7 +36,7 @@ class CloudSDModelsManager:
         try:
             api_gateway_url = get_variable_from_json('api_gateway_url')
             if not has_config():
-                print(f"failed to get the api_gateway_url, can not fetch date from remote")
+                print(f"Please config api_gateway_url and api_token")
                 return []
             api_url = f'{api_gateway_url}checkpoints?status=Active&types={self.model_type}'
             api_key_header = {'x-api-key': get_variable_from_json('api_token')}
