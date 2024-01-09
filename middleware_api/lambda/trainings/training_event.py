@@ -9,7 +9,6 @@ from common.response import ok, not_found
 from common.util import publish_msg
 from libs.common_tools import split_s3_path
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
-from libs.utils import log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -34,14 +33,14 @@ def handler(event, ctx):
         'sagemaker_train_name': train_job_name,
     })
 
-    log_json(rows, 'rows')
+    logger.info(rows)
 
     if not rows or len(rows) == 0:
         return not_found(message=f'training job {train_job_name} is not found')
 
     training_job = TrainJob(**(ddb_service.deserialize(rows[0])))
 
-    log_json(training_job, 'training_job')
+    logger.info(training_job)
 
     check_status(training_job)
 
@@ -54,7 +53,7 @@ def check_status(training_job: TrainJob):
         TrainingJobName=training_job.sagemaker_train_name
     )
 
-    log_json(resp, 'describe_training_job')
+    logger.info(resp)
 
     training_job_status = resp['TrainingJobStatus']
     secondary_status = resp['SecondaryStatus']
