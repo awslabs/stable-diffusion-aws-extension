@@ -10,13 +10,13 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import not_found, accepted, bad_request
 from libs.common_tools import DecimalEncoder
 from libs.data_types import TrainJob, TrainJobStatus, Model, CheckPoint
-from libs.utils import log_json
 
 train_table = os.environ.get('TRAIN_TABLE')
 model_table = os.environ.get('MODEL_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
+# e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
 region = os.environ.get('AWS_REGION')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
@@ -29,7 +29,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # PUT /trainings/{id}/start
 def handler(event, context):
-    log_json(event, 'event')
+    logger.info(json.dumps(event))
     train_job_id = event['pathParameters']['id']
 
     return _start_train_job(train_job_id)
@@ -51,7 +51,6 @@ def _start_train_job(train_job_id: str):
         return not_found(message=f'model with id {train_job.model_id} is not found')
 
     model = Model(**model_raw)
-    log_json(model_raw, 'model')
 
     raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
         'id': train_job.checkpoint_id
