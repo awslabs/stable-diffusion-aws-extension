@@ -41,8 +41,7 @@ def handler(raw_event, context):
         })
         if raw_checkpoint is None or len(raw_checkpoint) == 0:
             return not_found(
-                message=f'checkpoint not found with id {checkpoint_id}',
-                headers=headers
+                message=f'checkpoint not found with id {checkpoint_id}'
             )
 
         checkpoint = CheckPoint(**raw_checkpoint)
