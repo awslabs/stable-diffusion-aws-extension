@@ -38,13 +38,6 @@ def _stop_train_job(train_job_id: str):
 
     try:
 
-        if train_job.sagemaker_sfn_arn:
-            sfn_client.stop_execution(
-                executionArn=train_job.sagemaker_sfn_arn,
-                error='user stop',
-                cause='api stop'
-            )
-
         ddb_service.update_item(
             table=train_table,
             key={'id': train_job_id},
