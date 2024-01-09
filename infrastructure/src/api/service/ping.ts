@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
+import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -73,8 +73,8 @@ export class PingApi {
         memorySize: 1024,
         layers: [this.layer],
         environment: {
-            LOG_LEVEL: this.logLevel.valueAsString,
-        }
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
       });
 
 
