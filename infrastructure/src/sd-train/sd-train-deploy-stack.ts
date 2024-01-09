@@ -23,8 +23,8 @@ import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
+import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
 import { Database } from '../shared/database';
-import {SagemakerTrainingEvents, SagemakerTrainingEventsProps} from "../events/trainings-event";
 import { ResourceProvider } from '../shared/resource-provider';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -106,6 +106,7 @@ export class SdTrainDeployStack {
       userTopic: props.snsTopic,
       ecr_image_tag: props.ecr_image_tag,
       logLevel: props.logLevel,
+      resourceProvider: this.resourceProvider,
     });
 
     // PUT /trainings/{id}/stop
@@ -321,7 +322,7 @@ export class SdTrainDeployStack {
     );
 
     new SagemakerTrainingEvents(
-        scope, 'SagemakerTrainingEvents',
+      scope, 'SagemakerTrainingEvents',
         <SagemakerTrainingEventsProps>{
           commonLayer: props.commonLayer,
           trainingTable: props.database.trainingTable,
