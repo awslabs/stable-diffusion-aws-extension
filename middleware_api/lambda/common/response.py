@@ -9,7 +9,7 @@ from libs.utils import log_json
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-x_api_version = "1.4.0"
+x_api_version = "1.3.0"
 
 
 class HttpStatusCode:
