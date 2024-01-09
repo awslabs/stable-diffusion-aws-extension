@@ -118,7 +118,7 @@ def handler(raw_event, ctx):
         logger.info(f"Successfully created endpoint deployment: {data}")
 
         endpoint_item = EndpointItem(
-            id=endpoint_deployment_id,
+            id=endpoint_id,
             autoscaling=event.autoscaling_enabled,
             current_instance_count=0,
             name=endpoint_name,
