@@ -25,6 +25,7 @@ import { LambdaInvokeProps } from 'aws-cdk-lib/aws-stepfunctions-tasks/lib/lambd
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../../common/dockerImages';
+import { ResourceProvider } from '../../shared/resource-provider';
 
 export interface StartTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -38,6 +39,7 @@ export interface StartTrainingJobApiProps {
   userTopic: aws_sns.Topic;
   ecr_image_tag: string;
   logLevel: CfnParameter;
+  resourceProvider: ResourceProvider;
 }
 
 export class StartTrainingJobApi {
@@ -61,6 +63,7 @@ export class StartTrainingJobApi {
   private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
   private readonly logLevel: CfnParameter;
+  private readonly resourceProvider: ResourceProvider;
 
   constructor(scope: Construct, id: string, props: StartTrainingJobApiProps) {
     this.id = id;
@@ -75,6 +78,7 @@ export class StartTrainingJobApi {
     this.router = props.router;
     this.trainTable = props.trainTable;
     this.logLevel = props.logLevel;
+    this.resourceProvider = props.resourceProvider;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
     this.sfnLambdaRole = this.getStepFunctionLambdaRole();
     this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + props.ecr_image_tag;
@@ -365,6 +369,9 @@ export class StartTrainingJobApi {
     const ecrDeployment = new ECRDeployment(this.scope, `${this.id}-ecr-deploy`, {
       src: new DockerImageName(srcImage),
       dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
+      environment: {
+        BUCKET_NAME: this.resourceProvider.bucketName,
+      },
     });
 
     // trigger the custom resource lambda
