@@ -60,7 +60,6 @@ export async function handler(event: Event, context: Object) {
   }
 
   if (event.RequestType === 'Update') {
-    await checkDeploy();
     await createAndCheckResources();
   }
 
