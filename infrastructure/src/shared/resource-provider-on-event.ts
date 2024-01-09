@@ -1,4 +1,5 @@
 import { execFile } from 'child_process';
+import { promises as fsPromises } from 'fs';
 import { promisify } from 'util';
 import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
@@ -24,7 +25,6 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { promises as fsPromises } from 'fs';
 
 const execFilePromise = promisify(execFile);
 
@@ -54,18 +54,16 @@ export async function handler(event: Event, context: Object) {
   console.log(JSON.stringify(event));
   console.log(JSON.stringify(context));
 
-  switch (event.RequestType) {
-    case 'Create':
-      await checkDeploy();
-      await createAndCheckResources();
-      return response(event, true);
-    case 'Update':
-      await createAndCheckResources();
-      return response(event, true);
-    default:
-      throw new Error(`Invalid request type: ${event.RequestType}`);
+  if (event.RequestType === 'Create') {
+    await checkDeploy();
+    await createAndCheckResources();
   }
 
+  if (event.RequestType === 'Update') {
+    await createAndCheckResources();
+  }
+
+  return response(event, true);
 
 }
 
