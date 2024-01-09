@@ -260,6 +260,9 @@ def user_settings_tab():
                                      outputs=[user_setting_out_textbox])
 
             def delete_user(username):
+                if not username or len(username) < 1:
+                    return f'Username should not be none.'
+
                 try:
                     resp = api_manager.delete_user(username=username, user_token=cloud_auth_manager.username)
                     if resp:
@@ -356,6 +359,9 @@ def role_settings_tab():
                 role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
+                    if not role_name or not permissions:
+                        return 'Please input role name and permissions.'
+
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
                                                        creator=pr.username,

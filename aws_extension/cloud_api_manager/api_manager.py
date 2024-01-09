@@ -66,6 +66,10 @@ class CloudApiManager:
             return f"Failed to start endpoint deployment with exception: {e}"
 
     def sagemaker_endpoint_delete(self, delete_endpoint_list, user_token=""):
+
+        if not delete_endpoint_list:
+            return "No endpoint to delete"
+
         logger.debug(f"start delete sagemaker endpoint delete function")
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
 
