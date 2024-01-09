@@ -62,7 +62,6 @@ class CloudAuthLoader:
             return ''
         raw_resp = requests.get(url=f'{self.api_url}users?show_password=True', headers=self._headers)
         raw_resp.raise_for_status()
-        logger.debug(f'get users from api: {raw_resp.json()}')
         resp = raw_resp.json()['data']
         return ','.join([f"{user['name']}:{user['password']}" for user in resp['items']])
 

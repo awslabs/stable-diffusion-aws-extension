@@ -285,10 +285,10 @@ class Api:
             data=data
         )
 
-    def update_dataset(self, name: str, headers=None, data=None):
+    def update_dataset(self, dataset_id: str, headers=None, data=None):
         return self.req(
             "PUT",
-            f"datasets/{name}",
+            f"datasets/{dataset_id}",
             headers=headers,
             data=data
         )

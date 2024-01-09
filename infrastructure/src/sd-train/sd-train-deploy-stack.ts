@@ -27,7 +27,6 @@ import { Database } from '../shared/database';
 import {SagemakerTrainingEvents, SagemakerTrainingEventsProps} from "../events/trainings-event";
 import { ResourceProvider } from '../shared/resource-provider';
 
-
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
   createModelSuccessTopic: aws_sns.Topic;
