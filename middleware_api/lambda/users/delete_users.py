@@ -6,7 +6,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
 from libs.data_types import PARTITION_KEYS
 from libs.utils import KeyEncryptService
-from users.create_user import _check_action_permission
+from create_user import _check_action_permission
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
