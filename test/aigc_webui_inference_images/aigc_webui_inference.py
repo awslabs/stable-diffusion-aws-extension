@@ -57,7 +57,7 @@ def create_endpoint_config(endpoint_config_name, s3_output_path, model_name, ini
                     "S3OutputPath": s3_output_path,
                     # "NotificationConfig": {
                     #     "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                    #     "ErrorTopic": ASYNC_ERROR_TOPIC 
+                    #     "ErrorTopic": ASYNC_ERROR_TOPIC
                     # }
                 }
             },
@@ -127,18 +127,18 @@ INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
 # deploy endpoint
 print(f"start deploy endpoint")
 
-endpoint_deployment_id = "test"
+endpoint_deployment_id = "test-private-no-sd15-model"
 sagemaker_model_name = f"infer-model-{endpoint_deployment_id}"
 sagemaker_endpoint_config = f"infer-config-{endpoint_deployment_id}"
 sagemaker_endpoint_name = f"infer-endpoint-{endpoint_deployment_id}"
 
-image_url = INFERENCE_ECR_IMAGE_URL 
+image_url = INFERENCE_ECR_IMAGE_URL
 model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 
 s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
 
 initial_instance_count = 1
-instance_type = "ml.g4dn.2xlarge"
+instance_type = "ml.g5.2xlarge"
 
 print('Creating model resource ...')
 
@@ -190,7 +190,7 @@ def get_bucket_and_key(s3uri):
 
 bucket, key = get_bucket_and_key(output_location)
 obj = s3_resource.Object(bucket, key)
-body = obj.get()['Body'].read().decode('utf-8') 
+body = obj.get()['Body'].read().decode('utf-8')
 json_body = json.loads(body)
 
 def decode_base64_to_image(encoding):

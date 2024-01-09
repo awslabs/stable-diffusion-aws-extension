@@ -8,12 +8,13 @@ import {
   aws_s3,
   aws_sagemaker,
   aws_sns,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { CfnEndpointConfigProps, CfnEndpointProps, CfnModelProps } from 'aws-cdk-lib/aws-sagemaker';
 import { Construct } from 'constructs';
+import { ResourceProvider } from '../shared/resource-provider';
 
 export interface CreateModelSageMakerEndpointProps {
   primaryContainer: string;
@@ -26,11 +27,13 @@ export interface CreateModelSageMakerEndpointProps {
   userSnsTopic: aws_sns.Topic;
   successTopic: aws_sns.Topic;
   failureTopic: aws_sns.Topic;
+  resourceProvider: ResourceProvider;
 }
 
 export class CreateModelSageMakerEndpoint {
 
-  private readonly id;
+  private readonly id: string;
+  private readonly resourceProvider: ResourceProvider;
 
   private readonly rootSrc: string;
   private readonly modelTable: aws_dynamodb.Table;
@@ -54,12 +57,18 @@ export class CreateModelSageMakerEndpoint {
     this.userSnsTopic = props.userSnsTopic;
     this.successTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
     this.failureTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
+    this.resourceProvider = props.resourceProvider;
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
       modelName: `${this.id}-cdk-sample-model`,
       primaryContainer: {
         image: props.primaryContainer,
+        environment: {
+          AWS_DEFAULT_REGION: Aws.REGION,
+          BUCKET_NAME: this.resourceProvider.bucketName,
+          INSTANCE_TYPE: props.machineType,
+        },
       },
     });
 

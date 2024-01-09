@@ -1,17 +1,15 @@
+import * as path from 'path';
 import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime, Code, LayerVersion } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
-  accountId: string;
-  region: string;
   bucketName?: string;
-  emailAddress: string;
-  partition: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -27,6 +25,13 @@ export class ResourceProvider extends Construct {
 
     this.role = this.iamRole();
 
+
+    const binaryLayer = new LayerVersion(this, 'BinaryLayer', {
+      code: Code.fromAsset(path.join(__dirname, 's5cmd-layer.zip')),
+      compatibleRuntimes: [Runtime.NODEJS_18_X],
+      description: 'A layer that contains a s5cmd',
+    });
+
     this.handler = new NodejsFunction(scope, 'ResourceManagerHandler', {
       runtime: Runtime.NODEJS_18_X,
       handler: 'handler',
@@ -37,7 +42,14 @@ export class ResourceProvider extends Construct {
       },
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 4048,
+      memorySize: 10240,
+      ephemeralStorageSize: Size.gibibytes(10),
+      layers: [binaryLayer],
+      environment: {
+        ROLE_ARN: this.role.roleArn,
+        BUCKET_NAME: props.bucketName ?? '',
+        ESD_VERSION: '1.4.0',
+      },
     });
 
     this.provider = new Provider(scope, 'ResourceProvider', {
@@ -64,6 +76,7 @@ export class ResourceProvider extends Construct {
     ].includes(resource);
   }
 
+
   private iamRole(): Role {
 
     const newRole = new Role(this, 'deploy-check-role', {
@@ -77,11 +90,16 @@ export class ResourceProvider extends Construct {
         'sns:CreateTopic',
         'iam:ListRolePolicies',
         'iam:PutRolePolicy',
+        'sts:AssumeRole',
         'iam:GetRole',
         'kms:CreateKey',
         'kms:CreateAlias',
         'kms:DisableKeyRotation',
         'kms:ListAliases',
+        'ec2:RunInstances',
+        'ec2:TerminateInstances',
+        'ec2:DescribeImages',
+        'datasync:*',
       ],
       resources: [
         '*',
@@ -94,6 +112,10 @@ export class ResourceProvider extends Construct {
         's3:ListBucket',
         's3:CreateBucket',
         's3:PutBucketCORS',
+        's3:GetObject',
+        's3:PutObject',
+        's3:HeadObject',
+        's3:DeleteObject',
         's3:GetBucketLocation',
       ],
       resources: [
@@ -110,6 +132,16 @@ export class ResourceProvider extends Construct {
         'kms:Decrypt',
       ],
       resources: ['*'],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'iam:PassRole',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/*`,
+      ],
     }));
 
     return newRole;
