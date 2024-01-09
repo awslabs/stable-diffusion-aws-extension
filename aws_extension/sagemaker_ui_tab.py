@@ -17,7 +17,7 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from utils import get_variable_from_json, save_variable_to_json
+from utils import get_variable_from_json, save_variable_to_json, has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -177,7 +177,7 @@ def api_setting_tab():
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
 
-    with gr.Row() as disclaimer_tab:
+    with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
             gr.HTML(
                 value=
@@ -189,11 +189,11 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    with gr.Row():
+    with gr.Row(visible=has_config()):
         whoami_label = gr.Label(label='whoami')
 
-    with gr.Row():
-        logout_btn = gr.Button(value='logout')
+    with gr.Row(visible=has_config()):
+        logout_btn = gr.Button(value='Logout')
         logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
     return api_setting, disclaimer_tab, whoami_label
