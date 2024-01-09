@@ -28,6 +28,7 @@ class TrainJobStatus(Enum):
     Training = 'Training'
     Complete = 'Complete'
     Fail = 'Fail'
+    Failed = 'Failed'
     Stopped = 'Stopped'
     Starting = 'Starting'
     Downloading = 'Downloading'
