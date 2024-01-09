@@ -3,7 +3,8 @@ import importlib
 import logging
 import gradio as gr
 import os
-
+import threading
+import time
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
@@ -1075,6 +1076,20 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+
+def fetch_user_data():
+    while True:
+        try:
+            cloud_auth_manager.update_gradio_auth()
+        except Exception as e:
+            logger.error(e)
+        time.sleep(30)
+
+
+thread = threading.Thread(target=fetch_user_data)
+thread.daemon = True
+thread.start()
 
 if os.environ.get('ON_DOCKER', "false") != "true":
     from modules import call_queue, fifo_lock
