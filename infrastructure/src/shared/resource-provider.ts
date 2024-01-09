@@ -26,7 +26,7 @@ export class ResourceProvider extends Construct {
     this.role = this.iamRole();
 
 
-    const binaryLayer = new LayerVersion(this, 'BinaryLayer', {
+    const binaryLayer = new LayerVersion(this, 'ResourceManagerLayer', {
       code: Code.fromAsset(path.join(__dirname, 's5cmd-layer.zip')),
       compatibleRuntimes: [Runtime.NODEJS_18_X],
       description: 'A layer that contains a s5cmd',
