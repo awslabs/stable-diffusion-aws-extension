@@ -8,7 +8,7 @@ from datetime import datetime
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, accepted
+from common.response import bad_request, accepted, forbidden
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus
 from libs.utils import get_permissions_by_username
@@ -68,7 +68,7 @@ def handler(raw_event, ctx):
         if 'sagemaker_endpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
                     'sagemaker_endpoint']):
-            return bad_request(message=f"Creator {event.creator} has no permission to create Sagemaker")
+            return forbidden(message=f"Creator {event.creator} has no permission to create Sagemaker")
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:

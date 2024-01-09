@@ -59,13 +59,7 @@ def handler(raw_event, ctx):
         creator=event.creator,
     ).__dict__)
 
-    data = {
-        'role_name': event.role_name,
-        'permissions': event.permissions,
-        'creator': event.creator,
-    }
-
-    return created(message='role created', data=data)
+    return created(message='role created')
 
 
 def _get_role_by_name(role_name):
