@@ -1020,9 +1020,9 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
-            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img, endpoint_type)
-            self.current_inference_id = inference_id
-            self.inference_queue.put(inference_id)
+            inference_id_or_data = self.infer_manager.run(p.user, models, api_param, self.is_txt2img, endpoint_type)
+            self.current_inference_id = inference_id_or_data
+            self.inference_queue.put(inference_id_or_data)
         except Exception as e:
             logger.error(e)
             err = str(e)
@@ -1047,7 +1047,7 @@ class SageMakerUI(scripts.Script):
                 )
 
             image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(
-                inference_id)
+                inference_id_or_data, endpoint_type)
 
             processed = Processed(
                 p,

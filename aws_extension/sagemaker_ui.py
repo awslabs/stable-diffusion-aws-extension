@@ -771,14 +771,20 @@ async def call_remote_inference(sagemaker_endpoint, type):
             logger.error(f"Failed to get inference job {inference_id}, error: {e}")
 
 
-def process_result_by_inference_id(inference_id):
+def process_result_by_inference_id(inference_id_or_data, endpoint_type):
+    if endpoint_type == 'Async':
+        resp = get_inference_job(inference_id_or_data)
+        inference_id = inference_id_or_data
+    else:
+        resp = inference_id_or_data
+        inference_id = resp['InferenceJobId']
+
     image_list = []  # Return an empty list if selected_value is None
     info_text = ''
     infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
     json_list = []
     prompt_txt = ''
 
-    resp = get_inference_job(inference_id)
     if resp is None:
         logger.info(f"get_inference_job resp is null")
         return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -1015,7 +1021,7 @@ def get_infer_job_time(job):
         start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - start_time
         duration = round(duration.total_seconds(), 2)
-        string_array.append(f"API Duration: {duration} seconds")
+        string_array.append(f"Inference Time: {duration} seconds")
 
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:

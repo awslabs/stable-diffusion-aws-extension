@@ -61,6 +61,10 @@ class SimpleSagemakerInfer(InferManager):
                 logger.error(response.json())
                 raise Exception(response.json()['message'])
 
+            # if real-time, return inference data
+            if response.status_code == 200:
+                return response.json()['data']
+
         return inference_id
 
 
