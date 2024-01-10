@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 None_Option_For_On_Cloud_Model = "don't use on cloud inference"
+None_Option_For_Infer_Job = "No Selected"
 
 inference_job_dropdown = None
 embedding_dropdown = None
@@ -1003,7 +1004,7 @@ def fake_gan(selected_value, original_prompt):
 
 def delete_inference_job(selected_value):
     logger.debug(f"selected value is {selected_value}")
-    if selected_value and selected_value != None_Option_For_On_Cloud_Model:
+    if selected_value and selected_value != None_Option_For_Infer_Job:
         if selected_value == 'cancelled':
             return
         delimiter = "-->"
@@ -1214,7 +1215,7 @@ def create_ui(is_img2img):
                 global inference_job_dropdown
                 # global txt2img_inference_job_ids
 
-                inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
+                inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_Infer_Job,
                                                      label="Inference Job Histories: Time-Type-Status-UUID")
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
