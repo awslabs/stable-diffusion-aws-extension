@@ -90,9 +90,11 @@ def handler(raw_event, ctx):
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
+                event.autoscaling_enabled = False
                 _create_endpoint_config_provisioned(endpoint_config_name, model_name,
                                                     initial_instance_count, instance_type)
             elif event.endpoint_type == EndpointType.Serverless.value:
+                event.autoscaling_enabled = False
                 _create_endpoint_config_serverless(endpoint_config_name)
             elif event.endpoint_type == EndpointType.Async.value:
                 _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name,
@@ -185,7 +187,6 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
 
 
 def _create_endpoint_config_serverless(endpoint_config_name):
-
     production_variants = [
         {
             'MemorySizeInMB': 2048,
@@ -203,7 +204,7 @@ def _create_endpoint_config_serverless(endpoint_config_name):
 
 
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
-                                       instance_type):
+                                  instance_type):
     async_inference_config = {
         "OutputConfig": {
             "S3OutputPath": s3_output_path,
