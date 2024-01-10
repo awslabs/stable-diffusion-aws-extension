@@ -147,11 +147,12 @@ class DatasetInfo:
 @dataclass
 class InferenceJob:
     InferenceJobId: str
-    startTime: str
     status: str
     taskType: str
     owner_group_or_role: Optional[List[str]] = None
     inference_info_name: Optional[Any] = None
+    startTime: Optional[Any] = None
+    createTime: Optional[Any] = None
     image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
     completeTime: Optional[Any] = None

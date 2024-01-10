@@ -63,7 +63,7 @@ def handler(raw_event, context):
         presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
-            startTime=str(datetime.now()),
+            createTime=str(datetime.now()),
             status='created',
             taskType=_type,
             inference_type=event.inference_type,

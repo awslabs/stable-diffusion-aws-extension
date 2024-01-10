@@ -14,6 +14,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import accepted, ok, bad_request
+from inferences.get_inference_job import get_infer_data
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
 
@@ -81,6 +82,8 @@ def handler(event, _):
 
     logger.info(f"payload: {payload}")
 
+    update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
+
     if job.inference_type == EndpointType.RealTime.value:
         return real_time(payload, job, endpoint_name)
     else:
@@ -104,7 +107,7 @@ def real_time(payload, job: InferenceJob, endpoint_name):
 
         handle_sagemaker_out(job, prediction_sync, endpoint_name)
 
-        return ok()
+        return get_infer_data(job.InferenceJobId)
     except Exception as e:
         print(e)
         return bad_request(str(e))
