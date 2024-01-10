@@ -29,7 +29,7 @@ import nest_asyncio
 from utils import cp, tar, rm
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(utils.LOGGING_LEVEL)
 
 None_Option_For_On_Cloud_Model = "don't use on cloud inference"
 
