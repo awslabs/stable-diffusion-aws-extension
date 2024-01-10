@@ -1215,7 +1215,7 @@ def create_ui(is_img2img):
                 # global txt2img_inference_job_ids
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
-                                                     label="Inference Job: Time-Type-Status-Uuid")
+                                                     label="Inference Job Histories: Time-Type-Status-UUID")
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
