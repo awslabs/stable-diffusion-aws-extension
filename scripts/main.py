@@ -842,7 +842,7 @@ class SageMakerUI(scripts.Script):
 
         sagemaker_inputs_components = []
         if is_img2img:
-            self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -857,11 +857,11 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.img2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.img2img_lora_and_hypernet_models_state]
         else:
-            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -876,7 +876,7 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.txt2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.txt2img_lora_and_hypernet_models_state]
 
@@ -889,6 +889,7 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is InService
         sd_model_on_cloud = args[0]
+        endpoint_type = args[1]
         always_on_cloud = 'sd_model_checkpoint' not in opts.quicksettings_list
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model and not always_on_cloud:
             return
@@ -948,7 +949,7 @@ class SageMakerUI(scripts.Script):
 
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        models['VAE'] = [args[1]]
+        models['VAE'] = [args[2]]
 
         from modules.processing import get_fixed_seed
 
@@ -1019,7 +1020,7 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
-            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
+            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img, endpoint_type)
             self.current_inference_id = inference_id
             self.inference_queue.put(inference_id)
         except Exception as e:

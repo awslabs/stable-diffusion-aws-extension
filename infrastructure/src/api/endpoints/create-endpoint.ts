@@ -233,8 +233,12 @@ export class CreateEndpointApi {
         properties: {
           endpoint_name: {
             type: JsonSchemaType.STRING,
-            minLength: 0,
+            minLength: 2,
             maxLength: 20,
+          },
+          endpoint_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['Real-time', 'Serverless', 'Async'],
           },
           instance_type: {
             type: JsonSchemaType.STRING,
@@ -259,6 +263,7 @@ export class CreateEndpointApi {
           },
         },
         required: [
+          'endpoint_type',
           'instance_type',
           'initial_instance_count',
           'autoscaling_enabled',

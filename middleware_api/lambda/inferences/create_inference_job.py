@@ -32,6 +32,7 @@ class PrepareEvent:
     filters: dict[str, Any]
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
+    inference_type: Optional[str] = None
 
 
 # POST /inference/v2
@@ -50,7 +51,8 @@ def handler(raw_event, context):
             )
 
         # check if endpoint table for endpoint status and existence
-        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
+        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.inference_type,
+                                                          event.user_id)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
         instance_type = inference_endpoint.instance_type
@@ -64,6 +66,7 @@ def handler(raw_event, context):
             startTime=str(datetime.now()),
             status='created',
             taskType=_type,
+            inference_type=event.inference_type,
             owner_group_or_role=[event.user_id],
             params={
                 'input_body_s3': s3_location,
@@ -163,7 +166,7 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
-def _schedule_inference_endpoint(endpoint_name, user_id):
+def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
     if endpoint_name:
@@ -185,11 +188,12 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
             if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
                 continue
-
+            if endpoint.endpoint_type != inference_type:
+                continue
             if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):
                 available_endpoints.append(endpoint)
 
         if len(available_endpoints) == 0:
-            raise Exception(f'no available Endpoints for user "{user_id}"')
+            raise Exception(f'no available {inference_type} endpoints for user "{user_id}"')
 
         return random.choice(available_endpoints)

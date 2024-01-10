@@ -33,7 +33,7 @@ class CloudApiManager:
             'Content-Type': 'application/json',
         }
 
-    def sagemaker_deploy(self, endpoint_name, instance_type, initial_instance_count=1,
+    def sagemaker_deploy(self, endpoint_name, endpoint_type, instance_type, initial_instance_count=1,
                          autoscaling_enabled=True, user_roles=None, user_token=""):
         """ Create SageMaker endpoint for GPU inference.
         Args:
@@ -48,6 +48,7 @@ class CloudApiManager:
 
         payload = {
             "endpoint_name": endpoint_name,
+            "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,

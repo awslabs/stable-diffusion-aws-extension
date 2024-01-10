@@ -22,6 +22,8 @@ from utils import get_variable_from_json, save_variable_to_json, has_config
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
+endpoint_type_choices = ["Async", "Real-time", "Serverless"]
+
 async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
                            "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
 
@@ -767,6 +769,9 @@ def sagemaker_endpoint_tab():
             with gr.Row(visible=False) as filter_row:
                 endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
                                                    label="Specify Endpoint Name", visible=True)
+                endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
+                                                     elem_id="sagemaker_inference_endpoint_type_textbox",
+                                                     value="Async")
                 instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
                                                      elem_id="sagemaker_inference_instance_type_textbox",
                                                      value="ml.g5.2xlarge")
@@ -792,9 +797,11 @@ def sagemaker_endpoint_tab():
                                                 elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles,
+            def _create_sagemaker_endpoint(endpoint_name, endpoint_type, instance_type, scale_count, autoscale,
+                                           target_user_roles,
                                            pr: gr.Request):
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
+                                                    endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
                                                     autoscaling_enabled=autoscale,
@@ -803,7 +810,7 @@ def sagemaker_endpoint_tab():
                                                     )
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
-                                          inputs=[endpoint_name_textbox, instance_type_dropdown,
+                                          inputs=[endpoint_name_textbox, endpoint_type_dropdown, instance_type_dropdown,
                                                   instance_count_dropdown, autoscaling_enabled, user_roles],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
@@ -853,10 +860,13 @@ def _list_sagemaker_endpoints(username):
     resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
     endpoints = []
     for endpoint in resp:
+        if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
+            endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
                 endpoint['endpoint_name'],
+                endpoint['endpoint_type'],
                 endpoint_roles,
                 endpoint['autoscaling'],
                 endpoint['endpoint_status'],
@@ -870,8 +880,8 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str']
+            headers=['name', 'type', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
         )
 
         def list_ep_prev(paging, rq: gr.Request):

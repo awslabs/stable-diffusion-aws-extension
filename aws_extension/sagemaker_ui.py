@@ -288,6 +288,7 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inferences/{inference_job_id}')
+    logger.debug(f"get_inference_job response {response}")
     return response.json()['data']
 
 
@@ -1006,6 +1007,9 @@ def fake_gan(selected_value, original_prompt):
 def get_infer_job_time(job):
     string_array = []
 
+    if 'inference_type' in job:
+        string_array.append(f"{job['inference_type']}")
+
     if 'startTime' in job and 'completeTime' in job:
         complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
         start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
@@ -1166,6 +1170,9 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
+                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time", "Serverless"],
+                                                         value="Async",
+                                                         label='Inference Endpoint Type')
             with gr.Row():
                 with gr.Column():
                     with gr.Row():
@@ -1326,4 +1333,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state
+    return sd_model_on_cloud_dropdown, infer_endpoint_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state

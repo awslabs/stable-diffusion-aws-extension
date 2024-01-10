@@ -147,6 +147,10 @@ export class CreateInferenceJobApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          inference_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['Real-time', 'Serverless', 'Async'],
+          },
           models: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -158,6 +162,7 @@ export class CreateInferenceJobApi {
         },
         required: [
           'task_type',
+          'inference_type',
           'models',
         ],
       },
