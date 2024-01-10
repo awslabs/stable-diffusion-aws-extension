@@ -780,7 +780,7 @@ def sagemaker_endpoint_tab():
                                                     value=1, min=1, max=1000, step=1
                                                     )
                 autoscaling_enabled = gr.Checkbox(
-                    label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
+                    label="Enable Async Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
