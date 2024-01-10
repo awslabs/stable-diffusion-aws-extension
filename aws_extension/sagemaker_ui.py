@@ -1013,15 +1013,16 @@ def fake_gan(selected_value, original_prompt):
 def get_infer_job_time(job):
     string_array = []
 
+    inference_type = ""
     if 'inference_type' in job:
-        string_array.append(f"{job['inference_type']}")
+        inference_type = job['inference_type'] + " "
 
     if 'startTime' in job and 'completeTime' in job:
         complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
         start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - start_time
         duration = round(duration.total_seconds(), 2)
-        string_array.append(f"Inference Time: {duration} seconds")
+        string_array.append(f"{inference_type}Inference Time: {duration} seconds")
 
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:
