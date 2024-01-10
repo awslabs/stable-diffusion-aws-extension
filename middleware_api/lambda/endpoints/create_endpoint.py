@@ -48,6 +48,9 @@ def handler(raw_event, ctx):
     if event.endpoint_type == EndpointType.Serverless.value:
         return bad_request(message="Serverless endpoint is not supported yet")
 
+    if event.endpoint_type == EndpointType.RealTime.value and event.autoscaling_enabled:
+        return bad_request(message="Autoscaling is not supported for real-time endpoint")
+
     endpoint_id = str(uuid.uuid4())
     short_id = endpoint_id[:7]
 
@@ -90,11 +93,9 @@ def handler(raw_event, ctx):
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
-                event.autoscaling_enabled = False
                 _create_endpoint_config_provisioned(endpoint_config_name, model_name,
                                                     initial_instance_count, instance_type)
             elif event.endpoint_type == EndpointType.Serverless.value:
-                event.autoscaling_enabled = False
                 _create_endpoint_config_serverless(endpoint_config_name)
             elif event.endpoint_type == EndpointType.Async.value:
                 _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name,
