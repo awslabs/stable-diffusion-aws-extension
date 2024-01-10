@@ -1016,7 +1016,7 @@ def get_infer_job_time(job):
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:
             endpoint_name = job['params']['sagemaker_inference_endpoint_name']
-            infer_ep_name = f"Endpoint Name: {endpoint_name}"
+            infer_ep_name = f"Endpoint: {endpoint_name}"
             if 'sagemaker_inference_instance_type' in job['params']:
                 instance_type = job['params']['sagemaker_inference_instance_type']
                 infer_ep_name += f" ({instance_type})"
