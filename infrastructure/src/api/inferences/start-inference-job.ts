@@ -86,6 +86,7 @@ export class StartInferenceJobApi {
       effect: Effect.ALLOW,
       actions: [
         'sagemaker:InvokeEndpointAsync',
+        'sagemaker:InvokeEndpoint',
       ],
       resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
     }));

@@ -1,8 +1,12 @@
+import json
 import logging
 import os
+from datetime import datetime
 
 from sagemaker import Predictor
+from sagemaker.async_inference import WaiterConfig
 from sagemaker.deserializers import JSONDeserializer
+from sagemaker.exceptions import PollingTimeoutError
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
@@ -19,6 +23,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 def handler(event, _):
+    logger.info(json.dumps(event))
     _filter = {}
     inference_id = event['pathParameters']['id']
 
@@ -44,14 +49,35 @@ def handler(event, _):
         param_s3=inference_job.params['input_body_s3']
     )
 
+    logger.info(f"payload: {payload}")
+
     # start async inference
-    predictor = Predictor(endpoint_name)
+    predictor = Predictor("realtime")
     initial_args = {"InvocationTimeoutSeconds": 3600}
-    predictor = AsyncPredictor(predictor, name=endpoint_name)
+    # predictor = AsyncPredictor(predictor, name=endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()
-    prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args, inference_id=inference_id)
-    output_path = prediction.output_path
+    output_path = None
+    start_time = datetime.now()
+    try:
+        prediction_sync = predictor.predict(data=payload.__dict__,
+                                            inference_id=inference_id,
+                                            )
+        logger.info(f"prediction_sync: {prediction_sync}")
+    except PollingTimeoutError as e:
+        print(e.kwargs)
+        print(e.kwargs.get('message'))
+        print(e.kwargs.get('seconds'))
+        output_path = e.kwargs.get('output_path')
+    except Exception as e:
+        print(e)
+        raise e
+    end_time = datetime.now()
+    cost_time = (end_time - start_time).total_seconds()
+    logger.info(f"cost_time: {cost_time}")
+    # prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args, inference_id=inference_id)
+    # logger.info(f"prediction: {prediction}")
+    # output_path = prediction.output_path
 
     # update the ddb job status to 'inprogress' and save to ddb
     inference_job.status = 'inprogress'

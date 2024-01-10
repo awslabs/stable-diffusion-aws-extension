@@ -145,7 +145,7 @@ def send_message_to_sns(message_json):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
+    print(json.dumps(event))
     message = event['Records'][0]['Sns']['Message']
     print("From SNS: " + str(message))
     message = json.loads(message)
