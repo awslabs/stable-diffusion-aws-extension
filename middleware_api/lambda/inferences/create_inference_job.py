@@ -53,6 +53,7 @@ def handler(raw_event, context):
         inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
+        instance_type = inference_endpoint.instance_type
 
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
@@ -68,6 +69,7 @@ def handler(raw_event, context):
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
                 'sagemaker_inference_endpoint_id': endpoint_id,
+                'sagemaker_inference_instance_type': instance_type,
                 'sagemaker_inference_endpoint_name': endpoint_name,
             },
         )

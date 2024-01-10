@@ -111,6 +111,7 @@ def handler(raw_event, ctx):
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
             current_instance_count="0",
+            instance_type=instance_type,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)

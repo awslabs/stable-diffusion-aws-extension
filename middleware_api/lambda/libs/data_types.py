@@ -165,6 +165,7 @@ class EndpointDeploymentJob:
     max_instance_number: str
     startTime: str
     status: str = None  # deprecated, but can't remove, avoid unexpected keyword argument
+    instance_type: str = None
     current_instance_count: str = None
     endTime: Optional[str] = None
     endpoint_status: Optional[str] = None
