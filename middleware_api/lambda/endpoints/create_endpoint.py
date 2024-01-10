@@ -58,7 +58,7 @@ def handler(raw_event, ctx):
         short_id = event.endpoint_name
 
     endpoint_type = event.endpoint_type.lower()
-    model_name = f"esd-model-{short_id}"
+    model_name = f"esd-model-{endpoint_type}-{short_id}"
     endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
     endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
