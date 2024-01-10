@@ -57,7 +57,9 @@ class SimpleSagemakerInfer(InferManager):
             # start run infer
             response = requests.put(f'{url}inferences/{inference_id}/start', json=payload,
                                     headers={'x-api-key': api_key})
-            response.raise_for_status()
+            if response.status_code not in [200, 202]:
+                logger.error(response.json())
+                raise Exception(response.json()['message'])
 
         return inference_id
 
