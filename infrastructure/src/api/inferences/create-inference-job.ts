@@ -126,7 +126,7 @@ export class CreateInferenceJobApi {
       environment: {
         S3_BUCKET: this.s3Bucket.bucketName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
+        INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,

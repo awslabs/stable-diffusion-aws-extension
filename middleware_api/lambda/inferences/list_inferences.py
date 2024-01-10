@@ -6,7 +6,7 @@ from common.response import ok
 from libs.data_types import InferenceJob
 from libs.utils import get_user_roles, check_user_permissions
 
-inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)

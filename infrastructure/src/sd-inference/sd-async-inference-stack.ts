@@ -213,7 +213,7 @@ export class SDAsyncInferenceStack {
         timeout: Duration.minutes(15),
         memorySize: 3008,
         environment: {
-          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
+            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
@@ -352,7 +352,7 @@ export class SDAsyncInferenceStack {
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
-          DDB_INFERENCE_TABLE_NAME: props.sd_inference_job_table.tableName,
+            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',

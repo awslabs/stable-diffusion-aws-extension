@@ -13,17 +13,21 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import accepted, ok, bad_request
+from common.response import accepted, bad_request
 from inferences.get_inference_job import get_infer_data
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
 
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
-inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
+inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
+
 s3_client = boto3.client('s3')
+
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
 ddb_client = boto3.resource('dynamodb')
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 inference_table = ddb_client.Table(inference_table_name)
 

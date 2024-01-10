@@ -133,9 +133,9 @@ export class StartInferenceJobApi {
       role: this.getLambdaRole(),
       memorySize: 1024,
       environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
+        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
+        INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },

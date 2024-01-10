@@ -13,14 +13,14 @@ from botocore.exceptions import ClientError
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
 
-DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+INFERENCE_JOB_TABLE = os.environ.get('INFERENCE_JOB_TABLE')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
 
 ddb_client = boto3.resource('dynamodb')
-inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
+inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 sns = boto3.client('sns')
 
