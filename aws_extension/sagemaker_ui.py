@@ -973,6 +973,9 @@ def fake_gan(selected_value, original_prompt):
         inference_job_id = parts[3].strip()
         inference_job_status = parts[2].strip()
         inference_job_taskType = parts[1].strip()
+        if inference_job_status == 'failed':
+            job = get_inference_job(inference_job_id)
+            return [], [], plaintext_to_html(f"inference is failed: {job['sagemakerRaw']}"), original_prompt
         if inference_job_status != 'succeed':
             return [], [], plaintext_to_html(f'inference is {inference_job_status}'), original_prompt
 
