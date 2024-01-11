@@ -154,22 +154,7 @@ def sagemaker_api(_, app: FastAPI):
         logger.info('-------invocation------')
 
         def show_slim_dict(payload):
-            pay_type = type(payload)
-            if pay_type is dict:
-                for k, v in payload.items():
-                    logger.info(f"{k}")
-                    show_slim_dict(v)
-            elif pay_type is list:
-                for v in payload:
-                    logger.info(f"list")
-                    show_slim_dict(v)
-            elif pay_type is str:
-                if len(payload) > 50:
-                    logger.info(f" : {len(payload)} contents")
-                else:
-                    logger.info(f" : {payload}")
-            else:
-                logger.info(f" : {payload}")
+            pass
 
         with condition:
             try:
