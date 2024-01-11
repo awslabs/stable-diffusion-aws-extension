@@ -550,8 +550,6 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
 
-        logger.debug(f"Response json {response.json()}")
-
         if response.status_code not in [201, 202]:
             return response.json()['message'], None, None, None, None, None, None
 
@@ -1060,7 +1058,7 @@ def delete_inference_job(selected_value):
             return
         delimiter = "-->"
         parts = selected_value.split(delimiter)
-        # Extract the InferenceJob value
+        # Extract the InferenceJobId value
         inference_job_id = parts[3].strip()
         resp = api.delete_inferences(data={
             "inference_id_list": [inference_job_id],

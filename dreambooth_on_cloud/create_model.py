@@ -115,11 +115,7 @@ def async_create_model_on_sagemaker(
             }
             print("Post request for upload s3 presign url.")
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-
-            print(response.json())
-
             response.raise_for_status()
-
             json_response = response.json()['data']
             model_id = json_response["model"]["id"]
             payload = {
@@ -150,11 +146,7 @@ def async_create_model_on_sagemaker(
             }
             print('Post request for upload s3 presign url.')
             response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-
-            print(json.dumps(response.json(), indent=4))
-
             response.raise_for_status()
-
             json_response = response.json()['data']
             model_id = json_response["model"]["id"]
             multiparts_tags=[]

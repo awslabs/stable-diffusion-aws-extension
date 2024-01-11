@@ -893,7 +893,7 @@ def _list_sagemaker_endpoints(username):
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
-                endpoint['endpoint_name'],
+                endpoint['name'],
                 endpoint['endpoint_type'],
                 endpoint_roles,
                 endpoint['autoscaling'],

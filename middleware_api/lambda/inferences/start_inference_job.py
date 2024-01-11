@@ -14,7 +14,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import accepted, bad_request
-from inferences.get_inference_job import get_infer_data
+from get_inference_job import get_infer_data
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
 
