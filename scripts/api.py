@@ -154,7 +154,8 @@ def sagemaker_api(_, app: FastAPI):
         logger.info('-------invocation------')
 
         def show_slim_dict(payload):
-            logger.info(payload)
+            if 'models' in payload:
+                logger.info(f"models is {payload['models']}")
 
         with condition:
             try:
