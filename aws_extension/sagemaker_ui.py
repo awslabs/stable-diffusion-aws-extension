@@ -802,8 +802,9 @@ def process_result_by_inference_id(inference_id_or_data, endpoint_type):
                 logger.info(f"get_inference_job resp is null.")
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
             if resp['status'] == "failed":
-                infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
-                return image_list, info_text, plaintext_to_html(infotexts), infotexts
+                if 'sagemakerRaw' in resp:
+                    infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
+                    return image_list, info_text, plaintext_to_html(infotexts), infotexts
             elif resp['status'] == "succeed":
                 if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
                     prompt_txt = resp['caption']
