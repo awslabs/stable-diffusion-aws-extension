@@ -173,7 +173,7 @@ class EndpointDeploymentJob:
     endpoint_status: Optional[str] = None
     endpoint_name: Optional[str] = None
     error: Optional[str] = None
-    endpoint_type: Optional[str] = None
+    endpoint_type: Optional[str] = "Async"
     owner_group_or_role: Optional[List[str]] = None
 
 
