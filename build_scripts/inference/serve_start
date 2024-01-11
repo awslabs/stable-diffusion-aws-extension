@@ -43,13 +43,17 @@ cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
 
 start_at=$(date +%s)
-mv -f $instance_package/bin/*                    /opt/conda/bin/
-mv -f $instance_package/site-packages/*          /opt/conda/lib/python3.10/site-packages/
-mv -f site-packages/torch/lib/*                  /opt/conda/lib/python3.10/site-packages/torch/lib/
-mv -f site-packages/xformers/*                   /opt/conda/lib/python3.10/site-packages/xformers/
-mv -f site-packages/triton/_C/*                  /opt/conda/lib/python3.10/site-packages/triton/_C/
-mv -f site-packages/llvmlite/binding/*           /opt/conda/lib/python3.10/site-packages/llvmlite/binding/
-mv -f $instance_package/stable-diffusion-webui/* /opt/ml/code/
+if [ -d "/opt/ml/code/extensions" ]; then
+    mv -f /opt/ml/code/extensions/* $instance_package/stable-diffusion-webui/extensions/
+    rm -rf /opt/ml/code/extensions
+fi
+mv -f $instance_package/bin/*                     /opt/conda/bin/
+mv -f $instance_package/site-packages/*           /opt/conda/lib/python3.10/site-packages/
+mv -f site-packages/torch/lib/*                   /opt/conda/lib/python3.10/site-packages/torch/lib/
+mv -f site-packages/xformers/*                    /opt/conda/lib/python3.10/site-packages/xformers/
+mv -f site-packages/triton/_C/*                   /opt/conda/lib/python3.10/site-packages/triton/_C/
+mv -f site-packages/llvmlite/binding/*            /opt/conda/lib/python3.10/site-packages/llvmlite/binding/
+mv -f $instance_package/stable-diffusion-webui/*  /opt/ml/code/
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "move files: $cost seconds"
