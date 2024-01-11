@@ -5,24 +5,19 @@ import {
   aws_apigateway,
   aws_dynamodb,
   aws_ecr,
-  aws_iam as iam,
   aws_iam,
   aws_lambda,
   aws_s3,
   aws_sns,
-  aws_stepfunctions as sfn,
-  aws_stepfunctions_tasks as sfn_tasks,
   CfnParameter,
   CustomResource,
   Duration,
   RemovalPolicy,
 } from 'aws-cdk-lib';
+
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import * as stepfunctions from 'aws-cdk-lib/aws-stepfunctions';
-import { StateMachineProps } from 'aws-cdk-lib/aws-stepfunctions/lib/state-machine';
-import { LambdaInvokeProps } from 'aws-cdk-lib/aws-stepfunctions-tasks/lib/lambda/invoke';
 import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_DREAMBOOTH_TRAINING } from '../../common/dockerImages';
@@ -58,9 +53,7 @@ export class StartTrainingJobApi {
   private readonly sagemakerTrainRole: aws_iam.Role;
   private readonly dockerRepo: aws_ecr.Repository;
   private readonly customJob: CustomResource;
-  private readonly trainingStateMachine: sfn.StateMachine;
   private readonly userSnsTopic: aws_sns.Topic;
-  private readonly sfnLambdaRole: aws_iam.Role;
   private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
   private readonly logLevel: CfnParameter;
@@ -81,12 +74,9 @@ export class StartTrainingJobApi {
     this.logLevel = props.logLevel;
     this.resourceProvider = props.resourceProvider;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
-    this.sfnLambdaRole = this.getStepFunctionLambdaRole();
     this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + props.ecr_image_tag;
     [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
 
-    this.trainingStateMachine = this.sagemakerStepFunction(this.userSnsTopic);
-    this.trainingStateMachine.node.addDependency(this.customJob);
 
     this.startTrainJobLambda();
   }
@@ -140,18 +130,7 @@ export class StartTrainingJobApi {
       ],
       resources: [this.modelTable.tableArn, this.trainTable.tableArn, this.checkpointTable.tableArn],
     }));
-    newRole.attachInlinePolicy(
-      new iam.Policy(this.scope, 'getPolicy', {
-        statements: [
-          new iam.PolicyStatement({
-            // Access to trigger the Step Function
-            actions: ['states:StartExecution'],
-            effect: iam.Effect.ALLOW,
-            resources: [this.trainingStateMachine.stateMachineArn],
-          }),
-        ],
-      }),
-    );
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -198,76 +177,6 @@ export class StartTrainingJobApi {
     return newRole;
   }
 
-  private getStepFunctionLambdaRole(): aws_iam.Role {
-    const newRole = new aws_iam.Role(this.scope, `${this.id}-sfn-lambda-role`, {
-      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-    });
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'dynamodb:BatchGetItem',
-        'dynamodb:GetItem',
-        'dynamodb:Scan',
-        'dynamodb:Query',
-        'dynamodb:BatchWriteItem',
-        'dynamodb:PutItem',
-        'dynamodb:UpdateItem',
-        'dynamodb:DeleteItem',
-      ],
-      resources: [this.modelTable.tableArn, this.trainTable.tableArn, this.checkpointTable.tableArn],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sns:Publish',
-        'sns:GetTopicAttributes',
-        'sns:SetTopicAttributes',
-        'sns:Subscribe',
-        'sns:ListSubscriptionsByTopic',
-        'sns:Receive',
-      ],
-      resources: [this.userSnsTopic.topicArn],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sagemaker:DescribeTrainingJob',
-      ],
-      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        's3:GetObject',
-        's3:PutObject',
-        's3:DeleteObject',
-        's3:ListBucket',
-      ],
-      resources: [
-        `${this.s3Bucket.bucketArn}/*`,
-        `${this.s3Bucket.bucketArn}`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
-      ],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'logs:CreateLogGroup',
-        'logs:CreateLogStream',
-        'logs:PutLogEvents',
-        'kms:Decrypt',
-      ],
-      resources: ['*'],
-    }));
-
-    return newRole;
-  }
 
   private startTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
@@ -287,7 +196,6 @@ export class StartTrainingJobApi {
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
-        TRAINING_SAGEMAKER_ARN: this.trainingStateMachine.stateMachineArn,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
@@ -309,56 +217,6 @@ export class StartTrainingJobApi {
       });
 
     return lambdaFunction;
-  }
-
-  private checkTrainingJobStatusLambda(): aws_lambda.IFunction {
-    return new PythonFunction(this.scope, `${this.id}-checkTrainingJobStatus`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'check_train_job_status.py',
-      role: this.sfnLambdaRole,
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      memorySize: 1024,
-      environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        INSTANCE_TYPE: this.instanceType,
-        TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
-        USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-  }
-
-  private processTrainingJobResultLambda(): aws_lambda.IFunction {
-    return new PythonFunction(this.scope, `${this.id}-processTrainingJobResult`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      role: this.sfnLambdaRole,
-      index: 'process_train_job_result.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      memorySize: 1024,
-      environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        INSTANCE_TYPE: this.instanceType,
-        TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
-        USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
   }
 
   private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
@@ -389,126 +247,5 @@ export class StartTrainingJobApi {
     return [dockerRepo, customJob];
   }
 
-  private sagemakerStepFunction(snsTopic: aws_sns.Topic): sfn.StateMachine {
-    // Step to store training id into DynamoDB after training job complete
-    const trainingJobCheckState = new sfn_tasks.LambdaInvoke(
-      this.scope,
-      `${this.id}-trainingJobCheckState`,
-            <LambdaInvokeProps>{
-              lambdaFunction: this.checkTrainingJobStatusLambda(),
-              outputPath: '$.Payload',
-            },
-    );
 
-    const processJobResult = new sfn_tasks.LambdaInvoke(
-      this.scope,
-      `${this.id}-processJobResult`,
-            <LambdaInvokeProps>{
-              lambdaFunction: this.processTrainingJobResultLambda(),
-              outputPath: '$.Payload',
-            },
-    );
-
-    const checkTrainingBranch = new stepfunctions.Choice(
-      this.scope,
-      'CheckTrainingBranch',
-    );
-
-    const waitStatusDeploymentTask = new stepfunctions.Wait(
-      this.scope,
-      'WaitTrainingJobStatus',
-      {
-        time: stepfunctions.WaitTime.duration(Duration.minutes(2)),
-      },
-    );
-
-    // Create Step Function
-    return new sfn.StateMachine(this.scope, `${this.id}-TrainDeployStateMachine`, <StateMachineProps>{
-      definition: trainingJobCheckState
-        .next(
-          checkTrainingBranch
-            .when(
-              sfn.Condition.or(sfn.Condition.stringEquals(
-                '$.status',
-                'InProgress',
-              ), sfn.Condition.stringEquals(
-                '$.status',
-                'Stopping',
-              )),
-              waitStatusDeploymentTask.next(trainingJobCheckState),
-            ).otherwise(
-              processJobResult,
-            )
-            .afterwards(),
-        ),
-      role: this.sagemakerRoleForStepFunction(snsTopic.topicArn),
-    });
-  }
-
-  private sagemakerRoleForStepFunction(snsTopicArn: string): iam.Role {
-    const sagemakerRole = new iam.Role(this.scope, `${this.id}-SagemakerTrainRole`, {
-      assumedBy: new iam.ServicePrincipal('states.amazonaws.com'),
-    });
-
-    // Add SageMaker permissions to the role
-    sagemakerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          'sagemaker:CreateTrainingJob',
-          'sagemaker:CreateEndpoint',
-          'sagemaker:CreateEndpointConfig',
-          'sagemaker:CreateModel',
-          'sagemaker:DescribeTrainingJob',
-          'sagemaker:DescribeEndpoint',
-          'sagemaker:DescribeEndpointConfig',
-          'sagemaker:DescribeModel',
-          'sagemaker:StopTrainingJob',
-          'sagemaker:StopEndpoint',
-          'sagemaker:DeleteEndpoint',
-          'sagemaker:DeleteEndpointConfig',
-          'sagemaker:DeleteModel',
-          'sagemaker:UpdateEndpoint',
-          'sagemaker:UpdateEndpointWeightsAndCapacities',
-          'sagemaker:ListTrainingJobs',
-          'sagemaker:ListTrainingJobsForHyperParameterTuningJob',
-          'sagemaker:ListEndpointConfigs',
-          'sagemaker:ListEndpoints',
-          'sagemaker:ListModels',
-          'sagemaker:ListProcessingJobs',
-          'sagemaker:ListProcessingJobsForHyperParameterTuningJob',
-          'kms:Decrypt',
-        ],
-        resources: ['*'],
-      }),
-    );
-
-    // Add S3 permissions to the role
-    sagemakerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          's3:ListBucket',
-          's3:GetObject',
-          's3:PutObject',
-          's3:DeleteObject',
-        ],
-        resources: [
-          `${this.s3Bucket.bucketArn}/*`,
-          `${this.s3Bucket.bucketArn}`,
-          `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
-        ],
-      }),
-    );
-    // Add SNS permissions to the role
-    sagemakerRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['sns:Publish', 'sns:Encrypt'],
-        resources: [snsTopicArn],
-      }),
-    );
-
-    return sagemakerRole;
-  }
 }

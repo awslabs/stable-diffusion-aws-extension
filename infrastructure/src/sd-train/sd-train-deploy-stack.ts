@@ -23,6 +23,7 @@ import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
+import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
 import { Database } from '../shared/database';
 import { ResourceProvider } from '../shared/resource-provider';
 
@@ -318,6 +319,19 @@ export class SdTrainDeployStack {
               srcRoot: this.srcRoot,
               logLevel: props.logLevel,
             },
+    );
+
+    new SagemakerTrainingEvents(
+      scope, 'SagemakerTrainingEvents',
+        <SagemakerTrainingEventsProps>{
+          commonLayer: props.commonLayer,
+          trainingTable: props.database.trainingTable,
+          checkpointTable: props.database.checkpointTable,
+          srcRoot: this.srcRoot,
+          userTopic: props.snsTopic,
+          s3Bucket: props.s3Bucket,
+          logLevel: props.logLevel,
+        },
     );
 
   }

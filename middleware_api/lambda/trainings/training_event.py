@@ -1,52 +1,71 @@
+import json
 import logging
 import os
 
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, not_found
+from common.util import publish_msg
 from libs.common_tools import split_s3_path
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
-
-train_table = os.environ.get('TRAIN_TABLE')
-checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-ddb_service = DynamoDbUtilsService(logger=logger)
-boto3_sagemaker = boto3.client('sagemaker')
+dynamodb = boto3.resource('dynamodb')
+
+train_table = os.environ.get('TRAINING_JOB_TABLE')
+checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
+user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')
+
+sagemaker = boto3.client('sagemaker')
 s3 = boto3.client('s3')
+
+ddb_service = DynamoDbUtilsService(logger=logger)
+
+
+def handler(event, ctx):
+    logger.info(json.dumps(event))
+    train_job_name = event['detail']['TrainingJobName']
+
+    rows = ddb_service.scan(train_table, filters={
+        'sagemaker_train_name': train_job_name,
+    })
+
+    logger.info(rows)
+
+    if not rows or len(rows) == 0:
+        return not_found(message=f'training job {train_job_name} is not found')
+
+    training_job = TrainJob(**(ddb_service.deserialize(rows[0])))
+
+    logger.info(training_job)
+
+    check_status(training_job)
+
+    return ok()
 
 
 # sfn
-def handler(event, context):
-    train_job_name = event['train_job_name']
-    train_job_id = event['train_job_id']
-
-    resp = boto3_sagemaker.describe_training_job(
-        TrainingJobName=train_job_name
+def check_status(training_job: TrainJob):
+    resp = sagemaker.describe_training_job(
+        TrainingJobName=training_job.sagemaker_train_name
     )
 
+    logger.info(resp)
+
     training_job_status = resp['TrainingJobStatus']
-    event['status'] = training_job_status
+    secondary_status = resp['SecondaryStatus']
 
-    raw_train_job = ddb_service.get_item(table=train_table, key_values={
-        'id': train_job_id,
-    })
-
-    if raw_train_job is None or len(raw_train_job) == 0:
-        event['status'] = 'Failed'
-        return {
-            'statusCode': 500,
-            'msg': f'no such training job find in ddb id[{train_job_id}]'
-        }
-
-    training_job = TrainJob(**raw_train_job)
-    if training_job_status == 'InProgress' or training_job_status == 'Stopping':
-        return event
+    ddb_service.update_item(
+        table=train_table,
+        key={'id': training_job.id},
+        field_name='job_status',
+        value=secondary_status
+    )
 
     if training_job_status == 'Failed' or training_job_status == 'Stopped':
-        training_job.job_status = TrainJobStatus.Fail
         if 'FailureReason' in resp:
             err_msg = resp['FailureReason']
             training_job.params['resp'] = {
@@ -56,7 +75,7 @@ def handler(event, context):
             }
 
     if training_job_status == 'Completed':
-        training_job.job_status = TrainJobStatus.Complete
+        notify_user(training_job)
         # todo: update checkpoints
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': training_job.checkpoint_id
@@ -79,8 +98,13 @@ def handler(event, context):
                 checkpoint_name = obj['Key'].replace(f'{key}/', "")
                 checkpoint.checkpoint_names.append(checkpoint_name)
         else:
-            training_job.job_status = TrainJobStatus.Fail
             checkpoint.checkpoint_status = CheckPointStatus.Initial
+            ddb_service.update_item(
+                table=train_table,
+                key={'id': training_job.id},
+                field_name='job_status',
+                value=TrainJobStatus.Fail
+            )
 
         ddb_service.update_item(
             table=checkpoint_table,
@@ -103,14 +127,6 @@ def handler(event, context):
             'raw_resp': resp
         }
 
-    # fixme: this is ugly
-    ddb_service.update_item(
-        table=train_table,
-        key={'id': training_job.id},
-        field_name='job_status',
-        value=training_job.job_status.value
-    )
-
     ddb_service.update_item(
         table=train_table,
         key={'id': training_job.id},
@@ -118,4 +134,14 @@ def handler(event, context):
         value=training_job.params
     )
 
-    return event
+    return
+
+
+def notify_user(train_job: TrainJob):
+    publish_msg(
+        topic_arn=user_topic_arn,
+        subject=f'Create Model Job {train_job.sagemaker_train_name} {train_job.job_status}',
+        msg=f'to be done with resp: \n {train_job.job_status}'
+    )  # todo: find out msg
+
+    return 'job completed'

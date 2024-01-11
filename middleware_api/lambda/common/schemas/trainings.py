@@ -32,7 +32,6 @@ class TrainingItem(BaseModel):
     model_id: Optional[str]
     model_name: Optional[str]
     input_s3_location: Optional[str]
-    sagemaker_sfn_arn: Optional[str]
     sagemaker_train_name: Optional[str]
     allowed_roles_or_users: Optional[List[str]]
     params: Optional[TrainingParams]

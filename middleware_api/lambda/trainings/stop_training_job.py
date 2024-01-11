@@ -2,8 +2,6 @@ import json
 import logging
 import os
 
-import boto3
-
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import not_found, bad_request, ok
 from libs.data_types import TrainJob, TrainJobStatus
@@ -14,8 +12,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-
-sfn_client = boto3.client('stepfunctions')
 
 
 def handler(event, context):
@@ -37,13 +33,6 @@ def _stop_train_job(train_job_id: str):
     logger.info(f'train_job: {train_job}')
 
     try:
-
-        if train_job.sagemaker_sfn_arn:
-            sfn_client.stop_execution(
-                executionArn=train_job.sagemaker_sfn_arn,
-                error='user stop',
-                cause='api stop'
-            )
 
         ddb_service.update_item(
             table=train_table,
