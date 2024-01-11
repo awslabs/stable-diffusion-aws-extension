@@ -147,15 +147,17 @@ class DatasetInfo:
 @dataclass
 class InferenceJob:
     InferenceJobId: str
-    startTime: str
     status: str
     taskType: str
     owner_group_or_role: Optional[List[str]] = None
     inference_info_name: Optional[Any] = None
+    startTime: Optional[Any] = None
+    createTime: Optional[Any] = None
     image_names: Optional[Any] = None
     sagemakerRaw: Optional[Any] = None
     completeTime: Optional[Any] = None
     params: Optional[dict[str, Any]] = None
+    inference_type: Optional[str] = None
 
 
 @dataclass
@@ -171,6 +173,7 @@ class EndpointDeploymentJob:
     endpoint_status: Optional[str] = None
     endpoint_name: Optional[str] = None
     error: Optional[str] = None
+    endpoint_type: Optional[str] = "Async"
     owner_group_or_role: Optional[List[str]] = None
 
 

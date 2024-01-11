@@ -289,6 +289,7 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inferences/{inference_job_id}')
+    logger.debug(f"get_inference_job response {response}")
     return response.json()['data']
 
 
@@ -771,14 +772,20 @@ async def call_remote_inference(sagemaker_endpoint, type):
             logger.error(f"Failed to get inference job {inference_id}, error: {e}")
 
 
-def process_result_by_inference_id(inference_id):
+def process_result_by_inference_id(inference_id_or_data, endpoint_type):
+    if endpoint_type == 'Async':
+        resp = get_inference_job(inference_id_or_data)
+        inference_id = inference_id_or_data
+    else:
+        resp = inference_id_or_data
+        inference_id = resp['InferenceJobId']
+
     image_list = []  # Return an empty list if selected_value is None
     info_text = ''
     infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
     json_list = []
     prompt_txt = ''
 
-    resp = get_inference_job(inference_id)
     if resp is None:
         logger.info(f"get_inference_job resp is null")
         return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -967,6 +974,9 @@ def fake_gan(selected_value, original_prompt):
         inference_job_id = parts[3].strip()
         inference_job_status = parts[2].strip()
         inference_job_taskType = parts[1].strip()
+        if inference_job_status == 'failed':
+            job = get_inference_job(inference_job_id)
+            return [], [], plaintext_to_html(f"inference is failed: {job['sagemakerRaw']}"), original_prompt
         if inference_job_status != 'succeed':
             return [], [], plaintext_to_html(f'inference is {inference_job_status}'), original_prompt
 
@@ -1007,10 +1017,21 @@ def fake_gan(selected_value, original_prompt):
 def get_infer_job_time(job):
     string_array = []
 
+    inference_type = ""
+    if 'inference_type' in job:
+        inference_type = job['inference_type'] + " "
+
     if 'startTime' in job and 'completeTime' in job:
         complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
         start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - start_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"{inference_type}Inference Time: {duration} seconds")
+
+    if 'createTime' in job and 'completeTime' in job:
+        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+        create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - create_time
         duration = round(duration.total_seconds(), 2)
         string_array.append(f"API Duration: {duration} seconds")
 
@@ -1167,6 +1188,9 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
+                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time", "Serverless"],
+                                                         value="Async",
+                                                         label='Inference Endpoint Type')
             with gr.Row():
                 with gr.Column():
                     with gr.Row():
@@ -1327,4 +1351,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state
+    return sd_model_on_cloud_dropdown, infer_endpoint_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state

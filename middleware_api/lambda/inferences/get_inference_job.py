@@ -22,6 +22,10 @@ def handler(event, ctx):
 
     inference_id = event['pathParameters']['id']
 
+    return get_infer_data(inference_id)
+
+
+def get_infer_data(inference_id: str):
     inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
 
     if 'Item' not in inference:
