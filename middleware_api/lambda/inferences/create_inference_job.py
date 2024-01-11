@@ -38,6 +38,7 @@ class PrepareEvent:
 # POST /inference/v2
 def handler(raw_event, context):
     request_id = context.aws_request_id
+    logger.info(json.dumps(json.loads(raw_event['body'])))
     event = PrepareEvent(**json.loads(raw_event['body']))
     _type = event.task_type
 
