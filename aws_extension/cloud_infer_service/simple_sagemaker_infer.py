@@ -12,7 +12,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 class SimpleSagemakerInfer(InferManager):
 
-    def run(self, userid, models, sd_param, is_txt2img):
+    def run(self, userid, models, sd_param, is_txt2img, endpoint_type):
         # finished construct api payload
         sd_api_param_json = _parse_api_param_to_json(api_param=sd_param)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -31,6 +31,7 @@ class SimpleSagemakerInfer(InferManager):
         payload = {
             # 'sagemaker_endpoint_name': sagemaker_endpoint,
             'user_id': userid,
+            'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
             'filters': {
@@ -56,7 +57,13 @@ class SimpleSagemakerInfer(InferManager):
             # start run infer
             response = requests.put(f'{url}inferences/{inference_id}/start', json=payload,
                                     headers={'x-api-key': api_key})
-            response.raise_for_status()
+            if response.status_code not in [200, 202]:
+                logger.error(response.json())
+                raise Exception(response.json()['message'])
+
+            # if real-time, return inference data
+            if response.status_code == 200:
+                return response.json()['data']
 
         return inference_id
 

@@ -1,5 +1,10 @@
 from enum import Enum, unique
 
+@unique
+class EndpointType(Enum):
+    RealTime = "Real-time"
+    Serverless = "Serverless"
+    Async = "Async"
 
 @unique
 class EndpointStatus(Enum):
@@ -28,6 +33,7 @@ class TrainJobStatus(Enum):
     Training = 'Training'
     Complete = 'Complete'
     Fail = 'Fail'
+    Failed = 'Failed'
     Stopped = 'Stopped'
     Starting = 'Starting'
     Downloading = 'Downloading'

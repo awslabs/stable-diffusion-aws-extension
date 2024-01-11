@@ -24,7 +24,7 @@ from parse.parameter_parser import json_convert_to_payload
 logging.config.fileConfig('logging.conf', disable_existing_loggers=False)
 logger = logging.getLogger(const.LOGGER_API)
 
-DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+INFERENCE_JOB_TABLE = os.environ.get('INFERENCE_JOB_TABLE')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 REGION_NAME = os.environ['AWS_REGION']
@@ -33,7 +33,7 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 ddb_client = boto3.resource('dynamodb')
 s3 = boto3.client('s3', region_name=REGION_NAME)
 sagemaker = boto3.client('sagemaker')
-inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
+inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
 

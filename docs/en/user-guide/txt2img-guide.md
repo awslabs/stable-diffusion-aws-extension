@@ -43,5 +43,5 @@ You can open the **txt2img** tab to perform text-to-image inference using the co
 3. Select the required model, adjust the weights of the model in prompts field, and click **Generate on Cloud** to inference images.
 
 
-## Inference Job
-Inference Job displays latest 10 inference job by default, following naming format Time-Type-Status-Uuid. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users customized inference job list.
+## Inference Job Histories
+Inference Job displays the latest 10 inference jobs by default, following naming format Time-Type-Status-UUID. Checking **Show All** will display all inference jobs the account has. Checking **Advanced Inference Job filter** and apply filters as need will provide users a customized inference job list.

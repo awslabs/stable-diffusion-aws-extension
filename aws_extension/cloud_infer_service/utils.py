@@ -1,7 +1,7 @@
 
 class InferManager:
 
-    def run(self, device_id, models_in_cloud, sd_param, is_txt2img) -> str:
+    def run(self, device_id, models_in_cloud, sd_param, is_txt2img, endpoint_type) -> str:
         """
         Running the actual inference logic to the target
         :param device_id: the target id

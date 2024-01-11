@@ -13,14 +13,14 @@ from botocore.exceptions import ClientError
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
 
-DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+INFERENCE_JOB_TABLE = os.environ.get('INFERENCE_JOB_TABLE')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
 
 ddb_client = boto3.resource('dynamodb')
-inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
+inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 sns = boto3.client('sns')
 
@@ -145,12 +145,15 @@ def send_message_to_sns(message_json):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
+    print(json.dumps(event))
     message = event['Records'][0]['Sns']['Message']
     print("From SNS: " + str(message))
     message = json.loads(message)
     invocation_status = message["invocationStatus"]
     inference_id = message["inferenceId"]
+
+    update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
+
     if invocation_status == "Completed":
         try:
             print(f"Complete invocation!")
@@ -231,7 +234,6 @@ def lambda_handler(event, context):
                 print(f"Complete inference parameters {inference_parameters}")
 
             update_inference_job_table(inference_id, 'status', 'succeed')
-            update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
             update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         except Exception as e:
             print(f"Error occurred: {str(e)}")
