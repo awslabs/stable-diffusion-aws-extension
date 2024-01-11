@@ -150,7 +150,7 @@ def lcm_lora_pipeline(payload, used_models):
             shared.sd_pipeline.pipeline_name = 'LCM_Lora_SDXL_Inpaint'
             shared.opts.data["sd_checkpoint_name"] = os.path.splitext(sd_model_name)[0]
             shared.sd_pipeline.load_lora_weights("latent-consistency/lcm-lora-sdxl")
-    elif 'xl' in sd_model_name:
+    elif 'xl' in sd_model_name or 'XL' in sd_model_name:
         if shared.opts.data["sd_checkpoint_name"] != os.path.splitext(sd_model_name)[0]:
             shared.sd_pipeline.to('cpu')
             shared.sd_pipeline = StableDiffusionXLPipeline.from_single_file(os.path.join(sd_model_path, sd_model_name), torch_dtype=torch.float16, load_safety_checker=False, variant="fp16").to('cuda')
