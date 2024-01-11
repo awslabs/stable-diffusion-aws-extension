@@ -789,7 +789,7 @@ def process_result_by_inference_id(inference_id):
 
         if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
             while resp and resp['status'] == "inprogress":
-                time.sleep(3)
+                time.sleep(1)
                 resp = get_inference_job(inference_id)
             if resp is None:
                 logger.info(f"get_inference_job resp is null.")
@@ -811,7 +811,8 @@ def process_result_by_inference_id(inference_id):
 
                 if json_file:
                     info_text = json_file
-                    infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                    infotexts = f"Inference id is {inference_id}\n{get_infer_job_time(resp)}" + \
+                                json.loads(info_text)["infotexts"][0]
                 else:
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
@@ -979,7 +980,8 @@ def fake_gan(selected_value, original_prompt):
             json_file = download_images_to_json(inference_param_json_list)[0]
             if json_file:
                 info_text = json_file
-                infotexts = f"Inference id is {inference_job_id}\n" + json.loads(info_text)["infotexts"][0]
+                infotexts = f"Inference id is {inference_job_id}\n{get_infer_job_time(job)}" + \
+                            json.loads(info_text)["infotexts"][0]
             else:
                 logger.debug(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
@@ -1000,6 +1002,31 @@ def fake_gan(selected_value, original_prompt):
         info_text = ''
         infotexts = ''
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
+
+
+def get_infer_job_time(job):
+    string_array = []
+
+    if 'startTime' in job and 'completeTime' in job:
+        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - start_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"API Duration: {duration} seconds")
+
+    if 'params' in job:
+        if 'sagemaker_inference_endpoint_name' in job['params']:
+            endpoint_name = job['params']['sagemaker_inference_endpoint_name']
+            infer_ep_name = f"Endpoint: {endpoint_name}"
+            if 'sagemaker_inference_instance_type' in job['params']:
+                instance_type = job['params']['sagemaker_inference_instance_type']
+                infer_ep_name += f" ({instance_type})"
+            string_array.append(infer_ep_name)
+
+    if len(string_array) == 0:
+        return ""
+
+    return ",  ".join(string_array) + "\n"
 
 
 def delete_inference_job(selected_value):
