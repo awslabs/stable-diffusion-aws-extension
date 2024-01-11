@@ -114,7 +114,7 @@ class Api:
         # # TODO: do we need api_middleware? Xiujuan
         api_middleware(self.app)
         self.add_api_route("/invocations", self.invocations, methods=["POST"], response_model=[])
-        self.add_api_route("/ping", self.ping, methods=["GET"], response_model=models.PingResponse)
+        self.add_api_route("/ping", self.ping, methods=["GET"], response_model=[])
 
         # if shared.cmd_opts.api_server_stop:
         #     self.add_api_route("/sdapi/v1/server-kill", self.kill_webui, methods=["POST"])
@@ -328,19 +328,7 @@ class Api:
                 return float(c)
 
             payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
-            show_slim_dict(payload)
-
-        logger.info(f"extra_single_payload is: ")
-        extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-            req.extras_single_payload.json())
-        show_slim_dict(extra_single_payload)
-        logger.info(f"extra_batch_payload is: ")
-        extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-            req.extras_batch_payload.json())
-        show_slim_dict(extra_batch_payload)
-        logger.info(f"interrogate_payload is: ")
-        interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
-        show_slim_dict(interrogate_payload)
+            #show_slim_dict(payload)
 
         payload = payload_filter(payload)
         if 'pipeline_name' in payload:
@@ -349,13 +337,16 @@ class Api:
         if req.task != 'lcm_lora_pipeline' and 'lcm_lora' in shared.sd_pipeline.pipeline_name:
             shared.sd_pipeline.unload_lora_weights()
         
-        logger.info('!!!!!!! payload processing take', time.time()-start_time)
-        
+        payload_processing_time = time.time()-start_time
+        logger.info(f'!!!!!!! payload processing take {payload_processing_time}')
+        start_time = time.time()
         try:
             if req.task == 'txt2img':
                 with self.queue_lock:
                     checkspace_and_update_models(req.models)
                     response = self.txt2img_pipeline(payload)
+                    txt2img_time = time.time()-start_time
+                    logger.info(f'!!!!!!! txt2img take {txt2img_time}')
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     return response
@@ -363,6 +354,8 @@ class Api:
                 with self.queue_lock:
                     checkspace_and_update_models(req.models)
                     response = self.img2img_pipeline(payload)
+                    imgimg_time = time.time()-start_time
+                    logger.info(f'!!!!!!! img2img take {txt2img_time}')
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response
@@ -375,6 +368,8 @@ class Api:
             elif req.task == 'lcm_pipeline':
                 with self.queue_lock:
                     response = lcm_pipeline(payload, req.models)
+                    lcm_time = time.time()-start_time
+                    logger.info(f'!!!!!!! lcm_pipeline take {lcm_time}')
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response
@@ -385,6 +380,8 @@ class Api:
                     sd_model_update_dict['Stable-diffusion'] = req.models['Stable-diffusion']
                     checkspace_and_update_models(sd_model_update_dict)
                     response = lcm_lora_pipeline(payload, req.models)
+                    lcm_lora_time = time.time()-start_time
+                    logger.info(f'!!!!!!! lcm_lora_pipeline take {lcm_lora_time}')
                     logger.info(
                         f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!! {len(response.json())}")
                     return response   
