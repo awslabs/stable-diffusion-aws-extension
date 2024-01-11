@@ -266,6 +266,7 @@ export class CreateEndpointApi {
           },
         },
         required: [
+          'endpoint_name',
           'endpoint_type',
           'instance_type',
           'initial_instance_count',
