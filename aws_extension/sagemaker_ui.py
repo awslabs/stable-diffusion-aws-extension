@@ -1024,6 +1024,13 @@ def get_infer_job_time(job):
         duration = round(duration.total_seconds(), 2)
         string_array.append(f"{inference_type}Inference Time: {duration} seconds")
 
+    if 'createTime' in job and 'completeTime' in job:
+        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+        create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - create_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"API Duration: {duration} seconds")
+
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:
             endpoint_name = job['params']['sagemaker_inference_endpoint_name']
