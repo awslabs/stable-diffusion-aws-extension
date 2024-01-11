@@ -83,7 +83,7 @@ export class DeleteTrainingJobsApi {
           title: this.baseId,
           type: JsonSchemaType.OBJECT,
           properties: {
-            training_job_list: {
+            training_id_list: {
               type: JsonSchemaType.ARRAY,
               items: {
                 type: JsonSchemaType.STRING,
@@ -94,7 +94,7 @@ export class DeleteTrainingJobsApi {
             },
           },
           required: [
-            'training_job_list',
+            'training_id_list',
           ],
         },
         contentType: 'application/json',
