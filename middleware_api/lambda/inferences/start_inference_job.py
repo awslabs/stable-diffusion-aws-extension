@@ -146,6 +146,7 @@ def async_inference(payload, job: InferenceJob, endpoint_name):
 
 
 def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
+    update_inference_job_table(job.InferenceJobId, 'completeTime', str(datetime.now()))
     try:
 
         if job.taskType in ["interrogate_clip", "interrogate_deepbooru"]:
@@ -201,7 +202,6 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             update_inference_job_table(job.InferenceJobId, 'inference_info_name', json_file_name)
 
         update_inference_job_table(job.InferenceJobId, 'status', 'succeed')
-        update_inference_job_table(job.InferenceJobId, 'completeTime', str(datetime.now()))
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         update_inference_job_table(job.InferenceJobId, 'status', 'failed')
