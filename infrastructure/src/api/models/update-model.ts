@@ -80,7 +80,7 @@ export class UpdateModelApi {
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
     this.dockerRepo = dockerDeployment.dockerRepo;
     // create sagemaker endpoint
-    this.sagemakerEndpoint = new CreateModelSageMakerEndpoint(this.scope, 'aigc-utils', {
+    this.sagemakerEndpoint = new CreateModelSageMakerEndpoint(this.scope, 'esd-utils', {
       machineType: this.machineType,
       outputFolder: 'models',
       primaryContainer: `${this.dockerRepo.repositoryUri}:latest`,
