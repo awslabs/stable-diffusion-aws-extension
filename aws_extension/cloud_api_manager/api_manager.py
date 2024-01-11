@@ -212,7 +212,10 @@ class CloudApiManager:
 
             ckpts_list = []
             for ckpt in r['data']['checkpoints']:
-                ckpt_name = ckpt['name'][0]
+                if 'name' in ckpt and ckpt['name']:
+                    ckpt_name = ckpt['name'][0]
+                else:
+                    ckpt_name = 'None'
                 option_value = f"{ckpt_name}{string_separator}{ckpt['status']}{string_separator}{ckpt['id']}"
                 ckpts_list.append(option_value)
 
