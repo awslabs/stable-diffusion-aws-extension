@@ -33,40 +33,6 @@ class CloudApiManager:
             'Content-Type': 'application/json',
         }
 
-    def sagemaker_deploy(self, endpoint_name, endpoint_type, instance_type, initial_instance_count=1,
-                         autoscaling_enabled=True, user_roles=None, user_token=""):
-        """ Create SageMaker endpoint for GPU inference.
-        Args:
-            instance_type (string): the ML compute instance type.
-            initial_instance_count (integer): Number of instances to launch initially.
-        Returns:
-            (None)
-        """
-        # function code to call sagemaker deploy api
-        logger.debug(
-            f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
-
-        payload = {
-            "endpoint_name": endpoint_name,
-            "endpoint_type": endpoint_type,
-            "instance_type": instance_type,
-            "initial_instance_count": initial_instance_count,
-            "autoscaling_enabled": autoscaling_enabled,
-            'assign_to_roles': user_roles,
-            "creator": user_token,
-        }
-
-        deployment_url = f"{self.auth_manger.api_url}endpoints"
-
-        try:
-            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
-            r = response.json()
-            logger.debug(f"response for rest api {r}")
-            return r['message']
-        except Exception as e:
-            logger.error(e)
-            return f"Failed to start endpoint deployment with exception: {e}"
-
     def sagemaker_endpoint_delete(self, delete_endpoint_list, user_token=""):
 
         if not delete_endpoint_list:
@@ -92,6 +58,47 @@ class CloudApiManager:
         except Exception as e:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
+
+    def sagemaker_deploy(self, endpoint_name,
+                         endpoint_type,
+                         instance_type,
+                         initial_instance_count=1,
+                         custom_docker_image_uri="",
+                         autoscaling_enabled=True,
+                         user_roles=None,
+                         user_token=""):
+        """ Create SageMaker endpoint for GPU inference.
+        Args:
+            instance_type (string): the ML compute instance type.
+            initial_instance_count (integer): Number of instances to launch initially.
+        Returns:
+            (None)
+        """
+        # function code to call sagemaker deploy api
+        logger.debug(
+            f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
+
+        payload = {
+            "endpoint_name": endpoint_name,
+            "endpoint_type": endpoint_type,
+            "instance_type": instance_type,
+            "initial_instance_count": initial_instance_count,
+            "autoscaling_enabled": autoscaling_enabled,
+            "custom_docker_image_uri": custom_docker_image_uri,
+            'assign_to_roles': user_roles,
+            "creator": user_token,
+        }
+
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
+
+        try:
+            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            r = response.json()
+            logger.debug(f"response for rest api {r}")
+            return r['message']
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to start endpoint deployment with exception: {e}"
 
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")

@@ -775,6 +775,7 @@ def sagemaker_endpoint_tab():
                 instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
                                                      elem_id="sagemaker_inference_instance_type_textbox",
                                                      value="ml.g5.2xlarge")
+                gr.HTML(value="<br/>")
                 instance_count_dropdown = gr.Number(label="Max Instance count",
                                                     elem_id="sagemaker_inference_instance_count_textbox",
                                                     value=1, min=1, max=1000, step=1
@@ -782,6 +783,10 @@ def sagemaker_endpoint_tab():
                 autoscaling_enabled = gr.Checkbox(
                     label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                 )
+                gr.HTML(value="<br/>")
+                custom_docker_image_uri = gr.Textbox(value="", lines=1,
+                                                     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/stable-diffusion-aws-extension/aigc-webui-inference:latest",
+                                                     label="Custom Docker Image URI (Optional)")
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
                                          label="User Role")
@@ -797,21 +802,32 @@ def sagemaker_endpoint_tab():
                                                 elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def _create_sagemaker_endpoint(endpoint_name, endpoint_type, instance_type, scale_count, autoscale,
+            def _create_sagemaker_endpoint(endpoint_name,
+                                           endpoint_type,
+                                           instance_type,
+                                           scale_count,
+                                           docker_image_uri,
+                                           autoscale,
                                            target_user_roles,
                                            pr: gr.Request):
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
                                                     endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
+                                                    custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     user_token=pr.username
                                                     )
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
-                                          inputs=[endpoint_name_textbox, endpoint_type_dropdown, instance_type_dropdown,
-                                                  instance_count_dropdown, autoscaling_enabled, user_roles],
+                                          inputs=[endpoint_name_textbox,
+                                                  endpoint_type_dropdown,
+                                                  instance_type_dropdown,
+                                                  instance_count_dropdown,
+                                                  custom_docker_image_uri,
+                                                  autoscaling_enabled, user_roles
+                                                  ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):

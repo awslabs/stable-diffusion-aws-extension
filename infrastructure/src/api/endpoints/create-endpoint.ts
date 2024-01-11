@@ -236,6 +236,9 @@ export class CreateEndpointApi {
             minLength: 2,
             maxLength: 20,
           },
+          custom_docker_image_uri: {
+            type: JsonSchemaType.STRING,
+          },
           endpoint_type: {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],

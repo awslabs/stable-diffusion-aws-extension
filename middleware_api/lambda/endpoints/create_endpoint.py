@@ -4,7 +4,7 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-
+import re
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -15,6 +15,7 @@ from libs.utils import get_permissions_by_username
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
+aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
@@ -37,7 +38,23 @@ class CreateEndpointEvent:
     endpoint_name: str = None
     # real-time / serverless / async
     endpoint_type: str = None
+    custom_docker_image_uri: str = None
 
+def get_docker_image_uri(event: CreateEndpointEvent):
+    image_url = INFERENCE_ECR_IMAGE_URL
+
+    if event.custom_docker_image_uri:
+        image_url = event.custom_docker_image_uri
+
+        if aws_region.startswith('cn-'):
+            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com\.cn)/([^/]+)/([^:]+):(.+)$'
+        else:
+            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com)/([^/]+)/([^:]+):(.+)$'
+
+        if not re.match(pattern, image_url):
+            raise Exception(f"Invalid docker image uri {image_url}")
+
+    return image_url
 
 # POST /endpoints
 def handler(raw_event, ctx):
@@ -63,7 +80,7 @@ def handler(raw_event, ctx):
     endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
     try:
-        image_url = INFERENCE_ECR_IMAGE_URL
+        image_url = get_docker_image_uri(event)
 
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 
