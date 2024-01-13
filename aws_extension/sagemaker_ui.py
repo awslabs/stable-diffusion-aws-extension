@@ -988,7 +988,12 @@ def fake_gan(selected_value, original_prompt):
             images = job['img_presigned_urls']
             inference_param_json_list = job['output_presigned_urls']
             image_list = download_images_to_pil(images)
-            json_file = download_images_to_json(inference_param_json_list)[0]
+            images_to_json = download_images_to_json(inference_param_json_list)
+            # maybe param json was deleted
+            if len(images_to_json) == 0:
+                json_file = ""
+            else:
+                json_file = images_to_json[0]
             if json_file:
                 info_text = json_file
                 infotexts = f"Inference id is {inference_job_id}\n{get_infer_job_time(job)}" + \
