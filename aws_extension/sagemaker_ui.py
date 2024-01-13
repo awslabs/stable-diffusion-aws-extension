@@ -1,32 +1,32 @@
-import logging
-import os
-import html
-import boto3
-import time
-import json
-import gradio
-import requests
+import asyncio
 import base64
+import html
+import json
+import logging
+import math
+import os
+import re
+import time
+from datetime import datetime
+
+import boto3
+import gradio
 import gradio as gr
-from aws_extension.constant import MODEL_TYPE
+import nest_asyncio
+import requests
+from modules.shared import opts
+from modules.ui_components import FormRow
+from modules.ui_components import ToolButton
+from requests.exceptions import JSONDecodeError
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.cloud_api_manager.api import api
+from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.constant import MODEL_TYPE
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-from modules.shared import opts
-from modules.ui_components import FormRow
-from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url, has_config
-from requests.exceptions import JSONDecodeError
-from datetime import datetime
-import math
-import re
-from modules.ui_components import ToolButton
-import asyncio
-import nest_asyncio
-
 from utils import cp, tar, rm
+from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url, has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -486,7 +486,6 @@ def refresh_all_models(username):
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path,
                               controlnet_model_path, vae_path, pr: gradio.Request):
-
     if not has_config():
         return "Please config api url and token", None, None, None, None, None, None
 
@@ -833,7 +832,6 @@ def process_result_by_inference_id(inference_id_or_data, endpoint_type):
             return image_list, info_text, plaintext_to_html(infotexts), infotexts
 
 
-
 def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
     logger.debug(f"function under development, current checkpoint_info is {checkpoint_info}")
     api_gateway_url = get_variable_from_json('api_gateway_url')
@@ -881,7 +879,7 @@ def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_model
             prompt,
             MODEL_TYPE.EMBEDDING,
             lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
-            )
+        )
 
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.EMBEDDING)
 
@@ -894,7 +892,7 @@ def update_prompt_with_lora(selected_items, prompt):
     return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value=None):
     """Update txt2img or img2img prompt with selecte model name
 
     Args:
@@ -1022,19 +1020,25 @@ def get_infer_job_time(job):
     if 'inference_type' in job:
         inference_type = job['inference_type'] + " "
 
-    if 'startTime' in job and 'completeTime' in job:
-        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
-        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
-        duration = complete_time - start_time
-        duration = round(duration.total_seconds(), 2)
-        string_array.append(f"{inference_type}Inference Time: {duration} seconds")
-
     if 'createTime' in job and 'completeTime' in job:
         complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
         create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - create_time
         duration = round(duration.total_seconds(), 2)
-        string_array.append(f"API Duration: {duration} seconds")
+        string = f"End-to-end API Duration: {duration} seconds"
+
+        string_array.append(f"End-to-end API Duration: {duration} seconds")
+        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - start_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"{string} (in which {inference_type}Inference: {duration} seconds)")
+    else:
+        if 'startTime' in job and 'completeTime' in job:
+            complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+            start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+            duration = complete_time - start_time
+            duration = round(duration.total_seconds(), 2)
+            string_array.append(f"{inference_type}Inference Time: {duration} seconds")
 
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:
@@ -1139,36 +1143,40 @@ def load_lora_models(username, user_token):
 
 
 def load_hypernetworks_models(username, user_token):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
+    return list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
 
 
 def load_vae_list(username, user_token):
     vae_model_on_cloud = ['Automatic', 'None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
+    vae_model_on_cloud += list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
     return vae_model_on_cloud
 
 
 def load_controlnet_list(username, user_token):
     controlnet_model_on_cloud = ['None']
-    controlnet_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+    controlnet_model_on_cloud += list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 
 def load_xyz_controlnet_list(username, user_token):
     controlnet_model_on_cloud = ['None']
     controlnet_model_on_cloud += list(
-        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+        set([os.path.splitext(model['name'])[0] for model in
+             api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 
 def load_embeddings_list(username, user_token):
-    embedding_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+    embedding_model_on_cloud = list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
     return embedding_model_on_cloud
 
 
 def create_ui(is_img2img):
     global txt2img_gallery, txt2img_generation_info
-    import modules.ui
 
     # init_refresh_resource_list_from_cloud()
 
@@ -1190,31 +1198,31 @@ def create_ui(is_img2img):
                                               }, 'refresh_cloud_model_down')
 
                 infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time", "Serverless"],
-                                                         value="Async",
-                                                         label='Inference Endpoint Type')
+                                                      value="Async",
+                                                      label='Inference Endpoint Type')
             with gr.Row():
                 with gr.Column():
                     with gr.Row():
                         sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
-                                                            label='SD Vae on Cloud')
+                                                               label='SD Vae on Cloud')
 
                         create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
-                                                    lambda *args: None,
-                                                    lambda username: {
-                                                        'choices': load_vae_list(username, username)
-                                                    }, 'refresh_cloud_vae_down')
+                                                      lambda *args: None,
+                                                      lambda username: {
+                                                          'choices': load_vae_list(username, username)
+                                                      }, 'refresh_cloud_vae_down')
                 with gr.Column():
                     with gr.Row():
                         # Lora model
                         global lora_dropdown
                         lora_dropdown_local = gr.Dropdown(choices=[],
-                                                        label="Lora model on cloud",
-                                                        multiselect=True)
+                                                          label="Lora model on cloud",
+                                                          multiselect=True)
                         create_refresh_button_by_user(lora_dropdown_local,
-                                                    lambda *args: None,
-                                                    lambda username: {
-                                                        'choices': load_lora_models(username, username)
-                                                    }, 'refresh_lora_dropdown')
+                                                      lambda *args: None,
+                                                      lambda username: {
+                                                          'choices': load_lora_models(username, username)
+                                                      }, 'refresh_lora_dropdown')
                         lora_dropdown = lora_dropdown_local
 
             with gr.Row():
@@ -1223,26 +1231,26 @@ def create_ui(is_img2img):
                         # Embedding model
                         global embedding_dropdown
                         embedding_dropdown_local = gr.Dropdown(choices=[],
-                                                        label="Embedding on cloud",
-                                                        multiselect=True)
+                                                               label="Embedding on cloud",
+                                                               multiselect=True)
                         create_refresh_button_by_user(embedding_dropdown_local,
-                                                    lambda *args: None,
-                                                    lambda username: {
-                                                        'choices': load_embeddings_list(username, username)
-                                                    }, 'refresh_embedding_dropdown')
+                                                      lambda *args: None,
+                                                      lambda username: {
+                                                          'choices': load_embeddings_list(username, username)
+                                                      }, 'refresh_embedding_dropdown')
                         embedding_dropdown = embedding_dropdown_local
                 with gr.Column():
                     with gr.Row():
                         # Hypernetwork model
                         global hypernet_dropdown
                         hypernet_dropdown_local = gr.Dropdown(choices=[],
-                                                        label="Hypernetwork on cloud",
-                                                        multiselect=True)
+                                                              label="Hypernetwork on cloud",
+                                                              multiselect=True)
                         create_refresh_button_by_user(hypernet_dropdown_local,
-                                                    lambda *args: None,
-                                                    lambda username: {
-                                                        'choices': load_hypernetworks_models(username, username)
-                                                    }, 'refresh_hypernet_dropdown')
+                                                      lambda *args: None,
+                                                      lambda username: {
+                                                          'choices': load_hypernetworks_models(username, username)
+                                                      }, 'refresh_hypernet_dropdown')
                         hypernet_dropdown = hypernet_dropdown_local
 
             with gr.Row(visible=is_img2img):
@@ -1272,7 +1280,8 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username, username)
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username)
                                               }, 'refresh_inference_job_down')
 
                 delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
@@ -1284,7 +1293,6 @@ def create_ui(is_img2img):
                 )
 
             with gr.Row():
-
                 def setup_inference_for_plugin(pr: gr.Request):
                     models_on_cloud = load_model_list(pr.username, pr.username)
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
@@ -1306,7 +1314,8 @@ def create_ui(is_img2img):
                     }
 
                     return lora_hypernets, \
-                        gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
+                        gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(
+                            models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud), \
                         gr.update(choices=lora_models_on_cloud), \
@@ -1331,22 +1340,22 @@ def create_ui(is_img2img):
                 primary_model_name = gr.Dropdown(elem_id="modelmerger_primary_model_name_in_the_cloud",
                                                  label="Primary model (A) in the cloud")
                 create_refresh_button_by_user(primary_model_name, lambda *args: None,
-                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
-                                      "refresh_checkpoint_A_in_the_cloud")
+                                              lambda username: {"choices": sorted(update_sd_checkpoints(username))},
+                                              "refresh_checkpoint_A_in_the_cloud")
 
                 global secondary_model_name
                 secondary_model_name = gr.Dropdown(elem_id="modelmerger_secondary_model_name_in_the_cloud",
                                                    label="Secondary model (B) in the cloud")
                 create_refresh_button_by_user(secondary_model_name, lambda *args: None,
-                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
-                                      "refresh_checkpoint_B_in_the_cloud")
+                                              lambda username: {"choices": sorted(update_sd_checkpoints(username))},
+                                              "refresh_checkpoint_B_in_the_cloud")
 
                 global tertiary_model_name
                 tertiary_model_name = gr.Dropdown(elem_id="modelmerger_tertiary_model_name_in_the_cloud",
                                                   label="Tertiary model (C) in the cloud")
                 create_refresh_button_by_user(tertiary_model_name, lambda *args: None,
-                                      lambda username: {"choices": sorted(update_sd_checkpoints(username))},
-                                      "refresh_checkpoint_C_in_the_cloud")
+                                              lambda username: {"choices": sorted(update_sd_checkpoints(username))},
+                                              "refresh_checkpoint_C_in_the_cloud")
             with gr.Row():
                 global modelmerger_merge_on_cloud
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
