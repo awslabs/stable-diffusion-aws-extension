@@ -1,10 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
-# Parameters:
-#   KeyName:
-#     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
-#     Type: AWS::EC2::KeyPair::KeyName
-#     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+Parameters:
+  Branch:
+    Description: Branch of the ESD to deploy
+    Type: String
+    AllowedValues:
+      - main
+      - dev
+    Default: main
 
 Mappings:
   RegionToAmiId:
@@ -63,22 +66,22 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.2xlarge
+      InstanceType: c5.4xlarge
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
-      # KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 300
             VolumeType: gp2
       "Tags" : [
-        {"Key" : "Name", "Value" : "sd-on-aws"},
+        {"Key" : "Name", "Value" : !Sub "sd-on-aws-${Branch}"},
       ]
       SecurityGroups:
         - Ref: SecurityGroup
       UserData:
-        'Fn::Base64': |
+        'Fn::Base64': !Sub |
           #!/bin/bash
+          set -euxo pipefail
           sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
           sudo apt-get update
           sudo apt install software-properties-common -y
@@ -86,21 +89,27 @@ Resources:
           sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           cd /home/ubuntu
-          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git --branch master --single-branch --depth 1
           cd stable-diffusion-webui/extensions
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-          cd stable-diffusion-aws-extension/
-          ./pre-flight.sh -f     
-          cd ..
+          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch --depth 1
           sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
           cd ..
-          # sudo -u ubuntu python3 -m venv venv
+          cd models/Stable-diffusion/
+          wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
+          wget -P /home/ubuntu/stable-diffusion-webui/models/ControlNet https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
+          wget -P /home/ubuntu/stable-diffusion-webui/models/ControlNet https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
+          sudo mkdir ../Lora
+          sudo chown -R ubuntu:ubuntu ../Lora
+          cd ../Lora
+          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/nendoroid_xl_v7.safetensors
+          cd ../..
+          
           cat > sd-webui.service <<EOF
           [Unit]
           Description=Stable Diffusion UI server
           After=network.target
           StartLimitIntervalSec=0
-          
+
           [Service]
           WorkingDirectory=/home/ubuntu/stable-diffusion-webui
           ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen
@@ -109,14 +118,14 @@ Resources:
           RestartSec=3
           User=ubuntu
           StartLimitAction=reboot
-          
+
           [Install]
           WantedBy=default.target
-          
+
           EOF
           sudo mv sd-webui.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/sd-webui.service
-          
+
           sudo systemctl start sd-webui.service
           sudo systemctl enable sd-webui.service
 
@@ -132,4 +141,4 @@ Outputs:
   WebUIURL:
     Description: URL for Stable Diffusion Web UI
     # add port 7860 to the end of the URL
-    Value: !Sub http://${MyEIP.PublicIp}:7860
+    Value: !Sub http://${MyEIP}:7860

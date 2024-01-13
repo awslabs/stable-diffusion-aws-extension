@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Warning: This script is used to install the initial support for client and workshop
+
 set -euxo pipefail
 
 INITIAL_SUPPORT_COMMIT_ROOT=bda2ecdbf58fd33b4ad3036ed5cc13eef02747ae
@@ -18,7 +20,6 @@ git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git --branch m
 cd stable-diffusion-webui
 # Reset to specific commit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 
 # Go to "extensions" directory
 cd extensions
@@ -27,7 +28,6 @@ cd extensions
 git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch main --single-branch
 # Checkout aigc branch
 cd stable-diffusion-aws-extension
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 cd ..
 
 # Clone sd-webui-controlnet
@@ -35,7 +35,6 @@ git clone https://github.com/Mikubill/sd-webui-controlnet.git --branch main --si
 # Go to sd-webui-controlnet directory and reset to specific commit
 cd sd-webui-controlnet
 git reset --hard ${INITIAL_SUPPORT_COMMIT_CONTROLNET}
-rm -rf .git && git init && git add . && git commit -m "Initial commit" &> /dev/null
 cd ..
 
 # Clone sd_dreambooth_extension
@@ -43,7 +42,6 @@ git clone https://github.com/d8ahazard/sd_dreambooth_extension.git --branch main
 # Go to sd_dreambooth_extension directory and reset to specific commit
 cd sd_dreambooth_extension
 git reset --hard ${INITIAL_SUPPORT_COMMIT_DREAMBOOTH}
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 cd ..
 
 # Clone stable-diffusion-webui-rembg
@@ -51,7 +49,6 @@ git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git --br
 # Go to stable-diffusion-webui-rembg directory and reset to specific commit
 cd stable-diffusion-webui-rembg
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 cd ..
 
 # Clone sd-webui-segment-anything
@@ -59,12 +56,10 @@ git clone https://github.com/continue-revolution/sd-webui-segment-anything.git -
 # Go to sd-webui-segment-anything directory and reset to specific commit
 cd sd-webui-segment-anything
 git reset --hard ${INITIAL_SUPPORT_COMMIT_SAM}
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 cd ..
 
 # Clone Tiled VAE
 git clone https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git --branch main --single-branch
 cd multidiffusion-upscaler-for-automatic1111
 git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
-rm -rf .git && git init && git add README.md && git commit -m "Initial commit" &> /dev/null
 cd ..
