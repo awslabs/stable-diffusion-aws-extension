@@ -752,11 +752,11 @@ def sagemaker_endpoint_tab():
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Max Instance Count</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Enable Autoscaling</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
                           </tr>
                         
@@ -768,23 +768,12 @@ def sagemaker_endpoint_tab():
             # instance_count_dropdown =
             #   gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
             with gr.Column():
-                with gr.Row():
-                    endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
-                                                       label="Endpoint Name (Required)", visible=True)
-                    user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                             label="User Role (Required)")
-                    create_refresh_button_by_user(
-                        user_roles,
-                        lambda *args: None,
-                        lambda username: {
-                            'choices': roles(username)
-                        },
-                        'refresh_sagemaker_user_roles'
-                    )
-            endpoint_advance_config_enabled = gr.Checkbox(
-                label="Advanced Endpoint Configuration", value=False, visible=True
-            )
+                endpoint_advance_config_enabled = gr.Checkbox(
+                    label="Advanced Endpoint Configuration", value=False, visible=True
+                )
             with gr.Column(visible=False) as filter_row:
+                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
+                                                   label="Endpoint Name (Optional)", visible=True)
                 with gr.Column():
                     with gr.Row():
                         endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
@@ -800,11 +789,22 @@ def sagemaker_endpoint_tab():
                         autoscaling_enabled = gr.Checkbox(
                             label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                         )
-                custom_docker_image_uri = gr.Textbox(
-                    value="",
-                    lines=1,
-                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
-                    label="Custom Docker Image URI (Optional)"
+                # custom_docker_image_uri = gr.Textbox(
+                #     value="",
+                #     lines=1,
+                #     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
+                #     label="Custom Docker Image URI (Optional)"
+                # )
+            with gr.Row():
+                user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                         label="User Role (Required)")
+                create_refresh_button_by_user(
+                    user_roles,
+                    lambda *args: None,
+                    lambda username: {
+                        'choices': roles(username)
+                    },
+                    'refresh_sagemaker_user_roles'
                 )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
@@ -814,17 +814,15 @@ def sagemaker_endpoint_tab():
                                            endpoint_type,
                                            instance_type,
                                            scale_count,
-                                           docker_image_uri,
                                            autoscale,
                                            target_user_roles,
                                            pr: gr.Request):
-                if not endpoint_name:
-                    return 'Please input endpoint name.'
+                if not target_user_roles:
+                    return 'Please select at least one user role.'
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
                                                     endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
-                                                    custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     user_token=pr.username
@@ -835,7 +833,6 @@ def sagemaker_endpoint_tab():
                                                   endpoint_type_dropdown,
                                                   instance_type_dropdown,
                                                   instance_count_dropdown,
-                                                  custom_docker_image_uri,
                                                   autoscaling_enabled, user_roles
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
