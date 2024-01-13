@@ -12,41 +12,41 @@ Parameters:
 Mappings:
   RegionToAmiId:
     ap-south-1:
-      AMI: ami-089b78354e92adbc4
+      AMI: ami-03f4878755434977f
     eu-north-1:
-      AMI: ami-09f0506c9ef0fb473
+      AMI: ami-0014ce3e52359afbd
     eu-west-3:
-      AMI: ami-000cbe82b60906d24
+      AMI: ami-01d21b7be69801c2f
     eu-west-2:
-      AMI: ami-00f314baca4922fe3
+      AMI: ami-0e5f882be1900e43b
     eu-west-1:
-      AMI: ami-020fc399c31009b50
+      AMI: ami-0905a3c97561e0b69
     ap-northeast-3:
-      AMI: ami-00615a13ea1ff3de8
+      AMI: ami-05ff0b3a7128cd6f8
     ap-northeast-2:
-      AMI: ami-07d16c043aa8e5153
+      AMI: ami-0f3a440bbcff3d043
     ap-northeast-1:
-      AMI: ami-0ba151ad81cdd97be
+      AMI: ami-07c589821f2b353aa
     ca-central-1:
-      AMI: ami-0c0ef44e5ccbd075f
+      AMI: ami-0a2e7efb4257c0907
     sa-east-1:
-      AMI: ami-0efc6acdb081d5a82
+      AMI: ami-0fb4cf3a99aa89f72
     ap-east-1:
-      AMI: ami-0476827462b538638
+      AMI: ami-0d96ec8a788679eb2
     ap-southeast-1:
-      AMI: ami-01079af93e791f059
+      AMI: ami-0fa377108253bf620
     ap-southeast-2:
-      AMI: ami-0c30788ba2f3b701c
+      AMI: ami-04f5097681773b989
     eu-central-1:
-      AMI: ami-08046b3f92ed2f520
+      AMI: ami-0faab6bdbac9486fb
     us-east-1:
-      AMI: ami-031cf125b681ca3e0
+      AMI: ami-0c7217cdde317cfec
     us-east-2:
-      AMI: ami-0d68d031be2577777
+      AMI: ami-05fb0b8c1424f266b
     us-west-1:
-      AMI: ami-0cab1ec90365016c6
+      AMI: ami-0ce2cb35386fc22e9
     us-west-2:
-      AMI: ami-01cb61d12413ba783
+      AMI: ami-008fe2fc65df48dac
 
 Resources:
   SecurityGroup:
@@ -66,7 +66,7 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.4xlarge
+      InstanceType: c5.2xlarge
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -97,10 +97,10 @@ Resources:
           git checkout ${Branch}
           cd ../../
           
-          wget -P models/Stable-diffusion/ https://huggingface.co/marcy1111/majicmixRealistic_v7/resolve/main/majicmixRealistic_v7.safetensors
-          wget -P models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
-          wget -P models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
-          wget -P models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors
+          wget -qP models/Stable-diffusion/ https://huggingface.co/marcy1111/majicmixRealistic_v7/resolve/main/majicmixRealistic_v7.safetensors
+          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
+          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
+          wget -qP models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
