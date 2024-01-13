@@ -1144,8 +1144,7 @@ def load_lora_models(username, user_token):
 
 
 def load_hypernetworks_models(username, user_token):
-    return list(
-        set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
 
 
 def load_vae_list(username, user_token):
