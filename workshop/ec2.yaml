@@ -82,27 +82,27 @@ Resources:
         'Fn::Base64': !Sub |
           #!/bin/bash
           set -euxo pipefail
-          sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+          
           sudo apt-get update
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 -y
+          sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          
           cd /home/ubuntu
-          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git --branch master --single-branch --depth 1
-          cd stable-diffusion-webui/extensions
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch --depth 1
-          sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
-          cd ..
-          cd models/Stable-diffusion/
-          wget https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
-          wget -P /home/ubuntu/stable-diffusion-webui/models/ControlNet https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
-          wget -P /home/ubuntu/stable-diffusion-webui/models/ControlNet https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
-          sudo mkdir ../Lora
-          sudo chown -R ubuntu:ubuntu ../Lora
-          cd ../Lora
-          wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/nendoroid_xl_v7.safetensors
-          cd ../..
+          
+          curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
+          
+          cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+          git checkout ${Branch}
+          cd ../../
+          
+          wget -P models/Stable-diffusion/ https://huggingface.co/marcy1111/majicmixRealistic_v7/resolve/main/majicmixRealistic_v7.safetensors
+          wget -P models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
+          wget -P models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
+          wget -P models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors
+          
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
           cat > sd-webui.service <<EOF
           [Unit]
@@ -126,8 +126,8 @@ Resources:
           sudo mv sd-webui.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/sd-webui.service
 
-          sudo systemctl start sd-webui.service
           sudo systemctl enable sd-webui.service
+          sudo systemctl start sd-webui.service
 
   MyEIP:
     Type: AWS::EC2::EIP
