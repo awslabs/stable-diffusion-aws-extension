@@ -1027,7 +1027,6 @@ def get_infer_job_time(job):
         duration = round(duration.total_seconds(), 2)
         string = f"End-to-end API Duration: {duration} seconds"
 
-        string_array.append(f"End-to-end API Duration: {duration} seconds")
         start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - start_time
         duration = round(duration.total_seconds(), 2)
