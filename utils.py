@@ -268,12 +268,18 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
 
     return variable_value
 
+
 def host_url():
     return get_variable_from_json('api_gateway_url')
 
 
 def api_key():
     return get_variable_from_json('api_token')
+
+
+def is_gcr():
+    api_url = get_variable_from_json('api_gateway_url')
+    return api_url and '.execute-api.cn-' in api_url
 
 
 def has_config():

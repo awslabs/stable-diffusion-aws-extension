@@ -17,15 +17,22 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from utils import get_variable_from_json, save_variable_to_json, has_config
+from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 endpoint_type_choices = ["Async", "Real-time", "Serverless"]
 
-async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
-                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+if is_gcr():
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
+    inference_choices_default = "ml.g4dn.2xlarge"
+else:
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge",
+                         "ml.g5.2xlarge",
+                         "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+    inference_choices_default = "ml.g5.2xlarge"
+
 
 test_connection_result = None
 api_gateway_url = None
@@ -738,7 +745,7 @@ def sagemaker_endpoint_tab():
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
         with gr.Column(variant="panel"):
-            default_table = """
+            default_table = f"""
                         <table style="width:100%; border: 1px solid black; border-collapse: collapse;">
                           <tr>
                             <th style="border: 1px solid grey; padding: 15px; text-align: left; " colspan="2">Default SageMaker Endpoint Config</th>
@@ -749,7 +756,7 @@ def sagemaker_endpoint_tab():
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">{inference_choices_default}</td>
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Max Instance Count</b></td>
@@ -779,9 +786,9 @@ def sagemaker_endpoint_tab():
                         endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
                                                              elem_id="sagemaker_inference_endpoint_type_textbox",
                                                              value="Async")
-                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
+                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=inference_choices,
                                                              elem_id="sagemaker_inference_instance_type_textbox",
-                                                             value="ml.g5.2xlarge")
+                                                             value=inference_choices_default)
                         instance_count_dropdown = gr.Number(label="Max Instance count",
                                                             elem_id="sagemaker_inference_instance_count_textbox",
                                                             value=1, min=1, max=1000, step=1
