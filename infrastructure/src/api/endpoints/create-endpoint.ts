@@ -233,7 +233,6 @@ export class CreateEndpointApi {
         properties: {
           endpoint_name: {
             type: JsonSchemaType.STRING,
-            minLength: 2,
             maxLength: 20,
           },
           custom_docker_image_uri: {
@@ -266,7 +265,6 @@ export class CreateEndpointApi {
           },
         },
         required: [
-          'endpoint_name',
           'endpoint_type',
           'instance_type',
           'initial_instance_count',
