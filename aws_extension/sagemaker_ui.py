@@ -1053,7 +1053,7 @@ def get_infer_job_time(job):
     if len(string_array) == 0:
         return ""
 
-    return ",  ".join(string_array) + "\n"
+    return "\n".join(string_array) + "\n"
 
 
 def delete_inference_job(selected_value):
