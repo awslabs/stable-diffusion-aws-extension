@@ -395,7 +395,7 @@ export class SDAsyncInferenceStack {
   private createInferenceECR(scope: Construct, srcImg: string) {
     const dockerRepo = new aws_ecr.Repository(
       scope,
-      'esd-ecr-inference-repo',
+      'EsdEcrInferenceRepo',
       {
         repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
         removalPolicy: RemovalPolicy.DESTROY,
@@ -404,7 +404,7 @@ export class SDAsyncInferenceStack {
 
     const ecrDeployment = new ECRDeployment(
       scope,
-      'esd-ecr-inference-deploy',
+      'EsdEcrInferenceDeploy',
       {
         src: new DockerImageName(srcImg),
         dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
@@ -417,7 +417,7 @@ export class SDAsyncInferenceStack {
     // trigger the custom resource lambda
     const customJob = new CustomResource(
       scope,
-      'esd-ecr-inference-image',
+      'EsdEcrInferenceImage',
       {
         serviceToken: ecrDeployment.serviceToken,
         resourceType: 'Custom::AIGCSolutionECRLambda',
