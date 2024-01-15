@@ -770,10 +770,6 @@ def sagemaker_endpoint_tab():
                         </table>
                     """
             gr.HTML(value=default_table)
-            # instance_type_dropdown =
-            #   gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-            # instance_count_dropdown =
-            #   gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
             with gr.Column():
                 endpoint_advance_config_enabled = gr.Checkbox(
                     label="Advanced Endpoint Configuration", value=False, visible=True
@@ -796,12 +792,14 @@ def sagemaker_endpoint_tab():
                         autoscaling_enabled = gr.Checkbox(
                             label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                         )
-                # custom_docker_image_uri = gr.Textbox(
-                #     value="",
-                #     lines=1,
-                #     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
-                #     label="Custom Docker Image URI (Optional)"
-                # )
+
+                custom_docker_image_uri = gr.Textbox(
+                    value="",
+                    lines=1,
+                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
+                    label=f"Custom Docker Image URI (Optional)",
+                    visible=False
+                )
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
                                          label="User Role (Required)")
@@ -822,6 +820,7 @@ def sagemaker_endpoint_tab():
                                            instance_type,
                                            scale_count,
                                            autoscale,
+                                           docker_image_uri,
                                            target_user_roles,
                                            pr: gr.Request):
                 if not target_user_roles:
@@ -830,6 +829,7 @@ def sagemaker_endpoint_tab():
                                                     endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
+                                                    custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     user_token=pr.username
@@ -840,20 +840,27 @@ def sagemaker_endpoint_tab():
                                                   endpoint_type_dropdown,
                                                   instance_type_dropdown,
                                                   instance_count_dropdown,
-                                                  autoscaling_enabled, user_roles
+                                                  autoscaling_enabled,
+                                                  custom_docker_image_uri,
+                                                  user_roles
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
-                return gr.update(visible=True)
+                username = cloud_auth_manager.username
+                show_custom_docker_image = False
+                user = api_manager.get_user_by_username(username=username, user_token=username)
+                if 'roles' in user:
+                    show_custom_docker_image = 'byoc' in user['roles']
+                return gr.update(visible=True), custom_docker_image_uri.update(visible=show_custom_docker_image)
             else:
-                return gr.update(visible=False)
+                return gr.update(visible=False), custom_docker_image_uri.update(visible=False)
 
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
-            outputs=filter_row
+            outputs=[filter_row, custom_docker_image_uri]
         )
 
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):
