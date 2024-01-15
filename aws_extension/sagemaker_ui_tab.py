@@ -22,7 +22,7 @@ from utils import get_variable_from_json, save_variable_to_json, has_config, is_
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
-endpoint_type_choices = ["Async", "Real-time", "Serverless"]
+endpoint_type_choices = ["Async", "Real-time"]
 
 if is_gcr():
     inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]

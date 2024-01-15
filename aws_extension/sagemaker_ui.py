@@ -1199,7 +1199,7 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
-                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time", "Serverless"],
+                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time"],
                                                          value="Async",
                                                          label='Inference Endpoint Type')
             with gr.Row():
