@@ -796,12 +796,12 @@ def sagemaker_endpoint_tab():
                         autoscaling_enabled = gr.Checkbox(
                             label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                         )
-                # custom_docker_image_uri = gr.Textbox(
-                #     value="",
-                #     lines=1,
-                #     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
-                #     label="Custom Docker Image URI (Optional)"
-                # )
+                custom_docker_image_uri = gr.Textbox(
+                    value="",
+                    lines=1,
+                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
+                    label="Custom Docker Image URI (Optional)"
+                )
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
                                          label="User Role (Required)")
@@ -822,6 +822,7 @@ def sagemaker_endpoint_tab():
                                            instance_type,
                                            scale_count,
                                            autoscale,
+                                           docker_image_uri,
                                            target_user_roles,
                                            pr: gr.Request):
                 if not target_user_roles:
@@ -830,6 +831,7 @@ def sagemaker_endpoint_tab():
                                                     endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
+                                                    custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     user_token=pr.username
@@ -840,7 +842,9 @@ def sagemaker_endpoint_tab():
                                                   endpoint_type_dropdown,
                                                   instance_type_dropdown,
                                                   instance_count_dropdown,
-                                                  autoscaling_enabled, user_roles
+                                                  autoscaling_enabled,
+                                                  custom_docker_image_uri,
+                                                  user_roles
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
