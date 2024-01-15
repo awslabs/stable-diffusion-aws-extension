@@ -105,16 +105,22 @@ def real_time(payload, job: InferenceJob, endpoint_name):
                                             inference_id=job.InferenceJobId,
                                             )
         logger.info(prediction_sync)
+
+        if 'error' in prediction_sync:
+            if 'detail' in prediction_sync:
+                raise Exception(prediction_sync['detail'])
+            raise Exception(prediction_sync)
+
         end_time = datetime.now()
         cost_time = (end_time - start_time).total_seconds()
-        logger.info(f"inference cost_time: {cost_time}")
+        logger.info(f"Real-time inference cost_time: {cost_time}")
 
         handle_sagemaker_out(job, prediction_sync, endpoint_name)
 
         return get_infer_data(job.InferenceJobId)
     except Exception as e:
         print(e)
-        return bad_request(str(e))
+        return bad_request(message=str(e))
 
 
 def async_inference(payload, job: InferenceJob, endpoint_name):
