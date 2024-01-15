@@ -1,11 +1,7 @@
 #!/bin/bash
 
-# cmd_install_torch="pip install torch==2.0.1 --index-url https://download.pytorch.org/whl/cu118"
-
-# cmd_install_xformers="pip install file/xformers-0.0.20+1dc3d7a3.d20231226-cp310-cp310-linux_x86_64.whl"
-
-# cmd_uninstall_accelerate="pip uninstall -y accelerate"
-# cmd_install_accelerate="pip install accelerate"
+cat serve_start
+echo "---------------------------------------------------------------------------------"
 
 mkdir -p ~/.aws
 echo "[default]
