@@ -213,7 +213,7 @@ export class SDAsyncInferenceStack {
         timeout: Duration.minutes(15),
         memorySize: 3008,
         environment: {
-            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
+          INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
@@ -352,7 +352,7 @@ export class SDAsyncInferenceStack {
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
-            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
+          INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
@@ -395,7 +395,7 @@ export class SDAsyncInferenceStack {
   private createInferenceECR(scope: Construct, srcImg: string) {
     const dockerRepo = new aws_ecr.Repository(
       scope,
-      'aigc-webui-inference-repo',
+      'esd-ecr-inference-repo',
       {
         repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
         removalPolicy: RemovalPolicy.DESTROY,
@@ -404,7 +404,7 @@ export class SDAsyncInferenceStack {
 
     const ecrDeployment = new ECRDeployment(
       scope,
-      'aigc-webui-inference-ecr-deploy',
+      'esd-ecr-inference-deploy',
       {
         src: new DockerImageName(srcImg),
         dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
@@ -417,7 +417,7 @@ export class SDAsyncInferenceStack {
     // trigger the custom resource lambda
     const customJob = new CustomResource(
       scope,
-      'aigc-webui-inference-ecr-cr-image',
+      'esd-ecr-inference-image',
       {
         serviceToken: ecrDeployment.serviceToken,
         resourceType: 'Custom::AIGCSolutionECRLambda',
