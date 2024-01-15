@@ -220,12 +220,12 @@ export class StartTrainingJobApi {
   }
 
   private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
-    const dockerRepo = new aws_ecr.Repository(this.scope, `${this.id}-repo`, {
+    const dockerRepo = new aws_ecr.Repository(this.scope, 'EsdEcrTrainingRepo', {
       repositoryName: 'stable-diffusion-aws-extension/aigc-webui-dreambooth-training',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    const ecrDeployment = new ECRDeployment(this.scope, `${this.id}-ecr-deploy`, {
+    const ecrDeployment = new ECRDeployment(this.scope, 'EsdEcrTrainingDeploy', {
       src: new DockerImageName(srcImage),
       dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
       environment: {
@@ -234,7 +234,7 @@ export class StartTrainingJobApi {
     });
 
     // trigger the custom resource lambda
-    const customJob = new CustomResource(this.scope, `${this.id}-cr-image`, {
+    const customJob = new CustomResource(this.scope, 'EsdEcrTrainingImage', {
       serviceToken: ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
       properties: {
