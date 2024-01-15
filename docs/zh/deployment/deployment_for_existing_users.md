@@ -13,9 +13,8 @@
 
 - 步骤1：部署Stable Diffusion WebUI。
 - 步骤2：登录AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。
-- 步骤3：检查资源是否齐全。
-- 步骤4：重新部署本解决方案中间件。
-- 步骤5：配置API Url和API Token。
+- 步骤3：重新部署本解决方案中间件。
+- 步骤4：配置API Url和API Token。
 
 ## 部署步骤
 
@@ -60,14 +59,7 @@
 7. CloudFormation 将开始删除堆栈，这可能需要一些时间。你可以在 "Stacks" 页面上监视堆栈的状态。
 
 
-### 步骤3：检查 AWS 中的资源是否齐全
-
-1. 打开一个命令行工具，通过git将本项目clone到本地
-2. 配置好[aws cli](https://aws.amazon.com/cli/)
-3. 通过命令行，进入到`update_scripts`目录下并运行 `./validate_resources.sh* `。当输出`[Success] [Complete] All resources checked, ok to upgrade
-   `时，可以进行下一步。如果有任何资源检查失败，则需要手动更新相关资源。
-
-### 步骤4：重新部署 Stable Diffusion AWS Extension
+### 步骤3：重新部署 Stable Diffusion AWS Extension
 1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"}。
 2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
 3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
@@ -110,7 +102,7 @@ cd stable-diffusion-webui
 ``` -->
 
 
-### 步骤5: 配置 API URL 和 API Token
+### 步骤4: 配置 API URL 和 API Token
 
 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
 

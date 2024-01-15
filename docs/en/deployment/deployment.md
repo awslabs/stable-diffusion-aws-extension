@@ -3,7 +3,7 @@ Before you launch the solution, review the architecture, supported regions, and 
 **Time to deploy**: Approximately 25 minutes.
 
 ## Prerequisites
-Users need to prepare a computer running linux system in advance.
+Users need to prepare a computer-running linux system in advance.
 
 
 ## Deployment overview
@@ -36,7 +36,7 @@ Use the following steps to deploy this solution on AWS.
 
 8. Wait until the stack is created.
 
-9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait an extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
 
 ### Step 1: Deploy Stable Diffusion WebUI (Windows).
 1. Start a Windows Server and log in via RDP.
@@ -55,10 +55,10 @@ This automated AWS CloudFormation template deploys the solution in the AWS Cloud
 2. The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
 
-4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. Under **Parameters**, enter a valid bucket name under **aigcbucketname** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for **SdExtensionApiKey**, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the **EcrImageTag** field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this [link](ecr_image_param.md).Choose **Next**.
+4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. Under **Parameters**, enter a valid bucket name under **Bucket** for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under **email** for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for **SdExtensionApiKey**, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, etc. To select the tag for the ECR image corresponding to the solution, please refer to the **EcrImageTag** field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this [link](ecr_image_param.md).Choose **Next**.
 
     !!! Important "Notice" 
-        Please do not change **EcrImageTag** before consulting solution team.
+        Please do not change **EcrImageTag** before a consulting solution team.
 
 6. On the **Configure stack options** page, choose **Next**.
 7. On the **Review** page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose **Create stack** to deploy the stack.
