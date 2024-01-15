@@ -239,18 +239,18 @@ class CreateModelInferenceImage {
   public readonly customJob: CustomResource;
 
   constructor(scope: Construct, srcImage: string) {
-    this.dockerRepo = new aws_ecr.Repository(scope, 'EsdModelEcrRepo', {
+    this.dockerRepo = new aws_ecr.Repository(scope, 'EsdEcrModelRepo', {
       repositoryName: 'stable-diffusion-aws-extension/aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    this.ecrDeployment = new ECRDeployment(scope, 'EsdModelEcrDeploy', {
+    this.ecrDeployment = new ECRDeployment(scope, 'EsdEcrModelDeploy', {
       src: new DockerImageName(srcImage),
       dest: new DockerImageName(`${this.dockerRepo.repositoryUri}:latest`),
     });
 
     // trigger the lambda
-    this.customJob = new CustomResource(scope, 'EsdModelEcrImage', {
+    this.customJob = new CustomResource(scope, 'EsdEcrModelImage', {
       serviceToken: this.ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
       properties: {
