@@ -14,6 +14,7 @@ import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import { VtoStack } from './vto/vto';
 
 const app = new App();
 
@@ -76,6 +77,19 @@ export class Middleware extends Stack {
       description: 'Log level, example: ERROR|INFO|DEBUG',
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
+    const deployVto = new CfnParameter(this, 'VTO', {
+      type: 'String',
+      description: 'Whether to deploy Virtual try-on stack, example: YES|NO',
+      default: 'NO',
+      allowedValues: ['NO', 'YES'],
+    });
+
+    const vtoStack = new VtoStack(this, 'VtoStack');
+
+    vtoStack.nestedStackResource!.cfnOptions.condition = new CfnCondition(this, 'DeployVtoStackCondition', {
+      expression: Fn.conditionEquals(deployVto.valueAsString, 'YES'),
     });
 
     // Create resources here
