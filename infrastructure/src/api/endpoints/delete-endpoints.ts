@@ -172,7 +172,6 @@ export class DeleteEndpointsApi {
 
     const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
       restApi: this.router.api,
-      requestValidatorName: this.baseId,
       validateRequestBody: true,
     });
 

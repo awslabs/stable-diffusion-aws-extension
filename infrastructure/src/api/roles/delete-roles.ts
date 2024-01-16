@@ -144,7 +144,6 @@ export class DeleteRolesApi {
       `${this.baseId}-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
 

@@ -131,7 +131,6 @@ export class DeleteUsersApi {
       `${this.baseId}-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
 
