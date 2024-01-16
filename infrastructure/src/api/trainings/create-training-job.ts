@@ -181,7 +181,6 @@ export class CreateTrainingJobApi {
       `${this.id}-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.id,
         validateRequestBody: true,
       });
 

@@ -150,7 +150,6 @@ export class UpdateDatasetApi {
       `${this.baseId}-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
 

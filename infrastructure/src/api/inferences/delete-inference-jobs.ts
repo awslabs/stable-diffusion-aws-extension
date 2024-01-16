@@ -112,7 +112,6 @@ export class DeleteInferenceJobsApi {
       `${this.baseId}-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
 
