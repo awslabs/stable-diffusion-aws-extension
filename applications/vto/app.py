@@ -1,6 +1,7 @@
 import base64
 import logging
 import os
+import time
 from datetime import datetime
 from io import BytesIO
 
@@ -43,6 +44,12 @@ def real_time_inference(payload, endpoint_name):
     print(prediction_sync)
 
 
+def get_image_base64(image_path):
+    with open(image_path, "rb") as f:
+        encoded_string = base64.b64encode(f.read()).decode('utf-8')
+    return encoded_string
+
+
 def get_images(path: str):
     images = []
     for root, dirs, files in os.walk(path):
@@ -58,29 +65,34 @@ def get_images(path: str):
 clothes_images = get_images("./clothes/cloth")
 models_images = get_images("./person/model")
 
-with gr.Blocks(title="VTO") as demo:
-    gr.HTML("<h1>Virtual try-on</h1>")
+title = "Virtual Try-on"
+with gr.Blocks(title=title) as demo:
+    gr.HTML(f"<h1>{title}</h1>")
 
     clothes = gr.Gallery(
         label="Clothes",
         show_label=True,
         elem_id="clothes_gallery",
-        columns=[8],
-        rows=[1],
-        object_fit="contain",
+        columns=10,
+        rows=1,
+        object_fit="fill",
         value=clothes_images,
-        height="100px")
+        allow_preview=False,
+        height=155
+    )
 
     with gr.Row():
         model = gr.Gallery(
             label="Models",
             show_label=True,
             elem_id="models_gallery",
-            columns=[1],
-            rows=[5],
+            columns=1,
+            rows=5,
             object_fit="contain",
             value=models_images,
-            scale=1
+            scale=1,
+            height=600,
+            allow_preview=False,
         )
 
         result_image = gr.Image(
@@ -91,8 +103,7 @@ with gr.Blocks(title="VTO") as demo:
             interactive=False,
             scale=4,
             shape=(None, 200),
-            fixed=True,
-            height="100px"
+            height=600,
         )
 
     current_cloth = None
@@ -102,9 +113,15 @@ with gr.Blocks(title="VTO") as demo:
     def get_result():
         global current_cloth
         global current_model
-        if current_cloth is None or current_model is None:
+        if current_cloth is None:
+            gr.Warning("Please select a cloth to inference.")
             return
-        data = {
+
+        if current_model is None:
+            gr.Warning("Please select a model to inference.")
+            return
+
+        inference_payload = {
             "cloth_file": current_cloth[0],
             "cloth_base64": get_image_base64(current_cloth[0]),
             "cloth_name": current_cloth[1],
@@ -113,18 +130,14 @@ with gr.Blocks(title="VTO") as demo:
             "model_base64": get_image_base64(current_model[0]),
             "model_name": current_model[1]
         }
-        print(data)
+        print(inference_payload)
 
-        # TODO: call the sagemaker
+        # TODO: call the sagemaker real-time inference endpoint
         res = get_image_base64(current_model[0])
 
+        time.sleep(1)
+
         return base64_to_image(res)
-
-
-    def get_image_base64(image_path):
-        with open(image_path, "rb") as f:
-            encoded_string = base64.b64encode(f.read()).decode('utf-8')
-        return encoded_string
 
 
     def on_select_clothes(evt: gr.SelectData):
@@ -143,4 +156,5 @@ with gr.Blocks(title="VTO") as demo:
     model.select(on_select_models, None, result_image)
 
 if __name__ == "__main__":
-    demo.launch(share=False, enable_queue=True)
+    demo.queue()
+    demo.launch(share=False, server_name="0.0.0.0")

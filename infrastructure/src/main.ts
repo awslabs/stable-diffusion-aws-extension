@@ -81,7 +81,7 @@ export class Middleware extends Stack {
 
     const deployVto = new CfnParameter(this, 'VTO', {
       type: 'String',
-      description: 'Whether to deploy Virtual try-on stack, example: YES|NO',
+      description: 'Weather to deploy Virtual Try-On application, available option (All Caps): YES | NO',
       default: 'NO',
       allowedValues: ['NO', 'YES'],
     });
