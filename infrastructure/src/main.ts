@@ -86,7 +86,7 @@ export class Middleware extends Stack {
       allowedValues: ['NO', 'YES'],
     });
 
-    const vtoStack = new VtoStack(this, 'VtoStack');
+    const vtoStack = new VtoStack(this, 'VtoStack1');
 
     vtoStack.nestedStackResource!.cfnOptions.condition = new CfnCondition(this, 'DeployVtoStackCondition', {
       expression: Fn.conditionEquals(deployVto.valueAsString, 'YES'),

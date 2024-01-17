@@ -27,9 +27,7 @@ def real_time_inference(payload, endpoint_name):
     predictor.deserializer = JSONDeserializer()
 
     start_time = datetime.now()
-    prediction_sync = predictor.predict(data=payload.__dict__,
-                                        inference_id=job.InferenceJobId,
-                                        )
+    prediction_sync = predictor.predict(data=payload)
     logger.info(prediction_sync)
 
     if 'error' in prediction_sync:
@@ -91,21 +89,29 @@ with gr.Blocks(title=title) as demo:
             object_fit="contain",
             value=models_images,
             scale=1,
-            height=600,
             allow_preview=False,
+            height=670,
         )
 
-        result_image = gr.Image(
-            type="pil",
-            label="Try-on Result",
-            show_label=True,
-            elem_id="result_image",
-            interactive=False,
-            scale=4,
-            shape=(None, 200),
-            height=600,
-        )
+        with gr.Column(scale=4):
+            gr.Radio(
+                choices=["Option1", "Option2"],
+                label="Try-on Result",
+                show_label=False,
+                value="Try-on Result",
+                elem_id="select_radio",
+            )
+            result_image = gr.Image(
+                type="pil",
+                label="Try-on Result",
+                show_label=True,
+                elem_id="result_image",
+                interactive=False,
+                shape=(None, 200),
+                height=600,
+            )
 
+    result_text = gr.TextArea()
     current_cloth = None
     current_model = None
 
@@ -113,13 +119,13 @@ with gr.Blocks(title=title) as demo:
     def get_result():
         global current_cloth
         global current_model
+
         if current_cloth is None:
             gr.Warning("Please select a cloth to inference.")
-            return
-
+            return None, None
         if current_model is None:
             gr.Warning("Please select a model to inference.")
-            return
+            return None, None
 
         inference_payload = {
             "cloth_file": current_cloth[0],
@@ -136,8 +142,9 @@ with gr.Blocks(title=title) as demo:
         res = get_image_base64(current_model[0])
 
         time.sleep(1)
+        result_text = current_model
 
-        return base64_to_image(res)
+        return base64_to_image(res), result_text
 
 
     def on_select_clothes(evt: gr.SelectData):
@@ -152,8 +159,8 @@ with gr.Blocks(title=title) as demo:
         return get_result()
 
 
-    clothes.select(on_select_clothes, None, result_image)
-    model.select(on_select_models, None, result_image)
+    clothes.select(on_select_clothes, None, [result_image, result_text])
+    model.select(on_select_models, None, [result_image, result_text])
 
 if __name__ == "__main__":
     demo.queue()
