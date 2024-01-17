@@ -111,7 +111,7 @@ with gr.Blocks(title=title) as demo:
                 height=600,
             )
 
-    result_text = gr.TextArea()
+    result_text = gr.TextArea(show_label=True, label="Try-on Result", interactive=False, elem_id="result_text")
     current_cloth = None
     current_model = None
 
