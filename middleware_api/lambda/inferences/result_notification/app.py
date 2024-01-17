@@ -149,6 +149,11 @@ def lambda_handler(event, context):
     message = event['Records'][0]['Sns']['Message']
     print("From SNS: " + str(message))
     message = json.loads(message)
+
+    if 'invocationStatus' not in message:
+        print("Not a valid message")
+        return
+
     invocation_status = message["invocationStatus"]
     inference_id = message["inferenceId"]
 
@@ -162,6 +167,9 @@ def lambda_handler(event, context):
             bucket, key = get_bucket_and_key(output_location)
             obj = s3_resource.Object(bucket, key)
             body = obj.get()['Body'].read().decode('utf-8')
+
+            print(f"Sagemaker Out Body: {body}")
+
             json_body = json.loads(body)
             if json_body is None:
                 update_inference_job_table(inference_id, 'status', 'failed')
@@ -218,6 +226,89 @@ def lambda_handler(event, context):
                 inference_parameters = {}
                 inference_parameters["parameters"] = json_body["parameters"]
                 inference_parameters["info"] = json_body["info"]
+                inference_parameters["endpont_name"] = endpoint_name
+                inference_parameters["inference_id"] = inference_id
+                inference_parameters["sns_info"] = message
+
+                json_file_name = f"/tmp/{inference_id}_param.json"
+
+                with open(json_file_name, "w") as outfile:
+                    json.dump(inference_parameters, outfile)
+
+                upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
+                                  f"{inference_id}_param.json")
+                update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
+
+                print(f"Complete inference parameters {inference_parameters}")
+            elif taskType in ["extra-single-image"]:
+                if 'image' not in json_body:
+                    raise Exception(json_body)
+
+                image = decode_base64_to_image(json_body["image"]).convert("RGB")
+                output = io.BytesIO()
+                image.save(output, format="JPEG")
+                # Upload the image to the S3 bucket
+                s3_client.put_object(
+                    Body=output.getvalue(),
+                    Bucket=S3_BUCKET_NAME,
+                    Key=f"out/{inference_id}/result/image.jpg"
+                )
+                # Update the DynamoDB table
+                inference_table.update_item(
+                    Key={
+                        'InferenceJobId': inference_id
+                    },
+                    UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
+                    ExpressionAttributeValues={
+                        ':new_image': [f"image.jpg"],
+                        ':empty_list': []
+                    }
+                )
+
+                # save parameters
+                inference_parameters = {}
+                inference_parameters["html_info"] = json_body["html_info"]
+                inference_parameters["endpont_name"] = endpoint_name
+                inference_parameters["inference_id"] = inference_id
+                inference_parameters["sns_info"] = message
+
+                json_file_name = f"/tmp/{inference_id}_param.json"
+
+                with open(json_file_name, "w") as outfile:
+                    json.dump(inference_parameters, outfile)
+
+                upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
+                                  f"{inference_id}_param.json")
+                update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
+
+                print(f"Complete inference parameters {inference_parameters}")
+            elif taskType in ["rembg"]:
+                if 'image' not in json_body:
+                    raise Exception(json_body)
+
+                image = decode_base64_to_image(json_body["image"]).convert("RGB")
+                output = io.BytesIO()
+                image.save(output, format="JPEG")
+                # Upload the image to the S3 bucket
+                s3_client.put_object(
+                    Body=output.getvalue(),
+                    Bucket=S3_BUCKET_NAME,
+                    Key=f"out/{inference_id}/result/image.jpg"
+                )
+                # Update the DynamoDB table
+                inference_table.update_item(
+                    Key={
+                        'InferenceJobId': inference_id
+                    },
+                    UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
+                    ExpressionAttributeValues={
+                        ':new_image': [f"image.jpg"],
+                        ':empty_list': []
+                    }
+                )
+
+                # save parameters
+                inference_parameters = {}
                 inference_parameters["endpont_name"] = endpoint_name
                 inference_parameters["inference_id"] = inference_id
                 inference_parameters["sns_info"] = message
