@@ -1,10 +1,12 @@
 from typing import NamedTuple, Any, TypedDict, List
 
+
 # Represents the output of a GetItem operation.
 
 
 class ResponseMetadata(dict):
     pass
+
 
 # Represents the amount of provisioned throughput capacity consumed on a table or
 # an index.
@@ -50,7 +52,6 @@ class ConsumedCapacity:
 
 
 class GetItemOutput(TypedDict):
-
     # The capacity units consumed by the GetItem operation. The data returned includes
     # the total provisioned throughput consumed, along with statistics for the table
     # and any indexes involved in the operation. ConsumedCapacity is only returned if
@@ -79,7 +80,6 @@ class GetItemOutput(TypedDict):
 
 # Represents the output of a Scan operation.
 class ScanOutput(TypedDict):
-
     # The capacity units consumed by the Scan operation. The data returned includes
     # the total provisioned throughput consumed, along with statistics for the table
     # and any indexes involved in the operation. ConsumedCapacity is only returned if

@@ -39,7 +39,7 @@
 9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
 
 ### 步骤1：部署Stable Diffusion WebUI (Windows)。
-1. 启动一台Windows Server，通过RDP登陆。
+1. 启动一台Windows Server，通过RDP登录。
 2. 参考[链接](https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html)安装NVIDIA驱动程序。
 3. 访问[Python网站](https://www.python.org/downloads/release/python-3106/)，下载Python并安装，记得要选上 Add Python to Path。
 4. 访问[Git网站](https://git-scm.com/download/win)，下载Git并安装。

@@ -1,15 +1,16 @@
+# todo will remove
+import logging
+import os
+import time
 from datetime import datetime
 from functools import wraps
-import time
-from pydantic import BaseModel
-import os
 from typing import Optional
-from common.constant import const
-import logging
 
-from db.database import gen_session, close_session
+from common.constant import const
 from common.response_wrapper import resp_ok
+from db.database import gen_session, close_session
 from fastapi_pagination.bases import RawParams
+from pydantic import BaseModel
 
 logger = logging.getLogger(const.LOGGER_API)
 
@@ -22,7 +23,6 @@ def to_raw_params(self) -> RawParams:
 
 
 def inject_session(func):
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         start_time = time.time()
@@ -34,10 +34,11 @@ def inject_session(func):
             gen_session()
             result = func(*args, **kwargs)
             res = resp_ok(result)
-            logger.debug(f"END >>> USED:{round(time.time()-start_time)}ms")
+            logger.debug(f"END >>> USED:{round(time.time() - start_time)}ms")
             return res
         finally:
             close_session()
+
     return wrapper
 
 

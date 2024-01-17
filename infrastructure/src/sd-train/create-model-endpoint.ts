@@ -1,5 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import {
+  Aws,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -13,6 +14,7 @@ import { Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { CfnEndpointConfigProps, CfnEndpointProps, CfnModelProps } from 'aws-cdk-lib/aws-sagemaker';
 import { Construct } from 'constructs';
+import { ResourceProvider } from '../shared/resource-provider';
 
 export interface CreateModelSageMakerEndpointProps {
   primaryContainer: string;
@@ -25,24 +27,23 @@ export interface CreateModelSageMakerEndpointProps {
   userSnsTopic: aws_sns.Topic;
   successTopic: aws_sns.Topic;
   failureTopic: aws_sns.Topic;
+  resourceProvider: ResourceProvider;
 }
 
 export class CreateModelSageMakerEndpoint {
 
-  private readonly id;
-
+  public readonly model: aws_sagemaker.CfnModel;
+  public readonly modelConfig: aws_sagemaker.CfnEndpointConfig;
+  public readonly modelEndpoint: aws_sagemaker.CfnEndpoint;
+  public readonly successTopic: aws_sns.Topic;
+  public readonly failureTopic: aws_sns.Topic;
+  private readonly id: string;
+  private readonly resourceProvider: ResourceProvider;
   private readonly rootSrc: string;
   private readonly modelTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly userSnsTopic: aws_sns.Topic;
-
   private readonly s3Bucket: aws_s3.Bucket;
-  public readonly model: aws_sagemaker.CfnModel;
-  public readonly modelConfig: aws_sagemaker.CfnEndpointConfig;
-  public readonly modelEndpoint: aws_sagemaker.CfnEndpoint;
-
-  public readonly successTopic: aws_sns.Topic;
-  public readonly failureTopic: aws_sns.Topic;
 
   constructor(scope: Construct, id: string, props: CreateModelSageMakerEndpointProps) {
     this.s3Bucket = props.s3OutputBucket;
@@ -51,14 +52,20 @@ export class CreateModelSageMakerEndpoint {
     this.layer = props.commonLayer;
     this.rootSrc = props.rootSrc;
     this.userSnsTopic = props.userSnsTopic;
-    this.successTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
-    this.failureTopic = <aws_sns.Topic> aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
+    this.successTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-successTopic`, props.successTopic.topicArn);
+    this.failureTopic = <aws_sns.Topic>aws_sns.Topic.fromTopicArn(scope, `${id}-failureTopic`, props.failureTopic.topicArn);
+    this.resourceProvider = props.resourceProvider;
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
-      modelName: `${this.id}-cdk-sample-model`,
+      modelName: `${this.id}-model`,
       primaryContainer: {
         image: props.primaryContainer,
+        environment: {
+          AWS_DEFAULT_REGION: Aws.REGION,
+          BUCKET_NAME: this.resourceProvider.bucketName,
+          INSTANCE_TYPE: props.machineType,
+        },
       },
     });
 
@@ -117,7 +124,6 @@ export class CreateModelSageMakerEndpoint {
         's3:DeleteObject',
         's3:ListBucket',
       ],
-      // resources: ['arn:aws:s3:::*'],
       resources: [`${this.s3Bucket.bucketArn}/*`],
     }));
 
@@ -148,8 +154,7 @@ export class CreateModelSageMakerEndpoint {
 
   private createProcessResultLambda(scope: Construct, id: string): aws_lambda.Function {
     const updateModelLambda = new PythonFunction(scope, `${id}-process-sg-result`, <PythonFunctionProps>{
-      functionName: `${id}-process-sg-result`,
-      entry: `${this.rootSrc}/model_and_train`,
+      entry: `${this.rootSrc}/models`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'model_api.py',
@@ -200,9 +205,9 @@ export class CreateModelSageMakerEndpoint {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        'arn:aws:s3:::*SageMaker*',
-        'arn:aws:s3:::*Sagemaker*',
-        'arn:aws:s3:::*sagemaker*'],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({

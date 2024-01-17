@@ -12,7 +12,7 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 class SimpleSagemakerInfer(InferManager):
 
-    def run(self, userid, models, sd_param, is_txt2img):
+    def run(self, userid, models, sd_param, is_txt2img, endpoint_type):
         # finished construct api payload
         sd_api_param_json = _parse_api_param_to_json(api_param=sd_param)
         if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
@@ -31,6 +31,7 @@ class SimpleSagemakerInfer(InferManager):
         payload = {
             # 'sagemaker_endpoint_name': sagemaker_endpoint,
             'user_id': userid,
+            'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
             'filters': {
@@ -41,12 +42,12 @@ class SimpleSagemakerInfer(InferManager):
         logger.debug(payload)
         inference_id = None
 
-        response = requests.post(f'{url}inference/v2', json=payload, headers={'x-api-key': api_key})
-        response.raise_for_status()
-        upload_param_response = response.json()
-        if upload_param_response['statusCode'] != 200:
-            raise Exception(upload_param_response['errMsg'])
+        response = requests.post(f'{url}inferences', json=payload, headers={'x-api-key': api_key})
+        logger.info(response.json())
+        if response.status_code != 201:
+            raise Exception(response.json()['message'])
 
+        upload_param_response = response.json()['data']
         if 'inference' in upload_param_response and \
                 'api_params_s3_upload_url' in upload_param_response['inference']:
             upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],
@@ -54,9 +55,15 @@ class SimpleSagemakerInfer(InferManager):
             upload_s3_resp.raise_for_status()
             inference_id = upload_param_response['inference']['id']
             # start run infer
-            response = requests.put(f'{url}inference/v2/{inference_id}/run', json=payload,
+            response = requests.put(f'{url}inferences/{inference_id}/start', json=payload,
                                     headers={'x-api-key': api_key})
-            response.raise_for_status()
+            if response.status_code not in [200, 202]:
+                logger.error(response.json())
+                raise Exception(response.json()['message'])
+
+            # if real-time, return inference data
+            if response.status_code == 200:
+                return response.json()['data']
 
         return inference_id
 
