@@ -240,7 +240,6 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                 inference_parameters["html_info"] = json_body["html_info"]
             inference_parameters["endpont_name"] = endpoint_name
             inference_parameters["inference_id"] = inference_id
-            inference_parameters["sns_info"] = message
 
             json_file_name = f"/tmp/{inference_id}_param.json"
 
