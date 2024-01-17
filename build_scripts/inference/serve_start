@@ -40,6 +40,7 @@ echo "decompress files: $cost seconds"
 
 start_at=$(date +%s)
 if [ -d "/opt/ml/code/extensions" ]; then
+    echo "/opt/ml/code/extensions exists"
     mv -f /opt/ml/code/extensions/* $instance_package/stable-diffusion-webui/extensions/
     rm -rf /opt/ml/code/extensions
 fi
