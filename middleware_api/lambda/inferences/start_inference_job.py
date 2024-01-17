@@ -206,6 +206,49 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{job.InferenceJobId}/result",
                               f"{job.InferenceJobId}_param.json")
             update_inference_job_table(job.InferenceJobId, 'inference_info_name', json_file_name)
+        elif job.taskType in ["extra-single-image", "rembg"]:
+            if 'image' not in json_body:
+                raise Exception(json_body)
+
+            image = decode_base64_to_image(json_body["image"]).convert("RGB")
+            output = io.BytesIO()
+            image.save(output, format="JPEG")
+            # Upload the image to the S3 bucket
+            s3_client.put_object(
+                Body=output.getvalue(),
+                Bucket=S3_BUCKET_NAME,
+                Key=f"out/{inference_id}/result/image.jpg"
+            )
+            # Update the DynamoDB table
+            inference_table.update_item(
+                Key={
+                    'InferenceJobId': inference_id
+                },
+                UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
+                ExpressionAttributeValues={
+                    ':new_image': [f"image.jpg"],
+                    ':empty_list': []
+                }
+            )
+
+            # save parameters
+            inference_parameters = {}
+            if job.taskType == "extra-single-image":
+                inference_parameters["html_info"] = json_body["html_info"]
+            inference_parameters["endpont_name"] = endpoint_name
+            inference_parameters["inference_id"] = inference_id
+            inference_parameters["sns_info"] = message
+
+            json_file_name = f"/tmp/{inference_id}_param.json"
+
+            with open(json_file_name, "w") as outfile:
+                json.dump(inference_parameters, outfile)
+
+            upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
+                              f"{inference_id}_param.json")
+            update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
+
+            print(f"Complete inference parameters {inference_parameters}")
 
         update_inference_job_table(job.InferenceJobId, 'status', 'succeed')
     except Exception as e:
