@@ -62,22 +62,29 @@ def get_images(path: str):
 
 clothes_images = get_images("./clothes/cloth")
 models_images = get_images("./person/model")
-
+css = """
+    .gallery img:not(.selected) {
+        filter: brightness(0.5);
+    }
+    """
 title = "Virtual Try-on"
-with gr.Blocks(title=title) as demo:
+with gr.Blocks(title=title, css=css) as demo:
     gr.HTML(f"<h1>{title}</h1>")
 
-    clothes = gr.Gallery(
-        label="Clothes",
-        show_label=True,
-        elem_id="clothes_gallery",
-        columns=10,
-        rows=1,
-        object_fit="fill",
-        value=clothes_images,
-        allow_preview=False,
-        height=155
-    )
+    with gr.Row():
+        gr.HTML(f"", scale=1)
+        clothes = gr.Gallery(
+            label="Clothes",
+            show_label=True,
+            elem_id="clothes_gallery",
+            columns=10,
+            rows=1,
+            object_fit="fill",
+            value=clothes_images,
+            allow_preview=False,
+            height=135,
+            scale=7,
+        )
 
     with gr.Row():
         model = gr.Gallery(
@@ -93,14 +100,20 @@ with gr.Blocks(title=title) as demo:
             height=670,
         )
 
-        with gr.Column(scale=4):
-            gr.Radio(
-                choices=["Option1", "Option2"],
-                label="Try-on Result",
-                show_label=False,
-                value="Try-on Result",
-                elem_id="select_radio",
-            )
+        with gr.Column(scale=7):
+            with gr.Row():
+                gr.Radio(
+                    choices=["Option1", "Option2"],
+                    label="Try-on Result",
+                    show_label=False,
+                    value="Try-on Result",
+                    elem_id="select_radio",
+                    scale=8,
+                )
+                btn = gr.Button(
+                    value="Generate on Cloud",
+                    scale=2,
+                )
             result_image = gr.Image(
                 type="pil",
                 label="Try-on Result",
@@ -111,7 +124,13 @@ with gr.Blocks(title=title) as demo:
                 height=600,
             )
 
-    result_text = gr.TextArea(show_label=True, label="Try-on Result", interactive=False, elem_id="result_text")
+    with gr.Row():
+        gr.HTML(f"", scale=1)
+        result_text = gr.Textbox(show_label=True,
+                                 label="Try-on Result",
+                                 scale=7,
+                                 interactive=False,
+                                 elem_id="result_text")
     current_cloth = None
     current_model = None
 
@@ -123,6 +142,7 @@ with gr.Blocks(title=title) as demo:
         if current_cloth is None:
             gr.Warning("Please select a cloth to inference.")
             return None, None
+
         if current_model is None:
             gr.Warning("Please select a model to inference.")
             return None, None
@@ -136,31 +156,30 @@ with gr.Blocks(title=title) as demo:
             "model_base64": get_image_base64(current_model[0]),
             "model_name": current_model[1]
         }
-        print(inference_payload)
 
         # TODO: call the sagemaker real-time inference endpoint
         res = get_image_base64(current_model[0])
 
-        time.sleep(1)
-        result_text = current_model
+        time.sleep(0.5)
 
-        return base64_to_image(res), result_text
+        return base64_to_image(res), current_model
 
 
     def on_select_clothes(evt: gr.SelectData):
         global current_cloth
         current_cloth = clothes_images[evt.index]
-        return get_result()
+        print(current_cloth)
 
 
     def on_select_models(evt: gr.SelectData):
         global current_model
         current_model = models_images[evt.index]
-        return get_result()
+        print(current_model)
 
 
-    clothes.select(on_select_clothes, None, [result_image, result_text])
-    model.select(on_select_models, None, [result_image, result_text])
+    clothes.select(on_select_clothes, None, None)
+    model.select(on_select_models, None, None)
+    btn.click(get_result, None, [result_image, result_text])
 
 if __name__ == "__main__":
     demo.queue()
