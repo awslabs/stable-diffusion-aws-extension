@@ -151,6 +151,7 @@ def lambda_handler(event, context):
     message = json.loads(message)
 
     if 'invocationStatus' not in message:
+        # maybe a message from SNS for test
         print("Not a valid message")
         return
 
