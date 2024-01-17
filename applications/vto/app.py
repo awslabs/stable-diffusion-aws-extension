@@ -62,13 +62,9 @@ def get_images(path: str):
 
 clothes_images = get_images("./clothes/cloth")
 models_images = get_images("./person/model")
-css = """
-    .gallery img:not(.selected) {
-        filter: brightness(0.5);
-    }
-    """
 title = "Virtual Try-on"
-with gr.Blocks(title=title, css=css) as demo:
+
+with gr.Blocks(title=title) as demo:
     gr.HTML(f"<h1>{title}</h1>")
 
     with gr.Row():
