@@ -96,10 +96,6 @@ export class ResourceProvider extends Construct {
         'kms:CreateAlias',
         'kms:DisableKeyRotation',
         'kms:ListAliases',
-        'ec2:RunInstances',
-        'ec2:TerminateInstances',
-        'ec2:DescribeImages',
-        'datasync:*',
       ],
       resources: [
         '*',
