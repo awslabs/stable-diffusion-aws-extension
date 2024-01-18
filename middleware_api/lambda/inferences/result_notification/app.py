@@ -204,12 +204,12 @@ def lambda_handler(event, context):
                 for count, b64image in enumerate(json_body["images"]):
                     image = decode_base64_to_image(b64image).convert("RGB")
                     output = io.BytesIO()
-                    image.save(output, format="JPEG")
+                    image.save(output, format="PNG")
                     # Upload the image to the S3 bucket
                     s3_client.put_object(
                         Body=output.getvalue(),
                         Bucket=S3_BUCKET_NAME,
-                        Key=f"out/{inference_id}/result/image_{count}.jpg"
+                        Key=f"out/{inference_id}/result/image_{count}.png"
                     )
                     # Update the DynamoDB table
                     inference_table.update_item(
@@ -218,7 +218,7 @@ def lambda_handler(event, context):
                         },
                         UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                         ExpressionAttributeValues={
-                            ':new_image': [f"image_{count}.jpg"],
+                            ':new_image': [f"image_{count}.png"],
                             ':empty_list': []
                         }
                     )
@@ -247,12 +247,12 @@ def lambda_handler(event, context):
 
                 image = decode_base64_to_image(json_body["image"]).convert("RGB")
                 output = io.BytesIO()
-                image.save(output, format="JPEG")
+                image.save(output, format="PNG")
                 # Upload the image to the S3 bucket
                 s3_client.put_object(
                     Body=output.getvalue(),
                     Bucket=S3_BUCKET_NAME,
-                    Key=f"out/{inference_id}/result/image.jpg"
+                    Key=f"out/{inference_id}/result/image.png"
                 )
                 # Update the DynamoDB table
                 inference_table.update_item(
@@ -261,7 +261,7 @@ def lambda_handler(event, context):
                     },
                     UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                     ExpressionAttributeValues={
-                        ':new_image': [f"image.jpg"],
+                        ':new_image': [f"image.png"],
                         ':empty_list': []
                     }
                 )

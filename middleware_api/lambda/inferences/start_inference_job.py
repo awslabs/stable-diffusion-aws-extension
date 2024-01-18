@@ -175,12 +175,12 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             for count, b64image in enumerate(json_body["images"]):
                 image = decode_base64_to_image(b64image).convert("RGB")
                 output = io.BytesIO()
-                image.save(output, format="JPEG")
+                image.save(output, format="PNG")
                 # Upload the image to the S3 bucket
                 s3_client.put_object(
                     Body=output.getvalue(),
                     Bucket=S3_BUCKET_NAME,
-                    Key=f"out/{job.InferenceJobId}/result/image_{count}.jpg"
+                    Key=f"out/{inference_id}/result/image_{count}.png"
                 )
                 # Update the DynamoDB table
                 inference_table.update_item(
@@ -189,7 +189,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                     },
                     UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                     ExpressionAttributeValues={
-                        ':new_image': [f"image_{count}.jpg"],
+                        ':new_image': [f"image_{count}.png"],
                         ':empty_list': []
                     }
                 )
@@ -201,13 +201,13 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             inference_parameters["endpont_name"] = endpoint_name
             inference_parameters["inference_id"] = inference_id
 
-            json_file_name = f"/tmp/{job.InferenceJobId}_param.json"
+            json_file_name = f"/tmp/{inference_id}_param.json"
 
             with open(json_file_name, "w") as outfile:
                 json.dump(inference_parameters, outfile)
 
             upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
-                              f"{job.InferenceJobId}_param.json")
+                              f"{inference_id}_param.json")
             update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
         elif taskType in ["extra-single-image", "rembg"]:
             if 'image' not in json_body:
@@ -215,12 +215,12 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
 
             image = decode_base64_to_image(json_body["image"]).convert("RGB")
             output = io.BytesIO()
-            image.save(output, format="JPEG")
+            image.save(output, format="PNG")
             # Upload the image to the S3 bucket
             s3_client.put_object(
                 Body=output.getvalue(),
                 Bucket=S3_BUCKET_NAME,
-                Key=f"out/{inference_id}/result/image.jpg"
+                Key=f"out/{inference_id}/result/image.png"
             )
             # Update the DynamoDB table
             inference_table.update_item(
@@ -229,7 +229,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                 },
                 UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                 ExpressionAttributeValues={
-                    ':new_image': [f"image.jpg"],
+                    ':new_image': [f"image.png"],
                     ':empty_list': []
                 }
             )
