@@ -89,8 +89,8 @@ async function copyFiles() {
   const binaryPath = '/opt/s5cmd';
 
   const source_path = AWS_REGION?.startsWith('cn-') ?
-    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`
-    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`;
+    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`
+    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`;
 
   const source = AWS_REGION?.startsWith('cn-') ?
     'cn-north-1'
@@ -145,6 +145,7 @@ cp --source-region ${source} --destination-region ${destination} "s3://${source_
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g4/site-packages/xformers/"
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g5/site-packages/xformers/"`;
 
+  console.log(commands);
   await fsPromises.writeFile('/tmp/commands.txt', commands);
 
   const args = [
