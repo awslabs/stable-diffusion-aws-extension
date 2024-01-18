@@ -11,6 +11,9 @@ from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.serializers import JSONSerializer
 
+from vto import vto_update_payload, vto_realtime_inference
+import pathlib
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -59,9 +62,9 @@ def get_images(path: str):
 
     return images
 
-
-clothes_images = get_images("./clothes/cloth")
-models_images = get_images("./person/model")
+base_path = pathlib.Path(__file__).parent.resolve()
+clothes_images = get_images(f"{base_path}/clothes/cloth")
+models_images = get_images(f"{base_path}/person/model")
 title = "Virtual Try-on"
 
 with gr.Blocks(title=title) as demo:
@@ -152,13 +155,18 @@ with gr.Blocks(title=title) as demo:
             "model_base64": get_image_base64(current_model[0]),
             "model_name": current_model[1]
         }
+        payload = vto_update_payload(current_cloth, current_model)
+
+        res_image, run_time = vto_realtime_inference(payload)
+
+        return res_image, current_model
 
         # TODO: call the sagemaker real-time inference endpoint
-        res = get_image_base64(current_model[0])
+        # res = get_image_base64(current_model[0])
 
-        time.sleep(0.5)
+        # time.sleep(0.5)
 
-        return base64_to_image(res), current_model
+        # return base64_to_image(res), current_model
 
 
     def on_select_clothes(evt: gr.SelectData):
