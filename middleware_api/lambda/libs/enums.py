@@ -39,6 +39,7 @@ class TrainJobStatus(Enum):
     Downloading = 'Downloading'
     Uploading = 'Uploading'
     Completed = 'Completed'
+    Pending = 'Pending'
 
 
 class DataStatus(Enum):
