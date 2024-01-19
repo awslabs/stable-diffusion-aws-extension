@@ -131,7 +131,7 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    new DeleteEndpointsApi(
+    const deleteEndpointsApi = new DeleteEndpointsApi(
       scope, 'DeleteEndpoints',
             <DeleteEndpointsApiProps>{
               router: props.routers.endpoints,
@@ -144,6 +144,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    deleteEndpointsApi.model.node.addDependency(createInferenceJobApi.model);
+    deleteEndpointsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
 
     new SagemakerEndpointEvents(
       scope, 'EndpointEvents',
@@ -171,7 +173,7 @@ export class SDAsyncInferenceStack {
       },
     );
 
-    new CreateEndpointApi(
+    const createEndpointApi= new CreateEndpointApi(
       scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
@@ -190,6 +192,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
+    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
 
     const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
@@ -312,7 +316,7 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    new DeleteInferenceJobsApi(
+    const deleteInferenceJobsApi= new DeleteInferenceJobsApi(
       scope, 'DeleteInferenceJobs',
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
@@ -324,6 +328,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    deleteInferenceJobsApi.model.node.addDependency(createEndpointApi.model);
+    deleteInferenceJobsApi.requestValidator.node.addDependency(createEndpointApi.requestValidator);
 
     // Add a POST method with prefix inference
     if (!inference) {

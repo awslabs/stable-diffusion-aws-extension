@@ -38,7 +38,8 @@ export class UpdateCheckPointApi {
   private readonly role: aws_iam.Role;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public  model: Model;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: UpdateCheckPointApiProps) {
     this.scope = scope;
@@ -52,6 +53,7 @@ export class UpdateCheckPointApi {
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.updateCheckpointApi();
   }
@@ -153,6 +155,15 @@ export class UpdateCheckPointApi {
       contentType: 'application/json',
     });
   }
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-ckpt-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
 
   private updateCheckpointApi() {
     const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
@@ -192,14 +203,6 @@ export class UpdateCheckPointApi {
     });
 
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-update-ckpt-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -210,7 +213,7 @@ export class UpdateCheckPointApi {
       .addMethod(this.httpMethod, createModelIntegration,
         {
           apiKeyRequired: true,
-          requestValidator,
+          requestValidator: this.requestValidator,
           requestModels: {
             'application/json': this.model,
           },
