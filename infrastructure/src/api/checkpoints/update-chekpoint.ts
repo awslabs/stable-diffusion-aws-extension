@@ -28,6 +28,8 @@ export interface UpdateCheckPointApiProps {
 }
 
 export class UpdateCheckPointApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -38,8 +40,6 @@ export class UpdateCheckPointApi {
   private readonly role: aws_iam.Role;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: UpdateCheckPointApiProps) {
     this.scope = scope;
@@ -127,7 +127,7 @@ export class UpdateCheckPointApi {
     return newRole;
   }
 
-  private createModel():Model {
+  private createModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
@@ -155,6 +155,7 @@ export class UpdateCheckPointApi {
       contentType: 'application/json',
     });
   }
+
   private createRequestValidator(): RequestValidator {
     return new RequestValidator(
       this.scope,

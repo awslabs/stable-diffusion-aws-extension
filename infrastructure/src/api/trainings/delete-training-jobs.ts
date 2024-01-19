@@ -25,6 +25,8 @@ export interface DeleteTrainingJobsApiProps {
 }
 
 export class DeleteTrainingJobsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -34,8 +36,6 @@ export class DeleteTrainingJobsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteTrainingJobsApiProps) {
     this.scope = scope;

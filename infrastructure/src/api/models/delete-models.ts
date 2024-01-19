@@ -25,6 +25,8 @@ export interface DeleteModelsApiProps {
 }
 
 export class DeleteModelsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -34,8 +36,6 @@ export class DeleteModelsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteModelsApiProps) {
     this.scope = scope;
@@ -84,7 +84,7 @@ export class DeleteModelsApi {
       });
   }
 
-  private createRequestValidator() :RequestValidator {
+  private createRequestValidator(): RequestValidator {
     return new RequestValidator(
       this.scope,
       `${this.baseId}-del-model-validator`,

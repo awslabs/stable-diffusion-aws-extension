@@ -25,6 +25,8 @@ export interface DeleteUsersApiProps {
 }
 
 export class DeleteUsersApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -34,8 +36,6 @@ export class DeleteUsersApi {
   private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteUsersApiProps) {
     this.scope = scope;

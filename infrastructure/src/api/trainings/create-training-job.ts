@@ -31,6 +31,8 @@ export interface CreateTrainingJobApiProps {
 
 export class CreateTrainingJobApi {
 
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly srcRoot: string;
@@ -43,8 +45,6 @@ export class CreateTrainingJobApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;

@@ -31,6 +31,8 @@ export interface CreateInferenceJobApiProps {
 
 export class CreateInferenceJobApi {
 
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly srcRoot: string;
@@ -43,8 +45,6 @@ export class CreateInferenceJobApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;

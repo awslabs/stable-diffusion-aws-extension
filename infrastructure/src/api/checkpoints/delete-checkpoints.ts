@@ -25,6 +25,8 @@ export interface DeleteCheckpointsApiProps {
 }
 
 export class DeleteCheckpointsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -34,8 +36,6 @@ export class DeleteCheckpointsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteCheckpointsApiProps) {
     this.scope = scope;

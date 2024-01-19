@@ -45,10 +45,11 @@ export interface UpdateModelApiProps {
 export class UpdateModelApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly imageUrl: string;
   private readonly machineType: string;
   private readonly resourceProvider: ResourceProvider;
-
   private readonly src;
   private readonly scope: Construct;
   private readonly modelTable: aws_dynamodb.Table;
@@ -60,8 +61,6 @@ export class UpdateModelApi {
   private readonly dockerRepo: aws_ecr.Repository;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: UpdateModelApiProps) {
     this.scope = scope;

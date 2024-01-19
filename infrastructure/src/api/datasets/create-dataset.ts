@@ -30,6 +30,8 @@ export interface CreateDatasetApiProps {
 }
 
 export class CreateDatasetApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -41,8 +43,6 @@ export class CreateDatasetApi {
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateDatasetApiProps) {
     this.scope = scope;
@@ -117,7 +117,7 @@ export class CreateDatasetApi {
     return newRole;
   }
 
-  private createModel():Model {
+  private createModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,

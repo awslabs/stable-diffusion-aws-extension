@@ -37,6 +37,8 @@ export interface CreateEndpointApiProps {
 }
 
 export class CreateEndpointApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -53,8 +55,6 @@ export class CreateEndpointApi {
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;

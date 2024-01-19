@@ -27,6 +27,8 @@ export interface CreateUserApiProps {
 }
 
 export class CreateUserApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -37,8 +39,6 @@ export class CreateUserApi {
   private readonly baseId: string;
   private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateUserApiProps) {
     this.scope = scope;

@@ -27,6 +27,8 @@ export interface DeleteEndpointsApiProps {
 }
 
 export class DeleteEndpointsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -37,8 +39,6 @@ export class DeleteEndpointsApi {
   private readonly baseId: string;
   private readonly authorizer: IAuthorizer;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
     this.scope = scope;

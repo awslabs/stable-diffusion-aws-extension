@@ -29,6 +29,8 @@ export interface CreateModelJobApiProps {
 }
 
 export class CreateModelJobApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -40,8 +42,6 @@ export class CreateModelJobApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateModelJobApiProps) {
     this.scope = scope;

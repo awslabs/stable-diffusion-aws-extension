@@ -30,6 +30,8 @@ export interface UpdateDatasetApiProps {
 
 export class UpdateDatasetApi {
   public readonly router: aws_apigateway.Resource;
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -39,8 +41,6 @@ export class UpdateDatasetApi {
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: UpdateDatasetApiProps) {
     this.scope = scope;

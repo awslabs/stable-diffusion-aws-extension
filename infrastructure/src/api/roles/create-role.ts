@@ -25,6 +25,8 @@ export interface CreateRoleApiProps {
 }
 
 export class CreateRoleApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -33,8 +35,6 @@ export class CreateRoleApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateRoleApiProps) {
     this.scope = scope;

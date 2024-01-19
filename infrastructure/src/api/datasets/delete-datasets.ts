@@ -26,6 +26,8 @@ export interface DeleteDatasetsApiProps {
 }
 
 export class DeleteDatasetsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -36,8 +38,6 @@ export class DeleteDatasetsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteDatasetsApiProps) {
     this.scope = scope;
@@ -56,7 +56,7 @@ export class DeleteDatasetsApi {
     this.deleteDatasetsApi();
   }
 
-  private createModel():Model {
+  private createModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
