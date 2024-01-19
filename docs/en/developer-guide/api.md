@@ -44,9 +44,6 @@ Call [/endpoints](#inferencedeploy-sagemaker-endpoint) to create a new sagemaker
 
 After calling [/endpoints](#inferencedeploy-sagemaker-endpoint), you need to call [/endpoints](#inferencelist-endpoint-deployment-jobs) to list all the endpoint status. Normally it took about more than 10 minutes to make a new Sagemaker endpoint change to InService status. The Sagemaker endpoint can only be used for inference when it is InService status.
 
-If the endpoint is in failed status, you can call [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) with parameter jobID, the response will show the reason why endpoint deployment is failed, normally it is caused by AWS account quota limitation.
-
-
 <details>
   <summary>sequence digram raw</summary>
   
@@ -55,7 +52,6 @@ If the endpoint is in failed status, you can call [/inference/get-endpoint-deplo
 Client->Middleware:Call /endpoints
 Middleware->Middleware: Start a workflow to configure sagemaker endpoint \n based on uer request configuration
 Client->Middleware:Call /endpoints \n to list all the endpoint creation job list
-Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'InService' state.
   
 </details>
 
@@ -65,9 +61,9 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 
 ## 4. Do Inference
 ![Do Inference](../images/do-inference.png)
-After Sagemaker endpoint is in InService status, you can call [/inference/v2](#inference-l2-api) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/inference/v2](#inference-l2-api).
+After Sagemaker endpoint is in InService status, you can call [/inferences](#inference-l2-api) to do the txt2image or image2image inference. You specify the endpoint name in "sagemaker_endpoint" parameter in the post body of the request. Other required parameters are located in [/inferences](#inference-l2-api).
 
-[/inference/v2](#inference-l2-api) will return following json structure to client:
+[/inferences](#inference-l2-api) will return following json structure to client:
 ```json
 {
   "inference_id": "XXXXXXX",
@@ -76,76 +72,52 @@ After Sagemaker endpoint is in InService status, you can call [/inference/v2](#i
   "output_path": "path_of_prediction_output"
 }
 ```
-Client then can call [/inference/get-inference-job](#inferenceget-inference-job) using the inference_id as parameter to query the inference job status.  If the inference job has finished successfully(status is "succeed"), Client can use [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) to get all inference result images, the images will be returned as S3 presigned url list so client can download. following is am example of get-inference-job-image-output result:
-
-```json
-[
-  "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg"
-]
-```
-
-Also Client can call [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) to get all the inference parameters, the response of [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) is an S3 presigned url contains the json format of the parameters, following is an response example:
-
-```json
-[
-  "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json"
-]
-```
+Client then can call [/inferences/{id}](#inferenceget-inference-job) using the inference_id as parameter to query the inference job status.
 
 <details>
   <summary>sequence digram raw</summary>
   
 title Do Inference
 
-Client->Middleware:Call **/inference/v2**
+Client->Middleware:Call **/inferences**
 Middleware->Middleware: Start an async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
-Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
+Client->Middleware:Call **/inferences/{id}** \n to query the inference job status
 Middleware->Client: return inference_id and the job status(inprocess | succeed | failure)
 
-abox over Client: If the inference job is succeed, \n call **/inference/get-inference-job-image-output** and \n **/inference/get-inference-job-param-output** to get the \n inference result 
-Client->Middleware:Call **/inference/get-inference-job-image-output** \n to get all inference result images.
-
 Middleware->Client: return the inference result images in presigned url format
-
-Client->Middleware:Call **/inference/get-inference-job-param-output** \n to get inference parameters.
 
 Middleware->Client: return the inference parameter in presigned url format
   
 </details>
 # API List 
 
-| Index | Http Method | API Name                                                                                                | Description |
-|-------|-------------|---------------------------------------------------------------------------------------------------------| --- |
-| 1     | GET         | [/ping](#ping)                                                 | Test whether client can connect to api and check the API_TOKEN is correct | | 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
-| 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
-| 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job.               |
-| 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job.                                     |
-| 6     | POST        | [/inference/v2](#inference-l2-api)                                                                      | Run sagemaker inference using default parameters                                       |
-| 7     | POST        | [/endpoints](#inferencedeploy-sagemaker-endpoint)                                                       | Deploys a SageMaker endpoint.                                                         |
-| 8     | DELETE      | [/endpoints](#inferencedelete-sagemaker-endpoint)                                                       | Deletes a SageMaker endpoint.                                                         |
-| 9     | GET         | [/endpoints](#inferencelist-endpoint-deployment-jobs)                                                   | Lists all endpoint deployment jobs.                                                   |
-| 10    | GET         | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | Gets a specific endpoint deployment job.                                              |
-| 11    | GET         | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | Generates an S3 presigned URL for uploading.                                          |
-| 12    | GET         | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | Gets the list of textual inversions.                                                                     |
-| 13    | GET         | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | Gets the list of LoRa.                                                                                  |
-| 14    | GET         | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | Gets the list of hypernetworks.                                                                         |
-| 15    | GET         | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | Gets the list of ControlNet models.                                                                     |
-| 16    | POST        | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | Runs a model merge.                                                                                     |
-| 17    | POST        | [/model](#modelpost)                                                                                    | Creates a new model.                                                                                    |
-| 18    | PUT         | [/model](#modelput)                                                                                     | Upload the model file                                                                                   |
-| 19    | GET         | [/models](#modelsget)                                                                                   | Lists all models.                                                                                       |
-| 20    | GET         | [/checkpoint](#checkpoint)                                                                              | Gets a checkpoint.                                                                                      |
-| 21    | PUT         | [/checkpoint](#checkpointput)                                                                           | Updates a checkpoint.                                                                                   |
-| 22    | GET         | [/checkpoints](#checkpoints)                                                                            | Lists all checkpoints.                                                                                  |
-| 23    | PUT         | [/inference/v2/{id}/run](#train-api-post)                                                               | Starts a training job.                                                                                  |
-| 24    | PUT         | [/train](#trainput)                                                                                     | Updates a training job.                                                                                 |
-| 25    | GET         | [/trains](#trainsget)                                                                                   | Lists all training jobs.                                                                                |
-| 26    | POST        | [/dataset](#datasetpost)                                                                                | Creates a new dataset.                                                                                  |
-| 27    | PUT         | [/dataset](#datasetput)                                                                                 | Updates a dataset.                                                                                      |
-| 28    | GET         | [/datasets](#datasetsget)                                                                               | Lists all datasets.                                                                                     |
-| 29    | GET         | [/{dataset_name}/data](#dataset_namedata)                                                               | Gets data of a specific dataset.                                                                        |
-| 30  | POST        | [/upload_checkpoint](#upload_checkpointpost)                                                            | Upload directly to s3 according to the model url.                   |
+| Index | Http Method | API Name                                                                    | Description |
+|-------|-------------|-----------------------------------------------------------------------------| --- |
+| 1     | GET         | [/ping](#ping)                                                              | Test whether client can connect to api and check the API_TOKEN is correct | | 2 | [/inferences](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
+| 6     | POST        | [/inferences](#inference-l2-api)                                            | Run sagemaker inference using default parameters                                       |
+| 3     | GET         | [/inferences/{id}](#inferenceget-inference-job)                             | Retrieves details of a specific inference job. |
+| 23    | PUT         | [/inferences/{id}/start](#train-api-post)                                   | Starts a training job.                                                                                  |
+| 7     | POST        | [/endpoints](#inferencedeploy-sagemaker-endpoint)                           | Deploys a SageMaker endpoint.                                                         |
+| 8     | DELETE      | [/endpoints](#inferencedelete-sagemaker-endpoint)                           | Deletes a SageMaker endpoint.                                                         |
+| 9     | GET         | [/endpoints](#inferencelist-endpoint-deployment-jobs)                       | Lists all endpoint deployment jobs.                                                   |
+| 12    | GET         | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list) | Gets the list of textual inversions.                                                                     |
+| 13    | GET         | [/inference/get-lora-list](#inferenceget-lora-list)                         | Gets the list of LoRa.                                                                                  |
+| 14    | GET         | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)         | Gets the list of hypernetworks.                                                                         |
+| 15    | GET         | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list) | Gets the list of ControlNet models.                                                                     |
+| 16    | POST        | [/inference/run-model-merge](#inferencerun-model-merge)                     | Runs a model merge.                                                                                     |
+| 17    | POST        | [/models](#modelpost)                                                       | Creates a new model.                                                                                    |
+| 18    | PUT         | [/models/{id}](#modelput)                                                    | Upload the model file                                                                                   |
+| 19    | GET         | [/models](#modelsget)                                                       | Lists all models.                                                                                       |
+| 20    | GET         | [/checkpoints](#checkpoint)                                                 | Gets a checkpoint.                                                                                      |
+| 21    | PUT         | [/checkpoints](#checkpointput)                                              | Updates a checkpoint.                                                                                   |
+| 22    | GET         | [/checkpoints](#checkpoints)                                                | Lists all checkpoints.                                                                                  |
+| 24    | PUT         | [/trainings](#trainput)                                                     | Updates a training job.                                                                                 |
+| 25    | GET         | [/trainings](#trainsget)                                                    | Lists all training jobs.                                                                                |
+| 26    | POST        | [/datasets](#datasetpost)                                                   | Creates a new dataset.                                                                                  |
+| 27    | PUT         | [/datasets/{name}](#datasetput)                                             | Updates a dataset.                                                                                      |
+| 28    | GET         | [/datasets](#datasetsget)                                                   | Lists all datasets.                                                                                     |
+| 29    | GET         | [/datasets/{name}](#dataset_namedata)                                       | Gets data of a specific dataset.                                                                        |
 <br/>
 
 # /ping
@@ -214,7 +186,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping',
 
 <br/>
 
-# /inference/v2
+# /inferences
 
 Generate a new image from a text prompt.
 
@@ -243,7 +215,7 @@ body = {
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2", headers = headers, json = body)
+r = requests.post("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences", headers = headers, json = body)
 
 print(r.json())
 
@@ -269,7 +241,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2",
+fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences",
 {
   method: "POST",
   body: inputBody,
@@ -283,7 +255,7 @@ fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`POST /inference/v2`
+`POST /inferences`
 
 > Body parameter
 
@@ -512,7 +484,7 @@ This operation does not require authentication
 
 <br/>
 
-# /endpoints(DELETE)
+# /endpoints (DELETE)
 
 Delete Endpoints
 
@@ -613,7 +585,7 @@ This operation does not require authentication
 
 <br/>
 
-# /endpoints(GET)
+# /endpoints (GET)
 
 List Endpoints
 
@@ -706,7 +678,7 @@ This operation does not require authentication
 
 <br/>
 
-# /inference/list-inference-jobs
+# /inferences
 
 <a id="opIdlist_inference_jobs_inference_list_inference_jobs_get"></a>
 
@@ -721,7 +693,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences', headers = headers)
 
 print(r.json())
 
@@ -736,7 +708,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences',
 {
   method: 'GET',
 
@@ -750,7 +722,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/list-inference-jobs`
+`GET /inferences`
 
 > Example responses
 
@@ -799,91 +771,7 @@ This operation does not require authentication
 
 <br/>
 
-# /inference/get-endpoint-deployment-job
-
-<a id="opIdget_endpoint_deployment_job_inference_get_endpoint_deployment_job_get"></a>
-
-### **Code samples :**
-
-Python example code:
-
-```Python
-import requests
-headers = {
-  'Accept': 'application/json',
-  'x-api-key': 'API_TOKEN_VALUE'
-}
-
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job', params={
-  'jobID': 'string'
-}, headers = headers)
-
-print(r.json())
-
-```
-
-Javascript example code:
-
-```javascript
-
-const headers = {
-  'Accept':'application/json',
-  'x-api-key': 'API_TOKEN_VALUE'
-};
-
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string',
-{
-  method: 'GET',
-
-  headers: headers
-})
-.then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
-});
-
-```
-
-`GET /inference/get-endpoint-deployment-job`
-
-<h3 id="get-endpoint-deployment-job-parameters">Parameters</h3>
-
-|Name|In|Type|Required|Description|
-|---|---|---|---|---|
-|jobID|query|string|true|none|
-
-> Example responses
-
-> 200 Response
-
-```json
-{
-  "EndpointDeploymentJobId": "cb821ea9-e9d1-4bae-98f8-c20ecadf11e0",
-  "startTime": "2023-07-04 08:00:47.736033",
-  "endTime": "2023-07-04 08:12:55.148070",
-  "endpoint_name": "infer-endpoint-cb821ea",
-  "endpoint_status": "InService",
-  "status": "success"
-}
-```
-
-<h3 id="get-endpoint-deployment-job-responses">Responses</h3>
-
-|Status|Meaning|Description|Schema|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
-|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
-
-<h3 id="get-endpoint-deployment-job-responseschema">Response Schema</h3>
-
-<aside class="success">
-This operation does not require authentication
-</aside>
-
-<br/>
-
-# /inference/get-inference-job
+# /inferences/{id}
 
 <a id="opIdget_inference_job_inference_get_inference_job_get"></a>
 
@@ -898,7 +786,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}', headers = headers)
 
 print(r.json())
 
@@ -913,7 +801,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}',
 {
   method: 'GET',
 
@@ -927,13 +815,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/get-inference-job`
-
-<h3 id="get-inference-job-parameters">Parameters</h3>
-
-|Name|In|Type|Required|Description|
-|---|---|---|---|---|
-|jobID|query|string|false|none|
+`GET /inferences/{id}`
 
 > Example responses
 
@@ -2046,7 +1928,7 @@ api_key
 <br/>
 
 
-# /inference/v2/{id}/run(PUT)
+# /inferences/{id}/run(PUT)
 
 <a id="train-api-post"></a>
 ### **Code samples :**
@@ -2106,7 +1988,7 @@ const inputBody = {
 }
 
 
-r = requests.put('https://{api_id}.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/v2/{id}/run', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inferences/{id}/run', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2164,7 +2046,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inference/v2/{id}/run',
+fetch('https://{api_id}.execute-api.<Your AWS Account Region>.amazonaws.com/{basePath}/inferences/{id}/start',
 {
   method: 'POST',
   body: inputBody,
@@ -2178,7 +2060,7 @@ fetch('https://{api_id}.execute-api.<Your AWS Account Region>.amazonaws.com/{bas
 
 ```
 
-`PUT /inference/v2/{id}/run`
+`PUT /inferences/{id}/run`
 
 > Body parameter
 

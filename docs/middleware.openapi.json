@@ -1720,7 +1720,7 @@
         ]
       }
     },
-    "/inference/v2": {
+    "/inferences": {
       "post": {
         "summary": "CreateInferenceJob",
         "x-apifox-folder": "Inference",
@@ -1932,7 +1932,7 @@
         ]
       }
     },
-    "/inference/v2/{jobId}/run": {
+    "/inferences/{jobId}/start": {
       "put": {
         "summary": "RunInferenceJob",
         "x-apifox-folder": "Inference",
@@ -2044,7 +2044,7 @@
         ]
       }
     },
-    "/inference/get-inference-job": {
+    "/inferences/{id}": {
       "get": {
         "summary": "GetInferenceJob",
         "x-apifox-folder": "Inference",

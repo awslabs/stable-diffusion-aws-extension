@@ -45,7 +45,7 @@ headingLevel: 2
 
 在调用 [/endpoints](#inferencedeploy-sagemaker-endpoint) 后，您需要调用 [/endpoints](#inferencelist-endpoint-deployment-jobs) 来列出所有终端节点的状态。通常需要超过10分钟时间才能使新的 Sagemaker 终端节点更改为 "InService" 状态。Sagemaker 终端节点只能在 "InService" 状态下用于推理。
 
-如果终端节点处于失败状态，您可以调用 [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job) 并传递参数 `jobID`，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。
+如果终端节点处于失败状态，您可以调用 [/inferences/{id}](#inferenceget-endpoint-deployment-job) 并传递参数 `jobID`，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。
 
 <details>
   <summary>sequence digram raw</summary>
@@ -55,7 +55,6 @@ headingLevel: 2
 Client->Middleware:Call /endpoints
 Middleware->Middleware: Start a workflow to configure sagemaker endpoint \n based on uer request configuration
 Client->Middleware:Call /endpoints \n to list all the endpoint creation job list
-Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'InService' state.
   
 </details>
 
@@ -65,9 +64,9 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 
 ## 4. 进行推理
 ![进行推理](../images/do-inference.png)
-在 Sagemaker 终端节点处于 "InService" 状态之后，您可以调用 [/inference/v2](#inference-l2-api) 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 [/inference/v2](#inference-l2-api) 中。
+在 Sagemaker 终端节点处于 "InService" 状态之后，您可以调用 [/inferences](#inference-l2-api) 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 [/inferences](#inference-l2-api) 中。
 
-[/inference/v2](#inference-l2-api) 将向客户端返回以下 JSON 结构：
+[/inferences](#inference-l2-api) 将向客户端返回以下 JSON 结构：
 
 ```json
 {
@@ -77,40 +76,20 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
   "output_path": "path_of_prediction_output"
 }
 ```
-然后，客户端可以调用 [/inference/get-inference-job](#inferenceget-inference-job)，并将 `inference_id` 作为参数来查询推理作业的状态。如果推理作业成功完成（状态为 "succeed"），客户端可以使用 [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output) 来获取所有推理结果图像，这些图像将以 S3 预签名 URL 列表的形式返回，以便客户端下载。以下是一个示例，展示了 `get-inference-job-image-output` 的结果：
-
-```json
-[
-  "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg"
-]
-```
-
-此外，客户端还可以调用 [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) 来获取所有推理参数，[/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output) 的响应是一个包含参数的 JSON 格式的 S3 预签名 URL，以下是一个响应示例：
-
-
-```json
-[
-  "https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json"
-]
-```
+然后，客户端可以调用 [/inference/{id}](#inferenceget-inference-job)，并将 `inference_id` 作为参数来查询推理作业的状态。
 
 <details>
   <summary>sequence diagram raw</summary>
   
 title Do Inference
 
-Client->Middleware:Call **/inference/v2**
+Client->Middleware:Call **/inferences**
 Middleware->Middleware: Start an async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
-Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
+Client->Middleware:Call **/inference/{id}** \n to query the inference job status
 Middleware->Client: return inference_id and the job status(inprocess | succeed | failure)
 
-abox over Client: If the inference job is succeed, \n call **/inference/get-inference-job-image-output** and \n **/inference/get-inference-job-param-output** to get the \n inference result 
-Client->Middleware:Call **/inference/get-inference-job-image-output** \n to get all inference result images.
-
 Middleware->Client: return the inference result images in presigned url format
-
-Client->Middleware:Call **/inference/get-inference-job-param-output** \n to get inference parameters.
 
 Middleware->Client: return the inference parameter in presigned url format
   
@@ -119,36 +98,31 @@ Middleware->Client: return the inference parameter in presigned url format
 
 | 序号  | HTTP 方法 | API 名称                                                                                                  | 描述                                  |
 |-----|---------|---------------------------------------------------------------------------------------------------------|-------------------------------------|
-| 1   | GET     | [/ping](#ping)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
-| 2   | GET     | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | 列出所有推理作业。                           |
-| 3   | GET     | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。                      |
-| 4   | GET     | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。                      |
-| 5   | GET     | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | 获取特定推理作业的参数输出。                      |
-| 6   | POST    | [/inference/v2](#inference-l2-api)                                                                      | 使用默认参数运行 SageMaker 推理               |
-| 7   | POST    | [/endpoints](#inferencedeploy-sagemaker-endpoint)                             | 部署 SageMaker 终端节点。                  |
-| 8   | DELETE  | [/endpoints](#inferencedelete-sagemaker-endpoint)                             | 删除 SageMaker 终端节点。                  |
-| 9   | GET     | [/endpoints](#inferencelist-endpoint-deployment-jobs)                     | 列出所有终端节点部署作业。                       |
-| 10  | GET     | [/inference/get-endpoint-deployment-job](#inferenceget-endpoint-deployment-job)                         | 获取特定终端节点部署作业。                       |
-| 11  | GET     | [/inference/generate-s3-presigned-url-for-uploading](#inferencegenerate-s3-presigned-url-for-uploading) | 生成用于上传的 S3 预签名 URL。                 |
+| 1   | GET     | [/ping](#ping)                                                                                          | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
+| 2   | GET     | [/inferences](#inferencelist-inference-jobs)                                                            | 列出所有推理作业。                           |
+| 3   | GET     | [/inferences/{id}](#inferenceget-inference-job)                                                         | 获取特定推理作业的详细信息。                      |
+| 23  | PUT     | [/inferences/{id}/start](#train-api-post)                                                               | 启动训练作业。                             |
+| 6   | POST    | [/inferences](#inference-l2-api)                                                                        | 使用默认参数运行 SageMaker 推理               |
+| 7   | POST    | [/endpoints](#inferencedeploy-sagemaker-endpoint)                                                       | 部署 SageMaker 终端节点。                  |
+| 8   | DELETE  | [/endpoints](#inferencedelete-sagemaker-endpoint)                                                       | 删除 SageMaker 终端节点。                  |
+| 9   | GET     | [/endpoints](#inferencelist-endpoint-deployment-jobs)                                                   | 列出所有终端节点部署作业。                       |
 | 12  | GET     | [/inference/get-texual-inversion-list](#inferenceget-texual-inversion-list)                             | 获取文本反演列表。                           |
 | 13  | GET     | [/inference/get-lora-list](#inferenceget-lora-list)                                                     | 获取 LoRa 列表。                         |
 | 14  | GET     | [/inference/get-hypernetwork-list](#inferenceget-hypernetwork-list)                                     | 获取超网络列表。                            |
 | 15  | GET     | [/inference/get-controlnet-model-list](#inferenceget-controlnet-model-list)                             | 获取 ControlNet 模型列表。                 |
 | 16  | POST    | [/inference/run-model-merge](#inferencerun-model-merge)                                                 | 运行模型合并。                             |
-| 17  | POST    | [/model](#modelpost)                                                                                    | 创建新模型。                              |
-| 18  | PUT     | [/model](#modelput)                                                                                     | 上传模型文件。                             |
+| 17  | POST    | [/models](#modelpost)                                                                                   | 创建新模型。                              |
+| 18  | PUT     | [/models/{id}](#modelput)                                                                               | 上传模型文件。                             |
 | 19  | GET     | [/models](#modelsget)                                                                                   | 列出所有模型。                             |
-| 20  | GET     | [/checkpoint](#checkpoint)                                                                              | 获取检查点。                              |
-| 21  | PUT     | [/checkpoint](#checkpointput)                                                                           | 更新检查点。                              |
+| 20  | GET     | [/checkpoints](#checkpoint)                                                                             | 获取检查点。                              |
+| 21  | PUT     | [/checkpoints/{id}](#checkpointput)                                                                     | 更新检查点。                              |
 | 22  | GET     | [/checkpoints](#checkpoints)                                                                            | 列出所有检查点。                            |
-| 23  | PUT     | [/inference/v2/{id}/run](#train-api-post)                                                                     | 启动训练作业。                             |
-| 24  | PUT     | [/train](#trainput)                                                                                     | 更新训练作业。                             |
-| 25  | GET     | [/trains](#trainsget)                                                                                   | 列出所有训练作业。                           |
-| 26  | POST    | [/dataset](#datasetpost)                                                                                | 创建新数据集。                             |
-| 27  | PUT     | [/dataset](#datasetput)                                                                                 | 更新数据集。                              |
+| 24  | PUT     | [/trainings](#trainput)                                                                                     | 更新训练作业。                             |
+| 25  | GET     | [/trainings](#trainsget)                                                                                | 列出所有训练作业。                           |
+| 26  | POST    | [/datasets](#datasetpost)                                                                               | 创建新数据集。                             |
+| 27  | PUT     | [/datasets/{name}](#datasetput)                                                                         | 更新数据集。                              |
 | 28  | GET     | [/datasets](#datasetsget)                                                                               | 列出所有数据集。                            |
-| 29  | GET     | [/{dataset_name}/data](#dataset_namedata)                                                               | 获取特定数据集的数据。                         |
-| 30  | POST    | [/upload_checkpoint](#upload_checkpointpost)                                                            | 根据模型url直接上传到s3。                   |
+| 29  | GET     | [/datasets/{name}](#dataset_namedata)                                                           | 获取特定数据集的数据。                         |
 
 
 <br/>
@@ -219,7 +193,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping',
 
 <br/>
 
-# /inference/v2
+# /inferences
 
 文生图，通过文字生成图片
 
@@ -248,7 +222,7 @@ body = {
   "denoising_strength": 0.75
 }
 
-r = requests.post("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2", headers = headers, json = body)
+r = requests.post("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences", headers = headers, json = body)
 
 print(r.json())
 
@@ -274,7 +248,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2",
+fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences",
 {
   method: "POST",
   body: inputBody,
@@ -288,7 +262,7 @@ fetch("https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`POST /inference/v2`
+`POST /inferences`
 
 > Body
 
@@ -696,7 +670,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/endpoints'
 
 <br/>
 
-# /inference/list-inference-jobs
+# /inferences
 
 <a id="opIdlist_inference_jobs_inference_list_inference_jobs_get"></a>
 
@@ -711,7 +685,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences', headers = headers)
 
 print(r.json())
 
@@ -726,7 +700,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences',
 {
   method: 'GET',
 
@@ -740,7 +714,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/list-inference-jobs`
+`GET /inferences`
 
 > 响应示例
 
@@ -785,87 +759,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 <br/>
 
-# /inference/get-endpoint-deployment-job
-
-<a id="opIdget_endpoint_deployment_job_inference_get_endpoint_deployment_job_get"></a>
-
-### **示例：**
-
-Python示例代码：
-
-```Python
-import requests
-headers = {
-  'Accept': 'application/json',
-  'x-api-key': 'API_TOKEN_VALUE'
-}
-
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job', params={
-  'jobID': 'string'
-}, headers = headers)
-
-print(r.json())
-
-```
-
-Javascript示例代码：
-
-```javascript
-
-const headers = {
-  'Accept':'application/json',
-  'x-api-key': 'API_TOKEN_VALUE'
-};
-
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string',
-{
-  method: 'GET',
-
-  headers: headers
-})
-.then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
-});
-
-```
-
-`GET /inference/get-endpoint-deployment-job`
-
-<h3 id="get-endpoint-deployment-job-parameters">参数</h3>
-
-|名称|位置|数据类型|是否需要填写|描述|
-|---|---|---|---|---|
-|jobID|query|string|true|none|
-
-> 响应示例
-
-> 200 响应
-
-```json
-{
-  "EndpointDeploymentJobId": "cb821ea9-e9d1-4bae-98f8-c20ecadf11e0",
-  "startTime": "2023-07-04 08:00:47.736033",
-  "endTime": "2023-07-04 08:12:55.148070",
-  "endpoint_name": "infer-endpoint-cb821ea",
-  "endpoint_status": "InService",
-  "status": "success"
-}
-```
-
-<h3 id="get-endpoint-deployment-job-responses">响应</h3>
-
-|状态码|含义|描述|结构|
-|---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Successful Response|Inline|
-|422|[Unprocessable Entity](https://tools.ietf.org/html/rfc2518#section-10.3)|Validation Error|[HTTPValidationError](#schemahttpvalidationerror)|
-
-
-
-<br/>
-
-# /inference/get-inference-job
+# /inferences/{id}
 
 <a id="opIdget_inference_job_inference_get_inference_job_get"></a>
 
@@ -880,7 +774,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}', headers = headers)
 
 print(r.json())
 
@@ -895,7 +789,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}',
 {
   method: 'GET',
 
@@ -909,7 +803,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/get-inference-job`
+`GET /inferences/{id}`
 
 <h3 id="get-inference-job-parameters">参数</h3>
 
@@ -1947,7 +1841,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint
 
 <br/>
 
-# /inference/v2/{id}/run(PUT)
+# /inferences/{id}/start
 
 <a id="train-api-post"></a>
 ### **示例：**
@@ -2007,7 +1901,7 @@ const inputBody = {
 }
 
 
-r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2/{id}/run', headers = headers, json = inputBody)
+r = requests.put('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}/start', headers = headers, json = inputBody)
 
 print(r.json())
 
@@ -2065,7 +1959,7 @@ const headers = {
   'x-api-key':'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2/{id}/run',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}/start',
 {
   method: 'POST',
   body: inputBody,
@@ -2079,7 +1973,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`PUT /inference/v2/{id}/run`
+`PUT /inferences/{id}/start`
 
 > Body 参数
 
