@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
     
     
       
@@ -1219,7 +1219,7 @@
 <p><img alt="部署新的终端节点" src="../../images/deploy_sagemaker_endpoint.png" /></p>
 <p>调用 <a href="#inferencedeploy-sagemaker-endpoint">/endpoints</a> 来创建一个新的 Sagemaker 终端节点，您需要指定两个用于创建的参数，一个是 <code>instance_type</code>，可选值为 "ml.g4dn.2xlarge"、"ml.g4dn.4xlarge"、"ml.g4dn.8xlarge"、"ml.g4dn.12xlarge"，另一个是 <code>initial_instance_count</code>，可选值为 1|2|3|4|5|6。</p>
 <p>在调用 <a href="#inferencedeploy-sagemaker-endpoint">/endpoints</a> 后，您需要调用 <a href="#inferencelist-endpoint-deployment-jobs">/endpoints</a> 来列出所有终端节点的状态。通常需要超过10分钟时间才能使新的 Sagemaker 终端节点更改为 "InService" 状态。Sagemaker 终端节点只能在 "InService" 状态下用于推理。</p>
-<p>如果终端节点处于失败状态，您可以调用 <a href="#inferenceget-endpoint-deployment-job">/inference/get-endpoint-deployment-job</a> 并传递参数 <code>jobID</code>，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。</p>
+<p>如果终端节点处于失败状态，您可以调用 <a href="#inferenceget-endpoint-deployment-job">/inferences/{id}</a> 并传递参数 <code>jobID</code>，响应将显示终端节点部署失败的原因，通常是由于 AWS 帐户配额限制引起的。</p>
 <details>
   <summary>sequence digram raw</summary>
 
@@ -1228,7 +1228,6 @@
 Client->Middleware:Call /endpoints
 Middleware->Middleware: Start a workflow to configure sagemaker endpoint \n based on uer request configuration
 Client->Middleware:Call /endpoints \n to list all the endpoint creation job list
-Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check whether Sagemaker endpoint is in \n 'InService' state.
 
 </details>
 
@@ -1236,8 +1235,8 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 <h2 id="3">3. 训练模型</h2>
 <h2 id="4">4. 进行推理</h2>
 <p><img alt="进行推理" src="../../images/do-inference.png" />
-在 Sagemaker 终端节点处于 "InService" 状态之后，您可以调用 <a href="#inference-l2-api">/inference/v2</a> 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 <a href="#inference-l2-api">/inference/v2</a> 中。</p>
-<p><a href="#inference-l2-api">/inference/v2</a> 将向客户端返回以下 JSON 结构：</p>
+在 Sagemaker 终端节点处于 "InService" 状态之后，您可以调用 <a href="#inference-l2-api">/inferences</a> 来进行文本到图像或图像到图像的推理。您需要在请求的 POST 主体中的 "sagemaker_endpoint" 参数中指定终端节点的名称。其他所需参数位于 <a href="#inference-l2-api">/inferences</a> 中。</p>
+<p><a href="#inference-l2-api">/inferences</a> 将向客户端返回以下 JSON 结构：</p>
 <p><div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;inference_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;XXXXXXX&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;inprogress | failed&quot;</span><span class="p">,</span>
@@ -1245,33 +1244,19 @@ Client->Middleware:Call /inference/get-endpoint-deployment-job \n to check wheth
 <span class="w">  </span><span class="nt">&quot;output_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;path_of_prediction_output&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
-然后，客户端可以调用 <a href="#inferenceget-inference-job">/inference/get-inference-job</a>，并将 <code>inference_id</code> 作为参数来查询推理作业的状态。如果推理作业成功完成（状态为 "succeed"），客户端可以使用 <a href="#inferenceget-inference-job-image-output">/inference/get-inference-job-image-output</a> 来获取所有推理结果图像，这些图像将以 S3 预签名 URL 列表的形式返回，以便客户端下载。以下是一个示例，展示了 <code>get-inference-job-image-output</code> 的结果：</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="w">  </span><span class="s2">&quot;https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg&quot;</span>
-<span class="p">]</span>
-</code></pre></div>
-<p>此外，客户端还可以调用 <a href="#inferenceget-inference-job-param-output">/inference/get-inference-job-param-output</a> 来获取所有推理参数，<a href="#inferenceget-inference-job-param-output">/inference/get-inference-job-param-output</a> 的响应是一个包含参数的 JSON 格式的 S3 预签名 URL，以下是一个响应示例：</p>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="w">  </span><span class="s2">&quot;https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json&quot;</span>
-<span class="p">]</span>
-</code></pre></div>
+然后，客户端可以调用 <a href="#inferenceget-inference-job">/inference/{id}</a>，并将 <code>inference_id</code> 作为参数来查询推理作业的状态。</p>
 <details>
-  <summary>sequence digram raw</summary>
+  <summary>sequence diagram raw</summary>
 
 title Do Inference
 
-Client->Middleware:Call **/inference/v2**
+Client->Middleware:Call **/inferences**
 Middleware->Middleware: Start an async inference job \n on configure sagemaker endpoint \n based on uer request configuration
 Middleware->Client: return inference_id 
-Client->Middleware:Call **/inference/get-inference-job** \n to query the inference job status
+Client->Middleware:Call **/inference/{id}** \n to query the inference job status
 Middleware->Client: return inference_id and the job status(inprocess | succeed | failure)
 
-abox over Client: If the inference job is succeed, \n call **/inference/get-inference-job-image-output** and \n **/inference/get-inference-job-param-output** to get the \n inference result 
-Client->Middleware:Call **/inference/get-inference-job-image-output** \n to get all inference result images.
-
 Middleware->Client: return the inference result images in presigned url format
-
-Client->Middleware:Call **/inference/get-inference-job-param-output** \n to get inference parameters.
 
 Middleware->Client: return the inference parameter in presigned url format
 
@@ -1290,37 +1275,31 @@ Middleware->Client: return the inference parameter in presigned url format
 <tr>
 <td>1</td>
 <td>GET</td>
-<td><a href="#inferencetest-connection">/inference/test-connection</a></td>
+<td><a href="#ping">/ping</a></td>
 <td>测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确</td>
 </tr>
 <tr>
 <td>2</td>
 <td>GET</td>
-<td><a href="#inferencelist-inference-jobs">/inference/list-inference-jobs</a></td>
+<td><a href="#inferencelist-inference-jobs">/inferences</a></td>
 <td>列出所有推理作业。</td>
 </tr>
 <tr>
 <td>3</td>
 <td>GET</td>
-<td><a href="#inferenceget-inference-job">/inference/get-inference-job</a></td>
+<td><a href="#inferenceget-inference-job">/inferences/{id}</a></td>
 <td>获取特定推理作业的详细信息。</td>
 </tr>
 <tr>
-<td>4</td>
-<td>GET</td>
-<td><a href="#inferenceget-inference-job-image-output">/inference/get-inference-job-image-output</a></td>
-<td>获取特定推理作业的图像输出。</td>
-</tr>
-<tr>
-<td>5</td>
-<td>GET</td>
-<td><a href="#inferenceget-inference-job-param-output">/inference/get-inference-job-param-output</a></td>
-<td>获取特定推理作业的参数输出。</td>
+<td>23</td>
+<td>PUT</td>
+<td><a href="#train-api-post">/inferences/{id}/start</a></td>
+<td>启动训练作业。</td>
 </tr>
 <tr>
 <td>6</td>
 <td>POST</td>
-<td><a href="#inference-l2-api">/inference/v2</a></td>
+<td><a href="#inference-l2-api">/inferences</a></td>
 <td>使用默认参数运行 SageMaker 推理</td>
 </tr>
 <tr>
@@ -1340,18 +1319,6 @@ Middleware->Client: return the inference parameter in presigned url format
 <td>GET</td>
 <td><a href="#inferencelist-endpoint-deployment-jobs">/endpoints</a></td>
 <td>列出所有终端节点部署作业。</td>
-</tr>
-<tr>
-<td>10</td>
-<td>GET</td>
-<td><a href="#inferenceget-endpoint-deployment-job">/inference/get-endpoint-deployment-job</a></td>
-<td>获取特定终端节点部署作业。</td>
-</tr>
-<tr>
-<td>11</td>
-<td>GET</td>
-<td><a href="#inferencegenerate-s3-presigned-url-for-uploading">/inference/generate-s3-presigned-url-for-uploading</a></td>
-<td>生成用于上传的 S3 预签名 URL。</td>
 </tr>
 <tr>
 <td>12</td>
@@ -1386,13 +1353,13 @@ Middleware->Client: return the inference parameter in presigned url format
 <tr>
 <td>17</td>
 <td>POST</td>
-<td><a href="#modelpost">/model</a></td>
+<td><a href="#modelpost">/models</a></td>
 <td>创建新模型。</td>
 </tr>
 <tr>
 <td>18</td>
 <td>PUT</td>
-<td><a href="#modelput">/model</a></td>
+<td><a href="#modelput">/models/{id}</a></td>
 <td>上传模型文件。</td>
 </tr>
 <tr>
@@ -1404,13 +1371,13 @@ Middleware->Client: return the inference parameter in presigned url format
 <tr>
 <td>20</td>
 <td>GET</td>
-<td><a href="#checkpoint">/checkpoint</a></td>
+<td><a href="#checkpoint">/checkpoints</a></td>
 <td>获取检查点。</td>
 </tr>
 <tr>
 <td>21</td>
 <td>PUT</td>
-<td><a href="#checkpointput">/checkpoint</a></td>
+<td><a href="#checkpointput">/checkpoints/{id}</a></td>
 <td>更新检查点。</td>
 </tr>
 <tr>
@@ -1420,33 +1387,27 @@ Middleware->Client: return the inference parameter in presigned url format
 <td>列出所有检查点。</td>
 </tr>
 <tr>
-<td>23</td>
-<td>PUT</td>
-<td><a href="#train-api-post">/inference/v2/{id}/run</a></td>
-<td>启动训练作业。</td>
-</tr>
-<tr>
 <td>24</td>
 <td>PUT</td>
-<td><a href="#trainput">/train</a></td>
+<td><a href="#trainput">/trainings</a></td>
 <td>更新训练作业。</td>
 </tr>
 <tr>
 <td>25</td>
 <td>GET</td>
-<td><a href="#trainsget">/trains</a></td>
+<td><a href="#trainsget">/trainings</a></td>
 <td>列出所有训练作业。</td>
 </tr>
 <tr>
 <td>26</td>
 <td>POST</td>
-<td><a href="#datasetpost">/dataset</a></td>
+<td><a href="#datasetpost">/datasets</a></td>
 <td>创建新数据集。</td>
 </tr>
 <tr>
 <td>27</td>
 <td>PUT</td>
-<td><a href="#datasetput">/dataset</a></td>
+<td><a href="#datasetput">/datasets/{name}</a></td>
 <td>更新数据集。</td>
 </tr>
 <tr>
@@ -1458,19 +1419,13 @@ Middleware->Client: return the inference parameter in presigned url format
 <tr>
 <td>29</td>
 <td>GET</td>
-<td><a href="#dataset_namedata">/{dataset_name}/data</a></td>
+<td><a href="#dataset_namedata">/datasets/{name}</a></td>
 <td>获取特定数据集的数据。</td>
-</tr>
-<tr>
-<td>30</td>
-<td>POST</td>
-<td><a href="#upload_checkpointpost">/upload_checkpoint</a></td>
-<td>根据模型url直接上传到s3。</td>
 </tr>
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferencetest-connection">/inference/test-connection</h1>
+<h1 id="ping">/ping</h1>
 <h2 id="_3">测试中间件连接状态</h2>
 <p><a id="opIdtest_connection_get"></a></p>
 <h3 id="_4"><strong>示例：</strong></h3>
@@ -1481,7 +1436,7 @@ Middleware->Client: return the inference parameter in presigned url format
   <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">}</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/test-connection&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/ping&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -1491,7 +1446,7 @@ Middleware->Client: return the inference parameter in presigned url format
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection&#39;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping&#39;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
 
@@ -1503,7 +1458,7 @@ Middleware->Client: return the inference parameter in presigned url format
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>GET /inference/test-connection</code></p>
+<p><code>GET /ping</code></p>
 <blockquote>
 <p>响应示例</p>
 <p>200 响应</p>
@@ -1533,7 +1488,7 @@ Middleware->Client: return the inference parameter in presigned url format
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferencev2">/inference/v2</h1>
+<h1 id="inferences">/inferences</h1>
 <p>文生图，通过文字生成图片</p>
 <p><a id="inference-l2-api"></a></p>
 <h3 id="_5"><strong>示例：</strong></h3>
@@ -1556,7 +1511,7 @@ Middleware->Client: return the inference parameter in presigned url format
   <span class="s2">&quot;denoising_strength&quot;</span><span class="p">:</span> <span class="mf">0.75</span>
 <span class="p">}</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://</span><span class="si">{api_id}</span><span class="s2">.execute-api.</span><span class="si">{region}</span><span class="s2">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s2">/inference/v2&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">body</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;https://</span><span class="si">{api_id}</span><span class="s2">.execute-api.</span><span class="si">{region}</span><span class="s2">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s2">/inferences&quot;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">body</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -1578,7 +1533,7 @@ Middleware->Client: return the inference parameter in presigned url format
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2&quot;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s2">&quot;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences&quot;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nx">inputBody</span><span class="p">,</span>
@@ -1590,7 +1545,7 @@ Middleware->Client: return the inference parameter in presigned url format
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>POST /inference/v2</code></p>
+<p><code>POST /inferences</code></p>
 <blockquote>
 <p>Body</p>
 </blockquote>
@@ -2026,7 +1981,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferencelist-inference-jobs">/inference/list-inference-jobs</h1>
+<h1 id="inferences_1">/inferences</h1>
 <p><a id="opIdlist_inference_jobs_inference_list_inference_jobs_get"></a></p>
 <h3 id="_9"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
@@ -2036,7 +1991,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
   <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">}</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/list-inference-jobs&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inferences&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -2046,7 +2001,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/list-inference-jobs&#39;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences&#39;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
 
@@ -2058,7 +2013,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>GET /inference/list-inference-jobs</code></p>
+<p><code>GET /inferences</code></p>
 <blockquote>
 <p>响应示例</p>
 <p>200 响应</p>
@@ -2111,8 +2066,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferenceget-endpoint-deployment-job">/inference/get-endpoint-deployment-job</h1>
-<p><a id="opIdget_endpoint_deployment_job_inference_get_endpoint_deployment_job_get"></a></p>
+<h1 id="inferencesid">/inferences/{id}</h1>
+<p><a id="opIdget_inference_job_inference_get_inference_job_get"></a></p>
 <h3 id="_10"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
@@ -2121,9 +2076,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
   <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">}</span>
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-endpoint-deployment-job&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span>
-  <span class="s1">&#39;jobID&#39;</span><span class="p">:</span> <span class="s1">&#39;string&#39;</span>
-<span class="p">},</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inferences/</span><span class="si">{id}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -2133,7 +2086,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-endpoint-deployment-job?jobID=string&#39;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}&#39;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
 
@@ -2145,102 +2098,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>GET /inference/get-endpoint-deployment-job</code></p>
-<h3 id="get-endpoint-deployment-job-parameters">参数</h3>
-
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>位置</th>
-<th>数据类型</th>
-<th>是否需要填写</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>jobID</td>
-<td>query</td>
-<td>string</td>
-<td>true</td>
-<td>none</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;EndpointDeploymentJobId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cb821ea9-e9d1-4bae-98f8-c20ecadf11e0&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;startTime&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-07-04 08:00:47.736033&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;endTime&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-07-04 08:12:55.148070&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;endpoint_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;infer-endpoint-cb821ea&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;endpoint_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;InService&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;success&quot;</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3 id="get-endpoint-deployment-job-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-<tr>
-<td>422</td>
-<td><a href="https://tools.ietf.org/html/rfc2518#section-10.3">Unprocessable Entity</a></td>
-<td>Validation Error</td>
-<td><a href="#schemahttpvalidationerror">HTTPValidationError</a></td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
-<h1 id="inferenceget-inference-job">/inference/get-inference-job</h1>
-<p><a id="opIdget_inference_job_inference_get_inference_job_get"></a></p>
-<h3 id="_11"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-inference-job&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-inference-job</code></p>
+<p><code>GET /inferences/{id}</code></p>
 <h3 id="get-inference-job-parameters">参数</h3>
 
 <table>
@@ -2307,213 +2165,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferenceget-inference-job-image-output">/inference/get-inference-job-image-output</h1>
-<p><a id="opIdget_inference_job_image_output_inference_get_inference_job_image_output_get"></a></p>
-<h3 id="_12"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-inference-job-image-output&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-image-output&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-inference-job-image-output</code></p>
-<h3 id="get-inference-job-image-output-parameters">参数</h3>
-
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>位置</th>
-<th>数据类型</th>
-<th>是否需要填写</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>jobID</td>
-<td>query</td>
-<td>string</td>
-<td>false</td>
-<td>none</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="w">  </span><span class="s2">&quot;https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/image_0.jpg&quot;</span>
-<span class="p">]</span>
-</code></pre></div>
-<h3 id="get-inference-job-image-output-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-<tr>
-<td>422</td>
-<td><a href="https://tools.ietf.org/html/rfc2518#section-10.3">Unprocessable Entity</a></td>
-<td>Validation Error</td>
-<td><a href="#schemahttpvalidationerror">HTTPValidationError</a></td>
-</tr>
-</tbody>
-</table>
-<h3 id="get-inference-job-image-output-responseschema">响应结构</h3>
-
-<p>状态码 <strong>200</strong></p>
-<p><em>Response Get Inference Job Image Output Inference Get Inference Job Image Output Get</em></p>
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>类型</th>
-<th>是否需要填写</th>
-<th>限制</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Response Get Inference Job Image Output Inference Get Inference Job Image Output Get</td>
-<td>[string]</td>
-<td>false</td>
-<td>none</td>
-<td>none</td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
-<h1 id="inferenceget-inference-job-param-output">/inference/get-inference-job-param-output</h1>
-<p><a id="opIdget_inference_job_param_output_inference_get_inference_job_param_output_get"></a></p>
-<h3 id="_13"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-inference-job-param-output&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-inference-job-param-output&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-inference-job-param-output</code></p>
-<h3 id="get-inference-job-param-output-parameters">参数</h3>
-
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>位置</th>
-<th>数据类型</th>
-<th>是否需要填写</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>jobID</td>
-<td>query</td>
-<td>string</td>
-<td>false</td>
-<td>none</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="w">  </span><span class="s2">&quot;https://stable-diffusion-aws-extension-aigcbucketa457cb49-1tlr2pqwkosg3.s3.amazonaws.com/out/1f9679f3-25b8-4c44-8345-0a845da30094/result/1f9679f3-25b8-4c44-8345-0a845da30094_param.json&quot;</span>
-<span class="p">]</span>
-</code></pre></div>
-<h3 id="get-inference-job-param-output-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-<tr>
-<td>422</td>
-<td><a href="https://tools.ietf.org/html/rfc2518#section-10.3">Unprocessable Entity</a></td>
-<td>Validation Error</td>
-<td><a href="#schemahttpvalidationerror">HTTPValidationError</a></td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
 <h1 id="inferencegenerate-s3-presigned-url-for-uploading">/inference/generate-s3-presigned-url-for-uploading</h1>
 <p><a id="opIdgenerate_s3_presigned_url_for_uploading_inference_generate_s3_presigned_url_for_uploading_get"></a></p>
-<h3 id="_14"><strong>示例：</strong></h3>
+<h3 id="_11"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -2606,249 +2260,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </tbody>
 </table>
 <p><br/></p>
-<h1 id="inferenceget-texual-inversion-list">/inference/get-texual-inversion-list</h1>
-<p><a id="opIdget_texual_inversion_list_inference_get_texual_inversion_list_get"></a></p>
-<h3 id="_15"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-texual-inversion-list&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-texual-inversion-list&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-texual-inversion-list</code></p>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="kc">null</span>
-</code></pre></div>
-<h3 id="get-textual-inversion-list-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
-<h1 id="inferenceget-lora-list">/inference/get-lora-list</h1>
-<p><a id="opIdget_lora_list_inference_get_lora_list_get"></a></p>
-<h3 id="_16"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-lora-list&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-lora-list&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-lora-list</code></p>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="kc">null</span>
-</code></pre></div>
-<h3 id="get-lora-list-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
-<h1 id="inferenceget-hypernetwork-list">/inference/get-hypernetwork-list</h1>
-<p><a id="opIdget_hypernetwork_list_inference_get_hypernetwork_list_get"></a></p>
-<h3 id="_17"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-hypernetwork-list&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-hypernetwork-list&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-hypernetwork-list</code></p>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="kc">null</span>
-</code></pre></div>
-<h3 id="get-hypernetwork-list-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
-<h1 id="inferenceget-controlnet-model-list">/inference/get-controlnet-model-list</h1>
-<p><a id="opIdget_controlnet_model_list_inference_get_controlnet_model_list_get"></a></p>
-<h3 id="_18"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/get-controlnet-model-list&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/get-controlnet-model-list&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;GET&#39;</span><span class="p">,</span>
-
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>GET /inference/get-controlnet-model-list</code></p>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="kc">null</span>
-</code></pre></div>
-<h3 id="get-controlnet-model-list-responses">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful Response</td>
-<td>Inline</td>
-</tr>
-</tbody>
-</table>
-<p><br/></p>
 <h1 id="inferencerun-model-merge">/inference/run-model-merge</h1>
 <p><a id="opIdrun_model_merge_inference_run_model_merge_post"></a></p>
-<h3 id="_19"><strong>示例：</strong></h3>
+<h3 id="_12"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -2913,7 +2327,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 
 <p><br/></p>
 <h1 id="modelpost">/model(POST)</h1>
-<h3 id="_20"><strong>示例：</strong></h3>
+<h3 id="_13"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -2967,7 +2381,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>POST /model</code></p>
+<p><code>POST /models</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
@@ -3079,8 +2493,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="modelput">/model(PUT)</h1>
-<h3 id="_21"><strong>示例：</strong></h3>
+<h1 id="modelsid-put">/models/{id} (PUT)</h1>
+<h3 id="_14"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3169,12 +2583,11 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>PUT /model</code></p>
+<p><code>PUT /models/{id}</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;model_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;c9f59ee7-0672-4fd1-8a45-8a494de8a48d&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Creating&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;multi_parts_tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;v1-5-pruned-emaonly.safetensors.tar&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -3280,8 +2693,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="modelsget">/models(GET)</h1>
-<h3 id="_22"><strong>示例：</strong></h3>
+<h1 id="models-get">/models (GET)</h1>
+<h3 id="_15"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3391,8 +2804,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="checkpoint">/checkpoint</h1>
-<h3 id="_23"><strong>示例：</strong></h3>
+<h1 id="checkpoints">/checkpoints</h1>
+<h3 id="_16"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3453,7 +2866,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>POST /checkpoint</code></p>
+<p><code>POST /checkpoints</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
@@ -3557,8 +2970,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="checkpointput">/checkpoint(put)</h1>
-<h3 id="_24"><strong>示例：</strong></h3>
+<h1 id="checkpointsid-put">/checkpoints/{id} (put)</h1>
+<h3 id="_17"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3647,7 +3060,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>PUT /checkpoint</code></p>
+<p><code>PUT /checkpoints/{id}</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
@@ -3758,9 +3171,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="checkpoints">/checkpoints</h1>
+<h1 id="checkpoints_1">/checkpoints</h1>
 <p>列出所有检查点</p>
-<h3 id="_25"><strong>示例：</strong></h3>
+<h3 id="_18"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3882,9 +3295,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="inferencev2idrunput">/inference/v2/{id}/run(PUT)</h1>
+<h1 id="inferencesidstart">/inferences/{id}/start</h1>
 <p><a id="train-api-post"></a></p>
-<h3 id="_26"><strong>示例：</strong></h3>
+<h3 id="_19"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -3938,7 +3351,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="p">}</span>
 
 
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inference/v2/</span><span class="si">{id}</span><span class="s1">/run&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">inputBody</span><span class="p">)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;https://</span><span class="si">{api_id}</span><span class="s1">.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/</span><span class="si">{basePath}</span><span class="s1">/inferences/</span><span class="si">{id}</span><span class="s1">/start&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">inputBody</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
 </code></pre></div>
@@ -3992,7 +3405,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
 <span class="p">};</span>
 
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/v2/{id}/run&#39;</span><span class="p">,</span>
+<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences/{id}/start&#39;</span><span class="p">,</span>
 <span class="p">{</span>
 <span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
 <span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nx">inputBody</span><span class="p">,</span>
@@ -4004,7 +3417,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>PUT /inference/v2/{id}/run</code></p>
+<p><code>PUT /inferences/{id}/start</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
@@ -4138,8 +3551,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="trainput">/train(PUT)</h1>
-<h3 id="_27"><strong>示例：</strong></h3>
+<h1 id="trainingsid-put">/trainings/{id} (PUT)</h1>
+<h3 id="_20"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4180,7 +3593,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>PUT /train</code></p>
+<p><code>PUT /trainings/{id}</code></p>
 <blockquote>
 <p>Body 参数</p>
 </blockquote>
@@ -4268,8 +3681,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="trainsget">/trains(GET)</h1>
-<h3 id="_28"><strong>示例：</strong></h3>
+<h1 id="trainings-get">/trainings (GET)</h1>
+<h3 id="_21"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4299,7 +3712,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>GET /trains</code></p>
+<p><code>GET /trainings</code></p>
 <h3 id="list-train-jobs-parameters">参数</h3>
 
 <table>
@@ -4381,9 +3794,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="datasetpost">/dataset(POST)</h1>
+<h1 id="datasets-post">/datasets (POST)</h1>
 <p>创建新数据集</p>
-<h3 id="_29"><strong>示例：</strong></h3>
+<h3 id="_22"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4531,8 +3944,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="datasetput">/dataset(PUT)</h1>
-<h3 id="_30"><strong>示例：</strong></h3>
+<h1 id="datasetsname-put">/datasets/{name} (PUT)</h1>
+<h3 id="_23"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4655,9 +4068,9 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="datasetsget">/datasets(GET)</h1>
+<h1 id="datasets-get">/datasets (GET)</h1>
 <p>列出所有数据集</p>
-<h3 id="_31"><strong>示例：</strong></h3>
+<h3 id="_24"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4767,8 +4180,8 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="dataset_namedata">/{dataset_name}/data</h1>
-<h3 id="_32"><strong>示例：</strong></h3>
+<h1 id="datasetsname">/datasets/{name}</h1>
+<h3 id="_25"><strong>示例：</strong></h3>
 <p>Python示例代码：</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -4798,7 +4211,7 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 <span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>GET /{dataset_name}/data</code></p>
+<p><code>GET /datasets/{name}</code></p>
 <h3 id="list-dataset-items-by-dataset-name-parameters">参数</h3>
 
 <table>
@@ -4880,142 +4293,6 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
 </aside>
 
 <p><br/></p>
-<h1 id="upload_checkpoint">/upload_checkpoint</h1>
-<h3 id="_33"><strong>示例：</strong></h3>
-<p>Python示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;Accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-  <span class="s1">&#39;x-api-key&#39;</span><span class="p">:</span> <span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">}</span>
-
-<span class="n">const</span> <span class="n">inputBody</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s2">&quot;checkpointType&quot;</span><span class="p">:</span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
-  <span class="s2">&quot;modelUrl&quot;</span><span class="p">:[</span><span class="s2">&quot;https://huggingface.co/xxx.safetensors&quot;</span><span class="p">,</span><span class="s2">&quot;https://civitai.com/api/download/models/xxx&quot;</span><span class="p">],</span>
-  <span class="s2">&quot;params&quot;</span><span class="p">:{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">}</span>
-<span class="p">}</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://&lt;Your API Gateway ID&gt;.execute-api.</span><span class="si">{region}</span><span class="s1">.amazonaws.com/upload_checkpoint&#39;</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span><span class="p">,</span> <span class="n">json</span> <span class="o">=</span> <span class="n">inputBody</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-</code></pre></div>
-<p>Javascript示例代码：</p>
-<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">inputBody</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;{</span>
-<span class="s1">  &quot;checkpointType&quot;:&quot;Stable-diffusion&quot;,</span>
-<span class="s1">  &quot;modelUrl&quot;:[&quot;https://huggingface.co/xxx/sd_xl_base_1.0.safetensors&quot;,&quot;https://civitai.com/api/download/models/xxx&quot;],</span>
-<span class="s1">  &quot;params&quot;:{&quot;message&quot;:&quot;description&quot;}</span>
-<span class="s1">}&#39;</span><span class="p">;</span>
-<span class="kd">const</span><span class="w"> </span><span class="nx">headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;Accept&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="s1">&#39;x-api-key&#39;</span><span class="o">:</span><span class="s1">&#39;API_TOKEN_VALUE&#39;</span>
-<span class="p">};</span>
-
-<span class="nx">fetch</span><span class="p">(</span><span class="s1">&#39;https://&lt;Your API Gateway ID&gt;.execute-api.{region}.amazonaws.com/{basePath}/dataset&#39;</span><span class="p">,</span>
-<span class="p">{</span>
-<span class="w">  </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
-<span class="w">  </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nx">inputBody</span><span class="p">,</span>
-<span class="w">  </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="nx">headers</span>
-<span class="p">})</span>
-<span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">res</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
-<span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">body</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>POST /upload_checkpoint</code></p>
-<blockquote>
-<p>Body 参数</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="c1">// checkpointType 可选项包括：&quot;Stable-diffusion&quot;, &quot;embeddings&quot;, &quot;Lora&quot;, &quot;hypernetworks&quot;, &quot;ControlNet&quot;, &quot;VAE&quot;</span>
-<span class="w">  </span><span class="nt">&quot;checkpointType&quot;</span><span class="p">:</span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;modelUrl&quot;</span><span class="p">:[</span><span class="s2">&quot;https://huggingface.co/xxx.safetensors&quot;</span><span class="p">,</span><span class="s2">&quot;https://civitai.com/api/download/models/xxx&quot;</span><span class="p">],</span>
-<span class="w">  </span><span class="nt">&quot;params&quot;</span><span class="p">:{</span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="s2">&quot;description&quot;</span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p><a id="upload-checkpoint-params">参数</a></p>
-<table>
-<thead>
-<tr>
-<th>名称</th>
-<th>位置</th>
-<th>数据类型</th>
-<th>是否需要填写</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>body</td>
-<td>body</td>
-<td>object</td>
-<td>false</td>
-<td>none</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>响应示例</p>
-<p>200 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;statusCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;checkpoint&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;07dbd061-1df8-463f-bc78-44a41956435c&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Stable-diffusion&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;s3_location&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;s3://path&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Active&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;params&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;created&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2023-09-26 09:02:52.146566&quot;</span><span class="p">,</span>
-<span class="w">            </span><span class="nt">&quot;multipart_upload&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="nt">&quot;bubble-gum-kaugummi-v20&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<blockquote>
-<p>500 响应</p>
-</blockquote>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;statusCode&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;error&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error_message&quot;</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3 id="upload-checkpoint">响应</h3>
-
-<table>
-<thead>
-<tr>
-<th>状态码</th>
-<th>含义</th>
-<th>描述</th>
-<th>结构</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>200</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td>
-<td>Successful response</td>
-<td>Inline</td>
-</tr>
-<tr>
-<td>500</td>
-<td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td>
-<td>Error response</td>
-<td>Inline</td>
-</tr>
-</tbody>
-</table>
-<h3 id="upload-checkpoint-responseschema">响应结构</h3>
-
-<aside class="warning">
-要执行此操作，需要在请求时添加api_key进行身份验证
-</aside>
 
 
 
@@ -5060,10 +4337,10 @@ sagemaker_endpoint_name, task_type, prompt and Stable-Diffusion is mandatory, ot
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.7389ff0e.min.js"></script>
       
     
   </body>

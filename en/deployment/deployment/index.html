@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
     
     
       
@@ -760,36 +760,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#step-0-linux-deploy-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 1: Deploy Stable Diffusion WebUI (Linux).
+      Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui-windows" class="md-nav__link">
+  <a href="#step-0-windows-deploy-stable-diffusion-webui-windows" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 1: Deploy Stable Diffusion WebUI (Windows).
+      Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-deploy-the-solution-as-a-middleware" class="md-nav__link">
+  <a href="#step-1-deploy-the-solution-as-a-middleware" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2: Deploy the solution as a middleware.
+      Step 1: Deploy the solution as a middleware.
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step3-configure-api-url-and-api-token" class="md-nav__link">
+  <a href="#step2-configure-api-url-and-api-token" class="md-nav__link">
     <span class="md-ellipsis">
-      Step3: Configure API url and API token.
+      Step2: Configure API url and API token.
     </span>
   </a>
   
@@ -928,7 +928,7 @@
         
   
   <span class="md-ellipsis">
-    Configure API and Multiple Users
+    Configure API and Users Management
   </span>
   
 
@@ -1303,36 +1303,36 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#step-0-linux-deploy-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 1: Deploy Stable Diffusion WebUI (Linux).
+      Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-1-deploy-stable-diffusion-webui-windows" class="md-nav__link">
+  <a href="#step-0-windows-deploy-stable-diffusion-webui-windows" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 1: Deploy Stable Diffusion WebUI (Windows).
+      Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2-deploy-the-solution-as-a-middleware" class="md-nav__link">
+  <a href="#step-1-deploy-the-solution-as-a-middleware" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2: Deploy the solution as a middleware.
+      Step 1: Deploy the solution as a middleware.
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#step3-configure-api-url-and-api-token" class="md-nav__link">
+  <a href="#step2-configure-api-url-and-api-token" class="md-nav__link">
     <span class="md-ellipsis">
-      Step3: Configure API url and API token.
+      Step2: Configure API url and API token.
     </span>
   </a>
   
@@ -1364,18 +1364,23 @@
   <h1>Deployment step</h1>
 
 <p>Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.</p>
-<p><strong>Time to deploy</strong>: Approximately 25 minutes.</p>
+<p><strong>Time to deploy</strong>: Approximately 20 minutes.</p>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Users need to prepare a computer running linux system in advance.</p>
+<p>Users need to prepare a computer-running linux system in advance.</p>
 <h2 id="deployment-overview">Deployment overview</h2>
 <p>Use the following steps to deploy this solution on AWS. </p>
 <ul>
-<li>Step 1: Deploy Stable Diffusion WebUI. </li>
-<li>Step 2: Deploy the solution as a middleware.</li>
-<li>Step 3: Configure API url and API token.</li>
+<li>Step 0: Deploy Stable Diffusion webUI (if you haven't deployed Stable Diffusion webUI before). </li>
+<li>Step 1: Deploy the solution as middleware.</li>
+<li>Step 2: Configure API url and API token.</li>
 </ul>
+<div class="admonition important">
+<p class="admonition-title">Notice</p>
+<p>This solution provides two usage options: through UI interface and by directly calling the backend API. Step 0 only needs to be executed if the user intends to use the UI interface. This step involves installing another open-source project Stable Diffusion webUI, allowing business operations to be conducted through the webUI.</p>
+</div>
+<p>。</p>
 <h2 id="deployment-steps">Deployment steps</h2>
-<h3 id="step-1-deploy-stable-diffusion-webui-linux">Step 1: Deploy Stable Diffusion WebUI (Linux).</h3>
+<h3 id="step-0-linux-deploy-stable-diffusion-webui-linux">Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).</h3>
 <ol>
 <li>
 <p>Download the CloudFormation Template from <a href="https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml">link</a></p>
@@ -1402,10 +1407,10 @@
 <p>Wait until the stack is created.</p>
 </li>
 <li>
-<p>Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the <strong>WebUIURL</strong> value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.</p>
+<p>Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the <strong>WebUIURL</strong> value, note you need to wait an extra 5 minutes to wait for the internal setup complete after the stack been created successfully.</p>
 </li>
 </ol>
-<h3 id="step-1-deploy-stable-diffusion-webui-windows">Step 1: Deploy Stable Diffusion WebUI (Windows).</h3>
+<h3 id="step-0-windows-deploy-stable-diffusion-webui-windows">Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).</h3>
 <ol>
 <li>Start a Windows Server and log in via RDP.</li>
 <li>Refer to <a href="https://docs.aws.amazon.com/en_us/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html">this link</a> to install the NVIDIA driver.</li>
@@ -1415,7 +1420,7 @@
 <li>Inside the source code directory, run <code>install.bat</code>.</li>
 <li>In the downloaded <code>stable-diffusion-webui</code> folder, run <code>webui-user.bat</code>.</li>
 </ol>
-<h3 id="step-2-deploy-the-solution-as-a-middleware">Step 2: Deploy the solution as a middleware.</h3>
+<h3 id="step-1-deploy-the-solution-as-a-middleware">Step 1: Deploy the solution as a middleware.</h3>
 <p>This automated AWS CloudFormation template deploys the solution in the AWS Cloud.</p>
 <ol>
 <li>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json" target="_blank">Launch solution in AWS Standard Regions</a> to launch the AWS CloudFormation template.   </li>
@@ -1424,10 +1429,13 @@
 <p>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</p>
 </li>
 <li>
-<p>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. Under <strong>Parameters</strong>, enter a valid bucket name under <strong>aigcbucketname</strong> for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under <strong>email</strong> for future notice receiving. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>SdExtensionApiKey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, and etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>EcrImageTag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.Choose <strong>Next</strong>.</p>
+<p>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. </p>
+</li>
+<li>
+<p>On the <strong>Parameters</strong> page, enter a new valid bucket name under <strong>Bucket</strong> for this solution to use, which is mainly for uploading dates and storing results. Enter a correct email address under <strong>email</strong> for future notice receiving. Select desired Amazon log level to be printed under <strong>LogLevel</strong>, only ERROR log will be printed by default. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>SdExtensionApiKey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>EcrImageTag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>. Choose <strong>Next</strong>.</p>
 <div class="admonition important">
 <p class="admonition-title">Notice</p>
-<p>Please do not change <strong>EcrImageTag</strong> before consulting solution team.</p>
+<p>Please do not change <strong>EcrImageTag</strong> before a consulting solution team.</p>
 </div>
 </li>
 <li>
@@ -1440,45 +1448,18 @@
 <p class="admonition-title">Notice</p>
 <p>Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription, and the message of 'Subscription confirmed!' appears.</p>
 </div>
-<h3 id="step3-configure-api-url-and-api-token">Step3: Configure API url and API token.</h3>
-<ol>
-<li>
-<p>Go to <a href="https://console.aws.amazon.com/cloudformation/">CloudFormation console</a>.</p>
-</li>
-<li>
-<p>Select the root stack of the solution from the stack list, instead of a nested stack. Nested stacks in the list will be labeled as (NESTED) next to their names.</p>
-</li>
-<li>
-<p>Open the <strong>Outputs</strong> tab and locate the values corresponding to <strong>APIGatewayUrl</strong> and <strong>ApiGatewayUrlToken</strong>, and copy them.</p>
-</li>
-<li>
-<p>Open the <strong>Amazon SageMaker</strong> tab in the Stable Diffusion WebUI. Paste the URL obtained in step 3 into the <strong>API URL</strong> text box. Enter the token obtained in step 3 into the <strong>API Token</strong> field. Click <strong>Test Connection</strong> to receive a confirmation message of <strong>Successfully Connected</strong>.</p>
-</li>
-<li>
-<p>Click <strong>Update Setting</strong> to update the configuration file, so that you can receive the corresponding information next time.</p>
-</li>
-</ol>
-<!-- ### Step 2: Install the Extension for Stable Diffusion on AWS through the installation script.
-1. In the working directory of the computer running linux prepared in advance, run the following command to download the latest installation script
-<div class="highlight"><pre><span></span><code>wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
-</code></pre></div>
-2. Run the installation script
-<div class="highlight"><pre><span></span><code>sh install.sh
-</code></pre></div>
-3. Move to the stable-diffusion-webui folder downloaded by install.sh
-<div class="highlight"><pre><span></span><code>cd stable-diffusion-webui
-</code></pre></div>
-4. For machines without GPU, you can start the webui with the following command
-<div class="highlight"><pre><span></span><code>./webui.sh --skip-torch-cuda-test
-</code></pre></div>
-5. For machines with GPU, you can start the webui with the following command
-```
-./webui.sh
-``` -->
-<!-- 
-### Step 2: Install 'Stable Diffusion AWS Extension' extension in your Stable Diffusion WebUI. 
-1. Open the Stable Diffusion WebUI, navigate to the **Extensions** tab - **Install from URL** subtab, and enter the repository address of this solution [https://github.com/awslabs/stable-diffusion-aws-extension.git](https://github.com/awslabs/stable-diffusion-aws-extension.git) in the **URL from extension's git repository** text box. Click **Install**.
-2. Navigate to **Installed** subtab, click **Apply and restart UI**. The **Amazon SageMaker** tab will appear in the WebUI, indicating that the extension installation has been completed. -->
+<h3 id="step2-configure-api-url-and-api-token">Step2: Configure API url and API token.</h3>
+<p>After successfully stack creation, you can refer to <a href="../../user-guide/multi-user/">here</a> for subsequent configuration work.</p>
+<!-- 1. Go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/).
+
+2. Select the root stack of the solution from the stack list, instead of a nested stack. Nested stacks in the list will be labeled as (NESTED) next to their names.
+
+3. Open the **Outputs** tab and locate the values corresponding to **APIGatewayUrl** and **ApiGatewayUrlToken**, and copy them.
+
+4. Open the **Amazon SageMaker** tab in the Stable Diffusion WebUI. Paste the URL obtained in step 3 into the **API URL** text box. Enter the token obtained in step 3 into the **API Token** field. Click **Test Connection** to receive a confirmation message of **Successfully Connected**.
+
+5. Click **Update Setting** to update the configuration file, so that you can receive the corresponding information next time. -->
+
 <!-- ## Future step
 After successful stack creation, you can find relevant information in the **Outputs** tab of AWS CloudFormation. -->
 
@@ -1522,10 +1503,10 @@ After successful stack creation, you can find relevant information in the **Outp
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.7389ff0e.min.js"></script>
       
     
   </body>

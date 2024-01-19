@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.2">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.4">
     
     
       
@@ -888,7 +888,7 @@
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      创建新用户
+      角色管理
     </span>
   </a>
   
@@ -897,9 +897,33 @@
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
+      用户管理
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="用户管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      创建新用户
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
       管理现有用户
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1277,7 +1301,7 @@
           <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      创建新用户
+      角色管理
     </span>
   </a>
   
@@ -1286,9 +1310,33 @@
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
+      用户管理
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="用户管理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      创建新用户
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
       管理现有用户
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1318,32 +1366,27 @@
 <h1 id="api">配置API和多用户</h1>
 <h2 id="api_1">配置API</h2>
 <ol>
-<li>
-<p>当部署完成后，首次登陆webuI，此时，用户无需用户名密码登陆。点击<strong>Amazon Sagemaker</strong>页，填入api url和api token，按顺序点击<strong>Update Settings</strong>和<strong>test connection</strong>。
-<img alt="configure" src="../../images/multi_user/multi-user-2.png" /></p>
-</li>
-<li>
-<p>完成页面配置和注册管理员账号后，刷新页面并使用管理员用户名和密码登陆。
-<img alt="admin login" src="../../images/multi_user/multi-user-3.png" /></p>
-</li>
-<li>
-<p>登陆成功后，重新进入到Amazon SageMaker页，此时会看到用户列表页面。
-<img alt="add user" src="../../images/multi_user/multi-user-5.png" /></p>
-</li>
+<li>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>，选择成功部署的本解决方案的主堆栈。</li>
+<li>打开输出（Outputs）标签页，找到<strong>APIGatewayUrl</strong>和<strong>ApiGatewayUrlToken</strong>对应的数值，并复制。</li>
+<li>打开Stable Diffusion WebUI中的<strong>Amazon SageMaker</strong>标签页，在<strong>API URL</strong>文本框粘贴步骤2得到的URL，在<strong>API Token</strong>输入步骤2得到的token。在<strong>Username</strong>及<strong>Password</strong>文本框请填入初始超级管理员角色名称及密码。点击<strong>Test Connection &amp; Update Setting</strong>。</li>
+<li>当提示信息<strong>Successfully Connected &amp; Setting Updated</strong>显示后，表明前端已经和后端云资源成功链接，同时配置文件得到更新，以便在未来启动webUI时能自动打出对应信息。
+<img alt="config-setting" src="../images/API-Config-setting.png" /></li>
+<li>在后台重启webUI，以使得全功能生效。</li>
 </ol>
 <h2 id="_1">多用户管理</h2>
-<h3 id="_2">创建新用户</h3>
+<p>IT Operator角色用户登录成功后，进入到<strong>Amazon SageMaker</strong>标签页，<strong>API and User Settings</strong>子标签页下可以进行角色及用户管理页面。
+<img alt="add user" src="../images/Main-tab-user-mng.png" /></p>
+<h3 id="_2">角色管理</h3>
+<p>在<strong>Role Management</strong>标签页下，可以按需求查看、创建角色并配置相应权限。新增角色后，可以通过点击<code>Next Page</code>或刷新页面来更新在<strong>Role Table</strong>中。</p>
+<h3 id="_3">用户管理</h3>
+<p>在<strong>User Management</strong>标签页下，可以按需查看、创建、更新或删除用户。</p>
+<h4 id="_4">创建新用户</h4>
 <ol>
-<li>
-<p>根据具体需求，创建所有新的用户、密码和角色，点击<code>Next Page</code>后， 可以看到新创建的用户。需要再次重启webui，使新用户相关的配置在webuI的server中刷新。
-<img alt="add user" src="../../images/multi_user/multi-user-8.png" /></p>
-</li>
-<li>
-<p>打开另一个无痕浏览器，使用新创建的用户名、密码登陆。</p>
-</li>
+<li>根据具体需求，创建所有新的用户、密码和角色，点击<code>Next Page</code>后， 可以看到新创建的用户。</li>
+<li>打开另一个无痕浏览器，使用新创建的用户名、密码登录。</li>
 <li>进入到<strong>Amazon SageMaker</strong>页，不同的用户展示的内容有所不同。</li>
 </ol>
-<h3 id="_3">管理现有用户</h3>
+<h4 id="_5">管理现有用户</h4>
 <ol>
 <li>在表<strong>User Table</strong>中选择需要更新的用户，区域<strong>Update a User Setting</strong>将会显示该选中的用户信息。</li>
 <li>在<strong>Password</strong>或<strong>User Role</strong>处按需更新信息，并点击<strong>Upsert a User</strong>以保存改动。抑或点击<strong>Delete a User</strong>已完成删除该用户的操作。</li>
@@ -1389,10 +1432,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.c011b7c0.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7c377c4.min.js"></script>
+      <script src="../../assets/javascripts/bundle.7389ff0e.min.js"></script>
       
     
   </body>
