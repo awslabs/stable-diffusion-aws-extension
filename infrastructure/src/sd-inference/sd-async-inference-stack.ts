@@ -86,7 +86,7 @@ export class SDAsyncInferenceStack {
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
 
-    new CreateInferenceJobApi(
+    const createInferenceJobApi = new CreateInferenceJobApi(
       scope, 'CreateInferenceJob',
             <CreateInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,
@@ -131,7 +131,7 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    new DeleteEndpointsApi(
+    const deleteEndpointsApi = new DeleteEndpointsApi(
       scope, 'DeleteEndpoints',
             <DeleteEndpointsApiProps>{
               router: props.routers.endpoints,
@@ -144,6 +144,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    deleteEndpointsApi.model.node.addDependency(createInferenceJobApi.model);
+    deleteEndpointsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
 
     new SagemakerEndpointEvents(
       scope, 'EndpointEvents',
@@ -171,7 +173,7 @@ export class SDAsyncInferenceStack {
       },
     );
 
-    new CreateEndpointApi(
+    const createEndpointApi= new CreateEndpointApi(
       scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
@@ -190,6 +192,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
+    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
 
     const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
@@ -213,7 +217,7 @@ export class SDAsyncInferenceStack {
         timeout: Duration.minutes(15),
         memorySize: 3008,
         environment: {
-            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
+          INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
@@ -312,7 +316,7 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    new DeleteInferenceJobsApi(
+    const deleteInferenceJobsApi= new DeleteInferenceJobsApi(
       scope, 'DeleteInferenceJobs',
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
@@ -324,6 +328,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
+    deleteInferenceJobsApi.model.node.addDependency(createEndpointApi.model);
+    deleteInferenceJobsApi.requestValidator.node.addDependency(createEndpointApi.requestValidator);
 
     // Add a POST method with prefix inference
     if (!inference) {
@@ -352,7 +358,7 @@ export class SDAsyncInferenceStack {
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
         environment: {
-            INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
+          INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
           S3_BUCKET: props?.s3_bucket.bucketName ?? '',
@@ -395,7 +401,7 @@ export class SDAsyncInferenceStack {
   private createInferenceECR(scope: Construct, srcImg: string) {
     const dockerRepo = new aws_ecr.Repository(
       scope,
-      'aigc-webui-inference-repo',
+      'EsdEcrInferenceRepo',
       {
         repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
         removalPolicy: RemovalPolicy.DESTROY,
@@ -404,7 +410,7 @@ export class SDAsyncInferenceStack {
 
     const ecrDeployment = new ECRDeployment(
       scope,
-      'aigc-webui-inference-ecr-deploy',
+      'EsdEcrInferenceDeploy',
       {
         src: new DockerImageName(srcImg),
         dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
@@ -417,7 +423,7 @@ export class SDAsyncInferenceStack {
     // trigger the custom resource lambda
     const customJob = new CustomResource(
       scope,
-      'aigc-webui-inference-ecr-cr-image',
+      'EsdEcrInferenceImage',
       {
         serviceToken: ecrDeployment.serviceToken,
         resourceType: 'Custom::AIGCSolutionECRLambda',

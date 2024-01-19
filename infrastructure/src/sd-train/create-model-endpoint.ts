@@ -58,7 +58,7 @@ export class CreateModelSageMakerEndpoint {
 
     this.model = new aws_sagemaker.CfnModel(scope, `${this.id}-model`, <CfnModelProps>{
       executionRoleArn: this.sagemakerRole(scope).roleArn,
-      modelName: `${this.id}-cdk-sample-model`,
+      modelName: `${this.id}-model`,
       primaryContainer: {
         image: props.primaryContainer,
         environment: {

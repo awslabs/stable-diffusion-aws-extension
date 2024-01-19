@@ -17,15 +17,22 @@ from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from utils import get_variable_from_json, save_variable_to_json, has_config
+from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
-endpoint_type_choices = ["Async", "Real-time", "Serverless"]
+endpoint_type_choices = ["Async", "Real-time"]
 
-async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
-                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+if is_gcr():
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
+    inference_choices_default = "ml.g4dn.2xlarge"
+else:
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge",
+                         "ml.g5.2xlarge",
+                         "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+    inference_choices_default = "ml.g5.2xlarge"
+
 
 test_connection_result = None
 api_gateway_url = None
@@ -740,7 +747,7 @@ def sagemaker_endpoint_tab():
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
         with gr.Column(variant="panel"):
-            default_table = """
+            default_table = f"""
                         <table style="width:100%; border: 1px solid black; border-collapse: collapse;">
                           <tr>
                             <th style="border: 1px solid grey; padding: 15px; text-align: left; " colspan="2">Default SageMaker Endpoint Config</th>
@@ -751,50 +758,35 @@ def sagemaker_endpoint_tab():
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">{inference_choices_default}</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Max Instance Count</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Enable Autoscaling</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
                           </tr>
                         
                         </table>
                     """
             gr.HTML(value=default_table)
-            # instance_type_dropdown =
-            #   gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-            # instance_count_dropdown =
-            #   gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
             with gr.Column():
-                with gr.Row():
-                    endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
-                                                       label="Endpoint Name (Required)", visible=True)
-                    user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                             label="User Role (Required)")
-                    create_refresh_button_by_user(
-                        user_roles,
-                        lambda *args: None,
-                        lambda username: {
-                            'choices': roles(username)
-                        },
-                        'refresh_sagemaker_user_roles'
-                    )
-            endpoint_advance_config_enabled = gr.Checkbox(
-                label="Advanced Endpoint Configuration", value=False, visible=True
-            )
+                endpoint_advance_config_enabled = gr.Checkbox(
+                    label="Advanced Endpoint Configuration", value=False, visible=True
+                )
             with gr.Column(visible=False) as filter_row:
+                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
+                                                   label="Endpoint Name (Optional)", visible=True)
                 with gr.Column():
                     with gr.Row():
                         endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
                                                              elem_id="sagemaker_inference_endpoint_type_textbox",
                                                              value="Async")
-                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
+                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=inference_choices,
                                                              elem_id="sagemaker_inference_instance_type_textbox",
-                                                             value="ml.g5.2xlarge")
+                                                             value=inference_choices_default)
                         instance_count_dropdown = gr.Number(label="Max Instance count",
                                                             elem_id="sagemaker_inference_instance_count_textbox",
                                                             value=1, min=1, max=1000, step=1
@@ -802,11 +794,24 @@ def sagemaker_endpoint_tab():
                         autoscaling_enabled = gr.Checkbox(
                             label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
                         )
+
                 custom_docker_image_uri = gr.Textbox(
                     value="",
                     lines=1,
                     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
-                    label="Custom Docker Image URI (Optional)"
+                    label=f"Custom Docker Image URI (Optional)",
+                    visible=False
+                )
+            with gr.Row():
+                user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
+                                         label="User Role (Required)")
+                create_refresh_button_by_user(
+                    user_roles,
+                    lambda *args: None,
+                    lambda username: {
+                        'choices': roles(username)
+                    },
+                    'refresh_sagemaker_user_roles'
                 )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
@@ -816,12 +821,12 @@ def sagemaker_endpoint_tab():
                                            endpoint_type,
                                            instance_type,
                                            scale_count,
-                                           docker_image_uri,
                                            autoscale,
+                                           docker_image_uri,
                                            target_user_roles,
                                            pr: gr.Request):
-                if not endpoint_name:
-                    return 'Please input endpoint name.'
+                if not target_user_roles:
+                    return 'Please select at least one user role.'
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
                                                     endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
@@ -837,21 +842,27 @@ def sagemaker_endpoint_tab():
                                                   endpoint_type_dropdown,
                                                   instance_type_dropdown,
                                                   instance_count_dropdown,
+                                                  autoscaling_enabled,
                                                   custom_docker_image_uri,
-                                                  autoscaling_enabled, user_roles
+                                                  user_roles
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
-                return gr.update(visible=True)
+                username = cloud_auth_manager.username
+                show_custom_docker_image = False
+                user = api_manager.get_user_by_username(username=username, user_token=username)
+                if 'roles' in user:
+                    show_custom_docker_image = 'byoc' in user['roles']
+                return gr.update(visible=True), custom_docker_image_uri.update(visible=show_custom_docker_image)
             else:
-                return gr.update(visible=False)
+                return gr.update(visible=False), custom_docker_image_uri.update(visible=False)
 
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
-            outputs=filter_row
+            outputs=[filter_row, custom_docker_image_uri]
         )
 
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):

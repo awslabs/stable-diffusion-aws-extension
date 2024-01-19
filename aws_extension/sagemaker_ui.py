@@ -988,7 +988,12 @@ def fake_gan(selected_value, original_prompt):
             images = job['img_presigned_urls']
             inference_param_json_list = job['output_presigned_urls']
             image_list = download_images_to_pil(images)
-            json_file = download_images_to_json(inference_param_json_list)[0]
+            images_to_json = download_images_to_json(inference_param_json_list)
+            # maybe param json was deleted
+            if len(images_to_json) == 0:
+                json_file = ""
+            else:
+                json_file = images_to_json[0]
             if json_file:
                 info_text = json_file
                 infotexts = f"Inference id is {inference_job_id}\n{get_infer_job_time(job)}" + \
@@ -1022,19 +1027,24 @@ def get_infer_job_time(job):
     if 'inference_type' in job:
         inference_type = job['inference_type'] + " "
 
-    if 'startTime' in job and 'completeTime' in job:
-        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
-        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
-        duration = complete_time - start_time
-        duration = round(duration.total_seconds(), 2)
-        string_array.append(f"{inference_type}Inference Time: {duration} seconds")
-
     if 'createTime' in job and 'completeTime' in job:
         complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
         create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
         duration = complete_time - create_time
         duration = round(duration.total_seconds(), 2)
-        string_array.append(f"API Duration: {duration} seconds")
+        string = f"End-to-end API Duration: {duration} seconds"
+
+        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - start_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"{string} (in which {inference_type}Inference: {duration} seconds)")
+    else:
+        if 'startTime' in job and 'completeTime' in job:
+            complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+            start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+            duration = complete_time - start_time
+            duration = round(duration.total_seconds(), 2)
+            string_array.append(f"{inference_type}Inference Time: {duration} seconds")
 
     if 'params' in job:
         if 'sagemaker_inference_endpoint_name' in job['params']:
@@ -1048,7 +1058,7 @@ def get_infer_job_time(job):
     if len(string_array) == 0:
         return ""
 
-    return ",  ".join(string_array) + "\n"
+    return "\n".join(string_array) + "\n"
 
 
 def delete_inference_job(selected_value):
@@ -1189,7 +1199,7 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
-                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time", "Serverless"],
+                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time"],
                                                          value="Async",
                                                          label='Inference Endpoint Type')
             with gr.Row():

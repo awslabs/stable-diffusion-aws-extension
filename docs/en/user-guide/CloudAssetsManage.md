@@ -56,7 +56,7 @@ Method Three:
 
     > **Note:** The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time.
 
-6. It will take around 10 mins for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
+6. It will take around 3 mins for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
 
 
 ### Delete deployed endpoints

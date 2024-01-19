@@ -263,11 +263,10 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                 // 可在此处触发上传完成后的操作
                 uploadedFilesMap.clear();
                 const payload = {
-                    "checkpoint_id": checkpointId,
                     "status": "Active",
                     "multi_parts_tags": {[file.name]: parts}
                 }
-                fetch(url, {
+                fetch(url + '/' + checkpointId, {
                     method: "PUT",
                     headers: {
                         'x-api-key': apiKey

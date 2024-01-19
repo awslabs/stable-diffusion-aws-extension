@@ -35,7 +35,7 @@ class PrepareEvent:
     inference_type: Optional[str] = None
 
 
-# POST /inference/v2
+# POST /inferences
 def handler(raw_event, context):
     request_id = context.aws_request_id
     logger.info(json.dumps(json.loads(raw_event['body'])))

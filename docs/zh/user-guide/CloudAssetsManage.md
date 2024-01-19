@@ -62,7 +62,7 @@
 ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
 5. 您可进入**txt2img**或**img2img**的**Amazon SageMaker Inference**模块的下拉菜单**Select Cloud SageMaker Endpoint**，刷新并看到当前所有推理节点的部署状态。
 > **补充：** 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。
-6. 等待大约10分钟，即可看到最新推理节点的状态变成**InService**，表明推理节点部署成功。
+6. 等待大约3分钟，即可看到最新推理节点的状态变成**InService**，表明推理节点部署成功。
 
 
 ### 删除已部署推理节点
