@@ -17,33 +17,33 @@ then
     exit 1
 fi
 
-if [ -d "stable-diffusion-webui" ]; then
-    echo "Removing existing project..."
-    rm -rf stable-diffusion-webui
-fi
+#if [ -d "stable-diffusion-webui" ]; then
+#    echo "Removing existing project..."
+#    rm -rf stable-diffusion-webui
+#fi
 
 # Sync github repo contents
-cp ../install.sh .
-sh install.sh
-rm install.sh
-
-if [ "$mode" = "" ]
-then
-    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
-    git checkout master
-    git pull
-    cd -
-else
-    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
-    git checkout $mode
-    git pull
-    if [ -n "$commit_id" ]
-    then
-        git reset --hard $commit_id
-        echo `git rev-parse HEAD`
-    fi
-    cd -
-fi
+#cp ../install.sh .
+#sh install.sh
+#rm install.sh
+#
+#if [ "$mode" = "" ]
+#then
+#    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+#    git checkout master
+#    git pull
+#    cd -
+#else
+#    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+#    git checkout $mode
+#    git pull
+#    if [ -n "$commit_id" ]
+#    then
+#        git reset --hard $commit_id
+#        echo `git rev-parse HEAD`
+#    fi
+#    cd -
+#fi
 
 if [ "$tag" = "" ]
 then
