@@ -1,49 +1,52 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
-# Parameters:
-#   KeyName:
-#     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
-#     Type: AWS::EC2::KeyPair::KeyName
-#     ConstraintDescription: must be the name of an existing EC2 KeyPair.
+Parameters:
+  Branch:
+    Description: Branch of the ESD to deploy
+    Type: String
+    AllowedValues:
+      - main
+      - dev
+    Default: main
 
 Mappings:
   RegionToAmiId:
     ap-south-1:
-      AMI: ami-089b78354e92adbc4
+      AMI: ami-03f4878755434977f
     eu-north-1:
-      AMI: ami-09f0506c9ef0fb473
+      AMI: ami-0014ce3e52359afbd
     eu-west-3:
-      AMI: ami-000cbe82b60906d24
+      AMI: ami-01d21b7be69801c2f
     eu-west-2:
-      AMI: ami-00f314baca4922fe3
+      AMI: ami-0e5f882be1900e43b
     eu-west-1:
-      AMI: ami-020fc399c31009b50
+      AMI: ami-0905a3c97561e0b69
     ap-northeast-3:
-      AMI: ami-00615a13ea1ff3de8
+      AMI: ami-05ff0b3a7128cd6f8
     ap-northeast-2:
-      AMI: ami-07d16c043aa8e5153
+      AMI: ami-0f3a440bbcff3d043
     ap-northeast-1:
-      AMI: ami-0ba151ad81cdd97be
+      AMI: ami-07c589821f2b353aa
     ca-central-1:
-      AMI: ami-0c0ef44e5ccbd075f
+      AMI: ami-0a2e7efb4257c0907
     sa-east-1:
-      AMI: ami-0efc6acdb081d5a82
+      AMI: ami-0fb4cf3a99aa89f72
     ap-east-1:
-      AMI: ami-0476827462b538638
+      AMI: ami-0d96ec8a788679eb2
     ap-southeast-1:
-      AMI: ami-01079af93e791f059
+      AMI: ami-0fa377108253bf620
     ap-southeast-2:
-      AMI: ami-0c30788ba2f3b701c
+      AMI: ami-04f5097681773b989
     eu-central-1:
-      AMI: ami-08046b3f92ed2f520
+      AMI: ami-0faab6bdbac9486fb
     us-east-1:
-      AMI: ami-031cf125b681ca3e0
+      AMI: ami-0c7217cdde317cfec
     us-east-2:
-      AMI: ami-0d68d031be2577777
+      AMI: ami-05fb0b8c1424f266b
     us-west-1:
-      AMI: ami-0cab1ec90365016c6
+      AMI: ami-0ce2cb35386fc22e9
     us-west-2:
-      AMI: ami-01cb61d12413ba783
+      AMI: ami-008fe2fc65df48dac
 
 Resources:
   SecurityGroup:
@@ -63,44 +66,52 @@ Resources:
   EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.2xlarge
+      InstanceType: c5.4xlarge
       ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
-      # KeyName: !Ref KeyName
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 300
             VolumeType: gp2
       "Tags" : [
-        {"Key" : "Name", "Value" : "sd-on-aws"},
+        {"Key" : "Name", "Value" : !Sub "sd-on-aws-${Branch}"},
       ]
       SecurityGroups:
         - Ref: SecurityGroup
       UserData:
-        'Fn::Base64': |
+        'Fn::Base64': !Sub |
           #!/bin/bash
-          sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
+          set -euxo pipefail
+          
           sudo apt-get update
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 -y
+          sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          
           cd /home/ubuntu
-          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
-          cd stable-diffusion-webui/extensions
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git
-          cd stable-diffusion-aws-extension/
-          ./pre-flight.sh -f     
-          cd ..
-          sudo chown -R ubuntu:ubuntu stable-diffusion-aws-extension/ sd_dreambooth_extension/ sd-webui-controlnet/ ../../stable-diffusion-webui/
-          cd ..
-          # sudo -u ubuntu python3 -m venv venv
+          
+          curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
+          
+          cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+          git checkout ${Branch}
+          cd ../../
+          
+          wget -qP models/Stable-diffusion/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/sd_xl_base_1.0.safetensors
+          wget -qP models/Stable-diffusion/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
+          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
+          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
+          wget -qP models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_xl.safetensors
+          wget -qP models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors
+          
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
+          
           cat > sd-webui.service <<EOF
           [Unit]
           Description=Stable Diffusion UI server
           After=network.target
           StartLimitIntervalSec=0
-          
+
           [Service]
           WorkingDirectory=/home/ubuntu/stable-diffusion-webui
           ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen
@@ -109,16 +120,16 @@ Resources:
           RestartSec=3
           User=ubuntu
           StartLimitAction=reboot
-          
+
           [Install]
           WantedBy=default.target
-          
+
           EOF
           sudo mv sd-webui.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/sd-webui.service
-          
-          sudo systemctl start sd-webui.service
+
           sudo systemctl enable sd-webui.service
+          sudo systemctl start sd-webui.service
 
   MyEIP:
     Type: AWS::EC2::EIP
@@ -132,4 +143,4 @@ Outputs:
   WebUIURL:
     Description: URL for Stable Diffusion Web UI
     # add port 7860 to the end of the URL
-    Value: !Sub http://${MyEIP.PublicIp}:7860
+    Value: !Sub http://${MyEIP}:7860

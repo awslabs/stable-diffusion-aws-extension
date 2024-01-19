@@ -204,7 +204,7 @@ function uploadFileToS3(files, groupName, username) {
     };
     const apiUrl = apiGatewayUrl.endsWith('/') ? apiGatewayUrl : apiGatewayUrl + '/';
     const apiKey = apiToken;
-    const url = apiUrl + "checkpoint";
+    const url = apiUrl + "checkpoints";
     fetch(url, {
         method: "POST",
         headers: {
@@ -212,8 +212,16 @@ function uploadFileToS3(files, groupName, username) {
         },
         body: JSON.stringify(payload),
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (response.status !== 201 && response.status !== 202) {
+                return response.json().then(errorData => {
+                    throw new Error(errorData.message);
+                });
+            }
+            return response.json();
+        })
         .then((data) => {
+            data = data.data;
             const presignedUrlList = data.s3PresignUrl;
             const checkpointId = data.checkpoint.id;
             Promise.all(fileArrays.map(file => {
@@ -230,9 +238,8 @@ function uploadFileToS3(files, groupName, username) {
             });
         })
         .catch((error) => {
-            console.error("Error getting presigned URL:", error);
-            // 处理错误
-            alert("Error getting presigned URL! Upload stop,please refresh your ui and retry");
+            console.error(error);
+            alert(error);
         });
 }
 
@@ -256,11 +263,10 @@ function uploadFileChunks(file, presignedUrls, checkpointId, groupName, url, api
                 // 可在此处触发上传完成后的操作
                 uploadedFilesMap.clear();
                 const payload = {
-                    "checkpoint_id": checkpointId,
                     "status": "Active",
                     "multi_parts_tags": {[file.name]: parts}
                 }
-                fetch(url, {
+                fetch(url + '/' + checkpointId, {
                     method: "PUT",
                     headers: {
                         'x-api-key': apiKey
@@ -1840,4 +1846,10 @@ function postToApiGateway(remote_url, api_key, data, callback) {
 
     // Convert data object to JSON string before sending
     xhr.send(JSON.stringify(data));
+}
+
+
+function logout() {
+    // similar behavior as an HTTP redirect
+    window.location.replace(window.location.href+"logout");
 }

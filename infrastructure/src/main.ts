@@ -1,26 +1,18 @@
-import {
-  App,
-  Stack,
-  StackProps,
-  Aspects,
-  CfnParameter,
-  CfnOutput,
-} from 'aws-cdk-lib';
-import {
-  BootstraplessStackSynthesizer,
-  CompositeECRRepositoryAspect,
-} from 'cdk-bootstrapless-synthesizer';
+import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { PingApi } from './api/service/ping';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
-import { SDAsyncInferenceStackProps, SDAsyncInferenceStack } from './sd-inference/sd-async-inference-stack';
+import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { Database } from './shared/database';
+import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
-import { S3BucketStore } from './shared/s3-bucket';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
-import { LambdaDeployRoleStack } from './shared/deploy-role';
 import { SnsTopics } from './shared/sns-topics';
 
 const app = new App();
@@ -56,14 +48,6 @@ export class Middleware extends Stack {
     });
 
     // Create CfnParameters here
-    const deployedBefore = new CfnParameter(this, 'DeployedBefore', {
-      type: 'String',
-      description: 'If deployed before, please select \'yes\', the existing resources will be used for deployment.',
-      default: 'no',
-      allowedValues: ['yes', 'no'],
-    });
-
-    const useExist = deployedBefore.valueAsString;
 
     const s3BucketName = new CfnParameter(this, 'Bucket', {
       type: 'String',
@@ -87,63 +71,83 @@ export class Middleware extends Stack {
       default: ECR_IMAGE_TAG,
     });
 
+    const logLevel = new CfnParameter(this, 'LogLevel', {
+      type: 'String',
+      description: 'Log level, example: ERROR|INFO|DEBUG',
+      default: 'ERROR',
+      allowedValues: ['ERROR', 'INFO', 'DEBUG'],
+    });
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
     // Therefore, this resource is prioritized to save time.
-    new LambdaDeployRoleStack(this, useExist);
 
-    const s3BucketStore = new S3BucketStore(this, 'sd-s3', useExist, s3BucketName.valueAsString);
+    const resourceProvider = new ResourceProvider(
+      this,
+      'ResourcesProvider',
+      {
+        bucketName: s3BucketName.valueAsString,
+      },
+    );
 
-    const ddbTables = new Database(this, 'sd-ddb', useExist);
+    const s3Bucket = <Bucket>Bucket.fromBucketName(
+      this,
+      'aigc-bucket',
+      resourceProvider.bucketName,
+    );
+
+    const ddbTables = new Database(this, 'sd-ddb');
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
     const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
-      useExist: useExist,
     });
 
-    const api_train_path = 'train-api/train';
-
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
-      'model',
+      'ping',
       'models',
-      'upload_checkpoint',
-      'checkpoint',
       'checkpoints',
-      'train',
-      'trains',
-      'dataset',
       'datasets',
       'inference',
-      'inference-api',
-      'user',
       'users',
-      'role',
       'roles',
       'endpoints',
       'inferences',
-      api_train_path,
+      'trainings',
     ]);
+    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+    cfnApi.addPropertyOverride('EndpointConfiguration', {
+      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+    });
 
-    new MultiUsersStack(this, 'multiUserSt', {
+    new MultiUsersStack(this, {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      useExist: useExist,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
     });
 
-    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam, useExist);
+    new PingApi(this, 'Ping', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      router: restApi.routers.ping,
+      srcRoot: '../middleware_api/lambda',
+      logLevel,
+    });
 
-    new SDAsyncInferenceStack(this, 'SdAsyncInferSt', <SDAsyncInferenceStackProps>{
+    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+
+    new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
-      s3_bucket: s3BucketStore.s3Bucket,
+      s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
       ecr_image_tag: ecrImageTagParam.valueAsString,
@@ -156,10 +160,11 @@ export class Middleware extends Stack {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       authorizer: authorizerLambda.authorizer,
-      useExist: useExist,
+      logLevel,
+      resourceProvider,
     });
 
-    new SdTrainDeployStack(this, 'SdDBTrainStack', {
+    new SdTrainDeployStack(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
@@ -167,12 +172,25 @@ export class Middleware extends Stack {
       ecr_image_tag: ecrImageTagParam.valueAsString,
       database: ddbTables,
       routers: restApi.routers,
-      s3Bucket: s3BucketStore.s3Bucket,
+      s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       authorizer: authorizerLambda.authorizer,
+      logLevel,
+      resourceProvider,
     });
+
+    // Add ResourcesProvider dependency to all resources
+    for (const resource of this.node.children) {
+      if (!resourceProvider.instanceof(resource)) {
+        resource.node.addDependency(resourceProvider.resources);
+      }
+    }
+
+    // Add stackName tag to all resources
+    const stackName = Stack.of(this).stackName;
+    Tags.of(this).add('stackName', stackName);
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {
@@ -186,7 +204,7 @@ export class Middleware extends Stack {
     });
 
     new CfnOutput(this, 'S3BucketName', {
-      value: s3BucketStore.s3Bucket.bucketName,
+      value: s3Bucket.bucketName,
       description: 'S3 Bucket Name',
     });
 
@@ -199,7 +217,7 @@ export class Middleware extends Stack {
 
 new Middleware(
   app,
-  'Stable-diffusion-aws-extension-middleware-stack',
+  'Extension-for-Stable-Diffusion-on-AWS',
   {
     // env: devEnv,
     synthesizer: synthesizer(),

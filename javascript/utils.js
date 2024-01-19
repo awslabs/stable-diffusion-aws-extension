@@ -25,8 +25,31 @@ function update_auth_settings(api_url_textbox, api_token_textbox, username_textb
     res = confirm("You are about to update authentication settings. Do you want to continue?");
     if (res === true) {
         console.log("Settings updated.");
-    } else {
-        console.log("Settings update cancelled.");
+        return [api_url_textbox, api_token_textbox, username_textbox, password_textbox];
     }
-    return [api_url_textbox, api_token_textbox, username_textbox, password_textbox];
+
+    console.log("Settings update cancelled.");
+    return ["cancelled", null, null, null];
+}
+
+function delete_inference_job_confirm(inference_job_dropdown) {
+    res = confirm("You are about to delete inference job. Do you want to continue?");
+    if (res === true) {
+        console.log("Action confirm.");
+        return [inference_job_dropdown];
+    }
+
+    console.log("Action cancelled.");
+    return ["cancelled"];
+}
+
+function delete_dataset_confirm(dataset_name) {
+    res = confirm("You are about to delete dataset. Do you want to continue?");
+    if (res === true) {
+        console.log("Action confirm.");
+        return [dataset_name];
+    }
+
+    console.log("Action cancelled.");
+    return ["cancelled"];
 }

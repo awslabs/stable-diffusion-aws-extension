@@ -44,7 +44,12 @@
   },
   "dependencies": {
     "@aws-cdk/aws-lambda-python-alpha": "^2.73.0-alpha.0",
-    "aws-cdk-lib": "^2.73.0",
+    "@aws-sdk/client-dynamodb": "^3.484.0",
+    "@aws-sdk/client-iam": "^3.484.0",
+    "@aws-sdk/client-kms": "^3.484.0",
+    "@aws-sdk/client-s3": "^3.484.0",
+    "@aws-sdk/client-sns": "^3.484.0",
+    "aws-cdk-lib": "^2.117.0",
     "cdk-bootstrapless-synthesizer": "^2.3.2",
     "constructs": "^10.0.5"
   },

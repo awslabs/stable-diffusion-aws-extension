@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# todo will remove
+
 RED='\033[0;31m'
 Green='\033[0;32m'
 Blue='\033[0;34m'

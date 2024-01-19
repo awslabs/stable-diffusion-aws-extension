@@ -1,12 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_kms,
-  aws_lambda, CfnCondition,
-  Duration, Fn, RemovalPolicy,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -14,15 +7,12 @@ import { Construct } from 'constructs';
 export interface UserUpsertApiProps {
   multiUserTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
-  useExist: string;
 }
 
 export class AuthorizerLambda {
-  private readonly srcRoot ='../middleware_api/lambda';
-
   public readonly authorizer: aws_apigateway.IAuthorizer;
   public readonly passwordKeyAlias: aws_kms.IKey;
-
+  private readonly srcRoot = '../middleware_api/lambda';
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly multiUserTable: aws_dynamodb.Table;
@@ -33,31 +23,8 @@ export class AuthorizerLambda {
     this.scope = scope;
     this.baseId = id;
 
-    const shouldCreatePasswordKeyCondition = new CfnCondition(
-      scope,
-      `${id}-shouldCreateUseExistPasswordKey`,
-      {
-        expression: Fn.conditionEquals(props.useExist, 'no'),
-      },
-    );
     const keyAlias = 'sd-extension-password-key';
-    const newPasswordKey = new aws_kms.Key(scope, `${id}-password-key`, {
-      // const passwordKey = new aws_kms.Key(scope, `${id}-password-key`, {
-      description: 'a custom key for sd extension to encrypt and decrypt password',
-      // alias: keyAlias,
-      removalPolicy: RemovalPolicy.RETAIN,
-      enableKeyRotation: false,
-    });
 
-    const newKeyAlias = new aws_kms.Alias(scope, `${id}-passwordkey-alias`, {
-      aliasName: keyAlias,
-      removalPolicy: RemovalPolicy.RETAIN,
-      targetKey: newPasswordKey,
-      // targetKey: passwordKey,
-    });
-
-    (newPasswordKey.node.defaultChild as aws_kms.CfnKey).cfnOptions.condition = shouldCreatePasswordKeyCondition;
-    (newKeyAlias.node.defaultChild as aws_kms.CfnAlias).cfnOptions.condition = shouldCreatePasswordKeyCondition;
     this.passwordKeyAlias = aws_kms.Alias.fromAliasName(scope, `${id}-createOrNew-passwordKey`, keyAlias);
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
@@ -111,8 +78,7 @@ export class AuthorizerLambda {
 
   private createAuthorizer(): aws_apigateway.IAuthorizer {
     const authFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      functionName: `${this.baseId}-func`,
-      entry: `${this.srcRoot}/multi_users`,
+      entry: `${this.srcRoot}/users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'authorizer.py',

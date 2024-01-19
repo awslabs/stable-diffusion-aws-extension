@@ -1,0 +1,70 @@
+#!/bin/bash
+
+cat serve_start
+echo "---------------------------------------------------------------------------------"
+
+mkdir -p ~/.aws
+echo "[default]
+region = $AWS_DEFAULT_REGION" > ~/.aws/config
+
+echo "---------------------------------------------------------------------------------"
+echo "INSTANCE_TYPE: $INSTANCE_TYPE"
+echo "ENDPOINT_NAME: $ENDPOINT_NAME"
+echo "ENDPOINT_ID: $ENDPOINT_ID"
+echo "CREATED_AT: $CREATED_AT"
+echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+ESD_VERSION="1.4.0"
+
+instance_package="g5"
+if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
+    instance_package="g4"
+fi
+
+echo "instance_package: $instance_package"
+
+total_start_at=$(date +%s)
+start_at=$(date +%s)
+/opt/ml/code/tools/s5cmd --log=error sync "s3://$BUCKET_NAME/$ESD_VERSION-$instance_package/*" ./
+end_at=$(date +%s)
+cost=$((end_at-start_at))
+echo "download tar from s3://$BUCKET_NAME/$ESD_VERSION-$instance_package/*: $cost seconds"
+
+start_at=$(date +%s)
+tar -xf bin.tar
+tar -xf site-packages.tar
+tar -xf stable-diffusion-webui.tar
+end_at=$(date +%s)
+cost=$((end_at-start_at))
+echo "decompress files: $cost seconds"
+
+start_at=$(date +%s)
+if [ -d "/opt/ml/code/extensions" ]; then
+    echo "/opt/ml/code/extensions exists"
+    mv -f /opt/ml/code/extensions/* $instance_package/stable-diffusion-webui/extensions/
+    rm -rf /opt/ml/code/extensions
+fi
+mv -f $instance_package/bin/*                     /opt/conda/bin/
+mv -f $instance_package/site-packages/*           /opt/conda/lib/python3.10/site-packages/
+mv -f site-packages/torch/lib/*                   /opt/conda/lib/python3.10/site-packages/torch/lib/
+mv -f site-packages/xformers/*                    /opt/conda/lib/python3.10/site-packages/xformers/
+mv -f site-packages/triton/_C/*                   /opt/conda/lib/python3.10/site-packages/triton/_C/
+mv -f site-packages/llvmlite/binding/*            /opt/conda/lib/python3.10/site-packages/llvmlite/binding/
+mv -f $instance_package/stable-diffusion-webui/*  /opt/ml/code/
+end_at=$(date +%s)
+cost=$((end_at-start_at))
+echo "move files: $cost seconds"
+
+end_at=$(date +%s)
+cost=$((end_at-total_start_at))
+echo "total cost: $cost seconds"
+
+# Uncomment the lines below if you need to uninstall and install `accelerate`
+# pip uninstall -y accelerate
+# pip install accelerate
+
+chmod +x /opt/conda/bin/*
+
+echo "accelerate launch..."
+
+accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-torch-cuda-test --skip-install --skip-version-check --no-hashing

@@ -3,7 +3,8 @@ import importlib
 import logging
 import gradio as gr
 import os
-
+import threading
+import time
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
@@ -840,7 +841,7 @@ class SageMakerUI(scripts.Script):
 
         sagemaker_inputs_components = []
         if is_img2img:
-            self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -855,11 +856,11 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.img2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.img2img_lora_and_hypernet_models_state]
         else:
-            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -874,7 +875,7 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.txt2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.txt2img_lora_and_hypernet_models_state]
 
@@ -887,6 +888,7 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is InService
         sd_model_on_cloud = args[0]
+        endpoint_type = args[1]
         always_on_cloud = 'sd_model_checkpoint' not in opts.quicksettings_list
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model and not always_on_cloud:
             return
@@ -946,7 +948,7 @@ class SageMakerUI(scripts.Script):
 
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        models['VAE'] = [args[1]]
+        models['VAE'] = [args[2]]
 
         from modules.processing import get_fixed_seed
 
@@ -1017,8 +1019,9 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
-            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
-            self.current_inference_id = inference_id
+            inference_id_or_data = self.infer_manager.run(p.user, models, api_param, self.is_txt2img, endpoint_type)
+            self.current_inference_id = inference_id_or_data
+            self.inference_queue.put(inference_id_or_data)
         except Exception as e:
             logger.error(e)
             err = str(e)
@@ -1043,7 +1046,7 @@ class SageMakerUI(scripts.Script):
                 )
 
             image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(
-                inference_id)
+                inference_id_or_data, endpoint_type)
 
             processed = Processed(
                 p,
@@ -1073,6 +1076,20 @@ from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+
+def fetch_user_data():
+    while True:
+        try:
+            cloud_auth_manager.update_gradio_auth()
+        except Exception as e:
+            logger.error(e)
+        time.sleep(30)
+
+
+thread = threading.Thread(target=fetch_user_data)
+thread.daemon = True
+thread.start()
 
 if os.environ.get('ON_DOCKER', "false") != "true":
     from modules import call_queue, fifo_lock

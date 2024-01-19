@@ -1,7 +1,4 @@
-import {
-  CfnOutput,
-  aws_apigateway as apigw,
-} from 'aws-cdk-lib';
+import { aws_apigateway as apigw } from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -10,7 +7,7 @@ import { Construct } from 'constructs';
 export class RestApiGateway {
   public apiGateway: apigw.RestApi;
   public readonly apiKey: string;
-  public readonly routers: {[key: string]: Resource} = {};
+  public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
 
   constructor(scope: Construct, apiKey: string, routes: string[]) {
@@ -36,17 +33,48 @@ export class RestApiGateway {
 
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
-      restApiName: 'Stable Diffusion Train and Deploy API',
-      description:
-                'This service is used to train and deploy Stable Diffusion models.',
+      restApiName: this.scope.node.id,
+      description: 'Extension for Stable Diffusion on AWS API',
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(apiAccessLogGroup),
         accessLogFormat: AccessLogFormat.clf(),
+      },
+      endpointConfiguration: {
+        types: [apigw.EndpointType.EDGE],
       },
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS, // You can also provide a list of specific origins ['https://example.com']
         allowMethods: apigw.Cors.ALL_METHODS, // You can also provide a list of specific methods ['GET', 'POST', 'OPTIONS']
         allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'], // Customize as needed
+      },
+    });
+
+    // custom error response to return details of validation errors to the client.
+    api.addGatewayResponse('BAD_REQUEST_BODY', {
+      type: apigw.ResponseType.BAD_REQUEST_BODY,
+      templates: {
+        'application/json': JSON.stringify({
+          statusCode: 400,
+          message: '$context.error.validationErrorString',
+        }),
+      },
+    });
+
+    api.addGatewayResponse('DEFAULT_4XX', {
+      type: apigw.ResponseType.DEFAULT_4XX,
+      templates: {
+        'application/json': JSON.stringify({
+          message: '$context.error.message',
+        }),
+      },
+    });
+
+    api.addGatewayResponse('DEFAULT_5XX', {
+      type: apigw.ResponseType.DEFAULT_5XX,
+      templates: {
+        'application/json': JSON.stringify({
+          message: '$context.error.message',
+        }),
       },
     });
 
@@ -60,10 +88,6 @@ export class RestApiGateway {
     usagePlan.addApiKey(apiKey);
     usagePlan.addApiStage({
       stage: api.deploymentStage,
-    });
-    // Output the API Gateway URL
-    new CfnOutput(this.scope, 'train-deploy-api-url', {
-      value: api.url,
     });
 
     return [api, apiKeyStr];

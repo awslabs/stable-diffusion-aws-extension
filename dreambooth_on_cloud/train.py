@@ -8,11 +8,12 @@ import os
 import sys
 import logging
 from utils import upload_file_to_s3_by_presign_url
-from utils import get_variable_from_json
+from utils import get_variable_from_json, has_config
 from utils import tar
 
 logging.basicConfig(filename='sd-aws-ext.log', level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 dreambooth_available = True
 def dummy_function(*args, **kwargs):
@@ -41,7 +42,7 @@ base_model_folder = "models/sagemaker_dreambooth/"
 def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""):
     try:
         api_gateway_url = get_variable_from_json('api_gateway_url')
-        if api_gateway_url is None:
+        if not has_config():
             print(f"failed to get the api_gateway_url, can not fetch date from remote")
             return []
         url = f"{api_gateway_url}models?"
@@ -56,9 +57,9 @@ def get_cloud_db_models(types="Stable-diffusion", status="Complete", username=""
             'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
         }).json()
         model_list = []
-        if "models" not in response:
+        if "models" not in response['data']:
             return []
-        for model in response["models"]:
+        for model in response['data']["models"]:
             model_list.append(model)
             params = model['params']
             if 'resp' in params:
@@ -122,7 +123,7 @@ def async_prepare_for_training_on_sagemaker(
     if url is None or api_key is None:
         logger.debug("Url or API-Key is not setting.")
         return
-    url += "train"
+    url += "trainings"
     upload_files = []
     db_config_tar = f"db_config.tar"
     # os.system(f"tar cvf {db_config_tar} {db_config_path}")
@@ -181,7 +182,7 @@ def async_prepare_for_training_on_sagemaker(
     response.raise_for_status()
     json_response = response.json()
     print(json_response)
-    for local_tar_path, s3_presigned_url in response.json()["s3PresignUrl"].items():
+    for local_tar_path, s3_presigned_url in json_response['data']["s3PresignUrl"].items():
         upload_file_to_s3_by_presign_url(local_tar_path, s3_presigned_url)
     return json_response
 
@@ -229,7 +230,7 @@ def cloud_train(
     if url is None or api_key is None:
         logger.debug("Url or API-Key is not setting.")
         return
-    url += "train"
+    url += "trainings"
     try:
         # Get data path and class data path.
         print(f"Start cloud training {train_model_name}")
@@ -266,13 +267,12 @@ def cloud_train(
         response = async_prepare_for_training_on_sagemaker(
             model_id, train_model_name, model_s3_path, local_data_path_list, local_class_data_path_list,
             new_db_config_path, model_type, training_instance_type, creator)
-        job_id = response["job"]["id"]
+        job_id = response['data']["job"]["id"]
 
         payload = {
-            "train_job_id": job_id,
             "status": "Training"
         }
-        response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.put(url=f"{url}/{job_id}/start", json=payload, headers={'x-api-key': api_key})
         response.raise_for_status()
         print(f"Start training response:\n{response.json()}")
         integral_check = True
@@ -282,11 +282,7 @@ def cloud_train(
         if not integral_check:
             if job_id:
                 gr.Error(f'train job {train_model_name} failed')
-                payload = {
-                    "train_job_id": job_id,
-                    "status": "Fail"
-                }
-                response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                response = requests.put(url=f"{url}/{job_id}/stop", headers={'x-api-key': api_key})
                 print(f'training job failed but updated the job status {response.json()}')
 
 
@@ -319,16 +315,23 @@ def get_train_job_list(pr: gr.Request):
 
     table = []
     try:
-        url += "trains?types=Stable-diffusion&types=Lora"
+        url += "trainings?types=Stable-diffusion&types=Lora"
         encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
             'Authorization': f'Bearer {base64.b16encode(pr.username.encode(encode_type)).decode(encode_type)}',
         }).json()
-        if 'trainJobs' in response:
-            response['trainJobs'].sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
-            for trainJob in response['trainJobs']:
-                table.append([trainJob['id'][:6], trainJob['modelName'], trainJob["status"], trainJob['sagemakerTrainName']])
+        logger.info(f"trainings response: {response}")
+        if 'trainJobs' in response['data'] and response['data']['trainJobs']:
+            train_jobs = response['data']['trainJobs']
+            train_jobs.sort(key=lambda t: t['created'] if 'created' in t else sys.float_info.max, reverse=True)
+            for trainJob in train_jobs:
+                table.append([
+                    trainJob['id'][:6],
+                    trainJob['modelName'],
+                    trainJob["status"],
+                    trainJob['sagemakerTrainName']
+                ])
     except requests.exceptions.RequestException as e:
         print(f"exception {e}")
 
@@ -350,10 +353,12 @@ def get_sorted_cloud_dataset(username):
         })
         raw_response.raise_for_status()
         response = raw_response.json()
-        response['datasets'].sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
-        return response['datasets']
+        logger.info(f"datasets response: {response}")
+        datasets = response['data']['datasets']
+        datasets.sort(key=lambda t: t['timestamp'] if 'timestamp' in t else sys.float_info.max, reverse=True)
+        return datasets
     except Exception as e:
-        print(f"exception {e}")
+        logger.error(f"exception {e}")
         return []
 
 

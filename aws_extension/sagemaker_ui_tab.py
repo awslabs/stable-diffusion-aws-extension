@@ -1,28 +1,38 @@
-import json
+import datetime
 import logging
 import os
 
 import gradio as gr
+import modules.ui
 import requests
+from modules.ui_common import create_refresh_button
+from modules.ui_components import FormRow
+from modules.ui_components import ToolButton
 
 import utils
 from aws_extension import sagemaker_ui
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
-
+from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+from aws_extension.cloud_api_manager.api import api
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from dreambooth_on_cloud.train import get_sorted_cloud_dataset
-from modules.ui_common import create_refresh_button
-from modules.ui_components import FormRow
-import modules.ui
-from utils import get_variable_from_json, save_variable_to_json
-import datetime
+from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
-async_inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge", "ml.g5.2xlarge",
-                           "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+endpoint_type_choices = ["Async", "Real-time"]
+
+if is_gcr():
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
+    inference_choices_default = "ml.g4dn.2xlarge"
+else:
+    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge",
+                         "ml.g5.2xlarge",
+                         "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+    inference_choices_default = "ml.g5.2xlarge"
+
 
 test_connection_result = None
 api_gateway_url = None
@@ -109,7 +119,7 @@ def on_ui_tabs():
                 _list_models(req.username, req.username)[0:10], \
                 _list_sagemaker_endpoints(req.username), \
                 req.username, \
-                _list_users(req.username)[:user_table_size], \
+                _list_users(req.username, None, None)[:user_table_size], \
                 _get_roles_table(req.username)[:10], \
                 gr.update(choices=roles(req.username)), \
                 f'Welcome, {req.username}'
@@ -169,17 +179,14 @@ def api_setting_tab():
             global test_connection_result
             test_connection_result = gr.Label(title="Output")
         with gr.Row():
-            aws_connect_button = gr.Button(value="Update Setting", variant='primary', elem_id="aws_config_save")
+            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary',
+                                           elem_id="aws_config_save")
             aws_connect_button.click(_js="update_auth_settings",
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[test_connection_result])
-        with gr.Row():
-            aws_test_button = gr.Button(value="Test Connection", variant='primary', elem_id="aws_config_test")
-            aws_test_button.click(test_aws_connect_config, inputs=[api_url_textbox, api_token_textbox],
-                                  outputs=[test_connection_result])
 
-    with gr.Row() as disclaimer_tab:
+    with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
             gr.HTML(
                 value=
@@ -191,8 +198,13 @@ def api_setting_tab():
                 any representations or warranties that the third-party generative AI service is secure,
                 virus-free, operational, or compatible with your production environment and standards.""")
 
-    with gr.Row():
+    with gr.Row(visible=has_config()):
         whoami_label = gr.Label(label='whoami')
+
+    with gr.Row(visible=has_config()):
+        logout_btn = gr.Button(value='Logout')
+        logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
+
     return api_setting, disclaimer_tab, whoami_label
 
 
@@ -227,8 +239,8 @@ def user_settings_tab():
         with gr.Column(scale=1):
 
             gr.HTML(value="<b>Update a User Setting</b>")
-            username_textbox = gr.Textbox(placeholder="Please enter Enter a username", label="User name")
-            pwd_textbox = gr.Textbox(placeholder="Please enter Enter password", label="Password", type='password')
+            username_textbox = gr.Textbox(placeholder="Please Enter a username", label="User name")
+            pwd_textbox = gr.Textbox(placeholder="Please Enter password", label="Password", type='password')
             with gr.Row():
                 user_roles_dropdown = gr.Dropdown(multiselect=True, label="User Role")
                 create_refresh_button_by_user(user_roles_dropdown,
@@ -257,6 +269,9 @@ def user_settings_tab():
                                      outputs=[user_setting_out_textbox])
 
             def delete_user(username):
+                if not username or len(username) < 1:
+                    return f'Username should not be none.'
+
                 try:
                     resp = api_manager.delete_user(username=username, user_token=cloud_auth_manager.username)
                     if resp:
@@ -282,24 +297,40 @@ def user_settings_tab():
                 user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
                 return user['username'], user['password'], user['roles']
 
+            def search_users(name: str, role: str, paging, rq: gr.Request):
+                result = _list_users(rq.username, name, role)
+                if len(result) == 0:
+                    return None, gr.skip()
+                if paging >= len(result):
+                    return gr.skip(), gr.skip()
+                start = paging + user_table_size if paging + user_table_size < len(result) else paging
+                end = start + user_table_size if start + user_table_size < len(result) else len(result)
+                return result[start: end], start
+
             user_table.select(fn=choose_user, inputs=[], outputs=[username_textbox, pwd_textbox, user_roles_dropdown])
+            with gr.Accordion("Users Table Filter", open=False):
+                with gr.Row():
+                    name_search_textbox = gr.Textbox(ele_id="name_search_txt", label="Search by Name",
+                                                     placeholder="role name")
+                    role_search_dropdown = gr.Dropdown(ele_id="role_search_drop", label="Search by Role",
+                                                       choices=[''] + roles(cloud_auth_manager.username))
 
             with gr.Row():
                 current_page = gr.State(0)
                 previous_page_btn = gr.Button(value="Previous Page", variant='primary')
                 next_page_btn = gr.Button(value="Next Page", variant='primary')
 
-                def list_users_prev(paging, rq: gr.Request):
+                def list_users_prev(name, role, paging, rq: gr.Request):
                     if paging == 0:
                         return gr.skip(), gr.skip()
 
-                    result = _list_users(rq.username)
+                    result = _list_users(rq.username, name, role)
                     start = paging - user_table_size if paging - user_table_size >= 0 else 0
                     end = start + user_table_size
                     return result[start: end], start
 
-                def list_users_next(paging, rq: gr.Request):
-                    result = _list_users(rq.username)
+                def list_users_next(name, role, paging, rq: gr.Request):
+                    result = _list_users(rq.username, name, role)
                     if paging >= len(result):
                         return gr.skip(), gr.skip()
 
@@ -307,8 +338,17 @@ def user_settings_tab():
                     end = start + user_table_size if start + user_table_size < len(result) else len(result)
                     return result[start: end], start
 
-                next_page_btn.click(fn=list_users_next, inputs=[current_page], outputs=[user_table, current_page])
-                previous_page_btn.click(fn=list_users_prev, inputs=[current_page],
+                next_page_btn.click(fn=list_users_next,
+                                    inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                    outputs=[user_table, current_page])
+                previous_page_btn.click(fn=list_users_prev,
+                                        inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                        outputs=[user_table, current_page])
+            name_search_textbox.submit(fn=search_users,
+                                       inputs=[name_search_textbox, role_search_dropdown, current_page],
+                                       outputs=[user_table, current_page])
+            role_search_dropdown.change(fn=search_users,
+                                        inputs=[name_search_textbox, role_search_dropdown, current_page],
                                         outputs=[user_table, current_page])
 
     return user_tab, user_table, user_roles_dropdown
@@ -320,7 +360,7 @@ def role_settings_tab():
         with gr.Row(variant='panel') as role_tab:
             with gr.Column(scale=1) as upsert_role_form:
                 gr.HTML(value="<b>Update a Role</b>")
-                rolename_textbox = gr.Textbox(placeholder="Please enter Enter a role name", label="Role name")
+                rolename_textbox = gr.Textbox(placeholder="Please Enter a role name", label="Role name")
                 permissions_dropdown = gr.Dropdown(choices=all_permissions,
                                                    multiselect=True,
                                                    label="Role Permissions")
@@ -328,6 +368,9 @@ def role_settings_tab():
                 role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
+                    if not role_name or not permissions:
+                        return 'Please input role name and permissions.'
+
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
                                                        creator=pr.username,
@@ -335,7 +378,7 @@ def role_settings_tab():
                         if resp:
                             return f'Role upsert complete "{role_name}"'
                     except Exception as e:
-                        return f'User upsert failed: {e}'
+                        return f'Role upsert failed: {e}'
 
                 upsert_role_button.click(fn=upsert_role,
                                          inputs=[rolename_textbox, permissions_dropdown],
@@ -389,8 +432,12 @@ def _list_models(username, user_token):
         allowed = ''
         if model['allowed_roles_or_users']:
             allowed = ', '.join(model['allowed_roles_or_users'])
-        models.append([model['name'], model['type'], allowed,
-                       'In-Use' if model['status'] == 'Active' else 'Disabled', datetime.datetime.fromtimestamp(model['created'])])
+        models.append([
+            model['name'],
+            model['type'],
+            allowed,
+            model['status'],
+            datetime.datetime.fromtimestamp(model['created'])])
     return models
 
 
@@ -402,16 +449,68 @@ def _get_roles_table(username):
     return table
 
 
-def _list_users(username):
+def _list_users(username, name, role):
     resp = api_manager.list_users(user_token=username)
     if not resp['users']:
         return []
 
     table = []
     for user in resp['users']:
+        if name and name not in user['username']:
+            continue
+        if role and role not in user['roles']:
+            continue
         table.append([user['username'], ', '.join(user['roles']), user['creator']])
 
     return table
+
+
+def ckpt_rename_block():
+    with gr.Column(title="CheckPoint Management", variant='panel'):
+        gr.HTML(value="<u><b>CheckPoint Management</b></u>")
+        with gr.Row():
+            ckpt_rename_dropdown = gr.Dropdown(
+                multiselect=False,
+                label="Select Cloud CheckPoint")
+            modules.ui.create_refresh_button(ckpt_rename_dropdown,
+                                             lambda: None,
+                                             lambda: {"choices": api_manager.list_all_ckpts(
+                                                 username=cloud_auth_manager.username,
+                                                 user_token=cloud_auth_manager.username)},
+                                             "refresh_ckpts_delete")
+
+            def _endpoint_ckpts(ckpts, pr: gr.Request):
+                if not ckpts:
+                    gr.Warning("Please select one checkpoint to delete.")
+                    return
+                gr.Info(api_manager.ckpts_delete(ckpts=[ckpts], user_token=pr.username))
+
+            delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
+            delete_inference_job_button.click(
+                fn=_endpoint_ckpts,
+                inputs=[ckpt_rename_dropdown],
+            )
+
+        new_name_textbox = gr.TextArea(label="Input new Checkpoint name",
+                                       lines=1,
+                                       elem_id="new_ckpt_value_ele_id")
+
+        ckpts_rename_button = gr.Button(value="Rename", variant='primary', elem_id="ckpts_delete_button")
+
+        output_textbox = gr.Textbox(interactive=False, show_label=False)
+
+        def _rename_ckpt(ckpt, name, pr: gr.Request):
+            if not ckpt:
+                return 'Please select one checkpoint to rename.'
+            if not name:
+                return 'Please intput new name.'
+            return api_manager.ckpt_rename(ckpt=ckpt,
+                                           name=name,
+                                           user_token=pr.username)
+
+        ckpts_rename_button.click(_rename_ckpt,
+                                  inputs=[ckpt_rename_dropdown, new_name_textbox],
+                                  outputs=[output_textbox])
 
 
 def model_upload_tab():
@@ -530,10 +629,17 @@ def model_upload_tab():
 
         with gr.Tab("From URL"):
             with FormRow(elem_id="model_upload_url_form_row_01"):
-                model_type_url_drop_down = gr.Dropdown(label="Model Type", choices=["SD Checkpoints", "Textual Inversion", "LoRA model", "ControlNet model", "Hypernetwork", "VAE"], elem_id="model_url_type_ele_id")
+                model_type_url_drop_down = gr.Dropdown(label="Model Type",
+                                                       choices=["SD Checkpoints", "Textual Inversion", "LoRA model",
+                                                                "ControlNet model", "Hypernetwork", "VAE"],
+                                                       elem_id="model_url_type_ele_id")
             with FormRow(elem_id="model_upload_url_form_row_02"):
-                file_upload_url_component = gr.TextArea(label="URL list (Comma-separated in English)", elem_id="model_urls_value_ele_id", placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
-                file_upload_params_component = gr.TextArea(label="Models Description (Optional)", elem_id="model_params_value_ele_id", placeholder='for example:  {"message":"placeholder for chkpts upload test"}')
+                file_upload_url_component = gr.TextArea(label="URL List (Comma-separated in English)",
+                                                        elem_id="model_urls_value_ele_id",
+                                                        placeholder="Best to keep the total model size below 10 GB, and preferably not exceeding 5 urls.")
+                file_upload_params_component = gr.TextArea(label="Models Description (Optional)",
+                                                           elem_id="model_params_value_ele_id",
+                                                           placeholder='for example: placeholder for chkpts upload test')
             with FormRow(elem_id="model_upload_url_form_row_03"):
                 file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
             with gr.Row():
@@ -545,6 +651,9 @@ def model_upload_tab():
                                                         file_upload_params_component],
                                                 outputs=[file_upload_result_component]
                                                 )
+
+        ckpt_rename_block()
+
     with gr.Column():
         def list_models_prev(paging, rq: gr.Request):
             if paging == 0:
@@ -564,17 +673,69 @@ def model_upload_tab():
             end = start + 10 if start + 10 < len(result) else len(result)
             return result[start: end], start
 
-        current_page = gr.State(0)
+        def list_ckpts_data(query_types, query_status, query_roles, current_page, rq: gr.Request):
+            params = {
+                'types': query_types,
+                'status': query_status,
+                'roles': query_roles,
+                'page': int(current_page),
+                'username': rq.username,
+            }
+            api.set_username(rq.username)
+
+            if not has_config():
+                return [], 'Please config api url and token first'
+
+            resp = api.list_checkpoints(params=params)
+            models = []
+            page = resp.json()['data']['page']
+            per_page = resp.json()['data']['per_page']
+            total = resp.json()['data']['total']
+            pages = resp.json()['data']['pages']
+            for model in resp.json()['data']['checkpoints']:
+                allowed = ''
+                if model['allowed_roles_or_users']:
+                    allowed = ', '.join(model['allowed_roles_or_users'])
+                models.append([
+                    model['name'],
+                    model['type'],
+                    allowed,
+                    model['status'],
+                    datetime.datetime.fromtimestamp(float(model['created']))
+                ])
+            page_info = f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
+            return models, page_info
+
         gr.HTML(value="<b>Cloud Model List</b>")
         model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
                                      datatype=['str', 'str', 'str', 'str', 'str']
                                      )
+        page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False)
         with gr.Row():
-            model_list_prev_btn = gr.Button(value='Previous')
-            model_list_next_btn = gr.Button(value='Next')
-
-            model_list_prev_btn.click(fn=list_models_prev, inputs=[current_page], outputs=[model_list_df, current_page])
-            model_list_next_btn.click(fn=list_models_next, inputs=[current_page], outputs=[model_list_df, current_page])
+            with gr.Column():
+                current_page = gr.Number(label="Page Number", value=1, min=1, max=1000, step=1)
+            with gr.Column():
+                query_types = gr.Dropdown(
+                    multiselect=True,
+                    choices=checkpoint_type,
+                    label="Types")
+            with gr.Column():
+                query_status = gr.Dropdown(
+                    multiselect=True,
+                    choices=['Active', 'Initial'],
+                    label="Status")
+            with gr.Column():
+                query_roles = gr.Dropdown(
+                    multiselect=True,
+                    choices=roles(cloud_auth_manager.username),
+                    label="Roles")
+        with gr.Row():
+            refresh_button = gr.Button(value="Refresh", variant="primary")
+            refresh_button.click(
+                fn=list_ckpts_data,
+                inputs=[query_types, query_status, query_roles, current_page],
+                outputs=[model_list_df, page_info]
+            )
 
     return upload_tab, model_list_df
 
@@ -584,50 +745,64 @@ def sagemaker_endpoint_tab():
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
         with gr.Column(variant="panel"):
-            default_table = """
+            default_table = f"""
                         <table style="width:100%; border: 1px solid black; border-collapse: collapse;">
                           <tr>
-                            <th style="border: 1px solid grey; padding: 15px; text-align: left; background-color: #f2f2f2;" colspan="2">Default SageMaker Endpoint Config</th>
+                            <th style="border: 1px solid grey; padding: 15px; text-align: left; " colspan="2">Default SageMaker Endpoint Config</th>
+                          </tr>
+                          <tr>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Endpoint Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">Async</td>
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">ml.g5.2xlarge</td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">{inference_choices_default}</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Count</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Max Instance Count</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">1</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Automatic Scaling</b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Enable Autoscaling</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
                           </tr>
                         
                         </table>
                     """
             gr.HTML(value=default_table)
-            # instance_type_dropdown =
-            #   gr.Dropdown(label="SageMaker Instance Type", choices=async_inference_choices, elem_id="sagemaker_inference_instance_type_textbox", value="ml.g4dn.xlarge")
-            # instance_count_dropdown =
-            #   gr.Dropdown(label="Please select Instance count", choices=["1","2","3","4"], elem_id="sagemaker_inference_instance_count_textbox", value="1")
-            endpoint_advance_config_enabled = gr.Checkbox(
-                label="Advanced Endpoint Configuration", value=False, visible=True
-            )
-            with gr.Row(visible=False) as filter_row:
+            with gr.Column():
+                endpoint_advance_config_enabled = gr.Checkbox(
+                    label="Advanced Endpoint Configuration", value=False, visible=True
+                )
+            with gr.Column(visible=False) as filter_row:
                 endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
-                                                   label="Specify Endpoint Name", visible=True)
-                instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=async_inference_choices,
-                                                     elem_id="sagemaker_inference_instance_type_textbox",
-                                                     value="ml.g5.2xlarge")
-                instance_count_dropdown = gr.Dropdown(label="Max Instance count",
-                                                      choices=["1", "2", "3", "4", "5", "6"],
-                                                      elem_id="sagemaker_inference_instance_count_textbox",
-                                                      value="1")
-                autoscaling_enabled = gr.Checkbox(
-                    label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
+                                                   label="Endpoint Name (Optional)", visible=True)
+                with gr.Column():
+                    with gr.Row():
+                        endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
+                                                             elem_id="sagemaker_inference_endpoint_type_textbox",
+                                                             value="Async")
+                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=inference_choices,
+                                                             elem_id="sagemaker_inference_instance_type_textbox",
+                                                             value=inference_choices_default)
+                        instance_count_dropdown = gr.Number(label="Max Instance count",
+                                                            elem_id="sagemaker_inference_instance_count_textbox",
+                                                            value=1, min=1, max=1000, step=1
+                                                            )
+                        autoscaling_enabled = gr.Checkbox(
+                            label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
+                        )
+
+                custom_docker_image_uri = gr.Textbox(
+                    value="",
+                    lines=1,
+                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
+                    label=f"Custom Docker Image URI (Optional)",
+                    visible=False
                 )
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
-                                         label="User Role")
+                                         label="User Role (Required)")
                 create_refresh_button_by_user(
                     user_roles,
                     lambda *args: None,
@@ -640,43 +815,68 @@ def sagemaker_endpoint_tab():
                                                 elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
 
-            def _create_sagemaker_endpoint(endpoint_name, instance_type, scale_count, autoscale, target_user_roles, pr: gr.Request):
+            def _create_sagemaker_endpoint(endpoint_name,
+                                           endpoint_type,
+                                           instance_type,
+                                           scale_count,
+                                           autoscale,
+                                           docker_image_uri,
+                                           target_user_roles,
+                                           pr: gr.Request):
+                if not target_user_roles:
+                    return 'Please select at least one user role.'
                 return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
+                                                    endpoint_type=endpoint_type,
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
+                                                    custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     user_token=pr.username
                                                     )
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
-                                          inputs=[endpoint_name_textbox, instance_type_dropdown,
-                                                  instance_count_dropdown, autoscaling_enabled, user_roles],
+                                          inputs=[endpoint_name_textbox,
+                                                  endpoint_type_dropdown,
+                                                  instance_type_dropdown,
+                                                  instance_count_dropdown,
+                                                  autoscaling_enabled,
+                                                  custom_docker_image_uri,
+                                                  user_roles
+                                                  ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
-
 
         def toggle_new_rows(checkbox_state):
             if checkbox_state:
-                return gr.update(visible=True)
+                username = cloud_auth_manager.username
+                show_custom_docker_image = False
+                user = api_manager.get_user_by_username(username=username, user_token=username)
+                if 'roles' in user:
+                    show_custom_docker_image = 'byoc' in user['roles']
+                return gr.update(visible=True), custom_docker_image_uri.update(visible=show_custom_docker_image)
             else:
-                return gr.update(visible=False)
+                return gr.update(visible=False), custom_docker_image_uri.update(visible=False)
 
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
-            outputs=filter_row
+            outputs=[filter_row, custom_docker_image_uri]
         )
 
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):
             gr.HTML(value="<u><b>Delete SageMaker Endpoint</b></u>")
             with gr.Row():
                 # todo: this list is not safe
-                sagemaker_endpoint_delete_dropdown = gr.Dropdown(choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username),
-                                                                 multiselect=True,
-                                                                 label="Select Cloud SageMaker Endpoint")
+                sagemaker_endpoint_delete_dropdown = gr.Dropdown(
+                    choices=api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username,
+                                                                     user_token=cloud_auth_manager.username),
+                    multiselect=True,
+                    label="Select Cloud SageMaker Endpoint")
                 modules.ui.create_refresh_button(sagemaker_endpoint_delete_dropdown,
                                                  lambda: None,
-                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(username=cloud_auth_manager.username, user_token=cloud_auth_manager.username)},
+                                                 lambda: {"choices": api_manager.list_all_sagemaker_endpoints(
+                                                     username=cloud_auth_manager.username,
+                                                     user_token=cloud_auth_manager.username)},
                                                  "refresh_sagemaker_endpoints_delete")
 
             sagemaker_endpoint_delete_button = gr.Button(value="Delete", variant='primary',
@@ -697,11 +897,13 @@ def _list_sagemaker_endpoints(username):
     resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
     endpoints = []
     for endpoint in resp:
+        if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
+            endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
             endpoints.append([
-                endpoint['EndpointDeploymentJobId'][:4],
                 endpoint['endpoint_name'],
+                endpoint['endpoint_type'],
                 endpoint_roles,
                 endpoint['autoscaling'],
                 endpoint['endpoint_status'],
@@ -715,9 +917,9 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['id', 'name', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
+            headers=['name', 'type', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
             datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
-            )
+        )
 
         def list_ep_prev(paging, rq: gr.Request):
             if paging == 0:
@@ -763,7 +965,10 @@ def dataset_tab():
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
             def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
-                logger.debug(dataset_name)
+                if not files:
+                    return 'Error: No files selected', None, None, None, None
+                if not dataset_name:
+                    return 'Error: No dataset name', None, None, None, None
                 dataset_content = []
                 file_path_lookup = {}
                 for file in files:
@@ -787,12 +992,18 @@ def dataset_tab():
                     "creator": pr.username
                 }
 
-                url = get_variable_from_json('api_gateway_url') + '/dataset'
+                url = get_variable_from_json('api_gateway_url') + 'datasets'
                 api_key = get_variable_from_json('api_token')
 
+                if not has_config():
+                    return f'Please config api url and token', None, None, None, None
+
                 raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
-                raw_response.raise_for_status()
-                response = raw_response.json()
+                logger.info(raw_response.json())
+
+                if raw_response.status_code != 201:
+                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
+                response = raw_response.json()['data']
 
                 logger.info(f"Start upload sample files response:\n{response}")
                 for filename, presign_url in response['s3PresignUrl'].items():
@@ -803,11 +1014,10 @@ def dataset_tab():
                         response.raise_for_status()
 
                 payload = {
-                    "dataset_name": dataset_name,
                     "status": "Enabled"
                 }
 
-                raw_response = requests.put(url=url, json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload, headers={'x-api-key': api_key})
                 raw_response.raise_for_status()
                 logger.debug(raw_response.json())
                 return f'Complete Dataset {dataset_name} creation', None, None, None, None
@@ -852,15 +1062,24 @@ def dataset_tab():
                     },
                     "refresh_cloud_dataset",
                 )
+
+                delete_dataset_button = ToolButton(value='\U0001F5D1', elem_id="delete_dataset_btn")
+                delete_dataset_button.click(
+                    _js="delete_dataset_confirm",
+                    fn=delete_dataset,
+                    inputs=[cloud_dataset_name],
+                    outputs=[]
+                )
             with gr.Row():
                 dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
-                                               type='text').style(show_copy_button=True)
+                                               type='text', show_copy_button=True)
             with gr.Row():
                 dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
             with gr.Row():
                 dataset_gallery = gr.Gallery(
                     label="Dataset images", show_label=False, elem_id="gallery",
-                ).style(columns=[2], rows=[2], object_fit="contain", height="auto")
+                    columns=[2], rows=[2], object_fit="contain", height="auto"
+                )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
                     resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)
@@ -874,11 +1093,39 @@ def dataset_tab():
     return dt
 
 
+def delete_dataset(selected_value):
+    logger.debug(f"selected value is {selected_value}")
+    if selected_value:
+        if selected_value == 'cancelled':
+            return
+        resp = api.delete_datasets(data={
+            "dataset_name_list": [selected_value],
+        })
+        if resp.status_code != 204:
+            gr.Error(f"Error deleting dataset: {resp.json()['message']}")
+        gr.Info(f"{selected_value} deleted successfully")
+    else:
+        gr.Warning('Please select a dataset to delete')
+
+
 def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
+    if api_url == 'cancelled':
+        return "cancelled"
+
+    if not api_url:
+        return "Please input api url"
+
+    if not api_token:
+        return "Please input api token"
+
     # Check if api_url ends with '/', if not append it
     if not api_url.endswith('/'):
         api_url += '/'
 
+    if not test_aws_connect_config(api_url, api_token):
+        return "Failed to connect to backend server, please check the url and token"
+
+    message = "Successfully Connected"
     save_variable_to_json('api_gateway_url', api_url)
     save_variable_to_json('api_token', api_token)
     save_variable_to_json('username', username)
@@ -890,19 +1137,16 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     try:
         if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
                                        initial=initial, user_token=username):
-            return 'Initial Setup Failed'
+            return f'{message}, but update setting failed'
     except Exception as e:
-        return f'User upsert failed: {e}'
-    return "Setting updated"
+        return f'{message}, but update setting failed: {e}'
+    return f"{message} & Setting Updated"
 
 
 def test_aws_connect_config(api_url, api_token):
-    # update_connect_config(api_url, api_token, initial=False)
-    api_url = get_variable_from_json('api_gateway_url')
-    api_token = get_variable_from_json('api_token')
     if not api_url.endswith('/'):
         api_url += '/'
-    target_url = f'{api_url}inference/test-connection'
+    target_url = f'{api_url}ping'
     headers = {
         "x-api-key": api_token,
         "Content-Type": "application/json"
@@ -911,8 +1155,7 @@ def test_aws_connect_config(api_url, api_token):
         response = requests.get(target_url,
                                 headers=headers)  # Assuming sagemaker_ui.server_request is a wrapper around requests
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
-        r = response.json()
-        return "Successfully Connected"
+        return response.json()['message'] == 'pong'
     except requests.exceptions.RequestException as e:
         logger.error(f"Error: Failed to get server request. Details: {e}")
-        return "failed to connect to backend server, please check the url and token"
+        return False
