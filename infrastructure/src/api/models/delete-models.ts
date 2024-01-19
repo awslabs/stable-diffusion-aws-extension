@@ -34,6 +34,7 @@ export class DeleteModelsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: DeleteModelsApiProps) {
     this.scope = scope;
@@ -45,33 +46,13 @@ export class DeleteModelsApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.deleteModelsApi();
   }
 
-  private deleteModelsApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/models`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
-        index: 'delete_models.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 1024,
-        environment: {
-          MODELS_TABLE: this.modelTable.tableName,
-          S3_BUCKET_NAME: this.s3Bucket.bucketName,
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
-        layers: [this.layer],
-      });
-
-    const requestModel = new Model(
+  private createModel(): Model {
+    return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
@@ -99,6 +80,30 @@ export class DeleteModelsApi {
         },
         contentType: 'application/json',
       });
+  }
+
+  private deleteModelsApi() {
+
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/models`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_models.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          MODELS_TABLE: this.modelTable.tableName,
+          S3_BUCKET_NAME: this.s3Bucket.bucketName,
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
+        layers: [this.layer],
+      });
+
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -122,7 +127,7 @@ export class DeleteModelsApi {
         apiKeyRequired: true,
         requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

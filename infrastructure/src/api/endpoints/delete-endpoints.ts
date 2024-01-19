@@ -37,6 +37,7 @@ export class DeleteEndpointsApi {
   private readonly baseId: string;
   private readonly authorizer: IAuthorizer;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
     this.scope = scope;
@@ -49,6 +50,7 @@ export class DeleteEndpointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.deleteEndpointsApi();
   }
@@ -115,25 +117,8 @@ export class DeleteEndpointsApi {
     return newRole;
   }
 
-  private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/endpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'delete_endpoints.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const model = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -162,6 +147,26 @@ export class DeleteEndpointsApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private deleteEndpointsApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/endpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'delete_endpoints.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const deleteEndpointsIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -180,7 +185,7 @@ export class DeleteEndpointsApi {
       authorizer: this.authorizer,
       requestValidator,
       requestModels: {
-        'application/json': model,
+        'application/json': this.model,
       },
     });
 

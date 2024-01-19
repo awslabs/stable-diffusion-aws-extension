@@ -60,6 +60,7 @@ export class UpdateModelApi {
   private readonly dockerRepo: aws_ecr.Repository;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: UpdateModelApiProps) {
     this.scope = scope;
@@ -75,6 +76,7 @@ export class UpdateModelApi {
     this.imageUrl = AIGC_WEBUI_UTILS + props.ecr_image_tag;
     this.logLevel = props.logLevel;
     this.resourceProvider = props.resourceProvider;
+    this.model = this.createModel();
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
@@ -158,6 +160,33 @@ export class UpdateModelApi {
     return newRole;
   }
 
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+        required: [
+          'status',
+          'multi_parts_tags',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
   private updateModelApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/models`,
@@ -186,30 +215,6 @@ export class UpdateModelApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          multi_parts_tags: {
-            type: JsonSchemaType.OBJECT,
-          },
-        },
-        required: [
-          'status',
-          'multi_parts_tags',
-        ],
-      },
-      contentType: 'application/json',
-    });
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -224,7 +229,7 @@ export class UpdateModelApi {
         apiKeyRequired: true,
         requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
   }

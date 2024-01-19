@@ -33,8 +33,8 @@ export class DeleteUsersApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
-
   private readonly baseId: string;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: DeleteUsersApiProps) {
     this.scope = scope;
@@ -46,8 +46,37 @@ export class DeleteUsersApi {
     this.multiUserTable = props.multiUserTable;
     this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.deleteUserApi();
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          user_name_list: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 100,
+          },
+        },
+        required: [
+          'user_name_list',
+        ],
+      },
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -100,31 +129,6 @@ export class DeleteUsersApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          user_name_list: {
-            type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
-            minItems: 1,
-            maxItems: 100,
-          },
-        },
-        required: [
-          'user_name_list',
-        ],
-      },
-      contentType: 'application/json',
-    });
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -146,7 +150,7 @@ export class DeleteUsersApi {
       authorizer: this.authorizer,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

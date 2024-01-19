@@ -36,6 +36,7 @@ export class DeleteDatasetsApi {
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: DeleteDatasetsApiProps) {
     this.scope = scope;
@@ -48,34 +49,13 @@ export class DeleteDatasetsApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.deleteDatasetsApi();
   }
 
-  private deleteDatasetsApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/datasets`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
-        index: 'delete_datasets.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 1024,
-        environment: {
-          DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-          DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
-          S3_BUCKET_NAME: this.s3Bucket.bucketName,
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
-        layers: [this.layer],
-      });
-
-    const requestModel = new Model(
+  private createModel():Model {
+    return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
@@ -105,6 +85,31 @@ export class DeleteDatasetsApi {
         },
         contentType: 'application/json',
       });
+  }
+
+  private deleteDatasetsApi() {
+
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/datasets`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_datasets.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+          DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
+          S3_BUCKET_NAME: this.s3Bucket.bucketName,
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
+        layers: [this.layer],
+      });
+
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -128,7 +133,7 @@ export class DeleteDatasetsApi {
         apiKeyRequired: true,
         requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

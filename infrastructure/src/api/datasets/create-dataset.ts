@@ -41,6 +41,7 @@ export class CreateDatasetApi {
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: CreateDatasetApiProps) {
     this.scope = scope;
@@ -54,6 +55,7 @@ export class CreateDatasetApi {
     this.s3Bucket = props.s3Bucket;
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel()
 
     this.createDatasetApi();
   }
@@ -113,27 +115,8 @@ export class CreateDatasetApi {
     return newRole;
   }
 
-  private createDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/datasets`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_dataset.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
-        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel():Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -194,6 +177,28 @@ export class CreateDatasetApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createDatasetApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/datasets`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_dataset.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
+        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -213,7 +218,7 @@ export class CreateDatasetApi {
       apiKeyRequired: true,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

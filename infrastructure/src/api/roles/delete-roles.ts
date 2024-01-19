@@ -31,6 +31,7 @@ export class DeleteRolesApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: DeleteRolesApiProps) {
     this.scope = scope;
@@ -41,6 +42,7 @@ export class DeleteRolesApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.deleteRolesApi();
   }
@@ -82,28 +84,8 @@ export class DeleteRolesApi {
     return newRole;
   }
 
-  private deleteRolesApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/roles`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
-        index: 'delete_roles.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 1024,
-        environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
-        layers: [this.layer],
-      });
-
-    const requestModel = new Model(
+  private createModel(): Model {
+    return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
@@ -131,6 +113,29 @@ export class DeleteRolesApi {
         },
         contentType: 'application/json',
       });
+  }
+
+  private deleteRolesApi() {
+
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/roles`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_roles.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          MULTI_USER_TABLE: this.multiUserTable.tableName,
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
+        layers: [this.layer],
+      });
+
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -154,7 +159,7 @@ export class DeleteRolesApi {
         apiKeyRequired: true,
         requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

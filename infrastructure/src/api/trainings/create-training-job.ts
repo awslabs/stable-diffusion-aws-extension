@@ -43,6 +43,7 @@ export class CreateTrainingJobApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;
@@ -57,6 +58,7 @@ export class CreateTrainingJobApi {
     this.router = props.router;
     this.trainTable = props.trainTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.createTrainJobLambda();
   }
@@ -113,35 +115,8 @@ export class CreateTrainingJobApi {
     return newRole;
   }
 
-  private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_training_job.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.lambdaRole(),
-      memorySize: 1024,
-      environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const createTrainJobIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    const requestModel = new Model(this.scope, `${this.id}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
       modelName: this.id,
       description: `${this.id} Request Model`,
@@ -175,6 +150,36 @@ export class CreateTrainingJobApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createTrainJobLambda(): aws_lambda.IFunction {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/trainings`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_training_job.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.lambdaRole(),
+      memorySize: 1024,
+      environment: {
+        S3_BUCKET: this.s3Bucket.bucketName,
+        TRAIN_TABLE: this.trainTable.tableName,
+        MODEL_TABLE: this.modelTable.tableName,
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
+    const createTrainJobIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -189,7 +194,7 @@ export class CreateTrainingJobApi {
       apiKeyRequired: true,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
 

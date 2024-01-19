@@ -32,8 +32,8 @@ export class CreateRoleApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
-
   private readonly baseId: string;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: CreateRoleApiProps) {
     this.scope = scope;
@@ -44,6 +44,7 @@ export class CreateRoleApi {
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.createRoleApi();
   }
@@ -81,24 +82,8 @@ export class CreateRoleApi {
     return newRole;
   }
 
-  private createRoleApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/roles`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_role.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -133,6 +118,25 @@ export class CreateRoleApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createRoleApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/roles`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_role.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -152,7 +156,7 @@ export class CreateRoleApi {
       apiKeyRequired: true,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }
