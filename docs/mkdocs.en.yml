@@ -28,7 +28,7 @@ nav:
     - Uninstall the solution: uninstall.md
     - Use the solution:
         - Preparation: user-guide/preparation.md
-        - Configure API and Multiple Users: user-guide/multi-user.md
+        - Configure API and Users Management: user-guide/multi-user.md
         - Cloud Assets Management: user-guide/CloudAssetsManage.md
         - txt2img guide: user-guide/txt2img-guide.md
         - img2img guide: user-guide/img2img-guide.md
