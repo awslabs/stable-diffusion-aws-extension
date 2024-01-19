@@ -1055,7 +1055,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 
 ```
 
-`POST /model`
+`POST /models`
 
 > Body 参数
 
@@ -1138,7 +1138,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 
 <br/>
 
-# /model(PUT)
+# /models/{id} (PUT)
 
 ### **示例：**
 
@@ -1238,13 +1238,12 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 
 ```
 
-`PUT /model`
+`PUT /models/{id}`
 
 > Body 参数
 
 ```json
 {
-  "model_id": "c9f59ee7-0672-4fd1-8a45-8a494de8a48d",
   "status": "Creating",
   "multi_parts_tags": {
     "v1-5-pruned-emaonly.safetensors.tar": [
@@ -1320,7 +1319,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/model',
 
 <br/>
 
-# /models(GET)
+# /models (GET)
 
 ### **示例：**
 
@@ -1412,7 +1411,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/models',
 
 <br/>
 
-# /checkpoint
+# /checkpoints
 
 ### **示例：**
 
@@ -1484,7 +1483,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint
 
 ```
 
-`POST /checkpoint`
+`POST /checkpoints`
 
 > Body 参数
 
@@ -1559,7 +1558,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint
 
 <br/>
 
-# /checkpoint(put)
+# /checkpoints/{id} (put)
 
 ### **示例：**
 
@@ -1659,7 +1658,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/checkpoint
 
 ```
 
-`PUT /checkpoint`
+`PUT /checkpoints/{id}`
 
 > Body 参数
 
@@ -2078,7 +2077,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inferences
 
 <br/>
 
-# /train(PUT)
+# /trainings/{id} (PUT)
 
 ### **示例：**
 
@@ -2130,7 +2129,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/train',
 
 ```
 
-`PUT /train`
+`PUT /trainings/{id}`
 
 > Body 参数
 
@@ -2189,7 +2188,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/train',
 
 <br/>
 
-# /trains(GET)
+# /trainings (GET)
 
 ### **示例：**
 
@@ -2231,7 +2230,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/trains',
 
 ```
 
-`GET /trains`
+`GET /trainings`
 
 <h3 id="list-train-jobs-parameters">参数</h3>
 
@@ -2283,7 +2282,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/trains',
 
 <br/>
 
-# /dataset(POST)
+# /datasets (POST)
 
 创建新数据集
 
@@ -2415,7 +2414,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/dataset',
 
 <br/>
 
-# /dataset(PUT)
+# /datasets/{name} (PUT)
 
 ### **示例：**
 
@@ -2520,7 +2519,7 @@ fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePat
 
 <br/>
 
-# /datasets(GET)
+# /datasets (GET)
 
 列出所有数据集
 
@@ -2614,7 +2613,7 @@ fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePat
 
 <br/>
 
-# /{dataset_name}/data
+# /datasets/{name}
 
 ### **示例：**
 
@@ -2656,7 +2655,7 @@ fetch('https://<Your API Gateway ID>.execute-api.{region}.amazonaws.com/{basePat
 
 ```
 
-`GET /{dataset_name}/data`
+`GET /datasets/{name}`
 
 <h3 id="list-dataset-items-by-dataset-name-parameters">参数</h3>
 
