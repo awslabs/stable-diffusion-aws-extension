@@ -119,7 +119,7 @@ Middleware->Client: return the inference parameter in presigned url format
 
 | 序号  | HTTP 方法 | API 名称                                                                                                  | 描述                                  |
 |-----|---------|---------------------------------------------------------------------------------------------------------|-------------------------------------|
-| 1   | GET     | [/inference/test-connection](#inferencetest-connection)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
+| 1   | GET     | [/ping](#ping)                                                 | 测试客户端是否可以连接到 API 并检查 API_TOKEN 是否正确 |
 | 2   | GET     | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | 列出所有推理作业。                           |
 | 3   | GET     | [/inference/get-inference-job](#inferenceget-inference-job)                                             | 获取特定推理作业的详细信息。                      |
 | 4   | GET     | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | 获取特定推理作业的图像输出。                      |
@@ -153,7 +153,7 @@ Middleware->Client: return the inference parameter in presigned url format
 
 <br/>
 
-# /inference/test-connection
+# /ping
 ## 测试中间件连接状态
 
 <a id="opIdtest_connection_get"></a>
@@ -169,7 +169,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping', headers = headers)
 
 print(r.json())
 
@@ -184,7 +184,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping',
 {
   method: 'GET',
 
@@ -198,7 +198,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/test-connection`
+`GET /ping`
 
 > 响应示例
 

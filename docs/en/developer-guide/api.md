@@ -117,7 +117,7 @@ Middleware->Client: return the inference parameter in presigned url format
 
 | Index | Http Method | API Name                                                                                                | Description |
 |-------|-------------|---------------------------------------------------------------------------------------------------------| --- |
-| 1     | GET         | [/inference/test-connection](#inferencetest-connection)                                                 | Test whether client can connect to api and check the API_TOKEN is correct | | 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
+| 1     | GET         | [/ping](#ping)                                                 | Test whether client can connect to api and check the API_TOKEN is correct | | 2 | [/inference/list-inference-jobs](#inferencelist-inference-jobs)                                         | Lists all inference jobs. |
 | 3     | GET         | [/inference/get-inference-job](#inferenceget-inference-job)                                             | Retrieves details of a specific inference job. |
 | 4     | GET         | [/inference/get-inference-job-image-output](#inferenceget-inference-job-image-output)                   | Gets image output of a specific inference job.               |
 | 5     | GET         | [/inference/get-inference-job-param-output](#inferenceget-inference-job-param-output)                   | Gets parameter output of a specific inference job.                                     |
@@ -148,7 +148,7 @@ Middleware->Client: return the inference parameter in presigned url format
 | 30  | POST        | [/upload_checkpoint](#upload_checkpointpost)                                                            | Upload directly to s3 according to the model url.                   |
 <br/>
 
-# /inference/test-connection
+# /ping
 ## test middleware connection
 
 <a id="opIdtest_connection_get"></a>
@@ -164,7 +164,7 @@ headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 }
 
-r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection', headers = headers)
+r = requests.get('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping', headers = headers)
 
 print(r.json())
 
@@ -179,7 +179,7 @@ const headers = {
   'x-api-key': 'API_TOKEN_VALUE'
 };
 
-fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/test-connection',
+fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/ping',
 {
   method: 'GET',
 
@@ -193,7 +193,7 @@ fetch('https://{api_id}.execute-api.{region}.amazonaws.com/{basePath}/inference/
 
 ```
 
-`GET /inference/test-connection`
+`GET /ping`
 
 > Example responses
 

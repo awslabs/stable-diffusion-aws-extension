@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Extension for Stable Diffusion on AWS
   description: 'This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.'
-  version: 1.2.1
+  version: 1.4.0
   license:
     name: Apache 2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
@@ -18,7 +18,7 @@ tags:
   - name: Model
   - name: Train
 paths:
-  /inference/test-connection:
+  /ping:
     get:
       summary: TestConnection
       x-apifox-folder: Test
