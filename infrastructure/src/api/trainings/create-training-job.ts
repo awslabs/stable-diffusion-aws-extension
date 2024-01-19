@@ -178,7 +178,7 @@ export class CreateTrainingJobApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.id}-validator`,
+      `${this.id}-create-train-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

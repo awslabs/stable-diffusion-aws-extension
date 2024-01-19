@@ -109,7 +109,7 @@ export class DeleteInferenceJobsApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-del-infer-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

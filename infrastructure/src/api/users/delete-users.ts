@@ -128,7 +128,7 @@ export class DeleteUsersApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-delete-user-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

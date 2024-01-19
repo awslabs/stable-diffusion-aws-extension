@@ -171,7 +171,7 @@ export class CreateInferenceJobApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.id}-validator`,
+      `${this.id}-create-infer-Validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

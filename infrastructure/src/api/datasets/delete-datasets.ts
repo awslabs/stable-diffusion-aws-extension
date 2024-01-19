@@ -115,7 +115,7 @@ export class DeleteDatasetsApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-del-dataset-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

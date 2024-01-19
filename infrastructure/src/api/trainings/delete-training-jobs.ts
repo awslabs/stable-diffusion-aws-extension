@@ -107,7 +107,7 @@ export class DeleteTrainingJobsApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-del-train-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

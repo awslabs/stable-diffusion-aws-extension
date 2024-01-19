@@ -147,7 +147,7 @@ export class UpdateDatasetApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-update-dataset-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

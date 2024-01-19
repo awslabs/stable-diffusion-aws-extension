@@ -109,7 +109,7 @@ export class DeleteCheckpointsApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-del-ckpt-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

@@ -189,7 +189,7 @@ export class UpdateCheckPointApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-update-ckpt-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

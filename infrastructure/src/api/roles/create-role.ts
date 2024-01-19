@@ -136,7 +136,7 @@ export class CreateRoleApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-create-role-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

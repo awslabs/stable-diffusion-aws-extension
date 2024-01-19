@@ -141,7 +141,7 @@ export class DeleteRolesApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-del-role-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

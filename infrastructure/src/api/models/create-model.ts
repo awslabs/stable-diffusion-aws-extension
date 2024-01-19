@@ -170,7 +170,7 @@ export class CreateModelJobApi {
 
     const requestValidator = new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-create-model-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,

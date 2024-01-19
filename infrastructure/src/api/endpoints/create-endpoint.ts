@@ -282,7 +282,7 @@ export class CreateEndpointApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
+    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
       restApi: this.router.api,
       validateRequestBody: true,
       validateRequestParameters: false,

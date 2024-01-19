@@ -170,7 +170,7 @@ export class DeleteEndpointsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
+    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-del-ep-validator`, {
       restApi: this.router.api,
       validateRequestBody: true,
     });
