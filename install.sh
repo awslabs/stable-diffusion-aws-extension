@@ -52,3 +52,4 @@ cd ..
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git --branch master --single-branch
 cd stable-diffusion-webui-rembg
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
+cd ..
