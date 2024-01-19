@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Extension for Stable Diffusion on AWS
   description: 'This is a WebUI extension to help user migrate existing workload (inference, train, ckpt merge etc.) from local server or standalone server to AWS Cloud.'
-  version: 1.2.1
+  version: 1.4.0
   license:
     name: Apache 2.0
     url: 'https://www.apache.org/licenses/LICENSE-2.0.html'
@@ -18,7 +18,7 @@ tags:
   - name: Model
   - name: Train
 paths:
-  /inference/test-connection:
+  /ping:
     get:
       summary: TestConnection
       x-apifox-folder: Test
@@ -1180,7 +1180,7 @@ paths:
                   value: Endpoint deleted
       security:
         - apikey-header-x-api-key: []
-  /inference/v2:
+  /inferences:
     post:
       summary: CreateInferenceJob
       x-apifox-folder: Inference
@@ -1333,7 +1333,7 @@ paths:
                           type: Stable-diffusion
       security:
         - apikey-header-x-api-key: []
-  '/inference/v2/{jobId}/run':
+  '/inferences/{jobId}/start':
     put:
       summary: RunInferenceJob
       x-apifox-folder: Inference
@@ -1411,7 +1411,7 @@ paths:
                       output_path: 's3://******/sagemaker_output/25cd69fd-2ca6-4f37-87a5-aec2abfb9bf7.out'
       security:
         - apikey-header-x-api-key: []
-  /inference/get-inference-job:
+  /inferences/{id}:
     get:
       summary: GetInferenceJob
       x-apifox-folder: Inference
