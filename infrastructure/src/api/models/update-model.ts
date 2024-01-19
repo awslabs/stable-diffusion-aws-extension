@@ -61,6 +61,7 @@ export class UpdateModelApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: UpdateModelApiProps) {
     this.scope = scope;
@@ -77,6 +78,7 @@ export class UpdateModelApi {
     this.logLevel = props.logLevel;
     this.resourceProvider = props.resourceProvider;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
@@ -187,6 +189,16 @@ export class UpdateModelApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-model-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private updateModelApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/models`,
@@ -215,19 +227,10 @@ export class UpdateModelApi {
       },
     );
 
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-update-model-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
           'application/json': this.model,
         },

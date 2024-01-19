@@ -38,6 +38,7 @@ export class CreateUserApi {
   private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateUserApiProps) {
     this.scope = scope;
@@ -51,6 +52,7 @@ export class CreateUserApi {
     this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.upsertUserApi();
   }
@@ -146,6 +148,16 @@ export class CreateUserApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-user-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private upsertUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/users`,
@@ -165,14 +177,6 @@ export class CreateUserApi {
     });
 
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-user-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -182,7 +186,7 @@ export class CreateUserApi {
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

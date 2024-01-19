@@ -32,6 +32,7 @@ export class DeleteRolesApi {
   private readonly baseId: string;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteRolesApiProps) {
     this.scope = scope;
@@ -43,6 +44,7 @@ export class DeleteRolesApi {
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteRolesApi();
   }
@@ -115,6 +117,16 @@ export class DeleteRolesApi {
       });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-role-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private deleteRolesApi() {
 
     const lambdaFunction = new PythonFunction(
@@ -144,20 +156,13 @@ export class DeleteRolesApi {
       },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-role-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
           'application/json': this.model,
         },

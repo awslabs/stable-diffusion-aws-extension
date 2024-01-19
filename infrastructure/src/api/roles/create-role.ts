@@ -34,6 +34,7 @@ export class CreateRoleApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateRoleApiProps) {
     this.scope = scope;
@@ -45,6 +46,7 @@ export class CreateRoleApi {
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createRoleApi();
   }
@@ -120,6 +122,16 @@ export class CreateRoleApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-role-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createRoleApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/roles`,
@@ -138,14 +150,6 @@ export class CreateRoleApi {
     });
 
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-role-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     const upsertRoleIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -154,7 +158,7 @@ export class CreateRoleApi {
     );
     this.router.addMethod(this.httpMethod, upsertRoleIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

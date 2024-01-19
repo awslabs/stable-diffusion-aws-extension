@@ -44,6 +44,7 @@ export class CreateInferenceJobApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
@@ -59,6 +60,7 @@ export class CreateInferenceJobApi {
     this.router = props.router;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createInferenceJobLambda();
   }
@@ -152,6 +154,16 @@ export class CreateInferenceJobApi {
     return newRole;
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.id}-create-infer-Validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createInferenceJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/inferences`,
@@ -173,13 +185,6 @@ export class CreateInferenceJobApi {
       layers: [this.layer],
     });
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.id}-create-infer-Validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     const createInferenceJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -187,9 +192,10 @@ export class CreateInferenceJobApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, createInferenceJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

@@ -42,6 +42,7 @@ export class CreateDatasetApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateDatasetApiProps) {
     this.scope = scope;
@@ -55,7 +56,8 @@ export class CreateDatasetApi {
     this.s3Bucket = props.s3Bucket;
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
-    this.model = this.createModel()
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createDatasetApi();
   }
@@ -179,6 +181,16 @@ export class CreateDatasetApi {
     });
   }
 
+  private createRequestValidator() {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-dataset-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createDatasetApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/datasets`,
@@ -200,14 +212,6 @@ export class CreateDatasetApi {
     });
 
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-dataset-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     const createDatasetIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -216,7 +220,7 @@ export class CreateDatasetApi {
     );
     this.router.addMethod(this.httpMethod, createDatasetIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

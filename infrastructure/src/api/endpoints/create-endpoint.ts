@@ -54,6 +54,7 @@ export class CreateEndpointApi {
   private readonly inferenceResultErrorTopic: Topic;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -73,6 +74,7 @@ export class CreateEndpointApi {
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createEndpointsApi();
   }
@@ -253,6 +255,14 @@ export class CreateEndpointApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
+      validateRequestParameters: false,
+    });
+  }
+
   private createEndpointsApi() {
 
     const role = this.iamRole();
@@ -287,16 +297,11 @@ export class CreateEndpointApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-      validateRequestParameters: false,
-    });
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

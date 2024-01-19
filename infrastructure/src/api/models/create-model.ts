@@ -41,6 +41,7 @@ export class CreateModelJobApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateModelJobApiProps) {
     this.scope = scope;
@@ -55,6 +56,7 @@ export class CreateModelJobApi {
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createModelJobApi();
   }
@@ -105,6 +107,16 @@ export class CreateModelJobApi {
       resources: ['*'],
     }));
     return newRole;
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-model-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
   }
 
   private createModel(): Model {
@@ -172,18 +184,9 @@ export class CreateModelJobApi {
       },
     );
 
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-model-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

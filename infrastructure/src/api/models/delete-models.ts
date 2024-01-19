@@ -35,6 +35,7 @@ export class DeleteModelsApi {
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteModelsApiProps) {
     this.scope = scope;
@@ -47,6 +48,7 @@ export class DeleteModelsApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteModelsApi();
   }
@@ -82,6 +84,16 @@ export class DeleteModelsApi {
       });
   }
 
+  private createRequestValidator() :RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-model-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private deleteModelsApi() {
 
     const lambdaFunction = new PythonFunction(
@@ -112,20 +124,12 @@ export class DeleteModelsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-model-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
           'application/json': this.model,
         },

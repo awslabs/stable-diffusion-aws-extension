@@ -43,6 +43,7 @@ export class CreateCheckPointApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateCheckPointApiProps) {
     this.scope = scope;
@@ -57,6 +58,7 @@ export class CreateCheckPointApi {
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
     this.createCheckpointApi();
   }
@@ -214,6 +216,16 @@ export class CreateCheckPointApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-ckpt-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createCheckpointApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
@@ -234,13 +246,6 @@ export class CreateCheckPointApi {
       layers: [this.layer],
     });
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-create-ckpt-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     const createCheckpointIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -250,7 +255,7 @@ export class CreateCheckPointApi {
     );
     this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

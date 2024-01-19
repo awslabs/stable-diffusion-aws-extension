@@ -37,6 +37,7 @@ export class DeleteDatasetsApi {
   private readonly s3Bucket: Bucket;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteDatasetsApiProps) {
     this.scope = scope;
@@ -50,6 +51,7 @@ export class DeleteDatasetsApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteDatasetsApi();
   }
@@ -87,6 +89,16 @@ export class DeleteDatasetsApi {
       });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-dataset-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private deleteDatasetsApi() {
 
     const lambdaFunction = new PythonFunction(
@@ -118,20 +130,13 @@ export class DeleteDatasetsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-del-dataset-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
           'application/json': this.model,
         },

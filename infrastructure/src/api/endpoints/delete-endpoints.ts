@@ -38,6 +38,7 @@ export class DeleteEndpointsApi {
   private readonly authorizer: IAuthorizer;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
     this.scope = scope;
@@ -51,6 +52,7 @@ export class DeleteEndpointsApi {
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteEndpointsApi();
   }
@@ -149,6 +151,13 @@ export class DeleteEndpointsApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-del-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
+    });
+  }
+
   private deleteEndpointsApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/endpoints`,
@@ -175,15 +184,11 @@ export class DeleteEndpointsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-del-ep-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-    });
 
     this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

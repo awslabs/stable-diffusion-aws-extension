@@ -35,6 +35,7 @@ export class DeleteUsersApi {
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: DeleteUsersApiProps) {
     this.scope = scope;
@@ -47,6 +48,7 @@ export class DeleteUsersApi {
     this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteUserApi();
   }
@@ -112,6 +114,16 @@ export class DeleteUsersApi {
     return newRole;
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-delete-user-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private deleteUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/users`,
@@ -130,14 +142,6 @@ export class DeleteUsersApi {
     });
 
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-delete-user-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
@@ -148,7 +152,7 @@ export class DeleteUsersApi {
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },

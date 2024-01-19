@@ -44,6 +44,7 @@ export class CreateTrainingJobApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
   public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;
@@ -59,6 +60,7 @@ export class CreateTrainingJobApi {
     this.trainTable = props.trainTable;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createTrainJobLambda();
   }
@@ -152,6 +154,16 @@ export class CreateTrainingJobApi {
     });
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.id}-create-train-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/trainings`,
@@ -180,19 +192,9 @@ export class CreateTrainingJobApi {
       },
     );
 
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.id}-create-train-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
-
     this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },
