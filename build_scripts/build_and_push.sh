@@ -27,6 +27,8 @@ cp ../install.sh .
 sh install.sh
 rm install.sh
 
+ls -la
+
 if [ "$mode" = "" ]
 then
     cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
