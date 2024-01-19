@@ -28,7 +28,7 @@ export interface ListDatasetsApiProps {
 }
 
 export class ListDatasetsApi {
-  private readonly src;
+  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;

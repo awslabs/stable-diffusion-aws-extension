@@ -25,6 +25,8 @@ export interface DeleteUsersApiProps {
 }
 
 export class DeleteUsersApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -33,7 +35,6 @@ export class DeleteUsersApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
-
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: DeleteUsersApiProps) {
@@ -46,8 +47,38 @@ export class DeleteUsersApi {
     this.multiUserTable = props.multiUserTable;
     this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteUserApi();
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          user_name_list: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+              minLength: 1,
+            },
+            minItems: 1,
+            maxItems: 100,
+          },
+        },
+        required: [
+          'user_name_list',
+        ],
+      },
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -83,6 +114,16 @@ export class DeleteUsersApi {
     return newRole;
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-delete-user-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private deleteUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/users`,
@@ -100,39 +141,6 @@ export class DeleteUsersApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          user_name_list: {
-            type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
-            minItems: 1,
-            maxItems: 100,
-          },
-        },
-        required: [
-          'user_name_list',
-        ],
-      },
-      contentType: 'application/json',
-    });
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -144,9 +152,9 @@ export class DeleteUsersApi {
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

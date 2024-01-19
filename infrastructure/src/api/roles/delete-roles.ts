@@ -23,6 +23,8 @@ export interface DeleteRolesApiProps {
 }
 
 export class DeleteRolesApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -41,6 +43,8 @@ export class DeleteRolesApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteRolesApi();
   }
@@ -82,28 +86,8 @@ export class DeleteRolesApi {
     return newRole;
   }
 
-  private deleteRolesApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/roles`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
-        index: 'delete_roles.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 1024,
-        environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
-        layers: [this.layer],
-      });
-
-    const requestModel = new Model(
+  private createModel(): Model {
+    return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
@@ -131,6 +115,39 @@ export class DeleteRolesApi {
         },
         contentType: 'application/json',
       });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-role-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
+  private deleteRolesApi() {
+
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/roles`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_roles.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          MULTI_USER_TABLE: this.multiUserTable.tableName,
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
+        layers: [this.layer],
+      });
+
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -139,22 +156,15 @@ export class DeleteRolesApi {
       },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
 
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

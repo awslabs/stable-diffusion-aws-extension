@@ -25,6 +25,8 @@ export interface DeleteTrainingJobsApiProps {
 }
 
 export class DeleteTrainingJobsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -45,33 +47,14 @@ export class DeleteTrainingJobsApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteInferenceJobsApi();
   }
 
-  private deleteInferenceJobsApi() {
-
-    const lambdaFunction = new PythonFunction(
-      this.scope,
-      `${this.baseId}-lambda`,
-      {
-        entry: `${this.src}/trainings`,
-        architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
-        index: 'delete_training_jobs.py',
-        handler: 'handler',
-        timeout: Duration.seconds(900),
-        role: this.iamRole(),
-        memorySize: 1024,
-        environment: {
-          TRAINING_JOB_TABLE: this.trainingTable.tableName,
-          S3_BUCKET_NAME: this.s3Bucket.bucketName,
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
-        layers: [this.layer],
-      });
-
-    const requestModel = new Model(
+  private createModel(): Model {
+    return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
@@ -99,28 +82,54 @@ export class DeleteTrainingJobsApi {
         },
         contentType: 'application/json',
       });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-train-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
+  private deleteInferenceJobsApi() {
+
+    const lambdaFunction = new PythonFunction(
+      this.scope,
+      `${this.baseId}-lambda`,
+      {
+        entry: `${this.src}/trainings`,
+        architecture: Architecture.X86_64,
+        runtime: Runtime.PYTHON_3_9,
+        index: 'delete_training_jobs.py',
+        handler: 'handler',
+        timeout: Duration.seconds(900),
+        role: this.iamRole(),
+        memorySize: 1024,
+        environment: {
+          TRAINING_JOB_TABLE: this.trainingTable.tableName,
+          S3_BUCKET_NAME: this.s3Bucket.bucketName,
+          LOG_LEVEL: this.logLevel.valueAsString,
+        },
+        layers: [this.layer],
+      });
+
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       { proxy: true },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

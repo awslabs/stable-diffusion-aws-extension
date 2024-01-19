@@ -45,10 +45,11 @@ export interface UpdateModelApiProps {
 export class UpdateModelApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly imageUrl: string;
   private readonly machineType: string;
   private readonly resourceProvider: ResourceProvider;
-
   private readonly src;
   private readonly scope: Construct;
   private readonly modelTable: aws_dynamodb.Table;
@@ -75,6 +76,8 @@ export class UpdateModelApi {
     this.imageUrl = AIGC_WEBUI_UTILS + props.ecr_image_tag;
     this.logLevel = props.logLevel;
     this.resourceProvider = props.resourceProvider;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
@@ -158,6 +161,43 @@ export class UpdateModelApi {
     return newRole;
   }
 
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+        required: [
+          'status',
+          'multi_parts_tags',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-model-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private updateModelApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/models`,
@@ -186,45 +226,12 @@ export class UpdateModelApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          multi_parts_tags: {
-            type: JsonSchemaType.OBJECT,
-          },
-        },
-        required: [
-          'status',
-          'multi_parts_tags',
-        ],
-      },
-      contentType: 'application/json',
-    });
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
   }

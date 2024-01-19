@@ -37,6 +37,8 @@ export interface CreateEndpointApiProps {
 }
 
 export class CreateEndpointApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -71,6 +73,8 @@ export class CreateEndpointApi {
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createEndpointsApi();
   }
@@ -195,33 +199,8 @@ export class CreateEndpointApi {
     return lambdaStartDeployRole;
   }
 
-  private createEndpointsApi() {
-
-    const role = this.iamRole();
-
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/endpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_endpoint.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: role,
-      memorySize: 1024,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: this.inferenceECRUrl,
-        SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
-        SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
-        EXECUTION_ROLE_ARN: role.roleArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const model = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',
       modelName: this.baseId,
@@ -274,6 +253,42 @@ export class CreateEndpointApi {
         ],
       },
     });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
+      validateRequestParameters: false,
+    });
+  }
+
+  private createEndpointsApi() {
+
+    const role = this.iamRole();
+
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/endpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_endpoint.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: role,
+      memorySize: 1024,
+      environment: {
+        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        S3_BUCKET_NAME: this.s3Bucket.bucketName,
+        INFERENCE_ECR_IMAGE_URL: this.inferenceECRUrl,
+        SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
+        SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
+        EXECUTION_ROLE_ARN: role.roleArn,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const integration = new LambdaIntegration(
       lambdaFunction,
@@ -282,18 +297,13 @@ export class CreateEndpointApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-      validateRequestParameters: false,
-    });
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': model,
+        'application/json': this.model,
       },
     });
 

@@ -27,6 +27,8 @@ export interface DeleteEndpointsApiProps {
 }
 
 export class DeleteEndpointsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -49,6 +51,8 @@ export class DeleteEndpointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteEndpointsApi();
   }
@@ -115,25 +119,8 @@ export class DeleteEndpointsApi {
     return newRole;
   }
 
-  private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/endpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'delete_endpoints.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const model = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -162,6 +149,33 @@ export class DeleteEndpointsApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-del-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
+    });
+  }
+
+  private deleteEndpointsApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/endpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'delete_endpoints.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const deleteEndpointsIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -170,17 +184,13 @@ export class DeleteEndpointsApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
-      restApi: this.router.api,
-      validateRequestBody: true,
-    });
 
     this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': model,
+        'application/json': this.model,
       },
     });
 
