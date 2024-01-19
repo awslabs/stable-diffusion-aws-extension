@@ -38,6 +38,7 @@ export class UpdateCheckPointApi {
   private readonly role: aws_iam.Role;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
+  public  model: Model;
 
   constructor(scope: Construct, id: string, props: UpdateCheckPointApiProps) {
     this.scope = scope;
@@ -50,6 +51,7 @@ export class UpdateCheckPointApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
+    this.model = this.createModel();
 
     this.updateCheckpointApi();
   }
@@ -123,6 +125,35 @@ export class UpdateCheckPointApi {
     return newRole;
   }
 
+  private createModel():Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+            maxLength: 20,
+            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+      },
+      contentType: 'application/json',
+    });
+  }
+
   private updateCheckpointApi() {
     const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
@@ -160,32 +191,6 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-            maxLength: 20,
-            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-          },
-          multi_parts_tags: {
-            type: JsonSchemaType.OBJECT,
-          },
-        },
-      },
-      contentType: 'application/json',
-    });
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -207,7 +212,7 @@ export class UpdateCheckPointApi {
           apiKeyRequired: true,
           requestValidator,
           requestModels: {
-            'application/json': requestModel,
+            'application/json': this.model,
           },
         });
   }

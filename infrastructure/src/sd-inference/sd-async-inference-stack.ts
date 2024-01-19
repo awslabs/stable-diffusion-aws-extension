@@ -86,7 +86,7 @@ export class SDAsyncInferenceStack {
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
 
-    new CreateInferenceJobApi(
+    const createInferenceJobApi = new CreateInferenceJobApi(
       scope, 'CreateInferenceJob',
             <CreateInferenceJobApiProps>{
               checkpointTable: props.checkpointTable,

@@ -43,6 +43,7 @@ export class CreateInferenceJobApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
@@ -57,8 +58,46 @@ export class CreateInferenceJobApi {
     this.httpMethod = props.httpMethod;
     this.router = props.router;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
 
     this.createInferenceJobLambda();
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.id}-model`, {
+      restApi: this.router.api,
+      modelName: this.id,
+      description: `${this.id} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          task_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          inference_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['Real-time', 'Serverless', 'Async'],
+          },
+          models: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              embeddings: {
+                type: JsonSchemaType.ARRAY,
+              },
+            },
+          },
+        },
+        required: [
+          'task_type',
+          'inference_type',
+          'models',
+        ],
+      },
+      contentType: 'application/json',
+    });
   }
 
   private lambdaRole(): aws_iam.Role {
@@ -134,41 +173,6 @@ export class CreateInferenceJobApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.id}-model`, {
-      restApi: this.router.api,
-      modelName: this.id,
-      description: `${this.id} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.id,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          task_type: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          inference_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
-          },
-          models: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              embeddings: {
-                type: JsonSchemaType.ARRAY,
-              },
-            },
-          },
-        },
-        required: [
-          'task_type',
-          'inference_type',
-          'models',
-        ],
-      },
-      contentType: 'application/json',
-    });
-
     const requestValidator = new RequestValidator(
       this.scope,
       `${this.id}-create-infer-Validator`,
@@ -187,7 +191,7 @@ export class CreateInferenceJobApi {
       apiKeyRequired: true,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
     return lambdaFunction;

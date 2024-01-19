@@ -42,6 +42,7 @@ export class CreateCheckPointApi {
   private readonly role: aws_iam.Role;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
+  public model: Model;
 
   constructor(scope: Construct, id: string, props: CreateCheckPointApiProps) {
     this.scope = scope;
@@ -55,6 +56,7 @@ export class CreateCheckPointApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
+    this.model = this.createModel();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
     this.createCheckpointApi();
   }
@@ -143,27 +145,8 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/checkpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_checkpoint.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.role,
-      memorySize: 1024,
-      environment: {
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel():Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -229,6 +212,27 @@ export class CreateCheckPointApi {
       },
       contentType: 'application/json',
     });
+  }
+
+  private createCheckpointApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_checkpoint.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 1024,
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
 
     const requestValidator = new RequestValidator(
       this.scope,
@@ -248,7 +252,7 @@ export class CreateCheckPointApi {
       apiKeyRequired: true,
       requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }
