@@ -3,8 +3,6 @@
 # Warning: This script is used to install the initial support for client and workshop
 # Warning: For keeping the same version of the initial support
 
-set -euxo pipefail
-
 INITIAL_SUPPORT_COMMIT_ROOT=cf2772fab0af5573da775e7437e6acdca424f26e
 INITIAL_SUPPORT_COMMIT_CONTROLNET=7a4805c8ea3256a0eab3512280bd4f84ca0c8182
 INITIAL_SUPPORT_COMMIT_DREAMBOOTH=c2a5617c587b812b5a408143ddfb18fc49234edf
