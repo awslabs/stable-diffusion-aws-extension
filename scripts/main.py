@@ -80,6 +80,7 @@ except Exception as e:
 class SageMakerUI(scripts.Script):
     latest_result = None
     current_inference_id = None
+    inference_queue = Queue(maxsize=30)
     default_images_inner = None
     txt2img_generate_btn = None
     img2img_generate_btn = None
