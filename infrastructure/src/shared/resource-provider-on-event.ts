@@ -109,6 +109,7 @@ cp --source-region ${source} --destination-region ${destination} "s3://${source_
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/stable-diffusion-webui.tar" "s3://${destination_path}-g5/stable-diffusion-webui.tar"
 
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g4/site-packages/llvmlite/binding/"
+cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g5/site-packages/llvmlite/binding/"
 
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
