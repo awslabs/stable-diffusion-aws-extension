@@ -5,4 +5,4 @@ fastapi-pagination==0.11.0
 Pillow==10.0.1
 numpy==1.23.5
 sagemaker==2.143.0
-gradio==4.11.0
+gradio==3.34.0
