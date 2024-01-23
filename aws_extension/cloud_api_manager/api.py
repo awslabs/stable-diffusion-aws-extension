@@ -88,6 +88,14 @@ class Api:
             logger.info(f"resp headers: {resp.headers}")
             logger.info(f"{resp.status_code} {resp.text}")
 
+        resp.request = {
+            "method": method,
+            "url": url,
+            "headers": headers,
+            "data": data,
+            "params": params,
+        }
+
         return resp
 
     def ping(self, headers=None):

@@ -3,7 +3,9 @@ import requests
 from datetime import datetime
 
 import utils
+from aws_extension.cloud_api_manager.api_logger import ApiLogger
 from aws_extension.cloud_infer_service.utils import InferManager
+from aws_extension.cloud_api_manager.api import api
 from utils import get_variable_from_json
 
 logger = logging.getLogger(__name__)
@@ -42,8 +44,17 @@ class SimpleSagemakerInfer(InferManager):
         logger.debug(payload)
         inference_id = None
 
-        response = requests.post(f'{url}inferences', json=payload, headers={'x-api-key': api_key})
-        logger.info(response.json())
+        response = api.create_inference(data=payload, headers={'x-api-key': api_key})
+        logger.info("=================================")
+        logger.info(response)
+        logger.info("=================================")
+
+        api_logger = ApiLogger(
+            action='inference',
+            action_id=response.json()['data']['inference']['id'],
+        )
+        # api_logger.req_log(method='POST', path=f'{url}inferences', data=payload)
+
         if response.status_code != 201:
             raise Exception(response.json()['message'])
 
