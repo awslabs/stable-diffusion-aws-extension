@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 import boto3
-from PIL import Image
+from PIL import Image, ImageSequence
 from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
@@ -173,15 +173,41 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
         elif taskType in ["txt2img", "img2img"]:
             # save images
             for count, b64image in enumerate(json_body["images"]):
-                image = decode_base64_to_image(b64image).convert("RGB")
-                output = io.BytesIO()
-                image.save(output, format="PNG")
-                # Upload the image to the S3 bucket
-                s3_client.put_object(
-                    Body=output.getvalue(),
-                    Bucket=S3_BUCKET_NAME,
-                    Key=f"out/{inference_id}/result/image_{count}.png"
-                )
+                output_img_type = None
+                if json_body['output_img_type']:
+                    output_img_type = json_body['output_img_type']
+                if not output_img_type:
+                    image = decode_base64_to_image(b64image).convert("RGB")
+                    output = io.BytesIO()
+                    image.save(output, format="PNG")
+                    # Upload the image to the S3 bucket
+                    s3_client.put_object(
+                        Body=output.getvalue(),
+                        Bucket=S3_BUCKET_NAME,
+                        Key=f"out/{inference_id}/result/image_{count}.png"
+                    )
+                else:
+                    gif_data = base64.b64decode(b64image.split(",", 1)[0])
+                    if len(output_img_type) == 1 and (output_img_type[0] == 'PNG' or output_img_type[0] == 'TXT'):
+                        img_type = 'png'
+                    elif len(output_img_type) == 2 and ('PNG' in output_img_type and 'TXT' in output_img_type):
+                        img_type = 'png'
+                    else:
+                        img_type = 'gif'
+                        output_img_type = [element for element in output_img_type if
+                                           "TXT" not in element and "PNG" not in element]
+                        # type set
+                        image_count = len(json_body["images"])
+                        type_count = len(output_img_type)
+                        if image_count % type_count == 0:
+                            idx = count % type_count
+                            img_type = output_img_type[idx]
+                    s3_client.put_object(
+                        Body=gif_data,
+                        Bucket=S3_BUCKET_NAME,
+                        Key=f"out/{inference_id}/result/image_{count}.{img_type}"
+                    )
+
                 # Update the DynamoDB table
                 inference_table.update_item(
                     Key={
