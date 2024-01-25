@@ -8,6 +8,8 @@ import gradio
 import requests
 import base64
 import gradio as gr
+
+from aws_extension.cloud_api_manager.api_logger import ApiLogger
 from aws_extension.constant import MODEL_TYPE
 
 import utils
@@ -288,8 +290,27 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 
 def get_inference_job(inference_job_id):
-    response = server_request(f'inferences/{inference_job_id}')
+    url = f'inferences/{inference_job_id}'
+    response = server_request(url)
     logger.debug(f"get_inference_job response {response}")
+    username = ""
+    if 'data' in response.json():
+        if 'owner_group_or_role' in response.json()['data']:
+            username = response.json()['data']['owner_group_or_role'][0]
+    api_logger = ApiLogger(
+        action='inference',
+        append=True,
+        username=username
+    )
+    headers = {
+        "x-api-key": get_variable_from_json('api_token'),
+        "Content-Type": "application/json"
+    }
+    api_logger.req_log(sub_action="GetInferenceJob",
+                       method='GET',
+                       path=url,
+                       headers=headers,
+                       response=response)
     return response.json()['data']
 
 

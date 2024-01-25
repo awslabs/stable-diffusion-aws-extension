@@ -47,8 +47,14 @@ class SimpleSagemakerInfer(InferManager):
 
         api_logger = ApiLogger(
             action='inference',
+            username=userid
         )
-        api_logger.req_log(sub_action="CreateInference", method='POST', path=f'{url}inferences', data=payload)
+        api_logger.req_log(sub_action="CreateInference",
+                           method='POST',
+                           path=f'{url}inferences',
+                           headers=headers,
+                           response=response,
+                           data=payload)
 
         if response.status_code != 201:
             raise Exception(response.json()['message'])
@@ -59,10 +65,20 @@ class SimpleSagemakerInfer(InferManager):
             upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],
                                           data=sd_api_param_json)
             upload_s3_resp.raise_for_status()
+            api_logger.req_log(sub_action="UploadParameter",
+                               method='PUT',
+                               path=f's3_presign_url',
+                               data=sd_api_param_json)
             inference_id = upload_param_response['inference']['id']
             # start run infer
-            response = requests.put(f'{url}inferences/{inference_id}/start', json=payload,
-                                    headers={'x-api-key': api_key})
+            start_url = f'{url}inferences/{inference_id}/start'
+            response = requests.put(start_url, json=payload, headers={'x-api-key': api_key})
+            api_logger.req_log(sub_action="StartInference",
+                               method='PUT',
+                               path=start_url,
+                               data=payload,
+                               headers=headers,
+                               response=response)
             if response.status_code not in [200, 202]:
                 logger.error(response.json())
                 raise Exception(response.json()['message'])
