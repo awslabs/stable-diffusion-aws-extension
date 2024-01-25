@@ -6,7 +6,6 @@ Update time: 20240118
 | --------------------- | --------- |  --------- |
 | stable-diffusion-webui|1.6.0|bda2ecdbf58fd33b4ad3036ed5cc13eef02747ae|
 | sd-webui-controlnet | v1.1.410|7a4805c8ea3256a0eab3512280bd4f84ca0c8182|
-| sd_dreambooth_extension | 1.0.14|cf086c536b141fc522ff11f6cffc8b7b12da04b9|
 | Tiled Diffusion & VAE | |f9f8073e64f4e682838f255215039ba7884553bf|
 | rembg | |3d9eedbbf0d585207f97d5b21e42f32c0042df70|
 

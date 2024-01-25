@@ -18,7 +18,6 @@ import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, \
     upload_folder_to_s3_by_tar, read_from_s3
 
-dreambooth_available = True
 THREAD_CHECK_COUNT = 1
 CONDITION_POOL_MAX_COUNT = 10
 CONDITION_WAIT_TIME_OUT = 100000
@@ -26,14 +25,6 @@ CONDITION_WAIT_TIME_OUT = 100000
 
 def dummy_function(*args, **kwargs):
     return None
-
-try:
-    sys.path.append("extensions/sd_dreambooth_extension")
-    from dreambooth.ui_functions import create_model
-except Exception as e:
-    logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
-    dreambooth_available = False
-    create_model = dummy_function
 
 logger = logging.getLogger(__name__)
 
