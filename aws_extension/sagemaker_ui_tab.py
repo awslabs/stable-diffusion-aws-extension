@@ -16,7 +16,7 @@ from aws_extension.cloud_api_manager.api import api
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-from dreambooth_on_cloud.train import get_sorted_cloud_dataset
+from aws_extension.cloud_dataset_manager.dataset_manager import get_sorted_cloud_dataset
 from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
