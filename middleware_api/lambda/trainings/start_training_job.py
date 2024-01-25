@@ -16,7 +16,6 @@ model_table = os.environ.get('MODEL_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 instance_type = os.environ.get('INSTANCE_TYPE')
 sagemaker_role_arn = os.environ.get('TRAIN_JOB_ROLE')
-# e.g. "648149843064.dkr.ecr.us-east-1.amazonaws.com/dreambooth-training-repo"
 image_uri = os.environ.get('TRAIN_ECR_URL')
 region = os.environ.get('AWS_REGION')
 training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
