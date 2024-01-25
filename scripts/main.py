@@ -9,7 +9,6 @@ import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
 from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_xyz_controlnet_list
-from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
@@ -25,7 +24,6 @@ from modules.ui_components import ToolButton
 from scripts import global_state
 from scripts.xyz_grid import list_to_csv_string, csv_string_to_list_strip
 
-dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
@@ -48,33 +46,6 @@ IMG_SCRIPT_IDX = 7
 
 def dummy_function(*args, **kwargs):
     return []
-
-
-try:
-    from dreambooth_on_cloud.train import (
-        async_cloud_train,
-        get_cloud_db_model_name_list,
-        wrap_load_model_params,
-        get_train_job_list,
-        get_sorted_cloud_dataset
-    )
-    from dreambooth_on_cloud.create_model import (
-        get_sd_cloud_models,
-        get_create_model_job_list,
-        cloud_create_model,
-    )
-except Exception as e:
-    logging.warning(
-        "[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
-    dreambooth_available = False
-    cloud_train = dummy_function
-    get_cloud_db_model_name_list = dummy_function
-    wrap_load_model_params = dummy_function
-    get_train_job_list = dummy_function
-    get_sorted_cloud_dataset = dummy_function
-    get_sd_cloud_models = dummy_function
-    get_create_model_job_list = dummy_function
-    cloud_create_model = dummy_function
 
 
 class SageMakerUI(scripts.Script):
@@ -1071,7 +1042,6 @@ class SageMakerUI(scripts.Script):
 
 script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
-script_callbacks.ui_tabs_callback = ui_tabs_callback
 
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 

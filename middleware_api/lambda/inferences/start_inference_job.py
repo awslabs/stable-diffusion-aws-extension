@@ -212,8 +212,8 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
         elif taskType in ["extra-single-image", "rembg"]:
             if 'image' not in json_body:
                 raise Exception(json_body)
-
-            image = decode_base64_to_image(json_body["image"]).convert("RGB")
+            # image = decode_base64_to_image(json_body["image"]).convert("RGB")
+            image = Image.open(io.BytesIO(base64.b64decode(json_body["image"])))
             output = io.BytesIO()
             image.save(output, format="PNG")
             # Upload the image to the S3 bucket
