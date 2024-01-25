@@ -235,7 +235,9 @@ def sagemaker_api(_, app: FastAPI):
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp = response.json()
                     image_type = get_output_img_type(payload)
+                    print(f"image_type:{image_type}")
                     if image_type:
+                        print(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
                     print("response", resp)
                     return resp
@@ -248,7 +250,9 @@ def sagemaker_api(_, app: FastAPI):
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp = response.json()
                     image_type = get_output_img_type(payload)
+                    print(f"image_type:{image_type}")
                     if image_type:
+                        print(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
                     print("response", resp)
                     return resp
