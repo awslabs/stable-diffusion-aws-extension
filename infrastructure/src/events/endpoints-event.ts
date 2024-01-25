@@ -67,6 +67,7 @@ export class SagemakerEndpointEvents {
         'cloudwatch:PutMetricAlarm',
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',
+        'iam:CreateServiceLinkedRole',
       ],
       resources: ['*'],
     }));
