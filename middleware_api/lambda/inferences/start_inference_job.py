@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 import boto3
-from PIL import Image, ImageSequence
+from PIL import Image
 from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
