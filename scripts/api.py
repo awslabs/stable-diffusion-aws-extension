@@ -143,7 +143,6 @@ def get_output_img_type(payload: dict) -> str:
             return None
         # about animatediff out
         if 'animatediff' in payload['alwayson_scripts'].keys() and payload['alwayson_scripts']['animatediff']:
-
             if ('args' not in payload['alwayson_scripts']['animatediff']
                     or not payload['alwayson_scripts']['animatediff']['args']
                     or not payload['alwayson_scripts']['animatediff']['args'][0]):
@@ -159,10 +158,11 @@ def get_output_img_type(payload: dict) -> str:
                     or not payload['alwayson_scripts']['animatediff']['args'][0]['format']):
                 logger.info("not using alwayson_scripts or not set format ,image type not set")
                 return None
-
-            return payload['alwayson_scripts']['animatediff']['args'][0]['format']
-
+            images_types = payload['alwayson_scripts']['animatediff']['args'][0]['format']
+            logger.info(f"using alwayson_scripts ,image type set:{images_types}")
+            return images_types
     except Exception as e:
+        logger.error(f"get_output_img_type error:{e}")
         return None
 
 
