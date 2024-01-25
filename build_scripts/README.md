@@ -18,7 +18,7 @@ accelerate launch --num_cpu_threads_per_process=6 launch.py --api
 
 # How to build images
 
-### Build public images for aigc-webui-utils which is used for light-weight CPU operations, like create_model in Dreambooth, merge_checkpoint.
+### Build public images for aigc-webui-utils which is used for light-weight CPU operations, like create_model in merge_checkpoint.
 
 ```
 sh build_and_push.sh Dockerfile.utils.from_scratch aigc-webui-utils
