@@ -237,6 +237,7 @@ def sagemaker_api(_, app: FastAPI):
                     image_type = get_output_img_type(payload)
                     if image_type:
                         resp["output_img_type"] = image_type
+                    logger.debug("response", resp)
                     return resp
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
@@ -249,6 +250,7 @@ def sagemaker_api(_, app: FastAPI):
                     image_type = get_output_img_type(payload)
                     if image_type:
                         resp["output_img_type"] = image_type
+                    logger.debug("response", resp)
                     return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',

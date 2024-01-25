@@ -203,8 +203,9 @@ def lambda_handler(event, context):
                 # save images
                 for count, b64image in enumerate(json_body["images"]):
                     output_img_type = None
-                    if json_body['output_img_type']:
+                    if 'output_img_type' in json_body and json_body['output_img_type']:
                         output_img_type = json_body['output_img_type']
+                        logger.info(f"async handle_sagemaker_out: output_img_type is not null, {output_img_type}")
                     if not output_img_type:
                         image = decode_base64_to_image(b64image)
                         output = io.BytesIO()

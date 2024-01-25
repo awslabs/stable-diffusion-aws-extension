@@ -174,8 +174,9 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             # save images
             for count, b64image in enumerate(json_body["images"]):
                 output_img_type = None
-                if json_body['output_img_type']:
+                if 'output_img_type' in json_body and json_body['output_img_type']:
                     output_img_type = json_body['output_img_type']
+                    logger.info(f"sync handle_sagemaker_out: output_img_type is not null, {output_img_type}")
                 if not output_img_type:
                     image = decode_base64_to_image(b64image).convert("RGB")
                     output = io.BytesIO()
