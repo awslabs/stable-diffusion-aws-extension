@@ -48,7 +48,7 @@ export class ResourceProvider extends Construct {
       environment: {
         ROLE_ARN: this.role.roleArn,
         BUCKET_NAME: props.bucketName ?? '',
-        ESD_VERSION: '1.4.0',
+        ESD_VERSION: '1.4.1',
       },
     });
 
