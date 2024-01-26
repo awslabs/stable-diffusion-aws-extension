@@ -139,30 +139,30 @@ def merge_model_on_cloud(req):
 def get_output_img_type(payload: dict):
     try:
         if not payload or 'alwayson_scripts' not in payload.keys() or not payload['alwayson_scripts']:
-            print("not using alwayson_scripts ,image type not set")
+            logger.debug("not using alwayson_scripts ,image type not set")
             return None
         # about animatediff out
         if 'animatediff' in payload['alwayson_scripts'].keys() and payload['alwayson_scripts']['animatediff']:
             if ('args' not in payload['alwayson_scripts']['animatediff']
                     or not payload['alwayson_scripts']['animatediff']['args']
                     or not payload['alwayson_scripts']['animatediff']['args'][0]):
-                print("not using alwayson_scripts or args null,image type not set")
+                logger.debug("not using alwayson_scripts or args null,image type not set")
                 return None
 
             if ('enable' not in payload['alwayson_scripts']['animatediff']['args'][0]
                     or not payload['alwayson_scripts']['animatediff']['args'][0]['enable']):
-                print("not using alwayson_scripts or not enable ,image type not set")
+                logger.debug("not using alwayson_scripts or not enable ,image type not set")
                 return None
 
             if ('format' not in payload['alwayson_scripts']['animatediff']['args'][0]
                     or not payload['alwayson_scripts']['animatediff']['args'][0]['format']):
-                print("not using alwayson_scripts or not set format ,image type not set")
+                logger.debug("not using alwayson_scripts or not set format ,image type not set")
                 return None
             images_types = payload['alwayson_scripts']['animatediff']['args'][0]['format']
-            print(f"using alwayson_scripts ,image type set:{images_types}")
+            logger.debug(f"using alwayson_scripts ,image type set:{images_types}")
             return images_types
     except Exception as e:
-        print(f"get_output_img_type error:{e}")
+        logger.debug(f"get_output_img_type error:{e}")
         return None
 
 
@@ -231,16 +231,16 @@ def sagemaker_api(_, app: FastAPI):
                     checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
                     image_type = get_output_img_type(payload)
-                    print(f"image_type:{image_type}")
+                    logger.debug(f"image_type:{image_type}")
                     resp = {}
                     if image_type:
-                        print(f"set output_img_type:{image_type}")
+                        logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
                     resp.update(response.json())
-                    print("response", resp)
+                    logger.debug("response", resp)
                     return resp
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
@@ -251,11 +251,11 @@ def sagemaker_api(_, app: FastAPI):
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
                     resp = response.json()
                     image_type = get_output_img_type(payload)
-                    print(f"image_type:{image_type}")
+                    logger.debug(f"image_type:{image_type}")
                     if image_type:
-                        print(f"set output_img_type:{image_type}")
+                        logger.debug(f"set output_img_type:{image_type}")
                         resp["output_img_type"] = image_type
-                    print("response", resp)
+                    logger.debug("response", resp)
                     return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
