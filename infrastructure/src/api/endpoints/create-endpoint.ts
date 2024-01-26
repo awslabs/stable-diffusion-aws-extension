@@ -1,15 +1,23 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
-import { IAuthorizer, JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import {
+  IAuthorizer,
+  JsonSchemaType,
+  JsonSchemaVersion,
+  LambdaIntegration,
+  Model,
+  RequestValidator,
+  Resource,
+} from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Effect, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
+import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { LAMBDA_START_DEPLOY_ROLE_NAME } from '../../shared/deploy-role';
 
+export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
 export interface CreateEndpointApiProps {
   router: Resource;
@@ -29,7 +37,9 @@ export interface CreateEndpointApiProps {
 }
 
 export class CreateEndpointApi {
-  private readonly src;
+  public model: Model;
+  public requestValidator: RequestValidator;
+  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -63,6 +73,8 @@ export class CreateEndpointApi {
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createEndpointsApi();
   }
@@ -150,12 +162,6 @@ export class CreateEndpointApi {
       ],
     });
 
-    const lambdaStartDeployRole = <Role>Role.fromRoleName(
-      this.scope,
-      'createSagemakerEpRole',
-      LAMBDA_START_DEPLOY_ROLE_NAME,
-    );
-
     const logStatement = new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -170,7 +176,17 @@ export class CreateEndpointApi {
       actions: [
         'iam:PassRole',
       ],
-      resources: [`arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/LambdaStartDeployRole`],
+      resources: [
+        `arn:${Aws.PARTITION}:iam::${Aws.ACCOUNT_ID}:role/${ESDRoleForEndpoint}-${Aws.REGION}`,
+      ],
+    });
+
+    const lambdaStartDeployRole = new Role(this.scope, ESDRoleForEndpoint, {
+      assumedBy: new CompositePrincipal(
+        new ServicePrincipal('lambda.amazonaws.com'),
+        new ServicePrincipal('sagemaker.amazonaws.com'),
+      ),
+      roleName: `${ESDRoleForEndpoint}-${Aws.REGION}`,
     });
 
     lambdaStartDeployRole.addToPolicy(snsStatement);
@@ -181,6 +197,70 @@ export class CreateEndpointApi {
     lambdaStartDeployRole.addToPolicy(passStartDeployRole);
 
     return lambdaStartDeployRole;
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      contentType: 'application/json',
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          endpoint_name: {
+            type: JsonSchemaType.STRING,
+            maxLength: 20,
+          },
+          custom_docker_image_uri: {
+            type: JsonSchemaType.STRING,
+          },
+          endpoint_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['Real-time', 'Serverless', 'Async'],
+          },
+          instance_type: {
+            type: JsonSchemaType.STRING,
+          },
+          initial_instance_count: {
+            type: JsonSchemaType.NUMBER,
+            minimum: 1,
+          },
+          autoscaling_enabled: {
+            type: JsonSchemaType.BOOLEAN,
+          },
+          assign_to_roles: {
+            type: JsonSchemaType.ARRAY,
+            items: {
+              type: JsonSchemaType.STRING,
+            },
+            minItems: 1,
+            maxItems: 10,
+          },
+          creator: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'endpoint_type',
+          'instance_type',
+          'initial_instance_count',
+          'autoscaling_enabled',
+          'assign_to_roles',
+          'creator',
+        ],
+      },
+    });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(this.scope, `${this.baseId}-create-ep-validator`, {
+      restApi: this.router.api,
+      validateRequestBody: true,
+      validateRequestParameters: false,
+    });
   }
 
   private createEndpointsApi() {
@@ -209,52 +289,6 @@ export class CreateEndpointApi {
       layers: [this.layer],
     });
 
-    const model = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      contentType: 'application/json',
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            minLength: 0,
-            maxLength: 20,
-          },
-          instance_type: {
-            type: JsonSchemaType.STRING,
-          },
-          initial_instance_count: {
-            type: JsonSchemaType.NUMBER,
-            minimum: 1,
-          },
-          autoscaling_enabled: {
-            type: JsonSchemaType.BOOLEAN,
-          },
-          assign_to_roles: {
-            type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-            },
-            minItems: 1,
-            maxItems: 10,
-          },
-          creator: {
-            type: JsonSchemaType.STRING,
-          },
-        },
-        required: [
-          'instance_type',
-          'initial_instance_count',
-          'autoscaling_enabled',
-          'assign_to_roles',
-          'creator',
-        ],
-      },
-    });
 
     const integration = new LambdaIntegration(
       lambdaFunction,
@@ -263,19 +297,13 @@ export class CreateEndpointApi {
       },
     );
 
-    const requestValidator = new RequestValidator(this.scope, `${this.baseId}-validator`, {
-      restApi: this.router.api,
-      requestValidatorName: this.baseId,
-      validateRequestBody: true,
-      validateRequestParameters: false,
-    });
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': model,
+        'application/json': this.model,
       },
     });
 

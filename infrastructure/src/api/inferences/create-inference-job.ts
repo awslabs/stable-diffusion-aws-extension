@@ -8,7 +8,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -31,6 +31,8 @@ export interface CreateInferenceJobApiProps {
 
 export class CreateInferenceJobApi {
 
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly srcRoot: string;
@@ -57,8 +59,47 @@ export class CreateInferenceJobApi {
     this.httpMethod = props.httpMethod;
     this.router = props.router;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createInferenceJobLambda();
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.id}-model`, {
+      restApi: this.router.api,
+      modelName: this.id,
+      description: `${this.id} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          task_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          inference_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['Real-time', 'Serverless', 'Async'],
+          },
+          models: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              embeddings: {
+                type: JsonSchemaType.ARRAY,
+              },
+            },
+          },
+        },
+        required: [
+          'task_type',
+          'inference_type',
+          'models',
+        ],
+      },
+      contentType: 'application/json',
+    });
   }
 
   private lambdaRole(): aws_iam.Role {
@@ -113,6 +154,16 @@ export class CreateInferenceJobApi {
     return newRole;
   }
 
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.id}-create-infer-Validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private createInferenceJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/inferences`,
@@ -126,7 +177,7 @@ export class CreateInferenceJobApi {
       environment: {
         S3_BUCKET: this.s3Bucket.bucketName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
+        INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
@@ -134,44 +185,6 @@ export class CreateInferenceJobApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.id}-model`, {
-      restApi: this.router.api,
-      modelName: this.id,
-      description: `${this.id} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.id,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          task_type: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          models: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              embeddings: {
-                type: JsonSchemaType.ARRAY,
-              },
-            },
-          },
-        },
-        required: [
-          'task_type',
-          'models',
-        ],
-      },
-      contentType: 'application/json',
-    });
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.id}-validator`,
-      {
-        restApi: this.router.api,
-        requestValidatorName: this.id,
-        validateRequestBody: true,
-      });
 
     const createInferenceJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -179,11 +192,12 @@ export class CreateInferenceJobApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, createInferenceJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
     return lambdaFunction;

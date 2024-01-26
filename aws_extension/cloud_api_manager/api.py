@@ -5,12 +5,12 @@ import logging
 import requests
 
 from aws_extension.sagemaker_ui_utils import warning
-from utils import get_variable_from_json
+from utils import host_url, api_key
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-client_api_version = "1.3.0"
+client_api_version = "1.4.0"
 
 
 def upgrade_info(resp):
@@ -40,24 +40,22 @@ class Api:
         return self.username
 
     def __init__(self, debug: bool = True):
-        self.host_url = get_variable_from_json('api_gateway_url')
-        self.api_key = get_variable_from_json('api_token')
         self.debug = debug
 
     def req(self, method: str, path: str, headers=None, data=None, params=None):
 
-        url = f"{self.host_url}{path}"
+        url = f"{host_url()}{path}"
 
         if data is not None:
             data = json.dumps(data)
 
         if headers is None:
             headers = {
-                'x-api-key': self.api_key,
+                'x-api-key': api_key(),
                 'Content-Type': 'application/json',
             }
         else:
-            headers['x-api-key'] = self.api_key
+            headers['x-api-key'] = api_key()
             headers['Content-Type'] = 'application/json'
 
         if self.username:
@@ -322,7 +320,15 @@ class Api:
     def start_training_job(self, training_id: str, headers=None, data=None):
         return self.req(
             "PUT",
-            f"trainings/{training_id}",
+            f"trainings/{training_id}/start",
+            headers=headers,
+            data=data
+        )
+
+    def stop_training_job(self, training_id: str, headers=None, data=None):
+        return self.req(
+            "PUT",
+            f"trainings/{training_id}/stop",
             headers=headers,
             data=data
         )

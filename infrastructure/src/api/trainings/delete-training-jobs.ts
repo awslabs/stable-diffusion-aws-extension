@@ -1,6 +1,13 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, CfnParameter, Duration} from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import {
+  JsonSchemaType,
+  JsonSchemaVersion,
+  LambdaIntegration,
+  Model,
+  RequestValidator,
+  Resource,
+} from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -18,6 +25,8 @@ export interface DeleteTrainingJobsApiProps {
 }
 
 export class DeleteTrainingJobsApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -38,8 +47,51 @@ export class DeleteTrainingJobsApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.deleteInferenceJobsApi();
+  }
+
+  private createModel(): Model {
+    return new Model(
+      this.scope,
+      `${this.baseId}-model`,
+      {
+        restApi: this.router.api,
+        modelName: this.baseId,
+        description: `${this.baseId} Request Model`,
+        schema: {
+          schema: JsonSchemaVersion.DRAFT4,
+          title: this.baseId,
+          type: JsonSchemaType.OBJECT,
+          properties: {
+            training_id_list: {
+              type: JsonSchemaType.ARRAY,
+              items: {
+                type: JsonSchemaType.STRING,
+                minLength: 1,
+              },
+              minItems: 1,
+              maxItems: 100,
+            },
+          },
+          required: [
+            'training_id_list',
+          ],
+        },
+        contentType: 'application/json',
+      });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-del-train-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
   }
 
   private deleteInferenceJobsApi() {
@@ -64,57 +116,20 @@ export class DeleteTrainingJobsApi {
         layers: [this.layer],
       });
 
-    const requestModel = new Model(
-      this.scope,
-      `${this.baseId}-model`,
-      {
-        restApi: this.router.api,
-        modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
-        schema: {
-          schema: JsonSchemaVersion.DRAFT4,
-          title: this.baseId,
-          type: JsonSchemaType.OBJECT,
-          properties: {
-            training_job_list: {
-              type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
-              minItems: 1,
-              maxItems: 100,
-            },
-          },
-          required: [
-            'training_job_list',
-          ],
-        },
-        contentType: 'application/json',
-      });
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       { proxy: true },
     );
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        requestValidatorName: this.baseId,
-        validateRequestBody: true,
-      });
-
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
 

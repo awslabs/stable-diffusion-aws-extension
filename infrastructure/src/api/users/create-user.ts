@@ -7,7 +7,7 @@ import {
   aws_kms,
   aws_lambda,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -27,6 +27,8 @@ export interface CreateUserApiProps {
 }
 
 export class CreateUserApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -49,6 +51,8 @@ export class CreateUserApi {
     this.multiUserTable = props.multiUserTable;
     this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.upsertUserApi();
   }
@@ -99,25 +103,8 @@ export class CreateUserApi {
     return newRole;
   }
 
-  private upsertUserApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/users`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_user.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        KEY_ID: `alias/${this.passwordKey.keyId}`,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -159,15 +146,36 @@ export class CreateUserApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-create-user-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
+  }
+
+  private upsertUserApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/users`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_user.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        KEY_ID: `alias/${this.passwordKey.keyId}`,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const upsertUserIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -178,9 +186,9 @@ export class CreateUserApi {
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
       authorizer: this.authorizer,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

@@ -20,7 +20,7 @@ bucket = s3.Bucket(s3_bucket_name)
 
 @dataclass
 class DeleteTrainingJobsEvent:
-    training_job_list: [str]
+    training_id_list: [str]
 
 
 def handler(event, ctx):
@@ -30,11 +30,11 @@ def handler(event, ctx):
     body = DeleteTrainingJobsEvent(**json.loads(event['body']))
 
     # unique list for preventing duplicate delete
-    training_job_list = list(set(body.training_job_list))
+    training_id_list = list(set(body.training_id_list))
 
-    for training_job in training_job_list:
+    for training_id in training_id_list:
 
-        training = training_job_table.get_item(Key={'id': training_job})
+        training = training_job_table.get_item(Key={'id': training_id})
 
         if 'Item' not in training:
             continue
@@ -58,6 +58,6 @@ def handler(event, ctx):
                     response = bucket.objects.filter(Prefix=prefix).delete()
                     logger.info(f'delete response: {response}')
 
-        training_job_table.delete_item(Key={'id': training_job})
+        training_job_table.delete_item(Key={'id': training_id})
 
     return no_content(message='training jobs deleted')

@@ -28,12 +28,11 @@ nav:
     - Uninstall the solution: uninstall.md
     - Use the solution:
         - Preparation: user-guide/preparation.md
-        - Configure API and Multiple Users: user-guide/multi-user.md
+        - Configure API and Users Management: user-guide/multi-user.md
         - Cloud Assets Management: user-guide/CloudAssetsManage.md
         - txt2img guide: user-guide/txt2img-guide.md
         - img2img guide: user-guide/img2img-guide.md
         - controlNet guide: user-guide/controlnet-guide.md
-        - Dreambooth guide: user-guide/dreambooth-guide.md
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md

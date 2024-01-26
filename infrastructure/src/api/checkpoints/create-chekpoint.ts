@@ -8,14 +8,14 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import {Size} from "aws-cdk-lib/core";
 
 
 export interface CreateCheckPointApiProps {
@@ -30,6 +30,8 @@ export interface CreateCheckPointApiProps {
 }
 
 export class CreateCheckPointApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -55,6 +57,8 @@ export class CreateCheckPointApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
     this.createCheckpointApi();
   }
@@ -143,27 +147,8 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/checkpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_checkpoint.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.role,
-      memorySize: 1024,
-      environment: {
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -229,15 +214,38 @@ export class CreateCheckPointApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-create-ckpt-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
+  }
+
+  private createCheckpointApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_checkpoint.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 1024,
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const createCheckpointIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -247,9 +255,9 @@ export class CreateCheckPointApi {
     );
     this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

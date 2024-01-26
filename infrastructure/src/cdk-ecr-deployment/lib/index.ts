@@ -183,6 +183,10 @@ export class ECRDeployment extends Construct {
     // });
   }
 
+  public get serviceToken(): string {
+    return this.handler.functionArn;
+  }
+
   public addToPrincipalPolicy(statement: PolicyStatement): AddToPrincipalPolicyResult {
     const handlerRole = this.handler.role;
     if (!handlerRole) {
@@ -190,10 +194,6 @@ export class ECRDeployment extends Construct {
     }
 
     return handlerRole.addToPrincipalPolicy(statement);
-  }
-
-  public get serviceToken(): string {
-    return this.handler.functionArn;
   }
 
   private renderSingletonUuid(memoryLimit?: number) {

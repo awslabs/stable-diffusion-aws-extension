@@ -7,7 +7,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -29,7 +29,9 @@ export interface CreateModelJobApiProps {
 }
 
 export class CreateModelJobApi {
-  private readonly src;
+  public model: Model;
+  public requestValidator: RequestValidator;
+  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -53,6 +55,8 @@ export class CreateModelJobApi {
     this.checkpointTable = props.checkpointTable;
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createModelJobApi();
   }
@@ -105,33 +109,18 @@ export class CreateModelJobApi {
     return newRole;
   }
 
-  private createModelJobApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/models`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_model.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DYNAMODB_TABLE: this.modelTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-    const createModelIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-create-model-validator`,
       {
-        proxy: true,
-      },
-    );
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -167,21 +156,39 @@ export class CreateModelJobApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
+  private createModelJobApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/models`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_model.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DYNAMODB_TABLE: this.modelTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+    const createModelIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
       {
-        restApi: this.router.api,
-        requestValidatorName: this.baseId,
-        validateRequestBody: true,
-      });
+        proxy: true,
+      },
+    );
 
     this.router.addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

@@ -6,7 +6,7 @@ import {
   aws_iam,
   aws_lambda,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -101,7 +101,7 @@ export class ListInferencesApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
+        INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],

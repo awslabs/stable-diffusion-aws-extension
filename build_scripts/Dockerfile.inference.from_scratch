@@ -1,53 +1,74 @@
 #FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:2.0.0-gpu-py310-cu118-ubuntu20.04-sagemaker
 #change image to pytorch 2.0.1
-FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
-# update environment
-RUN apt-get update -y
+FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
 
-# install pkg lib for proprocess in controlnet
-RUN apt-get install -y pkg-config
-RUN apt-get install -y libcairo2-dev
-
-# install file cmd
-RUN apt-get install -y file
-
-COPY stable-diffusion-webui /opt/ml/code/
-COPY inference/serve /opt/ml/code
-
-# add accelerate
-RUN mkdir -p /root/.cache/huggingface/accelerate
-COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
-
-# download s5cmd
-RUN mkdir -p /opt/ml/code/tools
-RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
-RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
-
-RUN pip install --upgrade pip
-RUN pip install accelerate==0.19.0
-RUN pip install deepspeed==0.9.5
-# RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
-# RUN git clone https://github.com/facebookresearch/xformers.git && cd xformers && git checkout v0.0.20 && \
-# git submodule update --init --recursive && pip install -r requirements.txt && pip install -e .
-
-RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformer_name.txt
-RUN URL=$(cat xformer_name.txt) && wget $URL
-RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('''$URL'''))") && pip install $(basename $decoded)
-
-RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
+# COPY stable-diffusion-webui /opt/ml/code/
+COPY inference/serve_start /opt/ml/code/
 
 WORKDIR /opt/ml/code
 
 ENV ON_DOCKER true
 
-# install libtcmalloc to solve memory leak for multi model switch 
+# install libtcmalloc to solve memory leak for multi model switch
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-RUN apt-get install -y libtcmalloc-minimal4
+# RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-# patch for opencv 4.7
-# https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
-RUN pip install trash-cli
-RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
+# update environment
+RUN apt-get update -y && \
+    apt-get install -y pkg-config && \
+    apt-get install -y libcairo2-dev && \
+    apt-get install -y file && \
+    apt-get install -y libtcmalloc-minimal4 && \
+    mkdir -p /opt/ml/code/tools && \
+    wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    tar xzvf /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz -C /opt/ml/code/tools/ && \
+    rm /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+    pip uninstall -y torch && \
+    pip uninstall -y torchvision && \
+    pip uninstall -y torchaudio && \
+    echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth" && \
+    rm -rf /opt/conda/lib/python3.10/site-packages/* && \
+    rm -rf /opt/conda/pkgs/* && \
+    apt-get clean && \
+    apt-get autoremove -y && \
+    apt-get autoclean -y
 
-ENTRYPOINT ["python", "/opt/ml/code/serve"]
+# install pkg lib for proprocess in controlnet
+# RUN apt-get install -y pkg-config && libcairo2-dev && file
+# RUN apt-get install -y libtcmalloc-minimal4
+#
+
+
+#
+# # add accelerate
+# RUN mkdir -p /root/.cache/huggingface/accelerate
+# COPY inference/default_config.yaml /root/.cache/huggingface/accelerate/
+#
+# download s5cmd
+
+#
+# RUN pip install --upgrade pip
+# RUN pip install accelerate==0.19.0
+# RUN pip install deepspeed==0.9.5
+# RUN pip install -v -U git+https://github.com/facebookresearch/xformers.git@v0.0.20
+# RUN git clone https://github.com/facebookresearch/xformers.git && cd xformers && git checkout v0.0.20 && \
+# git submodule update --init --recursive && pip install -r requirements.txt && pip install -e .
+
+# RUN wget https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/prebuild_libs/xformers/xformer_name.txt
+# RUN URL=$(cat xformer_name.txt) && wget $URL
+# RUN URL=$(cat xformer_name.txt) && decoded=$(python3 -c "import urllib.parse; print(urllib.parse.unquote('''$URL'''))") && pip install $(basename $decoded)
+
+
+#uninstall
+# RUN pip uninstall -y awscli
+# RUN find /opt/conda/lib/python3.10/site-packages/ -maxdepth 1 -mindepth 1 -type d ! -name 'pip*' -exec rm -r {} +
+# RUN pip install awscli
+
+# # patch for opencv 4.7
+# # https://stackoverflow.com/questions/68886239/cannot-uninstall-numpy-1-21-2-record-file-not-found
+# RUN pip install trash-cli
+# RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
+
+#ENTRYPOINT ["python", "/opt/ml/code/quick_serve"]
+ENTRYPOINT ["sh", "/opt/ml/code/serve_start"]

@@ -8,7 +8,7 @@ If you have not install the Stable Diffusion WebUI, or the proper version of the
 
 ### **Part2**: Install Middleware On AWS Cloud
 #### **Option 1**: Use AWS Cloudformation Template
-1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the aigcbucketname is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
+1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the Bucket is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
 
 <img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
@@ -81,7 +81,7 @@ To set up the development environment, you will need have AWS account and tools 
 Please refer to [**user guide**](https://awslabs.github.io/stable-diffusion-aws-extension/zh/user-guide/preparation/) for following detailed operations.
 
 ## Why we build such extension
-Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2img/img2img model, e.g. Dreambooth. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
+Stable Diffusion WebUI is a popular open-source GitHub project that provides an intuitive and user-friendly interface for data scientists and developers to interact with pre-trained txt2img/img2img model. The project has gained traction in the community (forks/stars/prs) for its ability to streamline the process of training, evaluating, and deploying models. As the demand for scalable and efficient machine learning solutions continues to rise, the Stable Diffusion WebUI project has emerged as a go-to tool for many user.
 Some user existing workflow is shown below that the data scientists had to jump from customized WebUI, EC2 and manual scripts to accomplished a single model finetune process, which are:
 * time consuming: the model training is executed on a standalone server that leading long training time (30-40 minutes per model) and no scalable workaround;
 * error prone: data training, model (CKPT) packaging, endpoint deployment, UI update, result validation are not in a single panel;
@@ -125,7 +125,6 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ├── buildspec.yml -- buildspec file for CodeBuild, we have code pipeline to use this buildspec to transfer the CDK assets to Cloudformation templates
 ├── deployment    -- scripts to deploy the CloudFormation template
 ├── docs
-├── dreambooth_sagemaker -- SageMaker support for dreambooth
 ├── infrastructure -- CDK project to deploy the middleware, all the middle ware infrastructure code is in this directory
 ├── install.py -- install dependencies for the extension
 ├── install.sh --  script to set the webui and extension to specific version

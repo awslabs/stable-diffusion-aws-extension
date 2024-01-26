@@ -7,7 +7,8 @@ import {
   aws_iam,
   aws_lambda,
   aws_s3,
-  aws_sns, CfnParameter,
+  aws_sns,
+  CfnParameter,
   CustomResource,
   Duration,
   RemovalPolicy,
@@ -21,6 +22,7 @@ import { Construct } from 'constructs';
 import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_UTILS } from '../../common/dockerImages';
 import { CreateModelSageMakerEndpoint } from '../../sd-train/create-model-endpoint';
+import { ResourceProvider } from '../../shared/resource-provider';
 
 
 export interface UpdateModelApiProps {
@@ -37,14 +39,17 @@ export interface UpdateModelApiProps {
   trainMachineType: string;
   ecr_image_tag: string;
   logLevel: CfnParameter;
+  resourceProvider: ResourceProvider;
 }
 
 export class UpdateModelApi {
 
   public readonly sagemakerEndpoint: CreateModelSageMakerEndpoint;
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly imageUrl: string;
   private readonly machineType: string;
-
+  private readonly resourceProvider: ResourceProvider;
   private readonly src;
   private readonly scope: Construct;
   private readonly modelTable: aws_dynamodb.Table;
@@ -70,12 +75,15 @@ export class UpdateModelApi {
     this.checkpointTable = props.checkpointTable;
     this.imageUrl = AIGC_WEBUI_UTILS + props.ecr_image_tag;
     this.logLevel = props.logLevel;
+    this.resourceProvider = props.resourceProvider;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     // create private image:
     const dockerDeployment = new CreateModelInferenceImage(this.scope, this.imageUrl);
     this.dockerRepo = dockerDeployment.dockerRepo;
     // create sagemaker endpoint
-    this.sagemakerEndpoint = new CreateModelSageMakerEndpoint(this.scope, 'aigc-utils', {
+    this.sagemakerEndpoint = new CreateModelSageMakerEndpoint(this.scope, 'esd-utils', {
       machineType: this.machineType,
       outputFolder: 'models',
       primaryContainer: `${this.dockerRepo.repositoryUri}:latest`,
@@ -86,6 +94,7 @@ export class UpdateModelApi {
       userSnsTopic: props.snsTopic,
       successTopic: props.createModelSuccessTopic,
       failureTopic: props.createModelFailureTopic,
+      resourceProvider: this.resourceProvider,
     });
     this.sagemakerEndpoint.model.node.addDependency(dockerDeployment.customJob);
     // create lambda to trigger
@@ -152,6 +161,43 @@ export class UpdateModelApi {
     return newRole;
   }
 
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+        required: [
+          'status',
+          'multi_parts_tags',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-model-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private updateModelApi() {
     const updateModelLambda = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/models`,
@@ -180,46 +226,12 @@ export class UpdateModelApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          multi_parts_tags: {
-            type: JsonSchemaType.OBJECT,
-          },
-        },
-        required: [
-          'status',
-          'multi_parts_tags',
-        ],
-      },
-      contentType: 'application/json',
-    });
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        requestValidatorName: this.baseId,
-        validateRequestBody: true,
-      });
-
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, updateModelLambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
   }
@@ -231,21 +243,20 @@ class CreateModelInferenceImage {
   public readonly ecrDeployment: ECRDeployment;
   public readonly dockerRepo: aws_ecr.Repository;
   public readonly customJob: CustomResource;
-  private readonly id = 'aigc-createmodel-inf';
 
   constructor(scope: Construct, srcImage: string) {
-    this.dockerRepo = new aws_ecr.Repository(scope, `${this.id}-repo`, {
+    this.dockerRepo = new aws_ecr.Repository(scope, 'EsdEcrModelRepo', {
       repositoryName: 'stable-diffusion-aws-extension/aigc-webui-utils',
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    this.ecrDeployment = new ECRDeployment(scope, `${this.id}-ecr-deploy`, {
+    this.ecrDeployment = new ECRDeployment(scope, 'EsdEcrModelDeploy', {
       src: new DockerImageName(srcImage),
       dest: new DockerImageName(`${this.dockerRepo.repositoryUri}:latest`),
     });
 
     // trigger the lambda
-    this.customJob = new CustomResource(scope, `${this.id}-cr-image`, {
+    this.customJob = new CustomResource(scope, 'EsdEcrModelImage', {
       serviceToken: this.ecrDeployment.serviceToken,
       resourceType: 'Custom::AIGCSolutionECRLambda',
       properties: {

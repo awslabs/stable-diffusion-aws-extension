@@ -8,7 +8,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -30,6 +30,8 @@ export interface CreateDatasetApiProps {
 }
 
 export class CreateDatasetApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -54,6 +56,8 @@ export class CreateDatasetApi {
     this.s3Bucket = props.s3Bucket;
     this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createDatasetApi();
   }
@@ -113,27 +117,8 @@ export class CreateDatasetApi {
     return newRole;
   }
 
-  private createDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/datasets`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_dataset.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
-        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -194,15 +179,38 @@ export class CreateDatasetApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator() {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-create-dataset-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
+  }
+
+  private createDatasetApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/datasets`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_dataset.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
+        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const createDatasetIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -212,9 +220,9 @@ export class CreateDatasetApi {
     );
     this.router.addMethod(this.httpMethod, createDatasetIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
   }

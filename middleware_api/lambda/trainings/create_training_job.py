@@ -39,6 +39,7 @@ class Event:
 def handler(raw_event, context):
     request_id = context.aws_request_id
     event = Event(**json.loads(raw_event['body']))
+    logger.info(json.dumps(json.loads(raw_event['body'])))
     _type = event.train_type
 
     try:

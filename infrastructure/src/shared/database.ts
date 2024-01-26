@@ -1,99 +1,39 @@
-import { aws_dynamodb, CfnCondition, Fn, RemovalPolicy } from 'aws-cdk-lib';
-import { Attribute, AttributeType } from 'aws-cdk-lib/aws-dynamodb';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
 
 
 export class Database {
-  [index: string]: aws_dynamodb.Table;
 
-  constructor(scope: Construct, baseId: string, useExist: string) {
-    interface tableProperties {
-      partitionKey: Attribute;
-      sortKey?: Attribute;
-    }
+  public modelTable: Table;
+  public trainingTable: Table;
+  public checkpointTable: Table;
+  public datasetInfoTable: Table;
+  public datasetItemTable: Table;
+  public sDInferenceJobTable: Table;
+  public sDEndpointDeploymentJobTable: Table;
+  public multiUserTable: Table;
 
-    const tables: { [key: string]: tableProperties } = {
-      ModelTable: {
-        partitionKey: {
-          name: 'id',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      TrainingTable: {
-        partitionKey: {
-          name: 'id',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      CheckpointTable: {
-        partitionKey: {
-          name: 'id',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      DatasetInfoTable: {
-        partitionKey: {
-          name: 'dataset_name',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      DatasetItemTable: {
-        partitionKey: {
-          name: 'dataset_name',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-        sortKey: {
-          name: 'sort_key',
-          type: AttributeType.STRING,
-        },
-      },
-      SDInferenceJobTable: {
-        partitionKey: {
-          name: 'InferenceJobId',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      SDEndpointDeploymentJobTable: {
-        partitionKey: {
-          name: 'EndpointDeploymentJobId',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-      },
-      MultiUserTable: {
-        partitionKey: {
-          name: 'kind',
-          type: aws_dynamodb.AttributeType.STRING,
-        },
-        sortKey: {
-          name: 'sort_key',
-          type: AttributeType.STRING,
-        },
-      },
-    };
+  constructor(scope: Construct, baseId: string) {
 
-    const shouldCreateDDBTableCondition = new CfnCondition(
-      scope,
-      `${this.id}-shouldCreateDDBTable`,
-      {
-        expression: Fn.conditionEquals(useExist, 'no'),
-      },
-    );
+    this.modelTable = this.table(scope, baseId, 'ModelTable');
 
-    // Create DynamoDB table to store model job id
-    for (let key in tables) {
-      const val = tables[key];
+    this.trainingTable = this.table(scope, baseId, 'TrainingTable');
 
-      const newTable = new aws_dynamodb.Table(scope, `${baseId}-new-${key}`, {
-        tableName: key,
-        partitionKey: val.partitionKey,
-        billingMode: aws_dynamodb.BillingMode.PAY_PER_REQUEST,
-        sortKey: val.sortKey,
-        removalPolicy: RemovalPolicy.RETAIN,
-      });
+    this.checkpointTable = this.table(scope, baseId, 'CheckpointTable');
 
-      (newTable.node.defaultChild as aws_dynamodb.CfnTable).cfnOptions.condition = shouldCreateDDBTableCondition;
+    this.datasetInfoTable = this.table(scope, baseId, 'DatasetInfoTable');
 
-      this[key.charAt(0).toLocaleLowerCase() + key.slice(1)] = <aws_dynamodb.Table>aws_dynamodb.Table.fromTableName(scope, `${baseId}-${key}`, key);
-    }
+    this.datasetItemTable = this.table(scope, baseId, 'DatasetItemTable');
+
+    this.sDInferenceJobTable = this.table(scope, baseId, 'SDInferenceJobTable');
+
+    this.sDEndpointDeploymentJobTable = this.table(scope, baseId, 'SDEndpointDeploymentJobTable');
+
+    this.multiUserTable = this.table(scope, baseId, 'MultiUserTable');
+
+  }
+
+  private table(scope: Construct, baseId: string, tableName: string): Table {
+    return <Table>Table.fromTableName(scope, `${baseId}-${tableName}`, tableName);
   }
 }

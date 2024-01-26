@@ -3,12 +3,12 @@ import importlib
 import logging
 import gradio as gr
 import os
-
+import threading
+import time
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
 from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_xyz_controlnet_list
-from dreambooth_on_cloud.ui import ui_tabs_callback
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
@@ -24,7 +24,6 @@ from modules.ui_components import ToolButton
 from scripts import global_state
 from scripts.xyz_grid import list_to_csv_string, csv_string_to_list_strip
 
-dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
@@ -47,33 +46,6 @@ IMG_SCRIPT_IDX = 7
 
 def dummy_function(*args, **kwargs):
     return []
-
-
-try:
-    from dreambooth_on_cloud.train import (
-        async_cloud_train,
-        get_cloud_db_model_name_list,
-        wrap_load_model_params,
-        get_train_job_list,
-        get_sorted_cloud_dataset
-    )
-    from dreambooth_on_cloud.create_model import (
-        get_sd_cloud_models,
-        get_create_model_job_list,
-        cloud_create_model,
-    )
-except Exception as e:
-    logging.warning(
-        "[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
-    dreambooth_available = False
-    cloud_train = dummy_function
-    get_cloud_db_model_name_list = dummy_function
-    wrap_load_model_params = dummy_function
-    get_train_job_list = dummy_function
-    get_sorted_cloud_dataset = dummy_function
-    get_sd_cloud_models = dummy_function
-    get_create_model_job_list = dummy_function
-    cloud_create_model = dummy_function
 
 
 class SageMakerUI(scripts.Script):
@@ -841,7 +813,7 @@ class SageMakerUI(scripts.Script):
 
         sagemaker_inputs_components = []
         if is_img2img:
-            self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.img2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -856,11 +828,11 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.img2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.img2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.img2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.img2img_lora_and_hypernet_models_state]
         else:
-            self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
+            self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, \
             secondary_model_name, tertiary_model_name, \
             modelmerger_merge_on_cloud, self.txt2img_lora_and_hypernet_models_state = sagemaker_ui.create_ui(
                 is_img2img)
@@ -875,7 +847,7 @@ class SageMakerUI(scripts.Script):
             if 'sd_model_checkpoint' not in opts.quicksettings_list:
                 self.txt2img_generate_btn.value = 'Generate on Cloud'
 
-            sagemaker_inputs_components = [self.txt2img_model_on_cloud, sd_vae_on_cloud_dropdown, inference_job_dropdown,
+            sagemaker_inputs_components = [self.txt2img_model_on_cloud, ied, sd_vae_on_cloud_dropdown, inference_job_dropdown,
                     primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud,
                     self.txt2img_lora_and_hypernet_models_state]
 
@@ -888,6 +860,7 @@ class SageMakerUI(scripts.Script):
 
         # check if endpoint is InService
         sd_model_on_cloud = args[0]
+        endpoint_type = args[1]
         always_on_cloud = 'sd_model_checkpoint' not in opts.quicksettings_list
         if sd_model_on_cloud == None_Option_For_On_Cloud_Model and not always_on_cloud:
             return
@@ -947,7 +920,7 @@ class SageMakerUI(scripts.Script):
 
         # we not support automatic for simplicity because the default is Automatic
         # if user need, has to select a vae model manually in the setting page
-        models['VAE'] = [args[1]]
+        models['VAE'] = [args[2]]
 
         from modules.processing import get_fixed_seed
 
@@ -1018,9 +991,9 @@ class SageMakerUI(scripts.Script):
             from modules import call_queue
             call_queue.queue_lock.release()
             # logger.debug(f"########################{api_param}")
-            inference_id = self.infer_manager.run(p.user, models, api_param, self.is_txt2img)
-            self.current_inference_id = inference_id
-            self.inference_queue.put(inference_id)
+            inference_id_or_data = self.infer_manager.run(p.user, models, api_param, self.is_txt2img, endpoint_type)
+            self.current_inference_id = inference_id_or_data
+            self.inference_queue.put(inference_id_or_data)
         except Exception as e:
             logger.error(e)
             err = str(e)
@@ -1045,7 +1018,7 @@ class SageMakerUI(scripts.Script):
                 )
 
             image_list, info_text, plaintext_to_html, infotexts = sagemaker_ui.process_result_by_inference_id(
-                inference_id)
+                inference_id_or_data, endpoint_type)
 
             processed = Processed(
                 p,
@@ -1069,12 +1042,25 @@ class SageMakerUI(scripts.Script):
 
 script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
-script_callbacks.ui_tabs_callback = ui_tabs_callback
 
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 
 if cloud_auth_manager.enableAuth:
     cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+
+def fetch_user_data():
+    while True:
+        try:
+            cloud_auth_manager.update_gradio_auth()
+        except Exception as e:
+            logger.error(e)
+        time.sleep(30)
+
+
+thread = threading.Thread(target=fetch_user_data)
+thread.daemon = True
+thread.start()
 
 if os.environ.get('ON_DOCKER', "false") != "true":
     from modules import call_queue, fifo_lock

@@ -8,7 +8,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -31,6 +31,8 @@ export interface CreateTrainingJobApiProps {
 
 export class CreateTrainingJobApi {
 
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly srcRoot: string;
@@ -57,6 +59,8 @@ export class CreateTrainingJobApi {
     this.router = props.router;
     this.trainTable = props.trainTable;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.createTrainJobLambda();
   }
@@ -113,35 +117,8 @@ export class CreateTrainingJobApi {
     return newRole;
   }
 
-  private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'create_training_job.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.lambdaRole(),
-      memorySize: 1024,
-      environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const createTrainJobIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    const requestModel = new Model(this.scope, `${this.id}-model`, {
+  private createModel(): Model {
+    return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
       modelName: this.id,
       description: `${this.id} Request Model`,
@@ -175,22 +152,51 @@ export class CreateTrainingJobApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
       this.scope,
-      `${this.id}-validator`,
+      `${this.id}-create-train-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.id,
         validateRequestBody: true,
       });
+  }
 
+  private createTrainJobLambda(): aws_lambda.IFunction {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/trainings`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'create_training_job.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.lambdaRole(),
+      memorySize: 1024,
+      environment: {
+        S3_BUCKET: this.s3Bucket.bucketName,
+        TRAIN_TABLE: this.trainTable.tableName,
+        MODEL_TABLE: this.modelTable.tableName,
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
+    const createTrainJobIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
 
     this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator,
+      requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': requestModel,
+        'application/json': this.model,
       },
     });
 

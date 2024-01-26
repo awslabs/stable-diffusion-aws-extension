@@ -6,8 +6,9 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3, CfnParameter,
-  Duration
+  aws_s3,
+  CfnParameter,
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
@@ -28,8 +29,10 @@ export interface UpdateDatasetApiProps {
 }
 
 export class UpdateDatasetApi {
-  private readonly src;
   public readonly router: aws_apigateway.Resource;
+  public model: Model;
+  public requestValidator: RequestValidator;
+  private readonly src;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly datasetInfoTable: aws_dynamodb.Table;
@@ -50,6 +53,8 @@ export class UpdateDatasetApi {
     this.httpMethod = props.httpMethod;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.updateDatasetApi();
   }
@@ -104,26 +109,8 @@ export class UpdateDatasetApi {
     return newRole;
   }
 
-  private updateDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.src}/datasets`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
-      index: 'update_dataset.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 1024,
-      environment: {
-        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
-        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
-      layers: [this.layer],
-    });
-
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+  private createModel() {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -143,15 +130,38 @@ export class UpdateDatasetApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator() {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-update-dataset-validator`,
       {
         restApi: this.router.api,
-        requestValidatorName: this.baseId,
         validateRequestBody: true,
       });
+  }
+
+
+  private updateDatasetApi() {
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.src}/datasets`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_9,
+      index: 'update_dataset.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 1024,
+      environment: {
+        DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
+        DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
+        S3_BUCKET: this.s3Bucket.bucketName,
+        LOG_LEVEL: this.logLevel.valueAsString,
+      },
+      layers: [this.layer],
+    });
+
 
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -162,9 +172,9 @@ export class UpdateDatasetApi {
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        requestValidator,
+        requestValidator: this.requestValidator,
         requestModels: {
-          'application/json': requestModel,
+          'application/json': this.model,
         },
       });
   }

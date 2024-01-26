@@ -43,11 +43,6 @@ class CreateCheckPointEvent:
 def handler(raw_event, context):
     logger.info(json.dumps(raw_event))
     request_id = context.aws_request_id
-    headers = {
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-    }
     try:
         event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
@@ -87,7 +82,7 @@ def handler(raw_event, context):
             filenames_only.append(file.filename)
 
         if len(filenames_only) == 0:
-            return bad_request(message='no checkpoint name (file names) detected', headers=headers)
+            return bad_request(message='no checkpoint name (file names) detected')
 
         user_roles = ['*']
         creator_permissions = {}
@@ -97,7 +92,7 @@ def handler(raw_event, context):
 
         if 'checkpoint' not in creator_permissions or \
                 ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-            return bad_request(message='user has no permissions to create a model', headers=headers)
+            return bad_request(message='user has no permissions to create a model')
 
         checkpoint = CheckPoint(
             id=request_id,
@@ -120,14 +115,13 @@ def handler(raw_event, context):
             },
             's3PresignUrl': multiparts_resp
         }
-        return created(data=data, headers=headers)
+        return created(data=data)
     except Exception as e:
         logger.error(e)
-        return bad_request(headers=headers, message=str(e))
+        return bad_request(message=str(e))
 
 
 def invoke_url_lambda(event: CreateCheckPointEvent):
-
     urls = list(set(event.urls))
 
     for url in urls:
@@ -169,6 +163,10 @@ def check_ckpt_name_unique(names: [str]):
     ckpts = ddb_service.scan(table=checkpoint_table)
     exists_names = []
     for ckpt in ckpts:
+        if 'checkpoint_names' not in ckpt:
+            continue
+        if 'L' not in ckpt['checkpoint_names']:
+            continue
         for name in ckpt['checkpoint_names']['L']:
             exists_names.append(name['S'])
 

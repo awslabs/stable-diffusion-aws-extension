@@ -268,6 +268,23 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
 
     return variable_value
 
+
+def host_url():
+    return get_variable_from_json('api_gateway_url')
+
+
+def api_key():
+    return get_variable_from_json('api_token')
+
+
+def is_gcr():
+    api_url = get_variable_from_json('api_gateway_url')
+    return api_url and '.execute-api.cn-' in api_url
+
+
+def has_config():
+    return host_url() and api_key()
+
 """
     Description: Below functions are used to replace existing shell command implementation with os.system method, which is not os agonostic and not recommended.
 """
@@ -482,7 +499,5 @@ if __name__ == '__main__':
 
     # upload_file_to_s3(sys.argv[1], 'aws-gcr-csdc-atl-exp-us-west-2', sys.argv[2])
     # fast_upload(boto3.Session(), 'aws-gcr-csdc-atl-exp-us-west-2', sys.argv[2], [sys.argv[1]])
-    upload_folder_to_s3_by_tar('models/dreambooth/sagemaker_test/samples', 'aws-gcr-csdc-atl-exp-us-west-2',
-                               'aigc-webui-test-samples')
     download_folder_from_s3_by_tar('aws-gcr-csdc-atl-exp-us-west-2', 'aigc-webui-test-samples/samples.tar',
                                    'samples.tar')

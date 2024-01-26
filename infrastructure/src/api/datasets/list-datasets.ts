@@ -7,7 +7,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -28,7 +28,7 @@ export interface ListDatasetsApiProps {
 }
 
 export class ListDatasetsApi {
-  private readonly src;
+  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;

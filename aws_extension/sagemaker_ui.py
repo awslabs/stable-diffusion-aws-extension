@@ -8,6 +8,7 @@ import gradio
 import requests
 import base64
 import gradio as gr
+from aws_extension.constant import MODEL_TYPE
 
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -16,7 +17,7 @@ from aws_extension.cloud_api_manager.api import api
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
 from modules.shared import opts
 from modules.ui_components import FormRow
-from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url
+from utils import get_variable_from_json, upload_multipart_files_to_s3_by_signed_url, has_config
 from requests.exceptions import JSONDecodeError
 from datetime import datetime
 import math
@@ -31,10 +32,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 None_Option_For_On_Cloud_Model = "don't use on cloud inference"
+None_Option_For_Infer_Job = "No Selected"
 
 inference_job_dropdown = None
-textual_inversion_dropdown = None
-hyperNetwork_dropdown = None
+embedding_dropdown = None
+hypernet_dropdown = None
 lora_dropdown = None
 # sagemaker_endpoint = None
 modelmerger_merge_on_cloud = None
@@ -148,6 +150,8 @@ def get_current_date():
 
 def server_request(path):
     api_gateway_url = get_variable_from_json('api_gateway_url')
+    if not has_config():
+        return []
     # Check if api_url ends with '/', if not append it
     if not api_gateway_url.endswith('/'):
         api_gateway_url += '/'
@@ -285,6 +289,7 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 def get_inference_job(inference_job_id):
     response = server_request(f'inferences/{inference_job_id}')
+    logger.debug(f"get_inference_job response {response}")
     return response.json()['data']
 
 
@@ -341,7 +346,7 @@ def get_model_list_by_type(model_type, username=""):
     api_key = get_variable_from_json('api_token')
 
     # check if api_gateway_url and api_key are set
-    if api_gateway_url is None or api_key is None:
+    if not has_config():
         logger.info("api_gateway_url or api_key is not set")
         return []
 
@@ -447,6 +452,10 @@ def get_controlnet_model_list():
 def refresh_all_models(username):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     api_key = get_variable_from_json('api_token')
+
+    if not has_config():
+        return []
+
     encode_type = "utf-8"
 
     try:
@@ -477,6 +486,10 @@ def refresh_all_models(username):
 
 def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path,
                               controlnet_model_path, vae_path, pr: gradio.Request):
+
+    if not has_config():
+        return "Please config api url and token", None, None, None, None, None, None
+
     log = "start upload model to s3:"
 
     local_paths = [sd_checkpoints_path, textual_inversion_path, lora_path, hypernetwork_path, controlnet_model_path,
@@ -609,6 +622,9 @@ def check_url(url: str):
 
 
 def sagemaker_upload_model_s3_url(model_type: str, url_list: str, description: str, pr: gradio.Request):
+    if not url_list:
+        return "Please fill the url."
+
     model_type = modelTypeMap.get(model_type)
     if not model_type:
         return "Please choose the model type."
@@ -756,14 +772,20 @@ async def call_remote_inference(sagemaker_endpoint, type):
             logger.error(f"Failed to get inference job {inference_id}, error: {e}")
 
 
-def process_result_by_inference_id(inference_id):
+def process_result_by_inference_id(inference_id_or_data, endpoint_type):
+    if endpoint_type == 'Async':
+        resp = get_inference_job(inference_id_or_data)
+        inference_id = inference_id_or_data
+    else:
+        resp = inference_id_or_data
+        inference_id = resp['InferenceJobId']
+
     image_list = []  # Return an empty list if selected_value is None
     info_text = ''
     infotexts = f"Inference id is {inference_id}, please check all historical inference result in 'Inference Job' dropdown list"
     json_list = []
     prompt_txt = ''
 
-    resp = get_inference_job(inference_id)
     if resp is None:
         logger.info(f"get_inference_job resp is null")
         return image_list, info_text, plaintext_to_html(infotexts), infotexts
@@ -774,14 +796,15 @@ def process_result_by_inference_id(inference_id):
 
         if resp['taskType'] in ['txt2img', 'img2img', 'interrogate_clip', 'interrogate_deepbooru']:
             while resp and resp['status'] == "inprogress":
-                time.sleep(3)
+                time.sleep(1)
                 resp = get_inference_job(inference_id)
             if resp is None:
                 logger.info(f"get_inference_job resp is null.")
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
             if resp['status'] == "failed":
-                infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
-                return image_list, info_text, plaintext_to_html(infotexts), infotexts
+                if 'sagemakerRaw' in resp:
+                    infotexts = f"Inference job {inference_id} is failed, error message: {resp['sagemakerRaw']}"
+                    return image_list, info_text, plaintext_to_html(infotexts), infotexts
             elif resp['status'] == "succeed":
                 if resp['taskType'] in ['interrogate_clip', 'interrogate_deepbooru']:
                     prompt_txt = resp['caption']
@@ -796,7 +819,8 @@ def process_result_by_inference_id(inference_id):
 
                 if json_file:
                     info_text = json_file
-                    infotexts = f"Inference id is {inference_id}\n" + json.loads(info_text)["infotexts"][0]
+                    infotexts = f"Inference id is {inference_id}\n{get_infer_job_time(resp)}" + \
+                                json.loads(info_text)["infotexts"][0]
                 else:
                     logger.debug(f"File {json_file} does not exist.")
                     info_text = 'something wrong when trying to download the inference parameters'
@@ -850,78 +874,93 @@ def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary
 #     pass
 
 
-def update_txt2imgPrompt_from_TextualInversion(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'embeddings', False)
+def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
+    if MODEL_TYPE.EMBEDDING.value in lora_and_hypernet_models_state:
+        return update_prompt_with_selected_model(
+            selected_items,
+            prompt,
+            MODEL_TYPE.EMBEDDING,
+            lora_and_hypernet_models_state[MODEL_TYPE.EMBEDDING.value]
+            )
+
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.EMBEDDING)
 
 
-def update_txt2imgPrompt_from_Hypernetworks(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'hypernetworks', True)
+def update_prompt_with_hypernetwork(selected_items, prompt):
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.HYPER_NETWORK)
 
 
-def update_txt2imgPrompt_from_Lora(selected_items, txt2img_prompt):
-    return update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, 'Lora', True)
+def update_prompt_with_lora(selected_items, prompt):
+    return update_prompt_with_selected_model(selected_items, prompt, MODEL_TYPE.LORA)
 
 
-def update_txt2imgPrompt_from_model_select(selected_items, txt2img_prompt, model_name='embeddings',
-                                           with_angle_brackets=False):
-    logger.debug(selected_items)  # example ['FastNegativeV2.pt']
-    logger.debug(txt2img_prompt)
-    logger.debug(get_model_list_by_type('embeddings'))
-    full_dropdown_items = get_model_list_by_type(model_name)  # example ['FastNegativeV2.pt', 'okuryl3nko.pt']
+def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
+    """Update txt2img or img2img prompt with selecte model name
 
-    # Remove extensions from selected_items and full_dropdown_items
-    selected_items = [item.split('.')[0] for item in selected_items]
-    full_dropdown_items = [item.split('.')[0] for item in full_dropdown_items]
+    Args:
+        selected_value (gr.Dropdown): the selected dropdown
+        original_prompt (gr.Textbox): the original prompt before updating
+        type: the model type, embedding|lora|hypernetwork
 
-    # Loop over each item in full_dropdown_items and remove it from txt2img_prompt
-    type_str = ''
-    if model_name == 'Lora':
-        type_str = 'lora:'
-    elif model_name == 'hypernetworks':
-        type_str = 'hypernet:'
-    for item in full_dropdown_items:
-        if with_angle_brackets:
-            txt2img_prompt = re.sub(f'<{type_str}{item}:\d+>', "", txt2img_prompt).strip()
-        else:
-            txt2img_prompt = txt2img_prompt.replace(item, "").strip()
+    Returns:
+        gr.Textbox: The updated prompt
+    """
 
-    # Loop over each item in selected_items and append it to txt2img_prompt
-    for item in selected_items:
-        if with_angle_brackets:
-            txt2img_prompt += ' ' + '<' + type_str + item + ':1>'
-        else:
-            txt2img_prompt += ' ' + item
+    def _remove_embedding_prompt(state_value, selected_value, prompt_txt):
+        if state_value:
+            for embedding in state_value:
+                if embedding not in selected_value:
+                    prompt_txt = prompt_txt.replace(embedding.split(".")[0], "")
 
-    # Remove any leading or trailing whitespace
-    txt2img_prompt = txt2img_prompt.strip()
+        return prompt_txt
 
-    return txt2img_prompt
+    def _remove_prompt_by_regex(pattern, prompt_txt):
+        matches = re.findall(pattern, prompt_txt)
+        for match in matches:
+            if match not in existed_item:
+                prompt_txt = prompt_txt.replace(match, "")
 
+        return prompt_txt
 
-def add_lora_to_prompt(selected_value, original_prompt):
-    logger.info(f"selected value is {selected_value}")
-    logger.info(f"original prompt is {original_prompt}")
+    logger.info(f"Selected value is {selected_value}, \
+                original prompt is {original_prompt}, \
+                type is {type}")
     prompt_txt = original_prompt
     existed_item = []
 
+    # Compose prompt for Embedding/Lora/Hypernetwork
     for item in selected_value:
-        # Compose Lora prompt
-        lora_name = item.split(".")[0]
-        lora_prompt = f"<lora:{lora_name}:1>"
-        existed_item.append(lora_prompt)
+        model_name = item.split(".")[0]
+        if MODEL_TYPE.LORA == type:
+            model_prompt = f"<lora:{model_name}:1>"
+        elif MODEL_TYPE.HYPER_NETWORK == type:
+            model_prompt = f"<hypernet:{model_name}:1>"
+        elif MODEL_TYPE.EMBEDDING == type:
+            model_prompt = model_name
+        else:
+            logger.warning(f"The type {type} is not supported, skip it")
+            continue
 
-        if lora_prompt not in original_prompt:
+        existed_item.append(model_prompt)
+        if model_prompt not in original_prompt:
             if 0 == len(original_prompt.strip()):
-                prompt_txt = lora_prompt
+                prompt_txt = model_prompt
             else:
-                prompt_txt += f" {lora_prompt}"
+                prompt_txt += f" {model_prompt}"
 
-    # Remove Lora string which is not selected
-    pattern = r"<lora:[^>]*:1>"
-    matches = re.findall(pattern, prompt_txt)
-    for match in matches:
-        if match not in existed_item:
-            prompt_txt = prompt_txt.replace(match, "")
+    # Remove Embedding/Lora/Hypernetwork string which is not selected
+    pattern = ""
+    if MODEL_TYPE.LORA == type:
+        pattern = r"<lora:[^>]*:1>"
+        prompt_txt = _remove_prompt_by_regex(pattern, prompt_txt)
+    elif MODEL_TYPE.HYPER_NETWORK == type:
+        pattern = r"<hypernet:[^>]*:1>"
+        prompt_txt = _remove_prompt_by_regex(pattern, prompt_txt)
+    elif MODEL_TYPE.EMBEDDING == type:
+        prompt_txt = _remove_embedding_prompt(state_value, selected_value, prompt_txt)
+    else:
+        logger.warning(f"The type {type} is not supported, skip it")
+        return prompt_txt
 
     return prompt_txt
 
@@ -936,6 +975,9 @@ def fake_gan(selected_value, original_prompt):
         inference_job_id = parts[3].strip()
         inference_job_status = parts[2].strip()
         inference_job_taskType = parts[1].strip()
+        if inference_job_status == 'failed':
+            job = get_inference_job(inference_job_id)
+            return [], [], plaintext_to_html(f"inference is failed: {job['sagemakerRaw']}"), original_prompt
         if inference_job_status != 'succeed':
             return [], [], plaintext_to_html(f'inference is {inference_job_status}'), original_prompt
 
@@ -946,10 +988,16 @@ def fake_gan(selected_value, original_prompt):
             images = job['img_presigned_urls']
             inference_param_json_list = job['output_presigned_urls']
             image_list = download_images_to_pil(images)
-            json_file = download_images_to_json(inference_param_json_list)[0]
+            images_to_json = download_images_to_json(inference_param_json_list)
+            # maybe param json was deleted
+            if len(images_to_json) == 0:
+                json_file = ""
+            else:
+                json_file = images_to_json[0]
             if json_file:
                 info_text = json_file
-                infotexts = f"Inference id is {inference_job_id}\n" + json.loads(info_text)["infotexts"][0]
+                infotexts = f"Inference id is {inference_job_id}\n{get_infer_job_time(job)}" + \
+                            json.loads(info_text)["infotexts"][0]
             else:
                 logger.debug(f"File {json_file} does not exist.")
                 info_text = 'something wrong when trying to download the inference parameters'
@@ -972,9 +1020,50 @@ def fake_gan(selected_value, original_prompt):
     return image_list, info_text, plaintext_to_html(infotexts), prompt_txt
 
 
+def get_infer_job_time(job):
+    string_array = []
+
+    inference_type = ""
+    if 'inference_type' in job:
+        inference_type = job['inference_type'] + " "
+
+    if 'createTime' in job and 'completeTime' in job:
+        complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+        create_time = datetime.strptime(job['createTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - create_time
+        duration = round(duration.total_seconds(), 2)
+        string = f"End-to-end API Duration: {duration} seconds"
+
+        start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+        duration = complete_time - start_time
+        duration = round(duration.total_seconds(), 2)
+        string_array.append(f"{string} (in which {inference_type}Inference: {duration} seconds)")
+    else:
+        if 'startTime' in job and 'completeTime' in job:
+            complete_time = datetime.strptime(job['completeTime'], '%Y-%m-%d %H:%M:%S.%f')
+            start_time = datetime.strptime(job['startTime'], '%Y-%m-%d %H:%M:%S.%f')
+            duration = complete_time - start_time
+            duration = round(duration.total_seconds(), 2)
+            string_array.append(f"{inference_type}Inference Time: {duration} seconds")
+
+    if 'params' in job:
+        if 'sagemaker_inference_endpoint_name' in job['params']:
+            endpoint_name = job['params']['sagemaker_inference_endpoint_name']
+            infer_ep_name = f"Endpoint: {endpoint_name}"
+            if 'sagemaker_inference_instance_type' in job['params']:
+                instance_type = job['params']['sagemaker_inference_instance_type']
+                infer_ep_name += f" ({instance_type})"
+            string_array.append(infer_ep_name)
+
+    if len(string_array) == 0:
+        return ""
+
+    return "\n".join(string_array) + "\n"
+
+
 def delete_inference_job(selected_value):
     logger.debug(f"selected value is {selected_value}")
-    if selected_value and selected_value != None_Option_For_On_Cloud_Model:
+    if selected_value and selected_value != None_Option_For_Infer_Job:
         if selected_value == 'cancelled':
             return
         delimiter = "-->"
@@ -1083,9 +1172,8 @@ def load_xyz_controlnet_list(username, user_token):
 
 
 def load_embeddings_list(username, user_token):
-    # vae_model_on_cloud = ['None']
-    vae_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
-    return vae_model_on_cloud
+    embedding_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+    return embedding_model_on_cloud
 
 
 def create_ui(is_img2img):
@@ -1100,6 +1188,7 @@ def create_ui(is_img2img):
         inference_task_type = 'txt2img' if not is_img2img else 'img2img'
         with gr.Column():
             with gr.Row():
+                global lora_and_hypernet_models_state
                 lora_and_hypernet_models_state = gr.State({})
                 sd_model_on_cloud_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
                                                          label='Stable Diffusion Checkpoint Used on Cloud')
@@ -1110,28 +1199,62 @@ def create_ui(is_img2img):
                                                   'choices': load_model_list(username, username)
                                               }, 'refresh_cloud_model_down')
 
+                infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time"],
+                                                         value="Async",
+                                                         label='Inference Endpoint Type')
             with gr.Row():
-                sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
-                                                       label='SD Vae on Cloud')
+                with gr.Column():
+                    with gr.Row():
+                        sd_vae_on_cloud_dropdown = gr.Dropdown(choices=[], value='Automatic',
+                                                            label='SD Vae on Cloud')
 
-                create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_vae_list(username, username)
-                                              }, 'refresh_cloud_vae_down')
+                        create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_vae_list(username, username)
+                                                    }, 'refresh_cloud_vae_down')
+                with gr.Column():
+                    with gr.Row():
+                        # Lora model
+                        global lora_dropdown
+                        lora_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Lora model on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(lora_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_lora_models(username, username)
+                                                    }, 'refresh_lora_dropdown')
+                        lora_dropdown = lora_dropdown_local
+
             with gr.Row():
-                # Lora model
-                global lora_dropdown
-                lora_dropdown_local = gr.Dropdown(choices=[],
-                                                  label="Lora model on cloud",
-                                                  multiselect=True)
-                create_refresh_button_by_user(lora_dropdown_local,
-                                              lambda *args: None,
-                                              lambda username: {
-                                                  'choices': load_lora_models(username, username)
-                                              }, 'refresh_lora_down')
+                with gr.Column():
+                    with gr.Row():
+                        # Embedding model
+                        global embedding_dropdown
+                        embedding_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Embedding on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(embedding_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_embeddings_list(username, username)
+                                                    }, 'refresh_embedding_dropdown')
+                        embedding_dropdown = embedding_dropdown_local
+                with gr.Column():
+                    with gr.Row():
+                        # Hypernetwork model
+                        global hypernet_dropdown
+                        hypernet_dropdown_local = gr.Dropdown(choices=[],
+                                                        label="Hypernetwork on cloud",
+                                                        multiselect=True)
+                        create_refresh_button_by_user(hypernet_dropdown_local,
+                                                    lambda *args: None,
+                                                    lambda username: {
+                                                        'choices': load_hypernetworks_models(username, username)
+                                                    }, 'refresh_hypernet_dropdown')
+                        hypernet_dropdown = hypernet_dropdown_local
 
-                lora_dropdown = lora_dropdown_local
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
@@ -1154,10 +1277,8 @@ def create_ui(is_img2img):
                 global inference_job_dropdown
                 # global txt2img_inference_job_ids
 
-                inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_On_Cloud_Model,
-                                                     label="Inference Job: Time-Type-Status-Uuid")
-
-
+                inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_Infer_Job,
+                                                     label="Inference Job Histories: Time-Type-Status-UUID")
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
@@ -1179,24 +1300,28 @@ def create_ui(is_img2img):
                     vae_model_on_cloud = load_vae_list(pr.username, pr.username)
                     lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
                     hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
+                    embedding_model_on_cloud = load_embeddings_list(pr.username, pr.username)
                     controlnet_list = load_controlnet_list(pr.username, pr.username)
                     controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
 
                     inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
                     lora_hypernets = {
-                        'lora': lora_models_on_cloud,
-                        'hypernet': hypernetworks_models_on_cloud,
-                        'controlnet': controlnet_list,
-                        'controlnet_xyz': controlnet_xyz_list,
-                        'vae': vae_model_on_cloud,
-                        'sd': models_on_cloud,
+                        "lora": lora_models_on_cloud,
+                        "hypernet": hypernetworks_models_on_cloud,
+                        "controlnet": controlnet_list,
+                        "controlnet_xyz": controlnet_xyz_list,
+                        "vae": vae_model_on_cloud,
+                        "sd": models_on_cloud,
+                        "embedding": embedding_model_on_cloud
                     }
 
                     return lora_hypernets, \
                         gr.update(choices=models_on_cloud, value=models_on_cloud[0] if models_on_cloud and len(models_on_cloud) > 0 else None_Option_For_On_Cloud_Model), \
                         gr.update(choices=inference_jobs), \
                         gr.update(choices=vae_model_on_cloud), \
-                        gr.update(choices=lora_models_on_cloud)
+                        gr.update(choices=lora_models_on_cloud), \
+                        gr.update(choices=hypernetworks_models_on_cloud), \
+                        gr.update(choices=embedding_model_on_cloud)
 
                 sagemaker_inference_tab.load(fn=setup_inference_for_plugin, inputs=[],
                                              outputs=[
@@ -1204,7 +1329,9 @@ def create_ui(is_img2img):
                                                  sd_model_on_cloud_dropdown,
                                                  inference_job_dropdown,
                                                  sd_vae_on_cloud_dropdown,
-                                                 lora_dropdown_local
+                                                 lora_dropdown_local,
+                                                 hypernet_dropdown_local,
+                                                 embedding_dropdown_local
                                              ])
     with gr.Group():
         with gr.Accordion("Open for Checkpoint Merge in the Cloud!", visible=False, open=False):
@@ -1235,4 +1362,4 @@ def create_ui(is_img2img):
                 modelmerger_merge_on_cloud = gr.Button(elem_id="modelmerger_merge_in_the_cloud", value="Merge on Cloud",
                                                        variant='primary')
 
-    return sd_model_on_cloud_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state
+    return sd_model_on_cloud_dropdown, infer_endpoint_dropdown, sd_vae_on_cloud_dropdown, inference_job_dropdown, primary_model_name, secondary_model_name, tertiary_model_name, modelmerger_merge_on_cloud, lora_and_hypernet_models_state

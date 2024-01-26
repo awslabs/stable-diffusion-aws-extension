@@ -21,7 +21,7 @@ from libs.utils import get_user_roles, check_user_permissions
 bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class PrepareEvent:
     user_id: Optional[str] = ""
 
 
-# POST /inference/v2
+# POST /inferences
 def prepare_inference(raw_event, context):
     request_id = context.aws_request_id
     event = PrepareEvent(**json.loads(raw_event['body']))

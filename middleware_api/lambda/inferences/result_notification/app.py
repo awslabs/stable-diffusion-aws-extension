@@ -13,14 +13,14 @@ from botocore.exceptions import ClientError
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
 
-DDB_INFERENCE_TABLE_NAME = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+INFERENCE_JOB_TABLE = os.environ.get('INFERENCE_JOB_TABLE')
 DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
 DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
 
 ddb_client = boto3.resource('dynamodb')
-inference_table = ddb_client.Table(DDB_INFERENCE_TABLE_NAME)
+inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 sns = boto3.client('sns')
 
@@ -145,12 +145,21 @@ def send_message_to_sns(message_json):
 
 
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
+    print(json.dumps(event))
     message = event['Records'][0]['Sns']['Message']
     print("From SNS: " + str(message))
     message = json.loads(message)
+
+    if 'invocationStatus' not in message:
+        # maybe a message from SNS for test
+        print("Not a valid message")
+        return
+
     invocation_status = message["invocationStatus"]
     inference_id = message["inferenceId"]
+
+    update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
+
     if invocation_status == "Completed":
         try:
             print(f"Complete invocation!")
@@ -159,6 +168,9 @@ def lambda_handler(event, context):
             bucket, key = get_bucket_and_key(output_location)
             obj = s3_resource.Object(bucket, key)
             body = obj.get()['Body'].read().decode('utf-8')
+
+            print(f"Sagemaker Out Body: {body}")
+
             json_body = json.loads(body)
             if json_body is None:
                 update_inference_job_table(inference_id, 'status', 'failed')
@@ -192,12 +204,12 @@ def lambda_handler(event, context):
                 for count, b64image in enumerate(json_body["images"]):
                     image = decode_base64_to_image(b64image).convert("RGB")
                     output = io.BytesIO()
-                    image.save(output, format="JPEG")
+                    image.save(output, format="PNG")
                     # Upload the image to the S3 bucket
                     s3_client.put_object(
                         Body=output.getvalue(),
                         Bucket=S3_BUCKET_NAME,
-                        Key=f"out/{inference_id}/result/image_{count}.jpg"
+                        Key=f"out/{inference_id}/result/image_{count}.png"
                     )
                     # Update the DynamoDB table
                     inference_table.update_item(
@@ -206,7 +218,7 @@ def lambda_handler(event, context):
                         },
                         UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
                         ExpressionAttributeValues={
-                            ':new_image': [f"image_{count}.jpg"],
+                            ':new_image': [f"image_{count}.png"],
                             ':empty_list': []
                         }
                     )
@@ -229,9 +241,52 @@ def lambda_handler(event, context):
                 update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
 
                 print(f"Complete inference parameters {inference_parameters}")
+            elif taskType in ["extra-single-image", "rembg"]:
+                if 'image' not in json_body:
+                    raise Exception(json_body)
+
+                # image = decode_base64_to_image(json_body["image"]).convert("RGB")
+                image = Image.open(io.BytesIO(base64.b64decode(json_body["image"])))
+                output = io.BytesIO()
+                image.save(output, format="PNG")
+                # Upload the image to the S3 bucket
+                s3_client.put_object(
+                    Body=output.getvalue(),
+                    Bucket=S3_BUCKET_NAME,
+                    Key=f"out/{inference_id}/result/image.png"
+                )
+                # Update the DynamoDB table
+                inference_table.update_item(
+                    Key={
+                        'InferenceJobId': inference_id
+                    },
+                    UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
+                    ExpressionAttributeValues={
+                        ':new_image': [f"image.png"],
+                        ':empty_list': []
+                    }
+                )
+
+                # save parameters
+                inference_parameters = {}
+                if taskType == "extra-single-image":
+                    inference_parameters["html_info"] = json_body["html_info"]
+                inference_parameters["endpont_name"] = endpoint_name
+                inference_parameters["inference_id"] = inference_id
+                inference_parameters["sns_info"] = message
+
+                json_file_name = f"/tmp/{inference_id}_param.json"
+
+                with open(json_file_name, "w") as outfile:
+                    json.dump(inference_parameters, outfile)
+
+                upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
+                                  f"{inference_id}_param.json")
+                update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
+
+                print(f"Complete inference parameters {inference_parameters}")
 
             update_inference_job_table(inference_id, 'status', 'succeed')
-            update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
             update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         except Exception as e:
             print(f"Error occurred: {str(e)}")

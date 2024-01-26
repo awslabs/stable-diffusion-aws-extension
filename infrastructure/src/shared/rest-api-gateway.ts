@@ -1,4 +1,4 @@
-import { aws_apigateway as apigw, CfnOutput } from 'aws-cdk-lib';
+import { aws_apigateway as apigw } from 'aws-cdk-lib';
 import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigateway';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
@@ -33,9 +33,8 @@ export class RestApiGateway {
 
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
-      restApiName: 'Stable Diffusion Train and Deploy API',
-      description:
-                'This service is used to train and deploy Stable Diffusion models.',
+      restApiName: this.scope.node.id,
+      description: 'Extension for Stable Diffusion on AWS API',
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(apiAccessLogGroup),
         accessLogFormat: AccessLogFormat.clf(),
@@ -89,10 +88,6 @@ export class RestApiGateway {
     usagePlan.addApiKey(apiKey);
     usagePlan.addApiStage({
       stage: api.deploymentStage,
-    });
-    // Output the API Gateway URL
-    new CfnOutput(this.scope, 'train-deploy-api-url', {
-      value: api.url,
     });
 
     return [api, apiKeyStr];

@@ -8,7 +8,7 @@ import {
   aws_lambda,
   aws_s3,
   CfnParameter,
-  Duration
+  Duration,
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -86,6 +86,7 @@ export class StartInferenceJobApi {
       effect: Effect.ALLOW,
       actions: [
         'sagemaker:InvokeEndpointAsync',
+        'sagemaker:InvokeEndpoint',
       ],
       resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:endpoint/*`],
     }));
@@ -132,9 +133,9 @@ export class StartInferenceJobApi {
       role: this.getLambdaRole(),
       memorySize: 1024,
       environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
+        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        DDB_INFERENCE_TABLE_NAME: this.inferenceJobTable.tableName,
+        INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },

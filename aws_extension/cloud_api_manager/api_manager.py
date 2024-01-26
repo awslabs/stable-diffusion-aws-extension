@@ -6,6 +6,7 @@ import requests
 import utils
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager, Admin_Role
 from aws_extension.cloud_api_manager.api import api
+from utils import has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -32,40 +33,11 @@ class CloudApiManager:
             'Content-Type': 'application/json',
         }
 
-    def sagemaker_deploy(self, endpoint_name, instance_type, initial_instance_count=1,
-                         autoscaling_enabled=True, user_roles=None, user_token=""):
-        """ Create SageMaker endpoint for GPU inference.
-        Args:
-            instance_type (string): the ML compute instance type.
-            initial_instance_count (integer): Number of instances to launch initially.
-        Returns:
-            (None)
-        """
-        # function code to call sagemaker deploy api
-        logger.debug(
-            f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
-
-        payload = {
-            "endpoint_name": endpoint_name,
-            "instance_type": instance_type,
-            "initial_instance_count": initial_instance_count,
-            "autoscaling_enabled": autoscaling_enabled,
-            'assign_to_roles': user_roles,
-            "creator": user_token,
-        }
-
-        deployment_url = f"{self.auth_manger.api_url}endpoints"
-
-        try:
-            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
-            r = response.json()
-            logger.debug(f"response for rest api {r}")
-            return r['message']
-        except Exception as e:
-            logger.error(e)
-            return f"Failed to start endpoint deployment with exception: {e}"
-
     def sagemaker_endpoint_delete(self, delete_endpoint_list, user_token=""):
+
+        if not delete_endpoint_list:
+            return "No endpoint to delete"
+
         logger.debug(f"start delete sagemaker endpoint delete function")
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
 
@@ -86,6 +58,47 @@ class CloudApiManager:
         except Exception as e:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
+
+    def sagemaker_deploy(self, endpoint_name,
+                         endpoint_type,
+                         instance_type,
+                         initial_instance_count=1,
+                         custom_docker_image_uri="",
+                         autoscaling_enabled=True,
+                         user_roles=None,
+                         user_token=""):
+        """ Create SageMaker endpoint for GPU inference.
+        Args:
+            instance_type (string): the ML compute instance type.
+            initial_instance_count (integer): Number of instances to launch initially.
+        Returns:
+            (None)
+        """
+        # function code to call sagemaker deploy api
+        logger.debug(
+            f"start deploying instance type: {instance_type} with count {initial_instance_count} with autoscaling {autoscaling_enabled}............")
+
+        payload = {
+            "endpoint_name": endpoint_name,
+            "endpoint_type": endpoint_type,
+            "instance_type": instance_type,
+            "initial_instance_count": initial_instance_count,
+            "autoscaling_enabled": autoscaling_enabled,
+            "custom_docker_image_uri": custom_docker_image_uri,
+            'assign_to_roles': user_roles,
+            "creator": user_token,
+        }
+
+        deployment_url = f"{self.auth_manger.api_url}endpoints"
+
+        try:
+            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            r = response.json()
+            logger.debug(f"response for rest api {r}")
+            return r['message']
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to start endpoint deployment with exception: {e}"
 
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
@@ -146,6 +159,9 @@ class CloudApiManager:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
+            if not has_config():
+                return []
+
             response = requests.get(f'{self.auth_manger.api_url}endpoints',
                                     params={
                                         'username': username,
@@ -187,6 +203,9 @@ class CloudApiManager:
             if self.auth_manger.enableAuth and not user_token:
                 return []
 
+            if not has_config():
+                return []
+
             params = {
                 'username': username,
                 'per_page': 200,
@@ -201,7 +220,10 @@ class CloudApiManager:
 
             ckpts_list = []
             for ckpt in r['data']['checkpoints']:
-                ckpt_name = ckpt['name'][0]
+                if 'name' in ckpt and ckpt['name']:
+                    ckpt_name = ckpt['name'][0]
+                else:
+                    ckpt_name = 'None'
                 option_value = f"{ckpt_name}{string_separator}{ckpt['status']}{string_separator}{ckpt['id']}"
                 ckpts_list.append(option_value)
 
@@ -241,7 +263,7 @@ class CloudApiManager:
         return raw_resp.json()['data']
 
     def list_roles(self, user_token=""):
-        if not self.auth_manger.enableAuth:
+        if not self.auth_manger.enableAuth or not has_config():
             return {
                 'roles': []
             }

@@ -6,14 +6,15 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_s3, CfnParameter,
-  Duration
+  aws_s3,
+  CfnParameter,
+  Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import {Size} from "aws-cdk-lib/core";
 
 
 export interface UpdateCheckPointApiProps {
@@ -27,6 +28,8 @@ export interface UpdateCheckPointApiProps {
 }
 
 export class UpdateCheckPointApi {
+  public model: Model;
+  public requestValidator: RequestValidator;
   private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -49,6 +52,8 @@ export class UpdateCheckPointApi {
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.updateCheckpointApi();
   }
@@ -122,6 +127,45 @@ export class UpdateCheckPointApi {
     return newRole;
   }
 
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Request Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT4,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          status: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
+          name: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+            maxLength: 20,
+            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
+          },
+          multi_parts_tags: {
+            type: JsonSchemaType.OBJECT,
+          },
+        },
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-update-ckpt-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
+  }
+
   private updateCheckpointApi() {
     const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
@@ -159,41 +203,6 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          status: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-            maxLength: 20,
-            pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-          },
-          multi_parts_tags: {
-            type: JsonSchemaType.OBJECT,
-          },
-        },
-      },
-      contentType: 'application/json',
-    });
-
-    const requestValidator = new RequestValidator(
-      this.scope,
-      `${this.baseId}-validator`,
-      {
-        restApi: this.router.api,
-        requestValidatorName: this.baseId,
-        validateRequestBody: true,
-      });
 
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
@@ -205,9 +214,9 @@ export class UpdateCheckPointApi {
       .addMethod(this.httpMethod, createModelIntegration,
         {
           apiKeyRequired: true,
-          requestValidator,
+          requestValidator: this.requestValidator,
           requestModels: {
-            'application/json': requestModel,
+            'application/json': this.model,
           },
         });
   }

@@ -16,7 +16,7 @@ from libs.utils import get_user_roles, check_user_permissions
 bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-inference_table_name = os.environ.get('DDB_INFERENCE_TABLE_NAME')
+inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -32,11 +32,13 @@ class PrepareEvent:
     filters: dict[str, Any]
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
+    inference_type: Optional[str] = None
 
 
-# POST /inference/v2
+# POST /inferences
 def handler(raw_event, context):
     request_id = context.aws_request_id
+    logger.info(json.dumps(json.loads(raw_event['body'])))
     event = PrepareEvent(**json.loads(raw_event['body']))
     _type = event.task_type
 
@@ -50,9 +52,11 @@ def handler(raw_event, context):
             )
 
         # check if endpoint table for endpoint status and existence
-        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.user_id)
+        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.inference_type,
+                                                          event.user_id)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
+        instance_type = inference_endpoint.instance_type
 
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
@@ -60,14 +64,17 @@ def handler(raw_event, context):
         presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
+            createTime=str(datetime.now()),
             startTime=str(datetime.now()),
             status='created',
             taskType=_type,
+            inference_type=event.inference_type,
             owner_group_or_role=[event.user_id],
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
                 'sagemaker_inference_endpoint_id': endpoint_id,
+                'sagemaker_inference_instance_type': instance_type,
                 'sagemaker_inference_endpoint_name': endpoint_name,
             },
         )
@@ -161,7 +168,7 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
-def _schedule_inference_endpoint(endpoint_name, user_id):
+def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
     if endpoint_name:
@@ -183,11 +190,12 @@ def _schedule_inference_endpoint(endpoint_name, user_id):
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
             if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
                 continue
-
+            if endpoint.endpoint_type != inference_type:
+                continue
             if check_user_permissions(endpoint.owner_group_or_role, user_roles, user_id):
                 available_endpoints.append(endpoint)
 
         if len(available_endpoints) == 0:
-            raise Exception(f'no available Endpoints for user "{user_id}"')
+            raise Exception(f'no available {inference_type} endpoints for user "{user_id}"')
 
         return random.choice(available_endpoints)
