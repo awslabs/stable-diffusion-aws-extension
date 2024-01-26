@@ -293,22 +293,22 @@ def get_inference_job(inference_job_id):
     url = f'inferences/{inference_job_id}'
     response = server_request(url)
     logger.debug(f"get_inference_job response {response}")
-    username = ""
+    infer_id = ""
     if 'data' in response.json():
-        if 'owner_group_or_role' in response.json()['data']:
-            username = response.json()['data']['owner_group_or_role'][0]
+        infer_id = response.json()['data']['InferenceJobId']
     api_logger = ApiLogger(
         action='inference',
         append=True,
-        username=username
+        infer_id=infer_id
     )
     headers = {
         "x-api-key": get_variable_from_json('api_token'),
         "Content-Type": "application/json"
     }
+    api_gateway_url = get_variable_from_json('api_gateway_url')
     api_logger.req_log(sub_action="GetInferenceJob",
                        method='GET',
-                       path=url,
+                       path=f"{api_gateway_url}{url}",
                        headers=headers,
                        response=response)
     return response.json()['data']
@@ -1097,6 +1097,12 @@ def delete_inference_job(selected_value):
         if resp.status_code != 204:
             gr.Error(f"Error deleting inference: {resp.json()['message']}")
         gr.Info(f"{inference_job_id} deleted successfully")
+        file_path = f"{os.getcwd()}/outputs/{inference_job_id}.md"
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        file_path = f"{os.getcwd()}/outputs/{inference_job_id}.html"
+        if os.path.exists(file_path):
+            os.remove(file_path)
     else:
         gr.Warning('Please select a inference job to delete')
 
@@ -1311,6 +1317,15 @@ def create_ui(is_img2img):
                     _js="delete_inference_job_confirm",
                     fn=delete_inference_job,
                     inputs=[inference_job_dropdown],
+                    outputs=[]
+                )
+
+                api_inference_job_button = ToolButton(value='API', elem_id="api_inference_job")
+                api_inference_job_cwd = ToolButton(value=os.getcwd(), elem_id="api_inference_job_path", visible=False)
+                api_inference_job_button.click(
+                    _js="download_inference_job_api_call",
+                    fn=None,
+                    inputs=[api_inference_job_cwd, inference_job_dropdown],
                     outputs=[]
                 )
 

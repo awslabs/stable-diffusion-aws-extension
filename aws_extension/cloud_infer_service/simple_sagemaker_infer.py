@@ -44,10 +44,12 @@ class SimpleSagemakerInfer(InferManager):
         inference_id = None
         headers = {'x-api-key': api_key}
         response = requests.post(f'{url}inferences', json=payload, headers=headers)
-
+        infer_id = ""
+        if 'data' in response.json():
+            infer_id = response.json()['data']['inference']['id']
         api_logger = ApiLogger(
             action='inference',
-            username=userid
+            infer_id=infer_id
         )
         api_logger.req_log(sub_action="CreateInference",
                            method='POST',
@@ -62,12 +64,12 @@ class SimpleSagemakerInfer(InferManager):
         upload_param_response = response.json()['data']
         if 'inference' in upload_param_response and \
                 'api_params_s3_upload_url' in upload_param_response['inference']:
-            upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],
-                                          data=sd_api_param_json)
+            api_params_s3_upload_url = upload_param_response['inference']['api_params_s3_upload_url']
+            upload_s3_resp = requests.put(api_params_s3_upload_url, data=sd_api_param_json)
             upload_s3_resp.raise_for_status()
-            api_logger.req_log(sub_action="UploadParameter",
+            api_logger.req_log(sub_action="UploadParameterToS3",
                                method='PUT',
-                               path=f's3_presign_url',
+                               path=api_params_s3_upload_url,
                                data=sd_api_param_json)
             inference_id = upload_param_response['inference']['id']
             # start run infer
