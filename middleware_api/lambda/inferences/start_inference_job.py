@@ -171,6 +171,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                 }
             )
         elif taskType in ["txt2img", "img2img"]:
+            logger.debug(f'image count:{len(json_body["images"])}')
             # save images
             for count, b64image in enumerate(json_body["images"]):
                 output_img_type = None
@@ -190,19 +191,23 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                 else:
                     gif_data = base64.b64decode(b64image.split(",", 1)[0])
                     if len(output_img_type) == 1 and (output_img_type[0] == 'PNG' or output_img_type[0] == 'TXT'):
+                        logger.debug(f'output_img_type len is 1 :{output_img_type[0]} {count}')
                         img_type = 'png'
                     elif len(output_img_type) == 2 and ('PNG' in output_img_type and 'TXT' in output_img_type):
+                        logger.debug(f'output_img_type len is 2 :{output_img_type[0]} {output_img_type[1]} {count}')
                         img_type = 'png'
                     else:
                         img_type = 'gif'
                         output_img_type = [element for element in output_img_type if
                                            "TXT" not in element and "PNG" not in element]
+                        logger.debug(f'output_img_type new is  :{output_img_type}  {count}')
                         # type set
                         image_count = len(json_body["images"])
                         type_count = len(output_img_type)
                         if image_count % type_count == 0:
                             idx = count % type_count
-                            img_type = output_img_type[idx]
+                            img_type = output_img_type[idx].lower()
+                    logger.debug(f'img_type is :{img_type} count is:{count}')
                     s3_client.put_object(
                         Body=gif_data,
                         Bucket=S3_BUCKET_NAME,
