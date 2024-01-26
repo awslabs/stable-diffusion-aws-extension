@@ -7,8 +7,9 @@ logger.setLevel(logging.INFO)
 
 class ApiLogger:
     action = ""
-    file_path = ""
     infer_id = ""
+    file_path = ""
+    file_path_html = ""
 
     def __init__(self, action: str, append: bool = False, infer_id: str = ""):
         self.action = action
