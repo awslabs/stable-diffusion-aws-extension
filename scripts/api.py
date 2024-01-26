@@ -127,6 +127,37 @@ def merge_model_on_cloud(req):
     return output_model_position
 
 
+def get_output_img_type(payload: dict):
+    try:
+        if not payload or 'alwayson_scripts' not in payload.keys() or not payload['alwayson_scripts']:
+            logger.debug("not using alwayson_scripts ,image type not set")
+            return None
+        # about animatediff out
+        if 'animatediff' in payload['alwayson_scripts'].keys() and payload['alwayson_scripts']['animatediff']:
+            if ('args' not in payload['alwayson_scripts']['animatediff']
+                    or not payload['alwayson_scripts']['animatediff']['args']
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]):
+                logger.debug("not using alwayson_scripts or args null,image type not set")
+                return None
+
+            if ('enable' not in payload['alwayson_scripts']['animatediff']['args'][0]
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]['enable']):
+                logger.debug("not using alwayson_scripts or not enable ,image type not set")
+                return None
+
+            if ('format' not in payload['alwayson_scripts']['animatediff']['args'][0]
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]['format']):
+                logger.debug("not using alwayson_scripts or not set format ,image type not set")
+                return None
+            images_types = payload['alwayson_scripts']['animatediff']['args'][0]['format']
+            logger.debug(f"using alwayson_scripts ,image type set:{images_types}")
+            return images_types
+    except Exception as e:
+        logger.debug(f"get_output_img_type error:{e}")
+        return None
+
+
+
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
     import threading
@@ -190,18 +221,32 @@ def sagemaker_api(_, app: FastAPI):
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
                     checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    image_type = get_output_img_type(payload)
+                    logger.debug(f"image_type:{image_type}")
+                    resp = {}
+                    if image_type:
+                        logger.debug(f"set output_img_type:{image_type}")
+                        resp["output_img_type"] = image_type
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
-                    return response.json()
+                    resp.update(response.json())
+                    return resp
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
                     checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    image_type = get_output_img_type(payload)
+                    logger.debug(f"image_type:{image_type}")
+                    resp = {}
+                    if image_type:
+                        logger.debug(f"set output_img_type:{image_type}")
+                        resp["output_img_type"] = image_type
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
-                    return response.json()
+                    resp.update(response.json())
+                    return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
