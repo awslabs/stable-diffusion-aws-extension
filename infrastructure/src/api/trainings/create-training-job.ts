@@ -7,14 +7,21 @@ import {
   aws_iam,
   aws_lambda,
   aws_s3,
+  aws_sns,
+  aws_ecr,
   CfnParameter,
   Duration,
+  CustomResource,
+  RemovalPolicy,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { AIGC_WEBUI_DREAMBOOTH_TRAINING, KOHYA_ECR_IMAGE_TAG } from '../../common/dockerImages';
+import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
+import { ResourceProvider } from '../../shared/resource-provider';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -26,7 +33,10 @@ export interface CreateTrainingJobApiProps {
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
+  userTopic: aws_sns.Topic;
   logLevel: CfnParameter;
+  ecr_image_tag: string;
+  resourceProvider: ResourceProvider;
 }
 
 export class CreateTrainingJobApi {
@@ -45,6 +55,13 @@ export class CreateTrainingJobApi {
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
+  private readonly sagemakerTrainRole: aws_iam.Role;
+  private readonly userSnsTopic: aws_sns.Topic;
+  private readonly srcImg: string;
+  private readonly instanceType: string = 'ml.g4dn.2xlarge';
+  private readonly dockerRepo: aws_ecr.Repository;
+  private readonly customJob: CustomResource;
+  private readonly resourceProvider: ResourceProvider;
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;
@@ -61,8 +78,72 @@ export class CreateTrainingJobApi {
     this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
+    this.sagemakerTrainRole = this.sageMakerTrainRole();
+    this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + KOHYA_ECR_IMAGE_TAG;
+    [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
+    this.userSnsTopic = props.userTopic;
+    this.resourceProvider = props.resourceProvider;
 
     this.createTrainJobLambda();
+  }
+
+  private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
+    const dockerRepo = new aws_ecr.Repository(this.scope, 'EsdEcrTrainingRepo', {
+      repositoryName: 'stable-diffusion-aws-extension/aigc-webui-dreambooth-training',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const ecrDeployment = new ECRDeployment(this.scope, 'EsdEcrTrainingDeploy', {
+      src: new DockerImageName(srcImage),
+      dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
+      environment: {
+        BUCKET_NAME: this.resourceProvider.bucketName,
+      },
+    });
+
+    // trigger the custom resource lambda
+    const customJob = new CustomResource(this.scope, 'EsdEcrTrainingImage', {
+      serviceToken: ecrDeployment.serviceToken,
+      resourceType: 'Custom::AIGCSolutionECRLambda',
+      properties: {
+        SrcImage: `docker://${srcImage}`,
+        DestImage: `docker://${dockerRepo.repositoryUri}:latest`,
+        RepositoryName: `${dockerRepo.repositoryName}`,
+      },
+    });
+    customJob.node.addDependency(ecrDeployment);
+    return [dockerRepo, customJob];
+  }
+
+  private sageMakerTrainRole(): aws_iam.Role {
+    const sagemakerRole = new aws_iam.Role(this.scope, `${this.id}-train-role`, {
+      assumedBy: new aws_iam.ServicePrincipal('sagemaker.amazonaws.com'),
+    });
+    sagemakerRole.addManagedPolicy(aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSageMakerFullAccess'));
+
+    sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        's3:GetObject',
+        's3:PutObject',
+      ],
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+      ],
+    }));
+
+    sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'kms:Decrypt',
+      ],
+      resources: ['*'],
+    }));
+
+    return sagemakerRole;
   }
 
   private lambdaRole(): aws_iam.Role {
@@ -87,6 +168,22 @@ export class CreateTrainingJobApi {
         this.checkpointTable.tableArn,
         this.multiUserTable.tableArn,
       ],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sagemaker:CreateTrainingJob',
+      ],
+      resources: [`arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`],
+    }));
+
+    newRole.addToPolicy(new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'iam:PassRole',
+      ],
+      resources: [this.sagemakerTrainRole.roleArn],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -145,8 +242,6 @@ export class CreateTrainingJobApi {
         },
         required: [
           'train_type',
-          'model_id',
-          'filenames',
           'params',
         ],
       },
@@ -181,9 +276,14 @@ export class CreateTrainingJobApi {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
+        INSTANCE_TYPE: this.instanceType,
+        TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
+        TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
+        USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
       },
       layers: [this.layer],
     });
+    lambdaFunction.node.addDependency(this.customJob);
 
     const createTrainJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
