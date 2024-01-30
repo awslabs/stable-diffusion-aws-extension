@@ -42,6 +42,7 @@ instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 image_uri = os.environ.get("TRAIN_ECR_URL")
 user_topic_arn = os.environ.get("USER_EMAIL_TOPIC_ARN")
+training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL") or logging.ERROR)
@@ -159,7 +160,7 @@ def _trigger_sagemaker_training_job(
         time.sleep(1)
 
     train_job.sagemaker_train_name = est._current_job_name
-    # trigger stepfunction
+    
     stepfunctions_client = StepFunctionUtilsService(logger=logger)
     sfn_input = {
         "train_job_id": train_job.id,
@@ -235,7 +236,6 @@ def _create_training_job(raw_event, context):
     request_id = context.aws_request_id
     event = Event(**json.loads(raw_event["body"]))
     logger.info(json.dumps(json.loads(raw_event["body"])))
-    _type = event.train_type
     _lora_train_type = event.lora_train_type
 
     creator_permissions = get_permissions_by_username(
