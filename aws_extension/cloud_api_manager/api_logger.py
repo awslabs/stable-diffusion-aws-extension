@@ -1,4 +1,5 @@
 import logging
+
 import markdown
 
 logger = logging.getLogger(__name__)
@@ -60,8 +61,11 @@ class ApiLogger:
             self.file.write(f"```\n")
         self.file.write("\n")
 
-        with open(self.file_path, 'r') as file:
-            file_content = file.read()
-            html = markdown.markdown(file_content)
-            with open(self.file_path_html, 'w') as html_file:
-                html_file.write(html)
+        try:
+            with open(self.file_path, 'r') as file:
+                file_content = file.read()
+                html = markdown.markdown(file_content)
+                with open(self.file_path_html, 'w') as html_file:
+                    html_file.write(html)
+        except Exception as e:
+            logger.error(e)
