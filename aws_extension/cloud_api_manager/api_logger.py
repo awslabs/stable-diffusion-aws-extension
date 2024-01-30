@@ -1,5 +1,5 @@
 import logging
-
+import os
 import markdown
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,10 @@ class ApiLogger:
             self.file = open(self.file_path, 'w')
             self.file.write(f"# Inference Job API Request Process - {infer_id}\n")
         else:
-            self.file = open(self.file_path, 'a')
+            if os.path.exists(self.file_path):
+                self.file = open(self.file_path, 'a')
+            else:
+                self.file = open(self.file_path, 'w')
 
     def req_log(self, sub_action: str, method: str, path: str, headers=None, data=None, params=None, response=None):
         self.file.write(f"## {sub_action}\n")
