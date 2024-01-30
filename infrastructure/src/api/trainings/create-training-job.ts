@@ -78,11 +78,11 @@ export class CreateTrainingJobApi {
     this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
+    this.resourceProvider = props.resourceProvider;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
     this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + KOHYA_ECR_IMAGE_TAG;
     [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
     this.userSnsTopic = props.userTopic;
-    this.resourceProvider = props.resourceProvider;
 
     this.createTrainJobLambda();
   }
