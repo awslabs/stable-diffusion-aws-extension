@@ -13,6 +13,11 @@ class ApiLogger:
     file_path_html = ""
 
     def __init__(self, action: str, append: bool = False, infer_id: str = ""):
+
+        # if outputs dir not exists, create it
+        if not os.path.exists('outputs'):
+            os.makedirs('outputs')
+
         self.action = action
         self.infer_id = infer_id
         self.file_path = f'outputs/{infer_id}.md'
