@@ -15,15 +15,12 @@ from common import const
 from common.const import LoraTrainType
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import (
-    accepted,
-    bad_request,
-    created,
+    ok,
     forbidden,
     internal_server_error,
     not_found,
 )
-from common.util import get_s3_presign_urls, load_json_from_s3, save_json_to_file
-from libs.common_tools import DecimalEncoder, split_s3_path
+from libs.common_tools import DecimalEncoder
 from libs.data_types import (
     CheckPoint,
     CheckPointStatus,
@@ -31,32 +28,28 @@ from libs.data_types import (
     TrainJobStatus,
 )
 from libs.utils import get_permissions_by_username, get_user_roles
-from common.stepfunction_service.client import StepFunctionUtilsService
+
 
 bucket_name = os.environ.get("S3_BUCKET")
 train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
-region_name = os.environ.get("AWS_REGION")
+region = os.environ.get("AWS_REGION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 image_uri = os.environ.get("TRAIN_ECR_URL")
 user_topic_arn = os.environ.get("USER_EMAIL_TOPIC_ARN")
-training_stepfunction_arn = os.environ.get('TRAINING_SAGEMAKER_ARN')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL") or logging.ERROR)
-
 ddb_service = DynamoDbUtilsService(logger=logger)
-s3 = boto3.client("s3", region_name=region_name)
+s3 = boto3.client("s3", region_name=region)
 
 
 @dataclass
 class Event:
-    train_type: str
     params: dict[str, Any]
     creator: str
-    filenames: Optional[List[str]] = None
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
@@ -103,11 +96,14 @@ def _json_encode_hyperparameters(hyperparameters):
     """
     new_params = {}
     for k, v in hyperparameters.items():
-        json_v = json.dumps(v, cls=DecimalEncoder)
-        v_bytes = json_v.encode("ascii")
-        base64_bytes = base64.b64encode(v_bytes)
-        base64_v = base64_bytes.decode("ascii")
-        new_params[k] = base64_v
+        if region.startswith("cn"):
+            new_params[k] = json.dumps(v, cls=DecimalEncoder)
+        else:
+            json_v = json.dumps(v, cls=DecimalEncoder)
+            v_bytes = json_v.encode("ascii")
+            base64_bytes = base64.b64encode(v_bytes)
+            base64_v = base64_bytes.decode("ascii")
+            new_params[k] = base64_v
 
     return new_params
 
@@ -115,7 +111,7 @@ def _json_encode_hyperparameters(hyperparameters):
 def _trigger_sagemaker_training_job(
     train_job: TrainJob, ckpt_output_path: str, train_job_name: str
 ):
-    """Trigger SageMaker training job
+    """Trigger a SageMaker training job
 
     Args:
         train_job (TrainJob): training job metadata
@@ -130,7 +126,7 @@ def _trigger_sagemaker_training_job(
             "s3-output-path": ckpt_output_path,
             "training-type": train_job.params[
                 "training_type"
-            ],  # Available value: "dreambooth", "kohya"
+            ],  # Available value: "kohya"
         }
     )
 
@@ -160,16 +156,7 @@ def _trigger_sagemaker_training_job(
         time.sleep(1)
 
     train_job.sagemaker_train_name = est._current_job_name
-    
-    stepfunctions_client = StepFunctionUtilsService(logger=logger)
-    sfn_input = {
-        "train_job_id": train_job.id,
-        "train_job_name": train_job.sagemaker_train_name,
-    }
-    sfn_arn = stepfunctions_client.invoke_step_function(
-        training_stepfunction_arn, sfn_input
-    )
-    # todo: use batch update, this is ugly!!!
+
     search_key = {"id": train_job.id}
     ddb_service.update_item(
         table=train_table,
@@ -184,10 +171,6 @@ def _trigger_sagemaker_training_job(
         field_name="job_status",
         value=TrainJobStatus.Training.value,
     )
-    train_job.sagemaker_sfn_arn = sfn_arn
-    ddb_service.update_item(
-        table=train_table, key=search_key, field_name="sagemaker_sfn_arn", value=sfn_arn
-    )
 
 
 def _start_training_job(train_job_id: str):
@@ -195,9 +178,7 @@ def _start_training_job(train_job_id: str):
         table=train_table, key_values={"id": train_job_id}
     )
     if raw_train_job is None or len(raw_train_job) == 0:
-        return internal_server_error(
-            message=f"no such train job with id({train_job_id})"
-        )
+        return not_found(message=f"no such train job with id({train_job_id})")
 
     train_job = TrainJob(**raw_train_job)
     train_job_name = train_job.model_id
@@ -206,7 +187,7 @@ def _start_training_job(train_job_id: str):
         table=checkpoint_table, key_values={"id": train_job.checkpoint_id}
     )
     if raw_checkpoint is None:
-        return internal_server_error(
+        return not_found(
             message=f"checkpoint with id {train_job.checkpoint_id} is not found"
         )
 
@@ -215,15 +196,11 @@ def _start_training_job(train_job_id: str):
     _trigger_sagemaker_training_job(train_job, checkpoint.s3_location, train_job_name)
 
     return {
-        "statusCode": 200,
-        "job": {
-            "id": train_job.id,
-            "status": train_job.job_status.value,
-            "created": train_job.timestamp,
-            "trainType": train_job.train_type,
-            "params": train_job.params,
-            "input_location": train_job.input_s3_location,
-        },
+        "id": train_job.id,
+        "status": train_job.job_status.value,
+        "created": str(train_job.timestamp),
+        "params": train_job.params,
+        "input_location": train_job.input_s3_location,
     }
 
 
@@ -255,8 +232,6 @@ def _create_training_job(raw_event, context):
         input_location = f"{base_key}/input"
         toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
         toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
-        if event.model_id is None:
-            event.model_id = const.KOHYA_MODEL_ID
 
         if (
             "training_params" not in event.params
@@ -293,7 +268,7 @@ def _create_training_job(raw_event, context):
     user_roles = get_user_roles(ddb_service, user_table, event.creator)
     checkpoint = CheckPoint(
         id=request_id,
-        checkpoint_type=event.train_type,
+        checkpoint_type=const.TRAIN_TYPE,
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),
@@ -304,10 +279,10 @@ def _create_training_job(raw_event, context):
 
     train_job = TrainJob(
         id=request_id,
-        model_id=event.model_id,
+        model_id=const.KOHYA_MODEL_ID,
         job_status=TrainJobStatus.Initial,
         params=event.params,
-        train_type=event.train_type,
+        train_type=const.TRAIN_TYPE,
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
@@ -315,20 +290,15 @@ def _create_training_job(raw_event, context):
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
-    return {
-        "id": train_job.id,
-        "status": train_job.job_status.value,
-        "trainType": train_job.train_type,
-        "params": train_job.params,
-        "input_location": train_input_s3_location,
-    }
+    return train_job.id
 
 
 def handler(raw_event, context):
     try:
-        training_job = _create_training_job(raw_event, context)
+        job_id = _create_training_job(raw_event, context)
+        job_info = _start_training_job(job_id)
 
-        return _start_training_job(training_job.id)
+        return ok(data=job_info)
     except Exception as e:
         logger.error(f"Error when creating a training job: {e}")
 

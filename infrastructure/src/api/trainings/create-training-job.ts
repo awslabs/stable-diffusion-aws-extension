@@ -224,24 +224,15 @@ export class CreateTrainingJobApi {
         title: this.id,
         type: JsonSchemaType.OBJECT,
         properties: {
-          train_type: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          model_id: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          filenames: {
-            type: JsonSchemaType.ARRAY,
-            maxItems: 1,
-          },
           params: {
             type: JsonSchemaType.OBJECT,
           },
+          lora_train_type: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
         },
         required: [
-          'train_type',
           'params',
         ],
       },
