@@ -503,7 +503,7 @@ def ckpt_rename_block():
             if not ckpt:
                 return 'Please select one checkpoint to rename.'
             if not name:
-                return 'Please intput new name.'
+                return 'Please input new name.'
             return api_manager.ckpt_rename(ckpt=ckpt,
                                            name=name,
                                            user_token=pr.username)
