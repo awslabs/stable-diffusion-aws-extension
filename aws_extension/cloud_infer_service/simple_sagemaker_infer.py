@@ -30,15 +30,10 @@ class SimpleSagemakerInfer(InferManager):
             return
 
         payload = {
-            # 'sagemaker_endpoint_name': sagemaker_endpoint,
             'user_id': userid,
             'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
-            'filters': {
-                'createAt': datetime.now().timestamp(),
-                'creator': 'sd-webui'
-            }
         }
         logger.debug(payload)
         inference_id = None
