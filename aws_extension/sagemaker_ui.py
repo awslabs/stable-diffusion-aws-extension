@@ -916,7 +916,7 @@ def update_prompt_with_lora(selected_items, prompt):
 
 
 def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
-    """Update txt2img or img2img prompt with selecte model name
+    """Update txt2img or img2img prompt with selected model name
 
     Args:
         selected_value (gr.Dropdown): the selected dropdown

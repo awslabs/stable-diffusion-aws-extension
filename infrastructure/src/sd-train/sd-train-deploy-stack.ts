@@ -21,7 +21,6 @@ import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
 import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/trainings/delete-training-jobs';
 import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
-import { StartTrainingJobApi } from '../api/trainings/start-training-job';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
 import { Database } from '../shared/database';
@@ -89,25 +88,12 @@ export class SdTrainDeployStack {
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
+      userTopic: props.snsTopic,
+      ecr_image_tag: props.ecr_image_tag,
+      resourceProvider: this.resourceProvider,
     });
 
     const trainJobRouter = routers.trainings.addResource('{id}');
-
-    // PUT /trainings/{id}/start
-    new StartTrainingJobApi(scope, 'StartTrainingJob', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'PUT',
-      modelTable: props.database.modelTable,
-      router: trainJobRouter,
-      s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      trainTable: props.database.trainingTable,
-      userTopic: props.snsTopic,
-      ecr_image_tag: props.ecr_image_tag,
-      logLevel: props.logLevel,
-      resourceProvider: this.resourceProvider,
-    });
 
     // PUT /trainings/{id}/stop
     new StopTrainingJobApi(scope, 'StopTrainingJob', {

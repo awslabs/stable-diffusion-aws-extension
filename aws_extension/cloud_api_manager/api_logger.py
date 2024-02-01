@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 import markdown
 
 logger = logging.getLogger(__name__)
@@ -12,6 +14,11 @@ class ApiLogger:
     file_path_html = ""
 
     def __init__(self, action: str, append: bool = False, infer_id: str = ""):
+
+        # if outputs dir not exists, create it
+        if not os.path.exists('outputs'):
+            os.makedirs('outputs')
+
         self.action = action
         self.infer_id = infer_id
         self.file_path = f'outputs/{infer_id}.md'
@@ -21,7 +28,10 @@ class ApiLogger:
             self.file = open(self.file_path, 'w')
             self.file.write(f"# Inference Job API Request Process - {infer_id}\n")
         else:
-            self.file = open(self.file_path, 'a')
+            if os.path.exists(self.file_path):
+                self.file = open(self.file_path, 'a')
+            else:
+                self.file = open(self.file_path, 'w')
 
     def req_log(self, sub_action: str, method: str, path: str, headers=None, data=None, params=None, response=None):
         self.file.write(f"## {sub_action}\n")
@@ -31,37 +41,43 @@ class ApiLogger:
         self.file.write(f"\n")
 
         if headers:
-            headers['x-api-key'] = '***'
+            headers['x-api-key'] = 'xxxx'
             self.file.write(f"#### headers: \n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{headers}\n")
+            self.file.write(f"{json.dumps(headers)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if data:
             self.file.write(f"#### data:\n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{data}\n")
+            if isinstance(data, str):
+                self.file.write(f"{json.dumps(json.loads(data))}\n")
+            else:
+                self.file.write(f"{json.dumps(data)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if params:
             self.file.write(f"#### params: \n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{params}\n")
+            self.file.write(f"{json.dumps(params)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if response:
             self.file.write(f"#### response:\n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{response.json()}\n")
+            self.file.write(f"{json.dumps(response.json())}\n")
             self.file.write(f"```\n")
         self.file.write("\n")
 
-        with open(self.file_path, 'r') as file:
-            file_content = file.read()
-            html = markdown.markdown(file_content)
-            with open(self.file_path_html, 'w') as html_file:
-                html_file.write(html)
+        try:
+            with open(self.file_path, 'r') as file:
+                file_content = file.read()
+                html = markdown.markdown(file_content)
+                with open(self.file_path_html, 'w') as html_file:
+                    html_file.write(html)
+        except Exception as e:
+            logger.error(e)

@@ -11,6 +11,7 @@ from common.response import bad_request, created
 from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
+from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions
 
 bucket_name = os.environ.get('S3_BUCKET')
@@ -188,7 +189,11 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
-            if endpoint.endpoint_status != 'InService' or endpoint.status == 'deleted':
+            if endpoint.status == 'deleted':
+                continue
+            if endpoint.endpoint_status == EndpointStatus.UPDATING.value and int(endpoint.current_instance_count) == 0:
+                continue
+            if endpoint.endpoint_status != EndpointStatus.UPDATING.value and endpoint.endpoint_status != EndpointStatus.IN_SERVICE.value:
                 continue
             if endpoint.endpoint_type != inference_type:
                 continue
