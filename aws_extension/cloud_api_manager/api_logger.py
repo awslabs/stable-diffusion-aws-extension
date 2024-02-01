@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import markdown
@@ -40,32 +41,35 @@ class ApiLogger:
         self.file.write(f"\n")
 
         if headers:
-            headers['x-api-key'] = '***'
+            headers['x-api-key'] = 'xxxx'
             self.file.write(f"#### headers: \n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{headers}\n")
+            self.file.write(f"{json.dumps(headers)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if data:
             self.file.write(f"#### data:\n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{data}\n")
+            if isinstance(data, str):
+                self.file.write(f"{json.dumps(json.loads(data))}\n")
+            else:
+                self.file.write(f"{json.dumps(data)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if params:
             self.file.write(f"#### params: \n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{params}\n")
+            self.file.write(f"{json.dumps(params)}\n")
             self.file.write(f"```\n")
             self.file.write(f"\n")
         if response:
             self.file.write(f"#### response:\n")
             self.file.write(f"\n")
             self.file.write(f"```\n")
-            self.file.write(f"{response.json()}\n")
+            self.file.write(f"{json.dumps(response.json())}\n")
             self.file.write(f"```\n")
         self.file.write("\n")
 
