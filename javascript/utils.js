@@ -43,6 +43,18 @@ function delete_inference_job_confirm(inference_job_dropdown) {
     return ["cancelled"];
 }
 
+
+function download_inference_job_api_call(cwd, inference_job_dropdown) {
+    inference = inference_job_dropdown.split("-->");
+    if (inference.length < 3) {
+        alert("Please select a valid inference job.")
+        return;
+    }
+    let file = cwd + "/outputs/" + inference[3] + '.html';
+    let file_url = window.location.origin + '/file=' + file;
+    window.open(file_url);
+}
+
 function delete_dataset_confirm(dataset_name) {
     res = confirm("You are about to delete dataset. Do you want to continue?");
     if (res === true) {
