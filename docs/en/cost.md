@@ -14,7 +14,7 @@ As of December 2023, for example, assuming that use will actively inference imag
 | Amazon DynamoDB | $0.50 | Table class (Standard), Average item size (all attributes) (1 KB), Data storage size (2 GB) |
 | AWS Step Functions | $0.13 | Workflow requests (600 per month), State transitions per workflow (15) |
 | Amazon CloudWatch | $5.05 | Standard Logs: Data Ingested (10 GB) |
-| Total | $416.85 ||
+| Total | $310.45 ||
 
 
 ## Use Amazon SageMaker to Train Model

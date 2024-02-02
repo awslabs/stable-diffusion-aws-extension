@@ -13,7 +13,7 @@
 | Amazon DynamoDB | $0.50 | 表类（标准），平均项目大小（所有属性）(1 KB)，数据存储大小 (2 GB) |
 | AWS Step Functions | $0.13 | 工作流请求 600/月，每个工作流程的状态转换（15） |
 | Amazon CloudWatch | $5.05 | 标准日志：数据注入（10GB） |
-| 总计| $416.85 ||
+| 总计| $310.45 ||
 
 
 ## 使用Amazon SageMaker模型训练
