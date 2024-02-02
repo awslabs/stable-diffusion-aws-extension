@@ -7,7 +7,7 @@ As of December 2023, for example, assuming that use will actively inference imag
 
 |  Service  | Usage | Cost/Month | 
 |  ----  | ----  | ----  |  
-| Amazon SageMaker | $382.40 | Number of models per endpoint (1), Storage (General Purpose SSD (gp2)), Instance name (ml.g5.2xlarge), Number of models deployed (1), Number of instances per endpoint (1), Endpoint hour(s) per day (8), Endpoint day(s) per month (20), Storage amount (1000 GB per month) |
+| Amazon SageMaker | $276.00 | Number of models per endpoint (1), Storage (General Purpose SSD (gp2)), Instance name (ml.g5.2xlarge), Number of models deployed (1), Number of instances per endpoint (1), Endpoint hour(s) per day (8), Endpoint day(s) per month (20), Storage amount (240 GB per month) |
 | AWS Lambda | $0.02 | Architecture (x86), Architecture (x86), Invoke Mode (Buffered), Amount of ephemeral storage allocated (10 GB), Number of requests (300000 per month), Concurrency (10) |
 | Amazon API Gateway | $1.05 | REST API request units (thousands), Cache memory size (GB) (None), WebSocket message units (thousands), HTTP API requests units (thousands), Average message size (32 KB), Requests ( per month), Requests (300 per month)|
 | Amazon Simple Storage Service (S3) | $27.70 | S3 Standard storage (1000 GB per month), PUT, COPY, POST, LIST requests to S3 Standard (), GET, SELECT, and all other requests from S3 Standard (1000000), Data returned by S3 Select (1000 GB per month) DT Inbound: All other regions (0 TB per month), DT Outbound: Internet (40 GB per month) |
