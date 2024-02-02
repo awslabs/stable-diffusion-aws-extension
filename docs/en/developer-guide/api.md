@@ -32,9 +32,20 @@ After user [deployed](../deployment/deployment.md) solution middleware cloudform
 **Authentication**
 
 * API Key (api_key)
-    - Parameter Name: **x-api-key**, in: header. 
+  - Parameter Name: **x-api-key**, in: headers.
+  - Example: x-api-key: API_TOKEN_VALUE
 * Authorization
-    - Use Bearer Token in headers
+  - Parameter Name: **Authorization**, in: headers.
+  - Example: Authorization：Bearer {Token}
+  
+**How to get token? (Python)**
+```python
+import base64
+
+username = "your username on webui"
+token = base64.b16encode(username.encode("utf-8")).decode("utf-8")
+```
+
 
 # User Scenarios
 ## 1. Deploy a new Endpoint

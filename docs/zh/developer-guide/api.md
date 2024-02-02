@@ -32,9 +32,19 @@ headingLevel: 2
 **认证**
 
 * API Key (api_key)
-    - API 调用时您需要在标头的**x-api-key**参数中配置此值。
+  - API 调用时您需要在 headers 标头的**x-api-key**参数中配置此值。
+  - 例如：x-api-key: API_TOKEN_VALUE
 * Authorization
-  - 在 headers 中使用 Bearer Token
+  - API 调用时您需要在 headers 标头的**Authorization**参数中配置此值。
+  - 例如：Authorization：Bearer {Token}
+
+Token 算法（Python 示例）：
+```python
+import base64
+
+username = "your username on webui"
+token = base64.b16encode(username.encode("utf-8")).decode("utf-8")
+```
 
 # 用户场景
 ## 1. 部署新的终端节点
