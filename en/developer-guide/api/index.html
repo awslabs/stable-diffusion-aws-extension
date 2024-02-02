@@ -1205,15 +1205,19 @@
 </ul>
 <p><strong>Authentication</strong></p>
 <ul>
-<li>API Key (api_key)<ul>
-<li>Parameter Name: <strong>x-api-key</strong>, in: header. </li>
+<li>API Key (api_key)</li>
+<li>Parameter Name: <strong>x-api-key</strong>, in: headers.</li>
+<li>Example: x-api-key: API_TOKEN_VALUE</li>
+<li>Authorization</li>
+<li>Parameter Name: <strong>Authorization</strong>, in: headers.</li>
+<li>Example: Authorization：Bearer {Token}</li>
 </ul>
-</li>
-<li>Authorization<ul>
-<li>Use Bearer Token in headers</li>
-</ul>
-</li>
-</ul>
+<p><strong>How to get token? (Python)</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">base64</span>
+
+<span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;your username on webui&quot;</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b16encode</span><span class="p">(</span><span class="n">username</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 <h1 id="user-scenarios">User Scenarios</h1>
 <h2 id="1-deploy-a-new-endpoint">1. Deploy a new Endpoint</h2>
 <p><img alt="Deploy a new Endpoint" src="../../images/deploy_sagemaker_endpoint.png" /></p>

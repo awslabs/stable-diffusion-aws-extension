@@ -1207,13 +1207,19 @@
 </ul>
 <p><strong>认证</strong></p>
 <ul>
-<li>API Key (api_key)<ul>
-<li>API 调用时您需要在标头的<strong>x-api-key</strong>参数中配置此值。</li>
-</ul>
-</li>
+<li>API Key (api_key)</li>
+<li>API 调用时您需要在 headers 标头的<strong>x-api-key</strong>参数中配置此值。</li>
+<li>例如：x-api-key: API_TOKEN_VALUE</li>
 <li>Authorization</li>
-<li>在 headers 中使用 Bearer Token</li>
+<li>API 调用时您需要在 headers 标头的<strong>Authorization</strong>参数中配置此值。</li>
+<li>例如：Authorization：Bearer {Token}</li>
 </ul>
+<p>Token 算法（Python 示例）：
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">base64</span>
+
+<span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;your username on webui&quot;</span>
+<span class="n">token</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b16encode</span><span class="p">(</span><span class="n">username</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 <h1 id="_2">用户场景</h1>
 <h2 id="1">1. 部署新的终端节点</h2>
 <p><img alt="部署新的终端节点" src="../../images/deploy_sagemaker_endpoint.png" /></p>
