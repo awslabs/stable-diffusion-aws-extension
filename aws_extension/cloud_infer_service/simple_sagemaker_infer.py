@@ -30,15 +30,10 @@ class SimpleSagemakerInfer(InferManager):
             return
 
         payload = {
-            # 'sagemaker_endpoint_name': sagemaker_endpoint,
             'user_id': userid,
             'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
-            'filters': {
-                'createAt': datetime.now().timestamp(),
-                'creator': 'sd-webui'
-            }
         }
         logger.debug(payload)
         inference_id = None
@@ -74,11 +69,10 @@ class SimpleSagemakerInfer(InferManager):
             inference_id = upload_param_response['inference']['id']
             # start run infer
             start_url = f'{url}inferences/{inference_id}/start'
-            response = requests.put(start_url, json=payload, headers={'x-api-key': api_key})
+            response = requests.put(start_url, headers={'x-api-key': api_key})
             api_logger.req_log(sub_action="StartInference",
                                method='PUT',
                                path=start_url,
-                               data=payload,
                                headers=headers,
                                response=response)
             if response.status_code not in [200, 202]:

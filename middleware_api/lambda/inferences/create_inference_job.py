@@ -30,7 +30,6 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 class PrepareEvent:
     task_type: str
     models: dict[str, List[str]]  # [checkpoint_type: names] this is same as checkpoint if confused
-    filters: dict[str, Any]
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
     inference_type: Optional[str] = None
@@ -38,12 +37,12 @@ class PrepareEvent:
 
 # POST /inferences
 def handler(raw_event, context):
-    request_id = context.aws_request_id
-    logger.info(json.dumps(json.loads(raw_event['body'])))
-    event = PrepareEvent(**json.loads(raw_event['body']))
-    _type = event.task_type
 
     try:
+        request_id = context.aws_request_id
+        logger.info(json.dumps(json.loads(raw_event['body'])))
+        event = PrepareEvent(**json.loads(raw_event['body']))
+        _type = event.task_type
         extra_generate_types = ['extra-single-image', 'extra-batch-images', 'rembg']
         simple_generate_types = ['txt2img', 'img2img']
 
