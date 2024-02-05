@@ -1123,7 +1123,7 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
         api_url += '/'
 
     if not test_aws_connect_config(api_url, api_token):
-        return "Failed to connect to backend server, please check the url and token"
+        return "Failed to connect to backend server, please check your API version or url and token"
 
     message = "Successfully Connected"
     save_variable_to_json('api_gateway_url', api_url)
