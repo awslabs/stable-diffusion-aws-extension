@@ -14,8 +14,8 @@ import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
-import {ComfyApiStack, ComfyInferenceStackProps} from "./comfy/comfy-api-stack";
-import {ComfyDatabase} from "./comfy/comfy-database";
+import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
+import { ComfyDatabase } from './comfy/comfy-database';
 
 const app = new App();
 
