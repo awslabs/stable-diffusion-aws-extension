@@ -35,7 +35,7 @@ def handler(event, context):
     if resp is None or len(resp) == 0:
         return ok(data={'trainJobs': []})
 
-    requestor_name = event['requestContext']['authorizer']['username']
+    requestor_name = event['headers']['creator']
     try:
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)

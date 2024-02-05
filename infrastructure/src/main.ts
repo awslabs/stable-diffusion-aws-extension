@@ -48,16 +48,7 @@ export class Middleware extends Stack {
       allowedValues: ['ComfyUI', 'WebUI', 'ALL'],
     });
 
-    const utilInstanceType = new CfnParameter(this, 'UtilsCpuInstType', {
-      type: 'String',
-      description: 'ec2 instance type for operation including ckpt merge, model create etc.',
-      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
-      // API Key value should be at least 20 characters
-      default: 'ml.r5.large',
-    });
-
     // Create CfnParameters here
-
     const s3BucketName = new CfnParameter(this, 'Bucket', {
       type: 'String',
       description: 'New bucket name or Existing Bucket name',
@@ -86,6 +77,11 @@ export class Middleware extends Stack {
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
+
+    // Create resources here
+
+    // The solution currently does not support multi-region deployment, which makes it easy to failure.
+    // Therefore, this resource is prioritized to save time.
 
     const resourceProvider = new ResourceProvider(
       this,
@@ -122,12 +118,12 @@ export class Middleware extends Stack {
       expression: Fn.conditionEquals(scriptChoice, 'ALL'),
     });
 
+
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     if (isWholeChoice || isSdChoice) {
       const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
         'ping',
-        'models',
         'checkpoints',
         'datasets',
         'inference',
@@ -185,7 +181,6 @@ export class Middleware extends Stack {
         commonLayer: commonLayers.commonLayer,
         // env: devEnv,
         synthesizer: props.synthesizer,
-        modelInfInstancetype: utilInstanceType.valueAsString,
         ecr_image_tag: ecrImageTagParam.valueAsString,
         database: ddbTables,
         routers: restApi.routers,

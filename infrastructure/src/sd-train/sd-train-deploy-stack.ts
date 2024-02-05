@@ -13,10 +13,6 @@ import { DeleteDatasetsApi, DeleteDatasetsApiProps } from '../api/datasets/delet
 import { GetDatasetApi } from '../api/datasets/get-dataset';
 import { ListDatasetsApi } from '../api/datasets/list-datasets';
 import { UpdateDatasetApi } from '../api/datasets/update-dataset';
-import { CreateModelJobApi } from '../api/models/create-model';
-import { DeleteModelsApi, DeleteModelsApiProps } from '../api/models/delete-models';
-import { ListModelsApi } from '../api/models/list-models';
-import { UpdateModelApi } from '../api/models/update-model';
 import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
 import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/trainings/delete-training-jobs';
 import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
@@ -30,7 +26,6 @@ import { ResourceProvider } from '../shared/resource-provider';
 export interface SdTrainDeployStackProps extends StackProps {
   createModelSuccessTopic: aws_sns.Topic;
   createModelFailureTopic: aws_sns.Topic;
-  modelInfInstancetype: string;
   ecr_image_tag: string;
   database: Database;
   routers: { [key: string]: Resource };
@@ -72,7 +67,6 @@ export class SdTrainDeployStack {
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -105,53 +99,6 @@ export class SdTrainDeployStack {
       logLevel: props.logLevel,
     });
 
-    // POST /models
-    const createModelJobApi = new CreateModelJobApi(scope, 'CreateModel', {
-      router: routers.models,
-      s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      modelTable: props.database.modelTable,
-      commonLayer: commonLayer,
-      httpMethod: 'POST',
-      checkpointTable: checkPointTable,
-      multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
-    });
-    createModelJobApi.model.node.addDependency(createTrainingJobApi.model);
-    createModelJobApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
-
-    // GET /models
-    new ListModelsApi(scope, 'ListModels', {
-      router: routers.models,
-      srcRoot: this.srcRoot,
-      modelTable: props.database.modelTable,
-      multiUserTable: multiUserTable,
-      commonLayer: commonLayer,
-      httpMethod: 'GET',
-      authorizer: props.authorizer,
-      logLevel: props.logLevel,
-    });
-
-    // PUT /models/{id}
-    const updateModelApi = new UpdateModelApi(scope, 'UpdateModel', {
-      s3Bucket: props.s3Bucket,
-      router: routers.models,
-      httpMethod: 'PUT',
-      commonLayer: commonLayer,
-      srcRoot: this.srcRoot,
-      modelTable: props.database.modelTable,
-      snsTopic: props.snsTopic,
-      checkpointTable: checkPointTable,
-      trainMachineType: props.modelInfInstancetype,
-      ecr_image_tag: props.ecr_image_tag,
-      createModelFailureTopic: props.createModelFailureTopic,
-      createModelSuccessTopic: props.createModelSuccessTopic,
-      logLevel: props.logLevel,
-      resourceProvider: this.resourceProvider,
-    });
-    updateModelApi.model.node.addDependency(createModelJobApi.model);
-    updateModelApi.requestValidator.node.addDependency(createModelJobApi.requestValidator);
-
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
       s3Bucket: props.s3Bucket,
@@ -176,8 +123,6 @@ export class SdTrainDeployStack {
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
     });
-    createCheckPointApi.model.node.addDependency(updateModelApi.model);
-    createCheckPointApi.requestValidator.node.addDependency(updateModelApi.requestValidator);
 
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
@@ -281,22 +226,6 @@ export class SdTrainDeployStack {
     deleteDatasetsApi.model.node.addDependency(deleteCheckpointsApi.model);
     deleteDatasetsApi.requestValidator.node.addDependency(deleteCheckpointsApi.requestValidator);
 
-    // DELETE /models
-    const deleteModelsApi = new DeleteModelsApi(
-      scope, 'DeleteModels',
-            <DeleteModelsApiProps>{
-              router: props.routers.models,
-              commonLayer: props.commonLayer,
-              modelTable: props.database.modelTable,
-              httpMethod: 'DELETE',
-              s3Bucket: props.s3Bucket,
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
-    );
-    deleteModelsApi.model.node.addDependency(deleteDatasetsApi.model);
-    deleteModelsApi.requestValidator.node.addDependency(deleteDatasetsApi.requestValidator);
-
     // DELETE /trainings
     const deleteTrainingJobsApi = new DeleteTrainingJobsApi(
       scope, 'DeleteTrainingJobs',
@@ -310,8 +239,8 @@ export class SdTrainDeployStack {
               logLevel: props.logLevel,
             },
     );
-    deleteTrainingJobsApi.model.node.addDependency(deleteModelsApi.model);
-    deleteTrainingJobsApi.requestValidator.node.addDependency(deleteModelsApi.requestValidator);
+    deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
+    deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(
