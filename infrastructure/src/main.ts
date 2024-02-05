@@ -14,6 +14,8 @@ import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import {ComfyApiStack, ComfyInferenceStackProps} from "./comfy/comfy-api-stack";
+import {ComfyDatabase} from "./comfy/comfy-database";
 
 const app = new App();
 
@@ -37,6 +39,13 @@ export class Middleware extends Stack {
       maxLength: 20,
       // API Key value should be at least 20 characters
       default: '09876543210987654321',
+    });
+
+    const scriptChoice = new CfnParameter(this, 'scriptChoose', {
+      type: 'String',
+      description: 'choose the choice you want',
+      default: 'no',
+      allowedValues: ['ComfyUI', 'WebUI', 'ALL'],
     });
 
     const utilInstanceType = new CfnParameter(this, 'UtilsCpuInstType', {
@@ -78,11 +87,6 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
-    // Create resources here
-
-    // The solution currently does not support multi-region deployment, which makes it easy to failure.
-    // Therefore, this resource is prioritized to save time.
-
     const resourceProvider = new ResourceProvider(
       this,
       'ResourcesProvider',
@@ -106,80 +110,143 @@ export class Middleware extends Stack {
       multiUserTable: ddbTables.multiUserTable,
     });
 
-    const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
-      'ping',
-      'models',
-      'checkpoints',
-      'datasets',
-      'inference',
-      'users',
-      'roles',
-      'endpoints',
-      'inferences',
-      'trainings',
-    ]);
-    const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
+    const isComfyChoice = new CfnCondition(this, 'IsComfyChoice', {
+      expression: Fn.conditionEquals(scriptChoice, 'ComfyUI'),
+    });
+
+    const isSdChoice = new CfnCondition(this, 'IsSdChoice', {
+      expression: Fn.conditionEquals(scriptChoice, 'WebUI'),
+    });
+
+    const isWholeChoice = new CfnCondition(this, 'IsSdChoice', {
+      expression: Fn.conditionEquals(scriptChoice, 'ALL'),
+    });
+
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
-    cfnApi.addPropertyOverride('EndpointConfiguration', {
-      Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
-    });
 
-    new MultiUsersStack(this, {
-      synthesizer: props.synthesizer,
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-      routers: restApi.routers,
-      passwordKeyAlias: authorizerLambda.passwordKeyAlias,
-      authorizer: authorizerLambda.authorizer,
-      logLevel,
-    });
+    if (isWholeChoice || isSdChoice) {
+      const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+        'ping',
+        'models',
+        'checkpoints',
+        'datasets',
+        'inference',
+        'users',
+        'roles',
+        'endpoints',
+        'inferences',
+        'trainings',
+      ]);
+      const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
+      cfnApi.addPropertyOverride('EndpointConfiguration', {
+        Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+      });
+      new MultiUsersStack(this, {
+        synthesizer: props.synthesizer,
+        commonLayer: commonLayers.commonLayer,
+        multiUserTable: ddbTables.multiUserTable,
+        routers: restApi.routers,
+        passwordKeyAlias: authorizerLambda.passwordKeyAlias,
+        authorizer: authorizerLambda.authorizer,
+        logLevel,
+      });
 
-    new PingApi(this, 'Ping', {
-      commonLayer: commonLayers.commonLayer,
-      httpMethod: 'GET',
-      router: restApi.routers.ping,
-      srcRoot: '../middleware_api/lambda',
-      logLevel,
-    });
+      new PingApi(this, 'Ping', {
+        commonLayer: commonLayers.commonLayer,
+        httpMethod: 'GET',
+        router: restApi.routers.ping,
+        srcRoot: '../middleware_api/lambda',
+        logLevel,
+      });
 
-    const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
+      const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
-      routers: restApi.routers,
-      // env: devEnv,
-      s3_bucket: s3Bucket,
-      training_table: ddbTables.trainingTable,
-      snsTopic: snsTopics.snsTopic,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
-      sd_inference_job_table: ddbTables.sDInferenceJobTable,
-      sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
-      checkpointTable: ddbTables.checkpointTable,
-      multiUserTable: ddbTables.multiUserTable,
-      commonLayer: commonLayers.commonLayer,
-      synthesizer: props.synthesizer,
-      inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
-      inferenceResultTopic: snsTopics.inferenceResultTopic,
-      authorizer: authorizerLambda.authorizer,
-      logLevel,
-      resourceProvider,
-    });
+      new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
+        routers: restApi.routers,
+        // env: devEnv,
+        s3_bucket: s3Bucket,
+        training_table: ddbTables.trainingTable,
+        snsTopic: snsTopics.snsTopic,
+        ecr_image_tag: ecrImageTagParam.valueAsString,
+        sd_inference_job_table: ddbTables.sDInferenceJobTable,
+        sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
+        checkpointTable: ddbTables.checkpointTable,
+        multiUserTable: ddbTables.multiUserTable,
+        commonLayer: commonLayers.commonLayer,
+        synthesizer: props.synthesizer,
+        inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
+        inferenceResultTopic: snsTopics.inferenceResultTopic,
+        authorizer: authorizerLambda.authorizer,
+        logLevel,
+        resourceProvider,
+      });
 
-    new SdTrainDeployStack(this, {
-      commonLayer: commonLayers.commonLayer,
-      // env: devEnv,
-      synthesizer: props.synthesizer,
-      modelInfInstancetype: utilInstanceType.valueAsString,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
-      database: ddbTables,
-      routers: restApi.routers,
-      s3Bucket: s3Bucket,
-      snsTopic: snsTopics.snsTopic,
-      createModelFailureTopic: snsTopics.createModelFailureTopic,
-      createModelSuccessTopic: snsTopics.createModelSuccessTopic,
-      authorizer: authorizerLambda.authorizer,
-      logLevel,
-      resourceProvider,
-    });
+      new SdTrainDeployStack(this, {
+        commonLayer: commonLayers.commonLayer,
+        // env: devEnv,
+        synthesizer: props.synthesizer,
+        modelInfInstancetype: utilInstanceType.valueAsString,
+        ecr_image_tag: ecrImageTagParam.valueAsString,
+        database: ddbTables,
+        routers: restApi.routers,
+        s3Bucket: s3Bucket,
+        snsTopic: snsTopics.snsTopic,
+        createModelFailureTopic: snsTopics.createModelFailureTopic,
+        createModelSuccessTopic: snsTopics.createModelSuccessTopic,
+        authorizer: authorizerLambda.authorizer,
+        logLevel,
+        resourceProvider,
+      });
+      // Adding Outputs for apiGateway and s3Bucket
+      new CfnOutput(this, 'ApiGatewayUrl', {
+        value: restApi.apiGateway.url,
+        description: 'API Gateway URL',
+      });
+      new CfnOutput(this, 'SNSTopicName', {
+        value: snsTopics.snsTopic.topicName,
+        description: 'SNS Topic Name to get train and inference result notification',
+      });
+    }
+    if (isWholeChoice || isComfyChoice) {
+      const ddbComfyTables = new ComfyDatabase(this, 'comfy-ddb');
+      const inferenceEcrRepositoryUrl: string = 'comfy-aws-extension/gen-ai-comfy-inference';
+      const restComfyApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+        'template',
+        'model',
+        'execute',
+        'node',
+        'config',
+        'endpoint',
+        'sync',
+      ]);
+      const cfnApiComfy = restComfyApi.apiGateway.node.defaultChild as CfnRestApi;
+      cfnApiComfy.addPropertyOverride('EndpointConfiguration', {
+        Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
+      });
+      const apis = new ComfyApiStack(this, 'comfy-api', <ComfyInferenceStackProps>{
+        routers: restComfyApi.routers,
+        // env: devEnv,
+        s3Bucket: s3Bucket,
+        ecrImageTag: ecrImageTagParam.valueAsString,
+        configTable: ddbComfyTables.configTable,
+        executeTable: ddbComfyTables.executeTable,
+        endpointTable: ddbComfyTables.endpointTable,
+        modelTable: ddbComfyTables.modelTable,
+        nodeTable: ddbComfyTables.nodeTable,
+        msgTable: ddbComfyTables.msgTable,
+        commonLayer: commonLayers.commonLayer,
+        ecrRepositoryName: inferenceEcrRepositoryUrl,
+        logLevel: logLevel,
+        resourceProvider: resourceProvider,
+      });
+      apis.node.addDependency(ddbComfyTables);
+      // Adding Outputs for apiGateway and s3Bucket
+      new CfnOutput(this, 'ComfyApiGatewayUrl', {
+        value: restComfyApi.apiGateway.url,
+        description: 'API Gateway URL',
+      });
+    }
+
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
@@ -192,11 +259,11 @@ export class Middleware extends Stack {
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
 
-    // Adding Outputs for apiGateway and s3Bucket
-    new CfnOutput(this, 'ApiGatewayUrl', {
-      value: restApi.apiGateway.url,
-      description: 'API Gateway URL',
-    });
+    // // Adding Outputs for apiGateway and s3Bucket
+    // new CfnOutput(this, 'ApiGatewayUrl', {
+    //   value: restApi.apiGateway.url,
+    //   description: 'API Gateway URL',
+    // });
 
     new CfnOutput(this, 'ApiGatewayUrlToken', {
       value: apiKeyParam.valueAsString,
@@ -208,10 +275,10 @@ export class Middleware extends Stack {
       description: 'S3 Bucket Name',
     });
 
-    new CfnOutput(this, 'SNSTopicName', {
-      value: snsTopics.snsTopic.topicName,
-      description: 'SNS Topic Name to get train and inference result notification',
-    });
+    // new CfnOutput(this, 'SNSTopicName', {
+    //   value: snsTopics.snsTopic.topicName,
+    //   description: 'SNS Topic Name to get train and inference result notification',
+    // });
   }
 }
 

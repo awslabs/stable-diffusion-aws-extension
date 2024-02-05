@@ -139,7 +139,7 @@ export class ExecuteApi {
 
   private executeApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}`,
+      entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'execute.py',

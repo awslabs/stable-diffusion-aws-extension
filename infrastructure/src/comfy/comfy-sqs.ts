@@ -2,7 +2,7 @@ import { Duration } from 'aws-cdk-lib';
 import { AccountRootPrincipal, AnyPrincipal, Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
-import { SOLUTION_NAME } from './constant';
+import { SOLUTION_NAME } from '../shared/constant';
 
 export interface SqsProps {
   name: string;
@@ -10,7 +10,8 @@ export interface SqsProps {
 }
 
 export class SqsStack extends Construct {
-  readonly queue: sqs.Queue;constructor(scope: Construct, id: string, props: SqsProps) {
+  readonly queue: sqs.Queue;
+  constructor(scope: Construct, id: string, props: SqsProps) {
     super(scope, id);
 
     this.queue = new sqs.Queue(scope, `${props.name}QueueActual`, {

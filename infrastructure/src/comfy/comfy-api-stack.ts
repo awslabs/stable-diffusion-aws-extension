@@ -1,10 +1,8 @@
-import * as path from 'path';
 import { Aws, aws_dynamodb, aws_lambda, CfnParameter, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
@@ -12,7 +10,7 @@ import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_prompt';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-import { SqsStack } from '../shared/sqs';
+import { SqsStack } from './comfy-sqs';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -55,10 +53,8 @@ export class ComfyApiStack extends Construct {
     this.nodeTable = props.nodeTable;
     this.msgTable = props.msgTable;
 
-    // const srcImg = AIGC_COMFY_INFERENCE + props?.ecrImageTag;
-    // srcImg.replace('account', Aws.ACCOUNT_ID).replace('region', Aws.REGION)
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
-    const srcRoot = '../source/constructs/api';
+    const srcRoot = '../middleware_api/lambda';
 
     const model_data_url = 's3://' + props.s3Bucket.bucketName + '/data/model.tar.gz';
 
@@ -76,10 +72,6 @@ export class ComfyApiStack extends Construct {
     inferenceLambdaRole.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
-
-    if (props?.s3Bucket != undefined) {
-      this.uploadModelToS3(scope, props.s3Bucket);
-    }
 
     const sqsStack = new SqsStack(this, 'comfy-sqs', {
       name: 'SyncComfyMsgJob',
@@ -160,23 +152,5 @@ export class ComfyApiStack extends Construct {
               logLevel: props.logLevel,
             },
     );
-    // DELETE /execute/{id}
-
   }
-
-  private uploadModelToS3(scope: Construct, s3_bucket: s3.Bucket) {
-    // Create a folder in the bucket
-    const folderKey = 'data/';
-
-    // Upload a local file to the created folder
-    console.log(__dirname);
-    const modelPath = path.resolve(__dirname, '../', 'models', 'model.zip');
-    new s3deploy.BucketDeployment(scope, 'DeployLocalFile', {
-      sources: [s3deploy.Source.asset(modelPath)],
-      destinationBucket: s3_bucket,
-      destinationKeyPrefix: folderKey,
-      retainOnDelete: false,
-    });
-  }
-
 }
