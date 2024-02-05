@@ -34,6 +34,10 @@ class SimpleSagemakerInfer(InferManager):
             'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
             'models': models,
+            'filters': {
+                'createAt': datetime.now().timestamp(),
+                'creator': 'sd-webui'
+            }
         }
         logger.debug(payload)
         inference_id = None
@@ -51,7 +55,8 @@ class SimpleSagemakerInfer(InferManager):
                            path=f'{url}inferences',
                            headers=headers,
                            response=response,
-                           data=payload)
+                           data=payload,
+                           desc="Create inference job on cloud")
 
         if response.status_code != 201:
             raise Exception(response.json()['message'])
@@ -65,7 +70,9 @@ class SimpleSagemakerInfer(InferManager):
             api_logger.req_log(sub_action="UploadParameterToS3",
                                method='PUT',
                                path=api_params_s3_upload_url,
-                               data=sd_api_param_json)
+                               data=sd_api_param_json,
+                               desc="Upload inference parameter to S3 by presigned URL,"
+                                    "URL from previous step: CreateInference -> data -> inference -> api_params_s3_upload_url")
             inference_id = upload_param_response['inference']['id']
             # start run infer
             start_url = f'{url}inferences/{inference_id}/start'
@@ -74,7 +81,9 @@ class SimpleSagemakerInfer(InferManager):
                                method='PUT',
                                path=start_url,
                                headers=headers,
-                               response=response)
+                               response=response,
+                               desc=f"Start inference job on cloud by ID ({inference_id}), ID from previous step: "
+                                    "CreateInference -> data -> inference -> id")
             if response.status_code not in [200, 202]:
                 logger.error(response.json())
                 raise Exception(response.json()['message'])
