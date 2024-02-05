@@ -31,7 +31,7 @@ def handler(event, ctx):
         'job_status': item['job_status'],
         'model_id': item['model_id'],
         'params': item['params'],
-        'timestamp': item['timestamp'],
+        'timestamp': str(item['timestamp']),
         'train_type': item['train_type'],
     }
 
