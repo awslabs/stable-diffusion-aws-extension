@@ -310,7 +310,9 @@ def get_inference_job(inference_job_id):
                        method='GET',
                        path=f"{api_gateway_url}{url}",
                        headers=headers,
-                       response=response)
+                       response=response,
+                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), ID from previous step: "
+                            "CreateInference -> data -> inference -> id")
     return response.json()['data']
 
 

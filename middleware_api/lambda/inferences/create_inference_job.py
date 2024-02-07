@@ -30,6 +30,8 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 class PrepareEvent:
     task_type: str
     models: dict[str, List[str]]  # [checkpoint_type: names] this is same as checkpoint if confused
+    # todo will remove in next major version
+    filters: dict[str, Any] = None
     sagemaker_endpoint_name: Optional[str] = ""
     user_id: Optional[str] = ""
     inference_type: Optional[str] = None
