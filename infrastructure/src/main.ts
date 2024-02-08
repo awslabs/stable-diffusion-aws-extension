@@ -44,7 +44,7 @@ export class Middleware extends Stack {
     const scriptChoice = new CfnParameter(this, 'scriptChoose', {
       type: 'String',
       description: 'choose the choice you want',
-      default: 'no',
+      default: 'ALL',
       allowedValues: ['ComfyUI', 'WebUI', 'ALL'],
     });
 
@@ -68,6 +68,12 @@ export class Middleware extends Stack {
     const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Public ECR Image tag, example: stable|dev',
+      default: ECR_IMAGE_TAG,
+    });
+
+    const ecrComfyImageTagParam = new CfnParameter(this, 'ComfyEcrImageTag', {
+      type: 'String',
+      description: 'Public ComfyUI ECR Image tag, example: stable|dev',
       default: ECR_IMAGE_TAG,
     });
 
@@ -114,7 +120,7 @@ export class Middleware extends Stack {
       expression: Fn.conditionEquals(scriptChoice, 'WebUI'),
     });
 
-    const isWholeChoice = new CfnCondition(this, 'IsSdChoice', {
+    const isWholeChoice = new CfnCondition(this, 'IsAllChoice', {
       expression: Fn.conditionEquals(scriptChoice, 'ALL'),
     });
 
@@ -122,7 +128,7 @@ export class Middleware extends Stack {
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     if (isWholeChoice || isSdChoice) {
-      const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+      const restApi = new RestApiGateway(this, 'sd-extension', apiKeyParam.valueAsString, [
         'ping',
         'checkpoints',
         'datasets',
@@ -205,7 +211,7 @@ export class Middleware extends Stack {
     if (isWholeChoice || isComfyChoice) {
       const ddbComfyTables = new ComfyDatabase(this, 'comfy-ddb');
       const inferenceEcrRepositoryUrl: string = 'comfy-aws-extension/gen-ai-comfy-inference';
-      const restComfyApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+      const restComfyApi = new RestApiGateway(this, 'comfy-extension', apiKeyParam.valueAsString, [
         'template',
         'model',
         'execute',
@@ -222,7 +228,7 @@ export class Middleware extends Stack {
         routers: restComfyApi.routers,
         // env: devEnv,
         s3Bucket: s3Bucket,
-        ecrImageTag: ecrImageTagParam.valueAsString,
+        ecrImageTag: ecrComfyImageTagParam.valueAsString,
         configTable: ddbComfyTables.configTable,
         executeTable: ddbComfyTables.executeTable,
         endpointTable: ddbComfyTables.endpointTable,

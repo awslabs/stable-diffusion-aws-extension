@@ -62,7 +62,7 @@ export class ComfyApiStack extends Construct {
 
     const executeGetRouter = props.routers.execute.addResource('{id}');
 
-    const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
+    const inferenceLambdaRole = new iam.Role(scope, 'ComfyInferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
         new iam.ServicePrincipal('sagemaker.amazonaws.com'),
         new iam.ServicePrincipal('lambda.amazonaws.com'),
