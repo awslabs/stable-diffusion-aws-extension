@@ -80,7 +80,7 @@ export class RestApiGateway {
 
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey(id + '-api-key', {
-      apiKeyName: 'sd-extension-api-key',
+      apiKeyName: id + '-api-key',
       value: apiKeyStr,
     });
 

@@ -40,6 +40,15 @@ export class Middleware extends Stack {
       // API Key value should be at least 20 characters
       default: '09876543210987654321',
     });
+    const apiKeyComfyParam = new CfnParameter(this, 'ComfyExtensionApiKey', {
+      type: 'String',
+      description: 'Enter a string of 20 characters that includes a combination of alphanumeric characters',
+      allowedPattern: '[A-Za-z0-9]+',
+      minLength: 20,
+      maxLength: 20,
+      // API Key value should be at least 20 characters
+      default: '09876543210987654321',
+    });
 
     const scriptChoice = new CfnParameter(this, 'scriptChoose', {
       type: 'String',
@@ -207,11 +216,15 @@ export class Middleware extends Stack {
         value: snsTopics.snsTopic.topicName,
         description: 'SNS Topic Name to get train and inference result notification',
       });
+      new CfnOutput(this, 'ApiGatewayUrlToken', {
+        value: apiKeyParam.valueAsString,
+        description: 'API Gateway Token',
+      });
     }
     if (isWholeChoice || isComfyChoice) {
       const ddbComfyTables = new ComfyDatabase(this, 'comfy-ddb');
       const inferenceEcrRepositoryUrl: string = 'comfy-aws-extension/gen-ai-comfy-inference';
-      const restComfyApi = new RestApiGateway(this, 'comfy-extension', apiKeyParam.valueAsString, [
+      const restComfyApi = new RestApiGateway(this, 'comfy-extension', apiKeyComfyParam.valueAsString, [
         'template',
         'model',
         'execute',
@@ -246,6 +259,10 @@ export class Middleware extends Stack {
         value: restComfyApi.apiGateway.url,
         description: 'API Gateway URL',
       });
+      new CfnOutput(this, 'ComfyApiGatewayUrlToken', {
+        value: apiKeyComfyParam.valueAsString,
+        description: 'API Gateway Token',
+      });
     }
 
 
@@ -266,10 +283,10 @@ export class Middleware extends Stack {
     //   description: 'API Gateway URL',
     // });
 
-    new CfnOutput(this, 'ApiGatewayUrlToken', {
-      value: apiKeyParam.valueAsString,
-      description: 'API Gateway Token',
-    });
+    // new CfnOutput(this, 'ApiGatewayUrlToken', {
+    //   value: apiKeyParam.valueAsString,
+    //   description: 'API Gateway Token',
+    // });
 
     new CfnOutput(this, 'S3BucketName', {
       value: s3Bucket.bucketName,

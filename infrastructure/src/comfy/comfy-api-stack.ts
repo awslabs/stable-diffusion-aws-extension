@@ -107,7 +107,7 @@ export class ComfyApiStack extends Construct {
               dockerImageUrl: srcImg,
               modelDataUrl: model_data_url,
               s3Bucket: props.s3Bucket,
-              machineType: 'ml.g5.xlarge',
+              machineType: 'ml.g4dn.2xlarge',
               rootSrc: srcRoot,
               endpointTable: this.endpointTable,
               configTable: this.endpointTable,
