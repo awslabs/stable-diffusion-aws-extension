@@ -42,7 +42,8 @@ nav:
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
         - API Call:
-            - 1.4.0: developer-guide/api.md
+            - 1.4.0: developer-guide/api/1.4.0.md
+        - OpenAPI Specification: https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/docs/middleware.openapi.json
         - Custom Container: developer-guide/byoc.md
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md

@@ -1,4 +1,6 @@
-## 开启 API Inference Debugger
+由于推理参数众多，建议使用 `API 推理调试器` 辅助推理作业的开发。`API 推理调试器` 会完整记录真实的推理流程和参数，您只需要复制相关数据结构，做少许更改即可。
+
+## 开启 API 推理调试器
 
 > 注意：该功能将在 `1.4.1` 之后默认开启
 
@@ -13,7 +15,7 @@ sudo systemctl restart sd-webui
 
 等待重启 WebUI 完成，大约3分钟内。
 
-## 使用 API Inference Debugger
+## 使用 API 推理调试器
 
 完成一个推理作业后，请按照以下顺序打开该作业的API请求记录：
 
@@ -24,6 +26,6 @@ sudo systemctl restart sd-webui
 
 ![debugger](../images/api_debugger.png)
 
-## API Inference Debugger 日志
+## API 推理调试器 日志
 
 ![debugger_log](../images/api_debugger_log.png)
