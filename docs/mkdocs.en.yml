@@ -37,9 +37,9 @@ nav:
     - Developer guide:
         - Source code: developer-guide/source.md
         - API Access Restriction: developer-guide/access.md
-        - API Debugger: developer-guide/api_debugger.md
         - API Upload Checkpoint Process: developer-guide/api_upload_ckpt.md
         - API Inference Process: developer-guide/api_inference_process.md
+        - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
         - API Call:
             - 1.4.0: developer-guide/api.md

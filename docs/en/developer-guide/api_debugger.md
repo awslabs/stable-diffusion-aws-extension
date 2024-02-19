@@ -1,4 +1,4 @@
-## Enable Debugger
+## Enable API Inference Debugger
 
 > Note: This feature will be enabled by default after `1.4.1`
 
@@ -12,7 +12,7 @@ sudo systemctl restart sd-webui
 ```
 Wait for the WebUI to restart and complete within approximately 3 minutes.
 
-## Use API Debugger
+## Use API Inference Debugger
 
 After completing an inference job, open the API request record in the following order:
 
@@ -22,6 +22,6 @@ After completing an inference job, open the API request record in the following 
 
 ![debugger](../images/api_debugger.png)
 
-## API Debugger Log
+## API Inference Debugger Log
 
 ![debugger_log](../images/api_debugger_log.png)
