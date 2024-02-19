@@ -1,34 +1,28 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "ESD (Extension for Stable Diffusion on AWS)",
+    "title": "ESD 1.4.0",
     "description": "",
     "version": "1.0.0"
   },
   "tags": [
     {
-      "name": "版本（Release Versions）"
+      "name": "健康检查（Ping）"
     },
     {
-      "name": "版本（Release Versions）/1.4.0"
+      "name": "角色（Roles）"
     },
     {
-      "name": "版本（Release Versions）/1.4.0/健康检查（Ping）"
+      "name": "用户（Users）"
     },
     {
-      "name": "版本（Release Versions）/1.4.0/角色（Roles）"
+      "name": "模型文件（Checkpoints）"
     },
     {
-      "name": "版本（Release Versions）/1.4.0/用户（Users）"
+      "name": "推理端点（Endpoints）"
     },
     {
-      "name": "版本（Release Versions）/1.4.0/模型文件（Checkpoints）"
-    },
-    {
-      "name": "版本（Release Versions）/1.4.0/推理端点（Endpoints）"
-    },
-    {
-      "name": "版本（Release Versions）/1.4.0/推理（Inferences）"
+      "name": "推理（Inferences）"
     }
   ],
   "paths": {
@@ -39,7 +33,7 @@
         "description": "测试客户端是否可以连接到 API，并检查配置是否正确。\nTest whether client can connect to api and check the API_TOKEN is correct.",
         "operationId": "TestConnection",
         "tags": [
-          "版本（Release Versions）/1.4.0/健康检查（Ping）"
+          "健康检查（Ping）"
         ],
         "parameters": [],
         "responses": {
@@ -89,7 +83,7 @@
         "description": "获取角色列表\nList all roles",
         "operationId": "ListRoles",
         "tags": [
-          "版本（Release Versions）/1.4.0/角色（Roles）"
+          "角色（Roles）"
         ],
         "parameters": [
           {
@@ -233,7 +227,7 @@
         "description": "删除角色\nDelete roles",
         "operationId": "ListRoles",
         "tags": [
-          "版本（Release Versions）/1.4.0/角色（Roles）"
+          "角色（Roles）"
         ],
         "parameters": [
           {
@@ -299,7 +293,7 @@
         "description": "创建新角色\nCreate a new role\n",
         "operationId": "CreateRole",
         "tags": [
-          "版本（Release Versions）/1.4.0/角色（Roles）"
+          "角色（Roles）"
         ],
         "parameters": [
           {
@@ -377,7 +371,7 @@
         "description": "获取用户列表\nList all users",
         "operationId": "ListUsers",
         "tags": [
-          "版本（Release Versions）/1.4.0/用户（Users）"
+          "用户（Users）"
         ],
         "parameters": [
           {
@@ -528,7 +522,7 @@
         "description": "创建新用户\nCreate a new user\n",
         "operationId": "CreateUser",
         "tags": [
-          "版本（Release Versions）/1.4.0/用户（Users）"
+          "用户（Users）"
         ],
         "parameters": [
           {
@@ -642,7 +636,7 @@
         "description": "删除用户\nDelete users\n",
         "operationId": "DeleteUser",
         "tags": [
-          "版本（Release Versions）/1.4.0/用户（Users）"
+          "用户（Users）"
         ],
         "parameters": [
           {
@@ -705,7 +699,7 @@
         "description": "通过URL上传模型文件\nCreate a new Checkpoint by URL\n",
         "operationId": "CreateCheckpoint",
         "tags": [
-          "版本（Release Versions）/1.4.0/模型文件（Checkpoints）"
+          "模型文件（Checkpoints）"
         ],
         "parameters": [
           {
@@ -914,7 +908,7 @@
         "description": "获取模型文件列表\nLists all checkpoints",
         "operationId": "ListCheckpoints",
         "tags": [
-          "版本（Release Versions）/1.4.0/模型文件（Checkpoints）"
+          "模型文件（Checkpoints）"
         ],
         "parameters": [
           {
@@ -1324,7 +1318,7 @@
         "description": "删除模型文件 \nDelete checkpoints\n",
         "operationId": "ListCheckpoints",
         "tags": [
-          "版本（Release Versions）/1.4.0/模型文件（Checkpoints）"
+          "模型文件（Checkpoints）"
         ],
         "parameters": [
           {
@@ -1387,7 +1381,7 @@
         "description": "获取推理端点列表\nList inference endpoints",
         "operationId": "ListEndpoints",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理端点（Endpoints）"
+          "推理端点（Endpoints）"
         ],
         "parameters": [
           {
@@ -1558,7 +1552,7 @@
         "description": "创建推理端点\nCreate Endpoint\n",
         "operationId": "CreateEndpoint",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理端点（Endpoints）"
+          "推理端点（Endpoints）"
         ],
         "parameters": [
           {
@@ -1698,7 +1692,7 @@
         "description": "删除推理端点\nDelete endpoints",
         "operationId": "DeleteEndpoints",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理端点（Endpoints）"
+          "推理端点（Endpoints）"
         ],
         "parameters": [
           {
@@ -1771,7 +1765,7 @@
         "description": "创建推理作业，创建成功后，需要通过返回的`api_params_s3_upload_url` 上传推理参数\nCreate inference, When you got response, you have to upload your Payload to `api_params_s3_upload_url`",
         "operationId": "CreateInferenceJob",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理（Inferences）"
+          "推理（Inferences）"
         ],
         "parameters": [],
         "requestBody": {
@@ -1955,7 +1949,7 @@
                           "id": "f3421ce5-9ab9-40a2-b33b-3f126de70a52",
                           "type": "txt2img",
                           "api_params_s3_location": "s3://xxxx/txt2img/infer_v2/f3421ce5-9ab9-40a2-b33b-3f126de70a52/api_param.json",
-                          "api_params_s3_upload_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/f3421ce5-9ab9-40a2-b33b-3f126de70a52/api_param.json?AWSAccessKeyId=xxxxx&Signature=HNp81KZy2%2FDSgz7%2FWP%2FdMIUPz8s%3D&x-amz-security-token=xxxxx",
+                          "api_params_s3_upload_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/f3421ce5-9ab9-40a2-b33b-3f126de70a52/api_param.json?AWSAccessKeyId=xxxx&Signature=HNp81KZy2%2FDSgz7%2FWP%2FdMIUPz8s%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEOz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkcwRQIgNMLgV7at1Vaao4wiFDgLOk4vc3OwD1D%2F4vyd%2Bz5vxhkCIQCnDqwzj3jP%2BIEyc2hCFw%2FNbWOHE%2BLDOVNFfxowLpQFEyrhAwi1%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDg2MDY2MDYwMDY5MCIM%2B6KJWPfr9JG4NBwKKrUDxMOpMiWgg2N1uusnm%2FRpoZhBFTe4MnPMNHf5M%2Bb8mTZWHD1JnMNAda1RUzfc9QoL%2BO76bH2QxhHQgmWaCnoX9i4hQCH7U%2F2slmF4EVSktyKWPbKMr%2BooX4uSpCiuU7qXqgjhPKbEn3tmsfH0RVf%2ByaGLXe6G43JAHpArjaJTIRnmH%2Bszbq55F%2FaifIpjhw9IlB6X18uVTzx9vqepS8zF%2Bn7%2F0L0da%2FhNvzz5QbRxbTrzjtDIGKd7aOz2%2BuXM03naXLcRFDRw29wzbMH2Z2P%2Bran9lZsrJBDYlWN4BMV3PSaweOghOOTldPlxylTzWiE86xWmw5kUpgU%2B4A8Te%2BZmJRl6Qqhq7sOZ%2BaaNTAqpYYQhjkFxLFziZjub90%2B7%2B0idFmQN7CpKEmBUTVdrQGAcagAJ9jQRUosTfRfHP%2BiXK1dj2sOOgDsDOZE6X2O9dpJQCiQAJKDDDvBKPn1s%2BDp7KlgRh5AdlBEgUkfcx3fUyhFz7hrVGLHR74hYIScIM714eDMlPvqtPtznr8IKtRvzKRYGxMyN%2FM%2FdvqhDE2WEHOP9M%2B4bvDBxMTDhNngjdZsMs524zVcw79aGrgY6ngEPUkOghS7xw2T1%2FGr6jR8AIjsdZ4ZsC5BZp22jizDO%2FQBmWEH2Z9LJK6Jmf7XwCRagmOuZlc8ZSr929Q48f371DwbhPGJdwjb7VPYqA20CJkcz6mFrU5zwLm%2BqDB2%2BpNVWIBMWeRsoGfcEipeR%2BVRd5DhVh0gCYc9BqDtshpstnhEvesuPSr8syAt5VQwUEAplxtWGFHh%2BPH3RHcgu%2Bw%3D%3D&Expires=1707194752",
                           "models": [
                             {
                               "id": "32a7af23-3763-4289-a6af-2156a2331878",
@@ -1994,7 +1988,7 @@
         "description": "获取推理作业列表\nList inference jobs\n",
         "operationId": "ListInferenceJobs",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理（Inferences）"
+          "推理（Inferences）"
         ],
         "parameters": [
           {
@@ -2044,7 +2038,7 @@
                             "params": {
                               "input_body_s3": "s3://xxxx/txt2img/infer_v2/31d3d034-795b-4f82-8bab-0400199efa4c/api_param.json",
                               "sagemaker_inference_endpoint_id": "97fce5ef-3c1b-4902-9043-ec7cb614d7d1",
-                              "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/31d3d034-795b-4f82-8bab-0400199efa4c/api_param.json?AWSAccessKeyId=xxxx&Signature=qASpoFpZxNNMbDZNzwjcfS31%2Bts%3D&x-amz-security-token=xxxxx",
+                              "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/31d3d034-795b-4f82-8bab-0400199efa4c/api_param.json?AWSAccessKeyId=xxxx&Signature=qASpoFpZxNNMbDZNzwjcfS31%2Bts%3D&x-amz-security-token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkgwRgIhALn6k5IG2ikYnvMq55N8qzxoi0PcGaPgqzQiNfqjU2ueAiEAlD%2B36qo6fakPvbFIO%2FCEBq3OWIZy3PVRc50g11Yh%2BLAq4QMIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw4NjA2NjA2MDA2OTAiDP6CmhQmhgcfvjTYpSq1A%2FUxhB9s6Vam%2FSSyEYlgMkVgvRGOntmYPgfgAdGj9j37KcncPzUxzsuttNgVQzP%2Bu9CVAI4QrO02ObsyNPvsy3KOCLmpBRcSmZDqRkPW5%2BTmQwVEAD8AYut7P3CiLt0mIcCcMS8UOZuXbvb6%2FyaPAegYR20bUEfPDiOEvYxyBOrj9%2FdbED5lvSrS3fHucyIVk9wF6tJQQVucqWRA1qllL6Dj%2BIg86dFYkLl2BiYty0Vd0OBT6y51ATmhBJqqz66M5MlKuVvxWZ5ZL7T%2BcNcJyPnukXAADGuBXt6ZjD7QWxve7TQE6aUTHGi6WbF%2FLi0%2BqWOmVoKdootyVT3bCj34rA56NudSO5t0QjBonQ%2BfnFJlB7s1if4UHZUp%2FijPImWJU8uC6PMp9Qshgux3IwCjO6X%2B5GcyWnL1hO5GaljtyERBLQZ8SS2ZHej3kSw9cJ3w%2FN5cCgejLWkbNffQdkyan1XsRav9ufZOHQMNtupz0LEsUIvbctZjip3FLdBp0rwZDfrBEFlpuDEnmzpCbJVIw7BajO7Fqtu%2FzYHeyEH7ZLLHSMFSkK4apzXb2gkhpmM44XalQzu7MLb1ga4GOp0BghTpORcI%2F6KMUkPVI3YuuZ7O5HLQTlq8TYtl9%2BEWIpG8omXyk232ysXfV4hgvVNA1yOfBpa0IEY86LVLIUOGRgNgPtAkBp2Mao9lA0GcAh2XGCCJYRFyvwVU1veBhN5XgNA15dy1Vqp9YC2ZtwMiTxQcy5R6vlm8mI2cKaI0RJWlD9gWhRhlZJZVx5RTgYI6jjhnr0Zis3L52wmd0A%3D%3D&Expires=1707116744",
                               "used_models": {
                                 "Stable-diffusion": [
                                   {
@@ -2087,7 +2081,7 @@
                             "params": {
                               "input_body_s3": "s3://xxxx/txt2img/infer_v2/55cb83dc-24c0-4aec-9814-e0bea8abc5d0/api_param.json",
                               "sagemaker_inference_endpoint_id": "97fce5ef-3c1b-4902-9043-ec7cb614d7d1",
-                              "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/55cb83dc-24c0-4aec-9814-e0bea8abc5d0/api_param.json?AWSAccessKeyId=xxxx&Signature=IoOJDXuETJeMBz4vac3VuVOPhs8%3D&x-amz-security-token=xxxxx",
+                              "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/55cb83dc-24c0-4aec-9814-e0bea8abc5d0/api_param.json?AWSAccessKeyId=xxxx&Signature=IoOJDXuETJeMBz4vac3VuVOPhs8%3D&x-amz-security-token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkgwRgIhALn6k5IG2ikYnvMq55N8qzxoi0PcGaPgqzQiNfqjU2ueAiEAlD%2B36qo6fakPvbFIO%2FCEBq3OWIZy3PVRc50g11Yh%2BLAq4QMIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw4NjA2NjA2MDA2OTAiDP6CmhQmhgcfvjTYpSq1A%2FUxhB9s6Vam%2FSSyEYlgMkVgvRGOntmYPgfgAdGj9j37KcncPzUxzsuttNgVQzP%2Bu9CVAI4QrO02ObsyNPvsy3KOCLmpBRcSmZDqRkPW5%2BTmQwVEAD8AYut7P3CiLt0mIcCcMS8UOZuXbvb6%2FyaPAegYR20bUEfPDiOEvYxyBOrj9%2FdbED5lvSrS3fHucyIVk9wF6tJQQVucqWRA1qllL6Dj%2BIg86dFYkLl2BiYty0Vd0OBT6y51ATmhBJqqz66M5MlKuVvxWZ5ZL7T%2BcNcJyPnukXAADGuBXt6ZjD7QWxve7TQE6aUTHGi6WbF%2FLi0%2BqWOmVoKdootyVT3bCj34rA56NudSO5t0QjBonQ%2BfnFJlB7s1if4UHZUp%2FijPImWJU8uC6PMp9Qshgux3IwCjO6X%2B5GcyWnL1hO5GaljtyERBLQZ8SS2ZHej3kSw9cJ3w%2FN5cCgejLWkbNffQdkyan1XsRav9ufZOHQMNtupz0LEsUIvbctZjip3FLdBp0rwZDfrBEFlpuDEnmzpCbJVIw7BajO7Fqtu%2FzYHeyEH7ZLLHSMFSkK4apzXb2gkhpmM44XalQzu7MLb1ga4GOp0BghTpORcI%2F6KMUkPVI3YuuZ7O5HLQTlq8TYtl9%2BEWIpG8omXyk232ysXfV4hgvVNA1yOfBpa0IEY86LVLIUOGRgNgPtAkBp2Mao9lA0GcAh2XGCCJYRFyvwVU1veBhN5XgNA15dy1Vqp9YC2ZtwMiTxQcy5R6vlm8mI2cKaI0RJWlD9gWhRhlZJZVx5RTgYI6jjhnr0Zis3L52wmd0A%3D%3D&Expires=1707117326",
                               "used_models": {
                                 "Stable-diffusion": [
                                   {
@@ -2134,7 +2128,7 @@
         "description": "删除推理作业列表\nDelete inference jobs\n",
         "operationId": "ListInferenceJobs",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理（Inferences）"
+          "推理（Inferences）"
         ],
         "parameters": [
           {
@@ -2207,7 +2201,7 @@
         "description": "开始推理作业\nStart inference job\n",
         "operationId": "RunInferenceJob",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理（Inferences）"
+          "推理（Inferences）"
         ],
         "parameters": [
           {
@@ -2318,7 +2312,7 @@
         "description": "获取指定的推理作业详情\nGets a specific infernece job\n",
         "operationId": "GetInferenceJob",
         "tags": [
-          "版本（Release Versions）/1.4.0/推理（Inferences）"
+          "推理（Inferences）"
         ],
         "parameters": [
           {
@@ -2515,17 +2509,17 @@
                       "statusCode": 200,
                       "data": {
                         "img_presigned_urls": [
-                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/image_0.png?AWSAccessKeyId=xxxxx&Signature=%2BIoU%2BUuY0oJmd9yb8B6xJGnRN3Q%3D&x-amz-security-token=xxxxx"
+                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/image_0.png?AWSAccessKeyId=xxxx&Signature=%2BIoU%2BUuY0oJmd9yb8B6xJGnRN3Q%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEOz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkgwRgIhAJXX4Y7cAU1VjSQK3Ga5Q3oWrK9Pu7e%2BaJ%2FcP89H3DnAAiEAw%2FSIHzSWR01mAw6xb2kqhTgkapA3hRzRlmIgb%2FQuuNsq4QMItf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw4NjA2NjA2MDA2OTAiDI5nIbuU88AEtxiKeSq1A0em0PiCJywBO91ACgdnEOZhh46%2BcPMBZS8sbo2G7FuNR8VRz4nGIQjp4HdX468AMjoAN7tRidsufLva6L2xTrqmiiEZobRLqc%2FgsJnuxkK0FFbmdW%2B4GSjUWC8NIyICwF4KtL%2FS05fYVQyq5%2FBV%2B%2FVMw0aT5m7ai4E9FkHAgTsMvhxg31L3v%2BPe8A8Y%2BZbuWGdvonMzHE4CYMKAKe6SfvjK7u8U8YHR8IeCFWd90jzlkygIk83oFVOuyybITePaZbxWKuyEvBSJd3T7y46CeThyzc3I8AlmYTrfbuj8BhSqiptedtN5%2BmtMP5q04c3EGpIQ86B13NAUhHDadBeImztplPRLJFUXJsj7AMUHc5I7h8o%2BRXy1xE4GZD382WXsHOKLJ39UkioqRUvWCAozO%2B%2FBsILadh83RUcE7C7HFGd6%2BdnfcWPfjDOr5i%2FI5P%2BeamDL9Cvw9hakaaMSryI8ki3kmMMbubBc2JExOtspIh3SquN2dw6RUtb34mBZerxZhJHNGFsdARrboM7IZA1f8S6oGuMRX7tr67P%2Fgx5alSHiiS%2FvFlNyPqIRk7O3uAlnzLkQ7IgyMO%2FZhq4GOp0B1Fyc2ySOy88xOUvUFDkJHr5dpVYIOkffdqOgGXOi9H0edCyg8xELWZwofu6eT%2FecDv4xvjkHjXyJ%2B3H7KP1%2FmE2IoQSFJBFvI0El1rvg7jsvROTe8QVuNYG9V1PqH3zLLz%2Fw9V1R9fK6ys5ZdlDCm208LClKZq8YlxQWXlOO%2FLMLcR51FJxqu5tqXLAaVIFDNdwO%2BrUyvZx5xMTifg%3D%3D&Expires=1707195462"
                         ],
                         "output_presigned_urls": [
-                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/9d93e241-745a-4464-bb99-22253c910a01_param.json?AWSAccessKeyId=xxxxx&Signature=sAi%2ByxVsUBdZfSh34QCMAh%2B2jGg%3D&x-amz-security-token=xxxxx"
+                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/9d93e241-745a-4464-bb99-22253c910a01_param.json?AWSAccessKeyId=xxxx&Signature=sAi%2ByxVsUBdZfSh34QCMAh%2B2jGg%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEOz%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkgwRgIhAJXX4Y7cAU1VjSQK3Ga5Q3oWrK9Pu7e%2BaJ%2FcP89H3DnAAiEAw%2FSIHzSWR01mAw6xb2kqhTgkapA3hRzRlmIgb%2FQuuNsq4QMItf%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw4NjA2NjA2MDA2OTAiDI5nIbuU88AEtxiKeSq1A0em0PiCJywBO91ACgdnEOZhh46%2BcPMBZS8sbo2G7FuNR8VRz4nGIQjp4HdX468AMjoAN7tRidsufLva6L2xTrqmiiEZobRLqc%2FgsJnuxkK0FFbmdW%2B4GSjUWC8NIyICwF4KtL%2FS05fYVQyq5%2FBV%2B%2FVMw0aT5m7ai4E9FkHAgTsMvhxg31L3v%2BPe8A8Y%2BZbuWGdvonMzHE4CYMKAKe6SfvjK7u8U8YHR8IeCFWd90jzlkygIk83oFVOuyybITePaZbxWKuyEvBSJd3T7y46CeThyzc3I8AlmYTrfbuj8BhSqiptedtN5%2BmtMP5q04c3EGpIQ86B13NAUhHDadBeImztplPRLJFUXJsj7AMUHc5I7h8o%2BRXy1xE4GZD382WXsHOKLJ39UkioqRUvWCAozO%2B%2FBsILadh83RUcE7C7HFGd6%2BdnfcWPfjDOr5i%2FI5P%2BeamDL9Cvw9hakaaMSryI8ki3kmMMbubBc2JExOtspIh3SquN2dw6RUtb34mBZerxZhJHNGFsdARrboM7IZA1f8S6oGuMRX7tr67P%2Fgx5alSHiiS%2FvFlNyPqIRk7O3uAlnzLkQ7IgyMO%2FZhq4GOp0B1Fyc2ySOy88xOUvUFDkJHr5dpVYIOkffdqOgGXOi9H0edCyg8xELWZwofu6eT%2FecDv4xvjkHjXyJ%2B3H7KP1%2FmE2IoQSFJBFvI0El1rvg7jsvROTe8QVuNYG9V1PqH3zLLz%2Fw9V1R9fK6ys5ZdlDCm208LClKZq8YlxQWXlOO%2FLMLcR51FJxqu5tqXLAaVIFDNdwO%2BrUyvZx5xMTifg%3D%3D&Expires=1707195462"
                         ],
                         "inference_info_name": "/tmp/9d93e241-745a-4464-bb99-22253c910a01_param.json",
                         "startTime": "2024-02-05 06:10:52.552528",
                         "taskType": "txt2img",
                         "completeTime": "2024-02-05 06:10:56.270528",
                         "params": {
-                          "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/9d93e241-745a-4464-bb99-22253c910a01/api_param.json?AWSAccessKeyId=xxxx&Signature=i8q7mM74oZoqtl6reQCPEklgXkc%3D&x-amz-security-token=xxxxx",
+                          "input_body_presign_url": "https://xxxx.s3.amazonaws.com/txt2img/infer_v2/9d93e241-745a-4464-bb99-22253c910a01/api_param.json?AWSAccessKeyId=xxxx&Signature=i8q7mM74oZoqtl6reQCPEklgXkc%3D&x-amz-security-token=IQoJb3JpZ2luX2VjENb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaDmFwLXNvdXRoZWFzdC0xIkgwRgIhALn6k5IG2ikYnvMq55N8qzxoi0PcGaPgqzQiNfqjU2ueAiEAlD%2B36qo6fakPvbFIO%2FCEBq3OWIZy3PVRc50g11Yh%2BLAq4QMIn%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw4NjA2NjA2MDA2OTAiDP6CmhQmhgcfvjTYpSq1A%2FUxhB9s6Vam%2FSSyEYlgMkVgvRGOntmYPgfgAdGj9j37KcncPzUxzsuttNgVQzP%2Bu9CVAI4QrO02ObsyNPvsy3KOCLmpBRcSmZDqRkPW5%2BTmQwVEAD8AYut7P3CiLt0mIcCcMS8UOZuXbvb6%2FyaPAegYR20bUEfPDiOEvYxyBOrj9%2FdbED5lvSrS3fHucyIVk9wF6tJQQVucqWRA1qllL6Dj%2BIg86dFYkLl2BiYty0Vd0OBT6y51ATmhBJqqz66M5MlKuVvxWZ5ZL7T%2BcNcJyPnukXAADGuBXt6ZjD7QWxve7TQE6aUTHGi6WbF%2FLi0%2BqWOmVoKdootyVT3bCj34rA56NudSO5t0QjBonQ%2BfnFJlB7s1if4UHZUp%2FijPImWJU8uC6PMp9Qshgux3IwCjO6X%2B5GcyWnL1hO5GaljtyERBLQZ8SS2ZHej3kSw9cJ3w%2FN5cCgejLWkbNffQdkyan1XsRav9ufZOHQMNtupz0LEsUIvbctZjip3FLdBp0rwZDfrBEFlpuDEnmzpCbJVIw7BajO7Fqtu%2FzYHeyEH7ZLLHSMFSkK4apzXb2gkhpmM44XalQzu7MLb1ga4GOp0BghTpORcI%2F6KMUkPVI3YuuZ7O5HLQTlq8TYtl9%2BEWIpG8omXyk232ysXfV4hgvVNA1yOfBpa0IEY86LVLIUOGRgNgPtAkBp2Mao9lA0GcAh2XGCCJYRFyvwVU1veBhN5XgNA15dy1Vqp9YC2ZtwMiTxQcy5R6vlm8mI2cKaI0RJWlD9gWhRhlZJZVx5RTgYI6jjhnr0Zis3L52wmd0A%3D%3D&Expires=1707117052",
                           "used_models": {
                             "Stable-diffusion": [
                               {
@@ -2582,7 +2576,7 @@
         "description": "更新模型文件状态\nUpdate Checkpoint",
         "operationId": "UpdateCheckpoint",
         "tags": [
-          "版本（Release Versions）/1.4.0/模型文件（Checkpoints）"
+          "模型文件（Checkpoints）"
         ],
         "parameters": [
           {
@@ -3660,21 +3654,6 @@
           "output_s3_location"
         ]
       },
-      "Tag": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "description": "Tag ID"
-          },
-          "name": {
-            "type": "string",
-            "description": "Tag Name"
-          }
-        }
-      },
       "TrainJob": {
         "type": "object",
         "properties": {
@@ -3712,21 +3691,6 @@
           "sagemakerTrainName"
         ]
       },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "description": "Category ID"
-          },
-          "name": {
-            "type": "string",
-            "description": "Category Name"
-          }
-        }
-      },
       "Role": {
         "type": "object",
         "properties": {
@@ -3752,59 +3716,6 @@
           "creator",
           "permissions"
         ]
-      },
-      "Pet": {
-        "required": [
-          "name",
-          "photoUrls",
-          "id",
-          "category",
-          "tags",
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "description": "Pet ID"
-          },
-          "category": {
-            "$ref": "#/components/schemas/Category",
-            "description": "group"
-          },
-          "name": {
-            "type": "string",
-            "description": "name",
-            "examples": [
-              "doggie"
-            ]
-          },
-          "photoUrls": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "image URL"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Tag"
-            },
-            "description": "tag"
-          },
-          "status": {
-            "type": "string",
-            "description": "Pet Sales Status",
-            "enum": [
-              "available",
-              "pending",
-              "sold"
-            ]
-          }
-        }
       }
     },
     "securitySchemes": {

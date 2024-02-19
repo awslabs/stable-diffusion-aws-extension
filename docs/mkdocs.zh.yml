@@ -45,7 +45,7 @@ nav:
         - API 验证: developer-guide/api_authentication.md
         - API 调用:
             - 1.4.0: developer-guide/api/1.4.0.md
-        - OpenAPI Specification: https://github.com/awslabs/stable-diffusion-aws-extension/blob/main/docs/middleware.openapi.json
+        - OpenAPI Specification: developer-guide/oas.md
         - 自定义容器镜像: developer-guide/byoc.md
     - 故障排除: troubleshooting.md
     - 常见问题解答: faq.md
