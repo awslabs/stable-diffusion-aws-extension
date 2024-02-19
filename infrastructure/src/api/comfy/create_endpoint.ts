@@ -10,7 +10,6 @@ export interface CreateSageMakerEndpointProps {
   s3Bucket: aws_s3.Bucket;
   machineType: string;
   rootSrc: string;
-  endpointTable: aws_dynamodb.Table;
   configTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
   nodeTable: aws_dynamodb.Table;
@@ -28,7 +27,6 @@ export class CreateSageMakerEndpoint {
   public modelConfig: aws_sagemaker.CfnEndpointConfig;
   public modelEndpoint: aws_sagemaker.CfnEndpoint;
   private configTable: aws_dynamodb.Table;
-  private endpointTable: aws_dynamodb.Table;
   private modelTable: aws_dynamodb.Table;
   private nodeTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
@@ -38,7 +36,6 @@ export class CreateSageMakerEndpoint {
     this.modelTable = props.modelTable;
     this.resourceProvider = props.resourceProvider;
     this.queue = props.queue;
-    this.endpointTable = props.endpointTable;
     this.modelTable = props.modelTable;
     this.configTable = props.configTable;
     this.nodeTable = props.nodeTable;
@@ -120,7 +117,6 @@ export class CreateSageMakerEndpoint {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.endpointTable.tableArn,
         this.modelTable.tableArn,
         this.nodeTable.tableArn,
         this.configTable.tableArn,

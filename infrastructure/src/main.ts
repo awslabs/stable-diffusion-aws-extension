@@ -16,6 +16,7 @@ import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
+import { CheckpointStack } from './checkpoints/checkpoint-stack';
 
 const app = new App();
 
@@ -207,6 +208,18 @@ export class Middleware extends Stack {
         logLevel,
         resourceProvider,
       });
+
+      new CheckpointStack(this, {
+        // env: devEnv,
+        synthesizer: props.synthesizer,
+        checkpointTable: ddbTables.checkpointTable,
+        multiUserTable: ddbTables.multiUserTable,
+        routers: restApi.routers,
+        s3Bucket: s3Bucket,
+        commonLayer: commonLayers.commonLayer,
+        authorizer: authorizerLambda.authorizer,
+        logLevel: logLevel,
+      });
       // Adding Outputs for apiGateway and s3Bucket
       new CfnOutput(this, 'ApiGatewayUrl', {
         value: restApi.apiGateway.url,
@@ -244,8 +257,7 @@ export class Middleware extends Stack {
         ecrImageTag: ecrComfyImageTagParam.valueAsString,
         configTable: ddbComfyTables.configTable,
         executeTable: ddbComfyTables.executeTable,
-        endpointTable: ddbComfyTables.endpointTable,
-        modelTable: ddbComfyTables.modelTable,
+        modelTable: ddbTables.checkpointTable,
         nodeTable: ddbComfyTables.nodeTable,
         msgTable: ddbComfyTables.msgTable,
         commonLayer: commonLayers.commonLayer,
@@ -254,6 +266,19 @@ export class Middleware extends Stack {
         resourceProvider: resourceProvider,
       });
       apis.node.addDependency(ddbComfyTables);
+
+      new CheckpointStack(this, {
+        // env: devEnv,
+        synthesizer: props.synthesizer,
+        checkpointTable: ddbTables.checkpointTable,
+        multiUserTable: ddbTables.multiUserTable,
+        routers: restComfyApi.routers,
+        s3Bucket: s3Bucket,
+        commonLayer: commonLayers.commonLayer,
+        authorizer: authorizerLambda.authorizer,
+        logLevel: logLevel,
+      });
+
       // Adding Outputs for apiGateway and s3Bucket
       new CfnOutput(this, 'ComfyApiGatewayUrl', {
         value: restComfyApi.apiGateway.url,
@@ -277,26 +302,11 @@ export class Middleware extends Stack {
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
 
-    // // Adding Outputs for apiGateway and s3Bucket
-    // new CfnOutput(this, 'ApiGatewayUrl', {
-    //   value: restApi.apiGateway.url,
-    //   description: 'API Gateway URL',
-    // });
-
-    // new CfnOutput(this, 'ApiGatewayUrlToken', {
-    //   value: apiKeyParam.valueAsString,
-    //   description: 'API Gateway Token',
-    // });
-
     new CfnOutput(this, 'S3BucketName', {
       value: s3Bucket.bucketName,
       description: 'S3 Bucket Name',
     });
 
-    // new CfnOutput(this, 'SNSTopicName', {
-    //   value: snsTopics.snsTopic.topicName,
-    //   description: 'SNS Topic Name to get train and inference result notification',
-    // });
   }
 }
 

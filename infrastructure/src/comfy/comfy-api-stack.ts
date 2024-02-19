@@ -18,7 +18,6 @@ export interface ComfyInferenceStackProps extends StackProps {
   ecrImageTag: string;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
-  endpointTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
   nodeTable: aws_dynamodb.Table;
   msgTable:aws_dynamodb.Table;
@@ -33,7 +32,6 @@ export class ComfyApiStack extends Construct {
   private readonly layer: aws_lambda.LayerVersion;
   private configTable: aws_dynamodb.Table;
   private executeTable: aws_dynamodb.Table;
-  private endpointTable: aws_dynamodb.Table;
   private modelTable: aws_dynamodb.Table;
   private nodeTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
@@ -48,7 +46,6 @@ export class ComfyApiStack extends Construct {
     this.resourceProvider = props.resourceProvider;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
-    this.endpointTable = props.endpointTable;
     this.modelTable = props.modelTable;
     this.nodeTable = props.nodeTable;
     this.msgTable = props.msgTable;
@@ -109,10 +106,9 @@ export class ComfyApiStack extends Construct {
               s3Bucket: props.s3Bucket,
               machineType: 'ml.g4dn.2xlarge',
               rootSrc: srcRoot,
-              endpointTable: this.endpointTable,
-              configTable: this.endpointTable,
-              modelTable: this.endpointTable,
-              nodeTable: this.endpointTable,
+              configTable: this.configTable,
+              modelTable: this.modelTable,
+              nodeTable: this.nodeTable,
               commonLayer: this.layer,
               queue: sqsStack.queue,
               resourceProvider: this.resourceProvider,
@@ -129,7 +125,6 @@ export class ComfyApiStack extends Construct {
               s3Bucket: props.s3Bucket,
               configTable: this.configTable,
               executeTable: this.executeTable,
-              endpointTable: this.endpointTable,
               modelTable: this.modelTable,
               nodeTable: this.nodeTable,
               queue: sqsStack.queue,
