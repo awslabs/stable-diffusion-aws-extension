@@ -36,7 +36,13 @@ nav:
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md
-        - API Direct Call: developer-guide/api.md
+        - API Access Restriction: developer-guide/access.md
+        - API Debugger: developer-guide/api_debugger.md
+        - API Upload Checkpoint Process: developer-guide/api_upload_ckpt.md
+        - API Inference Process: developer-guide/api_inference_process.md
+        - API Authentication: developer-guide/api_authentication.md
+        - API Direct Call:
+            - 1.4.0: developer-guide/api.md
         - Custom Container: developer-guide/byoc.md
     - Troubleshooting: troubleshooting.md
     - FAQ: faq.md

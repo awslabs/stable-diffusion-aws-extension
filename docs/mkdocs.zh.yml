@@ -38,7 +38,13 @@ nav:
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
     - 开发者指南:
         - 源代码: developer-guide/source.md
-        - API调用指南: developer-guide/api.md
+        - API 访问限制: developer-guide/access.md
+        - API 调试器: developer-guide/api_debugger.md
+        - API 上传模型文件流程: developer-guide/api_upload_ckpt.md
+        - API 推理流程: developer-guide/api_inference_process.md
+        - API 验证: developer-guide/api_authentication.md
+        - API 调用指南:
+            - 1.4.0: developer-guide/api.md
         - 自定义容器镜像: developer-guide/byoc.md
     - 故障排除: troubleshooting.md
     - 常见问题解答: faq.md

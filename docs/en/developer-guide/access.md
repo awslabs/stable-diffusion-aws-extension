@@ -1,0 +1,1 @@
+The API is open to the public network by default. To protect it from being accessed by the public network, access control can be achieved through [Resource Policy](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-resource-policies.html){:target="_blank"}.
