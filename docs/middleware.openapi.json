@@ -2515,10 +2515,10 @@
                       "statusCode": 200,
                       "data": {
                         "img_presigned_urls": [
-                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/image_0.png?AWSAccessKeyId=ASIA4QY26R5ZILYMRRRA&Signature=%2BIoU%2BUuY0oJmd9yb8B6xJGnRN3Q%3D&x-amz-security-token=xxxxx"
+                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/image_0.png?AWSAccessKeyId=xxxxx&Signature=%2BIoU%2BUuY0oJmd9yb8B6xJGnRN3Q%3D&x-amz-security-token=xxxxx"
                         ],
                         "output_presigned_urls": [
-                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/9d93e241-745a-4464-bb99-22253c910a01_param.json?AWSAccessKeyId=ASIA4QY26R5ZILYMRRRA&Signature=sAi%2ByxVsUBdZfSh34QCMAh%2B2jGg%3D&x-amz-security-token=xxxxx"
+                          "https://xxxx.s3.amazonaws.com/out/9d93e241-745a-4464-bb99-22253c910a01/result/9d93e241-745a-4464-bb99-22253c910a01_param.json?AWSAccessKeyId=xxxxx&Signature=sAi%2ByxVsUBdZfSh34QCMAh%2B2jGg%3D&x-amz-security-token=xxxxx"
                         ],
                         "inference_info_name": "/tmp/9d93e241-745a-4464-bb99-22253c910a01_param.json",
                         "startTime": "2024-02-05 06:10:52.552528",
