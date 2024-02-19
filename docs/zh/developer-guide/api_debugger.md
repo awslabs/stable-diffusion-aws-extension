@@ -1,4 +1,6 @@
-开启 API Debugger 功能步骤：
+## 开启 API Debugger
+
+> 注意：该功能将在 `1.4.1` 之后默认开启
 
 登陆安装有 WebUI 的 EC2，执行以下命令：
 
@@ -10,3 +12,18 @@ sudo systemctl restart sd-webui
 ```
 
 等待重启 WebUI 完成，大约3分钟内。
+
+## 使用 API Debugger
+
+完成一个推理作业后，请按照以下顺序打开该作业的API请求记录：
+
+1. 点击按钮刷新推理历史作业列表
+2. 下拉推理作业列表，找到并选中该作业
+3. 点击右侧的 `API` 按钮
+
+
+![debugger](../images/api_debugger.png)
+
+## API Debugger 日志
+
+![debugger_log](../images/api_debugger_log.png)
