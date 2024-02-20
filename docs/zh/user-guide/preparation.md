@@ -4,13 +4,13 @@
 您需要已经成功完成解决方案的部署。
 
 *可选项*
-为了保证AWS Extension插件同第三方插件之间（dreambooth，controlnet）版本的兼容性，您可以运行以下命令检查AWS Extension所支持的第三方插件的最小支持版本。
+为了保证AWS Extension插件同第三方插件之间（controlnet）版本的兼容性，您可以运行以下命令检查AWS Extension所支持的第三方插件的最小支持版本。
 ```bash
 ./preflight.sh
 ```
 ![preflight](../images/preflight.png)
 
-如果您对第三方插件的版本没有特别的要求，您可以通过执行以下命令安装版本兼容的第三方插件（dreambooth，controlnet）。
+如果您对第三方插件的版本没有特别的要求，您可以通过执行以下命令安装版本兼容的第三方插件（controlnet）。
 
 ```bash
 # Clone sd-webui-controlnet
@@ -21,13 +21,6 @@ cd sd-webui-controlnet
 git reset --hard 7c674f8364227d63e1628fc29fa8619d33c56674
 cd ..
 
-# Clone sd_dreambooth_extension
-git clone https://github.com/d8ahazard/sd_dreambooth_extension.git
-
-# Go to sd_dreambooth_extension directory and reset to specific commit
-cd sd_dreambooth_extension
-git reset --hard 926ae204ef5de17efca2059c334b6098492a0641
-cd ..
 ```
 
 <!-- ### 操作步骤
