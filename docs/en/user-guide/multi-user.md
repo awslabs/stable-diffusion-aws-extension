@@ -3,7 +3,7 @@
 ## Configure API
 1. Open [AWS CloudFormation Console](https://console.aws.amazon.com/cloudformation/), and select the main stack that successfully deployed.
 2. Navigate the **Outputs** tab, and copy the information under **APIGatewayUrl** and **ApiGatewayUrlToken**.
-3. Open Stable Diffusion webUI, navigate to the 'Amazon SageMaker' tab, paste information from step 2 into fields **API URL** and **API Token**. Create a super admin user name and password by entering information in field **Username** and **Password**. And click **Test Connection & Update Setting**.
+3. Open Stable Diffusion webUI, navigate to the 'Amazon SageMaker' tab, paste information from step 2 into fileds **API URL** and **API Token**. Create a super admin user name and password by entering information in field **Username** and **Password**. And click **Test Connection & Udpate Setting**.
 4. Message **Successfully Connected & Setting Updated** will be printed once front UI successfully connected with backend cloud resource. The configuration file has been updated to automatically display corresponding information upon future launches of the webUI.
 ![config-setting](../images/API-Config-setting.png)
 5. Restart the webUI in the background to ensure that all functionalities take effect.

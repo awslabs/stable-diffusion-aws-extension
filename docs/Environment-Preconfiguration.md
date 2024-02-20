@@ -29,6 +29,7 @@ wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/ma
    * stable-diffusion-webui
    * stable-diffusion-aws-extension
    * sd-webui-controlnet
+   * sd_dreambooth_extension
 ```bash
 sh install.sh
 ```
