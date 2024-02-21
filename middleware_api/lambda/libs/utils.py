@@ -1,3 +1,5 @@
+import base64
+import json
 import logging
 
 import boto3
@@ -5,6 +7,7 @@ from botocore.exceptions import ClientError
 
 from libs.data_types import PARTITION_KEYS, User, Role
 
+encode_type = "utf-8"
 
 class KeyEncryptService:
 
@@ -113,3 +116,15 @@ def get_permissions_by_username(ddb_service, user_table, username):
             permissions[resource].add(action)
 
     return permissions
+
+
+def encode_last_key(last_evaluated_key):
+    if not last_evaluated_key:
+        return None
+    return base64.b64encode(json.dumps(last_evaluated_key).encode(encode_type)).decode(encode_type)
+
+
+def decode_last_key(last_evaluated_key):
+    if not last_evaluated_key:
+        return None
+    return json.loads(base64.b64decode(last_evaluated_key.encode(encode_type)).decode(encode_type))
