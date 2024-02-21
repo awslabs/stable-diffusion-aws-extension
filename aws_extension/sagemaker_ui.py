@@ -1109,9 +1109,10 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(target_task_type, username, usertoken):
+def load_inference_job_list(target_task_type, username, usertoken, first_load=True):
     inference_jobs = [None_Option_For_On_Cloud_Model]
-    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, usertoken,
+                                                                        first_load)
 
     temp_list = []
     for obj in inferences_jobs_list:
@@ -1122,10 +1123,7 @@ def load_inference_job_list(target_task_type, username, usertoken):
         status = obj.get('status')
         task_type = obj.get('taskType', 'txt2img')
         inference_job_id = obj.get('InferenceJobId')
-        # if filter_checkbox and task_type not in selected_types:
-        #     continue
-        if target_task_type == task_type:
-            temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
     # Sort the list based on completeTime in ascending order
     sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
     # Append the sorted combined strings to the txt2img_inference_job_ids list
@@ -1282,8 +1280,16 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username, username)
-                                              }, 'refresh_inference_job_down')
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, True)
+                                              }, 'refresh_inference_job_down', '⇤')
+
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, False)
+                                              }, 'refresh_inference_job_down_next', '➞')
 
                 delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
                 delete_inference_job_button.click(

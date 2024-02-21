@@ -1,7 +1,7 @@
 import { execFile } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import { promisify } from 'util';
-import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient, UpdateTableCommand } from '@aws-sdk/client-dynamodb';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import {
   GetRoleCommand,
@@ -25,6 +25,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
+import { UpdateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand";
 
 const execFilePromise = promisify(execFile);
 
@@ -69,14 +70,16 @@ export async function handler(event: Event, context: Object) {
 
 async function createAndCheckResources() {
   await createBucket();
-  await copyFiles();
   await createTables();
+  await createGlobalSecondaryIndex('SDInferenceJobTable');
   await createKms(
     'sd-extension-password-key',
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
   await createPolicyForOldRole();
+  // make copy files at last because it may take a long time
+  await copyFiles();
 }
 
 
@@ -302,7 +305,50 @@ async function createTables() {
     }
   }
 
+}
 
+async function createGlobalSecondaryIndex(tableName: string) {
+    const params: UpdateTableCommandInput = {
+        TableName: tableName,
+        AttributeDefinitions: [
+            {
+                AttributeName: "taskType",
+                AttributeType: "S"
+            },
+            {
+                AttributeName: "createTime",
+                AttributeType: "S"
+            }
+        ],
+        GlobalSecondaryIndexUpdates: [
+            {
+                Create: {
+                    IndexName: "taskType-createTime-index",
+                    KeySchema: [
+                        {
+                            AttributeName: "taskType",
+                            KeyType: "HASH"
+                        },
+                        {
+                            AttributeName: "createTime",
+                            KeyType: "RANGE"
+                        }
+                    ],
+                    Projection: {
+                        ProjectionType: "ALL"
+                    },
+                },
+            },
+        ],
+    };
+
+    try {
+        const command = new UpdateTableCommand(params);
+        const response = await ddbClient.send(command);
+        console.log("Success", response);
+    } catch (error) {
+        console.error("Error", error);
+    }
 }
 
 async function createBucket() {

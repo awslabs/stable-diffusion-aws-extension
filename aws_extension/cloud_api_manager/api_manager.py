@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 encode_type = "utf-8"
 string_separator = "___"
+last_evaluated_key = {}
 
 class CloudApiManager:
 
@@ -370,15 +371,33 @@ class CloudApiManager:
 
         return checkpoints
 
-    def list_all_inference_jobs_on_cloud(self, username, user_token=""):
+    def list_all_inference_jobs_on_cloud(self, target_task_type, username, user_token="", first_load=True):
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
+        params = {
             'username': username,
-        }, headers=self._get_headers_by_user(user_token))
+            'type': target_task_type,
+            'limit': 20,
+        }
+
+        global last_evaluated_key
+        last_key = f"{username}_{target_task_type}"
+        if first_load is False:
+            if last_key in last_evaluated_key and last_evaluated_key[last_key]:
+                params['last_evaluated_key'] = last_evaluated_key[last_key]
+            else:
+                return []
+        else:
+            last_evaluated_key[last_key] = None
+
+        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
+                                headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
+
+        last_evaluated_key[last_key] = resp['data']['last_evaluated_key']
+
         return resp['data']['inferences']
 
     def get_dataset_items_from_dataset(self, dataset_name, user_token=""):
