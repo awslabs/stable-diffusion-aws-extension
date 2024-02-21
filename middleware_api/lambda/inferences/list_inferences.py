@@ -46,7 +46,7 @@ def handler(event, ctx):
             'Limit': limit,
             'IndexName': "taskType-createTime-index",
             'KeyConditionExpression': Key('taskType').eq(inference_type),
-            "ScanIndexForward": True
+            "ScanIndexForward": False
         }
 
         if last_evaluated_key:
