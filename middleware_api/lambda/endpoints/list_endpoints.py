@@ -3,7 +3,7 @@ import os
 
 from common.ddb_service.client import DynamoDbUtilsService
 from libs.enums import EndpointStatus
-from common.response import ok, bad_request
+from common.response import ok, bad_request, unauthorized
 from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
 
@@ -44,7 +44,10 @@ def handler(event, ctx):
         if username:
             user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
-        requestor_name = event['requestContext']['authorizer']['username']
+        if 'username' not in event['headers']:
+            return unauthorized()
+        requestor_name = event['headers']['username']
+
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
             'kind': PARTITION_KEYS.role,

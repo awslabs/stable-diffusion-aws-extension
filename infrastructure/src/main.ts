@@ -92,10 +92,7 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-    });
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer');
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
@@ -120,7 +117,6 @@ export class Middleware extends Stack {
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
       passwordKeyAlias: authorizerLambda.passwordKeyAlias,
-      authorizer: authorizerLambda.authorizer,
       logLevel,
     });
 
@@ -149,7 +145,6 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
-      authorizer: authorizerLambda.authorizer,
       logLevel,
       resourceProvider,
     });
@@ -165,7 +160,6 @@ export class Middleware extends Stack {
       snsTopic: snsTopics.snsTopic,
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
-      authorizer: authorizerLambda.authorizer,
       logLevel,
       resourceProvider,
     });

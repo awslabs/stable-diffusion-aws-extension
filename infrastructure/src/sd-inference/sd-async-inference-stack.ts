@@ -3,7 +3,6 @@ import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
-  aws_apigateway,
   aws_dynamodb,
   aws_ecr,
   aws_sns,
@@ -59,7 +58,6 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
 }
@@ -126,7 +124,6 @@ export class SDAsyncInferenceStack {
               multiUserTable: props.multiUserTable,
               httpMethod: 'GET',
               srcRoot: srcRoot,
-              authorizer: props.authorizer,
               logLevel: props.logLevel,
             },
     );
@@ -140,7 +137,6 @@ export class SDAsyncInferenceStack {
               multiUserTable: props.multiUserTable,
               httpMethod: 'DELETE',
               srcRoot: srcRoot,
-              authorizer: props.authorizer,
               logLevel: props.logLevel,
             },
     );
@@ -162,7 +158,6 @@ export class SDAsyncInferenceStack {
       scope, 'ListInferenceJobs',
       {
         inferenceJobTable: props.sd_inference_job_table,
-        authorizer: props.authorizer,
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
         multiUserTable: props.multiUserTable,
@@ -183,7 +178,6 @@ export class SDAsyncInferenceStack {
               inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'POST',
               srcRoot: srcRoot,
-              authorizer: props.authorizer,
               s3Bucket: props.s3_bucket,
               userNotifySNS: props.snsTopic,
               inferenceECRUrl: inferenceECR_url,

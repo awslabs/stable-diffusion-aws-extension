@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok, bad_request, unauthorized
 from common.util import get_multi_query_params
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
@@ -49,7 +49,9 @@ def handler(event, context):
         if username:
             user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
-    requestor_name = event['requestContext']['authorizer']['username']
+    if 'username' not in event['headers']:
+        return unauthorized()
+    requestor_name = event['headers']['username']
 
     try:
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)

@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 
@@ -59,7 +58,7 @@ class Api:
             headers['Content-Type'] = 'application/json'
 
         if self.username:
-            headers['Authorization'] = f'Bearer {base64.b16encode(self.username.encode("utf-8")).decode("utf-8")}'
+            headers['username'] = self.username
 
         if self.debug:
             logger.info(f"{method} {url}")

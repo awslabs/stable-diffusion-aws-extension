@@ -1,4 +1,3 @@
-import base64
 import logging
 
 import requests
@@ -10,7 +9,6 @@ from utils import has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
-encode_type = "utf-8"
 string_separator = "___"
 
 class CloudApiManager:
@@ -26,9 +24,9 @@ class CloudApiManager:
                 'x-api-key': self.auth_manger.api_key,
                 'Content-Type': 'application/json',
             }
-        _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
+
         return {
-            'Authorization': _auth_token,
+            'username': user_token,
             'x-api-key': self.auth_manger.api_key,
             'Content-Type': 'application/json',
         }

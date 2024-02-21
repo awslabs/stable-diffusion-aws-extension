@@ -1,7 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
-  IAuthorizer,
   JsonSchemaType,
   JsonSchemaVersion,
   LambdaIntegration,
@@ -28,7 +27,6 @@ export interface CreateEndpointApiProps {
   srcRoot: string;
   inferenceECRUrl: string;
   commonLayer: LayerVersion;
-  authorizer: IAuthorizer;
   s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
@@ -49,7 +47,6 @@ export class CreateEndpointApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly inferenceECRUrl: string;
-  private readonly authorizer: IAuthorizer;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
@@ -64,7 +61,6 @@ export class CreateEndpointApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -300,7 +296,6 @@ export class CreateEndpointApi {
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,

@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import no_content
+from common.response import no_content, unauthorized
 from libs.data_types import PARTITION_KEYS
 from libs.utils import KeyEncryptService
 from create_user import _check_action_permission
@@ -24,7 +24,9 @@ def handler(event, ctx):
     body = json.loads(event['body'])
     user_name_list = body['user_name_list']
 
-    requestor_name = event['requestContext']['authorizer']['username']
+    if 'username' not in event['headers']:
+        return unauthorized()
+    requestor_name = event['headers']['username']
 
     for username in user_name_list:
         check_permission_resp = _check_action_permission(requestor_name, username)
