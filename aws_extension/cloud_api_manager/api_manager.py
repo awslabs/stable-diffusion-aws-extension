@@ -396,7 +396,10 @@ class CloudApiManager:
         raw_resp.raise_for_status()
         resp = raw_resp.json()
 
-        last_evaluated_key[last_key] = resp['data']['last_evaluated_key']
+        if 'last_evaluated_key' in resp['data']:
+            last_evaluated_key[last_key] = resp['data']['last_evaluated_key']
+        else:
+            last_evaluated_key[last_key] = None
 
         return resp['data']['inferences']
 
