@@ -390,21 +390,33 @@ class CloudApiManager:
         if last_key_cur not in last_evaluated_key:
             last_evaluated_key[last_key_cur] = []
 
+        last_key_cur_key = f"{username}_{target_task_type}_cur_key"
+        if last_key_cur_key not in last_evaluated_key:
+            last_evaluated_key[last_key_cur_key] = None
+
         last_key_next = f"{username}_{target_task_type}_next"
         if last_key_next not in last_evaluated_key:
             last_evaluated_key[last_key_next] = None
 
         if first_load == "next":
             if last_evaluated_key[last_key_next]:
+                last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
                 params['last_evaluated_key'] = last_evaluated_key[last_key_next]
             else:
                 return last_evaluated_key[last_key_cur]
         elif first_load == "previous":
             if len(last_evaluated_key[last_key_previous]) > 0:
-                params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
+                pre_key = last_evaluated_key[last_key_previous].pop()
+                if pre_key != last_evaluated_key[last_key_cur_key]:
+                    params['last_evaluated_key'] = pre_key
+                elif len(last_evaluated_key[last_key_previous]) > 0:
+                    params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
         else:
             last_evaluated_key[last_key_next] = None
             last_evaluated_key[last_key_previous] = []
+
+        if 'last_evaluated_key' in params:
+            last_evaluated_key[last_key_cur_key] = params['last_evaluated_key']
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
                                 headers=self._get_headers_by_user(user_token))
@@ -412,9 +424,6 @@ class CloudApiManager:
         resp = raw_resp.json()
 
         if 'last_evaluated_key' in resp['data']:
-            if first_load == "next" and resp['data']['last_evaluated_key']:
-                last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
-            # update last_evaluated_key form response
             last_evaluated_key[last_key_next] = resp['data']['last_evaluated_key']
         else:
             last_evaluated_key[last_key_next] = None
