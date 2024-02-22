@@ -8,6 +8,8 @@ import gradio
 import requests
 import base64
 import gradio as gr
+
+from aws_extension.cloud_api_manager.api_logger import ApiLogger
 from aws_extension.constant import MODEL_TYPE
 
 import utils
@@ -288,8 +290,30 @@ def query_inference_job_list(task_type: str = '', status: str = '',
 
 
 def get_inference_job(inference_job_id):
-    response = server_request(f'inferences/{inference_job_id}')
+    url = f'inferences/{inference_job_id}'
+    response = server_request(url)
     logger.debug(f"get_inference_job response {response}")
+    infer_id = ""
+    if 'data' in response.json():
+        infer_id = response.json()['data']['InferenceJobId']
+    api_logger = ApiLogger(
+        action='inference',
+        append=True,
+        infer_id=infer_id
+    )
+    headers = {
+        "x-api-key": get_variable_from_json('api_token'),
+        "Content-Type": "application/json"
+    }
+    api_gateway_url = get_variable_from_json('api_gateway_url')
+    api_logger.req_log(sub_action="GetInferenceJob",
+                       method='GET',
+                       path=f"{api_gateway_url}{url}",
+                       headers=headers,
+                       response=response,
+                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
+                            f"end request if data.status == succeed, "
+                            f"ID from previous step: CreateInference -> data -> inference -> id")
     return response.json()['data']
 
 
@@ -895,7 +919,7 @@ def update_prompt_with_lora(selected_items, prompt):
 
 
 def update_prompt_with_selected_model(selected_value, original_prompt, type, state_value = None):
-    """Update txt2img or img2img prompt with selecte model name
+    """Update txt2img or img2img prompt with selected model name
 
     Args:
         selected_value (gr.Dropdown): the selected dropdown
@@ -1076,6 +1100,12 @@ def delete_inference_job(selected_value):
         if resp.status_code != 204:
             gr.Error(f"Error deleting inference: {resp.json()['message']}")
         gr.Info(f"{inference_job_id} deleted successfully")
+        file_path = f"{os.getcwd()}/outputs/{inference_job_id}.md"
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        file_path = f"{os.getcwd()}/outputs/{inference_job_id}.html"
+        if os.path.exists(file_path):
+            os.remove(file_path)
     else:
         gr.Warning('Please select a inference job to delete')
 
@@ -1301,6 +1331,15 @@ def create_ui(is_img2img):
                     _js="delete_inference_job_confirm",
                     fn=delete_inference_job,
                     inputs=[inference_job_dropdown],
+                    outputs=[]
+                )
+
+                api_inference_job_button = ToolButton(value='API', elem_id="api_inference_job")
+                api_inference_job_cwd = ToolButton(value=os.getcwd(), elem_id="api_inference_job_path", visible=False)
+                api_inference_job_button.click(
+                    _js="download_inference_job_api_call",
+                    fn=None,
+                    inputs=[api_inference_job_cwd, inference_job_dropdown],
                     outputs=[]
                 )
 

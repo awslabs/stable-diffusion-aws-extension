@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 
 import utils
+from aws_extension.cloud_api_manager.api_logger import ApiLogger
 from aws_extension.cloud_infer_service.utils import InferManager
 from utils import get_variable_from_json
 
@@ -29,7 +30,6 @@ class SimpleSagemakerInfer(InferManager):
             return
 
         payload = {
-            # 'sagemaker_endpoint_name': sagemaker_endpoint,
             'user_id': userid,
             'inference_type': endpoint_type,
             'task_type': "txt2img" if is_txt2img else "img2img",
@@ -41,22 +41,49 @@ class SimpleSagemakerInfer(InferManager):
         }
         logger.debug(payload)
         inference_id = None
+        headers = {'x-api-key': api_key}
+        response = requests.post(f'{url}inferences', json=payload, headers=headers)
+        infer_id = ""
+        if 'data' in response.json():
+            infer_id = response.json()['data']['inference']['id']
+        api_logger = ApiLogger(
+            action='inference',
+            infer_id=infer_id
+        )
+        api_logger.req_log(sub_action="CreateInference",
+                           method='POST',
+                           path=f'{url}inferences',
+                           headers=headers,
+                           response=response,
+                           data=payload,
+                           desc="Create inference job on cloud")
 
-        response = requests.post(f'{url}inferences', json=payload, headers={'x-api-key': api_key})
-        logger.info(response.json())
         if response.status_code != 201:
             raise Exception(response.json()['message'])
 
         upload_param_response = response.json()['data']
         if 'inference' in upload_param_response and \
                 'api_params_s3_upload_url' in upload_param_response['inference']:
-            upload_s3_resp = requests.put(upload_param_response['inference']['api_params_s3_upload_url'],
-                                          data=sd_api_param_json)
+            api_params_s3_upload_url = upload_param_response['inference']['api_params_s3_upload_url']
+            upload_s3_resp = requests.put(api_params_s3_upload_url, data=sd_api_param_json)
             upload_s3_resp.raise_for_status()
+            api_logger.req_log(sub_action="UploadParameterToS3",
+                               method='PUT',
+                               path=api_params_s3_upload_url,
+                               data=sd_api_param_json,
+                               desc="Upload inference parameter to S3 by presigned URL,"
+                                    "URL from previous step: CreateInference -> data -> inference -> api_params_s3_upload_url")
             inference_id = upload_param_response['inference']['id']
             # start run infer
-            response = requests.put(f'{url}inferences/{inference_id}/start', json=payload,
-                                    headers={'x-api-key': api_key})
+            start_url = f'{url}inferences/{inference_id}/start'
+            response = requests.put(start_url, headers={'x-api-key': api_key})
+            api_logger.req_log(sub_action="StartInference",
+                               method='PUT',
+                               path=start_url,
+                               headers=headers,
+                               response=response,
+                               desc=f"Start inference job on cloud by ID ({inference_id}), ID from previous step: "
+                                    "CreateInference -> data -> inference -> id")
             if response.status_code not in [200, 202]:
                 logger.error(response.json())
                 raise Exception(response.json()['message'])

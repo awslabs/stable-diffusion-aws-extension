@@ -5,14 +5,14 @@ You only need to copy the relevant data structures and make minor modifications.
 
 ## Enable API Inference Debugger
 
-> Note: This feature will be enabled by default after `1.4.1`
-
-Login to EC2 with WebUI installed and execute the following command:
+If your WebUI interface does not display the API debugger button shown in the figure below,
+you may need to update the WebUI plugin code.
+Please switch to the plugin directory and execute the following command:
 
 ```Bash
 cd /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+git checkout main
 git pull
-git checkout api_debugger
 sudo systemctl restart sd-webui
 ```
 Wait for the WebUI to restart and complete within approximately 3 minutes.

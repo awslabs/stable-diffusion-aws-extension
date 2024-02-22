@@ -2,14 +2,12 @@
 
 ## 开启 API 推理调试器
 
-> 注意：该功能将在 `1.4.1` 之后默认开启
-
-登陆安装有 WebUI 的 EC2，执行以下命令：
+如果您的 WebUI 界面没有显示下图中的 API 调试器按钮，可能需要更新 WebUI 插件代码，请切换到插件目录，执行以下命令：
 
 ```bash
 cd /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+git checkout main
 git pull
-git checkout api_debugger
 sudo systemctl restart sd-webui
 ```
 
