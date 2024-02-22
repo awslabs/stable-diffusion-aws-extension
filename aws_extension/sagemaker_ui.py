@@ -310,8 +310,9 @@ def get_inference_job(inference_job_id):
                        path=f"{api_gateway_url}{url}",
                        headers=headers,
                        response=response,
-                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), ID from previous step: "
-                            "CreateInference -> data -> inference -> id")
+                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
+                            f"end request if data.status == succeed, "
+                            f"ID from previous step: CreateInference -> data -> inference -> id")
     return response.json()['data']
 
 
@@ -1134,27 +1135,23 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(target_task_type, username, usertoken):
+def load_inference_job_list(target_task_type, username, usertoken, first_load="first"):
     inference_jobs = [None_Option_For_On_Cloud_Model]
-    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, usertoken,
+                                                                        first_load)
 
     temp_list = []
     for obj in inferences_jobs_list:
-        if obj.get('completeTime') is None:
+        if obj.get('createTime') is None:
             complete_time = obj.get('startTime')
         else:
-            complete_time = obj.get('completeTime')
+            complete_time = obj.get('createTime')
         status = obj.get('status')
         task_type = obj.get('taskType', 'txt2img')
         inference_job_id = obj.get('InferenceJobId')
-        # if filter_checkbox and task_type not in selected_types:
-        #     continue
-        if target_task_type == task_type:
-            temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
-    # Sort the list based on completeTime in ascending order
-    sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
+        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
     # Append the sorted combined strings to the txt2img_inference_job_ids list
-    for item in sorted_list:
+    for item in temp_list:
         inference_jobs.append(item[1])
 
     return inference_jobs
@@ -1307,8 +1304,23 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username, username)
-                                              }, 'refresh_inference_job_down')
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "first")
+                                              }, 'refresh_inference_job_down', '⇤')
+
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "previous")
+                                              }, 'refresh_inference_job_down_previous', '←')
+
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "next")
+                                              }, 'refresh_inference_job_down_next', '→')
 
                 delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
                 delete_inference_job_button.click(

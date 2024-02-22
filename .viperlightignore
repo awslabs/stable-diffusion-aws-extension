@@ -5,5 +5,3 @@ workshop/ami-gen.sh
 README.md
 .github/workflows/
 infrastructure/.github/workflows/
-docs/en/developer-guide/api.md
-docs/zh/developer-guide/api.md

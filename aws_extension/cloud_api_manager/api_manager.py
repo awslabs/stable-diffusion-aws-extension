@@ -10,6 +10,7 @@ from utils import has_config
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 string_separator = "___"
+last_evaluated_key = {}
 
 class CloudApiManager:
 
@@ -368,15 +369,65 @@ class CloudApiManager:
 
         return checkpoints
 
-    def list_all_inference_jobs_on_cloud(self, username, user_token=""):
+    def list_all_inference_jobs_on_cloud(self, target_task_type, username, user_token="", first_load="first"):
         if not self.auth_manger.enableAuth:
             return []
 
-        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params={
+        params = {
             'username': username,
-        }, headers=self._get_headers_by_user(user_token))
+            'type': target_task_type,
+            'limit': 10,
+        }
+
+        global last_evaluated_key
+        last_key_previous = f"{username}_{target_task_type}_previous"
+        if last_key_previous not in last_evaluated_key:
+            last_evaluated_key[last_key_previous] = []
+
+        last_key_cur = f"{username}_{target_task_type}_cur"
+        if last_key_cur not in last_evaluated_key:
+            last_evaluated_key[last_key_cur] = []
+
+        last_key_cur_key = f"{username}_{target_task_type}_cur_key"
+        if last_key_cur_key not in last_evaluated_key:
+            last_evaluated_key[last_key_cur_key] = None
+
+        last_key_next = f"{username}_{target_task_type}_next"
+        if last_key_next not in last_evaluated_key:
+            last_evaluated_key[last_key_next] = None
+
+        if first_load == "next":
+            if last_evaluated_key[last_key_next]:
+                last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
+                params['last_evaluated_key'] = last_evaluated_key[last_key_next]
+            else:
+                return last_evaluated_key[last_key_cur]
+        elif first_load == "previous":
+            if len(last_evaluated_key[last_key_previous]) > 0:
+                pre_key = last_evaluated_key[last_key_previous].pop()
+                if pre_key != last_evaluated_key[last_key_cur_key]:
+                    params['last_evaluated_key'] = pre_key
+                elif len(last_evaluated_key[last_key_previous]) > 0:
+                    params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
+        else:
+            last_evaluated_key[last_key_next] = None
+            last_evaluated_key[last_key_previous] = []
+
+        if 'last_evaluated_key' in params:
+            last_evaluated_key[last_key_cur_key] = params['last_evaluated_key']
+
+        raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
+                                headers=self._get_headers_by_user(user_token))
         raw_resp.raise_for_status()
         resp = raw_resp.json()
+
+        if 'last_evaluated_key' in resp['data']:
+            last_evaluated_key[last_key_next] = resp['data']['last_evaluated_key']
+        else:
+            last_evaluated_key[last_key_next] = None
+
+        last_evaluated_key[last_key_cur] = resp['data']['inferences']
+
         return resp['data']['inferences']
 
     def get_dataset_items_from_dataset(self, dataset_name, user_token=""):

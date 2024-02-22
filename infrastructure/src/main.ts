@@ -79,6 +79,8 @@ export class Middleware extends Stack {
       'ResourcesProvider',
       {
         bucketName: s3BucketName.valueAsString,
+        // when this version updated, resource manager will be executed
+        version: '1.4.0',
       },
     );
 
