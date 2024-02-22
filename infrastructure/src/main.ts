@@ -78,9 +78,12 @@ export class Middleware extends Stack {
       this,
       'ResourcesProvider',
       {
+        // when props updated, resource manager will be executed
+        // ecrImageTag is not used in the resource manager
+        // but if it changes, the resource manager will be executed with 'Update'
+        // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        // when this version updated, resource manager will be executed
-        version: '1.4.0',
+        ecrImageTag: ecrImageTagParam.valueAsString,
       },
     );
 
