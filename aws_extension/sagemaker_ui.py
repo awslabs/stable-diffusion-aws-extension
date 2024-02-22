@@ -1153,7 +1153,9 @@ def load_inference_job_list(target_task_type, username, usertoken, first_load="f
         status = obj.get('status')
         task_type = obj.get('taskType', 'txt2img')
         inference_job_id = obj.get('InferenceJobId')
-        temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
+        # Compatible with lower versions of APIs without type filters
+        if target_task_type == task_type:
+            temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
     # Append the sorted combined strings to the txt2img_inference_job_ids list
     for item in temp_list:
         inference_jobs.append(item[1])
