@@ -20,15 +20,15 @@ Use the following steps to deploy this solution on AWS.
 
 ### Step 1 - Linux：Update Stable Diffusion WebUI (Linux).
 
-1. Download the CloudFormation Template from [link](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)
+1. Download the CloudFormation Template from [link](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"}
 
-2. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/)
+2. Sign in to the [AWS Management Console](https://console.aws.amazon.com/){:target="_blank"} and go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/){:target="_blank"}
 
 3. On the Stacks page, choose **Create stack**, and then choose **With new resources (standard)**.
 
 4. On the **Specify template** page, choose **Template is ready**, choose **Upload a template file**, and then browse for the template that is downloaded in step 1, and then choose **Next**.
 
-5. On the **Specify stack details** page, type a stack name in the Stack name box. Choose an EC2 instance key pair, then choose **Next**.
+5. On the **Specify stack details** page, type a stack name in the Stack name box, then choose **Next**.
 
 6. On the **Configure stack options** page, choose **Next**.
 
