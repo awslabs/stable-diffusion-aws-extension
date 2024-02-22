@@ -96,7 +96,7 @@ cd stable-diffusion-webui
 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)，选择成功部署的本解决方案的主堆栈。
 2. 打开输出（Outputs）标签页，找到**APIGatewayUrl**和**ApiGatewayUrlToken**对应的数值，并复制。
 3. 在启动webUI的环境目录下，找到文件sagemaker_ui.json，更新文件中的API配置数值并保存。
-4. 启动Stabel Diffusion webUI，新的链接即可生效。
+4. 启动 Stable Diffusion WebUI，新的链接即可生效。
 
 
 

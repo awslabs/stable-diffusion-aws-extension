@@ -48,7 +48,7 @@ Use the following steps to deploy this solution on AWS.
 7. In the downloaded `stable-diffusion-webui` folder, run `webui-user.bat`.
 
 
-### Step 2：Dlete the existing Stable Diffusion AWS extension template in CloudFormation.
+### Step 2：Delete the existing Stable Diffusion AWS extension template in CloudFormation.
 
 1. Open the AWS Management Console [(https://console.aws.amazon.com)](https://console.aws.amazon.com) and log in.
 2. Select "CloudFormation" from the service menu.
