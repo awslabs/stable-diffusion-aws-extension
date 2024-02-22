@@ -28,7 +28,7 @@ Use the following steps to deploy this solution on AWS.
 
 4. On the **Specify template** page, choose **Template is ready**, choose **Upload a template file**, and then browse for the template that is downloaded in step 1, and then choose **Next**.
 
-5. On the **Specify stack details** page, type a stack name in the Stack name box. Choose an EC2 instance key pair, then choose **Next**.
+5. On the **Specify stack details** page, type a stack name in the Stack name box, then choose **Next**.
 
 6. On the **Configure stack options** page, choose **Next**.
 
