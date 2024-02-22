@@ -76,7 +76,14 @@ def on_ui_tabs():
                     with gr.Tab(label='Role Management'):
                         _, role_form, role_table = role_settings_tab()
                     with gr.Row():
+<<<<<<< HEAD
                         version_label = gr.Label(label='Version', value=f'Client Version: {client_api_version}')
+=======
+                        version_label = gr.Label(
+                            label='Version',
+                            value=f'Client Version: {client_api_version}',
+                        )
+>>>>>>> dev
         with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
@@ -99,17 +106,19 @@ def on_ui_tabs():
 
         def get_version_info():
             if shared.demo.server_app.api_version == client_api_version:
-                return f'Client & API Version: {client_api_version}'
+                return f'Front-end & Middleware API Version: {client_api_version}'
 
-            version = f'Client Version {client_api_version}'
+            version = f'Front-end Version {client_api_version}'
 
             if shared.demo.server_app.api_version:
 
                 if client_api_version > shared.demo.server_app.api_version:
-                    version += f' > API Version {shared.demo.server_app.api_version}, Please update the API'
+                    version += (f' > Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Middleware API')
 
                 if client_api_version < shared.demo.server_app.api_version:
-                    version += f' < API Version {shared.demo.server_app.api_version}, Please update the Extension'
+                    version += (f' < Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Front-end')
 
             return version
 
@@ -220,7 +229,7 @@ def api_setting_tab():
                 virus-free, operational, or compatible with your production environment and standards.""")
 
     with gr.Row(visible=has_config()):
-        whoami_label = gr.Label(label='whoami')
+        whoami_label = gr.Label(label='Current User')
 
     with gr.Row(visible=has_config()):
         logout_btn = gr.Button(value='Logout')
