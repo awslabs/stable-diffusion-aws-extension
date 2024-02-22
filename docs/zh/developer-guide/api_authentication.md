@@ -20,7 +20,7 @@ username: admin
 
 ### 1.4.0 或更低版本
 
-应在 HTTP 标头中包含 `Authorization` 如下所示：
+应在 HTTP 标头中包含 `Authorization`，如下所示：
 
 ```config
 Authorization: Bearer {TOKEN}
