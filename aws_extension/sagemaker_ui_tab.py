@@ -8,11 +8,12 @@ import requests
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
+from modules import shared
 
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-from aws_extension.cloud_api_manager.api import api
+from aws_extension.cloud_api_manager.api import api, client_api_version
 from aws_extension.cloud_api_manager.api_manager import api_manager
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
@@ -74,6 +75,11 @@ def on_ui_tabs():
                         _, user_table, user_role_dropdown = user_settings_tab()
                     with gr.Tab(label='Role Management'):
                         _, role_form, role_table = role_settings_tab()
+                    with gr.Row():
+                        version_label = gr.Label(
+                            label='Version',
+                            value=f'Client Version: {client_api_version}',
+                        )
         with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
@@ -93,6 +99,24 @@ def on_ui_tabs():
         with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row():
                 dataset_asset = dataset_tab()
+
+        def get_version_info():
+            if shared.demo.server_app.api_version == client_api_version:
+                return f'Front-end & Middleware API Version: {client_api_version}'
+
+            version = f'Front-end Version {client_api_version}'
+
+            if shared.demo.server_app.api_version:
+
+                if client_api_version > shared.demo.server_app.api_version:
+                    version += (f' > Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Middleware API')
+
+                if client_api_version < shared.demo.server_app.api_version:
+                    version += (f' < Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Front-end')
+
+            return version
 
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
@@ -122,7 +146,8 @@ def on_ui_tabs():
                 _list_users(req.username, None, None)[:user_table_size], \
                 _get_roles_table(req.username)[:10], \
                 gr.update(choices=roles(req.username)), \
-                f'Welcome, {req.username}'
+                f'Welcome, {req.username}!', \
+                get_version_info()
 
         sagemaker_interface.load(ui_tab_setup, [], [
             config_form,
@@ -135,7 +160,8 @@ def on_ui_tabs():
             user_table,
             role_table,
             user_role_dropdown,
-            whoami_label
+            whoami_label,
+            version_label
         ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
@@ -199,7 +225,7 @@ def api_setting_tab():
                 virus-free, operational, or compatible with your production environment and standards.""")
 
     with gr.Row(visible=has_config()):
-        whoami_label = gr.Label(label='whoami')
+        whoami_label = gr.Label(label='Current User')
 
     with gr.Row(visible=has_config()):
         logout_btn = gr.Button(value='Logout')
