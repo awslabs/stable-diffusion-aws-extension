@@ -1562,10 +1562,7 @@
 <h3 id="step-0-linux-deploy-stable-diffusion-webui-linux">Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).</h3>
 <ol>
 <li>
-<p>Download the CloudFormation Template from <a href="https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml">link</a></p>
-</li>
-<li>
-<p>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and go to <a href="https://console.aws.amazon.com/cloudformation/">CloudFormation console</a></p>
+<p>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml" target="_blank">WebUI on EC2</a> to launch the AWS CloudFormation template.</p>
 </li>
 <li>
 <p>On the Stacks page, choose <strong>Create stack</strong>, and then choose <strong>With new resources (standard)</strong>.</p>
@@ -1574,7 +1571,7 @@
 <p>On the <strong>Specify template</strong> page, choose <strong>Template is ready</strong>, choose <strong>Upload a template file</strong>, and then browse for the template that is downloaded in step 1, and then choose <strong>Next</strong>.</p>
 </li>
 <li>
-<p>On the <strong>Specify stack details</strong> page, type a stack name in the Stack name box. Choose an EC2 instance key pair, then choose <strong>Next</strong>.</p>
+<p>On the <strong>Specify stack details</strong> page, type a stack name in the Stack name box, then choose <strong>Next</strong>.</p>
 </li>
 <li>
 <p>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</p>
