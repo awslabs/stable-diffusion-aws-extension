@@ -10,6 +10,7 @@ import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
   bucketName?: string;
+  version?: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -87,6 +88,7 @@ export class ResourceProvider extends Construct {
       effect: Effect.ALLOW,
       actions: [
         'dynamodb:CreateTable',
+        'dynamodb:UpdateTable',
         'sns:CreateTopic',
         'iam:ListRolePolicies',
         'iam:PutRolePolicy',

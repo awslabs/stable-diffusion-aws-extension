@@ -3,7 +3,7 @@
 You are responsible for the cost of AWS services used when running this solution. 
 
 ## Use auto-scale Amazon SageMaker Inference Endpoint for Image Inference
-As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024*1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is **$416.85** per month.
+As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024*1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is **$310.45** per month.
 
 |  Service  | Usage | Cost/Month | 
 |  ----  | ----  | ----  |  
