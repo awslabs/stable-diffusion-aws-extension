@@ -1462,13 +1462,10 @@
 
 <p>由于推理参数众多，建议使用 <code>API 推理调试器</code> 辅助推理作业的开发。<code>API 推理调试器</code> 会完整记录真实的推理流程和参数，您只需要复制相关数据结构，做少许更改即可。</p>
 <h2 id="api">开启 API 推理调试器</h2>
-<blockquote>
-<p>注意：该功能将在 <code>1.4.1</code> 之后默认开启</p>
-</blockquote>
-<p>登陆安装有 WebUI 的 EC2，执行以下命令：</p>
+<p>如果您的 WebUI 界面没有显示下图中的 API 调试器按钮，可能需要更新 WebUI 插件代码，请切换到插件目录，执行以下命令：</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+git<span class="w"> </span>checkout<span class="w"> </span>main
 git<span class="w"> </span>pull
-git<span class="w"> </span>checkout<span class="w"> </span>api_debugger
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>sd-webui
 </code></pre></div>
 <p>等待重启 WebUI 完成，大约3分钟内。</p>

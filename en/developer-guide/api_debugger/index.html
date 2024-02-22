@@ -1463,13 +1463,12 @@ it is recommended to use <code>API Inference Debugger</code> to assist with the 
 The <code>API Inference Debugger</code> will fully record the actual inference process and parameters.
 You only need to copy the relevant data structures and make minor modifications.</p>
 <h2 id="enable-api-inference-debugger">Enable API Inference Debugger</h2>
-<blockquote>
-<p>Note: This feature will be enabled by default after <code>1.4.1</code></p>
-</blockquote>
-<p>Login to EC2 with WebUI installed and execute the following command:</p>
+<p>If your WebUI interface does not display the API debugger button shown in the figure below,
+you may need to update the WebUI plugin code.
+Please switch to the plugin directory and execute the following command:</p>
 <p><div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+git<span class="w"> </span>checkout<span class="w"> </span>main
 git<span class="w"> </span>pull
-git<span class="w"> </span>checkout<span class="w"> </span>api_debugger
 sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>sd-webui
 </code></pre></div>
 Wait for the WebUI to restart and complete within approximately 3 minutes.</p>
