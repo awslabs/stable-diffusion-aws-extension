@@ -71,6 +71,7 @@ export class ListInferencesApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.inferenceJobTable.tableArn,
+        `${this.inferenceJobTable.tableArn}/*`,
         this.multiUserTable.tableArn,
       ],
     }));
