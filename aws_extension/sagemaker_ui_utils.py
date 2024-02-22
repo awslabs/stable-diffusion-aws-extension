@@ -210,7 +210,7 @@ def on_after_component_callback(component, **_kwargs):
         )
         sagemaker_ui.embedding_dropdown = None
 
-def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_args, elem_id):
+def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_args, elem_id, symbol = '\U0001f504'):
     def refresh(pr: gradio.Request):
         refresh_method(pr.username)
         args = refreshed_args(pr.username) if callable(refreshed_args) else refreshed_args
@@ -220,8 +220,7 @@ def create_refresh_button_by_user(refresh_component, refresh_method, refreshed_a
 
         return gr.update(**(args or {}))
 
-    refresh_symbol = '\U0001f504'  # 🔄
-    refresh_button = ToolButton(value=refresh_symbol, elem_id=elem_id)
+    refresh_button = ToolButton(value=symbol, elem_id=elem_id)
     refresh_button.click(
         fn=refresh,
         inputs=[],

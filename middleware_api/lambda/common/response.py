@@ -85,8 +85,8 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         payload['body'] = json.dumps(body)
 
-    logging.info("Lambda Response Payload:")
-    logging.info(json.dumps(payload))
+    logger.info("Lambda Response Payload:")
+    logger.info(payload['body'])
 
     return payload
 
