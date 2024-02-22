@@ -76,14 +76,10 @@ def on_ui_tabs():
                     with gr.Tab(label='Role Management'):
                         _, role_form, role_table = role_settings_tab()
                     with gr.Row():
-<<<<<<< HEAD
-                        version_label = gr.Label(label='Version', value=f'Client Version: {client_api_version}')
-=======
                         version_label = gr.Label(
                             label='Version',
                             value=f'Client Version: {client_api_version}',
                         )
->>>>>>> dev
         with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
