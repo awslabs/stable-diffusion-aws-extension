@@ -6,7 +6,6 @@ import time
 import json
 import gradio
 import requests
-import base64
 import gradio as gr
 
 from aws_extension.cloud_api_manager.api_logger import ApiLogger
@@ -385,10 +384,9 @@ def get_model_list_by_type(model_type, username=""):
         url += f"&types={model_type}"
 
     try:
-        encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
-            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+            'username': username
         })
         response.raise_for_status()
         json_response = response.json()
@@ -480,14 +478,12 @@ def refresh_all_models(username):
     if not has_config():
         return []
 
-    encode_type = "utf-8"
-
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
             response = requests.get(url=url, headers={
                 'x-api-key': api_key,
-                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+                'username': username,
             })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")

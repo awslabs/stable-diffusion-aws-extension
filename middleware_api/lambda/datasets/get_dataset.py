@@ -2,7 +2,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, not_found, forbidden
+from common.response import ok, not_found, forbidden, unauthorized
 from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
@@ -33,7 +33,10 @@ def handler(event, context):
 
     dataset_info = DatasetInfo(**dataset_info_rows)
 
-    requester_name = event['requestContext']['authorizer']['username']
+    if 'username' not in event['headers']:
+        return unauthorized()
+    requester_name = event['headers']['username']
+
     requestor_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requester_name)
 

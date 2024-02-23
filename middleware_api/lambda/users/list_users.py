@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import ok, unauthorized
 from libs.data_types import User, PARTITION_KEYS, Role
 from libs.utils import KeyEncryptService, get_permissions_by_username
 
@@ -32,7 +32,10 @@ def handler(event, ctx):
             'show_password'] else 0
         username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-    requester_name = event['requestContext']['authorizer']['username']
+    if 'username' not in event['headers']:
+        return unauthorized()
+    requester_name = event['headers']['username']
+
     requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
     if not username:
         result = ddb_service.query_items(user_table,

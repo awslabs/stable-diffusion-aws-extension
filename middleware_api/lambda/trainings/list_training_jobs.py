@@ -3,7 +3,7 @@ import logging
 import os
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok, bad_request, unauthorized
 from common.util import get_multi_query_params
 from libs.data_types import TrainJob
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
@@ -35,7 +35,10 @@ def handler(event, context):
     if resp is None or len(resp) == 0:
         return ok(data={'trainJobs': []})
 
-    requestor_name = event['headers']['creator']
+    if 'username' not in event['headers']:
+        return unauthorized()
+    requestor_name = event['headers']['username']
+
     try:
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)

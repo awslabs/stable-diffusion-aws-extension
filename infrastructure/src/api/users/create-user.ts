@@ -22,7 +22,6 @@ export interface CreateUserApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -37,7 +36,6 @@ export class CreateUserApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateUserApiProps) {
@@ -49,7 +47,6 @@ export class CreateUserApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -185,7 +182,6 @@ export class CreateUserApi {
     );
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
