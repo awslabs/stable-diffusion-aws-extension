@@ -230,7 +230,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             inference_parameters = {}
             inference_parameters["parameters"] = json_body["parameters"]
             inference_parameters["info"] = json_body["info"]
-            inference_parameters["endpont_name"] = endpoint_name
+            inference_parameters["endpoint_name"] = endpoint_name
             inference_parameters["inference_id"] = inference_id
 
             json_file_name = f"/tmp/{inference_id}_param.json"
@@ -270,7 +270,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             inference_parameters = {}
             if taskType == "extra-single-image":
                 inference_parameters["html_info"] = json_body["html_info"]
-            inference_parameters["endpont_name"] = endpoint_name
+            inference_parameters["endpoint_name"] = endpoint_name
             inference_parameters["inference_id"] = inference_id
 
             json_file_name = f"/tmp/{inference_id}_param.json"

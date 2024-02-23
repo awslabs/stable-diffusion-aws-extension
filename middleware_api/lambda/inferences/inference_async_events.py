@@ -10,6 +10,8 @@ from PIL import Image
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
+from inferences.start_inference_job import upload_file_to_s3, update_inference_job_table, decode_base64_to_image
+
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
 
@@ -35,33 +37,6 @@ def get_bucket_and_key(s3uri):
     return bucket, key
 
 
-def decode_base64_to_image(encoding):
-    if encoding.startswith("data:image/"):
-        encoding = encoding.split(";")[1].split(",")[1]
-    return Image.open(io.BytesIO(base64.b64decode(encoding)))
-
-
-def update_inference_job_table(inference_id, key, value):
-    # Update the inference DDB for the job status
-    response = inference_table.get_item(
-        Key={
-            "InferenceJobId": inference_id,
-        })
-    inference_resp = response['Item']
-    if not inference_resp:
-        raise Exception(f"Failed to get the inference job item with inference id: {inference_id}")
-
-    response = inference_table.update_item(
-        Key={
-            "InferenceJobId": inference_id,
-        },
-        UpdateExpression=f"set #k = :r",
-        ExpressionAttributeNames={'#k': key},
-        ExpressionAttributeValues={':r': value},
-        ReturnValues="UPDATED_NEW"
-    )
-
-
 def getInferenceJob(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")
@@ -71,7 +46,6 @@ def getInferenceJob(inference_job_id):
         resp = inference_table.query(
             KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
         )
-        (resp)
         record_list = resp['Items']
         if len(record_list) == 0:
             logger.error(f"No inference job info item for id: {inference_job_id}")
@@ -81,25 +55,6 @@ def getInferenceJob(inference_job_id):
         logger.error(
             f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
         raise
-
-
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Add the directory to the object_name
-    if directory:
-        object_name = f"{directory}/{object_name}"
-
-    # Upload the file
-    try:
-        s3_client.upload_file(file_name, bucket, object_name)
-        print(f"File {file_name} uploaded to {bucket}/{object_name}")
-    except Exception as e:
-        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
-        return False
-    return True
 
 
 def get_topic_arn(sns, topic_name):
@@ -112,12 +67,9 @@ def get_topic_arn(sns, topic_name):
 
 def send_message_to_sns(message_json):
     try:
-        message = message_json
-        sns_topic_name = SNS_TOPIC
-
-        sns_topic_arn = get_topic_arn(sns, sns_topic_name)
+        sns_topic_arn = get_topic_arn(sns, SNS_TOPIC)
         if sns_topic_arn is None:
-            print(f"No topic found with name {sns_topic_name}")
+            print(f"No topic found with name {SNS_TOPIC}")
             return {
                 'statusCode': 404,
                 'body': json.dumps('No topic found')
@@ -125,18 +77,18 @@ def send_message_to_sns(message_json):
 
         response = sns.publish(
             TopicArn=sns_topic_arn,
-            Message=json.dumps(message),
+            Message=json.dumps(message_json),
             Subject='Inference Error occurred Information',
         )
 
-        print(f"Message sent to SNS topic: {sns_topic_name}")
+        print(f"Message sent to SNS topic: {SNS_TOPIC}")
         return {
             'statusCode': 200,
             'body': json.dumps('Message sent successfully')
         }
 
     except ClientError as e:
-        print(f"Error sending message to SNS topic: {sns_topic_name}")
+        print(f"Error sending message to SNS topic: {SNS_TOPIC}")
         return {
             'statusCode': 500,
             'body': json.dumps('Error sending message'),
@@ -145,7 +97,6 @@ def send_message_to_sns(message_json):
 
 
 def handler(event, context):
-
     logger.info(json.dumps(event))
 
     message = event['Records'][0]['Sns']['Message']
@@ -153,7 +104,7 @@ def handler(event, context):
 
     if 'invocationStatus' not in message:
         # maybe a message from SNS for test
-        print("Not a valid message")
+        logger.error("Not a valid sagemaker message")
         return
 
     invocation_status = message["invocationStatus"]
@@ -189,7 +140,6 @@ def handler(event, context):
 
             if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
                 caption = json_body['caption']
-                method = taskType
                 # Update the DynamoDB table for the caption
                 inference_table.update_item(
                     Key={
@@ -257,7 +207,7 @@ def handler(event, context):
                 inference_parameters = {}
                 inference_parameters["parameters"] = json_body["parameters"]
                 inference_parameters["info"] = json_body["info"]
-                inference_parameters["endpont_name"] = endpoint_name
+                inference_parameters["endpoint_name"] = endpoint_name
                 inference_parameters["inference_id"] = inference_id
                 inference_parameters["sns_info"] = message
 
@@ -301,7 +251,7 @@ def handler(event, context):
                 inference_parameters = {}
                 if taskType == "extra-single-image":
                     inference_parameters["html_info"] = json_body["html_info"]
-                inference_parameters["endpont_name"] = endpoint_name
+                inference_parameters["endpoint_name"] = endpoint_name
                 inference_parameters["inference_id"] = inference_id
                 inference_parameters["sns_info"] = message
 

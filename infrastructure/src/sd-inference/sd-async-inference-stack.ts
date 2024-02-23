@@ -344,7 +344,7 @@ export class SDAsyncInferenceStack {
         entry: `${srcRoot}/inferences`,
         runtime: lambda.Runtime.PYTHON_3_9,
         handler: 'handler',
-        index: 'inference_events.py',
+        index: 'inference_async_events.py',
         memorySize: 10240,
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
