@@ -56,12 +56,12 @@ Method Three:
 
     > **Note:** The format of the drop down list is：endpoint name+ deployment status (including Creating/Failed/InService)+deployment completing time.
 
-6. It will take around 3 mins for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
+6. It will take around 3 minutes for endpoint deployment status changing to *InService*, which indicates that the endpoint has been successfully deployed.
 
 
 ### Delete deployed endpoints
-1. Refresh and select endpoint(s) under dropdown list of **Select Cloud SageMaker Endpoint**.
-2. Click **Delete**, message *Endpoint delete completed* will appear on left side, which indicates that the selected endpoint(s) havs been successfully deleted.
+1. Refresh and select endpoint(s) under the dropdown list of **Select Cloud SageMaker Endpoint**.
+2. Click **Delete**, message *Endpoint delete completed* will appear on the left side, which indicates that the selected endpoint(s) has been successfully deleted.
 
 
 
