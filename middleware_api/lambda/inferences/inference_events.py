@@ -24,7 +24,7 @@ inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
 endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 sns = boto3.client('sns')
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 
@@ -144,10 +144,11 @@ def send_message_to_sns(message_json):
         }
 
 
-def lambda_handler(event, context):
-    print(json.dumps(event))
+def handler(event, context):
+
+    logger.info(json.dumps(event))
+
     message = event['Records'][0]['Sns']['Message']
-    print("From SNS: " + str(message))
     message = json.loads(message)
 
     if 'invocationStatus' not in message:

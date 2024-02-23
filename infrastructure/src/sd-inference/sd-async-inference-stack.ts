@@ -341,13 +341,10 @@ export class SDAsyncInferenceStack {
       scope,
       'InferenceResultNotification',
       {
-        entry: path.join(
-          __dirname,
-          '../../../middleware_api/lambda/inferences/result_notification',
-        ),
+        entry: `${srcRoot}/inferences`,
         runtime: lambda.Runtime.PYTHON_3_9,
-        handler: 'lambda_handler',
-        index: 'app.py', // optional, defaults to 'index.py'
+        handler: 'handler',
+        index: 'inference_events.py',
         memorySize: 10240,
         ephemeralStorageSize: Size.gibibytes(10),
         timeout: Duration.seconds(900),
@@ -364,12 +361,7 @@ export class SDAsyncInferenceStack {
           INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
           LOG_LEVEL: props.logLevel.valueAsString,
         },
-        bundling: {
-          buildArgs: {
-            PIP_INDEX_URL: 'https://pypi.org/simple/',
-            PIP_EXTRA_INDEX_URL: 'https://pypi.org/simple/',
-          },
-        },
+        layers: [props.commonLayer],
         logRetention: RetentionDays.ONE_WEEK,
       },
     );
