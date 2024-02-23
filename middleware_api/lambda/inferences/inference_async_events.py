@@ -12,81 +12,19 @@ from botocore.exceptions import ClientError
 from inferences.start_inference_job import upload_file_to_s3, update_inference_job_table, decode_base64_to_image, \
     update_ddb_image
 
+ddb_client = boto3.resource('dynamodb')
 s3_resource = boto3.resource('s3')
 s3_client = boto3.client('s3')
+sns = boto3.client('sns')
 
 INFERENCE_JOB_TABLE = os.environ.get('INFERENCE_JOB_TABLE')
-DDB_TRAINING_TABLE_NAME = os.environ.get('DDB_TRAINING_TABLE_NAME')
-DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET')
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
 
-ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table(INFERENCE_JOB_TABLE)
-endpoint_deployment_table = ddb_client.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
-sns = boto3.client('sns')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
-
-def get_bucket_and_key(s3uri):
-    pos = s3uri.find('/', 5)
-    bucket = s3uri[5: pos]
-    key = s3uri[pos + 1:]
-    return bucket, key
-
-
-def get_inference_job(inference_job_id):
-    if not inference_job_id:
-        logger.error("Invalid inference job id")
-        raise ValueError("Inference job id must not be None or empty")
-
-    response = inference_table.get_item(Key={'InferenceJobId': inference_job_id})
-
-    if not response['Item']:
-        logger.error(f"Inference job not found with id: {inference_job_id}")
-        raise ValueError(f"Inference job not found with id: {inference_job_id}")
-    return response['Item']
-
-
-def get_topic_arn(sns, topic_name):
-    response = sns.list_topics()
-    for topic in response['Topics']:
-        if topic['TopicArn'].split(':')[-1] == topic_name:
-            return topic['TopicArn']
-    return None
-
-
-def send_message_to_sns(message_json):
-    try:
-        sns_topic_arn = get_topic_arn(sns, SNS_TOPIC)
-        if sns_topic_arn is None:
-            print(f"No topic found with name {SNS_TOPIC}")
-            return {
-                'statusCode': 404,
-                'body': json.dumps('No topic found')
-            }
-
-        sns.publish(
-            TopicArn=sns_topic_arn,
-            Message=json.dumps(message_json),
-            Subject='Inference Error occurred Information',
-        )
-
-        print(f"Message sent to SNS topic: {SNS_TOPIC}")
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Message sent successfully')
-        }
-
-    except ClientError as e:
-        print(f"Error sending message to SNS topic: {SNS_TOPIC}")
-        return {
-            'statusCode': 500,
-            'body': json.dumps('Error sending message'),
-            'error': str(e)
-        }
 
 
 def handler(event, context):
@@ -118,8 +56,8 @@ def handler(event, context):
 
     print(f"Sagemaker Out Body: {body}")
 
-    json_body = json.loads(body)
-    if json_body is None:
+    sagemaker_out = json.loads(body)
+    if sagemaker_out is None:
         update_inference_job_table(inference_id, 'status', 'failed')
         message_json = {
             'InferenceJobId': inference_id,
@@ -133,33 +71,92 @@ def handler(event, context):
     job = get_inference_job(inference_id)
     task_type = job.get('taskType', 'txt2img')
 
-    parse_result(json_body, inference_id, task_type, endpoint_name)
+    parse_result(sagemaker_out, inference_id, task_type, endpoint_name)
 
 
-def parse_result(json_body, inference_id, task_type, endpoint_name):
+def get_bucket_and_key(s3uri):
+    pos = s3uri.find('/', 5)
+    bucket = s3uri[5: pos]
+    key = s3uri[pos + 1:]
+    return bucket, key
+
+
+def get_inference_job(inference_job_id):
+    if not inference_job_id:
+        logger.error("Invalid inference job id")
+        raise ValueError("Inference job id must not be None or empty")
+
+    response = inference_table.get_item(Key={'InferenceJobId': inference_job_id})
+
+    if not response['Item']:
+        logger.error(f"Inference job not found with id: {inference_job_id}")
+        raise ValueError(f"Inference job not found with id: {inference_job_id}")
+    return response['Item']
+
+
+def get_topic_arn():
+    response = sns.list_topics()
+    for topic in response['Topics']:
+        if topic['TopicArn'].split(':')[-1] == SNS_TOPIC:
+            return topic['TopicArn']
+    return None
+
+
+def send_message_to_sns(message_json):
+    try:
+        sns_topic_arn = get_topic_arn()
+        if sns_topic_arn is None:
+            print(f"No topic found with name {SNS_TOPIC}")
+            return {
+                'statusCode': 404,
+                'body': json.dumps('No topic found')
+            }
+
+        sns.publish(
+            TopicArn=sns_topic_arn,
+            Message=json.dumps(message_json),
+            Subject='Inference Error occurred Information',
+        )
+
+        print(f"Message sent to SNS topic: {SNS_TOPIC}")
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Message sent successfully')
+        }
+
+    except ClientError as e:
+        print(f"Error sending message to SNS topic: {SNS_TOPIC}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps('Error sending message'),
+            'error': str(e)
+        }
+
+
+def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
     update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
     try:
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
-            interrogate_clip_interrogate_deepbooru(json_body, inference_id)
+            interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
         elif task_type in ["txt2img", "img2img"]:
-            txt2_img_img(json_body, inference_id, task_type, endpoint_name)
+            txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name)
         elif task_type in ["extra-single-image", "rembg"]:
-            esi_rembg(json_body, inference_id, task_type, endpoint_name)
+            esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name)
 
         update_inference_job_table(inference_id, 'status', 'succeed')
-        update_inference_job_table(inference_id, 'sagemakerRaw', str(json_body))
+        update_inference_job_table(inference_id, 'sagemakerRaw', str(sagemaker_out))
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         update_inference_job_table(inference_id, 'status', 'failed')
-        update_inference_job_table(inference_id, 'sagemakerRaw', json.dumps(json_body))
+        update_inference_job_table(inference_id, 'sagemakerRaw', json.dumps(sagemaker_out))
         raise e
 
 
-def esi_rembg(json_body, inference_id, task_type, endpoint_name):
-    if 'image' not in json_body:
-        raise Exception(json_body)
+def esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name):
+    if 'image' not in sagemaker_out:
+        raise Exception(sagemaker_out)
 
-    image = Image.open(io.BytesIO(base64.b64decode(json_body["image"])))
+    image = Image.open(io.BytesIO(base64.b64decode(sagemaker_out["image"])))
     output = io.BytesIO()
     image.save(output, format="PNG")
     # Upload the image to the S3 bucket
@@ -171,11 +168,11 @@ def esi_rembg(json_body, inference_id, task_type, endpoint_name):
 
     update_ddb_image(inference_id, "image.png")
 
-    inference_parameters(json_body, inference_id, task_type, endpoint_name)
+    inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name)
 
 
-def interrogate_clip_interrogate_deepbooru(json_body, inference_id):
-    caption = json_body['caption']
+def interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id):
+    caption = sagemaker_out['caption']
     # Update the DynamoDB table for the caption
     inference_table.update_item(
         Key={
@@ -188,11 +185,11 @@ def interrogate_clip_interrogate_deepbooru(json_body, inference_id):
     )
 
 
-def txt2_img_img(json_body, inference_id, task_type, endpoint_name):
-    for count, b64image in enumerate(json_body["images"]):
+def txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name):
+    for count, b64image in enumerate(sagemaker_out["images"]):
         output_img_type = None
-        if 'output_img_type' in json_body and json_body['output_img_type']:
-            output_img_type = json_body['output_img_type']
+        if 'output_img_type' in sagemaker_out and sagemaker_out['output_img_type']:
+            output_img_type = sagemaker_out['output_img_type']
             logger.info(f"handle_sagemaker_out: output_img_type is not null, {output_img_type}")
         if not output_img_type:
             image = decode_base64_to_image(b64image)
@@ -217,7 +214,7 @@ def txt2_img_img(json_body, inference_id, task_type, endpoint_name):
                                    "TXT" not in element and "PNG" not in element]
                 logger.debug(f'output_img_type new is  :{output_img_type}  {count}')
                 # type set
-                image_count = len(json_body["images"])
+                image_count = len(sagemaker_out["images"])
                 type_count = len(output_img_type)
                 if image_count % type_count == 0:
                     idx = count % type_count
@@ -231,16 +228,16 @@ def txt2_img_img(json_body, inference_id, task_type, endpoint_name):
 
         update_ddb_image(inference_id, f"image_{count}.png")
 
-    inference_parameters(json_body, inference_id, task_type, endpoint_name)
+    inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name)
 
 
-def inference_parameters(json_body, inference_id, task_type, endpoint_name):
+def inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name):
     inference_parameters = {}
-    inference_parameters["parameters"] = json_body["parameters"]
+    inference_parameters["parameters"] = sagemaker_out["parameters"]
     if task_type == "extra-single-image":
-        inference_parameters["html_info"] = json_body["html_info"]
+        inference_parameters["html_info"] = sagemaker_out["html_info"]
     else:
-        inference_parameters["info"] = json_body["info"]
+        inference_parameters["info"] = sagemaker_out["info"]
     inference_parameters["endpoint_name"] = endpoint_name
     inference_parameters["inference_id"] = inference_id
 

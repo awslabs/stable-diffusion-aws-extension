@@ -22,40 +22,14 @@ from libs.enums import EndpointType
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 
+ddb_client = boto3.resource('dynamodb')
 s3_client = boto3.client('s3')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-ddb_client = boto3.resource('dynamodb')
-
 ddb_service = DynamoDbUtilsService(logger=logger)
 inference_table = ddb_client.Table(inference_table_name)
-
-
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Add the directory to the object_name
-    if directory:
-        object_name = f"{directory}/{object_name}"
-
-    # Upload the file
-    try:
-        s3_client.upload_file(file_name, bucket, object_name)
-        print(f"File {file_name} uploaded to {bucket}/{object_name}")
-    except Exception as e:
-        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
-        return False
-    return True
-
-
-def decode_base64_to_image(encoding):
-    if encoding.startswith("data:image/"):
-        encoding = encoding.split(";")[1].split(",")[1]
-    return Image.open(io.BytesIO(base64.b64decode(encoding)))
 
 
 def handler(event, _):
@@ -102,21 +76,21 @@ def real_time(payload, job: InferenceJob, endpoint_name):
 
     try:
         start_time = datetime.now()
-        prediction_sync = predictor.predict(data=payload.__dict__,
-                                            inference_id=job.InferenceJobId,
-                                            )
-        logger.info(prediction_sync)
+        sagemaker_out = predictor.predict(data=payload.__dict__,
+                                          inference_id=job.InferenceJobId,
+                                          )
+        logger.info(sagemaker_out)
 
-        if 'error' in prediction_sync:
-            if 'detail' in prediction_sync:
-                raise Exception(prediction_sync['detail'])
-            raise Exception(prediction_sync)
+        if 'error' in sagemaker_out:
+            if 'detail' in sagemaker_out:
+                raise Exception(sagemaker_out['detail'])
+            raise Exception(sagemaker_out)
 
         end_time = datetime.now()
         cost_time = (end_time - start_time).total_seconds()
         logger.info(f"Real-time inference cost_time: {cost_time}")
 
-        parse_result(prediction_sync, job.InferenceJobId, job.taskType, endpoint_name)
+        parse_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
 
         return get_infer_data(job.InferenceJobId)
     except Exception as e:
@@ -126,11 +100,12 @@ def real_time(payload, job: InferenceJob, endpoint_name):
 
 def async_inference(payload, job: InferenceJob, endpoint_name):
     predictor = Predictor(endpoint_name)
-    initial_args = {"InvocationTimeoutSeconds": 3600}
+    initial_args = {"InvocationTimeoutSeconds": "3600"}
     predictor = AsyncPredictor(predictor, name=endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()
-    prediction = predictor.predict_async(data=payload.__dict__, initial_args=initial_args,
+    prediction = predictor.predict_async(data=payload.__dict__,
+                                         initial_args=initial_args,
                                          inference_id=job.InferenceJobId)
     logger.info(f"prediction: {prediction}")
     output_path = prediction.output_path
@@ -184,3 +159,28 @@ def update_ddb_image(inference_id: str, image_name: str):
             ':empty_list': []
         }
     )
+
+
+def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = file_name
+
+    # Add the directory to the object_name
+    if directory:
+        object_name = f"{directory}/{object_name}"
+
+    # Upload the file
+    try:
+        s3_client.upload_file(file_name, bucket, object_name)
+        print(f"File {file_name} uploaded to {bucket}/{object_name}")
+    except Exception as e:
+        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
+        return False
+    return True
+
+
+def decode_base64_to_image(encoding):
+    if encoding.startswith("data:image/"):
+        encoding = encoding.split(";")[1].split(",")[1]
+    return Image.open(io.BytesIO(base64.b64decode(encoding)))
