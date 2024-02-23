@@ -7,7 +7,6 @@ from datetime import datetime
 
 import boto3
 from PIL import Image
-from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from inferences.start_inference_job import upload_file_to_s3, update_inference_job_table, decode_base64_to_image
@@ -37,24 +36,17 @@ def get_bucket_and_key(s3uri):
     return bucket, key
 
 
-def getInferenceJob(inference_job_id):
+def get_inference_job(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")
         raise ValueError("Inference job id must not be None or empty")
 
-    try:
-        resp = inference_table.query(
-            KeyConditionExpression=Key('InferenceJobId').eq(inference_job_id)
-        )
-        record_list = resp['Items']
-        if len(record_list) == 0:
-            logger.error(f"No inference job info item for id: {inference_job_id}")
-            raise ValueError(f"There is no inference job info item for id: {inference_job_id}")
-        return record_list[0]
-    except Exception as e:
-        logger.error(
-            f"Exception occurred when trying to query inference job with id: {inference_job_id}, exception is {str(e)}")
-        raise
+    response = inference_table.get_item(Key={'InferenceJobId': inference_job_id})
+
+    if not response['Item']:
+        logger.error(f"Inference job not found with id: {inference_job_id}")
+        raise ValueError(f"Inference job not found with id: {inference_job_id}")
+    return response['Item']
 
 
 def get_topic_arn(sns, topic_name):
@@ -135,10 +127,10 @@ def handler(event, context):
                 raise ValueError("body contains invalid JSON")
 
             # Get the task type
-            job = getInferenceJob(inference_id)
-            taskType = job.get('taskType', 'txt2img')
+            job = get_inference_job(inference_id)
+            task_type = job.get('taskType', 'txt2img')
 
-            if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
+            if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
                 caption = json_body['caption']
                 # Update the DynamoDB table for the caption
                 inference_table.update_item(
@@ -150,7 +142,7 @@ def handler(event, context):
                         ':f': caption,
                     }
                 )
-            elif taskType in ["txt2img", "img2img"]:
+            elif task_type in ["txt2img", "img2img"]:
                 # save images
                 for count, b64image in enumerate(json_body["images"]):
                     output_img_type = None
@@ -221,7 +213,7 @@ def handler(event, context):
                 update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
 
                 print(f"Complete inference parameters {inference_parameters}")
-            elif taskType in ["extra-single-image", "rembg"]:
+            elif task_type in ["extra-single-image", "rembg"]:
                 if 'image' not in json_body:
                     raise Exception(json_body)
 
@@ -249,7 +241,7 @@ def handler(event, context):
 
                 # save parameters
                 inference_parameters = {}
-                if taskType == "extra-single-image":
+                if task_type == "extra-single-image":
                     inference_parameters["html_info"] = json_body["html_info"]
                 inference_parameters["endpoint_name"] = endpoint_name
                 inference_parameters["inference_id"] = inference_id
@@ -271,7 +263,7 @@ def handler(event, context):
         except Exception as e:
             print(f"Error occurred: {str(e)}")
             update_inference_job_table(inference_id, 'status', 'failed')
-            update_inference_job_table(inference_id, 'sagemakerRaw', json.dumps(json_body))
+            update_inference_job_table(inference_id, 'sagemakerRaw', json.dumps(message))
             raise e
     else:
         update_inference_job_table(inference_id, 'status', 'failed')

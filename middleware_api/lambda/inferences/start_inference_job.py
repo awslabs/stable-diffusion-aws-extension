@@ -155,10 +155,10 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
     update_inference_job_table(job.InferenceJobId, 'completeTime', str(datetime.now()))
 
     inference_id = job.InferenceJobId
-    taskType = job.taskType
+    task_type = job.taskType
 
     try:
-        if taskType in ["interrogate_clip", "interrogate_deepbooru"]:
+        if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             caption = json_body['caption']
             # Update the DynamoDB table for the caption
             inference_table.update_item(
@@ -170,7 +170,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
                     ':f': caption,
                 }
             )
-        elif taskType in ["txt2img", "img2img"]:
+        elif task_type in ["txt2img", "img2img"]:
             logger.debug(f'image count:{len(json_body["images"])}')
             # save images
             for count, b64image in enumerate(json_body["images"]):
@@ -241,7 +241,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
             upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
                               f"{inference_id}_param.json")
             update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
-        elif taskType in ["extra-single-image", "rembg"]:
+        elif task_type in ["extra-single-image", "rembg"]:
             if 'image' not in json_body:
                 raise Exception(json_body)
             # image = decode_base64_to_image(json_body["image"]).convert("RGB")
@@ -268,7 +268,7 @@ def handle_sagemaker_out(job: InferenceJob, json_body, endpoint_name):
 
             # save parameters
             inference_parameters = {}
-            if taskType == "extra-single-image":
+            if task_type == "extra-single-image":
                 inference_parameters["html_info"] = json_body["html_info"]
             inference_parameters["endpoint_name"] = endpoint_name
             inference_parameters["inference_id"] = inference_id
