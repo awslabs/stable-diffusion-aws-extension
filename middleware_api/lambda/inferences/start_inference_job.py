@@ -73,9 +73,8 @@ def real_time(payload, job: InferenceJob, endpoint_name):
         logger.info(sagemaker_out)
 
         if 'error' in sagemaker_out:
-            if 'detail' in sagemaker_out:
-                raise Exception(sagemaker_out['detail'])
-            raise Exception(sagemaker_out)
+            update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
+            raise Exception(str(sagemaker_out))
 
         end_time = datetime.now()
         cost_time = (end_time - start_time).total_seconds()

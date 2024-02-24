@@ -33,7 +33,7 @@ def handler(event, context):
         update_inference_job_table(inference_id, 'status', 'failed')
         update_inference_job_table(inference_id, 'sagemakerRaw', str(message))
         print(f"Not complete invocation!")
-        send_message_to_sns(event['Records'][0]['Sns']['Message'], SNS_TOPIC)
+        send_message_to_sns(message, SNS_TOPIC)
         return message
 
     endpoint_name = message["requestParameters"]["endpointName"]

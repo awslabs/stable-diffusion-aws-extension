@@ -33,11 +33,9 @@ def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
             esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name)
 
         update_inference_job_table(inference_id, 'status', 'succeed')
-        update_inference_job_table(inference_id, 'sagemakerRaw', str(sagemaker_out))
     except Exception as e:
-        print(f"Error occurred: {str(e)}")
+        logger.error(f"Error occurred: {str(e)}")
         update_inference_job_table(inference_id, 'status', 'failed')
-        update_inference_job_table(inference_id, 'sagemakerRaw', json.dumps(sagemaker_out))
         raise e
 
 
@@ -87,14 +85,7 @@ def get_bucket_and_key(s3uri):
 
 
 def update_inference_job_table(inference_id, key, value):
-    # Update the inference DDB for the job status
-    response = inference_table.get_item(
-        Key={
-            "InferenceJobId": inference_id,
-        })
-    inference_resp = response['Item']
-    if not inference_resp:
-        raise Exception(f"Failed to get the inference job item with inference id: {inference_id}")
+    logger.info(f"Update inference job table with inference id: {inference_id}, key: {key}, value: {value}")
 
     inference_table.update_item(
         Key={
