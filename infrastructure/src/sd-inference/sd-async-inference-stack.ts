@@ -352,7 +352,7 @@ export class SDAsyncInferenceStack {
           INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
           DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
           DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
-          S3_BUCKET: props?.s3_bucket.bucketName ?? '',
+          S3_BUCKET_NAME: props?.s3_bucket.bucketName ?? '',
           ACCOUNT_ID: Aws.ACCOUNT_ID,
           REGION_NAME: Aws.REGION,
           SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,

@@ -1,12 +1,8 @@
-import base64
-import io
 import json
 import logging
 import os
 from datetime import datetime
 
-import boto3
-from PIL import Image
 from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
@@ -15,21 +11,16 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import accepted, bad_request
 from get_inference_job import get_infer_data
-from inferences.inference_async_events import parse_result
+from inference_libs import parse_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
-
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
-
-ddb_client = boto3.resource('dynamodb')
-s3_client = boto3.client('s3')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
+inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
+
 ddb_service = DynamoDbUtilsService(logger=logger)
-inference_table = ddb_client.Table(inference_table_name)
 
 
 def handler(event, _):
@@ -65,8 +56,8 @@ def handler(event, _):
 
     if job.inference_type == EndpointType.RealTime.value:
         return real_time(payload, job, endpoint_name)
-    else:
-        return async_inference(payload, job, endpoint_name)
+
+    return async_inference(payload, job, endpoint_name)
 
 
 def real_time(payload, job: InferenceJob, endpoint_name):
@@ -100,7 +91,7 @@ def real_time(payload, job: InferenceJob, endpoint_name):
 
 def async_inference(payload, job: InferenceJob, endpoint_name):
     predictor = Predictor(endpoint_name)
-    initial_args = {"InvocationTimeoutSeconds": "3600"}
+    initial_args = {"InvocationTimeoutSeconds": 3600}
     predictor = AsyncPredictor(predictor, name=endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()
@@ -125,62 +116,3 @@ def async_inference(payload, job: InferenceJob, endpoint_name):
     }
 
     return accepted(data=data)
-
-
-def update_inference_job_table(inference_id, key, value):
-    # Update the inference DDB for the job status
-    response = inference_table.get_item(
-        Key={
-            "InferenceJobId": inference_id,
-        })
-    inference_resp = response['Item']
-    if not inference_resp:
-        raise Exception(f"Failed to get the inference job item with inference id: {inference_id}")
-
-    inference_table.update_item(
-        Key={
-            "InferenceJobId": inference_id,
-        },
-        UpdateExpression=f"set #k = :r",
-        ExpressionAttributeNames={'#k': key},
-        ExpressionAttributeValues={':r': value},
-        ReturnValues="UPDATED_NEW"
-    )
-
-
-def update_ddb_image(inference_id: str, image_name: str):
-    inference_table.update_item(
-        Key={
-            'InferenceJobId': inference_id
-        },
-        UpdateExpression='SET image_names = list_append(if_not_exists(image_names, :empty_list), :new_image)',
-        ExpressionAttributeValues={
-            ':new_image': [image_name],
-            ':empty_list': []
-        }
-    )
-
-
-def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Add the directory to the object_name
-    if directory:
-        object_name = f"{directory}/{object_name}"
-
-    # Upload the file
-    try:
-        s3_client.upload_file(file_name, bucket, object_name)
-        print(f"File {file_name} uploaded to {bucket}/{object_name}")
-    except Exception as e:
-        print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
-        return False
-    return True
-
-
-def decode_base64_to_image(encoding):
-    if encoding.startswith("data:image/"):
-        encoding = encoding.split(";")[1].split(",")[1]
-    return Image.open(io.BytesIO(base64.b64decode(encoding)))
