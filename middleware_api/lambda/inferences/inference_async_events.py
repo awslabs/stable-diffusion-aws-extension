@@ -23,7 +23,7 @@ def handler(event, context):
 
     if 'invocationStatus' not in message:
         # maybe a message from SNS for test
-        logger.error("Not a valid sagemaker message")
+        logger.error("Not a valid sagemaker inference result message")
         return
 
     invocation_status = message["invocationStatus"]

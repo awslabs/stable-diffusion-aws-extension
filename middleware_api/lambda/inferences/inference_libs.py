@@ -179,11 +179,16 @@ def txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name):
 
 def inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name):
     inference_parameters = {}
-    inference_parameters["parameters"] = sagemaker_out["parameters"]
-    if task_type == "extra-single-image":
+
+    if 'parameters' in sagemaker_out:
+        inference_parameters["parameters"] = sagemaker_out["parameters"]
+
+    if 'html_info' in sagemaker_out:
         inference_parameters["html_info"] = sagemaker_out["html_info"]
-    else:
+
+    if 'info' in sagemaker_out:
         inference_parameters["info"] = sagemaker_out["info"]
+
     inference_parameters["endpoint_name"] = endpoint_name
     inference_parameters["inference_id"] = inference_id
 
@@ -205,6 +210,8 @@ def get_inference_job(inference_job_id):
         raise ValueError("Inference job id must not be None or empty")
 
     response = inference_table.get_item(Key={'InferenceJobId': inference_job_id})
+
+    logger.info(f"Get inference job response: {response}")
 
     if not response['Item']:
         logger.error(f"Inference job not found with id: {inference_job_id}")
