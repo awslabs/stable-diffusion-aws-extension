@@ -173,7 +173,6 @@ def getInferenceJob(inference_job_id):
 
 def getEndpointDeploymentJobList():
     try:
-        sagemaker = boto3.client('sagemaker')
         ddb = boto3.resource('dynamodb')
         endpoint_deployment_table = ddb.Table(DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME)
 
@@ -393,24 +392,6 @@ async def run_sagemaker_inference(request: Request):
             content={"inference_id": inference_id, "status": "failure", "error": f"error info {str(e)}"},
             headers=headers)
         return response
-
-
-# todo will remove
-@app.post("/inference/query-inference-jobs")
-async def query_inference_jobs(request: Request):
-    logger.info(f"entering query-inference-jobs")
-    query_params = await request.json()
-    logger.info(query_params)
-    status = query_params.get('status')
-    task_type = query_params.get('task_type')
-    start_time = query_params.get('start_time')
-    end_time = query_params.get('end_time')
-    endpoint = query_params.get('endpoint')
-    checkpoint = query_params.get('checkpoint')
-    limit = query_params.get("limit") if query_params.get("limit") else const.PAGE_LIMIT_ALL
-    logger.info(
-        f"entering query-inference-jobs {status},{task_type},{start_time},{end_time},{checkpoint},{endpoint},{limit}")
-    return query_inference_job_list(status, task_type, start_time, end_time, endpoint, checkpoint, limit)
 
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:
