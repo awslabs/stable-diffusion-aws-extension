@@ -4,7 +4,7 @@
 
 ## 前提条件
 <!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
-- 用户需要提前准备一台运行linux系统的电脑。
+- 用户需要提前准备一台运行 Linux 系统的电脑。
 - 安装并且配置好了[aws cli](https://aws.amazon.com/cli/)。
 - 部署过上一个版本的Stable Diffusion Webui AWS插件。
 
@@ -18,7 +18,7 @@
 
 ## 部署步骤
 
-### 步骤1 - Linux：更新Stable Diffusion WebUI (Linux)
+### 步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)
 
 1. 从 [链接](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} 下载CloudFormation模板。
 2. 登录到[AWS管理控制台](https://console.aws.amazon.com/){:target="_blank"}，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/){:target="_blank"}。
@@ -28,7 +28,7 @@
 6. 在**设置堆栈选项**页面上，选择**下一步**。
 7. 在**审核**页面上，查看堆栈的详细信息，然后选择**提交**。
 8. 等待堆栈创建完成。
-9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
+9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。
 
 ### 步骤1 - Windows：更新 Stable Diffusion WebUI (Windows)
 1. 启动一台Windows Server，通过RDP登录。

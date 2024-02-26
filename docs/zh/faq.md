@@ -3,10 +3,10 @@
 ## 一般问题
 
 **问：什么是Stable Diffusion亚马逊云科技插件解决方案？**
-Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件和云资源模版方式，帮助现有客户将现有Stable Diffusion的模型训练，推理和调优等任务负载从本地服务器迁移至Amazon SageMaker，利用云上弹性资源加速模型迭代，避免单机部署所带来的性能瓶颈。
+Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件和云资源模版方式，帮助现有客户将现有 Stable Diffusion 的模型训练，推理和调优等任务负载从本地服务器迁移至 Amazon SageMaker，利用云上弹性资源加速模型迭代，避免单机部署所带来的性能瓶颈。
 
 **问：该解决方案中支持哪些原生功能/第三方插件？**
-本解决方案支持多种Stable Diffusion WebUI原生功能及第三方插件。请参考[支持的具体功能列表及版本](./solution-overview/features-and-benefits.md)等，了解更多细节。
+本解决方案支持多种 Stable Diffusion WebUI 原生功能及第三方插件。请参考[支持的具体功能列表及版本](./solution-overview/features-and-benefits.md)等，了解更多细节。
 
 **问：这个解决方案的许可证是什么？**
 本解决方案是根据[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0){:target="_blank"}许可证提供的。 它是一个由 Apache 软件基金会编写的自由软件许可证。 它允许用户为任何目的使用该软件，分发、修改该软件，并根据许可证的条款分发该软件的修改版本，而不必担心版权费。
