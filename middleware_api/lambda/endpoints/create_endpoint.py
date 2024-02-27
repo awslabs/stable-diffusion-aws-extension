@@ -1,10 +1,11 @@
 import json
 import logging
 import os
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-import re
+
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -39,6 +40,9 @@ class CreateEndpointEvent:
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
+    cool_down_time: str = "15 minutes"
+    invocations_per_instance: str = "1"
+
 
 def get_docker_image_uri(event: CreateEndpointEvent):
     image_url = INFERENCE_ECR_IMAGE_URL
@@ -56,6 +60,7 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 
     return image_url
 
+
 # POST /endpoints
 def handler(raw_event, ctx):
     logger.info(f"Received event: {raw_event}")
@@ -64,9 +69,6 @@ def handler(raw_event, ctx):
 
     if event.endpoint_type == EndpointType.Serverless.value:
         return bad_request(message="Serverless endpoint is not supported yet")
-
-    if event.endpoint_type == EndpointType.RealTime.value and event.autoscaling_enabled:
-        return bad_request(message="Autoscaling is not supported for real-time endpoint")
 
     endpoint_id = str(uuid.uuid4())
     short_id = endpoint_id[:7]
@@ -145,6 +147,8 @@ def handler(raw_event, ctx):
             current_instance_count="0",
             instance_type=instance_type,
             endpoint_type=event.endpoint_type,
+            cool_down_time=event.cool_down_time,
+            invocations_per_instance=event.invocations_per_instance,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)

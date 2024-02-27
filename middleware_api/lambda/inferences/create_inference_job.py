@@ -192,8 +192,6 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
             if endpoint.status == 'deleted':
                 continue
-            if endpoint.endpoint_status == EndpointStatus.UPDATING.value and int(endpoint.current_instance_count) == 0:
-                continue
             if endpoint.endpoint_status != EndpointStatus.UPDATING.value and endpoint.endpoint_status != EndpointStatus.IN_SERVICE.value:
                 continue
             if endpoint.endpoint_type != inference_type:

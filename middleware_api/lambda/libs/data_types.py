@@ -175,6 +175,8 @@ class EndpointDeploymentJob:
     error: Optional[str] = None
     endpoint_type: Optional[str] = "Async"
     owner_group_or_role: Optional[List[str]] = None
+    cool_down_time: Optional[str] = "15 minutes"
+    invocations_per_instance: Optional[str] = 1
 
 
 # a copy of aws_extensions.models.InvocationsRequest

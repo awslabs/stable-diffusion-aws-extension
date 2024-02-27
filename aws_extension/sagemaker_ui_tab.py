@@ -5,25 +5,28 @@ import os
 import gradio as gr
 import modules.ui
 import requests
+from modules import shared
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
-from modules import shared
 
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
 from aws_extension.cloud_api_manager.api import api, client_api_version
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.cloud_dataset_manager.dataset_manager import get_sorted_cloud_dataset
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-from aws_extension.cloud_dataset_manager.dataset_manager import get_sorted_cloud_dataset
 from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
 endpoint_type_choices = ["Async", "Real-time"]
+
+cool_down_choices = ["15 minutes", "1 hour", "6 hours", "1 day"]
+cool_down_default = "15 minutes"
 
 if is_gcr():
     inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
@@ -33,7 +36,6 @@ else:
                          "ml.g5.2xlarge",
                          "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
     inference_choices_default = "ml.g5.2xlarge"
-
 
 test_connection_result = None
 api_gateway_url = None
@@ -777,11 +779,11 @@ def sagemaker_endpoint_tab():
                             <th style="border: 1px solid grey; padding: 15px; text-align: left; " colspan="2">Default SageMaker Endpoint Config</th>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Endpoint Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Endpoint Type</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">Async</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">{inference_choices_default}</td>
                           </tr>
                           <tr>
@@ -790,7 +792,7 @@ def sagemaker_endpoint_tab():
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Enable Autoscaling</b></td>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range: 0 to 1)</td>
                           </tr>
                         
                         </table>
@@ -815,10 +817,21 @@ def sagemaker_endpoint_tab():
                                                             elem_id="sagemaker_inference_instance_count_textbox",
                                                             value=1, min=1, max=1000, step=1
                                                             )
-                        autoscaling_enabled = gr.Checkbox(
-                            label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
+                        cool_down_time_dropdown = gr.Dropdown(label="Autoscaling Cool Down", choices=cool_down_choices,
+                                                              elem_id="sagemaker_inference_cool_down_textbox",
+                                                              value=cool_down_default)
+                    with gr.Row():
+                        invocations_per_instance_dropdown = gr.Number(
+                            label="Autoscaling Threshold Per Instance: Async Backlog Size / Real-time Invocations",
+                            elem_id="sagemaker_inference_bsi_textbox",
+                            value=2, min=1, max=1000, step=1
                         )
-
+                    with gr.Row():
+                        autoscaling_enabled = gr.Checkbox(
+                            label="Enable Autoscaling (Async: 0 to Max Instance count / Real-time: 1 to Max Instance count)",
+                            value=True,
+                            visible=True
+                        )
                 custom_docker_image_uri = gr.Textbox(
                     value="",
                     lines=1,
@@ -848,6 +861,8 @@ def sagemaker_endpoint_tab():
                                            autoscale,
                                            docker_image_uri,
                                            target_user_roles,
+                                           cool_down_time,
+                                           invocations_per_instance,
                                            pr: gr.Request):
                 if not target_user_roles:
                     return 'Please select at least one user role.'
@@ -858,6 +873,8 @@ def sagemaker_endpoint_tab():
                                                     custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
+                                                    cool_down_time=cool_down_time,
+                                                    invocations_per_instance=invocations_per_instance,
                                                     user_token=pr.username
                                                     )
 
@@ -868,7 +885,9 @@ def sagemaker_endpoint_tab():
                                                   instance_count_dropdown,
                                                   autoscaling_enabled,
                                                   custom_docker_image_uri,
-                                                  user_roles
+                                                  user_roles,
+                                                  cool_down_time_dropdown,
+                                                  invocations_per_instance_dropdown,
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
@@ -934,6 +953,9 @@ def _list_sagemaker_endpoints(username):
                 endpoint['autoscaling'],
                 endpoint['endpoint_status'],
                 endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
+                endpoint['cool_down_time'] if endpoint['cool_down_time'] else "",
+                endpoint['instance_type'] if endpoint['instance_type'] else "",
+                endpoint['max_instance_number'] if endpoint['max_instance_number'] else "",
                 endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
             ])
     return endpoints
@@ -943,8 +965,9 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['name', 'type', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            headers=['Name', 'Type', 'Owners', 'Autoscaling', 'Status', 'Instance', 'Cool Down', 'Instance Type',
+                     'Max Instance', 'Created Time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str', 'str', 'str', 'str']
         )
 
         def list_ep_prev(paging, rq: gr.Request):

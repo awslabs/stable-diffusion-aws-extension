@@ -65,6 +65,8 @@ class CloudApiManager:
                          custom_docker_image_uri="",
                          autoscaling_enabled=True,
                          user_roles=None,
+                         cool_down_time="15 minutes",
+                         invocations_per_instance=1,
                          user_token=""):
         """ Create SageMaker endpoint for GPU inference.
         Args:
@@ -85,6 +87,8 @@ class CloudApiManager:
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
             'assign_to_roles': user_roles,
+            'cool_down_time': cool_down_time,
+            'invocations_per_instance': invocations_per_instance,
             "creator": user_token,
         }
 

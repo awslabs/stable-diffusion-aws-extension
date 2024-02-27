@@ -65,6 +65,7 @@ export class SagemakerEndpointEvents {
         'cloudwatch:DeleteAlarms',
         'cloudwatch:DescribeAlarms',
         'cloudwatch:PutMetricAlarm',
+        'cloudwatch:UpdateMetricAlarm',
         'application-autoscaling:PutScalingPolicy',
         'application-autoscaling:RegisterScalableTarget',
         'iam:CreateServiceLinkedRole',
