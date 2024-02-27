@@ -23,6 +23,7 @@ nav:
         - 区域支持: plan-deployment/regions.md
         - 配额信息: plan-deployment/quotas.md
     - 部署解决方案:
+        - 权限: deployment/permissions.md
         - 模板信息: deployment/template.md
         - 新用户部署步骤: deployment/deployment.md
         - 更新已有的部署: deployment/deployment_for_existing_users.md

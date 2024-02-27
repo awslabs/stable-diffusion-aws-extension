@@ -1,6 +1,6 @@
 Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.
 
-**Time to deploy**: Approximately 25 minutes.
+**Time to deploy**: Approximately 20 minutes.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ Use the following steps to deploy this solution on AWS.
 
 8. Wait until the stack is created.
 
-9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 30 minutes to wait for the internal setup complete after the stack been created successfully.
 
 ### Step 1 - Windows: Update Stable Diffusion WebUI (Windows).
 1. Start a Windows Server and log in via RDP.

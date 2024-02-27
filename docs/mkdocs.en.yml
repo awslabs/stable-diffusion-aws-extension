@@ -21,6 +21,7 @@ nav:
         - Supported regions: plan-deployment/regions.md
         - Quotas: plan-deployment/quotas.md
     - Deploy the solution:
+        - Permissions: deployment/permissions.md
         - AWS CloudFormation template: deployment/template.md
         - Deployment step: deployment/deployment.md
         - Deployment step from existing resource: deployment/deployment_for_existing_users.md
