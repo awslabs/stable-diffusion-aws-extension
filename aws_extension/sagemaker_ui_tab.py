@@ -25,9 +25,6 @@ logger.setLevel(utils.LOGGING_LEVEL)
 
 endpoint_type_choices = ["Async", "Real-time"]
 
-cool_down_choices = ["15 minutes", "1 hour", "6 hours", "1 day"]
-cool_down_default = "15 minutes"
-
 if is_gcr():
     inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
     inference_choices_default = "ml.g4dn.2xlarge"
