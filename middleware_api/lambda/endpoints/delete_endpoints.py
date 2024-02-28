@@ -24,6 +24,8 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class DeleteEndpointEvent:
     endpoint_name_list: [str]
+    # todo will be removed
+    username: str = ""
 
 
 # DELETE /endpoints

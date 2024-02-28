@@ -298,6 +298,8 @@ def get_inference_job(inference_job_id):
                        desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
                             f"end request if data.status == succeed, "
                             f"ID from previous step: CreateInference -> data -> inference -> id")
+    if 'data' not in response.json():
+        raise Exception(response.json())
     return response.json()['data']
 
 

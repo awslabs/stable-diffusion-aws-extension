@@ -37,9 +37,7 @@ def handler(event, context):
 
         dataset_info = DatasetInfo(**dataset_info_rows)
 
-        if 'username' not in event['headers']:
-            return unauthorized()
-        requester_name = event['headers']['username']
+        requester_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requester_name)

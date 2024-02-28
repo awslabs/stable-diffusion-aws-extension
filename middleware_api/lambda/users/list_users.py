@@ -2,10 +2,11 @@ import json
 import logging
 import os
 
+from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, unauthorized
+from common.response import ok
 from libs.data_types import User, PARTITION_KEYS, Role
-from libs.utils import KeyEncryptService, get_permissions_by_username, response_error
+from libs.utils import KeyEncryptService, get_permissions_by_username, response_error, permissions_check
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
@@ -34,9 +35,7 @@ def handler(event, ctx):
                 'show_password'] else 0
             username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-        if 'username' not in event['headers']:
-            return unauthorized()
-        requester_name = event['headers']['username']
+        requester_name = permissions_check(event, [PERMISSION_USER_ALL])
 
         requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
         if not username:

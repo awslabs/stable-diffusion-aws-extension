@@ -4,9 +4,8 @@ import os
 
 import boto3
 
-from common.const import PERMISSION_INFERENCE_ALL
 from common.response import ok, not_found
-from libs.utils import permissions_check, response_error
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -25,8 +24,6 @@ def handler(event, ctx):
     try:
 
         inference_id = event['pathParameters']['id']
-
-        permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
         return get_infer_data(inference_id)
     except Exception as e:

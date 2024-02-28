@@ -4,7 +4,7 @@ import os
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok
 from common.util import get_multi_query_params
 from libs.data_types import TrainJob
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
@@ -26,7 +26,7 @@ def handler(event, context):
     _filter = {}
 
     try:
-        permissions_check(event, [PERMISSION_TRAIN_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         types = get_multi_query_params(event, 'types')
         if types:
@@ -40,13 +40,8 @@ def handler(event, context):
         if resp is None or len(resp) == 0:
             return ok(data={'trainJobs': []})
 
-        requestor_name = event['headers']['username']
-
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
-        if 'train' not in requestor_permissions or \
-                ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-            return bad_request(message='user has no permission to train')
 
         train_jobs = []
         for tr in resp:

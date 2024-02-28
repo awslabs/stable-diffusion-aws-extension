@@ -27,7 +27,7 @@ def handler(event, context):
     _filter = {}
 
     try:
-        permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
         user_roles = ['*']
         username = None
         page = 1
@@ -52,8 +52,6 @@ def handler(event, context):
             username = parameters['username'] if 'username' in parameters and parameters['username'] else None
             if username:
                 user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
-
-        requestor_name = event['headers']['username']
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={

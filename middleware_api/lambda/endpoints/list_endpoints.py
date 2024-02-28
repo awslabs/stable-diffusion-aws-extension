@@ -24,7 +24,7 @@ def handler(event, ctx):
     _filter = {}
 
     try:
-        permissions_check(event, [PERMISSION_ENDPOINT_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_ENDPOINT_ALL])
         endpoint_deployment_job_id = None
         username = None
         parameters = event['queryStringParameters']
@@ -47,10 +47,6 @@ def handler(event, ctx):
 
         if username:
             user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
-
-        if 'username' not in event['headers']:
-            return unauthorized()
-        requestor_name = event['headers']['username']
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
