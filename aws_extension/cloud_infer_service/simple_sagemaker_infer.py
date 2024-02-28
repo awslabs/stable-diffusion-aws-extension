@@ -1,6 +1,6 @@
 import logging
+
 import requests
-from datetime import datetime
 
 import utils
 from aws_extension.cloud_api_manager.api_logger import ApiLogger
@@ -66,8 +66,10 @@ class SimpleSagemakerInfer(InferManager):
                                method='PUT',
                                path=api_params_s3_upload_url,
                                data=sd_api_param_json,
-                               desc="Upload inference parameter to S3 by presigned URL,"
-                                    "URL from previous step: CreateInference -> data -> inference -> api_params_s3_upload_url")
+                               desc="Upload inference parameter to S3 by presigned URL, "
+                                    "URL from previous step: CreateInference -> data -> inference -> api_params_s3_upload_url"
+                                    "<br/>Just use code to request, not use API tools to upload because they will change the headers to make the request invalid"
+                               )
             inference_id = upload_param_response['inference']['id']
             # start run infer
             start_url = f'{url}inferences/{inference_id}/start'
