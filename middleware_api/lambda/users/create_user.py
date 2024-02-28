@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
-from common.const import PERMISSION_ROLE_ALL, PERMISSION_USER_ALL
+from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
@@ -73,7 +73,8 @@ def handler(raw_event, ctx):
 
                 # todo will be remove, not use api
                 create_role_event = {
-                    'body': json.dumps(role_event)
+                    'body': json.dumps(role_event),
+                    'headers': raw_event['headers'],
                 }
                 resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
 

@@ -7,10 +7,11 @@ from boto3.dynamodb.conditions import Key
 
 from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok
+from common.util import get_query_param
 from libs.data_types import InferenceJob
-from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, permissions_check, \
-    response_error
+from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, response_error, \
+    permissions_check
 
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -29,21 +30,14 @@ def handler(event, ctx):
     logger.info(json.dumps(event))
     _filter = {}
 
-    parameters = event['queryStringParameters']
-
-    username = None
-    limit = 10
-    last_evaluated_key = None
-    inference_type = "txt2img"
-
     try:
-        permissions_check(event, [PERMISSION_INFERENCE_ALL])
-        if parameters:
-            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-            limit = int(parameters['limit']) if 'limit' in parameters and parameters['limit'] else limit
-            last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
-                'last_evaluated_key'] else None
-            inference_type = parameters['type'] if 'type' in parameters and parameters['type'] else inference_type
+        # todo compatibility with old version
+        # permissions_check(event, [PERMISSION_INFERENCE_ALL])
+
+        username = get_query_param(event, 'username')
+        last_evaluated_key = get_query_param(event, 'last_evaluated_key')
+        inference_type = get_query_param(event, 'type', 'txt2img')
+        limit = int(get_query_param(event, 'limit', 10))
 
         scan_kwargs = {
             'Limit': limit,

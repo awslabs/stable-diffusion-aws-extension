@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, internal_server_error, not_found
+from common.response import ok, not_found
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from libs.utils import permissions_check, response_error
 
@@ -30,7 +30,9 @@ def handler(raw_event, context):
     try:
         event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
         dataset_id = raw_event['pathParameters']['id']
-        permissions_check(event, [PERMISSION_TRAIN_ALL])
+
+        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+
         raw_dataset_info = ddb_service.get_item(table=dataset_info_table, key_values={
             'dataset_name': dataset_id
         })

@@ -8,7 +8,7 @@ import boto3
 from common.const import PERMISSION_ROLE_ALL
 from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
-from libs.utils import permissions_check, response_error
+from libs.utils import response_error, permissions_check
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -29,7 +29,8 @@ def handler(event, ctx):
     try:
         body = DeleteRolesEvent(**json.loads(event['body']))
 
-        permissions_check(event, [PERMISSION_ROLE_ALL])
+        # todo compatibility with old version
+        # permissions_check(event, [PERMISSION_ROLE_ALL])
 
         # unique role_name_list for preventing duplicate delete
         role_name_list = list(set(body.role_name_list))

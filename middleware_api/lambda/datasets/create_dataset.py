@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
-from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_TRAIN_ALL
+from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, internal_server_error, created
+from common.response import created
 from common.util import get_s3_presign_urls
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
-from libs.utils import get_permissions_by_username, get_user_roles, permissions_check, response_error
+from libs.utils import get_user_roles, permissions_check, response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -36,7 +36,8 @@ class DatasetCreateEvent:
     dataset_name: str
     content: List[DataUploadEvent]
     params: dict[str, Any]
-    creator: str
+    # todo will be removed
+    creator: str = ""
 
     def get_filenames(self):
         return [f.filename for f in self.content]
@@ -56,7 +57,8 @@ def handler(raw_event, context):
     event = DatasetCreateEvent(**json.loads(raw_event['body']))
 
     try:
-        permissions_check(event, [PERMISSION_TRAIN_ALL])
+        # todo compatibility with old version
+        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
         timestamp = datetime.now().timestamp()

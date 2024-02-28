@@ -154,6 +154,7 @@ export class SdTrainDeployStack {
     // PUT /datasets/{id}
     const updateDatasetApi = new UpdateDatasetApi(scope, 'UpdateDataset', {
       commonLayer: commonLayer,
+      userTable: multiUserTable,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',

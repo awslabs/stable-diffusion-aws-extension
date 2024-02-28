@@ -7,7 +7,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException
+from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
 from common.response import unauthorized, forbidden, not_found, bad_request
 from libs.data_types import PARTITION_KEYS, User, Role
 
@@ -99,7 +99,7 @@ def get_user_roles(ddb_service, user_table_name, username):
 
 def response_error(e):
     try:
-        logger.error(e)
+        logger.error(e, exc_info=True)
         raise e
     except UnauthorizedException as e:
         return unauthorized(message=str(e))
@@ -112,6 +112,8 @@ def response_error(e):
 
 
 def permissions_check(event: any, permissions: [str]):
+    if 'headers' not in event:
+        raise BadRequestException('Not found headers in event')
 
     # todo compatibility with 1.4.0, will be removed
     if 'Authorization' in event['headers']:
@@ -122,14 +124,14 @@ def permissions_check(event: any, permissions: [str]):
             return permissions_check_by_username(username, permissions)
 
     if 'username' not in event['headers']:
-        raise UnauthorizedException('Not found username in headers')
+        raise UnauthorizedException("Unauthorized")
 
     return permissions_check_by_username(event['headers']['username'], permissions)
 
 
 def permissions_check_by_username(username: any, permissions: [str]):
     if not username:
-        raise UnauthorizedException('username is empty in headers')
+        raise UnauthorizedException("Unauthorized")
 
     user = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -137,7 +139,7 @@ def permissions_check_by_username(username: any, permissions: [str]):
     })
 
     if not user or len(user) == 0:
-        raise UnauthorizedException(f'user "{username}" not exist')
+        raise UnauthorizedException("Unauthorized")
 
     user = User(**ddb_service.deserialize(user[0]))
     logger.info(f'user: {user}')
