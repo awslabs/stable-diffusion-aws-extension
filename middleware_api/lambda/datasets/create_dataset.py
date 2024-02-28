@@ -58,9 +58,9 @@ def handler(raw_event, context):
 
     try:
         # todo compatibility with old version
-        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+        username = permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
-        user_roles = get_user_roles(ddb_service, user_table, event.creator)
+        user_roles = get_user_roles(ddb_service, user_table, username)
         timestamp = datetime.now().timestamp()
         new_dataset_info = DatasetInfo(
             dataset_name=event.dataset_name,

@@ -1067,7 +1067,8 @@ def dataset_tab():
                 if not has_config():
                     return f'Please config api url and token', None, None, None, None
 
-                raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.post(url=url, json=payload,
+                                             headers={'x-api-key': api_key, "username": pr.username})
                 logger.info(raw_response.json())
 
                 if raw_response.status_code != 201:
@@ -1086,7 +1087,8 @@ def dataset_tab():
                     "status": "Enabled"
                 }
 
-                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload,
+                                            headers={'x-api-key': api_key, "username": pr.username})
                 raw_response.raise_for_status()
                 logger.debug(raw_response.json())
                 return f'Complete Dataset {dataset_name} creation', None, None, None, None
