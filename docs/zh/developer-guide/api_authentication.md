@@ -8,19 +8,16 @@ x-api-key: 09876743201987654321
 
 ## 用户验证
 
-部分 API 除了要使用 `x-api-key` 作为基本的安全验证外，还需要进行用户验证。
-
-### 1.5.0 或更高版本
-
-应在 HTTP 标头中包含 `username`，例如，如果在 WebUI 上配置的用户名是 `admin`，则：
+使用 `x-api-key`，您拥有操作 API 的全部权限，如果您希望使用方案内置的多用户权限校验，请在 HTTP 标头中包含 `username`，例如，如果在
+WebUI 上配置的用户名是 `admin`，则：
 
 ```config
 username: admin
 ```
 
-### 1.4.0 或更低版本
+## 1.4.0 或更低版本
 
-应在 HTTP 标头中包含 `Authorization`，如下所示：
+除了要使用 `x-api-key` 作为基本的安全验证外，还需要进行用户验证，应在 HTTP 标头中包含 `Authorization`，如下所示：
 
 ```config
 Authorization: Bearer {TOKEN}

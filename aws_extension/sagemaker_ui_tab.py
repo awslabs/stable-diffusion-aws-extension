@@ -957,15 +957,17 @@ def _list_sagemaker_endpoints(username):
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
 
-            scope = ""
-            min_instance_number = endpoint['min_instance_number'] if 'min_instance_number' in endpoint else ""
-            max_instance_number = endpoint['max_instance_number'] if endpoint['max_instance_number'] else ""
-            if min_instance_number:
-                scope = f"({min_instance_number}-{max_instance_number})"
+            scale_scope = ""
+            min_instance_number = endpoint['min_instance_number'] if 'min_instance_number' in endpoint and endpoint[
+                'min_instance_number'] else "0"
+            max_instance_number = endpoint['max_instance_number'] if 'max_instance_number' in endpoint and endpoint[
+                'max_instance_number'] else ""
+            if max_instance_number:
+                scale_scope = f"({min_instance_number}-{max_instance_number})"
 
             autoscaling = endpoint['autoscaling']
             if autoscaling:
-                autoscaling = f"yes {scope}"
+                autoscaling = f"yes {scale_scope}"
 
             endpoints.append([
                 endpoint['endpoint_name'],

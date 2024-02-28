@@ -134,13 +134,9 @@ export class DeleteEndpointsApi {
             minItems: 1,
             maxItems: 10,
           },
-          username: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_name_list',
-          'username',
         ],
       },
       contentType: 'application/json',

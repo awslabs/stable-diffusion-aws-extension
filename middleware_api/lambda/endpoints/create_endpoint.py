@@ -9,10 +9,11 @@ from datetime import datetime
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import BadRequestException
 from common.response import bad_request, accepted, forbidden
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import get_permissions_by_username
+from libs.utils import get_permissions_by_username, response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -32,15 +33,16 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class CreateEndpointEvent:
     instance_type: str
-    initial_instance_count: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
+    initial_instance_count: str
+    max_instance_number: str = "1"
+    min_instance_number: str = "0"
     endpoint_name: str = None
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
-    min_instance_number: str = None
 
 
 def get_docker_image_uri(event: CreateEndpointEvent):
@@ -64,29 +66,36 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 def handler(raw_event, ctx):
     logger.info(f"Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")
-    event = CreateEndpointEvent(**json.loads(raw_event['body']))
-
-    if event.endpoint_type == EndpointType.Serverless.value:
-        return bad_request(message="Serverless endpoint is not supported yet")
-
-    if event.endpoint_type == EndpointType.RealTime.value and int(event.min_instance_number) < 1:
-        return bad_request(f"min_instance_number should be at least 1 for real-time endpoint: {event.endpoint_name}")
-
-    if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
-        raise bad_request(f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
-
-    endpoint_id = str(uuid.uuid4())
-    short_id = endpoint_id[:7]
-
-    if event.endpoint_name:
-        short_id = event.endpoint_name
-
-    endpoint_type = event.endpoint_type.lower()
-    model_name = f"esd-model-{endpoint_type}-{short_id}"
-    endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
-    endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
     try:
+        event = CreateEndpointEvent(**json.loads(raw_event['body']))
+
+        if event.endpoint_type not in EndpointType.List.value:
+            raise BadRequestException(message=f"{event.endpoint_type} endpoint is not supported yet")
+
+        if int(event.initial_instance_count) < 1:
+            raise BadRequestException(f"initial_instance_count should be at least 1: {event.endpoint_name}")
+
+        if event.autoscaling_enabled:
+            if event.endpoint_type == EndpointType.RealTime.value and int(event.min_instance_number) < 1:
+                raise BadRequestException(
+                    f"min_instance_number should be at least 1 for real-time endpoint: {event.endpoint_name}")
+
+            if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
+                raise BadRequestException(
+                    f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
+
+        endpoint_id = str(uuid.uuid4())
+        short_id = endpoint_id[:7]
+
+        if event.endpoint_name:
+            short_id = event.endpoint_name
+
+        endpoint_type = event.endpoint_type.lower()
+        model_name = f"esd-model-{endpoint_type}-{short_id}"
+        endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
+        endpoint_name = f"esd-{endpoint_type}-{short_id}"
+
         image_url = get_docker_image_uri(event)
 
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
@@ -146,13 +155,13 @@ def handler(raw_event, ctx):
             endpoint_name=endpoint_name,
             startTime=str(datetime.now()),
             endpoint_status=EndpointStatus.CREATING.value,
-            max_instance_number=event.initial_instance_count,
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
             current_instance_count="0",
             instance_type=instance_type,
             endpoint_type=event.endpoint_type,
             min_instance_number=event.min_instance_number,
+            max_instance_number=event.max_instance_number,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
@@ -163,8 +172,7 @@ def handler(raw_event, ctx):
             data=data
         )
     except Exception as e:
-        logger.error(e)
-        return bad_request(message=str(e))
+        return response_error(e)
 
 
 def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id):

@@ -6,10 +6,10 @@ from dataclasses import dataclass
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
+from common.const import PERMISSION_ENDPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import forbidden, no_content, bad_request
-from libs.enums import EndpointStatus
-from libs.utils import get_permissions_by_username
+from common.response import no_content
+from libs.utils import permissions_check, response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -24,20 +24,14 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class DeleteEndpointEvent:
     endpoint_name_list: [str]
-    username: str
 
 
 # DELETE /endpoints
 def handler(raw_event, ctx):
     try:
+        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL], False)
         # delete sagemaker endpoints in the same loop
         event = DeleteEndpointEvent(**json.loads(raw_event['body']))
-
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
-                    'sagemaker_endpoint']):
-            return forbidden(message=f"User {event.username} has no permission to delete a Sagemaker endpoint")
 
         for endpoint_name in event.endpoint_name_list:
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
@@ -46,8 +40,7 @@ def handler(raw_event, ctx):
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
-        logger.error(f"{e}")
-        return bad_request(message=f"{e}")
+        return response_error(e)
 
 
 def delete_endpoint(endpoint_item):

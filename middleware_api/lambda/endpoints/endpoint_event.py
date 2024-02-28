@@ -79,19 +79,19 @@ def handler(event, context):
 
 def check_and_enable_autoscaling(item, variant_name):
     autoscaling = item['autoscaling']['BOOL']
-    max_instance_number = item['max_instance_number']['N']
 
     logger.info(f"item: {item}")
 
     if str(autoscaling) == 'True':
-        enable_autoscaling(item, variant_name, int(max_instance_number))
+        enable_autoscaling(item, variant_name)
     else:
         logger.info(f'autoscaling_enabled is {autoscaling}, no need to enable autoscaling')
 
 
-def enable_autoscaling(item, variant_name, high_value):
+def enable_autoscaling(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
     endpoint_type = item['endpoint_type']['S']
+    max_instance_number = item['max_instance_number']['N']
 
     min_instance_number = 0
     if endpoint_type == EndpointType.RealTime.value:
@@ -106,7 +106,7 @@ def enable_autoscaling(item, variant_name, high_value):
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
         ScalableDimension='sagemaker:variant:DesiredInstanceCount',
         MinCapacity=min_instance_number,
-        MaxCapacity=high_value,
+        MaxCapacity=max_instance_number,
     )
     logger.info(f"Register scalable target response: {response}")
 

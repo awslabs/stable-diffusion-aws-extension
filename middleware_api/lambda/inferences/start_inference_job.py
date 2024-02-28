@@ -8,12 +8,15 @@ from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
+from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import BadRequestException
 from common.response import accepted, bad_request
 from get_inference_job import get_infer_data
 from inference_libs import parse_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
+from libs.utils import response_error, permissions_check
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -26,38 +29,51 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 def handler(event, _):
     logger.info(json.dumps(event))
     _filter = {}
-    inference_id = event['pathParameters']['id']
 
-    # get the inference job from ddb by job id
-    inference_raw = ddb_service.get_item(inference_table_name, {
-        'InferenceJobId': inference_id
-    })
+    try:
+        inference_id = event['pathParameters']['id']
 
-    assert inference_raw is not None and len(inference_raw) > 0
-    job = InferenceJob(**inference_raw)
-    endpoint_name = job.params['sagemaker_inference_endpoint_name']
-    models = {}
-    if 'used_models' in job.params:
-        models = {
-            "space_free_size": 4e10,
-            **job.params['used_models'],
-        }
+        if not inference_id:
+            raise BadRequestException("InferenceJobId is required")
 
-    payload = InvocationsRequest(
-        task=job.taskType,
-        username="test",
-        models=models,
-        param_s3=job.params['input_body_s3']
-    )
+        permissions_check(event, [PERMISSION_INFERENCE_ALL], False)
 
-    logger.info(f"payload: {payload}")
+        # delete sagemaker endpoints in the same loop
 
-    update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
+        # get the inference job from ddb by job id
+        inference_raw = ddb_service.get_item(inference_table_name, {
+            'InferenceJobId': inference_id
+        })
 
-    if job.inference_type == EndpointType.RealTime.value:
-        return real_time(payload, job, endpoint_name)
+        if inference_raw is None or len(inference_raw) == 0:
+            raise BadRequestException(f"InferenceJobId {inference_id} not found")
 
-    return async_inference(payload, job, endpoint_name)
+        job = InferenceJob(**inference_raw)
+        endpoint_name = job.params['sagemaker_inference_endpoint_name']
+        models = {}
+        if 'used_models' in job.params:
+            models = {
+                "space_free_size": 4e10,
+                **job.params['used_models'],
+            }
+
+        payload = InvocationsRequest(
+            task=job.taskType,
+            username="test",
+            models=models,
+            param_s3=job.params['input_body_s3']
+        )
+
+        logger.info(f"payload: {payload}")
+
+        update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
+
+        if job.inference_type == EndpointType.RealTime.value:
+            return real_time(payload, job, endpoint_name)
+
+        return async_inference(payload, job, endpoint_name)
+    except Exception as e:
+        return response_error(e)
 
 
 def real_time(payload, job: InferenceJob, endpoint_name):
