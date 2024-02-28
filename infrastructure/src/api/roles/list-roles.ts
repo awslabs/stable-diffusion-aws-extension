@@ -97,6 +97,7 @@ export class ListRolesApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listRolesIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });

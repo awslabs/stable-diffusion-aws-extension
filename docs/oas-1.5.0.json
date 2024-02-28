@@ -232,7 +232,18 @@
           "角色（Roles）",
           "Role"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{userName}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -293,7 +304,25 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Role"
+                "type": "object",
+                "properties": {
+                  "role_name": {
+                    "type": "string",
+                    "description": "角色名（Role Name）"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "- train:all\n- checkpoint:all\n- inference:all\n- sagemaker_endpoint:all\n- user:all\n- role:all"
+                    },
+                    "description": "权限列表（Permissions）"
+                  }
+                },
+                "required": [
+                  "role_name",
+                  "permissions"
+                ]
               },
               "example": {
                 "role_name": "new_role_name",
@@ -527,10 +556,6 @@
                     },
                     "description": "角色列表（Roles）"
                   },
-                  "creator": {
-                    "type": "string",
-                    "description": "创建者用户名（Creator User Name）"
-                  },
                   "permissions": {
                     "type": "array",
                     "items": {
@@ -547,7 +572,6 @@
                 "required": [
                   "username",
                   "roles",
-                  "creator",
                   "permissions",
                   "password"
                 ]
@@ -693,15 +717,10 @@
                       "message": {
                         "type": "string",
                         "description": "模型文件信息（Message）"
-                      },
-                      "creator": {
-                        "type": "string",
-                        "description": "创建者用户名（Creator User Name）"
                       }
                     },
                     "required": [
-                      "message",
-                      "creator"
+                      "message"
                     ],
                     "description": "参数（Params）"
                   },
@@ -1727,10 +1746,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": {
-                    "type": "string",
-                    "description": "用户名（User Name）"
-                  },
                   "inference_type": {
                     "type": "string",
                     "description": "推理类型（Inference Type）Async | Real-time"
@@ -1767,30 +1782,12 @@
                       "embeddings"
                     ],
                     "description": "模型列表（Model List）"
-                  },
-                  "filters": {
-                    "type": "object",
-                    "properties": {
-                      "createAt": {
-                        "type": "number"
-                      },
-                      "creator": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "createAt",
-                      "creator"
-                    ],
-                    "description": "将在下一版本中移除"
                   }
                 },
                 "required": [
-                  "user_id",
                   "inference_type",
                   "task_type",
-                  "models",
-                  "filters"
+                  "models"
                 ]
               },
               "example": {
@@ -2085,7 +2082,18 @@
           "推理（Inferences）",
           "Inference"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "example": "{{userName}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
