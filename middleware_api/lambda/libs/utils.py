@@ -111,11 +111,23 @@ def response_error(e):
         return bad_request(message=str(e))
 
 
-def permissions_check(event: object, permissions: [str]):
+def permissions_check(event: any, permissions: [str]):
+
+    # todo compatibility with 1.4.0, will be removed
+    if 'Authorization' in event['headers']:
+        authorization = event['headers']['Authorization']
+        if authorization:
+            username = base64.b16decode(authorization.replace('Bearer ', '').encode(encode_type)).decode(
+                encode_type)
+            return permissions_check_by_username(username, permissions)
+
     if 'username' not in event['headers']:
         raise UnauthorizedException('Not found username in headers')
 
-    username = event['headers']['username']
+    return permissions_check_by_username(event['headers']['username'], permissions)
+
+
+def permissions_check_by_username(username: any, permissions: [str]):
     if not username:
         raise UnauthorizedException('username is empty in headers')
 

@@ -76,8 +76,8 @@ export class UpdateCheckPointApi {
         'dynamodb:UpdateItem',
       ],
       resources: [
-          this.checkpointTable.tableArn,
-          this.userTable.tableArn,
+        this.userTable.tableArn,
+        this.checkpointTable.tableArn,
       ],
     }));
 
@@ -174,6 +174,7 @@ export class UpdateCheckPointApi {
   }
 
   private updateCheckpointApi() {
+
     const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
@@ -185,7 +186,6 @@ export class UpdateCheckPointApi {
       memorySize: 10240,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,
@@ -203,6 +203,7 @@ export class UpdateCheckPointApi {
       role: this.role,
       memorySize: 4048,
       environment: {
+        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
@@ -211,13 +212,13 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-
     const createModelIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, createModelIntegration,
         {

@@ -38,7 +38,9 @@ def handler(raw_event, context):
 
     try:
         permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL])
+
         event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
+
         checkpoint_id = raw_event['pathParameters']['id']
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': checkpoint_id

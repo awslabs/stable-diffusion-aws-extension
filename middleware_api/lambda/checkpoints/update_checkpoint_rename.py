@@ -3,10 +3,9 @@ import os
 
 import boto3
 
-from common.const import PERMISSION_CHECKPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from libs.utils import permissions_check, response_error
+from libs.utils import response_error
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
@@ -22,7 +21,6 @@ def handler(raw_event, context):
     logger.info(f'event: {raw_event}')
 
     try:
-        permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL])
         ckpt_id = raw_event['id']
         s3_path = raw_event['s3_path']
         old_name = raw_event['old_name']

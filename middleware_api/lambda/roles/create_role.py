@@ -22,7 +22,7 @@ class UpsertRoleEvent:
     role_name: str
     permissions: [str]
     # todo: will be removed
-    # creator: str = ""
+    creator: str = ""
 
 
 def handler(raw_event, ctx):
