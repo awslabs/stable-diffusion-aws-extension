@@ -50,8 +50,9 @@ all_resources = [
 
 all_actions = [
     'all',
-    'create',
-    'list'
+    # 'create',
+    # 'list'
+    # 'delete'
 ]
 
 all_permissions = []
