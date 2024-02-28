@@ -77,22 +77,6 @@ def handler(event, context):
     return {'statusCode': 200}
 
 
-def get_cool_down_evaluation_periods(item):
-    if 'cool_down_time' not in item:
-        return 1
-    if item['cool_down_time']['S']:
-        cool_down_time = item['cool_down_time']['S']
-        if cool_down_time == "15 minutes":
-            return 1
-        if cool_down_time == "1 hour":
-            return int((60 * 60) / cool_down_period)
-        if cool_down_time == "6 hours":
-            return int((60 * 60 * 6) / cool_down_period)
-        if cool_down_time == "1 day":
-            return int((60 * 60 * 6) / cool_down_period)
-    return 1
-
-
 def check_and_enable_autoscaling(item, variant_name):
     autoscaling = item['autoscaling']['BOOL']
     max_instance_number = item['max_instance_number']['N']
@@ -109,16 +93,19 @@ def enable_autoscaling(item, variant_name, high_value):
     endpoint_name = item['endpoint_name']['S']
     endpoint_type = item['endpoint_type']['S']
 
-    low_value = 0
+    min_instance_number = 0
     if endpoint_type == EndpointType.RealTime.value:
-        low_value = 1
+        min_instance_number = 1
+
+    if 'min_instance_number' in item:
+        min_instance_number = int(item['min_instance_number']['N'])
 
     # Register scalable target
     response = autoscaling_client.register_scalable_target(
         ServiceNamespace='sagemaker',
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
         ScalableDimension='sagemaker:variant:DesiredInstanceCount',
-        MinCapacity=low_value,
+        MinCapacity=min_instance_number,
         MaxCapacity=high_value,
     )
     logger.info(f"Register scalable target response: {response}")
@@ -132,7 +119,7 @@ def enable_autoscaling(item, variant_name, high_value):
 
 def enable_autoscaling_async(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
-    target_value = get_backlog_size_or_invocations_per_instance(item)
+    target_value = 5.0
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
@@ -171,12 +158,12 @@ def enable_autoscaling_async(item, variant_name):
         comparison_operator = response.get('MetricAlarms')[0]['ComparisonOperator']
         if comparison_operator == "LessThanThreshold":
             period = cool_down_period  # 15 minutes
-            evaluation_periods = get_cool_down_evaluation_periods(item)
-            datapoints_to_alarm = evaluation_periods
+            evaluation_periods = 4
+            datapoints_to_alarm = 4
         else:
-            period = 60
-            evaluation_periods = 2
-            datapoints_to_alarm = 2
+            period = 30
+            evaluation_periods = 1
+            datapoints_to_alarm = 1
         response = cw_client.put_metric_alarm(
             AlarmName=alarm_name,
             Namespace='AWS/SageMaker',
@@ -221,15 +208,15 @@ def enable_autoscaling_async(item, variant_name):
         MetricName='HasBacklogWithoutCapacity',
         Namespace='AWS/SageMaker',
         Statistic='Average',
-        EvaluationPeriods=2,
-        DatapointsToAlarm=2,
+        Period=30,
+        EvaluationPeriods=1,
+        DatapointsToAlarm=1,
         Threshold=1,
         ComparisonOperator='GreaterThanOrEqualToThreshold',
         TreatMissingData='missing',
         Dimensions=[
             {'Name': 'EndpointName', 'Value': endpoint_name},
         ],
-        Period=60,
         AlarmActions=[step_policy_response['PolicyARN']]
     )
     logger.info(f"Put metric alarm response: {step_policy_response}")
@@ -237,18 +224,9 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 
-def get_backlog_size_or_invocations_per_instance(item):
-    target_value = 1
-
-    if 'invocations_per_instance' in item:
-        target_value = int(item['invocations_per_instance']['N'])
-
-    return target_value
-
-
 def enable_autoscaling_real_time(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
-    target_value = get_backlog_size_or_invocations_per_instance(item)
+    target_value = 5.0
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
@@ -284,12 +262,12 @@ def enable_autoscaling_real_time(item, variant_name):
         comparison_operator = response.get('MetricAlarms')[0]['ComparisonOperator']
         if comparison_operator == "LessThanThreshold":
             period = cool_down_period  # 15 minutes
-            evaluation_periods = get_cool_down_evaluation_periods(item)
-            datapoints_to_alarm = evaluation_periods
+            evaluation_periods = 4
+            datapoints_to_alarm = 4
         else:
-            period = 60
-            evaluation_periods = 2
-            datapoints_to_alarm = 2
+            period = 30
+            evaluation_periods = 1
+            datapoints_to_alarm = 1
         response = cw_client.put_metric_alarm(
             AlarmName=alarm_name,
             Namespace='AWS/SageMaker',

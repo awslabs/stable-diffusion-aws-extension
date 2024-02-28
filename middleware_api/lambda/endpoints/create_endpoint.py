@@ -40,8 +40,7 @@ class CreateEndpointEvent:
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
-    cool_down_time: str = "15 minutes"
-    invocations_per_instance: str = "1"
+    min_instance_number: str = None
 
 
 def get_docker_image_uri(event: CreateEndpointEvent):
@@ -69,6 +68,12 @@ def handler(raw_event, ctx):
 
     if event.endpoint_type == EndpointType.Serverless.value:
         return bad_request(message="Serverless endpoint is not supported yet")
+
+    if event.endpoint_type == EndpointType.RealTime.value and int(event.min_instance_number) < 1:
+        return bad_request(f"min_instance_number should be at least 1 for real-time endpoint: {event.endpoint_name}")
+
+    if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
+        raise bad_request(f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
 
     endpoint_id = str(uuid.uuid4())
     short_id = endpoint_id[:7]
@@ -147,8 +152,7 @@ def handler(raw_event, ctx):
             current_instance_count="0",
             instance_type=instance_type,
             endpoint_type=event.endpoint_type,
-            cool_down_time=event.cool_down_time,
-            invocations_per_instance=event.invocations_per_instance,
+            min_instance_number=event.min_instance_number,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
