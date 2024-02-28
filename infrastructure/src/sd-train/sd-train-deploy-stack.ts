@@ -216,6 +216,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               datasetInfoTable: props.database.datasetInfoTable,
               datasetItemTable: props.database.datasetItemTable,
+              multiUserTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,

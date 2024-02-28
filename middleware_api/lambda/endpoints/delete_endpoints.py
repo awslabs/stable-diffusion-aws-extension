@@ -31,7 +31,8 @@ class DeleteEndpointEvent:
 # DELETE /endpoints
 def handler(raw_event, ctx):
     try:
-        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
+        # todo will be removed
+        # permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
 
         # delete sagemaker endpoints in the same loop
         event = DeleteEndpointEvent(**json.loads(raw_event['body']))

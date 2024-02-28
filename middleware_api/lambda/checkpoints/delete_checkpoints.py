@@ -29,7 +29,8 @@ def handler(event, ctx):
     logger.info(json.dumps(event))
 
     try:
-        permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
 
         body = DeleteCheckpointsEvent(**json.loads(event['body']))
 

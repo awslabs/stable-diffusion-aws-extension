@@ -30,7 +30,9 @@ def handler(event, ctx):
 
     try:
         body = DeleteInferenceJobsEvent(**json.loads(event['body']))
-        permissions_check(event, [PERMISSION_INFERENCE_ALL])
+
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
         # unique list for preventing duplicate delete
         inference_id_list = list(set(body.inference_id_list))

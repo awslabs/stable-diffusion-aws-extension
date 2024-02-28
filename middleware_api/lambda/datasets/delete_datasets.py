@@ -33,7 +33,8 @@ def handler(event, ctx):
     try:
         body = DeleteDatasetsEvent(**json.loads(event['body']))
 
-        permissions_check(event, [PERMISSION_TRAIN_ALL])
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         # unique list for preventing duplicate delete
         dataset_name_list = list(set(body.dataset_name_list))
