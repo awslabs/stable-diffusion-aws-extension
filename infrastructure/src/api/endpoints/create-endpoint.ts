@@ -217,6 +217,10 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],
           },
+          cool_down_time: {
+            type: JsonSchemaType.STRING,
+            enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
+          },
           instance_type: {
             type: JsonSchemaType.STRING,
           },

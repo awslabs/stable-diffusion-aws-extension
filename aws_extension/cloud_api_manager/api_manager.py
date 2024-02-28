@@ -65,6 +65,7 @@ class CloudApiManager:
                          custom_docker_image_uri="",
                          autoscaling_enabled=True,
                          user_roles=None,
+                         min_instance_number=1,
                          user_token=""):
         """ Create SageMaker endpoint for GPU inference.
         Args:
@@ -85,6 +86,7 @@ class CloudApiManager:
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
             'assign_to_roles': user_roles,
+            'min_instance_number': min_instance_number,
             "creator": user_token,
         }
 
