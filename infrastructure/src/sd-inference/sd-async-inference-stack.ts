@@ -103,6 +103,7 @@ export class SDAsyncInferenceStack {
     new StartInferenceJobApi(
       scope, 'StartInferenceJob',
             <StartInferenceJobApiProps>{
+              userTable: props.multiUserTable,
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
               endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
@@ -303,6 +304,7 @@ export class SDAsyncInferenceStack {
               router: inferV2Router,
               commonLayer: props.commonLayer,
               inferenceJobTable: props.sd_inference_job_table,
+              userTable: props.multiUserTable,
               httpMethod: 'GET',
               s3Bucket: props.s3_bucket,
               srcRoot: srcRoot,
@@ -315,6 +317,7 @@ export class SDAsyncInferenceStack {
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
               commonLayer: props.commonLayer,
+              userTable: props.multiUserTable,
               inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'DELETE',
               s3Bucket: props.s3_bucket,

@@ -1,11 +1,13 @@
 import logging
 import os
 
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_ENDPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from libs.enums import EndpointStatus
 from common.response import ok, bad_request, unauthorized
 from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
-from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
+from libs.enums import EndpointStatus
+from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
+    response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -18,29 +20,31 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /endpoints?name=SageMaker_Endpoint_Name&username=&filter=key:value,key:value
 def handler(event, ctx):
+    logger.info(f'event: {event}')
     _filter = {}
 
-    endpoint_deployment_job_id = None
-    username = None
-    parameters = event['queryStringParameters']
-    if parameters:
-        endpoint_deployment_job_id = parameters[
-            'endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
-                                          parameters[
-                                              'endpointDeploymentJobId'] else None
-        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-
-    if endpoint_deployment_job_id:
-        scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
-                                            key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
-                                            )
-    else:
-        scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
-
-    results = []
-    user_roles = []
-
     try:
+        permissions_check(event, [PERMISSION_ENDPOINT_ALL])
+        endpoint_deployment_job_id = None
+        username = None
+        parameters = event['queryStringParameters']
+        if parameters:
+            endpoint_deployment_job_id = parameters[
+                'endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
+                                              parameters[
+                                                  'endpointDeploymentJobId'] else None
+            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+
+        if endpoint_deployment_job_id:
+            scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
+                                                key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
+                                                )
+        else:
+            scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+
+        results = []
+        user_roles = []
+
         if username:
             user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
@@ -82,4 +86,4 @@ def handler(event, ctx):
 
         return ok(data=data, decimal=True)
     except Exception as e:
-        return bad_request(message=str(e))
+        return response_error(e)

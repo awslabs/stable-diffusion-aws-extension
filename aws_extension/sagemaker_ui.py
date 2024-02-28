@@ -104,21 +104,6 @@ def plaintext_to_html(text):
     return text
 
 
-def server_request_post(path, params):
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, json=params, headers=headers)
-    return response
-
-
 def server_request_get(path, params):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     # Check if api_url ends with '/', if not append it

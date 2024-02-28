@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, internal_server_error, created
 from common.util import get_s3_presign_urls
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
-from libs.utils import get_permissions_by_username, get_user_roles
+from libs.utils import get_permissions_by_username, get_user_roles, permissions_check, response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -50,13 +51,12 @@ class DatasetCreateEvent:
 
 # POST /datasets
 def handler(raw_event, context):
+    logger.info(f'event: {raw_event}')
+
     event = DatasetCreateEvent(**json.loads(raw_event['body']))
 
     try:
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'train' not in creator_permissions \
-                or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return bad_request(message=f'user {event.creator} has not permission to create a train job')
+        permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         user_roles = get_user_roles(ddb_service, user_table, event.creator)
         timestamp = datetime.now().timestamp()
@@ -102,5 +102,4 @@ def handler(raw_event, context):
 
         return created(data=data)
     except Exception as e:
-        logger.error(e)
-        return internal_server_error(message=str(e))
+        return response_error(e)

@@ -21,6 +21,7 @@ export interface UpdateCheckPointApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
+  userTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -35,6 +36,7 @@ export class UpdateCheckPointApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly userTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly role: aws_iam.Role;
@@ -49,6 +51,7 @@ export class UpdateCheckPointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
+    this.userTable = props.userTable;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
@@ -62,6 +65,7 @@ export class UpdateCheckPointApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-update-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -71,7 +75,10 @@ export class UpdateCheckPointApi {
         'dynamodb:Query',
         'dynamodb:UpdateItem',
       ],
-      resources: [this.checkpointTable.tableArn],
+      resources: [
+          this.checkpointTable.tableArn,
+          this.userTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -178,6 +185,7 @@ export class UpdateCheckPointApi {
       memorySize: 10240,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
+        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,

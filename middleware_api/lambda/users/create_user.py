@@ -4,10 +4,12 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
+from common.const import PERMISSION_ROLE_ALL, PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
-from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username
+from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username, \
+    permissions_check, response_error
 from roles.create_role import handler as upsert_role
 
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -25,101 +27,109 @@ password_encryptor = KeyEncryptService()
 class UpsertUserEvent:
     username: str
     password: str
-    creator: str
     initial: Optional[bool] = False
     roles: Optional[List[str]] = None
+    # todo: will be removed
+    creator: str = ""
 
 
 def handler(raw_event, ctx):
     logger.info(json.dumps(raw_event))
-    event = UpsertUserEvent(**json.loads(raw_event['body']))
-    if event.initial:
-        rolenames = [Default_Role]
+
+    try:
+        username = permissions_check(raw_event, [PERMISSION_USER_ALL])
+
+        event = UpsertUserEvent(**json.loads(raw_event['body']))
+
+        if event.initial:
+            role_names = [Default_Role]
+
+            ddb_service.put_items(user_table, User(
+                kind=PARTITION_KEYS.user,
+                sort_key=event.username,
+                password=password_encryptor.encrypt(key_id=kms_key_id, text=event.password),
+                roles=[role_names[0]],
+                creator=username,
+            ).__dict__)
+
+            for rn in role_names:
+                role_event = {
+                    'role_name': rn,
+                    'permissions': [
+                        'train:all',
+                        'checkpoint:all',
+                        'inference:all',
+                        'sagemaker_endpoint:all',
+                        'user:all',
+                        'role:all'
+                    ],
+                    'creator': event.username
+                }
+
+                @dataclass
+                class MockContext:
+                    aws_request_id: str
+                    from_sd_local: bool
+
+                # todo will be remove, not use api
+                create_role_event = {
+                    'body': json.dumps(role_event)
+                }
+                resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
+
+                if resp['statusCode'] != 201:
+                    return resp
+
+            data = {
+                'user': {
+                    'username': event.username,
+                    'roles': [role_names[0]]
+                },
+                'all_roles': role_names,
+            }
+
+            return created(data=data)
+
+        check_permission_resp = _check_action_permission(username, event.username)
+        if check_permission_resp:
+            return check_permission_resp
+
+        creator_permissions = get_permissions_by_username(ddb_service, user_table, username)
+
+        # check if created roles exist
+        roles_result = ddb_service.scan(table=user_table, filters={
+            'kind': PARTITION_KEYS.role,
+            'sort_key': event.roles
+        })
+
+        roles_pool = []
+        for row in roles_result:
+            role = Role(**ddb_service.deserialize(row))
+            # checking if the creator has the proper permissions
+            for permission in role.permissions:
+                permission_parts = permission.split(':')
+                resource = permission_parts[0]
+                action = permission_parts[1]
+                if 'all' not in creator_permissions[resource] and action not in creator_permissions[resource]:
+                    return forbidden(message=f'creator has no permission to assign permission [{permission}] to others')
+
+            roles_pool.append(role.sort_key)
+
+        for role in event.roles:
+            if role not in roles_pool:
+                return bad_request(message=f'user roles "{role}" not exist')
 
         ddb_service.put_items(user_table, User(
             kind=PARTITION_KEYS.user,
             sort_key=event.username,
             password=password_encryptor.encrypt(key_id=kms_key_id, text=event.password),
-            roles=[rolenames[0]],
-            creator=event.creator,
+            roles=event.roles,
+            creator=username,
         ).__dict__)
 
-        for rn in rolenames:
-            role_event = {
-                'role_name': rn,
-                'permissions': [
-                    'train:all',
-                    'checkpoint:all',
-                    'inference:all',
-                    'sagemaker_endpoint:all',
-                    'user:all',
-                    'role:all'
-                ],
-                'creator': event.username
-            }
-
-            @dataclass
-            class MockContext:
-                aws_request_id: str
-                from_sd_local: bool
-
-            # todo will be remove, not use api
-            create_role_event = {
-                'body': json.dumps(role_event)
-            }
-            resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
-
-            if resp['statusCode'] != 201:
-                return resp
-
-        data = {
-            'user': {
-                'username': event.username,
-                'roles': [rolenames[0]]
-            },
-            'all_roles': rolenames,
-        }
-
-        return created(data=data)
-
-    check_permission_resp = _check_action_permission(event.creator, event.username)
-    if check_permission_resp:
-        return check_permission_resp
-
-    creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-
-    # check if created roles exist
-    roles_result = ddb_service.scan(table=user_table, filters={
-        'kind': PARTITION_KEYS.role,
-        'sort_key': event.roles
-    })
-
-    roles_pool = []
-    for row in roles_result:
-        role = Role(**ddb_service.deserialize(row))
-        # checking if the creator has the proper permissions
-        for permission in role.permissions:
-            permission_parts = permission.split(':')
-            resource = permission_parts[0]
-            action = permission_parts[1]
-            if 'all' not in creator_permissions[resource] and action not in creator_permissions[resource]:
-                return forbidden(message=f'creator has no permission to assign permission [{permission}] to others')
-
-        roles_pool.append(role.sort_key)
-
-    for role in event.roles:
-        if role not in roles_pool:
-            return bad_request(message=f'user roles "{role}" not exist')
-
-    ddb_service.put_items(user_table, User(
-        kind=PARTITION_KEYS.user,
-        sort_key=event.username,
-        password=password_encryptor.encrypt(key_id=kms_key_id, text=event.password),
-        roles=event.roles,
-        creator=event.creator,
-    ).__dict__)
-
-    return created()
+        return created()
+    except Exception as e:
+        return response_error(e)
 
 
 def _check_action_permission(creator_username, target_username):

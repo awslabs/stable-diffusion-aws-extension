@@ -111,15 +111,13 @@ def response_error(e):
         return bad_request(message=str(e))
 
 
-def permissions_check(event: object, permissions: [str], required: bool = True):
+def permissions_check(event: object, permissions: [str]):
     if 'username' not in event['headers']:
-        if required is False:
-            return ""
-        raise UnauthorizedException('Unauthorized')
+        raise UnauthorizedException('Not found username in headers')
 
     username = event['headers']['username']
     if not username:
-        raise UnauthorizedException('Unauthorized')
+        raise UnauthorizedException('username is empty in headers')
 
     user = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,

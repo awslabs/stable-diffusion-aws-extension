@@ -36,9 +36,7 @@ def handler(event, _):
         if not inference_id:
             raise BadRequestException("InferenceJobId is required")
 
-        permissions_check(event, [PERMISSION_INFERENCE_ALL], False)
-
-        # delete sagemaker endpoints in the same loop
+        permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
         # get the inference job from ddb by job id
         inference_raw = ddb_service.get_item(inference_table_name, {
@@ -69,14 +67,14 @@ def handler(event, _):
         update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
 
         if job.inference_type == EndpointType.RealTime.value:
-            return real_time(payload, job, endpoint_name)
+            return real_time_inference(payload, job, endpoint_name)
 
         return async_inference(payload, job, endpoint_name)
     except Exception as e:
         return response_error(e)
 
 
-def real_time(payload, job: InferenceJob, endpoint_name):
+def real_time_inference(payload, job: InferenceJob, endpoint_name):
     predictor = Predictor(endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()

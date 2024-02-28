@@ -125,6 +125,7 @@ export class SdTrainDeployStack {
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
+      userTable: multiUserTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoints,
@@ -196,6 +197,7 @@ export class SdTrainDeployStack {
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
               checkPointsTable: checkPointTable,
+              userTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,

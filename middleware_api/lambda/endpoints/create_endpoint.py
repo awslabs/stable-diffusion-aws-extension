@@ -8,12 +8,13 @@ from datetime import datetime
 
 import boto3
 
+from common.const import PERMISSION_ENDPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import bad_request, accepted, forbidden
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import get_permissions_by_username, response_error
+from libs.utils import get_permissions_by_username, response_error, permissions_check
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -70,6 +71,8 @@ def handler(raw_event, ctx):
     try:
         event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
+        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
+
         if event.endpoint_type not in EndpointType.List.value:
             raise BadRequestException(message=f"{event.endpoint_type} endpoint is not supported yet")
 
@@ -104,13 +107,6 @@ def handler(raw_event, ctx):
 
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
-
-        # check if roles have already linked to an endpoint?
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
-                    'sagemaker_endpoint']):
-            return forbidden(message=f"Creator {event.creator} has no permission to create Sagemaker")
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:

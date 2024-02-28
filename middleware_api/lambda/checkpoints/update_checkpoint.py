@@ -7,10 +7,12 @@ from typing import Any, Dict
 import boto3
 
 from checkpoints.create_checkpoint import check_ckpt_name_unique
+from common.const import PERMISSION_CHECKPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, internal_server_error, not_found, bad_request, accepted
+from common.response import ok, not_found, bad_request, accepted
 from libs.common_tools import complete_multipart_upload
 from libs.data_types import CheckPoint, CheckPointStatus
+from libs.utils import permissions_check, response_error
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 rename_lambda_name = os.environ.get('RENAME_LAMBDA_NAME')
@@ -32,10 +34,12 @@ class UpdateCheckPointEvent:
 
 # PUT /checkpoints/{id}
 def handler(raw_event, context):
-    event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
-    checkpoint_id = raw_event['pathParameters']['id']
+    logger.info(f'event: {raw_event}')
 
     try:
+        permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL])
+        event = UpdateCheckPointEvent(**json.loads(raw_event['body']))
+        checkpoint_id = raw_event['pathParameters']['id']
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': checkpoint_id
         })
@@ -51,8 +55,7 @@ def handler(raw_event, context):
             return update_name(event, checkpoint)
         return ok()
     except Exception as e:
-        logger.error(e)
-        return internal_server_error(message=str(e))
+        return response_error(e)
 
 
 def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):

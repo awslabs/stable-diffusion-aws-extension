@@ -11,6 +11,7 @@ export interface GetInferenceJobApiProps {
   router: Resource;
   httpMethod: string;
   inferenceJobTable: Table;
+  userTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -23,6 +24,7 @@ export class GetInferenceJobApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly inferenceJobTable: Table;
+  private readonly userTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
@@ -38,6 +40,7 @@ export class GetInferenceJobApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
+    this.userTable = props.userTable;
 
     this.getInferenceJobsApi();
   }
@@ -57,6 +60,7 @@ export class GetInferenceJobApi {
         role: this.iamRole(),
         memorySize: 1024,
         environment: {
+          MULTI_USER_TABLE: this.userTable.tableName,
           INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
           LOG_LEVEL: this.logLevel.valueAsString,
@@ -96,9 +100,13 @@ export class GetInferenceJobApi {
       actions: [
         // get an inference job
         'dynamodb:GetItem',
+        // query users
+        'dynamodb:Query',
+        'dynamodb:Scan',
       ],
       resources: [
         this.inferenceJobTable.tableArn,
+        this.userTable.tableArn,
       ],
     }));
 

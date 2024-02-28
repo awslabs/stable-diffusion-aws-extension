@@ -5,10 +5,12 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 
+from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request
 from libs.data_types import InferenceJob
-from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key
+from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, permissions_check, \
+    response_error
 
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -35,6 +37,7 @@ def handler(event, ctx):
     inference_type = "txt2img"
 
     try:
+        permissions_check(event, [PERMISSION_INFERENCE_ALL])
         if parameters:
             username = parameters['username'] if 'username' in parameters and parameters['username'] else None
             limit = int(parameters['limit']) if 'limit' in parameters and parameters['limit'] else limit
@@ -81,4 +84,4 @@ def handler(event, ctx):
 
         return ok(data=data, decimal=True)
     except Exception as e:
-        return bad_request(message=str(e))
+        return response_error(e)
