@@ -136,18 +136,6 @@ curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension
 
 <br>
 
-# 恢复默认镜像
-
-如欲恢复默认镜像，请替换以下命令中的变量，并执行命令，即可恢复到默认镜像：
-
-- **{region}**：方案部署的区域，如：`us-east-1`
-- **{endpoint-name}**：Endpoint 名称，如：`infer-endpoint-111111`
-
-```shell
-curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh | bash -s {region} {endpoint-name} default
-```
-
-<br>
 
 # 验证或诊断容器镜像
 

@@ -326,7 +326,6 @@
               },
               "example": {
                 "role_name": "new_role_name",
-                "creator": "admin",
                 "permissions": [
                   "train:all",
                   "checkpoint:all"
@@ -579,7 +578,6 @@
               "example": {
                 "username": "username",
                 "password": "XXXXXXXXXXXXX",
-                "creator": "admin",
                 "roles": [
                   "IT Operator",
                   "Designer"
@@ -741,8 +739,7 @@
               "example": {
                 "checkpoint_type": "ControlNet",
                 "params": {
-                  "message": "placeholder for chkpts upload test",
-                  "creator": "admin"
+                  "message": "placeholder for chkpts upload test"
                 },
                 "urls": [
                   "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth"
@@ -1597,8 +1594,7 @@
                 "assign_to_roles": [
                   "Designer",
                   "IT Operator"
-                ],
-                "creator": "admin"
+                ]
               }
             }
           }
@@ -2467,11 +2463,6 @@
                     "summary": "Success",
                     "value": {
                       "statusCode": 200,
-                      "headers": {
-                        "Access-Control-Allow-Headers": "Content-Type",
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-                      },
                       "checkpoint": {
                         "id": "d613760c-c8f7-466a-9838-cea3033bf57d",
                         "type": "Stable-diffusion",

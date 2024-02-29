@@ -137,19 +137,6 @@ The following figure shows the successful execution of the command:
 
 <br>
 
-# Restore the default image
-
-To restore the default image, replace the variables in the following command and execute:
-
-- **{region}**: The region where the solution is deployed, such as: `us-east-1`
-- **{endpoint-name}**: Endpoint name, such as: `infer-endpoint-111111`
-
-```shell
-curl -s https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh | bash -s {region} {endpoint-name} default
-```
-
-<br>
-
 # Verify or diagnose whether the container image is work
 
 After the container image is replaced, you can verify whether the container image is working properly by viewing the logs of the SageMaker Endpoint, or diagnose the cause of the problem:
