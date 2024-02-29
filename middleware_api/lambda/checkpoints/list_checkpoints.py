@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from common.const import PERMISSION_CHECKPOINT_ALL
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_multi_query_params
@@ -27,7 +27,7 @@ def handler(event, context):
     _filter = {}
 
     try:
-        requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST])
         user_roles = ['*']
         username = None
         page = 1

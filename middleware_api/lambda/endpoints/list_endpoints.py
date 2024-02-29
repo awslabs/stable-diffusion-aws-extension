@@ -1,9 +1,9 @@
 import logging
 import os
 
-from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_ENDPOINT_ALL
+from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, unauthorized
+from common.response import ok
 from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
 from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
@@ -24,7 +24,7 @@ def handler(event, ctx):
     _filter = {}
 
     try:
-        requestor_name = permissions_check(event, [PERMISSION_ENDPOINT_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST])
         endpoint_deployment_job_id = None
         username = None
         parameters = event['queryStringParameters']

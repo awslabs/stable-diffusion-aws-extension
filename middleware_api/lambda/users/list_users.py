@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from common.const import PERMISSION_USER_ALL
+from common.const import PERMISSION_USER_ALL, PERMISSION_USER_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.data_types import User, PARTITION_KEYS, Role
@@ -35,7 +35,7 @@ def handler(event, ctx):
                 'show_password'] else 0
             username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
 
-        requester_name = permissions_check(event, [PERMISSION_USER_ALL])
+        requester_name = permissions_check(event, [PERMISSION_USER_ALL, PERMISSION_USER_LIST])
 
         requester_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
         if not username:

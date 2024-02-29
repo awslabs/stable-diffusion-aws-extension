@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from common.const import PERMISSION_ROLE_ALL
+from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.data_types import Role, PARTITION_KEYS
@@ -22,7 +22,7 @@ def handler(event, ctx):
     _filter = {}
 
     try:
-        requestor_name = permissions_check(event, [PERMISSION_ROLE_ALL])
+        requestor_name = permissions_check(event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST])
 
         parameters = event['queryStringParameters']
 

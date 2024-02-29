@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
-from common.const import PERMISSION_INFERENCE_ALL
+from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
@@ -46,7 +46,7 @@ def handler(raw_event, context):
         logger.info(json.dumps(json.loads(raw_event['body'])))
         event = CreateInferenceEvent(**json.loads(raw_event['body']))
 
-        username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL])
+        username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE])
 
         _type = event.task_type
         extra_generate_types = ['extra-single-image', 'extra-batch-images', 'rembg']

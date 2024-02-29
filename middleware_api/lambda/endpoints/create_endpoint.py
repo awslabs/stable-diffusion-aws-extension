@@ -8,13 +8,13 @@ from datetime import datetime
 
 import boto3
 
-from common.const import PERMISSION_ENDPOINT_ALL
+from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import bad_request, accepted, forbidden
+from common.response import bad_request, accepted
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import get_permissions_by_username, response_error, permissions_check
+from libs.utils import response_error, permissions_check
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -71,7 +71,7 @@ def handler(raw_event, ctx):
     try:
         event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
-        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
+        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE])
 
         if event.endpoint_type not in EndpointType.List.value:
             raise BadRequestException(message=f"{event.endpoint_type} endpoint is not supported yet")

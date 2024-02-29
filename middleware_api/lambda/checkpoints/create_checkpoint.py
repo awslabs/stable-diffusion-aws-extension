@@ -9,7 +9,7 @@ from typing import Any
 import boto3
 import requests
 
-from common.const import PERMISSION_CHECKPOINT_ALL
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, accepted
 from libs.common_tools import get_base_checkpoint_s3_key, \
@@ -48,7 +48,7 @@ def handler(raw_event, context):
     try:
         event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
-        username = permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL])
+        username = permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE])
 
         # all urls or filenames must be passed check
         check_filenames_unique(event)

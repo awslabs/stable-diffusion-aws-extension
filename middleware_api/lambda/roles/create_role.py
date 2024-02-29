@@ -3,7 +3,7 @@ import logging
 import os
 from dataclasses import dataclass
 
-from common.const import PERMISSION_ROLE_ALL
+from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from libs.data_types import Role, PARTITION_KEYS
@@ -31,7 +31,7 @@ def handler(raw_event, ctx):
     try:
         event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
-        username = permissions_check(raw_event, [PERMISSION_ROLE_ALL])
+        username = permissions_check(raw_event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE])
 
         if not ctx or 'from_sd_local' not in vars(ctx):
             # should check the creator permission contains role:all
