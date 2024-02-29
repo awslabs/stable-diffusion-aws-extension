@@ -65,7 +65,7 @@ RUN mkdir -p /opt/ml/code/extensions/ && \
 强烈建议您在更换镜像后验证或诊断容器镜像是否正常工作，如需查看日志，您可进入 Endpoint 的日志组查看日志：
 
 - **{region}**：方案部署的区域，如：`us-east-1`
-- **{endpoint-name}**：Endpoint 名称，如：`infer-endpoint-111111`
+- **{endpoint-name}**：Endpoint 名称，如：`esd-type-111111`
 
 ```shell
 https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups$3FlogGroupNameFilter$3D{endpoint-name}

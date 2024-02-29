@@ -30,7 +30,7 @@ Amazon SageMaker 提供了能力自动扩展模型推理端点，以响应流量
             "PolicyARN": "Your PolicyARN",
             "PolicyName": "HasBacklogWithoutCapacity-ScalingPolicy",
             "ServiceNamespace": "sagemaker",
-            "ResourceId": "endpoint/infer-endpoint-c356f91/variant/prod",
+            "ResourceId": "endpoint/esd-type-c356f91/variant/prod",
             "ScalableDimension": "sagemaker:variant:DesiredInstanceCount",
             "PolicyType": "StepScaling",
             "StepScalingPolicyConfiguration": {
@@ -56,7 +56,7 @@ Amazon SageMaker 提供了能力自动扩展模型推理端点，以响应流量
             "PolicyARN": "Your PolicyARN",
             "PolicyName": "CPUUtil-ScalingPolicy",
             "ServiceNamespace": "sagemaker",
-            "ResourceId": "endpoint/infer-endpoint-c356f91/variant/prod",
+            "ResourceId": "endpoint/esd-type-c356f91/variant/prod",
             "ScalableDimension": "sagemaker:variant:DesiredInstanceCount",
             "PolicyType": "TargetTrackingScaling",
             "TargetTrackingScalingPolicyConfiguration": {
@@ -67,7 +67,7 @@ Amazon SageMaker 提供了能力自动扩展模型推理端点，以响应流量
                     "Dimensions": [
                         {
                             "Name": "EndpointName",
-                            "Value": "infer-endpoint-c356f91"
+                            "Value": "esd-type-c356f91"
                         },
                         {
                             "Name": "VariantName",
@@ -82,11 +82,11 @@ Amazon SageMaker 提供了能力自动扩展模型推理端点，以响应流量
             },
             "Alarms": [
                 {
-                    "AlarmName": "TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmHigh-c915b303-9048-40b2-99a7-f5b7e49ab7c4",
+                    "AlarmName": "TargetTracking-endpoint/esd-type-c356f91/variant/prod-AlarmHigh-c915b303-9048-40b2-99a7-f5b7e49ab7c4",
                     "AlarmARN": "Your AlarmARN"
                 },
                 {
-                    "AlarmName": "TargetTracking-endpoint/infer-endpoint-c356f91/variant/prod-AlarmLow-2fd61f99-c2e5-4ac6-9722-54030c3f0216",
+                    "AlarmName": "TargetTracking-endpoint/esd-type-c356f91/variant/prod-AlarmLow-2fd61f99-c2e5-4ac6-9722-54030c3f0216",
                     "AlarmARN": "Your AlarmARN"
                 }
             ],

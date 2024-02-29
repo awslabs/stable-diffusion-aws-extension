@@ -64,7 +64,7 @@ Create a role named `byoc` and add the logged-in user to that role to activate t
 After the container image is replaced, you can verify whether the container image is working properly by viewing the logs of the SageMaker Endpoint, or diagnose the cause of the problem:
 
 - **{region}**: The region where the solution is deployed, such as: `us-east-1`
-- **{endpoint-name}**: Endpoint name, such as: `infer-endpoint-111111`
+- **{endpoint-name}**: Endpoint name, such as: `esd-type-111111`
 
 ```shell
 https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:log-groups$3FlogGroupNameFilter$3D{endpoint-name}

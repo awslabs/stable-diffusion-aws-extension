@@ -383,7 +383,7 @@ def json_convert_to_payload(params_dict, checkpoint_info, task_type):
             inpainting_fill = 3
         include_init_images = False
 
-    endpoint_name = checkpoint_info['sagemaker_endpoint']  # "infer-endpoint-ca0e"
+    endpoint_name = checkpoint_info['sagemaker_endpoint']  # "esd-type-name"
 
     # construct payload
     payload = {}
