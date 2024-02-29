@@ -22,6 +22,7 @@ export interface StartInferenceJobApiProps {
   endpointDeploymentTable: aws_dynamodb.Table;
   inferenceJobTable: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
+  userTable: aws_dynamodb.Table;
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
@@ -40,6 +41,7 @@ export class StartInferenceJobApi {
   private readonly endpointDeploymentTable: aws_dynamodb.Table;
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly userTable: aws_dynamodb.Table;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: StartInferenceJobApiProps) {
@@ -50,6 +52,7 @@ export class StartInferenceJobApi {
     this.router = props.router;
     this.inferenceJobTable = props.inferenceJobTable;
     this.checkpointTable = props.checkpointTable;
+    this.userTable = props.userTable;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
@@ -79,6 +82,7 @@ export class StartInferenceJobApi {
         this.inferenceJobTable.tableArn,
         this.endpointDeploymentTable.tableArn,
         this.checkpointTable.tableArn,
+        this.userTable.tableArn,
       ],
     }));
 
@@ -133,6 +137,7 @@ export class StartInferenceJobApi {
       role: this.getLambdaRole(),
       memorySize: 1024,
       environment: {
+        MULTI_USER_TABLE: this.userTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,

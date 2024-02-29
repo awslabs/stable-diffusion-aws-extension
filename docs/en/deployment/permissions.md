@@ -1,3 +1,5 @@
+When deploying, updating, and managing the resources deployed in this solution, it is recommended to follow the minimum permission principle to grant permissions to the monitored account.
+
 The permissions required for deploying, updating, and managing the resources deployed in this solution are as follows:
 
 ```json

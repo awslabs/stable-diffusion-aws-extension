@@ -19,6 +19,7 @@ export interface DeleteDatasetsApiProps {
   httpMethod: string;
   datasetInfoTable: Table;
   datasetItemTable: Table;
+  multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -34,6 +35,7 @@ export class DeleteDatasetsApi {
   private readonly scope: Construct;
   private readonly datasetInfoTable: Table;
   private readonly datasetItemTable: Table;
+  private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
@@ -46,6 +48,7 @@ export class DeleteDatasetsApi {
     this.httpMethod = props.httpMethod;
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemTable = props.datasetItemTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -114,6 +117,7 @@ export class DeleteDatasetsApi {
         role: this.iamRole(),
         memorySize: 1024,
         environment: {
+          MULTI_USER_TABLE: this.multiUserTable.tableName,
           DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
           DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
@@ -160,10 +164,13 @@ export class DeleteDatasetsApi {
         'dynamodb:Query',
         // delete dataset
         'dynamodb:DeleteItem',
+        // sacn users
+        'dynamodb:Scan',
       ],
       resources: [
         this.datasetInfoTable.tableArn,
         this.datasetItemTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 

@@ -6,13 +6,14 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error
 
 bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
@@ -27,23 +28,26 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 @dataclasses.dataclass
-class PrepareEvent:
+class CreateInferenceEvent:
     task_type: str
-    models: dict[str, List[str]]  # [checkpoint_type: names] this is same as checkpoint if confused
-    # todo will remove in next major version
-    filters: dict[str, Any] = None
+    models: dict[str, List[str]]  # [checkpoint_type: names] this is the same as checkpoint if confused
     sagemaker_endpoint_name: Optional[str] = ""
-    user_id: Optional[str] = ""
     inference_type: Optional[str] = None
+    # todo user_id is not used in this lambda, but we need to keep it for the compatibility with the old code
+    filters: dict[str, Any] = None
+    user_id: Optional[str] = ""
 
 
 # POST /inferences
 def handler(raw_event, context):
-
+    logger.info(f'event: {raw_event}')
     try:
         request_id = context.aws_request_id
         logger.info(json.dumps(json.loads(raw_event['body'])))
-        event = PrepareEvent(**json.loads(raw_event['body']))
+        event = CreateInferenceEvent(**json.loads(raw_event['body']))
+
+        username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE])
+
         _type = event.task_type
         extra_generate_types = ['extra-single-image', 'extra-batch-images', 'rembg']
         simple_generate_types = ['txt2img', 'img2img']
@@ -55,7 +59,7 @@ def handler(raw_event, context):
 
         # check if endpoint table for endpoint status and existence
         inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.inference_type,
-                                                          event.user_id)
+                                                          username)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
         instance_type = inference_endpoint.instance_type
@@ -71,7 +75,7 @@ def handler(raw_event, context):
             status='created',
             taskType=_type,
             inference_type=event.inference_type,
-            owner_group_or_role=[event.user_id],
+            owner_group_or_role=[username],
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
@@ -132,7 +136,7 @@ def handler(raw_event, context):
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
         return created(data=resp)
     except Exception as e:
-        return bad_request(message=str(e))
+        return response_error(e)
 
 
 # fixme: this is a very expensive function

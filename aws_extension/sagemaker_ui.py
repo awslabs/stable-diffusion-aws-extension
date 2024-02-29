@@ -104,21 +104,6 @@ def plaintext_to_html(text):
     return text
 
 
-def server_request_post(path, params):
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, json=params, headers=headers)
-    return response
-
-
 def server_request_get(path, params):
     api_gateway_url = get_variable_from_json('api_gateway_url')
     # Check if api_url ends with '/', if not append it
@@ -313,6 +298,8 @@ def get_inference_job(inference_job_id):
                        desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
                             f"end request if data.status == succeed, "
                             f"ID from previous step: CreateInference -> data -> inference -> id")
+    if 'data' not in response.json():
+        raise Exception(response.json())
     return response.json()['data']
 
 
@@ -568,7 +555,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key, "username": pr.username})
 
         if response.status_code not in [201, 202]:
             return response.json()['message'], None, None, None, None, None, None

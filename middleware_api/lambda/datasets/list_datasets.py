@@ -1,10 +1,12 @@
 import logging
 import os
 
+from common.const import PERMISSION_TRAIN_ALL
 from libs.data_types import DatasetInfo
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, bad_request, unauthorized
-from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions
+from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
+    response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -27,9 +29,7 @@ def handler(event, context):
             _filter['dataset_status'] = parameters['dataset_status']
 
     try:
-        if 'username' not in event['headers']:
-            return unauthorized()
-        requestor_name = event['headers']['username']
+        requestor_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
@@ -63,5 +63,4 @@ def handler(event, context):
 
         return ok(data={'datasets': datasets}, decimal=True)
     except Exception as e:
-        logger.error(e)
-        return bad_request(message=str(e))
+        return response_error(e)

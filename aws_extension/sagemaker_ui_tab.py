@@ -50,8 +50,9 @@ all_resources = [
 
 all_actions = [
     'all',
-    'create',
-    'list'
+    # 'create',
+    # 'list'
+    # 'delete'
 ]
 
 all_permissions = []
@@ -957,15 +958,17 @@ def _list_sagemaker_endpoints(username):
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
 
-            scope = ""
-            min_instance_number = endpoint['min_instance_number'] if 'min_instance_number' in endpoint else ""
-            max_instance_number = endpoint['max_instance_number'] if endpoint['max_instance_number'] else ""
-            if min_instance_number:
-                scope = f"({min_instance_number}-{max_instance_number})"
+            scale_scope = ""
+            min_instance_number = endpoint['min_instance_number'] if 'min_instance_number' in endpoint and endpoint[
+                'min_instance_number'] else "0"
+            max_instance_number = endpoint['max_instance_number'] if 'max_instance_number' in endpoint and endpoint[
+                'max_instance_number'] else ""
+            if max_instance_number:
+                scale_scope = f"({min_instance_number}-{max_instance_number})"
 
             autoscaling = endpoint['autoscaling']
             if autoscaling:
-                autoscaling = f"yes {scope}"
+                autoscaling = f"yes {scale_scope}"
 
             endpoints.append([
                 endpoint['endpoint_name'],
@@ -1065,7 +1068,8 @@ def dataset_tab():
                 if not has_config():
                     return f'Please config api url and token', None, None, None, None
 
-                raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.post(url=url, json=payload,
+                                             headers={'x-api-key': api_key, "username": pr.username})
                 logger.info(raw_response.json())
 
                 if raw_response.status_code != 201:
@@ -1084,7 +1088,8 @@ def dataset_tab():
                     "status": "Enabled"
                 }
 
-                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload,
+                                            headers={'x-api-key': api_key, "username": pr.username})
                 raw_response.raise_for_status()
                 logger.debug(raw_response.json())
                 return f'Complete Dataset {dataset_name} creation', None, None, None, None

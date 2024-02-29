@@ -118,10 +118,6 @@ export class CreateUserApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
           initial: {
             type: JsonSchemaType.BOOLEAN,
             default: false,
@@ -138,7 +134,6 @@ export class CreateUserApi {
         },
         required: [
           'username',
-          'creator',
         ],
       },
       contentType: 'application/json',

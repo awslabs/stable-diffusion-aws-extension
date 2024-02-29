@@ -3,9 +3,11 @@ import logging
 import os
 from dataclasses import dataclass
 
+from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, internal_server_error, not_found
+from common.response import ok, not_found
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
+from libs.utils import permissions_check, response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -23,9 +25,14 @@ class UpdateDatasetStatusEvent:
 
 # PUT /dataset
 def handler(raw_event, context):
-    event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
-    dataset_id = raw_event['pathParameters']['id']
+    logger.info(f'event: {raw_event}')
+
     try:
+        event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
+        dataset_id = raw_event['pathParameters']['id']
+
+        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+
         raw_dataset_info = ddb_service.get_item(table=dataset_info_table, key_values={
             'dataset_name': dataset_id
         })
@@ -58,5 +65,4 @@ def handler(raw_event, context):
         })
 
     except Exception as e:
-        logger.error(e)
-        return internal_server_error(message=str(e))
+        return response_error(e)

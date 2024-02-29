@@ -125,6 +125,7 @@ export class SdTrainDeployStack {
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
+      userTable: multiUserTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoints,
@@ -153,6 +154,7 @@ export class SdTrainDeployStack {
     // PUT /datasets/{id}
     const updateDatasetApi = new UpdateDatasetApi(scope, 'UpdateDataset', {
       commonLayer: commonLayer,
+      userTable: multiUserTable,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',
@@ -196,6 +198,7 @@ export class SdTrainDeployStack {
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
               checkPointsTable: checkPointTable,
+              userTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
@@ -213,6 +216,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               datasetInfoTable: props.database.datasetInfoTable,
               datasetItemTable: props.database.datasetItemTable,
+              multiUserTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,

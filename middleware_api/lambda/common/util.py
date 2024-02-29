@@ -21,6 +21,15 @@ def get_multi_query_params(event, param_name: str, default=None):
     return value
 
 
+def get_query_param(event, param_name: str, default=None):
+    if 'queryStringParameters' in event:
+        queries = event['queryStringParameters']
+        if queries and param_name in queries:
+            return queries[param_name]
+
+    return default
+
+
 def publish_msg(topic_arn, msg, subject):
     client = boto3.client('sns')
     client.publish(

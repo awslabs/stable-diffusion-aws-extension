@@ -1,13 +1,25 @@
 import base64
 import json
 import logging
+import os
 
 import boto3
 from botocore.exceptions import ClientError
 
+from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
+from common.response import unauthorized, forbidden, not_found, bad_request
 from libs.data_types import PARTITION_KEYS, User, Role
 
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+
+user_table = os.environ.get('MULTI_USER_TABLE')
+
+ddb_service = DynamoDbUtilsService(logger=logger)
+
 encode_type = "utf-8"
+
 
 class KeyEncryptService:
 
@@ -83,6 +95,68 @@ def get_user_roles(ddb_service, user_table_name, username):
 
     user = User(**ddb_service.deserialize(user[0]))
     return user.roles
+
+
+def response_error(e):
+    try:
+        logger.error(e, exc_info=True)
+        raise e
+    except UnauthorizedException as e:
+        return unauthorized(message=str(e))
+    except ForbiddenException as e:
+        return forbidden(message=str(e))
+    except NotFoundException as e:
+        return not_found(message=str(e))
+    except Exception as e:
+        return bad_request(message=str(e))
+
+
+def permissions_check(event: any, permissions: [str]):
+    if 'headers' not in event:
+        raise BadRequestException('Not found headers in event')
+
+    # todo compatibility with 1.4.0, will be removed
+    if 'Authorization' in event['headers']:
+        authorization = event['headers']['Authorization']
+        if authorization:
+            username = base64.b16decode(authorization.replace('Bearer ', '').encode(encode_type)).decode(
+                encode_type)
+            return permissions_check_by_username(username, permissions)
+
+    if 'username' not in event['headers']:
+        raise UnauthorizedException("Unauthorized")
+
+    return permissions_check_by_username(event['headers']['username'], permissions)
+
+
+def permissions_check_by_username(username: any, permissions: [str]):
+    if not username:
+        raise UnauthorizedException("Unauthorized")
+
+    user = ddb_service.query_items(table=user_table, key_values={
+        'kind': PARTITION_KEYS.user,
+        'sort_key': username,
+    })
+
+    if not user or len(user) == 0:
+        raise UnauthorizedException("Unauthorized")
+
+    user = User(**ddb_service.deserialize(user[0]))
+    logger.info(f'user: {user}')
+
+    roles = ddb_service.scan(table=user_table, filters={
+        'kind': PARTITION_KEYS.role,
+        'sort_key': user.roles,
+    })
+
+    for role_raw in roles:
+        role = Role(**(ddb_service.deserialize(role_raw)))
+        logger.info(f'role: {role}')
+        for permission in permissions:
+            if permission in role.permissions:
+                return username
+
+    return ForbiddenException(f"User {username} has no permissions: {permissions}")
 
 
 def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_name: str) -> bool:

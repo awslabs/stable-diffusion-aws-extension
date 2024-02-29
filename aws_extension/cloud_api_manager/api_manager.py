@@ -44,7 +44,6 @@ class CloudApiManager:
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
             "endpoint_name_list": delete_endpoint_list,
-            "username": user_token,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
@@ -83,10 +82,12 @@ class CloudApiManager:
             "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
+            'min_instance_number': min_instance_number,
+            # use initial_instance_count for user experience
+            'max_instance_number': initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
             'assign_to_roles': user_roles,
-            'min_instance_number': min_instance_number,
             "creator": user_token,
         }
 

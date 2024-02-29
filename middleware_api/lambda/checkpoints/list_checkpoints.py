@@ -2,11 +2,13 @@ import json
 import logging
 import os
 
+from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, unauthorized
+from common.response import ok
 from common.util import get_multi_query_params
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
-from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username
+from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
+    response_error
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 
@@ -24,36 +26,33 @@ def handler(event, context):
     logger.info(json.dumps(event))
     _filter = {}
 
-    user_roles = ['*']
-    username = None
-    page = 1
-    per_page = 10
-
-    roles = get_multi_query_params(event, 'roles', default=[])
-
-    status = get_multi_query_params(event, 'status')
-    if status:
-        _filter['checkpoint_status'] = status
-
-    types = get_multi_query_params(event, 'types')
-    if types:
-        _filter['checkpoint_type'] = types
-
-    parameters = event['queryStringParameters']
-    if parameters:
-        page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
-        per_page = int(parameters['per_page']) if 'per_page' in parameters and parameters['per_page'] else 10
-
-        # todo: support multi user fetch later
-        username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-        if username:
-            user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
-
-    if 'username' not in event['headers']:
-        return unauthorized()
-    requestor_name = event['headers']['username']
-
     try:
+        requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST])
+        user_roles = ['*']
+        username = None
+        page = 1
+        per_page = 10
+
+        roles = get_multi_query_params(event, 'roles', default=[])
+
+        status = get_multi_query_params(event, 'status')
+        if status:
+            _filter['checkpoint_status'] = status
+
+        types = get_multi_query_params(event, 'types')
+        if types:
+            _filter['checkpoint_type'] = types
+
+        parameters = event['queryStringParameters']
+        if parameters:
+            page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
+            per_page = int(parameters['per_page']) if 'per_page' in parameters and parameters['per_page'] else 10
+
+            # todo: support multi user fetch later
+            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+            if username:
+                user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={
             'kind': PARTITION_KEYS.role,
@@ -105,8 +104,7 @@ def handler(event, context):
 
         return ok(data=data, decimal=True)
     except Exception as e:
-        logger.error(e)
-        return bad_request(data=str(e))
+        return response_error(e)
 
 
 # todo will use query

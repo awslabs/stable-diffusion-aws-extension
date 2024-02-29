@@ -109,6 +109,7 @@ export class ListDatasetsApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listDatasetsIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });

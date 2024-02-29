@@ -1,10 +1,13 @@
 from enum import Enum, unique
 
+
 @unique
 class EndpointType(Enum):
     RealTime = "Real-time"
     Serverless = "Serverless"
     Async = "Async"
+    List = [RealTime, Async]
+
 
 @unique
 class EndpointStatus(Enum):
@@ -15,6 +18,7 @@ class EndpointStatus(Enum):
     FAILED = "Failed"
     UPDATING = "Updating"
     ROLLING_BACK = "RollingBack"
+
 
 class CreateModelStatus(Enum):
     Initial = 'Initial'
@@ -27,6 +31,7 @@ class CheckPointStatus(Enum):
     Initial = 'Initial'
     Active = 'Active'
     Disabled = 'Disabled'
+
 
 class TrainJobStatus(Enum):
     Initial = 'Initial'
@@ -46,6 +51,7 @@ class DataStatus(Enum):
     Initialed = 'Initialed'
     Enabled = 'Enabled'
     Disabled = 'Disabled'
+
 
 class DatasetStatus(Enum):
     Initialed = 'Initialed'

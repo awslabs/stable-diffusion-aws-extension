@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "ESD 1.4.0",
+    "title": "ESD 1.5.0",
     "description": "",
     "version": "1.0.0"
   },
@@ -33,7 +33,8 @@
         "description": "测试客户端是否可以连接到 API，并检查配置是否正确。\nTest whether client can connect to api and check the API_TOKEN is correct.",
         "operationId": "TestConnection",
         "tags": [
-          "健康检查（Ping）"
+          "健康检查（Ping）",
+          "Test"
         ],
         "parameters": [],
         "responses": {
@@ -83,7 +84,8 @@
         "description": "获取角色列表\nList all roles",
         "operationId": "ListRoles",
         "tags": [
-          "角色（Roles）"
+          "角色（Roles）",
+          "Role"
         ],
         "parameters": [
           {
@@ -97,7 +99,7 @@
             }
           },
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
@@ -227,15 +229,16 @@
         "description": "删除角色\nDelete roles",
         "operationId": "ListRoles",
         "tags": [
-          "角色（Roles）"
+          "角色（Roles）",
+          "Role"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
-            "example": "{{bearerToken}}",
+            "example": "{{userName}}",
             "schema": {
               "type": "string"
             }
@@ -293,29 +296,36 @@
         "description": "创建新角色\nCreate a new role\n",
         "operationId": "CreateRole",
         "tags": [
-          "角色（Roles）"
+          "角色（Roles）",
+          "Role"
         ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Role"
+                "type": "object",
+                "properties": {
+                  "role_name": {
+                    "type": "string",
+                    "description": "角色名（Role Name）"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "- train:all\n- checkpoint:all\n- inference:all\n- sagemaker_endpoint:all\n- user:all\n- role:all"
+                    },
+                    "description": "权限列表（Permissions）"
+                  }
+                },
+                "required": [
+                  "role_name",
+                  "permissions"
+                ]
               },
               "example": {
                 "role_name": "new_role_name",
-                "creator": "admin",
                 "permissions": [
                   "train:all",
                   "checkpoint:all"
@@ -371,11 +381,12 @@
         "description": "获取用户列表\nList all users",
         "operationId": "ListUsers",
         "tags": [
-          "用户（Users）"
+          "用户（Users）",
+          "User"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
@@ -522,20 +533,10 @@
         "description": "创建新用户\nCreate a new user\n",
         "operationId": "CreateUser",
         "tags": [
-          "用户（Users）"
+          "用户（Users）",
+          "User"
         ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -554,10 +555,6 @@
                     },
                     "description": "角色列表（Roles）"
                   },
-                  "creator": {
-                    "type": "string",
-                    "description": "创建者用户名（Creator User Name）"
-                  },
                   "permissions": {
                     "type": "array",
                     "items": {
@@ -574,7 +571,6 @@
                 "required": [
                   "username",
                   "roles",
-                  "creator",
                   "permissions",
                   "password"
                 ]
@@ -582,7 +578,6 @@
               "example": {
                 "username": "username",
                 "password": "XXXXXXXXXXXXX",
-                "creator": "admin",
                 "roles": [
                   "IT Operator",
                   "Designer"
@@ -636,15 +631,16 @@
         "description": "删除用户\nDelete users\n",
         "operationId": "DeleteUser",
         "tags": [
-          "用户（Users）"
+          "用户（Users）",
+          "User"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
-            "example": "{{bearerToken}}",
+            "example": "{{userName}}",
             "schema": {
               "type": "string"
             }
@@ -699,20 +695,10 @@
         "description": "通过URL上传模型文件\nCreate a new Checkpoint by URL\n",
         "operationId": "CreateCheckpoint",
         "tags": [
-          "模型文件（Checkpoints）"
+          "模型文件（Checkpoints）",
+          "Checkpoint"
         ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -729,15 +715,10 @@
                       "message": {
                         "type": "string",
                         "description": "模型文件信息（Message）"
-                      },
-                      "creator": {
-                        "type": "string",
-                        "description": "创建者用户名（Creator User Name）"
                       }
                     },
                     "required": [
-                      "message",
-                      "creator"
+                      "message"
                     ],
                     "description": "参数（Params）"
                   },
@@ -758,8 +739,7 @@
               "example": {
                 "checkpoint_type": "ControlNet",
                 "params": {
-                  "message": "placeholder for chkpts upload test",
-                  "creator": "admin"
+                  "message": "placeholder for chkpts upload test"
                 },
                 "urls": [
                   "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth"
@@ -908,7 +888,8 @@
         "description": "获取模型文件列表\nLists all checkpoints",
         "operationId": "ListCheckpoints",
         "tags": [
-          "模型文件（Checkpoints）"
+          "模型文件（Checkpoints）",
+          "Checkpoint"
         ],
         "parameters": [
           {
@@ -932,7 +913,7 @@
             }
           },
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
@@ -1318,20 +1299,10 @@
         "description": "删除模型文件 \nDelete checkpoints\n",
         "operationId": "ListCheckpoints",
         "tags": [
-          "模型文件（Checkpoints）"
+          "模型文件（Checkpoints）",
+          "Checkpoint"
         ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1381,11 +1352,12 @@
         "description": "获取推理端点列表\nList inference endpoints",
         "operationId": "ListEndpoints",
         "tags": [
-          "推理端点（Endpoints）"
+          "推理端点（Endpoints）",
+          "Endpoint"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
@@ -1552,20 +1524,10 @@
         "description": "创建推理端点\nCreate Endpoint\n",
         "operationId": "CreateEndpoint",
         "tags": [
-          "推理端点（Endpoints）"
+          "推理端点（Endpoints）",
+          "Endpoint"
         ],
-        "parameters": [
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "application/json": {
@@ -1585,7 +1547,7 @@
                     "description": "实例类型（Instance Type）"
                   },
                   "initial_instance_count": {
-                    "type": "string",
+                    "type": "integer",
                     "description": "初始实例数（Initial Instance Count）"
                   },
                   "autoscaling_enabled": {
@@ -1602,12 +1564,23 @@
                   "creator": {
                     "type": "string",
                     "description": "创建者用户名（Creator User Name）"
+                  },
+                  "min_instance_number": {
+                    "type": "integer",
+                    "description": "最小实例数（Min Instance Count）"
+                  },
+                  "max_instance_number": {
+                    "type": "integer",
+                    "description": "最大实例数（Max Instance Count）"
                   }
                 },
                 "required": [
+                  "endpoint_name",
                   "endpoint_type",
                   "instance_type",
                   "initial_instance_count",
+                  "min_instance_number",
+                  "max_instance_number",
                   "autoscaling_enabled",
                   "assign_to_roles",
                   "creator"
@@ -1615,15 +1588,13 @@
               },
               "example": {
                 "endpoint_name": "test",
-                "endpoint_type": "Async",
                 "instance_type": "ml.g5.2xlarge",
                 "initial_instance_count": "1",
                 "autoscaling_enabled": false,
                 "assign_to_roles": [
                   "Designer",
                   "IT Operator"
-                ],
-                "creator": "admin"
+                ]
               }
             }
           }
@@ -1693,11 +1664,12 @@
         "description": "删除推理端点\nDelete endpoints",
         "operationId": "DeleteEndpoints",
         "tags": [
-          "推理端点（Endpoints）"
+          "推理端点（Endpoints）",
+          "Endpoint"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": true,
@@ -1713,28 +1685,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "delete_endpoint_list": {
+                  "endpoint_name_list": {
                     "type": "array",
                     "items": {
                       "type": "string"
                     },
                     "description": "端点名列表（Endpoint Name List）"
-                  },
-                  "username": {
-                    "type": "string",
-                    "description": "用户名（User Name）"
                   }
                 },
                 "required": [
-                  "delete_endpoint_list",
-                  "username"
+                  "endpoint_name_list"
                 ]
               },
               "example": {
-                "delete_endpoint_list": [
-                  "infer-endpoint-test"
-                ],
-                "username": "admin"
+                "endpoint_name_list": [
+                  "esd-async-test-tmp"
+                ]
               }
             }
           }
@@ -1766,7 +1732,8 @@
         "description": "创建推理作业，创建成功后，需要通过返回的`api_params_s3_upload_url` 上传推理参数\nCreate inference, When you got response, you have to upload your Payload to `api_params_s3_upload_url`",
         "operationId": "CreateInferenceJob",
         "tags": [
-          "推理（Inferences）"
+          "推理（Inferences）",
+          "Inference"
         ],
         "parameters": [],
         "requestBody": {
@@ -1775,10 +1742,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "user_id": {
-                    "type": "string",
-                    "description": "用户名（User Name）"
-                  },
                   "inference_type": {
                     "type": "string",
                     "description": "推理类型（Inference Type）Async | Real-time"
@@ -1815,30 +1778,12 @@
                       "embeddings"
                     ],
                     "description": "模型列表（Model List）"
-                  },
-                  "filters": {
-                    "type": "object",
-                    "properties": {
-                      "createAt": {
-                        "type": "number"
-                      },
-                      "creator": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "createAt",
-                      "creator"
-                    ],
-                    "description": "将在下一版本中移除"
                   }
                 },
                 "required": [
-                  "user_id",
                   "inference_type",
                   "task_type",
-                  "models",
-                  "filters"
+                  "models"
                 ]
               },
               "example": {
@@ -1989,15 +1934,16 @@
         "description": "获取推理作业列表\nList inference jobs\n",
         "operationId": "ListInferenceJobs",
         "tags": [
-          "推理（Inferences）"
+          "推理（Inferences）",
+          "Inference"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
             "required": false,
-            "example": "{{bearerToken}}",
+            "example": "{{userName}}",
             "schema": {
               "type": "string"
             }
@@ -2129,15 +2075,16 @@
         "description": "删除推理作业列表\nDelete inference jobs\n",
         "operationId": "ListInferenceJobs",
         "tags": [
-          "推理（Inferences）"
+          "推理（Inferences）",
+          "Inference"
         ],
         "parameters": [
           {
-            "name": "Authorization",
+            "name": "username",
             "in": "header",
             "description": "",
-            "required": false,
-            "example": "{{bearerToken}}",
+            "required": true,
+            "example": "{{userName}}",
             "schema": {
               "type": "string"
             }
@@ -2202,7 +2149,8 @@
         "description": "开始推理作业\nStart inference job\n",
         "operationId": "RunInferenceJob",
         "tags": [
-          "推理（Inferences）"
+          "推理（Inferences）",
+          "Inference"
         ],
         "parameters": [
           {
@@ -2211,16 +2159,6 @@
             "description": "推理作业ID（Inference Job ID）",
             "required": true,
             "example": "",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
             "schema": {
               "type": "string"
             }
@@ -2306,14 +2244,266 @@
         ]
       }
     },
+    "/checkpoints/{checkpointId}": {
+      "put": {
+        "summary": "更新模型文件状态 UpdateCheckpoint",
+        "deprecated": false,
+        "description": "更新模型文件状态\nUpdate Checkpoint",
+        "operationId": "UpdateCheckpoint",
+        "tags": [
+          "模型文件（Checkpoints）",
+          "Checkpoint"
+        ],
+        "parameters": [
+          {
+            "name": "checkpointId",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "{{checkpointId}}",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "状态（Status）"
+                  },
+                  "multi_parts_tags": {
+                    "type": "object",
+                    "properties": {
+                      "v1-5-pruned-emaonly.safetensors": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "ETag": {
+                              "type": "string"
+                            },
+                            "PartNumber": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "ETag",
+                            "PartNumber"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "v1-5-pruned-emaonly.safetensors"
+                    ],
+                    "description": "ETags"
+                  }
+                },
+                "required": [
+                  "status",
+                  "multi_parts_tags"
+                ]
+              },
+              "example": {
+                "checkpoint_id": "5b47fc8f-c1b0-47ad-9d85-ad0f08526e28",
+                "status": "Active",
+                "multi_parts_tags": {
+                  "v1-5-pruned-emaonly.safetensors": [
+                    {
+                      "ETag": "\"e6279f0ad8bf8048c0d106095c4d4b24\"",
+                      "PartNumber": 1
+                    },
+                    {
+                      "ETag": "\"01a458e7d019140cb792b577596b7918\"",
+                      "PartNumber": 2
+                    },
+                    {
+                      "ETag": "\"296e59a1fb1ea02f6512c5b4c4565bea\"",
+                      "PartNumber": 3
+                    },
+                    {
+                      "ETag": "\"9dd22961ddf32130a22b36dc53f93fd0\"",
+                      "PartNumber": 4
+                    },
+                    {
+                      "ETag": "\"bfb91caed0e9f1aaaca7a0f125e7e96b\"",
+                      "PartNumber": 5
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "statusCode": {
+                      "type": "integer",
+                      "description": "Status Code"
+                    },
+                    "headers": {
+                      "type": "object",
+                      "properties": {
+                        "Access-Control-Allow-Headers": {
+                          "type": "string"
+                        },
+                        "Access-Control-Allow-Origin": {
+                          "type": "string"
+                        },
+                        "Access-Control-Allow-Methods": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "Access-Control-Allow-Headers",
+                        "Access-Control-Allow-Origin",
+                        "Access-Control-Allow-Methods"
+                      ]
+                    },
+                    "checkpoint": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "ID"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "Type"
+                        },
+                        "s3_location": {
+                          "type": "string",
+                          "description": "S3 Key"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "Status"
+                        },
+                        "params": {
+                          "type": "object",
+                          "properties": {
+                            "creator": {
+                              "type": "string",
+                              "description": "User Name"
+                            },
+                            "multipart_upload": {
+                              "type": "object",
+                              "properties": {
+                                "v1-5-pruned-emaonly.safetensors": {
+                                  "type": "object",
+                                  "properties": {
+                                    "bucket": {
+                                      "type": "string"
+                                    },
+                                    "upload_id": {
+                                      "type": "string"
+                                    },
+                                    "key": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "bucket",
+                                    "upload_id",
+                                    "key"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "v1-5-pruned-emaonly.safetensors"
+                              ],
+                              "description": "S3 Multipart Upload"
+                            },
+                            "message": {
+                              "type": "string",
+                              "description": "Message"
+                            },
+                            "created": {
+                              "type": "string",
+                              "description": "Created At"
+                            }
+                          },
+                          "required": [
+                            "creator",
+                            "multipart_upload",
+                            "message",
+                            "created"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "type",
+                        "s3_location",
+                        "status",
+                        "params"
+                      ],
+                      "description": "Checkpoint"
+                    }
+                  },
+                  "required": [
+                    "statusCode",
+                    "headers",
+                    "checkpoint"
+                  ]
+                },
+                "examples": {
+                  "1": {
+                    "summary": "Success",
+                    "value": {
+                      "statusCode": 200,
+                      "checkpoint": {
+                        "id": "d613760c-c8f7-466a-9838-cea3033bf57d",
+                        "type": "Stable-diffusion",
+                        "s3_location": "s3://******/Stable-diffusion/checkpoint/custom/d613760c-c8f7-466a-9838-cea3033bf57d",
+                        "status": "Initial",
+                        "params": {
+                          "creator": "admin",
+                          "multipart_upload": {
+                            "v1-5-pruned-emaonly.safetensors": {
+                              "bucket": "******",
+                              "upload_id": "KFzbB7FwAuCDkR3NRaAO81uNM6E38KrvbB9m9T2dPlE0XUbOXrDB0c9CbhpLA3wFqnN6uTf0qh7HOYOmSXFwicHYOL7XfPMAhsT0cbxRhWvbyKPo8bO_wXrFcbUMDY.ef4vFZNKfdKaRba23Src44CrwGtYjkp3RQ8dEZubjleVTTTz0gaclwjfxmrdpqcZa",
+                              "key": "Stable-diffusion/checkpoint/custom/d613760c-c8f7-466a-9838-cea3033bf57d/v1-5-pruned-emaonly.safetensors"
+                            }
+                          },
+                          "message": "api-test-message",
+                          "created": "2023-12-07 00:45:59.334826"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apikey-header-x-api-key": []
+          }
+        ]
+      }
+    },
     "/inferences/{jobId}": {
       "get": {
         "summary": "获取推理作业详情 GetInferenceJob",
         "deprecated": false,
-        "description": "获取指定的推理作业详情\nGets a specific infernece job\n",
+        "description": "获取指定的推理作业详情\nGets a specific inference job\n",
         "operationId": "GetInferenceJob",
         "tags": [
-          "推理（Inferences）"
+          "推理（Inferences）",
+          "Inference"
         ],
         "parameters": [
           {
@@ -2322,16 +2512,6 @@
             "description": "推理作业ID（Inference Job ID）",
             "required": true,
             "example": "{{jobId}}",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Authorization",
-            "in": "header",
-            "description": "",
-            "required": true,
-            "example": "{{bearerToken}}",
             "schema": {
               "type": "string"
             }
@@ -2556,259 +2736,6 @@
                         ]
                       },
                       "message": "OK"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "apikey-header-x-api-key": []
-          }
-        ]
-      }
-    },
-    "/checkpoints/{id}": {
-      "put": {
-        "summary": "更新模型文件状态 UpdateCheckpoint",
-        "deprecated": false,
-        "description": "更新模型文件状态\nUpdate Checkpoint",
-        "operationId": "UpdateCheckpoint",
-        "tags": [
-          "模型文件（Checkpoints）"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "description": "状态（Status）"
-                  },
-                  "multi_parts_tags": {
-                    "type": "object",
-                    "properties": {
-                      "v1-5-pruned-emaonly.safetensors": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "ETag": {
-                              "type": "string"
-                            },
-                            "PartNumber": {
-                              "type": "integer"
-                            }
-                          },
-                          "required": [
-                            "ETag",
-                            "PartNumber"
-                          ]
-                        }
-                      }
-                    },
-                    "required": [
-                      "v1-5-pruned-emaonly.safetensors"
-                    ],
-                    "description": "ETags"
-                  }
-                },
-                "required": [
-                  "status",
-                  "multi_parts_tags"
-                ]
-              },
-              "example": {
-                "status": "Active",
-                "multi_parts_tags": {
-                  "v1-5-pruned-emaonly.safetensors": [
-                    {
-                      "ETag": "\"e6279f0ad8bf8048c0d106095c4d4b24\"",
-                      "PartNumber": 1
-                    },
-                    {
-                      "ETag": "\"01a458e7d019140cb792b577596b7918\"",
-                      "PartNumber": 2
-                    },
-                    {
-                      "ETag": "\"296e59a1fb1ea02f6512c5b4c4565bea\"",
-                      "PartNumber": 3
-                    },
-                    {
-                      "ETag": "\"9dd22961ddf32130a22b36dc53f93fd0\"",
-                      "PartNumber": 4
-                    },
-                    {
-                      "ETag": "\"bfb91caed0e9f1aaaca7a0f125e7e96b\"",
-                      "PartNumber": 5
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "statusCode": {
-                      "type": "integer",
-                      "description": "Status Code"
-                    },
-                    "headers": {
-                      "type": "object",
-                      "properties": {
-                        "Access-Control-Allow-Headers": {
-                          "type": "string"
-                        },
-                        "Access-Control-Allow-Origin": {
-                          "type": "string"
-                        },
-                        "Access-Control-Allow-Methods": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "Access-Control-Allow-Headers",
-                        "Access-Control-Allow-Origin",
-                        "Access-Control-Allow-Methods"
-                      ]
-                    },
-                    "checkpoint": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "description": "ID"
-                        },
-                        "type": {
-                          "type": "string",
-                          "description": "Type"
-                        },
-                        "s3_location": {
-                          "type": "string",
-                          "description": "S3 Key"
-                        },
-                        "status": {
-                          "type": "string",
-                          "description": "Status"
-                        },
-                        "params": {
-                          "type": "object",
-                          "properties": {
-                            "creator": {
-                              "type": "string",
-                              "description": "User Name"
-                            },
-                            "multipart_upload": {
-                              "type": "object",
-                              "properties": {
-                                "v1-5-pruned-emaonly.safetensors": {
-                                  "type": "object",
-                                  "properties": {
-                                    "bucket": {
-                                      "type": "string"
-                                    },
-                                    "upload_id": {
-                                      "type": "string"
-                                    },
-                                    "key": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "bucket",
-                                    "upload_id",
-                                    "key"
-                                  ]
-                                }
-                              },
-                              "required": [
-                                "v1-5-pruned-emaonly.safetensors"
-                              ],
-                              "description": "S3 Multipart Upload"
-                            },
-                            "message": {
-                              "type": "string",
-                              "description": "Message"
-                            },
-                            "created": {
-                              "type": "string",
-                              "description": "Created At"
-                            }
-                          },
-                          "required": [
-                            "creator",
-                            "multipart_upload",
-                            "message",
-                            "created"
-                          ]
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "type",
-                        "s3_location",
-                        "status",
-                        "params"
-                      ],
-                      "description": "Checkpoint"
-                    }
-                  },
-                  "required": [
-                    "statusCode",
-                    "headers",
-                    "checkpoint"
-                  ]
-                },
-                "examples": {
-                  "1": {
-                    "summary": "Success",
-                    "value": {
-                      "statusCode": 200,
-                      "headers": {
-                        "Access-Control-Allow-Headers": "Content-Type",
-                        "Access-Control-Allow-Origin": "*",
-                        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-                      },
-                      "checkpoint": {
-                        "id": "d613760c-c8f7-466a-9838-cea3033bf57d",
-                        "type": "Stable-diffusion",
-                        "s3_location": "s3://******/Stable-diffusion/checkpoint/custom/d613760c-c8f7-466a-9838-cea3033bf57d",
-                        "status": "Initial",
-                        "params": {
-                          "creator": "admin",
-                          "multipart_upload": {
-                            "v1-5-pruned-emaonly.safetensors": {
-                              "bucket": "******",
-                              "upload_id": "KFzbB7FwAuCDkR3NRaAO81uNM6E38KrvbB9m9T2dPlE0XUbOXrDB0c9CbhpLA3wFqnN6uTf0qh7HOYOmSXFwicHYOL7XfPMAhsT0cbxRhWvbyKPo8bO_wXrFcbUMDY.ef4vFZNKfdKaRba23Src44CrwGtYjkp3RQ8dEZubjleVTTTz0gaclwjfxmrdpqcZa",
-                              "key": "Stable-diffusion/checkpoint/custom/d613760c-c8f7-466a-9838-cea3033bf57d/v1-5-pruned-emaonly.safetensors"
-                            }
-                          },
-                          "message": "api-test-message",
-                          "created": "2023-12-07 00:45:59.334826"
-                        }
-                      }
                     }
                   }
                 }
