@@ -15,6 +15,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import {Size} from "aws-cdk-lib/core";
 
 export interface StartInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -133,12 +134,13 @@ export class StartInferenceJobApi {
       runtime: Runtime.PYTHON_3_9,
       index: 'start_inference_job.py',
       handler: 'handler',
+      memorySize: 10240,
+      ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
-      memorySize: 1024,
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
+        MULTI_USER_TABLE: this.userTable.tableName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,

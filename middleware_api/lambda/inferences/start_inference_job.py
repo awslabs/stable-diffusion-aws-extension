@@ -16,7 +16,7 @@ from get_inference_job import get_infer_data
 from inference_libs import parse_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error, permissions_check, log_execution_time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -24,6 +24,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 
 ddb_service = DynamoDbUtilsService(logger=logger)
+
+predictors = {}
 
 
 def handler(event, _):
@@ -47,52 +49,50 @@ def handler(event, _):
             raise BadRequestException(f"InferenceJobId {inference_id} not found")
 
         job = InferenceJob(**inference_raw)
-        endpoint_name = job.params['sagemaker_inference_endpoint_name']
-        models = {}
-        if 'used_models' in job.params:
-            models = {
-                "space_free_size": 4e10,
-                **job.params['used_models'],
-            }
 
-        payload = InvocationsRequest(
-            task=job.taskType,
-            username="test",
-            models=models,
-            param_s3=job.params['input_body_s3']
-        )
+        return start_inference_job(job)
 
-        logger.info(f"payload: {payload}")
-
-        update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
-
-        if job.inference_type == EndpointType.RealTime.value:
-            return real_time_inference(payload, job, endpoint_name)
-
-        return async_inference(payload, job, endpoint_name)
     except Exception as e:
         return response_error(e)
 
 
-def real_time_inference(payload, job: InferenceJob, endpoint_name):
-    predictor = Predictor(endpoint_name)
-    predictor.serializer = JSONSerializer()
-    predictor.deserializer = JSONDeserializer()
+def start_inference_job(job: InferenceJob):
+    endpoint_name = job.params['sagemaker_inference_endpoint_name']
+    models = {}
+    if 'used_models' in job.params:
+        models = {
+            "space_free_size": 4e10,
+            **job.params['used_models'],
+        }
 
+    payload = InvocationsRequest(
+        task=job.taskType,
+        username="test",
+        models=models,
+        param_s3=job.params['input_body_s3']
+    )
+
+    logger.info(f"payload: {payload}")
+
+    update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
+
+    if job.inference_type == EndpointType.RealTime.value:
+        return real_time_inference(payload, job, endpoint_name)
+
+    return async_inference(payload, job, endpoint_name)
+
+
+def real_time_inference(payload, job: InferenceJob, endpoint_name):
     try:
-        start_time = datetime.now()
-        sagemaker_out = predictor.predict(data=payload.__dict__,
+
+        sagemaker_out = predictor_predict(endpoint_name=endpoint_name,
+                                          data=payload.__dict__,
                                           inference_id=job.InferenceJobId,
                                           )
-        logger.info(sagemaker_out)
 
         if 'error' in sagemaker_out:
             update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
             raise Exception(str(sagemaker_out))
-
-        end_time = datetime.now()
-        cost_time = (end_time - start_time).total_seconds()
-        logger.info(f"Real-time inference cost_time: {cost_time}")
 
         parse_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
 
@@ -102,14 +102,51 @@ def real_time_inference(payload, job: InferenceJob, endpoint_name):
         return bad_request(message=str(e))
 
 
-def async_inference(payload, job: InferenceJob, endpoint_name):
+@log_execution_time
+def get_predict_client(endpoint_name):
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
     predictor = Predictor(endpoint_name)
-    initial_args = {"InvocationTimeoutSeconds": 3600}
+    predictor.serializer = JSONSerializer()
+    predictor.deserializer = JSONDeserializer()
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
+
+
+@log_execution_time
+def get_predict_async_client(endpoint_name):
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
+    predictor = Predictor(endpoint_name)
     predictor = AsyncPredictor(predictor, name=endpoint_name)
     predictor.serializer = JSONSerializer()
     predictor.deserializer = JSONDeserializer()
-    prediction = predictor.predict_async(data=payload.__dict__,
-                                         initial_args=initial_args,
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
+
+
+@log_execution_time
+def predictor_predict(endpoint_name, data, inference_id):
+    return get_predict_client(endpoint_name).predict(data=data, inference_id=inference_id)
+
+
+@log_execution_time
+def predictor_predict_async(endpoint_name, data, inference_id):
+    initial_args = {"InvocationTimeoutSeconds": 3600}
+    return get_predict_async_client(endpoint_name).predict_async(data=data,
+                                                                 initial_args=initial_args,
+                                                                 inference_id=inference_id)
+
+
+def async_inference(payload, job: InferenceJob, endpoint_name):
+    prediction = predictor_predict_async(endpoint_name=endpoint_name,
+                                         data=payload.__dict__,
                                          inference_id=job.InferenceJobId)
     logger.info(f"prediction: {prediction}")
     output_path = prediction.output_path
