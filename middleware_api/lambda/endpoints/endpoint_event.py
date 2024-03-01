@@ -91,7 +91,7 @@ def check_and_enable_autoscaling(item, variant_name):
 def enable_autoscaling(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
     endpoint_type = item['endpoint_type']['S']
-    max_instance_number = item['max_instance_number']['N']
+    max_instance_number = int(item['max_instance_number']['N'])
 
     min_instance_number = 0
     if endpoint_type == EndpointType.RealTime.value:
