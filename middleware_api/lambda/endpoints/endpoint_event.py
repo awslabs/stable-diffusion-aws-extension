@@ -37,42 +37,49 @@ def handler(event, context):
 
     endpoint_deployment_job_id = endpoint['EndpointDeploymentJobId']
 
-    business_status = get_business_status(endpoint_status)
+    try:
+        business_status = get_business_status(endpoint_status)
 
-    update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
+        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
 
-    # update the instance count if the endpoint is not deleting or deleted
-    if business_status not in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
-        status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
-        logger.info(f"Endpoint status: {status}")
-        if 'ProductionVariants' in status:
-            instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
-            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
-    else:
-        # sometime sagemaker don't send deleted event, so just use deleted status when deleting
-        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', EndpointStatus.DELETED.value)
-        update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+        # update the instance count if the endpoint is not deleting or deleted
+        if business_status not in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
+            status = sagemaker.describe_endpoint(EndpointName=endpoint_name)
+            logger.info(f"Endpoint status: {status}")
+            if 'ProductionVariants' in status:
+                instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
+                update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+        else:
+            # sometime sagemaker don't send deleted event, so just use deleted status when deleting
+            update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', EndpointStatus.DELETED.value)
+            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
 
-    # if endpoint is deleted, update the instance count to 0 and delete the config and model
-    if business_status == EndpointStatus.DELETED.value:
-        try:
-            endpoint_config_name = event['detail']['EndpointConfigName']
-            model_name = event['detail']['ModelName']
-            sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
-            sagemaker.delete_model(ModelName=model_name)
-        except Exception as e:
-            logger.error(f"error deleting endpoint config and model with exception: {e}")
+        # if endpoint is deleted, update the instance count to 0 and delete the config and model
+        if business_status == EndpointStatus.DELETED.value:
+            try:
+                endpoint_config_name = event['detail']['EndpointConfigName']
+                model_name = event['detail']['ModelName']
+                sagemaker.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+                sagemaker.delete_model(ModelName=model_name)
+            except Exception as e:
+                logger.error(f"error deleting endpoint config and model with exception: {e}")
 
-    if business_status == EndpointStatus.IN_SERVICE.value:
-        current_time = str(datetime.now())
-        update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
+        if business_status == EndpointStatus.IN_SERVICE.value:
+            start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
+            deploy_seconds = (datetime.now() - start_time).total_seconds()
+            update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', str(deploy_seconds))
+            current_time = str(datetime.now())
+            update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
 
-        # if it is the first time in service
-        if 'endTime' not in endpoint:
-            check_and_enable_autoscaling(endpoint, 'prod')
+            # if it is the first time in service
+            if 'endTime' not in endpoint:
+                check_and_enable_autoscaling(endpoint, 'prod')
 
-    if business_status == EndpointStatus.FAILED.value:
-        update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
+        if business_status == EndpointStatus.FAILED.value:
+            update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
+    except Exception as e:
+        update_endpoint_field(endpoint_deployment_job_id, 'error', str(e))
+        logger.error(f"Error processing event with exception: {e}")
 
     return {'statusCode': 200}
 
