@@ -65,9 +65,6 @@ def handler(event, context):
                 logger.error(f"error deleting endpoint config and model with exception: {e}")
 
         if business_status == EndpointStatus.IN_SERVICE.value:
-            start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
-            deploy_seconds = (datetime.now() - start_time).total_seconds()
-            update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', str(deploy_seconds))
             current_time = str(datetime.now())
             update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
 
