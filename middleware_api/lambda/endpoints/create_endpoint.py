@@ -196,9 +196,8 @@ def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endp
     logger.info(f"Successfully created model resource: {response}")
 
 
-def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
-                                        instance_type):
-    production_variants = [
+def get_production_variants(model_name, instance_type, initial_instance_count):
+    return [
         {
             'VariantName': 'prod',
             'ModelName': model_name,
@@ -208,6 +207,11 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
             "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
         }
     ]
+
+
+def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
+                                        instance_type):
+    production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
 
     logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
 
@@ -252,16 +256,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
         }
     }
 
-    production_variants = [
-        {
-            'VariantName': 'prod',
-            'ModelName': model_name,
-            'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type,
-            "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
-        }
-    ]
+    production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
 
     logger.info(f"Creating endpoint configuration AsyncInferenceConfig: {async_inference_config}")
     logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
