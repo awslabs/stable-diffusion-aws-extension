@@ -203,7 +203,9 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
             'VariantName': 'prod',
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type
+            'InstanceType': instance_type,
+            "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
         }
     ]
 
@@ -255,7 +257,9 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
             'VariantName': 'prod',
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type
+            'InstanceType': instance_type,
+            "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
         }
     ]
 
