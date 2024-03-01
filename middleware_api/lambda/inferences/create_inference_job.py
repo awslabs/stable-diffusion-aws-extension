@@ -6,16 +6,19 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+import boto3
+
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
+from inferences.start_inference_job import start_inference_job
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_execution_time
 
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
@@ -25,6 +28,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
+s3_client = boto3.client('s3')
 
 
 @dataclasses.dataclass
@@ -36,6 +40,7 @@ class CreateInferenceEvent:
     # todo user_id is not used in this lambda, but we need to keep it for the compatibility with the old code
     filters: dict[str, Any] = None
     user_id: Optional[str] = ""
+    endpoint_payload: Optional[str] = None
 
 
 # POST /inferences
@@ -67,7 +72,9 @@ def handler(raw_event, context):
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
-        presign_url = generate_presign_url(bucket_name, param_s3_key)
+        presign_url = None
+        if event.endpoint_payload is None:
+            presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
             createTime=str(datetime.now()),
@@ -134,12 +141,27 @@ def handler(raw_event, context):
                                            for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
+
+        if event.endpoint_payload:
+            put_inference_payload_to_s3(param_s3_key, event.endpoint_payload)
+            return start_inference_job(inference_job)
+
         return created(data=resp)
     except Exception as e:
         return response_error(e)
 
 
+@log_execution_time
+def put_inference_payload_to_s3(param_s3_key: str, body: str):
+    s3_client.put_object(
+        Bucket=bucket_name,
+        Key=param_s3_key,
+        Body=json.dumps(body),
+    )
+
+
 # fixme: this is a very expensive function
+@log_execution_time
 def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoint:
     if model_type == 'VAE' and ckpt_name in ['None', 'Automatic']:
         return CheckPoint(
@@ -174,6 +196,7 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
+@log_execution_time
 def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key

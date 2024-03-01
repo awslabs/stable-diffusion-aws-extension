@@ -4,6 +4,7 @@ import logging
 import os
 
 import boto3
+import time
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -19,6 +20,17 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 encode_type = "utf-8"
+
+
+def log_execution_time(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        logger.info(f"executed {func.__name__} in {(end_time - start_time) * 1000:.2f}ms")
+        return result
+
+    return wrapper
 
 
 class KeyEncryptService:
@@ -64,6 +76,7 @@ class KeyEncryptService:
             return text
 
 
+@log_execution_time
 def check_user_existence(ddb_service, user_table, username):
     creator = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -73,6 +86,7 @@ def check_user_existence(ddb_service, user_table, username):
     return not creator or len(creator) == 0
 
 
+@log_execution_time
 def get_user_by_username(ddb_service, user_table, username):
     user_raw = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -85,6 +99,7 @@ def get_user_by_username(ddb_service, user_table, username):
     return User(**(ddb_service.deserialize(user_raw[0])))
 
 
+@log_execution_time
 def get_user_roles(ddb_service, user_table_name, username):
     user = ddb_service.query_items(table=user_table_name, key_values={
         'kind': PARTITION_KEYS.user,
@@ -129,6 +144,7 @@ def permissions_check(event: any, permissions: [str]):
     return permissions_check_by_username(event['headers']['username'], permissions)
 
 
+@log_execution_time
 def permissions_check_by_username(username: any, permissions: [str]):
     if not username:
         raise UnauthorizedException("Unauthorized")
@@ -170,6 +186,7 @@ def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_nam
     return False
 
 
+@log_execution_time
 def get_permissions_by_username(ddb_service, user_table, username):
     creator_roles = get_user_roles(ddb_service, user_table, username)
     roles = ddb_service.scan(table=user_table, filters={

@@ -9,6 +9,8 @@ import boto3
 from PIL import Image
 from botocore.exceptions import ClientError
 
+from libs.utils import log_execution_time
+
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -22,6 +24,7 @@ inference_table = ddb_client.Table(inference_table_name)
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 
+@log_execution_time
 def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
     update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
     try:
@@ -30,7 +33,7 @@ def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
         elif task_type in ["txt2img", "img2img"]:
             txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name)
         elif task_type in ["extra-single-image", "rembg"]:
-            esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name)
+            esi_rembg(sagemaker_out, inference_id, endpoint_name)
 
         update_inference_job_table(inference_id, 'status', 'succeed')
     except Exception as e:
@@ -39,6 +42,7 @@ def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
         raise e
 
 
+@log_execution_time
 def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # If S3 object_name was not specified, use file_name
     if object_name is None:
@@ -98,7 +102,7 @@ def update_inference_job_table(inference_id, key, value):
     )
 
 
-def esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name):
+def esi_rembg(sagemaker_out, inference_id, endpoint_name):
     if 'image' not in sagemaker_out:
         raise Exception(sagemaker_out)
 
@@ -114,7 +118,7 @@ def esi_rembg(sagemaker_out, inference_id, task_type, endpoint_name):
 
     update_ddb_image(inference_id, "image.png")
 
-    inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name)
+    save_inference_parameters(sagemaker_out, inference_id, endpoint_name)
 
 
 def interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id):
@@ -174,10 +178,11 @@ def txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name):
 
         update_ddb_image(inference_id, f"image_{count}.png")
 
-    inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name)
+    save_inference_parameters(sagemaker_out, inference_id, endpoint_name)
 
 
-def inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name):
+@log_execution_time
+def save_inference_parameters(sagemaker_out, inference_id, endpoint_name):
     inference_parameters = {}
 
     if 'parameters' in sagemaker_out:
@@ -199,11 +204,13 @@ def inference_parameters(sagemaker_out, inference_id, task_type, endpoint_name):
 
     upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
                       f"{inference_id}_param.json")
+
     update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
 
     print(f"Complete inference parameters {inference_parameters}")
 
 
+@log_execution_time
 def get_inference_job(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")
@@ -227,6 +234,7 @@ def get_topic_arn(sns_topic):
     return None
 
 
+@log_execution_time
 def send_message_to_sns(message_json, sns_topic):
     try:
         sns_topic_arn = get_topic_arn(sns_topic)
