@@ -8,7 +8,7 @@ If you have not install the Stable Diffusion WebUI, or the proper version of the
 
 ### **Part2**: Install Middleware On AWS Cloud
 #### **Option 1**: Use AWS Cloudformation Template
-1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json) to install CloudFormation template directly, input the parameter accordingly, note the Bucket is the bucket to store all your solution assets, email is the mail address you register to receive notification for events like model training complete, the apikey is the basic authentication for your api url connection, the trainmodelinferencetype is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
+1. Install the middleware by click the [**link to navigate to AWS CloudFormation console**](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SdWebUiMidWare&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) to install CloudFormation template directly, input the parameter accordingly, note the `Bucket` is the bucket to store all your solution assets, `Email` is the mail address you register to receive notification for events like model training complete, the `SdExtensionApiKey` is the basic authentication for your api url connection, the `UtilsCpuInstType` is the ec2 instance type you choose to handle the workload like ckpt merge that can be handled by cpu enough.:
 
 <img width="1377" alt="iShot_2023-06-01_14 52 51" src="https://github.com/awslabs/stable-diffusion-aws-extension/assets/2245949/3fe9469a-b9e1-4633-ac4d-ceb6a459fec5">
 
@@ -138,4 +138,4 @@ Diagram below is the overall architecture of middleware, including API Gateway a
 ```
 
 ## Version
-Check our [wiki](https://github.com/awslabs/stable-diffusion-aws-extension/wiki) for latest & historical version
+Check our [wiki](https://github.com/awslabs/stable-diffusion-aws-extension/wiki) for the latest & historical version
