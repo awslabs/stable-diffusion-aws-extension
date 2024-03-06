@@ -21,7 +21,6 @@ export interface ListEndpointsApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -34,7 +33,6 @@ export class ListEndpointsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
 
@@ -45,7 +43,6 @@ export class ListEndpointsApi {
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
@@ -109,7 +106,6 @@ export class ListEndpointsApi {
     );
     this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

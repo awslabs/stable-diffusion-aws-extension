@@ -23,7 +23,6 @@ export interface ListDatasetsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -36,7 +35,6 @@ export class ListDatasetsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
@@ -50,7 +48,6 @@ export class ListDatasetsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
 
     this.listAllDatasetApi();
@@ -112,9 +109,9 @@ export class ListDatasetsApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listDatasetsIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

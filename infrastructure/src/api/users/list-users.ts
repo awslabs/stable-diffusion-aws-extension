@@ -22,7 +22,6 @@ export interface ListUsersApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -35,7 +34,6 @@ export class ListUsersApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: ListUsersApiProps) {
@@ -47,7 +45,6 @@ export class ListUsersApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
 
     this.listUsersApi();
@@ -121,7 +118,6 @@ export class ListUsersApi {
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

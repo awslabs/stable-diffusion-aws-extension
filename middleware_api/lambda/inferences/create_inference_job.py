@@ -6,15 +6,19 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+import boto3
+
+from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
+from inferences.start_inference_job import start_inference_job
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_execution_time
 
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
@@ -24,26 +28,31 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
+s3_client = boto3.client('s3')
 
 
 @dataclasses.dataclass
-class PrepareEvent:
+class CreateInferenceEvent:
     task_type: str
-    models: dict[str, List[str]]  # [checkpoint_type: names] this is same as checkpoint if confused
-    # todo will remove in next major version
-    filters: dict[str, Any] = None
+    models: dict[str, List[str]]  # [checkpoint_type: names] this is the same as checkpoint if confused
     sagemaker_endpoint_name: Optional[str] = ""
-    user_id: Optional[str] = ""
     inference_type: Optional[str] = None
+    # todo user_id is not used in this lambda, but we need to keep it for the compatibility with the old code
+    filters: dict[str, Any] = None
+    user_id: Optional[str] = ""
+    endpoint_payload: Optional[str] = None
 
 
 # POST /inferences
 def handler(raw_event, context):
-
+    logger.info(f'event: {raw_event}')
     try:
         request_id = context.aws_request_id
         logger.info(json.dumps(json.loads(raw_event['body'])))
-        event = PrepareEvent(**json.loads(raw_event['body']))
+        event = CreateInferenceEvent(**json.loads(raw_event['body']))
+
+        username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE])
+
         _type = event.task_type
         extra_generate_types = ['extra-single-image', 'extra-batch-images', 'rembg']
         simple_generate_types = ['txt2img', 'img2img']
@@ -55,7 +64,7 @@ def handler(raw_event, context):
 
         # check if endpoint table for endpoint status and existence
         inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.inference_type,
-                                                          event.user_id)
+                                                          username)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId
         instance_type = inference_endpoint.instance_type
@@ -63,7 +72,9 @@ def handler(raw_event, context):
         # generate param s3 location for upload
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
-        presign_url = generate_presign_url(bucket_name, param_s3_key)
+        presign_url = None
+        if event.endpoint_payload is None:
+            presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
             createTime=str(datetime.now()),
@@ -71,7 +82,7 @@ def handler(raw_event, context):
             status='created',
             taskType=_type,
             inference_type=event.inference_type,
-            owner_group_or_role=[event.user_id],
+            owner_group_or_role=[username],
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
@@ -130,12 +141,27 @@ def handler(raw_event, context):
                                            for ckpt in ckpts]
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
+
+        if event.endpoint_payload:
+            put_inference_payload_to_s3(param_s3_key, event.endpoint_payload)
+            return start_inference_job(inference_job)
+
         return created(data=resp)
     except Exception as e:
-        return bad_request(message=str(e))
+        return response_error(e)
+
+
+@log_execution_time
+def put_inference_payload_to_s3(param_s3_key: str, body: str):
+    s3_client.put_object(
+        Bucket=bucket_name,
+        Key=param_s3_key,
+        Body=json.dumps(body),
+    )
 
 
 # fixme: this is a very expensive function
+@log_execution_time
 def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoint:
     if model_type == 'VAE' and ckpt_name in ['None', 'Automatic']:
         return CheckPoint(
@@ -170,6 +196,7 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
+@log_execution_time
 def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
@@ -191,8 +218,6 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
             if endpoint.status == 'deleted':
-                continue
-            if endpoint.endpoint_status == EndpointStatus.UPDATING.value and int(endpoint.current_instance_count) == 0:
                 continue
             if endpoint.endpoint_status != EndpointStatus.UPDATING.value and endpoint.endpoint_status != EndpointStatus.IN_SERVICE.value:
                 continue

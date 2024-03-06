@@ -5,7 +5,9 @@ from dataclasses import dataclass
 
 import boto3
 
+from common.const import PERMISSION_INFERENCE_ALL
 from common.response import no_content
+from libs.utils import permissions_check, response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -26,39 +28,45 @@ def handler(event, ctx):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {ctx}')
 
-    body = DeleteInferenceJobsEvent(**json.loads(event['body']))
+    try:
+        body = DeleteInferenceJobsEvent(**json.loads(event['body']))
 
-    # unique list for preventing duplicate delete
-    inference_id_list = list(set(body.inference_id_list))
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
-    for inference_id in inference_id_list:
+        # unique list for preventing duplicate delete
+        inference_id_list = list(set(body.inference_id_list))
 
-        # todo will rename primary key
-        inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
+        for inference_id in inference_id_list:
 
-        if 'Item' not in inference:
-            continue
+            # todo will rename primary key
+            inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
 
-        logger.info(f'inference: {inference}')
+            if 'Item' not in inference:
+                continue
 
-        if 'params' not in inference['Item']:
-            continue
+            logger.info(f'inference: {inference}')
 
-        params = inference['Item']['params']
+            if 'params' not in inference['Item']:
+                continue
 
-        if 'input_body_s3' in params:
-            s3_client.delete_object(
-                Bucket=s3_bucket_name,
-                Key=params['input_body_s3'].replace(f"s3://{s3_bucket_name}/", "")
-            )
+            params = inference['Item']['params']
 
-        if 'output_path' in params:
-            s3_client.delete_object(
-                Bucket=s3_bucket_name,
-                Key=params['output_path'].replace(f"s3://{s3_bucket_name}/", "")
-            )
+            if 'input_body_s3' in params:
+                s3_client.delete_object(
+                    Bucket=s3_bucket_name,
+                    Key=params['input_body_s3'].replace(f"s3://{s3_bucket_name}/", "")
+                )
 
-        # todo will rename primary key
-        inference_job_table.delete_item(Key={'InferenceJobId': inference_id})
+            if 'output_path' in params:
+                s3_client.delete_object(
+                    Bucket=s3_bucket_name,
+                    Key=params['output_path'].replace(f"s3://{s3_bucket_name}/", "")
+                )
 
-    return no_content(message='inferences deleted')
+            # todo will rename primary key
+            inference_job_table.delete_item(Key={'InferenceJobId': inference_id})
+
+        return no_content(message='inferences deleted')
+    except Exception as e:
+        return response_error(e)

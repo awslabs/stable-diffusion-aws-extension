@@ -3,21 +3,20 @@ import datetime
 import json
 import logging
 import os
-import time
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import boto3
 import sagemaker
+import time
 import tomli
 import tomli_w
+
 from common import const
-from common.const import LoraTrainType
+from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import (
     ok,
-    forbidden,
-    internal_server_error,
     not_found,
 )
 from libs.common_tools import DecimalEncoder
@@ -27,8 +26,7 @@ from libs.data_types import (
     TrainJob,
     TrainJobStatus,
 )
-from libs.utils import get_permissions_by_username, get_user_roles
-
+from libs.utils import get_user_roles, permissions_check, response_error
 
 bucket_name = os.environ.get("S3_BUCKET")
 train_table = os.environ.get("TRAIN_TABLE")
@@ -54,7 +52,7 @@ class Event:
 
 
 def _update_toml_file_in_s3(
-    bucket_name: str, file_key: str, new_file_key: str, updated_params
+        bucket_name: str, file_key: str, new_file_key: str, updated_params
 ):
     """Update and save a TOML file in an S3 bucket
 
@@ -109,7 +107,7 @@ def _json_encode_hyperparameters(hyperparameters):
 
 
 def _trigger_sagemaker_training_job(
-    train_job: TrainJob, ckpt_output_path: str, train_job_name: str
+        train_job: TrainJob, ckpt_output_path: str, train_job_name: str
 ):
     """Trigger a SageMaker training job
 
@@ -132,9 +130,9 @@ def _trigger_sagemaker_training_job(
 
     final_instance_type = instance_type
     if (
-        "training_params" in train_job.params
-        and "training_instance_type" in train_job.params["training_params"]
-        and train_job.params["training_params"]["training_instance_type"]
+            "training_params" in train_job.params
+            and "training_instance_type" in train_job.params["training_params"]
+            and train_job.params["training_params"]["training_instance_type"]
     ):
         final_instance_type = train_job.params["training_params"][
             "training_instance_type"
@@ -216,17 +214,6 @@ def _create_training_job(raw_event, context):
     logger.info(json.dumps(json.loads(raw_event["body"])))
     _lora_train_type = event.lora_train_type
 
-    creator_permissions = get_permissions_by_username(
-        ddb_service, user_table, event.username
-    )
-    if "train" not in creator_permissions or (
-        "all" not in creator_permissions["train"]
-        and "create" not in creator_permissions["train"]
-    ):
-        return forbidden(
-            message=f"user {event.username} has not permission to create a train job"
-        )
-
     if _lora_train_type.lower() == LoraTrainType.KOHYA.value:
         # Kohya training
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
@@ -235,9 +222,9 @@ def _create_training_job(raw_event, context):
         toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
 
         if (
-            "training_params" not in event.params
-            or "s3_model_path" not in event.params["training_params"]
-            or "s3_data_path" not in event.params["training_params"]
+                "training_params" not in event.params
+                or "s3_model_path" not in event.params["training_params"]
+                or "s3_data_path" not in event.params["training_params"]
         ):
             raise ValueError(
                 "Missing train parameters, s3_model_path and s3_data_path should be in training_params"
@@ -303,12 +290,13 @@ def _create_training_job(raw_event, context):
 
 
 def handler(raw_event, context):
+    logger.info(f'event: {raw_event}')
     try:
+        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
         return ok(data=job_info, decimal=True)
     except Exception as e:
-        logger.error(f"Error when creating a training job: {e}")
-
-        return internal_server_error(message=str(e))
+        return response_error(e)

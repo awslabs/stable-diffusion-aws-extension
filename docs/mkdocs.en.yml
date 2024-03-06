@@ -21,6 +21,7 @@ nav:
         - Supported regions: plan-deployment/regions.md
         - Quotas: plan-deployment/quotas.md
     - Deploy the solution:
+        - Permissions: deployment/permissions.md
         - AWS CloudFormation template: deployment/template.md
         - Deployment step: deployment/deployment.md
         - Deployment step from existing resource: deployment/deployment_for_existing_users.md
@@ -42,6 +43,7 @@ nav:
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
         - API Call:
+            - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md
         - OpenAPI Specification: developer-guide/oas.md
         - Custom Container: developer-guide/byoc.md

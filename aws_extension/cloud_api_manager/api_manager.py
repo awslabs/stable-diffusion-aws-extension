@@ -1,4 +1,3 @@
-import base64
 import logging
 
 import requests
@@ -10,7 +9,6 @@ from utils import has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
-encode_type = "utf-8"
 string_separator = "___"
 last_evaluated_key = {}
 
@@ -27,9 +25,9 @@ class CloudApiManager:
                 'x-api-key': self.auth_manger.api_key,
                 'Content-Type': 'application/json',
             }
-        _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
+
         return {
-            'Authorization': _auth_token,
+            'username': user_token,
             'x-api-key': self.auth_manger.api_key,
             'Content-Type': 'application/json',
         }
@@ -46,7 +44,6 @@ class CloudApiManager:
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
             "endpoint_name_list": delete_endpoint_list,
-            "username": user_token,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
@@ -67,6 +64,7 @@ class CloudApiManager:
                          custom_docker_image_uri="",
                          autoscaling_enabled=True,
                          user_roles=None,
+                         min_instance_number=1,
                          user_token=""):
         """ Create SageMaker endpoint for GPU inference.
         Args:
@@ -84,6 +82,9 @@ class CloudApiManager:
             "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
+            'min_instance_number': min_instance_number,
+            # use initial_instance_count for user experience
+            'max_instance_number': initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
             'assign_to_roles': user_roles,

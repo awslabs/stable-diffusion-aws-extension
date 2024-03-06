@@ -17,9 +17,6 @@ Use the following steps to deploy this solution on AWS.
     This solution provides two usage options: through UI interface and by directly calling the backend API. Step 0 only needs to be executed if the user intends to use the UI interface. This step involves installing another open-source project Stable Diffusion webUI, allowing business operations to be conducted through the webUI.
 
 
-。
-
-
 ## Deployment steps
 
 ### Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).
@@ -38,7 +35,7 @@ Use the following steps to deploy this solution on AWS.
 
 7. Wait until the stack is created.
 
-8. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait an extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+8. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait an extra 30 minutes to wait for the internal setup complete after the stack been created successfully.
 
 ### Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).
 1. Start a Windows Server and log in via RDP.
@@ -53,7 +50,7 @@ Use the following steps to deploy this solution on AWS.
 ### Step 1: Deploy the solution as a middleware.
 This automated AWS CloudFormation template deploys the solution in the AWS Cloud.
 
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"} to launch the AWS CloudFormation template.   
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json){:target="_blank"} to launch the AWS CloudFormation template.   
 2. The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
 

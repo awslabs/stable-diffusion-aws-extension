@@ -22,6 +22,7 @@ export interface UpdateDatasetApiProps {
   httpMethod: string;
   datasetInfoTable: aws_dynamodb.Table;
   datasetItemTable: aws_dynamodb.Table;
+  userTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -32,9 +33,10 @@ export class UpdateDatasetApi {
   public readonly router: aws_apigateway.Resource;
   public model: Model;
   public requestValidator: RequestValidator;
-  private readonly src;
+  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
+  private readonly userTable: aws_dynamodb.Table;
   private readonly datasetInfoTable: aws_dynamodb.Table;
   private readonly datasetItemTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
@@ -50,6 +52,7 @@ export class UpdateDatasetApi {
     this.router = props.router;
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemTable = props.datasetItemTable;
+    this.userTable = props.userTable;
     this.httpMethod = props.httpMethod;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
@@ -76,6 +79,7 @@ export class UpdateDatasetApi {
       resources: [
         this.datasetItemTable.tableArn,
         this.datasetInfoTable.tableArn,
+        this.userTable.tableArn,
       ],
     }));
 
@@ -154,6 +158,7 @@ export class UpdateDatasetApi {
       role: this.iamRole(),
       memorySize: 1024,
       environment: {
+        MULTI_USER_TABLE: this.userTable.tableName,
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
@@ -169,6 +174,7 @@ export class UpdateDatasetApi {
         proxy: true,
       },
     );
+
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
         apiKeyRequired: true,

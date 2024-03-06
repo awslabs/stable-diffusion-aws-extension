@@ -1615,6 +1615,7 @@
               },
               "example": {
                 "endpoint_name": "test",
+                "endpoint_type": "Async",
                 "instance_type": "ml.g5.2xlarge",
                 "initial_instance_count": "1",
                 "autoscaling_enabled": false,
@@ -2595,10 +2596,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "checkpoint_id": {
-                    "type": "string",
-                    "description": "模型文件ID（Checkpoint ID）"
-                  },
                   "status": {
                     "type": "string",
                     "description": "状态（Status）"
@@ -2632,13 +2629,11 @@
                   }
                 },
                 "required": [
-                  "checkpoint_id",
                   "status",
                   "multi_parts_tags"
                 ]
               },
               "example": {
-                "checkpoint_id": "5b47fc8f-c1b0-47ad-9d85-ad0f08526e28",
                 "status": "Active",
                 "multi_parts_tags": {
                   "v1-5-pruned-emaonly.safetensors": [

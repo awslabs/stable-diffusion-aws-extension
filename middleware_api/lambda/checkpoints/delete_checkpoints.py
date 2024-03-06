@@ -5,7 +5,9 @@ from dataclasses import dataclass
 
 import boto3
 
+from common.const import PERMISSION_CHECKPOINT_ALL
 from common.response import no_content
+from libs.utils import response_error, permissions_check
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -24,29 +26,34 @@ class DeleteCheckpointsEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
+    logger.info(json.dumps(event))
 
-    body = DeleteCheckpointsEvent(**json.loads(event['body']))
+    try:
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
 
-    # unique list for preventing duplicate delete
-    checkpoint_id_list = list(set(body.checkpoint_id_list))
+        body = DeleteCheckpointsEvent(**json.loads(event['body']))
 
-    for checkpoint_id in checkpoint_id_list:
+        # unique list for preventing duplicate delete
+        checkpoint_id_list = list(set(body.checkpoint_id_list))
 
-        checkpoint = checkpoints_table.get_item(Key={'id': checkpoint_id})
+        for checkpoint_id in checkpoint_id_list:
 
-        if 'Item' not in checkpoint:
-            continue
+            checkpoint = checkpoints_table.get_item(Key={'id': checkpoint_id})
 
-        logger.info(f'checkpoint: {checkpoint}')
+            if 'Item' not in checkpoint:
+                continue
 
-        prefix = checkpoint['Item']['s3_location'].replace(f"s3://{s3_bucket_name}/", "")
-        logger.info(f'delete prefix: {prefix}')
+            logger.info(f'checkpoint: {checkpoint}')
 
-        response = bucket.objects.filter(Prefix=prefix).delete()
-        logger.info(f'delete response: {response}')
+            prefix = checkpoint['Item']['s3_location'].replace(f"s3://{s3_bucket_name}/", "")
+            logger.info(f'delete prefix: {prefix}')
 
-        checkpoints_table.delete_item(Key={'id': checkpoint_id})
+            response = bucket.objects.filter(Prefix=prefix).delete()
+            logger.info(f'delete response: {response}')
 
-    return no_content(message='checkpoints deleted')
+            checkpoints_table.delete_item(Key={'id': checkpoint_id})
+
+        return no_content(message='checkpoints deleted')
+    except Exception as e:
+        return response_error(e)

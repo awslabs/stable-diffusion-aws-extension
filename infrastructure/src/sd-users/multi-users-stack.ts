@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_dynamodb, aws_kms, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_dynamodb, aws_kms, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { CreateRoleApi } from '../api/roles/create-role';
@@ -15,7 +15,6 @@ export interface MultiUsersStackProps extends StackProps {
   routers: { [key: string]: Resource };
   commonLayer: PythonLayerVersion;
   passwordKeyAlias: aws_kms.IKey;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -41,7 +40,6 @@ export class MultiUsersStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
       srcRoot: this.srcRoot,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -53,7 +51,6 @@ export class MultiUsersStack {
       passwordKey: props.passwordKeyAlias,
       router: props.routers.users,
       srcRoot: this.srcRoot,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -64,7 +61,6 @@ export class MultiUsersStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
       srcRoot: this.srcRoot,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -76,7 +72,6 @@ export class MultiUsersStack {
       router: props.routers.users,
       srcRoot: this.srcRoot,
       passwordKey: props.passwordKeyAlias,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 

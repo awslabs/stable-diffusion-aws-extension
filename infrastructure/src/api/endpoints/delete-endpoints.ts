@@ -1,7 +1,6 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
-  IAuthorizer,
   JsonSchemaType,
   JsonSchemaVersion,
   LambdaIntegration,
@@ -22,7 +21,6 @@ export interface DeleteEndpointsApiProps {
   multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  authorizer: IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -37,7 +35,6 @@ export class DeleteEndpointsApi {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly authorizer: IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
@@ -47,7 +44,6 @@ export class DeleteEndpointsApi {
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
@@ -138,13 +134,9 @@ export class DeleteEndpointsApi {
             minItems: 1,
             maxItems: 10,
           },
-          username: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_name_list',
-          'username',
         ],
       },
       contentType: 'application/json',
@@ -187,7 +179,6 @@ export class DeleteEndpointsApi {
 
     this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,

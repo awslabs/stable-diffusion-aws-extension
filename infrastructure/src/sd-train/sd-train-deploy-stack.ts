@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
@@ -32,7 +32,6 @@ export interface SdTrainDeployStackProps extends StackProps {
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
 }
@@ -108,7 +107,6 @@ export class SdTrainDeployStack {
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -127,6 +125,7 @@ export class SdTrainDeployStack {
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
+      userTable: multiUserTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoints,
@@ -155,6 +154,7 @@ export class SdTrainDeployStack {
     // PUT /datasets/{id}
     const updateDatasetApi = new UpdateDatasetApi(scope, 'UpdateDataset', {
       commonLayer: commonLayer,
+      userTable: multiUserTable,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
       httpMethod: 'PUT',
@@ -174,7 +174,6 @@ export class SdTrainDeployStack {
       router: routers.datasets,
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      authorizer: props.authorizer,
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
     });
@@ -189,7 +188,6 @@ export class SdTrainDeployStack {
       router: updateDatasetApi.router,
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
@@ -200,6 +198,7 @@ export class SdTrainDeployStack {
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
               checkPointsTable: checkPointTable,
+              userTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,
@@ -217,6 +216,7 @@ export class SdTrainDeployStack {
               commonLayer: props.commonLayer,
               datasetInfoTable: props.database.datasetInfoTable,
               datasetItemTable: props.database.datasetItemTable,
+              multiUserTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,

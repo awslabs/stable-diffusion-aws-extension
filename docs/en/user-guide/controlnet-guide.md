@@ -1,4 +1,4 @@
-# Use Controlnet for inferencing
+# Use Controlnet for inference
 
 You can open **controlnet** sub-session, by combining the use of native functionalities **txt2img** or **img2img** along with the added panel of **Amazon SageMaker Inference** in the solution, the inference tasks involving cloud resources can be invoked.
 

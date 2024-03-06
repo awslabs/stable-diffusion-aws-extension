@@ -6,7 +6,6 @@ import time
 import json
 import gradio
 import requests
-import base64
 import gradio as gr
 
 from aws_extension.cloud_api_manager.api_logger import ApiLogger
@@ -103,21 +102,6 @@ modelTypeMap = {
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
-
-
-def server_request_post(path, params):
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, json=params, headers=headers)
-    return response
 
 
 def server_request_get(path, params):
@@ -314,6 +298,8 @@ def get_inference_job(inference_job_id):
                        desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
                             f"end request if data.status == succeed, "
                             f"ID from previous step: CreateInference -> data -> inference -> id")
+    if 'data' not in response.json():
+        raise Exception(response.json())
     return response.json()['data']
 
 
@@ -385,10 +371,9 @@ def get_model_list_by_type(model_type, username=""):
         url += f"&types={model_type}"
 
     try:
-        encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
-            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+            'username': username
         })
         response.raise_for_status()
         json_response = response.json()
@@ -480,14 +465,12 @@ def refresh_all_models(username):
     if not has_config():
         return []
 
-    encode_type = "utf-8"
-
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
             response = requests.get(url=url, headers={
                 'x-api-key': api_key,
-                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+                'username': username,
             })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")
@@ -572,7 +555,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key, "username": pr.username})
 
         if response.status_code not in [201, 202]:
             return response.json()['message'], None, None, None, None, None, None
