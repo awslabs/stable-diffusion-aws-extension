@@ -1,8 +1,0 @@
-boto3>=1.26.28
-fastapi==0.109.1
-mangum==0.16.0
-fastapi-pagination==0.11.0
-Pillow==10.2.0
-numpy==1.23.5
-sagemaker==2.143.0
-gradio==3.34.0
