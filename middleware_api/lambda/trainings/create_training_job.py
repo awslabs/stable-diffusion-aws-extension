@@ -307,7 +307,7 @@ def handler(raw_event, context):
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
-        return ok(data=job_info)
+        return ok(data=job_info, decimal=True)
     except Exception as e:
         logger.error(f"Error when creating a training job: {e}")
 
