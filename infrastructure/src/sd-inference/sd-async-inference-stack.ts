@@ -12,7 +12,6 @@ import {
   RemovalPolicy,
   StackProps,
 } from 'aws-cdk-lib';
-import * as apigw from 'aws-cdk-lib/aws-apigateway';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -190,67 +189,6 @@ export class SDAsyncInferenceStack {
     createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
     createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
 
-    const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
-      assumedBy: new iam.CompositePrincipal(
-        new iam.ServicePrincipal('sagemaker.amazonaws.com'),
-        new iam.ServicePrincipal('lambda.amazonaws.com'),
-      ),
-    });
-
-    inferenceLambdaRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-    );
-
-    // Create a Lambda function for inference
-    const inferenceLambda = new lambda.DockerImageFunction(
-      scope,
-      'InferenceLambda',
-      {
-        code: lambda.DockerImageCode.fromImageAsset(
-          '../middleware_api/lambda/inference',
-        ),
-        timeout: Duration.minutes(15),
-        memorySize: 3008,
-        environment: {
-          INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
-          DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
-          DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
-          S3_BUCKET: props?.s3_bucket.bucketName ?? '',
-          ACCOUNT_ID: Aws.ACCOUNT_ID,
-          REGION_NAME: Aws.REGION,
-          SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
-          SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
-          NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-          INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
-          LOG_LEVEL: props.logLevel.valueAsString,
-        },
-        role: inferenceLambdaRole,
-        logRetention: RetentionDays.ONE_WEEK,
-      },
-    );
-
-    // Grant Lambda permission to read/write from/to the S3 bucket
-    props?.s3_bucket.grantReadWrite(inferenceLambda);
-
-    // Grant Lambda permission to invoke SageMaker endpoint
-    inferenceLambda.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'sagemaker:DescribeEndpoint',
-          'sagemaker:ListEndpoints',
-          'sagemaker:DeleteEndpoint',
-          'sagemaker:InvokeEndpoint',
-          'sagemaker:InvokeEndpointAsync',
-          'application-autoscaling:DeregisterScalableTarget',
-          's3:CreateBucket',
-          's3:ListBucket',
-          's3:GetObject',
-        ],
-        resources: ['*'],
-      }),
-    );
-
-
     const ddbStatement = new iam.PolicyStatement({
       actions: [
         'dynamodb:Query',
@@ -291,12 +229,6 @@ export class SDAsyncInferenceStack {
         props.inferenceResultTopic.topicArn,
       ],
     });
-    inferenceLambda.addToRolePolicy(ddbStatement);
-    inferenceLambda.addToRolePolicy(s3Statement);
-    inferenceLambda.addToRolePolicy(snsStatement);
-
-    // Create a POST method for the API Gateway and connect it to the Lambda function
-    const txt2imgIntegration = new apigw.LambdaIntegration(inferenceLambda);
 
     new GetInferenceJobApi(
       scope, 'GetInferenceJob',
@@ -332,13 +264,6 @@ export class SDAsyncInferenceStack {
     if (!inference) {
       throw new Error('inference is undefined');
     }
-
-    const run_sagemaker_inference = inference.addResource(
-      'run-sagemaker-inference',
-    );
-    run_sagemaker_inference.addMethod('POST', txt2imgIntegration, {
-      apiKeyRequired: true,
-    });
 
     const handler = new python.PythonFunction(
       scope,
