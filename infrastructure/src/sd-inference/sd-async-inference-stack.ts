@@ -32,7 +32,7 @@ import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferenc
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { ResourceProvider } from '../shared/resource-provider';
-import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
+import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -118,10 +118,8 @@ export class SDAsyncInferenceStack {
               inferenceResultTopic: props.inferenceResultTopic,
               routers: props.routers,
               s3Bucket: props?.s3_bucket,
-              trainingTable: props?.training_table,
               multiUserTable: props.multiUserTable,
               snsTopic: props?.snsTopic,
-              sd_inference_job_table: props.sd_inference_job_table,
               EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
               checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,

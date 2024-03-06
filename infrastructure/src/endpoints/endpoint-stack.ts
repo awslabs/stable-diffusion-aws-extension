@@ -29,10 +29,8 @@ export interface EndpointStackProps extends StackProps {
   inferenceResultTopic: sns.Topic;
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
-  trainingTable: dynamodb.Table;
   multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
-  sd_inference_job_table: aws_dynamodb.Table;
   EndpointDeploymentJobTable: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
@@ -97,7 +95,6 @@ export class EndpointStack {
               commonLayer: props.commonLayer,
               endpointDeploymentTable: props.EndpointDeploymentJobTable,
               multiUserTable: props.multiUserTable,
-              inferenceJobTable: props.sd_inference_job_table,
               httpMethod: 'POST',
               srcRoot: srcRoot,
               s3Bucket: props.s3Bucket,

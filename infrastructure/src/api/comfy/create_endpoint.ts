@@ -22,7 +22,6 @@ export interface CreateSageMakerEndpointProps {
 export class CreateSageMakerEndpoint {
 
   private readonly id: string;
-  private readonly resourceProvider: ResourceProvider;
   public model: aws_sagemaker.CfnModel;
   public modelConfig: aws_sagemaker.CfnEndpointConfig;
   public modelEndpoint: aws_sagemaker.CfnEndpoint;
@@ -34,7 +33,6 @@ export class CreateSageMakerEndpoint {
   constructor(scope: Construct, id: string, props: CreateSageMakerEndpointProps) {
     this.id = id;
     this.modelTable = props.modelTable;
-    this.resourceProvider = props.resourceProvider;
     this.queue = props.queue;
     this.modelTable = props.modelTable;
     this.configTable = props.configTable;
@@ -50,7 +48,7 @@ export class CreateSageMakerEndpoint {
         // modelDataUrl: props.modelDataUrl,
         environment: {
           AWS_DEFAULT_REGION: Aws.REGION,
-          BUCKET_NAME: this.resourceProvider.bucketName,
+          BUCKET_NAME: props.s3Bucket.bucketName,
         },
       },
     });

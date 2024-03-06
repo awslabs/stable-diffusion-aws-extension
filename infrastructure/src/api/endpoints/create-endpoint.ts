@@ -23,7 +23,6 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  inferenceJobTable: Table;
   srcRoot: string;
   inferenceECRUrl: string;
   commonLayer: LayerVersion;
@@ -43,7 +42,6 @@ export class CreateEndpointApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
-  private readonly inferenceJobTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly inferenceECRUrl: string;
@@ -59,7 +57,6 @@ export class CreateEndpointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
@@ -154,7 +151,6 @@ export class CreateEndpointApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.multiUserTable.tableArn,
-        this.inferenceJobTable.tableArn,
       ],
     });
 

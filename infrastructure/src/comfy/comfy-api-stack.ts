@@ -11,6 +11,7 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
 import { SqsStack } from './comfy-sqs';
+// import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -28,7 +29,6 @@ export interface ComfyInferenceStackProps extends StackProps {
 }
 
 export class ComfyApiStack extends Construct {
-  private resourceProvider: ResourceProvider;
   private readonly layer: aws_lambda.LayerVersion;
   private configTable: aws_dynamodb.Table;
   private executeTable: aws_dynamodb.Table;
@@ -43,7 +43,6 @@ export class ComfyApiStack extends Construct {
       throw new Error('ecrImageTag is required');
     }
     this.layer = props.commonLayer;
-    this.resourceProvider = props.resourceProvider;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.modelTable = props.modelTable;
@@ -111,9 +110,24 @@ export class ComfyApiStack extends Construct {
               nodeTable: this.nodeTable,
               commonLayer: this.layer,
               queue: sqsStack.queue,
-              resourceProvider: this.resourceProvider,
               logLevel: props.logLevel,
             });
+    // new EndpointStack(
+    //   scope, 'Comfy',
+    //         <EndpointStackProps>{
+    //           inferenceErrorTopic: props.inferenceErrorTopic,
+    //           inferenceResultTopic: props.inferenceResultTopic,
+    //           routers: props.routers,
+    //           s3Bucket: props?.s3Bucket,
+    //           multiUserTable: props.multiUserTable,
+    //           snsTopic: props?.snsTopic,
+    //           EndpointDeploymentJobTable: props.EndpointDeploymentJobTable,
+    //           checkpointTable: props.modelTable,
+    //           commonLayer: props.commonLayer,
+    //           logLevel: props.logLevel,
+    //           ecrUrl: srcImg,
+    //         },
+    // );
 
     // POST /execute
     new ExecuteApi(
