@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
-from common.const import PERMISSION_USER_ALL, PERMISSION_USER_CREATE
+from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
@@ -59,6 +59,7 @@ def handler(raw_event, ctx):
             for rn in role_names:
                 role_event = {
                     'role_name': rn,
+                    'initial': event.initial,
                     'permissions': [
                         'train:all',
                         'checkpoint:all',
@@ -67,7 +68,6 @@ def handler(raw_event, ctx):
                         'user:all',
                         'role:all'
                     ],
-                    'creator': event.username
                 }
 
                 @dataclass
