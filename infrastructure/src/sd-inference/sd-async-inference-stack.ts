@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import {
@@ -22,13 +21,9 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
-import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
-import { ListEndpointsApi, ListEndpointsApiProps } from '../api/endpoints/list-endpoints';
 import { CreateInferenceJobApi, CreateInferenceJobApiProps } from '../api/inferences/create-inference-job';
 import { DeleteInferenceJobsApi, DeleteInferenceJobsApiProps } from '../api/inferences/delete-inference-jobs';
 import { GetInferenceJobApi, GetInferenceJobApiProps } from '../api/inferences/get-inference-job';
@@ -36,8 +31,8 @@ import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferences/start-inference-job';
 import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
 import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
-import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
 import { ResourceProvider } from '../shared/resource-provider';
+import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -116,42 +111,22 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    new ListEndpointsApi(
-      scope, 'ListEndpoints',
-            <ListEndpointsApiProps>{
-              router: props.routers.endpoints,
-              commonLayer: props.commonLayer,
-              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
+    new EndpointStack(
+      scope, 'SD',
+            <EndpointStackProps>{
+              inferenceErrorTopic: props.inferenceErrorTopic,
+              inferenceResultTopic: props.inferenceResultTopic,
+              routers: props.routers,
+              s3Bucket: props?.s3_bucket,
+              trainingTable: props?.training_table,
               multiUserTable: props.multiUserTable,
-              httpMethod: 'GET',
-              srcRoot: srcRoot,
-              logLevel: props.logLevel,
-            },
-    );
-
-    const deleteEndpointsApi = new DeleteEndpointsApi(
-      scope, 'DeleteEndpoints',
-            <DeleteEndpointsApiProps>{
-              router: props.routers.endpoints,
+              snsTopic: props?.snsTopic,
+              sd_inference_job_table: props.sd_inference_job_table,
+              EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
+              checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
-              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-              multiUserTable: props.multiUserTable,
-              httpMethod: 'DELETE',
-              srcRoot: srcRoot,
               logLevel: props.logLevel,
-            },
-    );
-    deleteEndpointsApi.model.node.addDependency(createInferenceJobApi.model);
-    deleteEndpointsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
-
-    new SagemakerEndpointEvents(
-      scope, 'EndpointEvents',
-            <SagemakerEndpointEventsProps>{
-              commonLayer: props.commonLayer,
-              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-              multiUserTable: props.multiUserTable,
-              srcRoot: srcRoot,
-              logLevel: props.logLevel,
+              ecrUrl: inferenceECR_url,
             },
     );
 
@@ -168,27 +143,6 @@ export class SDAsyncInferenceStack {
         logLevel: props.logLevel,
       },
     );
-
-    const createEndpointApi= new CreateEndpointApi(
-      scope, 'CreateEndpoint',
-            <CreateEndpointApiProps>{
-              router: props.routers.endpoints,
-              commonLayer: props.commonLayer,
-              endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-              multiUserTable: props.multiUserTable,
-              inferenceJobTable: props.sd_inference_job_table,
-              httpMethod: 'POST',
-              srcRoot: srcRoot,
-              s3Bucket: props.s3_bucket,
-              userNotifySNS: props.snsTopic,
-              inferenceECRUrl: inferenceECR_url,
-              inferenceResultTopic: props.inferenceResultTopic,
-              inferenceResultErrorTopic: props.inferenceErrorTopic,
-              logLevel: props.logLevel,
-            },
-    );
-    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
-    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
 
     const inferenceLambdaRole = new iam.Role(scope, 'InferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
@@ -325,8 +279,8 @@ export class SDAsyncInferenceStack {
               logLevel: props.logLevel,
             },
     );
-    deleteInferenceJobsApi.model.node.addDependency(createEndpointApi.model);
-    deleteInferenceJobsApi.requestValidator.node.addDependency(createEndpointApi.requestValidator);
+    deleteInferenceJobsApi.model.node.addDependency(createInferenceJobApi.model);
+    deleteInferenceJobsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
 
     // Add a POST method with prefix inference
     if (!inference) {
@@ -372,11 +326,6 @@ export class SDAsyncInferenceStack {
     handler.addToRolePolicy(s3Statement);
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
-
-    //adding model to data directory of s3 bucket
-    if (props?.s3_bucket != undefined) {
-      this.uploadModelToS3(scope, props.s3_bucket);
-    }
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
@@ -427,20 +376,5 @@ export class SDAsyncInferenceStack {
     customJob.node.addDependency(ecrDeployment);
 
     return dockerRepo.repositoryUri;
-  }
-
-  private uploadModelToS3(scope: Construct, s3_bucket: s3.Bucket) {
-    // Create a folder in the bucket
-    const folderKey = 'data/';
-
-    // Upload a local file to the created folder
-    console.log(__dirname);
-    const modelPath = path.resolve(__dirname, '../', '../', 'models', 'model.zip');
-    new s3deploy.BucketDeployment(scope, 'DeployLocalFile', {
-      sources: [s3deploy.Source.asset(modelPath)],
-      destinationBucket: s3_bucket,
-      destinationKeyPrefix: folderKey,
-      retainOnDelete: false,
-    });
   }
 }
