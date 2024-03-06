@@ -47,7 +47,6 @@ s3 = boto3.client("s3", region_name=region)
 @dataclass
 class Event:
     params: dict[str, Any]
-    username: str
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
@@ -253,7 +252,7 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, event.username)
+    user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
     ckpt_type = const.CheckPointType.LORA
     if "config_params" in event.params and \
         "additional_network" in event.params["config_params"] and \
@@ -282,7 +281,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[event.username],
+        allowed_roles_or_users=[raw_event["headers"]["username"]],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
