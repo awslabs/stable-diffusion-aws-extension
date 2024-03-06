@@ -267,9 +267,17 @@ def _create_training_job(raw_event, context):
 
     event.params["training_type"] = _lora_train_type.lower()
     user_roles = get_user_roles(ddb_service, user_table, event.username)
+    ckpt_type = const.CheckPointType.LORA
+    if "config_params" in event.params and \
+        "additional_network" in event.params["config_params"] and \
+            "network_module" in event.params["config_params"]["additional_network"]:
+        network_module = event.params["config_params"]["additional_network"]["network_module"]
+        if network_module.lower() != const.NetworkModule.LORA:
+            ckpt_type = const.CheckPointType.SD
+
     checkpoint = CheckPoint(
         id=request_id,
-        checkpoint_type=const.TRAIN_TYPE,
+        checkpoint_type=ckpt_type,
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),
