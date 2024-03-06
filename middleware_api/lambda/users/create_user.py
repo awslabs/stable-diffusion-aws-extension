@@ -37,9 +37,13 @@ def handler(raw_event, ctx):
     logger.info(json.dumps(raw_event))
 
     try:
-        username = permissions_check(raw_event, [PERMISSION_USER_ALL, PERMISSION_USER_CREATE])
 
         event = UpsertUserEvent(**json.loads(raw_event['body']))
+
+        if event.initial:
+            username = raw_event['headers']['username']
+        else:
+            username = permissions_check(raw_event, [PERMISSION_USER_ALL])
 
         if event.initial:
             role_names = [Default_Role]
