@@ -49,7 +49,7 @@ s3 = boto3.client("s3", region_name=region)
 @dataclass
 class Event:
     params: dict[str, Any]
-    creator: str
+    username: str
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
@@ -201,6 +201,7 @@ def _start_training_job(train_job_id: str):
         "created": str(train_job.timestamp),
         "params": train_job.params,
         "input_location": train_job.input_s3_location,
+        "output_location": checkpoint.s3_location
     }
 
 
@@ -216,14 +217,14 @@ def _create_training_job(raw_event, context):
     _lora_train_type = event.lora_train_type
 
     creator_permissions = get_permissions_by_username(
-        ddb_service, user_table, event.creator
+        ddb_service, user_table, event.username
     )
     if "train" not in creator_permissions or (
         "all" not in creator_permissions["train"]
         and "create" not in creator_permissions["train"]
     ):
         return forbidden(
-            message=f"user {event.creator} has not permission to create a train job"
+            message=f"user {event.username} has not permission to create a train job"
         )
 
     if _lora_train_type.lower() == LoraTrainType.KOHYA.value:
@@ -265,7 +266,7 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, event.creator)
+    user_roles = get_user_roles(ddb_service, user_table, event.username)
     checkpoint = CheckPoint(
         id=request_id,
         checkpoint_type=const.TRAIN_TYPE,
@@ -286,7 +287,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[event.creator],
+        allowed_roles_or_users=[event.username],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
