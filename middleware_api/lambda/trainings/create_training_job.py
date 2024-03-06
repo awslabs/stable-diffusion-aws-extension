@@ -47,7 +47,6 @@ s3 = boto3.client("s3", region_name=region)
 @dataclass
 class Event:
     params: dict[str, Any]
-    creator: str
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
@@ -199,6 +198,7 @@ def _start_training_job(train_job_id: str):
         "created": str(train_job.timestamp),
         "params": train_job.params,
         "input_location": train_job.input_s3_location,
+        "output_location": checkpoint.s3_location
     }
 
 
@@ -252,10 +252,18 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, event.creator)
+    user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
+    ckpt_type = const.CheckPointType.LORA
+    if "config_params" in event.params and \
+        "additional_network" in event.params["config_params"] and \
+            "network_module" in event.params["config_params"]["additional_network"]:
+        network_module = event.params["config_params"]["additional_network"]["network_module"]
+        if network_module.lower() != const.NetworkModule.LORA:
+            ckpt_type = const.CheckPointType.SD
+
     checkpoint = CheckPoint(
         id=request_id,
-        checkpoint_type=const.TRAIN_TYPE,
+        checkpoint_type=ckpt_type,
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),
@@ -273,7 +281,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[event.creator],
+        allowed_roles_or_users=[raw_event["headers"]["username"]],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -288,6 +296,6 @@ def handler(raw_event, context):
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
-        return ok(data=job_info)
+        return ok(data=job_info, decimal=True)
     except Exception as e:
         return response_error(e)
