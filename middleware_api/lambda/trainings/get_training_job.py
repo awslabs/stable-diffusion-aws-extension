@@ -3,7 +3,9 @@ import os
 
 import boto3
 
+from common.const import PERMISSION_TRAIN_ALL
 from common.response import ok, not_found
+from libs.utils import response_error, permissions_check
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -16,23 +18,28 @@ def handler(event, ctx):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {ctx}')
 
-    job_id = event['pathParameters']['id']
+    try:
+        job_id = event['pathParameters']['id']
 
-    job = table.get_item(Key={'id': job_id})
+        permissions_check(event, [PERMISSION_TRAIN_ALL])
 
-    if 'Item' not in job:
-        return not_found(message=f'Job with id {job_id} not found')
+        job = table.get_item(Key={'id': job_id})
 
-    item = job['Item']
+        if 'Item' not in job:
+            return not_found(message=f'Job with id {job_id} not found')
 
-    data = {
-        'id': item['id'],
-        'checkpoint_id': item['checkpoint_id'],
-        'job_status': item['job_status'],
-        'model_id': item['model_id'],
-        'params': item['params'],
-        'timestamp': str(item['timestamp']),
-        'train_type': item['train_type'],
-    }
+        item = job['Item']
 
-    return ok(data=data)
+        data = {
+            'id': item['id'],
+            'checkpoint_id': item['checkpoint_id'],
+            'job_status': item['job_status'],
+            'model_id': item['model_id'],
+            'params': item['params'],
+            'timestamp': str(item['timestamp']),
+            'train_type': item['train_type'],
+        }
+
+        return ok(data=data)
+    except Exception as e:
+        return response_error(e)

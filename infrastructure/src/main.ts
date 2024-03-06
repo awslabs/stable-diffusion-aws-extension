@@ -103,7 +103,12 @@ export class Middleware extends Stack {
       this,
       'ResourcesProvider',
       {
+        // when props updated, resource manager will be executed
+        // ecrImageTag is not used in the resource manager
+        // but if it changes, the resource manager will be executed with 'Update'
+        // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
+        ecrImageTag: ecrImageTagParam.valueAsString,
       },
     );
 
@@ -117,10 +122,7 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-    });
+    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer');
 
     const isComfyChoice = new CfnCondition(this, 'IsComfyChoice', {
       expression: Fn.conditionEquals(scriptChoice, 'ComfyUI'),
@@ -159,7 +161,6 @@ export class Middleware extends Stack {
         multiUserTable: ddbTables.multiUserTable,
         routers: restApi.routers,
         passwordKeyAlias: authorizerLambda.passwordKeyAlias,
-        authorizer: authorizerLambda.authorizer,
         logLevel,
       });
 
@@ -188,7 +189,6 @@ export class Middleware extends Stack {
         synthesizer: props.synthesizer,
         inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
         inferenceResultTopic: snsTopics.inferenceResultTopic,
-        authorizer: authorizerLambda.authorizer,
         logLevel,
         resourceProvider,
       });
@@ -204,7 +204,6 @@ export class Middleware extends Stack {
         snsTopic: snsTopics.snsTopic,
         createModelFailureTopic: snsTopics.createModelFailureTopic,
         createModelSuccessTopic: snsTopics.createModelSuccessTopic,
-        authorizer: authorizerLambda.authorizer,
         logLevel,
         resourceProvider,
       });
@@ -217,7 +216,6 @@ export class Middleware extends Stack {
         routers: restApi.routers,
         s3Bucket: s3Bucket,
         commonLayer: commonLayers.commonLayer,
-        authorizer: authorizerLambda.authorizer,
         logLevel: logLevel,
       });
       // Adding Outputs for apiGateway and s3Bucket
@@ -275,7 +273,6 @@ export class Middleware extends Stack {
         routers: restComfyApi.routers,
         s3Bucket: s3Bucket,
         commonLayer: commonLayers.commonLayer,
-        authorizer: authorizerLambda.authorizer,
         logLevel: logLevel,
       });
 
@@ -289,7 +286,6 @@ export class Middleware extends Stack {
         description: 'API Gateway Token',
       });
     }
-
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {

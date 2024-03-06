@@ -5,6 +5,7 @@ import os
 import boto3
 
 from common.response import ok, not_found
+from libs.utils import response_error, log_execution_time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -20,11 +21,16 @@ def handler(event, ctx):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {ctx}')
 
-    inference_id = event['pathParameters']['id']
+    try:
 
-    return get_infer_data(inference_id)
+        inference_id = event['pathParameters']['id']
+
+        return get_infer_data(inference_id)
+    except Exception as e:
+        return response_error(e)
 
 
+@log_execution_time
 def get_infer_data(inference_id: str):
     inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
 

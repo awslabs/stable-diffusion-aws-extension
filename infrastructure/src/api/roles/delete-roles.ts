@@ -67,6 +67,8 @@ export class DeleteRolesApi {
         'dynamodb:UpdateItem',
         // delete role
         'dynamodb:DeleteItem',
+        // scan users
+        'dynamodb:Scan',
       ],
       resources: [
         this.multiUserTable.tableArn,

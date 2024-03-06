@@ -16,6 +16,7 @@ class HttpStatusCode:
     Accepted = 202
     NoContent: int = 204
     BadRequest = 400
+    Unauthorized = 401
     Forbidden = 403
     NotFound = 404
     InternalServerError = 500
@@ -28,6 +29,7 @@ http_status_descriptions = {
     HttpStatusCode.Accepted: "Accepted",
     HttpStatusCode.NoContent: "No Content",
     HttpStatusCode.BadRequest: "Bad Request",
+    HttpStatusCode.Unauthorized: "Unauthorized",
     HttpStatusCode.Forbidden: "Forbidden",
     HttpStatusCode.NotFound: "Not Found",
     HttpStatusCode.InternalServerError: "Internal Server Error"
@@ -85,8 +87,8 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     else:
         payload['body'] = json.dumps(body)
 
-    logging.info("Lambda Response Payload:")
-    logging.info(json.dumps(payload))
+    logger.info("Lambda Response Payload:")
+    logger.info(payload['body'])
 
     return payload
 
@@ -129,6 +131,14 @@ def bad_request(data=None,
                 decimal=None
                 ):
     return response(HttpStatusCode.BadRequest, data, message, headers, decimal)
+
+
+def unauthorized(data=None,
+                 message: str = http_status_descriptions[HttpStatusCode.Unauthorized],
+                 headers: Optional[dict[str, Any]] = None,
+                 decimal=None
+                 ):
+    return response(HttpStatusCode.Unauthorized, data, message, headers, decimal)
 
 
 def forbidden(data=None,

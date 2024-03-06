@@ -3,10 +3,10 @@
 ## 一般问题
 
 **问：什么是Stable Diffusion亚马逊云科技插件解决方案？**
-Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件和云资源模版方式，帮助现有客户将现有Stable Diffusion的模型训练，推理和调优等任务负载从本地服务器迁移至Amazon SageMaker，利用云上弹性资源加速模型迭代，避免单机部署所带来的性能瓶颈。
+Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件和云资源模版方式，帮助现有客户将现有 Stable Diffusion 的模型训练，推理和调优等任务负载从本地服务器迁移至 Amazon SageMaker，利用云上弹性资源加速模型迭代，避免单机部署所带来的性能瓶颈。
 
 **问：该解决方案中支持哪些原生功能/第三方插件？**
-本解决方案支持多种Stable Diffusion WebUI原生功能及第三方插件。请参考[支持的具体功能列表及版本](./solution-overview/features-and-benefits.md)等，了解更多细节。
+本解决方案支持多种 Stable Diffusion WebUI 原生功能及第三方插件。请参考[支持的具体功能列表及版本](./solution-overview/features-and-benefits.md)等，了解更多细节。
 
 **问：这个解决方案的许可证是什么？**
 本解决方案是根据[Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0){:target="_blank"}许可证提供的。 它是一个由 Apache 软件基金会编写的自由软件许可证。 它允许用户为任何目的使用该软件，分发、修改该软件，并根据许可证的条款分发该软件的修改版本，而不必担心版权费。
@@ -36,7 +36,7 @@ Stable Diffusion亚马逊云科技插件解决方案通过为社区提供插件�
 **问：我如何去掉本地推理的选项，让我的webUI只能支持云上推理？**
 
 您可以打开webUI的主页面，进入**Settings**标签页，选择左侧的*User interface*标签栏，找到以下区域‘[info]
- Quicksettings list (setting entries that appear at the top of page rather than in settings tab) (requires Reload UI)‘，不选中‘sd_model_checkpoint' 和 ‘sd_vae' （如果sd_vae之前被选中的话）。以上操作完成后，点击最上方‘Apply setting'，而后在控制台重启webUI，来让此改动生效。重启webUI后，您就会发现，原本界面本地选择推理底模的左上角下拉菜单消失，用户将只会有云上推理的选项。
+ Quick settings list (setting entries that appear at the top of page rather than in settings tab) (requires Reload UI)‘，不选中‘sd_model_checkpoint' 和 ‘sd_vae' （如果sd_vae之前被选中的话）。以上操作完成后，点击最上方‘Apply setting'，而后在控制台重启webUI，来让此改动生效。重启webUI后，您就会发现，原本界面本地选择推理底模的左上角下拉菜单消失，用户将只会有云上推理的选项。
 ![generate-lock-step](images/generate-lock-step.png)
 
 

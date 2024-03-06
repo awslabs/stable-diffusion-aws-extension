@@ -20,7 +20,6 @@ export interface ListAllRolesApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -32,7 +31,6 @@ export class ListRolesApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: ListAllRolesApiProps) {
@@ -43,7 +41,6 @@ export class ListRolesApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
 
     this.listAllRolesApi();
@@ -100,9 +97,9 @@ export class ListRolesApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listRolesIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

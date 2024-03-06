@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_apigateway, aws_s3, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_s3, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
@@ -19,7 +19,6 @@ export interface CheckpointStackProps extends StackProps {
   routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;
   commonLayer: PythonLayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -50,12 +49,11 @@ export class CheckpointStack {
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      authorizer: props.authorizer,
       logLevel: props.logLevel,
     });
 
     // POST /checkpoint
-    const createCheckPointApi = new CreateCheckPointApi(scope, 'CreateCheckPoint', {
+    const createCheckPointApi= new CreateCheckPointApi(scope, 'CreateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -69,6 +67,7 @@ export class CheckpointStack {
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
+      userTable: multiUserTable,
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: routers.checkpoints,
@@ -86,6 +85,7 @@ export class CheckpointStack {
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,
               checkPointsTable: checkPointTable,
+              userTable: multiUserTable,
               httpMethod: 'DELETE',
               s3Bucket: props.s3Bucket,
               srcRoot: this.srcRoot,

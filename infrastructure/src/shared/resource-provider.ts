@@ -10,6 +10,7 @@ import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
   bucketName?: string;
+  ecrImageTag?: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -48,6 +49,7 @@ export class ResourceProvider extends Construct {
       environment: {
         ROLE_ARN: this.role.roleArn,
         BUCKET_NAME: props.bucketName ?? '',
+        // if files are not changed, then the version should not be changed
         ESD_VERSION: '1.4.0',
       },
     });
@@ -87,6 +89,7 @@ export class ResourceProvider extends Construct {
       effect: Effect.ALLOW,
       actions: [
         'dynamodb:CreateTable',
+        'dynamodb:UpdateTable',
         'sns:CreateTopic',
         'iam:ListRolePolicies',
         'iam:PutRolePolicy',

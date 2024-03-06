@@ -5,6 +5,7 @@ import os
 import gradio as gr
 import modules.ui
 import requests
+from modules import shared
 from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
@@ -12,11 +13,11 @@ from modules.ui_components import ToolButton
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-from aws_extension.cloud_api_manager.api import api
+from aws_extension.cloud_api_manager.api import api, client_api_version
 from aws_extension.cloud_api_manager.api_manager import api_manager
+from aws_extension.cloud_dataset_manager.dataset_manager import get_sorted_cloud_dataset
 from aws_extension.sagemaker_ui import checkpoint_type
 from aws_extension.sagemaker_ui_utils import create_refresh_button_by_user
-from aws_extension.cloud_dataset_manager.dataset_manager import get_sorted_cloud_dataset
 from utils import get_variable_from_json, save_variable_to_json, has_config, is_gcr
 
 logger = logging.getLogger(__name__)
@@ -32,7 +33,6 @@ else:
                          "ml.g5.2xlarge",
                          "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
     inference_choices_default = "ml.g5.2xlarge"
-
 
 test_connection_result = None
 api_gateway_url = None
@@ -50,8 +50,9 @@ all_resources = [
 
 all_actions = [
     'all',
-    'create',
-    'list'
+    # 'create',
+    # 'list'
+    # 'delete'
 ]
 
 all_permissions = []
@@ -74,6 +75,11 @@ def on_ui_tabs():
                         _, user_table, user_role_dropdown = user_settings_tab()
                     with gr.Tab(label='Role Management'):
                         _, role_form, role_table = role_settings_tab()
+                    with gr.Row():
+                        version_label = gr.Label(
+                            label='Version',
+                            value=f'Client Version: {client_api_version}',
+                        )
         with gr.Tab(label='Cloud Models Management', variant='panel'):
             with gr.Row():
                 # todo: the output message is not right yet
@@ -93,6 +99,24 @@ def on_ui_tabs():
         with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row():
                 dataset_asset = dataset_tab()
+
+        def get_version_info():
+            if shared.demo.server_app.api_version == client_api_version:
+                return f'Front-end & Middleware API Version: {client_api_version}'
+
+            version = f'Front-end Version {client_api_version}'
+
+            if shared.demo.server_app.api_version:
+
+                if client_api_version > shared.demo.server_app.api_version:
+                    version += (f' > Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Middleware API')
+
+                if client_api_version < shared.demo.server_app.api_version:
+                    version += (f' < Middleware API Version {shared.demo.server_app.api_version},'
+                                f' please update the Front-end')
+
+            return version
 
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
@@ -122,7 +146,8 @@ def on_ui_tabs():
                 _list_users(req.username, None, None)[:user_table_size], \
                 _get_roles_table(req.username)[:10], \
                 gr.update(choices=roles(req.username)), \
-                f'Welcome, {req.username}'
+                f'Welcome, {req.username}!', \
+                get_version_info()
 
         sagemaker_interface.load(ui_tab_setup, [], [
             config_form,
@@ -135,7 +160,8 @@ def on_ui_tabs():
             user_table,
             role_table,
             user_role_dropdown,
-            whoami_label
+            whoami_label,
+            version_label
         ])
 
     return (sagemaker_interface, "Amazon SageMaker", "sagemaker_interface"),
@@ -199,7 +225,7 @@ def api_setting_tab():
                 virus-free, operational, or compatible with your production environment and standards.""")
 
     with gr.Row(visible=has_config()):
-        whoami_label = gr.Label(label='whoami')
+        whoami_label = gr.Label(label='Current User')
 
     with gr.Row(visible=has_config()):
         logout_btn = gr.Button(value='Logout')
@@ -713,7 +739,7 @@ def model_upload_tab():
         page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False)
         with gr.Row():
             with gr.Column():
-                current_page = gr.Number(label="Page Number", value=1, min=1, max=1000, step=1)
+                current_page = gr.Number(label="Page Number", value=1, minimum=1, step=1)
             with gr.Column():
                 query_types = gr.Dropdown(
                     multiselect=True,
@@ -751,11 +777,11 @@ def sagemaker_endpoint_tab():
                             <th style="border: 1px solid grey; padding: 15px; text-align: left; " colspan="2">Default SageMaker Endpoint Config</th>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Endpoint Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Endpoint Type</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">Async</td>
                           </tr>
                           <tr>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type: </b></td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Instance Type</b></td>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;">{inference_choices_default}</td>
                           </tr>
                           <tr>
@@ -764,42 +790,12 @@ def sagemaker_endpoint_tab():
                           </tr>
                           <tr>
                             <td style="border: 1px solid grey; padding: 15px; text-align: left;"><b>Enable Autoscaling</b></td>
-                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range:0-1)</td>
+                            <td style="border: 1px solid grey; padding: 15px; text-align: left;">yes(range: 0 to 1)</td>
                           </tr>
                         
                         </table>
                     """
             gr.HTML(value=default_table)
-            with gr.Column():
-                endpoint_advance_config_enabled = gr.Checkbox(
-                    label="Advanced Endpoint Configuration", value=False, visible=True
-                )
-            with gr.Column(visible=False) as filter_row:
-                endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
-                                                   label="Endpoint Name (Optional)", visible=True)
-                with gr.Column():
-                    with gr.Row():
-                        endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
-                                                             elem_id="sagemaker_inference_endpoint_type_textbox",
-                                                             value="Async")
-                        instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=inference_choices,
-                                                             elem_id="sagemaker_inference_instance_type_textbox",
-                                                             value=inference_choices_default)
-                        instance_count_dropdown = gr.Number(label="Max Instance count",
-                                                            elem_id="sagemaker_inference_instance_count_textbox",
-                                                            value=1, min=1, max=1000, step=1
-                                                            )
-                        autoscaling_enabled = gr.Checkbox(
-                            label="Enable Autoscaling (0 to Max Instance count)", value=True, visible=True
-                        )
-
-                custom_docker_image_uri = gr.Textbox(
-                    value="",
-                    lines=1,
-                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
-                    label=f"Custom Docker Image URI (Optional)",
-                    visible=False
-                )
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
                                          label="User Role (Required)")
@@ -810,6 +806,41 @@ def sagemaker_endpoint_tab():
                         'choices': roles(username)
                     },
                     'refresh_sagemaker_user_roles'
+                )
+            with gr.Column():
+                endpoint_advance_config_enabled = gr.Checkbox(
+                    label="Advanced Endpoint Configuration", value=False, visible=True
+                )
+            with gr.Column(visible=False) as filter_row:
+                with gr.Row():
+                    endpoint_name_textbox = gr.Textbox(value="", lines=1, placeholder="custom endpoint name",
+                                                       label="Endpoint Name (Optional)", visible=True)
+                    endpoint_type_dropdown = gr.Dropdown(label="Endpoint Type", choices=endpoint_type_choices,
+                                                         elem_id="sagemaker_inference_endpoint_type_textbox",
+                                                         value="Async")
+                    instance_type_dropdown = gr.Dropdown(label="Instance Type", choices=inference_choices,
+                                                         elem_id="sagemaker_inference_instance_type_textbox",
+                                                         value=inference_choices_default)
+                    instance_count_dropdown = gr.Number(label="Max Instance Number",
+                                                        elem_id="sagemaker_inference_instance_count_textbox",
+                                                        value=1, minimum=1, maximum=1000, step=1
+                                                        )
+                with gr.Column():
+                    with gr.Row():
+                        autoscaling_enabled = gr.Checkbox(
+                            label="Enable Autoscaling",
+                            value=True,
+                            visible=True,
+                        )
+                    with gr.Row(visible=True) as autoscaling_enabled_filter_row:
+                        min_instance_number_dropdown = gr.Number(value=0, label="Min Instance Number", minimum=0,
+                                                                 visible=True)
+                custom_docker_image_uri = gr.Textbox(
+                    value="",
+                    lines=1,
+                    placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
+                    label=f"Custom Docker Image URI (Optional)",
+                    visible=False
                 )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
@@ -822,6 +853,7 @@ def sagemaker_endpoint_tab():
                                            autoscale,
                                            docker_image_uri,
                                            target_user_roles,
+                                           min_instance_number,
                                            pr: gr.Request):
                 if not target_user_roles:
                     return 'Please select at least one user role.'
@@ -832,6 +864,7 @@ def sagemaker_endpoint_tab():
                                                     custom_docker_image_uri=docker_image_uri,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
+                                                    min_instance_number=min_instance_number,
                                                     user_token=pr.username
                                                     )
 
@@ -842,25 +875,48 @@ def sagemaker_endpoint_tab():
                                                   instance_count_dropdown,
                                                   autoscaling_enabled,
                                                   custom_docker_image_uri,
-                                                  user_roles
+                                                  user_roles,
+                                                  min_instance_number_dropdown,
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
+            show_custom_docker_image = False
             if checkbox_state:
                 username = cloud_auth_manager.username
-                show_custom_docker_image = False
                 user = api_manager.get_user_by_username(username=username, user_token=username)
                 if 'roles' in user:
                     show_custom_docker_image = 'byoc' in user['roles']
-                return gr.update(visible=True), custom_docker_image_uri.update(visible=show_custom_docker_image)
+            return gr.update(visible=checkbox_state), custom_docker_image_uri.update(visible=show_custom_docker_image)
+
+        def toggle_autoscaling_enabled_rows(checkbox_state):
+            if checkbox_state:
+                return gr.update(visible=True)
             else:
-                return gr.update(visible=False), custom_docker_image_uri.update(visible=False)
+                return gr.update(visible=False)
+
+        def endpoint_type_dropdown_change(endpoint_type):
+            if endpoint_type == "Real-time":
+                return gr.update(value=1, minimum=1)
+            else:
+                return gr.update(value=0, minimum=0)
+
+        endpoint_type_dropdown.change(
+            fn=endpoint_type_dropdown_change,
+            inputs=[endpoint_type_dropdown],
+            outputs=[min_instance_number_dropdown]
+        )
 
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
             outputs=[filter_row, custom_docker_image_uri]
+        )
+
+        autoscaling_enabled.change(
+            fn=toggle_autoscaling_enabled_rows,
+            inputs=autoscaling_enabled,
+            outputs=[autoscaling_enabled_filter_row]
         )
 
         with gr.Column(title="Delete SageMaker Endpoint", variant='panel'):
@@ -901,13 +957,27 @@ def _list_sagemaker_endpoints(username):
             endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
             endpoint_roles = ','.join(endpoint['owner_group_or_role'])
+
+            scale_scope = ""
+            min_instance_number = endpoint['min_instance_number'] if 'min_instance_number' in endpoint and endpoint[
+                'min_instance_number'] else "0"
+            max_instance_number = endpoint['max_instance_number'] if 'max_instance_number' in endpoint and endpoint[
+                'max_instance_number'] else ""
+            if max_instance_number:
+                scale_scope = f"({min_instance_number}-{max_instance_number})"
+
+            autoscaling = endpoint['autoscaling']
+            if autoscaling:
+                autoscaling = f"yes {scale_scope}"
+
             endpoints.append([
                 endpoint['endpoint_name'],
                 endpoint['endpoint_type'],
                 endpoint_roles,
-                endpoint['autoscaling'],
+                autoscaling,
                 endpoint['endpoint_status'],
                 endpoint['current_instance_count'] if endpoint['current_instance_count'] else "0",
+                endpoint['instance_type'] if endpoint['instance_type'] else "",
                 endpoint['startTime'].split(' ')[0] if endpoint['startTime'] else "",
             ])
     return endpoints
@@ -917,8 +987,8 @@ def list_sagemaker_endpoints_tab():
     with gr.Column():
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
         model_list_df = gr.Dataframe(
-            headers=['name', 'type', 'owners', 'autoscaling', 'status', 'instance', 'created time'],
-            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str']
+            headers=['Name', 'Type', 'Owners', 'Autoscaling', 'Status', 'Instance', 'Instance Type', 'Created Time'],
+            datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str', 'str']
         )
 
         def list_ep_prev(paging, rq: gr.Request):
@@ -998,7 +1068,8 @@ def dataset_tab():
                 if not has_config():
                     return f'Please config api url and token', None, None, None, None
 
-                raw_response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.post(url=url, json=payload,
+                                             headers={'x-api-key': api_key, "username": pr.username})
                 logger.info(raw_response.json())
 
                 if raw_response.status_code != 201:
@@ -1017,7 +1088,8 @@ def dataset_tab():
                     "status": "Enabled"
                 }
 
-                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload, headers={'x-api-key': api_key})
+                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload,
+                                            headers={'x-api-key': api_key, "username": pr.username})
                 raw_response.raise_for_status()
                 logger.debug(raw_response.json())
                 return f'Complete Dataset {dataset_name} creation', None, None, None, None

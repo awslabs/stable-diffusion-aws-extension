@@ -1,9 +1,8 @@
-import base64
 import json
 import logging
 
 import requests
-
+from modules import shared
 from aws_extension.sagemaker_ui_utils import warning
 from utils import host_url, api_key
 
@@ -19,7 +18,7 @@ def upgrade_info(resp):
                 f"Please update the client or api.")
         return
 
-    api_version = resp.headers['x-api-version']
+    shared.demo.server_app.api_version = api_version = resp.headers['x-api-version']
 
     if api_version < client_api_version:
         warning(f"extension version {client_api_version} is not compatible api version {api_version}. "
@@ -59,7 +58,7 @@ class Api:
             headers['Content-Type'] = 'application/json'
 
         if self.username:
-            headers['Authorization'] = f'Bearer {base64.b16encode(self.username.encode("utf-8")).decode("utf-8")}'
+            headers['username'] = self.username
 
         if self.debug:
             logger.info(f"{method} {url}")

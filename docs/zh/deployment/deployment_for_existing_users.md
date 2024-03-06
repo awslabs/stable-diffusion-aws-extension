@@ -4,7 +4,7 @@
 
 ## 前提条件
 <!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
-- 用户需要提前准备一台运行linux系统的电脑。
+- 用户需要提前准备一台运行 Linux 系统的电脑。
 - 安装并且配置好了[aws cli](https://aws.amazon.com/cli/)。
 - 部署过上一个版本的Stable Diffusion Webui AWS插件。
 
@@ -18,17 +18,17 @@
 
 ## 部署步骤
 
-### 步骤1 - Linux：更新Stable Diffusion WebUI (Linux)
+### 步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)
 
-1. 从[链接](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)下载CloudFormation模板。
-2. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
+1. 从 [链接](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} 下载CloudFormation模板。
+2. 登录到[AWS管理控制台](https://console.aws.amazon.com/){:target="_blank"}，进入[CloudFormation控制台](https://console.aws.amazon.com/cloudformation/){:target="_blank"}。
 3. 在**堆栈**页面上，选择**创建堆栈**，然后选择**使用新资源（标准）**。
 4. 在**指定模板**页面上，选择**模板准备就绪**，选择**上传模板文件**，选择步骤1中下载的模板，最后选择**下一步**。
-5. 在**指定堆栈名称和参数**页面上，输入堆栈名称到堆栈名称框中。选择一个EC2实例密钥对，然后选择**下一步**。
+5. 在**指定堆栈名称和参数**页面上，输入堆栈名称到堆栈名称框中，然后选择**下一步**。
 6. 在**设置堆栈选项**页面上，选择**下一步**。
 7. 在**审核**页面上，查看堆栈的详细信息，然后选择**提交**。
 8. 等待堆栈创建完成。
-9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。
+9. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。
 
 ### 步骤1 - Windows：更新 Stable Diffusion WebUI (Windows)
 1. 启动一台Windows Server，通过RDP登录。
@@ -53,7 +53,7 @@
 
 ### 步骤3：重新部署 Stable Diffusion AWS Extension
 
-1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击链接[Stable-Diffusion-AWS-Extension.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"}。
+1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击链接[Extension-for-Stable-Diffusion-on-AWS.template](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json){:target="_blank"}。
 2. 默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。
 3. 在**创建堆栈**页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择**下一步**。
 4. 在**制定堆栈详细信息**页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。
@@ -96,7 +96,7 @@ cd stable-diffusion-webui
 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)，选择成功部署的本解决方案的主堆栈。
 2. 打开输出（Outputs）标签页，找到**APIGatewayUrl**和**ApiGatewayUrlToken**对应的数值，并复制。
 3. 在启动webUI的环境目录下，找到文件sagemaker_ui.json，更新文件中的API配置数值并保存。
-4. 启动Stabel Diffusion webUI，新的链接即可生效。
+4. 启动 Stable Diffusion WebUI，新的链接即可生效。
 
 
 

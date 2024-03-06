@@ -1,4 +1,3 @@
-import base64
 import logging
 import sys
 
@@ -18,12 +17,11 @@ def get_sorted_cloud_dataset(username):
         return []
 
     try:
-        encode_type = "utf-8"
         raw_response = requests.get(
             url=url,
             headers={
                 "x-api-key": api_key,
-                "Authorization": f"Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}",
+                "username": username
             },
         )
         raw_response.raise_for_status()

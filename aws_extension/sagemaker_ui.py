@@ -6,7 +6,6 @@ import time
 import json
 import gradio
 import requests
-import base64
 import gradio as gr
 
 from aws_extension.cloud_api_manager.api_logger import ApiLogger
@@ -103,21 +102,6 @@ modelTypeMap = {
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
-
-
-def server_request_post(path, params):
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, json=params, headers=headers)
-    return response
 
 
 def server_request_get(path, params):
@@ -311,8 +295,11 @@ def get_inference_job(inference_job_id):
                        path=f"{api_gateway_url}{url}",
                        headers=headers,
                        response=response,
-                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), ID from previous step: "
-                            "CreateInference -> data -> inference -> id")
+                       desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
+                            f"end request if data.status == succeed, "
+                            f"ID from previous step: CreateInference -> data -> inference -> id")
+    if 'data' not in response.json():
+        raise Exception(response.json())
     return response.json()['data']
 
 
@@ -384,10 +371,9 @@ def get_model_list_by_type(model_type, username=""):
         url += f"&types={model_type}"
 
     try:
-        encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
-            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+            'username': username
         })
         response.raise_for_status()
         json_response = response.json()
@@ -479,14 +465,12 @@ def refresh_all_models(username):
     if not has_config():
         return []
 
-    encode_type = "utf-8"
-
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
             response = requests.get(url=url, headers={
                 'x-api-key': api_key,
-                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+                'username': username,
             })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")
@@ -571,7 +555,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key, "username": pr.username})
 
         if response.status_code not in [201, 202]:
             return response.json()['message'], None, None, None, None, None, None
@@ -1138,27 +1122,25 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(target_task_type, username, usertoken):
+def load_inference_job_list(target_task_type, username, usertoken, first_load="first"):
     inference_jobs = [None_Option_For_On_Cloud_Model]
-    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(username, usertoken)
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, usertoken,
+                                                                        first_load)
 
     temp_list = []
     for obj in inferences_jobs_list:
-        if obj.get('completeTime') is None:
+        if obj.get('createTime') is None:
             complete_time = obj.get('startTime')
         else:
-            complete_time = obj.get('completeTime')
+            complete_time = obj.get('createTime')
         status = obj.get('status')
         task_type = obj.get('taskType', 'txt2img')
         inference_job_id = obj.get('InferenceJobId')
-        # if filter_checkbox and task_type not in selected_types:
-        #     continue
+        # Compatible with lower versions of APIs without type filters
         if target_task_type == task_type:
             temp_list.append((complete_time, f"{complete_time}-->{task_type}-->{status}-->{inference_job_id}"))
-    # Sort the list based on completeTime in ascending order
-    sorted_list = sorted(temp_list, key=lambda x: x[0], reverse=False)
     # Append the sorted combined strings to the txt2img_inference_job_ids list
-    for item in sorted_list:
+    for item in temp_list:
         inference_jobs.append(item[1])
 
     return inference_jobs
@@ -1311,8 +1293,23 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username, username)
-                                              }, 'refresh_inference_job_down')
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "first")
+                                              }, 'refresh_inference_job_down', '⇤')
+
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "previous")
+                                              }, 'refresh_inference_job_down_previous', '←')
+
+                create_refresh_button_by_user(inference_job_dropdown,
+                                              lambda *args: None,
+                                              lambda username: {
+                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                                                     username, "next")
+                                              }, 'refresh_inference_job_down_next', '→')
 
                 delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
                 delete_inference_job_button.click(

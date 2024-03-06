@@ -1,6 +1,6 @@
 Before you launch the solution, review the architecture, supported regions, and other considerations discussed in this guide. Follow the step-by-step instructions in this section to configure and deploy the solution into your account.
 
-**Time to deploy**: Approximately 25 minutes.
+**Time to deploy**: Approximately 20 minutes.
 
 ## Prerequisites
 
@@ -20,15 +20,15 @@ Use the following steps to deploy this solution on AWS.
 
 ### Step 1 - Linux：Update Stable Diffusion WebUI (Linux).
 
-1. Download the CloudFormation Template from [link](https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/workshop/ec2.yaml)
+1. Download the CloudFormation Template from [link](https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"}
 
-2. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/)
+2. Sign in to the [AWS Management Console](https://console.aws.amazon.com/){:target="_blank"} and go to [CloudFormation console](https://console.aws.amazon.com/cloudformation/){:target="_blank"}
 
 3. On the Stacks page, choose **Create stack**, and then choose **With new resources (standard)**.
 
 4. On the **Specify template** page, choose **Template is ready**, choose **Upload a template file**, and then browse for the template that is downloaded in step 1, and then choose **Next**.
 
-5. On the **Specify stack details** page, type a stack name in the Stack name box. Choose an EC2 instance key pair, then choose **Next**.
+5. On the **Specify stack details** page, type a stack name in the Stack name box, then choose **Next**.
 
 6. On the **Configure stack options** page, choose **Next**.
 
@@ -36,7 +36,7 @@ Use the following steps to deploy this solution on AWS.
 
 8. Wait until the stack is created.
 
-9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+9. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait extra 30 minutes to wait for the internal setup complete after the stack been created successfully.
 
 ### Step 1 - Windows: Update Stable Diffusion WebUI (Windows).
 1. Start a Windows Server and log in via RDP.
@@ -48,7 +48,7 @@ Use the following steps to deploy this solution on AWS.
 7. In the downloaded `stable-diffusion-webui` folder, run `webui-user.bat`.
 
 
-### Step 2：Dlete the existing Stable Diffusion AWS extension template in CloudFormation.
+### Step 2：Delete the existing Stable Diffusion AWS extension template in CloudFormation.
 
 1. Open the AWS Management Console [(https://console.aws.amazon.com)](https://console.aws.amazon.com) and log in.
 2. Select "CloudFormation" from the service menu.
@@ -60,7 +60,7 @@ Use the following steps to deploy this solution on AWS.
 
 
 ### Step 3: Deploy a new solution AWS CloudFormation as  middleware.
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Stable-diffusion-aws-extension-middleware-stack.template.json){:target="_blank"} to launch the AWS CloudFormation template.   
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [Launch solution in AWS Standard Regions](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json){:target="_blank"}  to launch the AWS CloudFormation template.   
 2. The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.
 3. On the **Create stack** page, verify that the correct template URL is shown in the **Amazon S3 URL** text box and choose **Next**.
 4. On the **Specify stack details** page, assign a valid and account level unique name to your solution stack. 
