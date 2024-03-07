@@ -5,7 +5,7 @@ import os
 import boto3
 
 from common.response import ok, not_found
-from libs.utils import response_error, log_execution_time
+from libs.utils import response_error, log_execution_time, log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -37,8 +37,7 @@ def get_infer_data(inference_id: str):
 
     item = inference['Item']
 
-    logger.info(f'inference')
-    logger.info(json.dumps(item, indent=2, default=str))
+    log_json(logger, "inference job", item)
 
     img_presigned_urls = []
     if 'image_names' in item:

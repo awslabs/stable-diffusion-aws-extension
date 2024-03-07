@@ -15,7 +15,7 @@ class InvocationsRequest(BaseModel):
     db_create_model_payload: Optional[str]
     merge_checkpoint_payload: Optional[dict]
     param_s3: Optional[str] = None
-    endpoint_payload: Optional[str] = None
+    endpoint_payload: Optional[dict] = None
 
 
 class PingResponse(BaseModel):
