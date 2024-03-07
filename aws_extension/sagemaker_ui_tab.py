@@ -101,6 +101,9 @@ def on_ui_tabs():
                 dataset_asset = dataset_tab()
 
         def get_version_info():
+            if not hasattr(shared.demo.server_app, 'api_version'):
+                return f'Front-end Version: {client_api_version}'
+
             if shared.demo.server_app.api_version == client_api_version:
                 return f'Front-end & Middleware API Version: {client_api_version}'
 
