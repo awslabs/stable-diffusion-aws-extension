@@ -8,7 +8,7 @@ import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
-export const ESD_VERSION = '1.8.0';
+export const ESD_FILE_VERSION = '1.8.0';
 
 export interface ResourceProviderProps {
   bucketName?: string;
@@ -52,7 +52,7 @@ export class ResourceProvider extends Construct {
         ROLE_ARN: this.role.roleArn,
         BUCKET_NAME: props.bucketName ?? '',
         // if files are not changed, then the version should not be changed
-        ESD_VERSION: ESD_VERSION,
+        ESD_FILE_VERSION: ESD_FILE_VERSION,
       },
     });
 

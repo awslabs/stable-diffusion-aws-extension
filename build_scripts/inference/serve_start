@@ -12,7 +12,7 @@ echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "CREATED_AT: $CREATED_AT"
-echo "ESD_VERSION: $ESD_VERSION"
+echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 
@@ -25,10 +25,10 @@ echo "instance_package: $instance_package"
 
 total_start_at=$(date +%s)
 start_at=$(date +%s)
-/opt/ml/code/tools/s5cmd --log=error sync "s3://$BUCKET_NAME/$ESD_VERSION-$instance_package/*" ./
+/opt/ml/code/tools/s5cmd --log=error sync "s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/*" ./
 end_at=$(date +%s)
 cost=$((end_at-start_at))
-echo "download tar from s3://$BUCKET_NAME/$ESD_VERSION-$instance_package/*: $cost seconds"
+echo "download tar from s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/*: $cost seconds"
 
 start_at=$(date +%s)
 tar -xf bin.tar

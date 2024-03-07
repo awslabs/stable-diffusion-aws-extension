@@ -40,7 +40,7 @@ const {
   AWS_REGION,
   ROLE_ARN,
   BUCKET_NAME,
-  ESD_VERSION,
+  ESD_FILE_VERSION,
 } = process.env;
 const partition = AWS_REGION?.startsWith('cn-') ? 'aws-cn' : 'aws';
 const accountId = ROLE_ARN?.split(':')[4] || '';
@@ -92,15 +92,15 @@ async function copyFiles() {
   const binaryPath = '/opt/s5cmd';
 
   const source_path = AWS_REGION?.startsWith('cn-') ?
-    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`
-    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`;
+    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}`
+    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}`;
 
   const source = AWS_REGION?.startsWith('cn-') ?
     'cn-north-1'
     : 'us-east-1';
 
   const destination = AWS_REGION || '';
-  const destination_path = `${bucketName}/${ESD_VERSION}`;
+  const destination_path = `${bucketName}/${ESD_FILE_VERSION}`;
 
   const commands = `cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/bin.tar" "s3://${destination_path}-g4/bin.tar"
 cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/bin.tar"
