@@ -92,8 +92,8 @@ async function copyFiles() {
   const binaryPath = '/opt/s5cmd';
 
   const source_path = AWS_REGION?.startsWith('cn-') ?
-    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`
-    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`;
+    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`
+    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/${ESD_VERSION}`;
 
   const source = AWS_REGION?.startsWith('cn-') ?
     'cn-north-1'

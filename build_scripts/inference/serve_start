@@ -12,9 +12,9 @@ echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "CREATED_AT: $CREATED_AT"
+echo "ESD_VERSION: $ESD_VERSION"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-ESD_VERSION="1.4.0"
 
 instance_package="g5"
 if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
