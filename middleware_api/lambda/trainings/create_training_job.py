@@ -217,16 +217,27 @@ def _create_training_job(raw_event, context):
         # Kohya training
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
         input_location = f"{base_key}/input"
-        toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
-        toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
 
         if (
                 "training_params" not in event.params
                 or "s3_model_path" not in event.params["training_params"]
                 or "s3_data_path" not in event.params["training_params"]
+                or "fm_type" not in event.params["training_params"]
         ):
             raise ValueError(
-                "Missing train parameters, s3_model_path and s3_data_path should be in training_params"
+                "Missing train parameters, fm_type, s3_model_path and s3_data_path should be in training_params"
+            )
+        
+        fm_type = event.params["training_params"]["fm_type"]
+        if fm_type.lower() == const.TrainFMType.SD_1_5:
+            toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
+            toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
+        elif fm_type.lower() == const.TrainFMType.SD_XL:
+            toml_dest_path = f"{input_location}/{const.KOHYA_XL_TOML_FILE_NAME}"
+            toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
+        else:
+            raise ValueError(
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5} and {const.TrainFMType.SD_XL}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
