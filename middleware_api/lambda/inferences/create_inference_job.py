@@ -45,8 +45,8 @@ class CreateInferenceEvent:
 
 # POST /inferences
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
     try:
+        logger.info(json.dumps(raw_event, default=str))
         request_id = context.aws_request_id
         logger.info(json.dumps(json.loads(raw_event['body'])))
         event = CreateInferenceEvent(**json.loads(raw_event['body']))
@@ -83,6 +83,7 @@ def handler(raw_event, context):
             taskType=_type,
             inference_type=event.inference_type,
             owner_group_or_role=[username],
+            endpoint_payload=event.endpoint_payload,
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
@@ -144,7 +145,7 @@ def handler(raw_event, context):
 
         if event.endpoint_payload:
             put_inference_payload_to_s3(param_s3_key, event.endpoint_payload)
-            return start_inference_job(inference_job)
+            return start_inference_job(inference_job, username)
 
         return created(data=resp)
     except Exception as e:
