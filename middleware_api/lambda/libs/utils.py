@@ -22,6 +22,11 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 encode_type = "utf-8"
 
 
+def log_json(logger, title, payload: any):
+    logger.info(f"{title}: ")
+    logger.info(json.dumps(payload, default=str))
+
+
 def log_execution_time(func):
     def wrapper(*args, **kwargs):
         start_time = time.time()
