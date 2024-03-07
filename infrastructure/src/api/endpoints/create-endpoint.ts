@@ -15,6 +15,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import {ESD_FILE_VERSION} from "../../shared/resource-provider";
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -291,6 +292,7 @@ export class CreateEndpointApi {
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
+        ESD_FILE_VERSION: ESD_FILE_VERSION,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
