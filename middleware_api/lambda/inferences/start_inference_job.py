@@ -83,7 +83,7 @@ def start_inference_job(job: InferenceJob, username):
     return async_inference(payload, job, endpoint_name)
 
 
-def real_time_inference(payload, job: InferenceJob, endpoint_name):
+def real_time_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
     try:
 
         sagemaker_out = predictor_predict(endpoint_name=endpoint_name,
@@ -145,7 +145,7 @@ def predictor_predict_async(endpoint_name, data, inference_id):
                                                                  inference_id=inference_id)
 
 
-def async_inference(payload, job: InferenceJob, endpoint_name):
+def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
     prediction = predictor_predict_async(endpoint_name=endpoint_name,
                                          data=payload.__dict__,
                                          inference_id=job.InferenceJobId)
