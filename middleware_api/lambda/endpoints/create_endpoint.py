@@ -66,10 +66,8 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 
 # POST /endpoints
 def handler(raw_event, ctx):
-    logger.info(f"Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-
     try:
+        logger.info(json.dumps(raw_event))
         event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
         permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE])

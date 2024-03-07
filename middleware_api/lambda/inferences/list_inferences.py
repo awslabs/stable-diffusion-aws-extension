@@ -5,13 +5,11 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 
-from common.const import PERMISSION_INFERENCE_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param
 from libs.data_types import InferenceJob
-from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, response_error, \
-    permissions_check
+from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, response_error
 
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -25,12 +23,12 @@ ddb = boto3.resource('dynamodb')
 table = ddb.Table(inference_table_name)
 
 
-# GET /inferences?last_evaluated_key=xxx&limit=10&username=USER_NAME&name=SageMaker_Endpoint_Name&filter=key:value,key:value
+# GET /inferences?last_evaluated_key=xxx&limit=10
 def handler(event, ctx):
-    logger.info(json.dumps(event))
-    _filter = {}
-
     try:
+        logger.info(json.dumps(event))
+        _filter = {}
+
         # todo compatibility with old version
         # permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
@@ -53,7 +51,7 @@ def handler(event, ctx):
 
         response = table.query(**scan_kwargs)
 
-        logger.info(json.dumps(response))
+        logger.info(json.dumps(response, default=str))
 
         items = response.get('Items', [])
         last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))

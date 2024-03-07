@@ -6,8 +6,6 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
-import boto3
-
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
@@ -28,7 +26,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-s3_client = boto3.client('s3')
 
 
 @dataclasses.dataclass
@@ -144,21 +141,11 @@ def handler(raw_event, context):
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
         if event.endpoint_payload:
-            put_inference_payload_to_s3(param_s3_key, event.endpoint_payload)
             return start_inference_job(inference_job, username)
 
         return created(data=resp)
     except Exception as e:
         return response_error(e)
-
-
-@log_execution_time
-def put_inference_payload_to_s3(param_s3_key: str, body: str):
-    s3_client.put_object(
-        Bucket=bucket_name,
-        Key=param_s3_key,
-        Body=json.dumps(body),
-    )
 
 
 # fixme: this is a very expensive function

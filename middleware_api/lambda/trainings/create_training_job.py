@@ -255,7 +255,7 @@ def _create_training_job(raw_event, context):
     user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
     ckpt_type = const.CheckPointType.LORA
     if "config_params" in event.params and \
-        "additional_network" in event.params["config_params"] and \
+            "additional_network" in event.params["config_params"] and \
             "network_module" in event.params["config_params"]["additional_network"]:
         network_module = event.params["config_params"]["additional_network"]["network_module"]
         if network_module.lower() != const.NetworkModule.LORA:
@@ -289,8 +289,8 @@ def _create_training_job(raw_event, context):
 
 
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
     try:
+        logger.info(json.dumps(raw_event))
         permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         job_id = _create_training_job(raw_event, context)

@@ -2,7 +2,8 @@ import json
 import logging
 import os
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
+
 from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
@@ -27,9 +28,8 @@ class UpsertRoleEvent:
 
 
 def handler(raw_event, ctx):
-    logger.info(f'event: {raw_event}')
-
     try:
+        logger.info(json.dumps(raw_event))
         event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
         if event.initial:

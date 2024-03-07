@@ -5,9 +5,8 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.const import PERMISSION_TRAIN_ALL
 from common.response import no_content
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -27,10 +26,8 @@ class DeleteDatasetsEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
         body = DeleteDatasetsEvent(**json.loads(event['body']))
 
         # todo will be removed

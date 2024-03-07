@@ -5,10 +5,9 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.const import PERMISSION_ROLE_ALL
 from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -23,10 +22,8 @@ class DeleteRolesEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
         body = DeleteRolesEvent(**json.loads(event['body']))
 
         # todo compatibility with old version

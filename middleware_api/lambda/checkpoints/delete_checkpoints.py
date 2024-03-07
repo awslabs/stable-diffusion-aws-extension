@@ -5,9 +5,8 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.const import PERMISSION_CHECKPOINT_ALL
 from common.response import no_content
-from libs.utils import response_error, permissions_check
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -26,9 +25,8 @@ class DeleteCheckpointsEvent:
 
 
 def handler(event, ctx):
-    logger.info(json.dumps(event))
-
     try:
+        logger.info(json.dumps(event))
         # todo will be removed
         # permissions_check(event, [PERMISSION_CHECKPOINT_ALL])
 

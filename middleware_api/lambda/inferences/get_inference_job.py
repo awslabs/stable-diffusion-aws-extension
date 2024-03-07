@@ -18,10 +18,8 @@ s3 = boto3.client('s3')
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
 
         inference_id = event['pathParameters']['id']
 

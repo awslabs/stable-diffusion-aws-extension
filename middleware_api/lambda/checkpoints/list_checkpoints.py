@@ -23,10 +23,9 @@ MAX_WORKERS = 10
 
 # GET /checkpoints?username=USER_NAME&types=value&status=value
 def handler(event, context):
-    logger.info(json.dumps(event))
-    _filter = {}
-
     try:
+        logger.info(json.dumps(event))
+        _filter = {}
         requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST])
         user_roles = ['*']
         username = None

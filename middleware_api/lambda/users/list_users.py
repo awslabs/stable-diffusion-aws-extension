@@ -20,12 +20,11 @@ password_encryptor = KeyEncryptService()
 
 
 def handler(event, ctx):
-    logger.info(json.dumps(event))
-
     # todo: if user has no list all, we should add username to self, prevent security issue
     _filter = {}
 
     try:
+        logger.info(json.dumps(event))
         parameters = event['queryStringParameters']
 
         show_password = 0

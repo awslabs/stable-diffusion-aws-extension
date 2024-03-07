@@ -29,10 +29,10 @@ predictors = {}
 
 
 def handler(event, _):
-    logger.info(json.dumps(event))
-    _filter = {}
-
     try:
+        logger.info(json.dumps(event))
+        _filter = {}
+
         inference_id = event['pathParameters']['id']
 
         if not inference_id:

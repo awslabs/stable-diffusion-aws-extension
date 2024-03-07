@@ -52,11 +52,9 @@ class DatasetCreateEvent:
 
 # POST /datasets
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
-
-    event = DatasetCreateEvent(**json.loads(raw_event['body']))
-
     try:
+        logger.info(json.dumps(raw_event))
+        event = DatasetCreateEvent(**json.loads(raw_event['body']))
         # todo compatibility with old version
         username = permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
