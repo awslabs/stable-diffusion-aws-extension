@@ -229,15 +229,15 @@ def _create_training_job(raw_event, context):
             )
         
         fm_type = event.params["training_params"]["fm_type"]
-        if fm_type.lower() == const.TrainFMType.SD_1_5:
+        if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
             toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
-        elif fm_type.lower() == const.TrainFMType.SD_XL:
+        elif fm_type.lower() == const.TrainFMType.SD_XL.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_XL_TOML_FILE_NAME}"
             toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
         else:
             raise ValueError(
-                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5} and {const.TrainFMType.SD_XL}"
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
