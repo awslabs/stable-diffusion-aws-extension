@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -20,10 +21,10 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /endpoints?name=SageMaker_Endpoint_Name&username=&filter=key:value,key:value
 def handler(event, ctx):
-    logger.info(f'event: {event}')
     _filter = {}
 
     try:
+        logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST])
         endpoint_deployment_job_id = None
         username = None

@@ -26,10 +26,8 @@ class DeleteTrainingJobsEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
         body = DeleteTrainingJobsEvent(**json.loads(event['body']))
 
         permissions_check(event, [PERMISSION_TRAIN_ALL])

@@ -18,10 +18,8 @@ s3 = boto3.client('s3')
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
 
         inference_id = event['pathParameters']['id']
 
@@ -40,7 +38,7 @@ def get_infer_data(inference_id: str):
     item = inference['Item']
 
     logger.info(f'inference')
-    logger.info(json.dumps(item))
+    logger.info(json.dumps(item, indent=2, default=str))
 
     img_presigned_urls = []
     if 'image_names' in item:
@@ -58,7 +56,7 @@ def get_infer_data(inference_id: str):
         **item,
     }
 
-    return ok(data=data)
+    return ok(data=data, decimal=True)
 
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:

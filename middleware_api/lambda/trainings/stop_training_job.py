@@ -17,9 +17,8 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 def handler(event, context):
-    logger.info(json.dumps(event))
-
     try:
+        logger.info(json.dumps(event))
         train_job_id = event['pathParameters']['id']
 
         permissions_check(event, [PERMISSION_TRAIN_ALL])

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -29,6 +30,7 @@ def handler(event, context):
             _filter['dataset_status'] = parameters['dataset_status']
 
     try:
+        logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)

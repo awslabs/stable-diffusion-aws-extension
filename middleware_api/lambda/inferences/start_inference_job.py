@@ -29,16 +29,16 @@ predictors = {}
 
 
 def handler(event, _):
-    logger.info(json.dumps(event))
-    _filter = {}
-
     try:
+        logger.info(json.dumps(event))
+        _filter = {}
+
         inference_id = event['pathParameters']['id']
 
         if not inference_id:
             raise BadRequestException("InferenceJobId is required")
 
-        permissions_check(event, [PERMISSION_INFERENCE_ALL])
+        username = permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
         # get the inference job from ddb by job id
         inference_raw = ddb_service.get_item(inference_table_name, {
@@ -50,13 +50,13 @@ def handler(event, _):
 
         job = InferenceJob(**inference_raw)
 
-        return start_inference_job(job)
+        return start_inference_job(job, username)
 
     except Exception as e:
         return response_error(e)
 
 
-def start_inference_job(job: InferenceJob):
+def start_inference_job(job: InferenceJob, username):
     endpoint_name = job.params['sagemaker_inference_endpoint_name']
     models = {}
     if 'used_models' in job.params:
@@ -67,9 +67,10 @@ def start_inference_job(job: InferenceJob):
 
     payload = InvocationsRequest(
         task=job.taskType,
-        username="test",
+        username=username,
         models=models,
-        param_s3=job.params['input_body_s3']
+        param_s3=job.params['input_body_s3'],
+        endpoint_payload=job.endpoint_payload
     )
 
     logger.info(f"payload: {payload}")

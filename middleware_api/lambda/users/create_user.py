@@ -34,10 +34,8 @@ class UpsertUserEvent:
 
 
 def handler(raw_event, ctx):
-    logger.info(json.dumps(raw_event))
-
     try:
-
+        logger.info(json.dumps(raw_event))
         event = UpsertUserEvent(**json.loads(raw_event['body']))
 
         if event.initial:

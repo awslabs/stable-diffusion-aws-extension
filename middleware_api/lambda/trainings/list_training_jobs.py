@@ -21,11 +21,10 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /trains
 def handler(event, context):
-    logger.info(json.dumps(event))
-
     _filter = {}
 
     try:
+        logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         types = get_multi_query_params(event, 'types')

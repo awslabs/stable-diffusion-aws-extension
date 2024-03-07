@@ -24,7 +24,7 @@ cool_down_period = 15 * 60  # 15 minutes
 
 # lambda: handle sagemaker events
 def handler(event, context):
-    logger.info(event)
+    logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']
     endpoint_status = event['detail']['EndpointStatus']
 

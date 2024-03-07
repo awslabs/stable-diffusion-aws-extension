@@ -1,9 +1,10 @@
+import json
 import logging
 import os
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, not_found, forbidden, unauthorized
+from common.response import ok, not_found, forbidden
 from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check
@@ -21,10 +22,10 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /dataset/{name}
 def handler(event, context):
-    logger.info(f'event: {event}')
     _filter = {}
 
     try:
+        logger.info(json.dumps(event))
         permissions_check(event, [PERMISSION_TRAIN_ALL])
         dataset_name = event['pathParameters']['id']
 
@@ -47,7 +48,7 @@ def handler(event, context):
                                                                                 requestor_roles,
                                                                                 requester_name)) or  # permission in dataset
                 (not dataset_info.allowed_roles_or_users and 'user' in requestor_permissions and 'all' in
-                requestor_permissions['user'])  # legacy data for super admin
+                 requestor_permissions['user'])  # legacy data for super admin
         ):
             return forbidden(message='no permission to view dataset')
 
@@ -62,7 +63,8 @@ def handler(event, context):
                 'key': item.sort_key,
                 'name': item.name,
                 'type': item.type,
-                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24, method='get_object'),
+                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24,
+                                                    method='get_object'),
                 'dataStatus': item.data_status.value,
                 **item.params
             })

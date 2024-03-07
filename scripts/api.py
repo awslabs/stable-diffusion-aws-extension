@@ -6,7 +6,6 @@ import traceback
 import time
 import copy
 
-import requests
 from fastapi import FastAPI
 
 from modules import sd_models
@@ -26,12 +25,9 @@ CONDITION_WAIT_TIME_OUT = 100000
 def dummy_function(*args, **kwargs):
     return None
 
-logger = logging.getLogger(__name__)
 
-if os.environ.get("DEBUG_API", False):
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
@@ -174,6 +170,7 @@ def sagemaker_api(_, app: FastAPI):
         @return:
         """
         logger.info('-------invocation------')
+        logger.info(json.dumps(req, default=str))
 
         def show_slim_dict(payload):
             pass
@@ -192,7 +189,11 @@ def sagemaker_api(_, app: FastAPI):
                 logger.info(f"task is {req.task}")
                 logger.info(f"models is {req.models}")
                 payload = {}
-                if req.param_s3:
+                # if it has endpoint_payload, use it
+                if req.endpoint_payload:
+                    payload = req.endpoint_payload
+                    show_slim_dict(payload)
+                elif req.param_s3:
                     def parse_constant(c: str) -> float:
                         if c == "NaN":
                             raise ValueError("NaN is not valid JSON")
@@ -378,7 +379,6 @@ def sagemaker_api(_, app: FastAPI):
     def ping():
         return {'status': 'Healthy'}
 
-import hashlib
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:

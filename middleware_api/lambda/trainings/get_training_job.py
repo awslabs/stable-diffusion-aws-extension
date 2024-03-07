@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -15,10 +16,8 @@ table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
         job_id = event['pathParameters']['id']
 
         permissions_check(event, [PERMISSION_TRAIN_ALL])

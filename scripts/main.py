@@ -950,6 +950,7 @@ class SageMakerUI(scripts.Script):
             if key == 'lora':
                 if not args[-1] or not args[-1]['lora']:
                     logger.error("please upload lora models!!!!")
+                    logger.error(args)
                     continue
                 for val in vals:
                     if 'Lora' not in models:
