@@ -70,4 +70,4 @@ chmod +x /opt/conda/bin/*
 
 echo "accelerate launch..."
 
-accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-torch-cuda-test --skip-install --skip-version-check --no-hashing
+accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-torch-cuda-test --skip-install --skip-version-check --no-hashing --nowebui
