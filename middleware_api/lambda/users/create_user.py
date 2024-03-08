@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
-from common.const import PERMISSION_USER_ALL, PERMISSION_USER_CREATE
+from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
@@ -34,12 +34,14 @@ class UpsertUserEvent:
 
 
 def handler(raw_event, ctx):
-    logger.info(json.dumps(raw_event))
-
     try:
-        username = permissions_check(raw_event, [PERMISSION_USER_ALL, PERMISSION_USER_CREATE])
-
+        logger.info(json.dumps(raw_event))
         event = UpsertUserEvent(**json.loads(raw_event['body']))
+
+        if event.initial:
+            username = raw_event['headers']['username']
+        else:
+            username = permissions_check(raw_event, [PERMISSION_USER_ALL])
 
         if event.initial:
             role_names = [Default_Role]
@@ -55,6 +57,7 @@ def handler(raw_event, ctx):
             for rn in role_names:
                 role_event = {
                     'role_name': rn,
+                    'initial': event.initial,
                     'permissions': [
                         'train:all',
                         'checkpoint:all',
@@ -63,7 +66,6 @@ def handler(raw_event, ctx):
                         'user:all',
                         'role:all'
                     ],
-                    'creator': event.username
                 }
 
                 @dataclass

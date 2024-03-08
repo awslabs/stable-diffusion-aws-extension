@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
+from typing import Optional
 
 from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
@@ -21,17 +22,20 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 class UpsertRoleEvent:
     role_name: str
     permissions: [str]
+    initial: Optional[bool] = False
     # todo: will be removed
     creator: str = ""
 
 
 def handler(raw_event, ctx):
-    logger.info(f'event: {raw_event}')
-
     try:
+        logger.info(json.dumps(raw_event))
         event = UpsertRoleEvent(**json.loads(raw_event['body']))
 
-        username = permissions_check(raw_event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE])
+        if event.initial:
+            username = raw_event['headers']['username']
+        else:
+            username = permissions_check(raw_event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE])
 
         if not ctx or 'from_sd_local' not in vars(ctx):
             # should check the creator permission contains role:all

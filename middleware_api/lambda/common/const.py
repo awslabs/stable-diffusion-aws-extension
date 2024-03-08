@@ -5,8 +5,24 @@ from enum import Enum, unique
 class LoraTrainType(Enum):
     KOHYA = 'kohya'
 
+@unique
+class CheckPointType(Enum):
+    SD = "Stable-diffusion"
+    LORA = "Lora"
+
+@unique
+class NetworkModule(Enum):
+    LORA = "networks.lora"
+
+
+@unique
+class TrainFMType(Enum):
+    SD_1_5 = "sd_1_5"
+    SD_XL = "sd_xl"
+
 
 KOHYA_TOML_FILE_NAME = 'kohya_config_cloud.toml'
+KOHYA_XL_TOML_FILE_NAME = 'kohya_config_cloud_xl.toml'
 KOHYA_MODEL_ID = 'kohya'
 TRAIN_TYPE = "Stable-diffusion"
 

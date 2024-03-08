@@ -47,7 +47,6 @@ s3 = boto3.client("s3", region_name=region)
 @dataclass
 class Event:
     params: dict[str, Any]
-    creator: str
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
@@ -199,6 +198,7 @@ def _start_training_job(train_job_id: str):
         "created": str(train_job.timestamp),
         "params": train_job.params,
         "input_location": train_job.input_s3_location,
+        "output_location": checkpoint.s3_location
     }
 
 
@@ -217,16 +217,27 @@ def _create_training_job(raw_event, context):
         # Kohya training
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
         input_location = f"{base_key}/input"
-        toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
-        toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
 
         if (
                 "training_params" not in event.params
                 or "s3_model_path" not in event.params["training_params"]
                 or "s3_data_path" not in event.params["training_params"]
+                or "fm_type" not in event.params["training_params"]
         ):
             raise ValueError(
-                "Missing train parameters, s3_model_path and s3_data_path should be in training_params"
+                "Missing train parameters, fm_type, s3_model_path and s3_data_path should be in training_params"
+            )
+        
+        fm_type = event.params["training_params"]["fm_type"]
+        if fm_type.lower() == const.TrainFMType.SD_1_5.value:
+            toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
+            toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
+        elif fm_type.lower() == const.TrainFMType.SD_XL.value:
+            toml_dest_path = f"{input_location}/{const.KOHYA_XL_TOML_FILE_NAME}"
+            toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
+        else:
+            raise ValueError(
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
@@ -252,10 +263,18 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, event.creator)
+    user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
+    ckpt_type = const.CheckPointType.LORA
+    if "config_params" in event.params and \
+            "additional_network" in event.params["config_params"] and \
+            "network_module" in event.params["config_params"]["additional_network"]:
+        network_module = event.params["config_params"]["additional_network"]["network_module"]
+        if network_module.lower() != const.NetworkModule.LORA:
+            ckpt_type = const.CheckPointType.SD
+
     checkpoint = CheckPoint(
         id=request_id,
-        checkpoint_type=const.TRAIN_TYPE,
+        checkpoint_type=ckpt_type,
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),
@@ -273,7 +292,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[event.creator],
+        allowed_roles_or_users=[raw_event["headers"]["username"]],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -281,13 +300,13 @@ def _create_training_job(raw_event, context):
 
 
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
     try:
+        logger.info(json.dumps(raw_event))
         permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
-        return ok(data=job_info)
+        return ok(data=job_info, decimal=True)
     except Exception as e:
         return response_error(e)

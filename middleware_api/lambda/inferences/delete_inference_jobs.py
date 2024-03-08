@@ -5,9 +5,8 @@ from dataclasses import dataclass
 
 import boto3
 
-from common.const import PERMISSION_INFERENCE_ALL
 from common.response import no_content
-from libs.utils import permissions_check, response_error
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -25,10 +24,9 @@ class DeleteInferenceJobsEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
-
     try:
+        logger.info(json.dumps(event))
+
         body = DeleteInferenceJobsEvent(**json.loads(event['body']))
 
         # todo will be removed

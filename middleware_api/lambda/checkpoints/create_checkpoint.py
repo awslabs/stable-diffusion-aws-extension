@@ -43,10 +43,9 @@ class CreateCheckPointEvent:
 
 
 def handler(raw_event, context):
-    logger.info(json.dumps(raw_event))
-    request_id = context.aws_request_id
-
     try:
+        logger.info(json.dumps(raw_event))
+        request_id = context.aws_request_id
         event = CreateCheckPointEvent(**json.loads(raw_event['body']))
 
         username = permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE])

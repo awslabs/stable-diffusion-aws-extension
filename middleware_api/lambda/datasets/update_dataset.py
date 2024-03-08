@@ -25,9 +25,8 @@ class UpdateDatasetStatusEvent:
 
 # PUT /dataset
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
-
     try:
+        logger.info(json.dumps(raw_event))
         event = UpdateDatasetStatusEvent(**json.loads(raw_event['body']))
         dataset_id = raw_event['pathParameters']['id']
 

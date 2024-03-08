@@ -6,7 +6,6 @@ import traceback
 import time
 import copy
 
-import requests
 from fastapi import FastAPI
 
 from modules import sd_models
@@ -26,12 +25,9 @@ CONDITION_WAIT_TIME_OUT = 100000
 def dummy_function(*args, **kwargs):
     return None
 
-logger = logging.getLogger(__name__)
 
-if os.environ.get("DEBUG_API", False):
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
@@ -174,9 +170,7 @@ def sagemaker_api(_, app: FastAPI):
         @return:
         """
         logger.info('-------invocation------')
-
-        def show_slim_dict(payload):
-            pass
+        logger.info(json.dumps(req.__dict__, default=str))
 
         with condition:
             try:
@@ -192,7 +186,10 @@ def sagemaker_api(_, app: FastAPI):
                 logger.info(f"task is {req.task}")
                 logger.info(f"models is {req.models}")
                 payload = {}
-                if req.param_s3:
+                # if it has endpoint_payload, use it
+                if req.endpoint_payload:
+                    payload = req.endpoint_payload
+                elif req.param_s3:
                     def parse_constant(c: str) -> float:
                         if c == "NaN":
                             raise ValueError("NaN is not valid JSON")
@@ -203,19 +200,6 @@ def sagemaker_api(_, app: FastAPI):
                         return float(c)
 
                     payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
-                    show_slim_dict(payload)
-
-                logger.info(f"extra_single_payload is: ")
-                extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-                    req.extras_single_payload.json())
-                show_slim_dict(extra_single_payload)
-                logger.info(f"extra_batch_payload is: ")
-                extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-                    req.extras_batch_payload.json())
-                show_slim_dict(extra_batch_payload)
-                logger.info(f"interrogate_payload is: ")
-                interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
-                show_slim_dict(interrogate_payload)
 
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
@@ -378,7 +362,6 @@ def sagemaker_api(_, app: FastAPI):
     def ping():
         return {'status': 'Healthy'}
 
-import hashlib
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:

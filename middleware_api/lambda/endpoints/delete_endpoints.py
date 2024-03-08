@@ -6,10 +6,9 @@ from dataclasses import dataclass
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
-from common.const import PERMISSION_ENDPOINT_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
-from libs.utils import permissions_check, response_error
+from libs.utils import response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -31,6 +30,7 @@ class DeleteEndpointEvent:
 # DELETE /endpoints
 def handler(raw_event, ctx):
     try:
+        logger.info(json.dumps(raw_event))
         # todo will be removed
         # permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
 

@@ -33,9 +33,8 @@ class UpdateCheckPointEvent:
 
 # PUT /checkpoints/{id}
 def handler(raw_event, context):
-    logger.info(f'event: {raw_event}')
-
     try:
+        logger.info(f'event: {raw_event}')
         # todo will be removed
         # permissions_check(raw_event, [PERMISSION_CHECKPOINT_ALL])
 

@@ -23,6 +23,7 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
+ESD_FILE_VERSION = os.environ.get("ESD_FILE_VERSION")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -65,10 +66,8 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 
 # POST /endpoints
 def handler(raw_event, ctx):
-    logger.info(f"Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-
     try:
+        logger.info(json.dumps(raw_event))
         event = CreateEndpointEvent(**json.loads(raw_event['body']))
 
         permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE])
@@ -176,12 +175,12 @@ def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endp
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
-            'EndpointID': 'OUR_ID',
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
             'BUCKET_NAME': S3_BUCKET_NAME,
             'INSTANCE_TYPE': instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
+            'ESD_FILE_VERSION': ESD_FILE_VERSION,
             'CREATED_AT': datetime.utcnow().isoformat(),
         },
     }

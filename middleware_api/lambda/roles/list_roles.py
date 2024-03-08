@@ -18,10 +18,10 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /roles?last_evaluated_key=xxx&limit=10&role=ROLE_NAME&filter=key:value,key:value
 def handler(event, ctx):
-    logger.info(json.dumps(event))
     _filter = {}
 
     try:
+        logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST])
 
         parameters = event['queryStringParameters']

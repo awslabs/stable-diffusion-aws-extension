@@ -895,13 +895,13 @@ class SageMakerUI(scripts.Script):
             all_used_models = []
             script_args = p.script_args[script.args_from:script.args_to]
             if script.alwayson:
-                logger.debug(f'{script.name} {script.args_from} {script.args_to}')
-                api_param.alwayson_scripts[script.name] = {}
-                api_param.alwayson_scripts[script.name]['args'] = []
+                logger.debug(f'{script.title().lower()} {script.args_from} {script.args_to}')
+                api_param.alwayson_scripts[script.title().lower()] = {}
+                api_param.alwayson_scripts[script.title().lower()]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.title().lower(), arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
-                    api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
+                    api_param.alwayson_scripts[script.title().lower()]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
@@ -950,6 +950,7 @@ class SageMakerUI(scripts.Script):
             if key == 'lora':
                 if not args[-1] or not args[-1]['lora']:
                     logger.error("please upload lora models!!!!")
+                    logger.error(args)
                     continue
                 for val in vals:
                     if 'Lora' not in models:

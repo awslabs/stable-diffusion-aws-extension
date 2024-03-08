@@ -21,9 +21,8 @@ password_encryptor = KeyEncryptService()
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-
     try:
+        logger.info(json.dumps(event))
         body = json.loads(event['body'])
         user_name_list = body['user_name_list']
 
