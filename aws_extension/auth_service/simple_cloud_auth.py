@@ -41,7 +41,7 @@ class CloudAuthLoader:
     def update_gradio_auth(self):
         from modules import shared
         if not shared.demo:
-            print('shared.demo not set yet, cannot update auth temporarily')
+            print('shared.demo not set yet or in API mode, not update auth temporarily')
             return
         user_cred_str = self.create_config()
         if user_cred_str:
