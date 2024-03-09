@@ -84,6 +84,9 @@ export class CreateInferenceJobApi {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],
           },
+          payload_string: {
+            type: JsonSchemaType.STRING,
+          },
           models: {
             type: JsonSchemaType.OBJECT,
             properties: {

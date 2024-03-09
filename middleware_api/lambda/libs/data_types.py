@@ -158,7 +158,7 @@ class InferenceJob:
     completeTime: Optional[Any] = None
     params: Optional[dict[str, Any]] = None
     inference_type: Optional[str] = None
-    endpoint_payload: Optional[str] = None
+    payload_string: Optional[str] = None
 
 
 @dataclass
@@ -186,5 +186,5 @@ class InvocationsRequest:
     username: Optional[str]
     models: Optional[dict]
     param_s3: Optional[str] = None
-    endpoint_payload: Optional[str] = None
+    payload_string: Optional[str] = None
 

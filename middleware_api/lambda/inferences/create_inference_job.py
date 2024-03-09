@@ -37,7 +37,7 @@ class CreateInferenceEvent:
     # todo user_id is not used in this lambda, but we need to keep it for the compatibility with the old code
     filters: dict[str, Any] = None
     user_id: Optional[str] = ""
-    endpoint_payload: Optional[str] = None
+    payload_string: Optional[str] = None
 
 
 # POST /inferences
@@ -70,7 +70,7 @@ def handler(raw_event, context):
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
         presign_url = None
-        if event.endpoint_payload is None:
+        if event.payload_string is None:
             presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
@@ -80,8 +80,7 @@ def handler(raw_event, context):
             taskType=_type,
             inference_type=event.inference_type,
             owner_group_or_role=[username],
-            # endpoint_payload need to be converted to string to be stored in ddb
-            endpoint_payload=json.dumps(event.endpoint_payload),
+            payload_string=event.payload_string,
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
@@ -141,7 +140,7 @@ def handler(raw_event, context):
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
-        if event.endpoint_payload:
+        if event.payload_string:
             return start_inference_job(inference_job, username)
 
         return created(data=resp)

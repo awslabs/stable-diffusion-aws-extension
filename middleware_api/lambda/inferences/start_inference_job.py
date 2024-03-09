@@ -70,7 +70,7 @@ def start_inference_job(job: InferenceJob, username):
         username=username,
         models=models,
         param_s3=job.params['input_body_s3'],
-        endpoint_payload=json.loads(job.endpoint_payload)
+        payload_string=job.payload_string
     )
 
     log_json(logger, "inference payload", job.__dict__)
