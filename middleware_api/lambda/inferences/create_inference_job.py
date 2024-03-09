@@ -80,7 +80,8 @@ def handler(raw_event, context):
             taskType=_type,
             inference_type=event.inference_type,
             owner_group_or_role=[username],
-            endpoint_payload=event.endpoint_payload,
+            # endpoint_payload need to be converted to string to be stored in ddb
+            endpoint_payload=json.dumps(event.endpoint_payload),
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
