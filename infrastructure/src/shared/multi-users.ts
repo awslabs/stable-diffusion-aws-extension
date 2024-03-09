@@ -2,6 +2,7 @@ import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_dynamodb, aws_kms, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
+import { KEY_ALIAS } from './const';
 import { CreateRoleApi } from '../api/roles/create-role';
 import { DeleteRolesApi, DeleteRolesApiProps } from '../api/roles/delete-roles';
 import { ListRolesApi } from '../api/roles/list-roles';
@@ -14,14 +15,20 @@ export interface MultiUsersStackProps extends StackProps {
   multiUserTable: aws_dynamodb.Table;
   routers: { [key: string]: Resource };
   commonLayer: PythonLayerVersion;
-  passwordKeyAlias: aws_kms.IKey;
   logLevel: CfnParameter;
 }
 
-export class MultiUsersStack {
-  private readonly srcRoot = '../middleware_api/lambda';
+export class MultiUsers {
+  private readonly srcRoot: string = '../middleware_api/lambda';
+  private readonly passwordKeyAlias: aws_kms.IKey;
 
   constructor(scope: Construct, props: MultiUsersStackProps) {
+
+    this.passwordKeyAlias = aws_kms.Alias.fromAliasName(
+      scope,
+      'sd-authorizer-createOrNew-passwordKey',
+      KEY_ALIAS,
+    );
 
     // POST /roles
     new CreateRoleApi(scope, 'CreateRole', {
@@ -48,7 +55,7 @@ export class MultiUsersStack {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
-      passwordKey: props.passwordKeyAlias,
+      passwordKey: this.passwordKeyAlias,
       router: props.routers.users,
       srcRoot: this.srcRoot,
       logLevel: props.logLevel,
@@ -71,7 +78,7 @@ export class MultiUsersStack {
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
       srcRoot: this.srcRoot,
-      passwordKey: props.passwordKeyAlias,
+      passwordKey: this.passwordKeyAlias,
       logLevel: props.logLevel,
     });
 

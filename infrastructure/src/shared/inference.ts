@@ -24,7 +24,7 @@ import { GetInferenceJobApi, GetInferenceJobApiProps } from '../api/inferences/g
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferences/start-inference-job';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
-import { ResourceProvider } from '../shared/resource-provider';
+import { ResourceProvider } from './resource-provider';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -49,7 +49,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   resourceProvider: ResourceProvider;
 }
 
-export class SDAsyncInferenceStack {
+export class Inference {
 
 
   constructor(

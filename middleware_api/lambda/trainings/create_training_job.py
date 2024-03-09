@@ -36,10 +36,10 @@ region = os.environ.get("AWS_REGION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 image_uri = os.environ.get("TRAIN_ECR_URL")
-user_topic_arn = os.environ.get("USER_EMAIL_TOPIC_ARN")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL") or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 s3 = boto3.client("s3", region_name=region)
 
@@ -227,7 +227,7 @@ def _create_training_job(raw_event, context):
             raise ValueError(
                 "Missing train parameters, fm_type, s3_model_path and s3_data_path should be in training_params"
             )
-        
+
         fm_type = event.params["training_params"]["fm_type"]
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"

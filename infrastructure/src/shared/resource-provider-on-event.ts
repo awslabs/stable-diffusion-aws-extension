@@ -308,47 +308,47 @@ async function createTables() {
 }
 
 async function createGlobalSecondaryIndex(tableName: string) {
-    const params: UpdateTableCommandInput = {
-        TableName: tableName,
-        AttributeDefinitions: [
+  const params: UpdateTableCommandInput = {
+    TableName: tableName,
+    AttributeDefinitions: [
+      {
+        AttributeName: 'taskType',
+        AttributeType: 'S',
+      },
+      {
+        AttributeName: 'createTime',
+        AttributeType: 'S',
+      },
+    ],
+    GlobalSecondaryIndexUpdates: [
+      {
+        Create: {
+          IndexName: 'taskType-createTime-index',
+          KeySchema: [
             {
-                AttributeName: "taskType",
-                AttributeType: "S"
+              AttributeName: 'taskType',
+              KeyType: 'HASH',
             },
             {
-                AttributeName: "createTime",
-                AttributeType: "S"
-            }
-        ],
-        GlobalSecondaryIndexUpdates: [
-            {
-                Create: {
-                    IndexName: "taskType-createTime-index",
-                    KeySchema: [
-                        {
-                            AttributeName: "taskType",
-                            KeyType: "HASH"
-                        },
-                        {
-                            AttributeName: "createTime",
-                            KeyType: "RANGE"
-                        }
-                    ],
-                    Projection: {
-                        ProjectionType: "ALL"
-                    },
-                },
+              AttributeName: 'createTime',
+              KeyType: 'RANGE',
             },
-        ],
-    };
+          ],
+          Projection: {
+            ProjectionType: 'ALL',
+          },
+        },
+      },
+    ],
+  };
 
-    try {
-        const command = new UpdateTableCommand(params);
-        const response = await ddbClient.send(command);
-        console.log("Success", response);
-    } catch (error) {
-        console.error("Error", error);
-    }
+  try {
+    const command = new UpdateTableCommand(params);
+    const response = await ddbClient.send(command);
+    console.log('Success', response);
+  } catch (error) {
+    console.error('Error', error);
+  }
 }
 
 async function createBucket() {

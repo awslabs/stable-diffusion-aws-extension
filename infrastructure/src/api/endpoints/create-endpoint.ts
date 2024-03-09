@@ -15,7 +15,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import {ESD_FILE_VERSION} from "../../shared/resource-provider";
+import { ESD_FILE_VERSION } from '../../shared/const';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 

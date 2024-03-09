@@ -14,8 +14,8 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import {Size} from "aws-cdk-lib/core";
 
 export interface StartInferenceJobApiProps {
   router: aws_apigateway.Resource;

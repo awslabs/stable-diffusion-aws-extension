@@ -4,6 +4,8 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
+import { Database } from './database';
+import { ResourceProvider } from './resource-provider';
 import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
 import { DeleteCheckpointsApi, DeleteCheckpointsApiProps } from '../api/checkpoints/delete-checkpoints';
 import { ListCheckPointsApi } from '../api/checkpoints/list-chekpoints';
@@ -19,8 +21,6 @@ import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
-import { Database } from '../shared/database';
-import { ResourceProvider } from '../shared/resource-provider';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface SdTrainDeployStackProps extends StackProps {
@@ -36,7 +36,7 @@ export interface SdTrainDeployStackProps extends StackProps {
   resourceProvider: ResourceProvider;
 }
 
-export class SdTrainDeployStack {
+export class TrainDeploy {
   private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
 

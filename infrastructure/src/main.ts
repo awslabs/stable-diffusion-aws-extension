@@ -4,15 +4,15 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
-import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
-import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
-import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
+import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
+import { Inference, SDAsyncInferenceStackProps } from './shared/inference';
+import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
-import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import { TrainDeploy } from './shared/train-deploy';
 
 const app = new App();
 
@@ -103,8 +103,6 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer');
-
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
       'checkpoints',
@@ -122,12 +120,11 @@ export class Middleware extends Stack {
       Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
     });
 
-    new MultiUsersStack(this, {
+    new MultiUsers(this, {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      passwordKeyAlias: authorizerLambda.passwordKeyAlias,
       logLevel,
     });
 
@@ -141,7 +138,7 @@ export class Middleware extends Stack {
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
+    new Inference(this, <SDAsyncInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
       s3_bucket: s3Bucket,
@@ -160,7 +157,7 @@ export class Middleware extends Stack {
       resourceProvider,
     });
 
-    new SdTrainDeployStack(this, {
+    new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
@@ -211,7 +208,7 @@ export class Middleware extends Stack {
 
 new Middleware(
   app,
-  'Extension-for-Stable-Diffusion-on-AWS',
+  STACK_ID,
   {
     // env: devEnv,
     synthesizer: synthesizer(),

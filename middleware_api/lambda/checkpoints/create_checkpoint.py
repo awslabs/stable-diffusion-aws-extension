@@ -22,13 +22,11 @@ bucket_name = os.environ.get('S3_BUCKET')
 checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
 user_table = os.environ.get('MULTI_USER_TABLE')
 upload_by_url_lambda_name = os.environ.get('UPLOAD_BY_URL_LAMBDA_NAME')
-CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-MAX_WORKERS = 10
 
 lambda_client = boto3.client('lambda')
 
