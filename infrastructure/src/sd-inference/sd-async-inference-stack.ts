@@ -1,17 +1,7 @@
 import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_dynamodb,
-  aws_ecr,
-  aws_sns,
-  CfnParameter,
-  CustomResource,
-  Duration,
-  RemovalPolicy,
-  StackProps,
-} from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_sns, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -33,8 +23,6 @@ import { DeleteInferenceJobsApi, DeleteInferenceJobsApiProps } from '../api/infe
 import { GetInferenceJobApi, GetInferenceJobApiProps } from '../api/inferences/get-inference-job';
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferences/start-inference-job';
-import { DockerImageName, ECRDeployment } from '../cdk-ecr-deployment/lib';
-import { AIGC_WEBUI_INFERENCE } from '../common/dockerImages';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
 import { ResourceProvider } from '../shared/resource-provider';
 
@@ -52,7 +40,7 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   training_table: dynamodb.Table;
   multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
-  ecr_image_tag: string;
+  ecr_image_tag: CfnParameter;
   sd_inference_job_table: aws_dynamodb.Table;
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
@@ -63,21 +51,13 @@ export interface SDAsyncInferenceStackProps extends StackProps {
 
 export class SDAsyncInferenceStack {
 
-  private resourceProvider: ResourceProvider;
 
   constructor(
     scope: Construct,
     props: SDAsyncInferenceStackProps,
   ) {
-    if (!props?.ecr_image_tag) {
-      throw new Error('ecr_image_tag is required');
-    }
 
-    this.resourceProvider = props.resourceProvider;
-
-    const srcImg = AIGC_WEBUI_INFERENCE + props?.ecr_image_tag;
-
-    const inferenceECR_url = this.createInferenceECR(scope, srcImg);
+    const inferenceECR_url = `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag}`;
 
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
@@ -168,7 +148,7 @@ export class SDAsyncInferenceStack {
       },
     );
 
-    const createEndpointApi= new CreateEndpointApi(
+    const createEndpointApi = new CreateEndpointApi(
       scope, 'CreateEndpoint',
             <CreateEndpointApiProps>{
               router: props.routers.endpoints,
@@ -244,7 +224,7 @@ export class SDAsyncInferenceStack {
             },
     );
 
-    const deleteInferenceJobsApi= new DeleteInferenceJobsApi(
+    const deleteInferenceJobsApi = new DeleteInferenceJobsApi(
       scope, 'DeleteInferenceJobs',
             <DeleteInferenceJobsApiProps>{
               router: props.routers.inferences,
@@ -312,47 +292,6 @@ export class SDAsyncInferenceStack {
     );
   }
 
-  private createInferenceECR(scope: Construct, srcImg: string) {
-    const dockerRepo = new aws_ecr.Repository(
-      scope,
-      'EsdEcrInferenceRepo',
-      {
-        repositoryName: 'stable-diffusion-aws-extension/aigc-webui-inference',
-        removalPolicy: RemovalPolicy.DESTROY,
-      },
-    );
-
-    const ecrDeployment = new ECRDeployment(
-      scope,
-      'EsdEcrInferenceDeploy',
-      {
-        src: new DockerImageName(srcImg),
-        dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
-        environment: {
-          BUCKET_NAME: this.resourceProvider.bucketName,
-        },
-      },
-    );
-
-    // trigger the custom resource lambda
-    const customJob = new CustomResource(
-      scope,
-      'EsdEcrInferenceImage',
-      {
-        serviceToken: ecrDeployment.serviceToken,
-        resourceType: 'Custom::AIGCSolutionECRLambda',
-        properties: {
-          SrcImage: `docker://${srcImg}`,
-          DestImage: `docker://${dockerRepo.repositoryUri}:latest`,
-          RepositoryName: `${dockerRepo.repositoryName}`,
-        },
-      },
-    );
-
-    customJob.node.addDependency(ecrDeployment);
-
-    return dockerRepo.repositoryUri;
-  }
 
   private uploadModelToS3(scope: Construct, s3_bucket: s3.Bucket) {
     // Create a folder in the bucket

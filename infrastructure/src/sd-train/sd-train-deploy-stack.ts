@@ -26,7 +26,7 @@ import { ResourceProvider } from '../shared/resource-provider';
 export interface SdTrainDeployStackProps extends StackProps {
   createModelSuccessTopic: aws_sns.Topic;
   createModelFailureTopic: aws_sns.Topic;
-  ecr_image_tag: string;
+  ecr_image_tag: CfnParameter;
   database: Database;
   routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;

@@ -4,7 +4,6 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
-import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
 import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
 import { MultiUsersStack } from './sd-users/multi-users-stack';
@@ -58,8 +57,15 @@ export class Middleware extends Stack {
 
     const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
-      description: 'Public ECR Image tag, example: stable|dev',
-      default: ECR_IMAGE_TAG,
+      description: 'Inference Public ECR Image tag, example: stable|dev',
+      default: 'dev',
+    });
+
+    // todo - remove this parameter when training tag same as inference tag
+    const trainEcrImageTagParam = new CfnParameter(this, 'TrainEcrImageTag', {
+      type: 'String',
+      description: 'Training Public ECR Image tag, example: stable|dev',
+      default: 'kohya-65bf90a',
     });
 
     const logLevel = new CfnParameter(this, 'LogLevel', {
@@ -141,7 +147,7 @@ export class Middleware extends Stack {
       s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
+      ecr_image_tag: ecrImageTagParam,
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
@@ -158,7 +164,7 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
+      ecr_image_tag: trainEcrImageTagParam,
       database: ddbTables,
       routers: restApi.routers,
       s3Bucket: s3Bucket,

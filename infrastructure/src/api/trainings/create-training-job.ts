@@ -8,19 +8,14 @@ import {
   aws_lambda,
   aws_s3,
   aws_sns,
-  aws_ecr,
   CfnParameter,
   Duration,
-  CustomResource,
-  RemovalPolicy,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import { AIGC_WEBUI_DREAMBOOTH_TRAINING, KOHYA_ECR_IMAGE_TAG } from '../../common/dockerImages';
-import { DockerImageName, ECRDeployment } from '../../cdk-ecr-deployment/lib';
 import { ResourceProvider } from '../../shared/resource-provider';
 
 export interface CreateTrainingJobApiProps {
@@ -35,7 +30,7 @@ export interface CreateTrainingJobApiProps {
   checkpointTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
   logLevel: CfnParameter;
-  ecr_image_tag: string;
+  ecr_image_tag: CfnParameter;
   resourceProvider: ResourceProvider;
 }
 
@@ -45,6 +40,7 @@ export class CreateTrainingJobApi {
   public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
+  private readonly ecr_image_tag: CfnParameter;
   private readonly srcRoot: string;
   private readonly modelTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
@@ -57,11 +53,7 @@ export class CreateTrainingJobApi {
   private readonly logLevel: CfnParameter;
   private readonly sagemakerTrainRole: aws_iam.Role;
   private readonly userSnsTopic: aws_sns.Topic;
-  private readonly srcImg: string;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
-  private readonly dockerRepo: aws_ecr.Repository;
-  private readonly customJob: CustomResource;
-  private readonly resourceProvider: ResourceProvider;
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;
@@ -78,42 +70,13 @@ export class CreateTrainingJobApi {
     this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
-    this.resourceProvider = props.resourceProvider;
     this.sagemakerTrainRole = this.sageMakerTrainRole();
-    this.srcImg = AIGC_WEBUI_DREAMBOOTH_TRAINING + KOHYA_ECR_IMAGE_TAG;
-    [this.dockerRepo, this.customJob] = this.trainImageInPrivateRepo(this.srcImg);
     this.userSnsTopic = props.userTopic;
+    this.ecr_image_tag = props.ecr_image_tag;
 
     this.createTrainJobLambda();
   }
 
-  private trainImageInPrivateRepo(srcImage: string): [aws_ecr.Repository, CustomResource] {
-    const dockerRepo = new aws_ecr.Repository(this.scope, 'EsdEcrTrainingRepo', {
-      repositoryName: 'stable-diffusion-aws-extension/aigc-webui-dreambooth-training',
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
-
-    const ecrDeployment = new ECRDeployment(this.scope, 'EsdEcrTrainingDeploy', {
-      src: new DockerImageName(srcImage),
-      dest: new DockerImageName(`${dockerRepo.repositoryUri}:latest`),
-      environment: {
-        BUCKET_NAME: this.resourceProvider.bucketName,
-      },
-    });
-
-    // trigger the custom resource lambda
-    const customJob = new CustomResource(this.scope, 'EsdEcrTrainingImage', {
-      serviceToken: ecrDeployment.serviceToken,
-      resourceType: 'Custom::AIGCSolutionECRLambda',
-      properties: {
-        SrcImage: `docker://${srcImage}`,
-        DestImage: `docker://${dockerRepo.repositoryUri}:latest`,
-        RepositoryName: `${dockerRepo.repositoryName}`,
-      },
-    });
-    customJob.node.addDependency(ecrDeployment);
-    return [dockerRepo, customJob];
-  }
 
   private sageMakerTrainRole(): aws_iam.Role {
     const sagemakerRole = new aws_iam.Role(this.scope, `${this.id}-train-role`, {
@@ -269,12 +232,11 @@ export class CreateTrainingJobApi {
         LOG_LEVEL: this.logLevel.valueAsString,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.dockerRepo.repositoryUri}:latest`,
+        TRAIN_ECR_URL: `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${this.ecr_image_tag}`,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
       },
       layers: [this.layer],
     });
-    lambdaFunction.node.addDependency(this.customJob);
 
     const createTrainJobIntegration = new apigw.LambdaIntegration(
       lambdaFunction,
