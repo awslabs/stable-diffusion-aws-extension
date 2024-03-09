@@ -131,28 +131,30 @@ def response_error(e):
         return bad_request(message=str(e))
 
 
-def permissions_check(event: any, permissions: [str]):
+def get_user_name(event: any):
     if 'headers' not in event:
         raise BadRequestException('Not found headers in event')
 
-    # todo compatibility with 1.4.0, will be removed
-    if 'Authorization' in event['headers']:
+    username = None
+
+    if 'username' in event['headers']:
+        username = event['headers']['username']
+    elif 'Authorization' in event['headers']:
+        # todo compatibility with 1.4.0, will be removed
         authorization = event['headers']['Authorization']
         if authorization:
             username = base64.b16decode(authorization.replace('Bearer ', '').encode(encode_type)).decode(
                 encode_type)
-            return permissions_check_by_username(username, permissions)
 
-    if 'username' not in event['headers']:
+    if not username:
         raise UnauthorizedException("Unauthorized")
 
-    return permissions_check_by_username(event['headers']['username'], permissions)
+    return username
 
 
 @log_execution_time
-def permissions_check_by_username(username: any, permissions: [str]):
-    if not username:
-        raise UnauthorizedException("Unauthorized")
+def permissions_check(event: any, permissions: [str]):
+    username = get_user_name(event)
 
     user = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,

@@ -232,7 +232,7 @@ export class CreateTrainingJobApi {
         LOG_LEVEL: this.logLevel.valueAsString,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${this.ecr_image_tag}`,
+        TRAIN_ECR_URL: `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${this.ecr_image_tag.valueAsString}`,
         USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
       },
       layers: [this.layer],

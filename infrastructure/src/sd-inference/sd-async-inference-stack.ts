@@ -57,7 +57,7 @@ export class SDAsyncInferenceStack {
     props: SDAsyncInferenceStackProps,
   ) {
 
-    const inferenceECR_url = `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag}`;
+    const inferenceECR_url = `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag.valueAsString}`;
 
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
