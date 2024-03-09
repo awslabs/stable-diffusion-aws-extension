@@ -5,3 +5,4 @@ workshop/ami-gen.sh
 README.md
 .github/workflows/
 infrastructure/.github/workflows/
+infrastructure/src/main.ts
