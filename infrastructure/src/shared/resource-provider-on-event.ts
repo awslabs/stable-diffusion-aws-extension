@@ -91,63 +91,56 @@ async function copyFiles() {
 
   const binaryPath = '/opt/s5cmd';
 
-  const source_path = AWS_REGION?.startsWith('cn-') ?
-    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}`
-    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}`;
+  const source_path = `aws-gcr-solutions-${AWS_REGION}/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}`;
 
-  const source = AWS_REGION?.startsWith('cn-') ?
-    'cn-north-1'
-    : 'us-east-1';
-
-  const destination = AWS_REGION || '';
   const destination_path = `${bucketName}/${ESD_FILE_VERSION}`;
 
-  const commands = `cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/bin.tar" "s3://${destination_path}-g4/bin.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/bin.tar"
+  const commands = `cp "s3://${source_path}-g4/bin.tar" "s3://${destination_path}-g4/"
+cp "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/"
   
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages.tar" "s3://${destination_path}-g4/site-packages.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages.tar" "s3://${destination_path}-g5/site-packages.tar"
+cp "s3://${source_path}-g4/site-packages.tar" "s3://${destination_path}-g4/"
+cp "s3://${source_path}-g5/site-packages.tar" "s3://${destination_path}-g5/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/stable-diffusion-webui.tar" "s3://${destination_path}-g4/stable-diffusion-webui.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/stable-diffusion-webui.tar" "s3://${destination_path}-g5/stable-diffusion-webui.tar"
+cp "s3://${source_path}-g4/stable-diffusion-webui.tar" "s3://${destination_path}-g4/"
+cp "s3://${source_path}-g5/stable-diffusion-webui.tar" "s3://${destination_path}-g5/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g4/site-packages/llvmlite/binding/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g5/site-packages/llvmlite/binding/"
+cp "s3://${source_path}-g4/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g4/site-packages/llvmlite/binding/"
+cp "s3://${source_path}-g5/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g5/site-packages/llvmlite/binding/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
+cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
+cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g4/site-packages/triton/_C/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g5/site-packages/triton/_C/"
+cp "s3://${source_path}-g4/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g4/site-packages/triton/_C/"
+cp "s3://${source_path}-g5/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g5/site-packages/triton/_C/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/xformers/_C.so" "s3://${destination_path}-g4/site-packages/xformers/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/xformers/_C.so" "s3://${destination_path}-g5/site-packages/xformers/"
+cp "s3://${source_path}-g4/site-packages/xformers/_C.so" "s3://${destination_path}-g4/site-packages/xformers/"
+cp "s3://${source_path}-g5/site-packages/xformers/_C.so" "s3://${destination_path}-g5/site-packages/xformers/"
 
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g4/site-packages/xformers/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g5/site-packages/xformers/"`;
+cp "s3://${source_path}-g4/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g4/site-packages/xformers/"
+cp "s3://${source_path}-g5/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g5/site-packages/xformers/"`;
 
   console.log(commands);
   await fsPromises.writeFile('/tmp/commands.txt', commands);
@@ -159,7 +152,11 @@ cp --source-region ${source} --destination-region ${destination} "s3://${source_
   ];
 
   const { stdout, stderr } = await execFilePromise(binaryPath, args);
-  console.log('s5cmd cp output:', stdout);
+
+  if (stdout) {
+    console.log('s5cmd cp output:', stdout);
+  }
+
   if (stderr) {
     throw new Error(stderr);
   }
