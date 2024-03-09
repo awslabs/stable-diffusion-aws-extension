@@ -3,6 +3,7 @@ import { aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { Database } from './database';
 import { ResourceProvider } from './resource-provider';
@@ -23,7 +24,7 @@ import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
-export interface SdTrainDeployStackProps extends StackProps {
+export interface TrainDeployProps extends StackProps {
   createModelSuccessTopic: aws_sns.Topic;
   createModelFailureTopic: aws_sns.Topic;
   ecr_image_tag: CfnParameter;
@@ -34,13 +35,14 @@ export interface SdTrainDeployStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class TrainDeploy {
   private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
 
-  constructor(scope: Construct, props: SdTrainDeployStackProps) {
+  constructor(scope: Construct, props: TrainDeployProps) {
 
     this.resourceProvider = props.resourceProvider;
 
@@ -84,6 +86,7 @@ export class TrainDeploy {
       userTopic: props.snsTopic,
       ecr_image_tag: props.ecr_image_tag,
       resourceProvider: this.resourceProvider,
+      accountId: props.accountId,
     });
 
     const trainJobRouter = routers.trainings.addResource('{id}');

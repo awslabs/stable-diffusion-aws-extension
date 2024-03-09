@@ -14,7 +14,9 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import { Size } from 'aws-cdk-lib/core';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
+import { ResourceProvider } from './resource-provider';
 import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi, ListEndpointsApiProps } from '../api/endpoints/list-endpoints';
@@ -24,7 +26,6 @@ import { GetInferenceJobApi, GetInferenceJobApiProps } from '../api/inferences/g
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi, StartInferenceJobApiProps } from '../api/inferences/start-inference-job';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
-import { ResourceProvider } from './resource-provider';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -32,7 +33,7 @@ based on Stable Diffusion. S3 is used to store large payloads and passed as obje
 request and Lambda function to avoid request payload limitation
 Note: Sync Inference is put here for reference, we use Async Inference now
 */
-export interface SDAsyncInferenceStackProps extends StackProps {
+export interface InferenceProps extends StackProps {
   inferenceErrorTopic: sns.Topic;
   inferenceResultTopic: sns.Topic;
   routers: { [key: string]: Resource };
@@ -47,17 +48,17 @@ export interface SDAsyncInferenceStackProps extends StackProps {
   commonLayer: PythonLayerVersion;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class Inference {
 
-
   constructor(
     scope: Construct,
-    props: SDAsyncInferenceStackProps,
+    props: InferenceProps,
   ) {
 
-    const inferenceECR_url = `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag.valueAsString}`;
+    const inferenceECR_url = `${props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag.valueAsString}`;
 
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');

@@ -15,6 +15,7 @@ import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ResourceProvider } from '../../shared/resource-provider';
 
@@ -32,6 +33,7 @@ export interface CreateTrainingJobApiProps {
   logLevel: CfnParameter;
   ecr_image_tag: CfnParameter;
   resourceProvider: ResourceProvider;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class CreateTrainingJobApi {
@@ -40,39 +42,17 @@ export class CreateTrainingJobApi {
   public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
-  private readonly ecr_image_tag: CfnParameter;
-  private readonly srcRoot: string;
-  private readonly modelTable: aws_dynamodb.Table;
-  private readonly layer: aws_lambda.LayerVersion;
-  private readonly s3Bucket: aws_s3.Bucket;
-  private readonly httpMethod: string;
-  private readonly router: aws_apigateway.Resource;
-  private readonly trainTable: aws_dynamodb.Table;
-  private readonly checkpointTable: aws_dynamodb.Table;
-  private readonly multiUserTable: aws_dynamodb.Table;
-  private readonly logLevel: CfnParameter;
+  private readonly props: CreateTrainingJobApiProps;
   private readonly sagemakerTrainRole: aws_iam.Role;
-  private readonly userSnsTopic: aws_sns.Topic;
   private readonly instanceType: string = 'ml.g4dn.2xlarge';
 
   constructor(scope: Construct, id: string, props: CreateTrainingJobApiProps) {
     this.id = id;
     this.scope = scope;
-    this.srcRoot = props.srcRoot;
-    this.checkpointTable = props.checkpointTable;
-    this.multiUserTable = props.multiUserTable;
-    this.modelTable = props.modelTable;
-    this.layer = props.commonLayer;
-    this.s3Bucket = props.s3Bucket;
-    this.httpMethod = props.httpMethod;
-    this.router = props.router;
-    this.trainTable = props.trainTable;
-    this.logLevel = props.logLevel;
+    this.props = props;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
     this.sagemakerTrainRole = this.sageMakerTrainRole();
-    this.userSnsTopic = props.userTopic;
-    this.ecr_image_tag = props.ecr_image_tag;
 
     this.createTrainJobLambda();
   }
@@ -91,7 +71,7 @@ export class CreateTrainingJobApi {
         's3:PutObject',
       ],
       resources: [
-        `${this.s3Bucket.bucketArn}/*`,
+        `${this.props.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
         `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
@@ -126,10 +106,10 @@ export class CreateTrainingJobApi {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.modelTable.tableArn,
-        this.trainTable.tableArn,
-        this.checkpointTable.tableArn,
-        this.multiUserTable.tableArn,
+        this.props.modelTable.tableArn,
+        this.props.trainTable.tableArn,
+        this.props.checkpointTable.tableArn,
+        this.props.multiUserTable.tableArn,
       ],
     }));
 
@@ -157,7 +137,7 @@ export class CreateTrainingJobApi {
         's3:DeleteObject',
         's3:ListBucket',
       ],
-      resources: [`${this.s3Bucket.bucketArn}/*`,
+      resources: [`${this.props.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
         `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
@@ -179,7 +159,7 @@ export class CreateTrainingJobApi {
 
   private createModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
-      restApi: this.router.api,
+      restApi: this.props.router.api,
       modelName: this.id,
       description: `${this.id} Request Model`,
       schema: {
@@ -208,14 +188,14 @@ export class CreateTrainingJobApi {
       this.scope,
       `${this.id}-create-train-validator`,
       {
-        restApi: this.router.api,
+        restApi: this.props.router.api,
         validateRequestBody: true,
       });
   }
 
   private createTrainJobLambda(): aws_lambda.IFunction {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/trainings`,
+      entry: `${this.props.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_9,
       index: 'create_training_job.py',
@@ -224,18 +204,18 @@ export class CreateTrainingJobApi {
       role: this.lambdaRole(),
       memorySize: 1024,
       environment: {
-        S3_BUCKET: this.s3Bucket.bucketName,
-        TRAIN_TABLE: this.trainTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
+        S3_BUCKET: this.props.s3Bucket.bucketName,
+        TRAIN_TABLE: this.props.trainTable.tableName,
+        MODEL_TABLE: this.props.modelTable.tableName,
+        CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
+        MULTI_USER_TABLE: this.props.multiUserTable.tableName,
+        LOG_LEVEL: this.props.logLevel.valueAsString,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `366590864501.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${this.ecr_image_tag.valueAsString}`,
-        USER_EMAIL_TOPIC_ARN: this.userSnsTopic.topicArn,
+        TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${this.props.ecr_image_tag.valueAsString}`,
+        USER_EMAIL_TOPIC_ARN: this.props.userTopic.topicArn,
       },
-      layers: [this.layer],
+      layers: [this.props.commonLayer],
     });
 
     const createTrainJobIntegration = new apigw.LambdaIntegration(
@@ -245,7 +225,7 @@ export class CreateTrainingJobApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, createTrainJobIntegration, <MethodOptions>{
+    this.props.router.addMethod(this.props.httpMethod, createTrainJobIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

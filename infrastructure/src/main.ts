@@ -7,7 +7,7 @@ import { PingApi } from './api/service/ping';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
-import { Inference, SDAsyncInferenceStackProps } from './shared/inference';
+import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
@@ -75,6 +75,14 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+
+    const accountId = Fn.conditionIf(
+      isChinaCondition.logicalId,
+      '753680513547',
+      '366590864501',
+    );
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
@@ -115,7 +123,6 @@ export class Middleware extends Stack {
       'trainings',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
     cfnApi.addPropertyOverride('EndpointConfiguration', {
       Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
     });
@@ -138,9 +145,8 @@ export class Middleware extends Stack {
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    new Inference(this, <SDAsyncInferenceStackProps>{
+    new Inference(this, {
       routers: restApi.routers,
-      // env: devEnv,
       s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
@@ -153,6 +159,7 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
+      accountId,
       logLevel,
       resourceProvider,
     });
@@ -170,6 +177,7 @@ export class Middleware extends Stack {
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       logLevel,
       resourceProvider,
+      accountId,
     });
 
     // Add ResourcesProvider dependency to all resources
