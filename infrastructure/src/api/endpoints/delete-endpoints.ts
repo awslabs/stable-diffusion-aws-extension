@@ -176,7 +176,6 @@ export class DeleteEndpointsApi {
       },
     );
 
-
     this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,

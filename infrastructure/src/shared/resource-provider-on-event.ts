@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import { promisify } from 'util';
 import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient, UpdateTableCommand } from '@aws-sdk/client-dynamodb';
+import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import {
   GetRoleCommand,
@@ -25,7 +26,6 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { UpdateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand";
 
 const execFilePromise = promisify(execFile);
 

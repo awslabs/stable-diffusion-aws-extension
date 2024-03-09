@@ -106,6 +106,7 @@ export class ListCheckPointsApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });
