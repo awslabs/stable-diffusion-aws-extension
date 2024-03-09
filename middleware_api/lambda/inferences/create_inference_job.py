@@ -48,6 +48,12 @@ def handler(raw_event, context):
         logger.info(json.dumps(json.loads(raw_event['body'])))
         event = CreateInferenceEvent(**json.loads(raw_event['body']))
 
+        if event.payload_string:
+            try:
+                json.loads(event.payload_string)
+            except json.JSONDecodeError:
+                return bad_request(message='payload_string must be valid json string')
+
         username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE])
 
         _type = event.task_type
