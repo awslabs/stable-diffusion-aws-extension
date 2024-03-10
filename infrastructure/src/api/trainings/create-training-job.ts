@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
-  aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
   aws_iam,
@@ -194,15 +193,15 @@ export class CreateTrainingJobApi {
   }
 
   private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.props.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'create_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         S3_BUCKET: this.props.s3Bucket.bucketName,
         TRAIN_TABLE: this.props.trainTable.tableName,
@@ -218,7 +217,7 @@ export class CreateTrainingJobApi {
       layers: [this.props.commonLayer],
     });
 
-    const createTrainJobIntegration = new apigw.LambdaIntegration(
+    const createTrainJobIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

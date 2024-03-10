@@ -2,26 +2,25 @@ import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { Database } from './database';
 import { ResourceProvider } from './resource-provider';
 import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
-import { DeleteCheckpointsApi, DeleteCheckpointsApiProps } from '../api/checkpoints/delete-checkpoints';
+import { DeleteCheckpointsApi } from '../api/checkpoints/delete-checkpoints';
 import { ListCheckPointsApi } from '../api/checkpoints/list-chekpoints';
 import { UpdateCheckPointApi } from '../api/checkpoints/update-chekpoint';
 import { CreateDatasetApi } from '../api/datasets/create-dataset';
-import { DeleteDatasetsApi, DeleteDatasetsApiProps } from '../api/datasets/delete-datasets';
+import { DeleteDatasetsApi } from '../api/datasets/delete-datasets';
 import { GetDatasetApi } from '../api/datasets/get-dataset';
 import { ListDatasetsApi } from '../api/datasets/list-datasets';
 import { UpdateDatasetApi } from '../api/datasets/update-dataset';
 import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
-import { DeleteTrainingJobsApi, DeleteTrainingJobsApiProps } from '../api/trainings/delete-training-jobs';
-import { GetTrainingJobApi, GetTrainingJobApiProps } from '../api/trainings/get-training-job';
+import { DeleteTrainingJobsApi } from '../api/trainings/delete-training-jobs';
+import { GetTrainingJobApi } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
-import { SagemakerTrainingEvents, SagemakerTrainingEventsProps } from '../events/trainings-event';
+import { SagemakerTrainingEvents } from '../events/trainings-event';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface TrainDeployProps extends StackProps {
@@ -47,7 +46,7 @@ export class TrainDeploy {
     this.resourceProvider = props.resourceProvider;
 
     // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', <BucketDeploymentProps>{
+    new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', {
       sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
       destinationBucket: props.s3Bucket,
       destinationKeyPrefix: 'template',
@@ -195,81 +194,71 @@ export class TrainDeploy {
     });
 
     // DELETE /checkpoints
-    const deleteCheckpointsApi = new DeleteCheckpointsApi(
-      scope, 'DeleteCheckpoints',
-            <DeleteCheckpointsApiProps>{
-              router: props.routers.checkpoints,
-              commonLayer: props.commonLayer,
-              checkPointsTable: checkPointTable,
-              userTable: multiUserTable,
-              httpMethod: 'DELETE',
-              s3Bucket: props.s3Bucket,
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
+    const deleteCheckpointsApi = new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
+      router: props.routers.checkpoints,
+      commonLayer: props.commonLayer,
+      checkPointsTable: checkPointTable,
+      userTable: multiUserTable,
+      httpMethod: 'DELETE',
+      s3Bucket: props.s3Bucket,
+      srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
+    },
     );
     deleteCheckpointsApi.model.node.addDependency(updateDatasetApi.model);
     deleteCheckpointsApi.requestValidator.node.addDependency(updateDatasetApi.requestValidator);
 
     // DELETE /datasets
-    const deleteDatasetsApi = new DeleteDatasetsApi(
-      scope, 'DeleteDatasets',
-            <DeleteDatasetsApiProps>{
-              router: props.routers.datasets,
-              commonLayer: props.commonLayer,
-              datasetInfoTable: props.database.datasetInfoTable,
-              datasetItemTable: props.database.datasetItemTable,
-              multiUserTable: multiUserTable,
-              httpMethod: 'DELETE',
-              s3Bucket: props.s3Bucket,
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
+    const deleteDatasetsApi = new DeleteDatasetsApi(scope, 'DeleteDatasets', {
+      router: props.routers.datasets,
+      commonLayer: props.commonLayer,
+      datasetInfoTable: props.database.datasetInfoTable,
+      datasetItemTable: props.database.datasetItemTable,
+      multiUserTable: multiUserTable,
+      httpMethod: 'DELETE',
+      s3Bucket: props.s3Bucket,
+      srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
+    },
     );
     deleteDatasetsApi.model.node.addDependency(deleteCheckpointsApi.model);
     deleteDatasetsApi.requestValidator.node.addDependency(deleteCheckpointsApi.requestValidator);
 
     // DELETE /trainings
-    const deleteTrainingJobsApi = new DeleteTrainingJobsApi(
-      scope, 'DeleteTrainingJobs',
-            <DeleteTrainingJobsApiProps>{
-              router: props.routers.trainings,
-              commonLayer: props.commonLayer,
-              trainingTable: props.database.trainingTable,
-              httpMethod: 'DELETE',
-              s3Bucket: props.s3Bucket,
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
+    const deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, 'DeleteTrainingJobs', {
+      router: props.routers.trainings,
+      commonLayer: props.commonLayer,
+      trainingTable: props.database.trainingTable,
+      httpMethod: 'DELETE',
+      s3Bucket: props.s3Bucket,
+      srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
+    },
     );
     deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
     deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
 
     // DELETE /trainings/{id}
-    new GetTrainingJobApi(
-      scope, 'GetTrainingJob',
-            <GetTrainingJobApiProps>{
-              router: trainJobRouter,
-              commonLayer: props.commonLayer,
-              trainingTable: props.database.trainingTable,
-              httpMethod: 'GET',
-              s3Bucket: props.s3Bucket,
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
+    new GetTrainingJobApi(scope, 'GetTrainingJob', {
+      router: trainJobRouter,
+      commonLayer: props.commonLayer,
+      trainingTable: props.database.trainingTable,
+      httpMethod: 'GET',
+      s3Bucket: props.s3Bucket,
+      srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
+    },
     );
 
-    new SagemakerTrainingEvents(
-      scope, 'SagemakerTrainingEvents',
-        <SagemakerTrainingEventsProps>{
-          commonLayer: props.commonLayer,
-          trainingTable: props.database.trainingTable,
-          checkpointTable: props.database.checkpointTable,
-          srcRoot: this.srcRoot,
-          userTopic: props.snsTopic,
-          s3Bucket: props.s3Bucket,
-          logLevel: props.logLevel,
-        },
+    new SagemakerTrainingEvents(scope, 'SagemakerTrainingEvents', {
+      commonLayer: props.commonLayer,
+      trainingTable: props.database.trainingTable,
+      checkpointTable: props.database.checkpointTable,
+      srcRoot: this.srcRoot,
+      userTopic: props.snsTopic,
+      s3Bucket: props.s3Bucket,
+      logLevel: props.logLevel,
+    },
     );
 
   }

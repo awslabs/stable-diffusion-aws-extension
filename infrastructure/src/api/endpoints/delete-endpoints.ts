@@ -1,4 +1,4 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
@@ -151,15 +151,15 @@ export class DeleteEndpointsApi {
   }
 
   private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'delete_endpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,

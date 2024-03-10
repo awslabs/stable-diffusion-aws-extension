@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
-  aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
   aws_iam,
@@ -191,10 +190,10 @@ export class CreateInferenceJobApi {
   }
 
   private createInferenceJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'create_inference_job.py',
       handler: 'handler',
       memorySize: 10240,
@@ -213,7 +212,7 @@ export class CreateInferenceJobApi {
     });
 
 
-    const createInferenceJobIntegration = new apigw.LambdaIntegration(
+    const createInferenceJobIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

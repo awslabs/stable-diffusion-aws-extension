@@ -1,8 +1,7 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -148,15 +147,15 @@ export class UpdateDatasetApi {
 
 
   private updateDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'update_dataset.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         MULTI_USER_TABLE: this.userTable.tableName,
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
@@ -168,7 +167,7 @@ export class UpdateDatasetApi {
     });
 
 
-    const createModelIntegration = new apigw.LambdaIntegration(
+    const createModelIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

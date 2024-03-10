@@ -13,7 +13,7 @@ export class LambdaCommonLayer {
       bundling: {
         outputPathSuffix: '/python',
       },
-      compatibleRuntimes: [Runtime.PYTHON_3_9],
+      compatibleRuntimes: [Runtime.PYTHON_3_12],
     });
   }
 }

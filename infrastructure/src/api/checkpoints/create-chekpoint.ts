@@ -1,8 +1,7 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -64,11 +63,11 @@ export class CreateCheckPointApi {
   }
 
   private uploadByUrlLambdaFunction() {
-    return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, <PythonFunctionProps>{
+    return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, {
       functionName: `${this.baseId}-create-checkpoint-by-url`,
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'update_checkpoint_by_url.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -227,15 +226,15 @@ export class CreateCheckPointApi {
   }
 
   private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'create_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 1024,
+      memorySize: 4048,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
@@ -247,12 +246,13 @@ export class CreateCheckPointApi {
     });
 
 
-    const createCheckpointIntegration = new apigw.LambdaIntegration(
+    const createCheckpointIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,

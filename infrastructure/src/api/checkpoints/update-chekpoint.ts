@@ -1,8 +1,7 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -175,10 +174,10 @@ export class UpdateCheckPointApi {
 
   private updateCheckpointApi() {
 
-    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
+    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'update_checkpoint_rename.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -193,10 +192,10 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'update_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -212,7 +211,7 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const createModelIntegration = new apigw.LambdaIntegration(
+    const createModelIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

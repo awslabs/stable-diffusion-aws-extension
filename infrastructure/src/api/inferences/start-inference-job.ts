@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
-  aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
   aws_iam,
@@ -128,10 +127,10 @@ export class StartInferenceJobApi {
   }
 
   private updateTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'start_inference_job.py',
       handler: 'handler',
       memorySize: 10240,
@@ -149,7 +148,7 @@ export class StartInferenceJobApi {
       layers: [this.layer],
     });
 
-    const runJobIntegration = new apigw.LambdaIntegration(
+    const runJobIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

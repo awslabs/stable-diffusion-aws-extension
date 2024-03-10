@@ -4,7 +4,7 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { KEY_ALIAS } from './const';
 import { CreateRoleApi } from '../api/roles/create-role';
-import { DeleteRolesApi, DeleteRolesApiProps } from '../api/roles/delete-roles';
+import { DeleteRolesApi } from '../api/roles/delete-roles';
 import { ListRolesApi } from '../api/roles/list-roles';
 import { CreateUserApi } from '../api/users/create-user';
 import { DeleteUsersApi } from '../api/users/delete-users';
@@ -83,15 +83,14 @@ export class MultiUsers {
     });
 
     // DELETE /roles
-    new DeleteRolesApi(scope, 'DeleteRoles',
-            <DeleteRolesApiProps>{
-              router: props.routers.roles,
-              commonLayer: props.commonLayer,
-              multiUserTable: props.multiUserTable,
-              httpMethod: 'DELETE',
-              srcRoot: this.srcRoot,
-              logLevel: props.logLevel,
-            },
+    new DeleteRolesApi(scope, 'DeleteRoles', {
+      router: props.routers.roles,
+      commonLayer: props.commonLayer,
+      multiUserTable: props.multiUserTable,
+      httpMethod: 'DELETE',
+      srcRoot: this.srcRoot,
+      logLevel: props.logLevel,
+    },
     );
 
   }

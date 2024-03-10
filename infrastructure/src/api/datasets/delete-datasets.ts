@@ -110,12 +110,12 @@ export class DeleteDatasetsApi {
       {
         entry: `${this.src}/datasets`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_12,
         index: 'delete_datasets.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           MULTI_USER_TABLE: this.multiUserTable.tableName,
           DATASET_INFO_TABLE: this.datasetInfoTable.tableName,

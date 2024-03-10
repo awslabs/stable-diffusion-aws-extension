@@ -50,12 +50,12 @@ export class GetTrainingJobApi {
       {
         entry: `${this.src}/trainings`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_12,
         index: 'get_training_job.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,

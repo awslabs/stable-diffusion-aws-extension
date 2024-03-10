@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -82,10 +81,10 @@ export class ListCheckPointsApi {
   }
 
   private listCheckpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_12,
       index: 'list_checkpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -100,7 +99,7 @@ export class ListCheckPointsApi {
       layers: [this.layer],
     });
 
-    const listCheckpointsIntegration = new apigw.LambdaIntegration(
+    const listCheckpointsIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
