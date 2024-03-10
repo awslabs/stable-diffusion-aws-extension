@@ -7,7 +7,8 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, forbidden
 from common.util import generate_presign_url
 from libs.data_types import DatasetItem, DatasetInfo
-from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check
+from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
+    response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -26,7 +27,9 @@ def handler(event, context):
 
     try:
         logger.info(json.dumps(event))
-        permissions_check(event, [PERMISSION_TRAIN_ALL])
+
+        requester_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
+
         dataset_name = event['pathParameters']['id']
 
         dataset_info_rows = ddb_service.get_item(table=dataset_info_table, key_values={
@@ -37,8 +40,6 @@ def handler(event, context):
             return not_found(message=f'dataset {dataset_name} is not found')
 
         dataset_info = DatasetInfo(**dataset_info_rows)
-
-        requester_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requester_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requester_name)
