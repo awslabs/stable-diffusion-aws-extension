@@ -89,7 +89,7 @@ export class ListInferencesApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'list_inferences.py',
       handler: 'handler',
       timeout: Duration.seconds(900),

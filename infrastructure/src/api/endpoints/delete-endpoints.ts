@@ -154,7 +154,7 @@ export class DeleteEndpointsApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'delete_endpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),

@@ -105,7 +105,7 @@ export class DeleteCheckpointsApi {
       {
         entry: `${this.src}/checkpoints`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_12,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_checkpoints.py',
         handler: 'handler',
         timeout: Duration.seconds(900),

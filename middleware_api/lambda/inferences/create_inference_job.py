@@ -10,7 +10,7 @@ from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
-from inferences.start_inference_job import start_inference_job
+from start_inference_job import start_inference_job
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus

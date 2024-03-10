@@ -105,7 +105,7 @@ export class DeleteInferenceJobsApi {
       {
         entry: `${this.src}/inferences`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_12,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_inference_jobs.py',
         handler: 'handler',
         timeout: Duration.seconds(900),

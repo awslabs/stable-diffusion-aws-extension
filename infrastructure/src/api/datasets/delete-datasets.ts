@@ -110,7 +110,7 @@ export class DeleteDatasetsApi {
       {
         entry: `${this.src}/datasets`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_12,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_datasets.py',
         handler: 'handler',
         timeout: Duration.seconds(900),

@@ -93,7 +93,7 @@ export class StopTrainingJobApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'stop_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),

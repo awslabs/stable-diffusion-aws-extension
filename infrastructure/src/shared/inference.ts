@@ -235,7 +235,7 @@ export class Inference {
 
     const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
       entry: `${srcRoot}/inferences`,
-      runtime: lambda.Runtime.PYTHON_3_12,
+      runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'inference_async_events.py',
       memorySize: 10240,

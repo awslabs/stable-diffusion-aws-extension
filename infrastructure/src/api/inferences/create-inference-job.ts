@@ -193,7 +193,7 @@ export class CreateInferenceJobApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_inference_job.py',
       handler: 'handler',
       memorySize: 10240,

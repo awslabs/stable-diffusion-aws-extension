@@ -196,7 +196,7 @@ export class CreateTrainingJobApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.props.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),

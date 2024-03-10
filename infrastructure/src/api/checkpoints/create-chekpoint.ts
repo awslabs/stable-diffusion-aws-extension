@@ -67,7 +67,7 @@ export class CreateCheckPointApi {
       functionName: `${this.baseId}-create-checkpoint-by-url`,
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint_by_url.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -229,7 +229,7 @@ export class CreateCheckPointApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_12,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
