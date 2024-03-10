@@ -13,7 +13,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import accepted
 from get_inference_job import get_infer_data
-from inference_libs import parse_result, update_inference_job_table
+from inference_libs import parse_sagemaker_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
 from libs.utils import response_error, permissions_check, log_execution_time, log_json
@@ -73,7 +73,7 @@ def start_inference_job(job: InferenceJob, username):
         payload_string=job.payload_string
     )
 
-    log_json(logger, "inference payload", job.__dict__)
+    log_json("inference payload", job.__dict__)
 
     update_inference_job_table(job.InferenceJobId, 'startTime', str(datetime.now()))
 
@@ -93,7 +93,7 @@ def real_time_inference(payload: InvocationsRequest, job: InferenceJob, endpoint
         update_inference_job_table(job.InferenceJobId, 'sagemakerRaw', str(sagemaker_out))
         raise Exception(str(sagemaker_out))
 
-    parse_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
+    parse_sagemaker_result(sagemaker_out, job.InferenceJobId, job.taskType, endpoint_name)
 
     return get_infer_data(job.InferenceJobId)
 
