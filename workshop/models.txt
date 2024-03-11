@@ -1,11 +1,11 @@
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/sd_xl_base_1.0.safetensors ./models/Stable-diffusion/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors ./models/Stable-diffusion/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/LahCuteCartoonSDXL_alpha.safetensors ./models/Stable-diffusion/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/majicmixRealistic_v7.safetensors ./models/Stable-diffusion/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/sd_xl_base_1.0.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/LahCuteCartoonSDXL_alpha.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/majicmixRealistic_v7.safetensors /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/
 
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/ControlNet/control_v11p_sd15_canny.pth ./models/ControlNet/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/ControlNet/control_v11p_sd15_openpose.pth ./models/ControlNet/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/ControlNet/control_v11p_sd15_canny.pth /home/ubuntu/stable-diffusion-webui/models/ControlNet/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/ControlNet/control_v11p_sd15_openpose.pth /home/ubuntu/stable-diffusion-webui/models/ControlNet/
 
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_xl.safetensors ./models/Lora/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors ./models/Lora/
-cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/nendoroid_xl_v7.safetensors ./models/Lora/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_xl.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/
+cp s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/models/Lora/nendoroid_xl_v7.safetensors /home/ubuntu/stable-diffusion-webui/models/Lora/
