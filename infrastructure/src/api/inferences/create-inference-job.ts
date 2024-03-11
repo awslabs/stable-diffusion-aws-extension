@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
-  aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
   aws_iam,
@@ -12,10 +11,10 @@ import {
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
-import {Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import {Size} from "aws-cdk-lib/core";
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -83,6 +82,9 @@ export class CreateInferenceJobApi {
           inference_type: {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],
+          },
+          payload_string: {
+            type: JsonSchemaType.STRING,
           },
           models: {
             type: JsonSchemaType.OBJECT,
@@ -188,10 +190,10 @@ export class CreateInferenceJobApi {
   }
 
   private createInferenceJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_inference_job.py',
       handler: 'handler',
       memorySize: 10240,
@@ -210,7 +212,7 @@ export class CreateInferenceJobApi {
     });
 
 
-    const createInferenceJobIntegration = new apigw.LambdaIntegration(
+    const createInferenceJobIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

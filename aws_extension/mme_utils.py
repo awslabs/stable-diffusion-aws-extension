@@ -97,15 +97,18 @@ def checkspace_and_update_models(selected_models):
         shared.opts.sd_vae = selected_models['VAE'][0]['model_name']
         sd_vae.reload_vae_weights()
 
+
 def download_model(model_name, model_s3_pos):
     #download from s3
     os.system(f'./tools/s5cmd cp {model_s3_pos} ./')
     os.system(f"tar xvf {model_name}")
 
+
 def upload_model(model_type, model_name, model_s3_pos):
     #upload model to s3
     os.system(f"tar cvf {model_name} {models_path[model_type]}/{model_name}")
     os.system(f'./tools/s5cmd cp {model_name} {model_s3_pos}')
+
 
 def download_and_update(model_type, model_s3_pos):
     #download from s3
@@ -145,15 +148,18 @@ def download_and_update(model_type, model_s3_pos):
     if model_type == 'VAE':
         sd_vae.refresh_vae_list()
 
+
 def decode_base64_to_image(encoding):
     if encoding.startswith("data:image/"):
         encoding = encoding.split(";")[1].split(",")[1]
     return Image.open(io.BytesIO(base64.b64decode(encoding)))
 
+
 def file_to_base64(file_path) -> str:
     with open(file_path, "rb") as f:
         im_b64 = base64.b64encode(f.read())
         return str(im_b64, 'utf-8')
+
 
 def get_bucket_and_key(s3uri):
         pos = s3uri.find('/', 5)

@@ -10,7 +10,7 @@ from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
-from inferences.start_inference_job import start_inference_job
+from start_inference_job import start_inference_job
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
@@ -37,7 +37,7 @@ class CreateInferenceEvent:
     # todo user_id is not used in this lambda, but we need to keep it for the compatibility with the old code
     filters: dict[str, Any] = None
     user_id: Optional[str] = ""
-    endpoint_payload: Optional[str] = None
+    payload_string: Optional[str] = None
 
 
 # POST /inferences
@@ -47,6 +47,12 @@ def handler(raw_event, context):
         request_id = context.aws_request_id
         logger.info(json.dumps(json.loads(raw_event['body'])))
         event = CreateInferenceEvent(**json.loads(raw_event['body']))
+
+        if event.payload_string:
+            try:
+                json.loads(event.payload_string)
+            except json.JSONDecodeError:
+                return bad_request(message='payload_string must be valid json string')
 
         username = permissions_check(raw_event, [PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE])
 
@@ -70,7 +76,7 @@ def handler(raw_event, context):
         param_s3_key = f'{get_base_inference_param_s3_key(_type, request_id)}/api_param.json'
         s3_location = f's3://{bucket_name}/{param_s3_key}'
         presign_url = None
-        if event.endpoint_payload is None:
+        if event.payload_string is None:
             presign_url = generate_presign_url(bucket_name, param_s3_key)
         inference_job = InferenceJob(
             InferenceJobId=request_id,
@@ -80,7 +86,7 @@ def handler(raw_event, context):
             taskType=_type,
             inference_type=event.inference_type,
             owner_group_or_role=[username],
-            endpoint_payload=event.endpoint_payload,
+            payload_string=event.payload_string,
             params={
                 'input_body_s3': s3_location,
                 'input_body_presign_url': presign_url,
@@ -140,7 +146,7 @@ def handler(raw_event, context):
 
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
-        if event.endpoint_payload:
+        if event.payload_string:
             return start_inference_job(inference_job, username)
 
         return created(data=resp)

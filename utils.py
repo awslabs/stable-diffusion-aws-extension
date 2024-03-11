@@ -1,6 +1,5 @@
 import logging
 import os
-import requests
 import boto3
 import botocore
 import boto3.s3.transfer as s3transfer
@@ -11,14 +10,20 @@ import json
 import gradio as gr
 
 sys.path.append(os.getcwd())
-# from modules.timer import Timer
+
 import tarfile
 
 import shutil
 from pathlib import Path
 import psutil
 
-LOGGING_LEVEL = logging.DEBUG
+LOGGING_LEVEL = os.environ.get('LOG_LEVEL') or logging.ERROR
+
+logger = logging.getLogger(__name__)
+logger.setLevel(LOGGING_LEVEL)
+
+s3_client = boto3.client('s3')
+
 
 class ModelsRef:
     def __init__(self):
@@ -80,8 +85,8 @@ class ModelsRef:
 # hyper_models_Ref = ModelsRef()
 # embedding_Ref = ModelsRef()
 
+
 def upload_folder_to_s3(local_folder_path, bucket_name, s3_folder_path):
-    s3_client = boto3.client('s3')
     for root, dirs, files in os.walk(local_folder_path):
         for file in files:
             local_file_path = os.path.join(root, file)
@@ -99,7 +104,6 @@ def upload_folder_to_s3_by_tar(local_folder_path, bucket_name, s3_folder_path):
     #         local_file_path = os.path.join(root, file)
     #         tar.add(local_file_path)
     # tar.close()
-    s3_client = boto3.client('s3')
     s3_client.upload_file(tar_name, bucket_name, os.path.join(s3_folder_path, tar_name))
     # os.system(f"rm {tar_name}")
     rm(tar_name, recursive=True)
@@ -116,7 +120,6 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
 
     # Upload the file
     try:
-        s3_client = boto3.client('s3')
         s3_client.upload_file(file_name, bucket, object_name)
         print(f"File {file_name} uploaded to {bucket}/{object_name}")
     except Exception as e:
@@ -124,9 +127,11 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
         return False
     return True
 
+
 def upload_file_to_s3_by_presign_url(local_path, s3_presign_url):
     response = requests.put(s3_presign_url, open(local_path, "rb"))
     response.raise_for_status()
+
 
 def upload_multipart_files_to_s3_by_signed_url(local_path, signed_urls, part_size):
     integral_uploaded = False
@@ -168,7 +173,6 @@ def download_folder_from_s3(bucket_name, s3_folder_path, local_folder_path):
 
 
 def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, target_dir="."):
-    s3_client = boto3.client('s3')
     s3_client.download_file(bucket_name, s3_tar_path, local_tar_path)
     # tar_name = os.path.basename(s3_tar_path)
     # os.system(f"tar xvf {local_tar_path} -C {target_dir}")
@@ -181,7 +185,6 @@ def download_folder_from_s3_by_tar(bucket_name, s3_tar_path, local_tar_path, tar
 
 
 def download_file_from_s3(bucket_name, s3_file_path, local_file_path):
-    s3_client = boto3.client('s3')
     s3_client.download_file(bucket_name, s3_file_path, local_file_path)
 
 
@@ -189,13 +192,16 @@ def get_bucket_name_from_s3_url(s3_path) -> str:
     o = urlparse(s3_path, allow_fragments=False)
     return o.netloc
 
+
 def get_bucket_name_from_s3_path(s3_path) -> str:
     s3_path = s3_path.replace("s3://", "")
     return s3_path.split("/")[0]
 
+
 def get_path_from_s3_path(s3_path) -> str:
     s3_path = s3_path.replace("s3://", "")
     return "/".join(s3_path.split("/")[1:])
+
 
 def split_s3_path(s3_path):
     path_parts = s3_path.replace("s3://", "").split("/")
@@ -205,9 +211,8 @@ def split_s3_path(s3_path):
 
 
 def read_from_s3(s3_path):
-    s3 = boto3.client('s3')
     bucket, key = split_s3_path(s3_path)
-    s3_resp = s3.get_object(
+    s3_resp = s3_client.get_object(
         Bucket=bucket,
         Key=key,
     )
@@ -216,6 +221,7 @@ def read_from_s3(s3_path):
         return s3_resp['Body'].read()
 
     raise Exception(f'no content for file {s3_path}')
+
 
 def fast_upload(session, bucketname, s3dir, filelist, progress_func=None, workers=10):
     # timer = Timer()
@@ -239,6 +245,7 @@ def fast_upload(session, bucketname, s3dir, filelist, progress_func=None, worker
     # timer.record("upload")
     # print(timer.summary())
 
+
 def save_variable_to_json(variable_name, variable_value, filename='sagemaker_ui.json'):
     data = {}
 
@@ -250,6 +257,7 @@ def save_variable_to_json(variable_name, variable_value, filename='sagemaker_ui.
 
     with open(filename, 'w') as json_file:
         json.dump(data, json_file)
+
 
 def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
     if not os.path.exists(filename):
@@ -284,6 +292,7 @@ def is_gcr():
 
 def has_config():
     return host_url() and api_key()
+
 
 """
     Description: Below functions are used to replace existing shell command implementation with os.system method, which is not os agonostic and not recommended.
@@ -342,6 +351,7 @@ def tar(mode, archive, sfiles=None, verbose=False, change_dir=None):
                 else:
                     tar.extract(file)
 
+
 def rm(path, force=False, recursive=False):
     """
     Description:
@@ -370,6 +380,7 @@ def rm(path, force=False, recursive=False):
     except Exception as e:
         if not force:
             raise e
+
 
 def cp(src, dst, recursive=False, dereference=False, preserve=True):
     """
@@ -451,6 +462,7 @@ def mv(src, dest, force=False):
     else:
         raise FileNotFoundError(f"Source path '{src}' does not exist")
 
+
 def format_size(size, human_readable):
     if human_readable:
         for unit in ['B', 'K', 'M', 'G', 'T', 'P']:
@@ -459,6 +471,7 @@ def format_size(size, human_readable):
             size /= 1024
     else:
         return str(size)
+
 
 def df(show_all=False, human_readable=False):
     """
@@ -493,6 +506,7 @@ def df(show_all=False, human_readable=False):
         result.append(partition_info)
 
     return result
+
 
 if __name__ == '__main__':
     import sys

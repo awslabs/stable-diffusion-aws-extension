@@ -11,7 +11,6 @@ from common.response import no_content
 from libs.utils import response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)

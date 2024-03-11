@@ -37,7 +37,7 @@ def get_infer_data(inference_id: str):
 
     item = inference['Item']
 
-    log_json(logger, "inference job", item)
+    log_json("inference job", item)
 
     img_presigned_urls = []
     if 'image_names' in item:

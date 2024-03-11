@@ -1,6 +1,5 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
-  aws_apigateway as apigw,
   aws_apigateway,
   aws_dynamodb,
   aws_iam,
@@ -91,15 +90,15 @@ export class StopTrainingJobApi {
   }
 
   private stopTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'stop_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         TRAIN_TABLE: this.trainTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
@@ -107,7 +106,7 @@ export class StopTrainingJobApi {
       layers: [this.layer],
     });
 
-    const integration = new apigw.LambdaIntegration(
+    const integration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

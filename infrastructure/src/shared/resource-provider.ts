@@ -7,8 +7,7 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-
-export const ESD_FILE_VERSION = '1.8.0';
+import { ESD_FILE_VERSION } from './const';
 
 export interface ResourceProviderProps {
   bucketName?: string;

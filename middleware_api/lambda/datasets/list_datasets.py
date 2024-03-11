@@ -9,7 +9,6 @@ from common.response import ok, bad_request, unauthorized
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
     response_error
 
-dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
 user_table = os.environ.get('MULTI_USER_TABLE')
