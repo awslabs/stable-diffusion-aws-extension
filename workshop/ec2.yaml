@@ -170,7 +170,10 @@ Resources:
           
           curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
           
-          cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+          cd stable-diffusion-webui/extensions
+          git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
+          
+          cd stable-diffusion-aws-extension
           git checkout ${Branch}
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
