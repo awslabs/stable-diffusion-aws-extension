@@ -95,6 +95,10 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 7860
+          ToPort: 7860
+          CidrIp: 0.0.0.0/0
 
   WebUiInternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -213,7 +217,11 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
-  WebUIURL:
+  WebUINginxURL:
     Description: URL for Stable Diffusion WebUI
     # add port 7860 to the end of the URL
     Value: !Sub http://${WebUiEIP}
+  WebUIURL:
+    Description: URL for Stable Diffusion WebUI
+    # add port 7860 to the end of the URL
+    Value: !Sub http://${WebUiEIP}:7860
