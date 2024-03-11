@@ -8,6 +8,13 @@ Parameters:
       - main
       - dev
     Default: main
+  InstanceType:
+    Description: EC2 Instance Type of the ESD to deploy
+    Type: String
+    AllowedValues:
+      - c5.4xlarge
+      - ml.g5.2xlarge
+    Default: c5.4xlarge
 
 Mappings:
   RegionToAmiId:
@@ -134,7 +141,7 @@ Resources:
   WebUiEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.4xlarge
+      InstanceType: !Ref InstanceType
       IamInstanceProfile: !Ref WebUiInstanceProfile
       SubnetId: !Ref WebUiSubnet
       ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
