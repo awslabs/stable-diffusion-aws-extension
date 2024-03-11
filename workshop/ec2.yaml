@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
+Description: (SO8032) - Extension for Stable Diffusion on AWS - EC2 Instance
 Parameters:
   Branch:
     Description: Branch of the ESD to deploy
@@ -55,18 +55,12 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      Tags:
-        - Key: Name
-          Value: MyVPC
   WebUiSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref WebUiVPC
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: MySubnet
   WebUiInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -75,8 +69,8 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: [ec2.amazonaws.com]
-            Action: ['sts:AssumeRole']
+              Service: [ ec2.amazonaws.com ]
+            Action: [ 'sts:AssumeRole' ]
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
@@ -101,23 +95,51 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+
+  WebUiInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  MyVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref WebUiVPC
+      InternetGatewayId: !Ref WebUiInternetGateway
+
+  WebUiRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref WebUiVPC
+      Tags:
+        - Key: Name
+          Value: MyRouteTable
+
+  MyRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref WebUiRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref WebUiInternetGateway
+
+  WebUiSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WebUiSubnet
+      RouteTableId: !Ref WebUiRouteTable
+
   WebUiEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: c5.4xlarge
       IamInstanceProfile: !Ref WebUiInstanceProfile
       SubnetId: !Ref WebUiSubnet
-      ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
+      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
             VolumeSize: 1024
             VolumeType: gp3
-      "Tags" : [
-        {"Key" : "Name", "Value" : !Sub "sd-on-aws-${Branch}"},
-      ]
-      SecurityGroups:
-        - Ref: WebUiSecurityGroup
+      SecurityGroupIds:
+        - !GetAtt WebUiSecurityGroup.GroupId
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
@@ -151,7 +173,7 @@ Resources:
           export AWS_REGION=us-east-1
           sudo wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/models.txt
           sudo /s5cmd run models.txt
-        
+          
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
           cat > sd-webui.service <<EOF
