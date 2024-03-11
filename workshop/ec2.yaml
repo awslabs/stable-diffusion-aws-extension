@@ -13,8 +13,8 @@ Parameters:
     Type: String
     AllowedValues:
       - c5.4xlarge
-      - ml.g5.2xlarge
-      - ml.g5.4xlarge
+      - g5.2xlarge
+      - g5.4xlarge
     Default: c5.4xlarge
 
 Mappings:
