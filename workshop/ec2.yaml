@@ -55,12 +55,14 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
+
   WebUiSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref WebUiVPC
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
+
   WebUiInstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -74,12 +76,14 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
   WebUiInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
       Roles:
         - Ref: WebUiInstanceRole
+
   WebUiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -103,7 +107,7 @@ Resources:
   WebUiInternetGateway:
     Type: AWS::EC2::InternetGateway
 
-  MyVPCGatewayAttachment:
+  WebUiVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref WebUiVPC
@@ -113,11 +117,8 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref WebUiVPC
-      Tags:
-        - Key: Name
-          Value: MyRouteTable
 
-  MyRoute:
+  WebUiRoute:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId: !Ref WebUiRouteTable
