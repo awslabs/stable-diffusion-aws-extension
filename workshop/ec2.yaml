@@ -169,6 +169,12 @@ Resources:
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502.html
           sudo systemctl enable nginx
           sudo systemctl restart nginx
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          export AWS_REGION=us-east-1
+          sudo wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/models.txt
+          sudo /s5cmd run models.txt
           
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
@@ -211,14 +217,6 @@ Resources:
 
           sudo systemctl enable sd-webui.service
           sudo systemctl start sd-webui.service
-          
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          export AWS_REGION=us-east-1
-          sudo wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/models.txt
-          sudo /s5cmd run models.txt
-          
-          sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
 
   WebUiEIP:
     Type: AWS::EC2::EIP
