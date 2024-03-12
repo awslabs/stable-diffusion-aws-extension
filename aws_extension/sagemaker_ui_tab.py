@@ -10,6 +10,8 @@ from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
 from modules import shared
 
+import subprocess
+import threading
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -59,6 +61,17 @@ all_permissions = []
 for resource in all_resources:
     for action in all_actions:
         all_permissions.append(f'{resource}:{action}')
+
+
+def run_command():
+    subprocess.run(["sleep", "5"])
+    subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
+
+
+def restart_sd_webui_service():
+    thread = threading.Thread(target=run_command)
+    thread.start()
+    return "Restarting the service after 5 seconds..."
 
 
 def on_ui_tabs():
@@ -1166,6 +1179,11 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
             return f'{message}, but update setting failed'
     except Exception as e:
         return f'{message}, but update setting failed: {e}'
+
+    if os.path.exists("/etc/systemd/system/sd-webui.service"):
+        restart_sd_webui_service()
+        return f"Setting Updated, Service will restart in 5 seconds"
+
     return f"{message} & Setting Updated"
 
 
