@@ -1182,6 +1182,7 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
 
     if os.path.exists("/etc/systemd/system/sd-webui.service"):
         restart_sd_webui_service()
+
         return f"Setting Updated, Service will restart in 5 seconds"
 
     return f"{message} & Setting Updated"
