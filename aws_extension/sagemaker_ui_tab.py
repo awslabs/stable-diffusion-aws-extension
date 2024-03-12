@@ -65,6 +65,7 @@ for resource in all_resources:
 
 def run_command():
     subprocess.run(["sleep", "5"])
+    subprocess.run(["sudo", "systemctl", "stop", "sd-webui-init.service"])
     subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
 
 
