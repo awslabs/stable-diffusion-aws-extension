@@ -838,18 +838,18 @@ def sagemaker_endpoint_tab():
                     with gr.Row(visible=True) as autoscaling_enabled_filter_row:
                         min_instance_number_dropdown = gr.Number(value=0, label="Min Instance Number", minimum=0,
                                                                  visible=True)
+                custom_extensions = gr.Textbox(
+                    value="",
+                    lines=5,
+                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
+                    label=f"Custom Extension URLs (Optional) - Please separate with line breaks",
+                    visible=False
+                )
                 custom_docker_image_uri = gr.Textbox(
                     value="",
                     lines=1,
                     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
                     label=f"Custom Docker Image URI (Optional)",
-                    visible=False
-                )
-                custom_extensions = gr.Textbox(
-                    value="",
-                    lines=5,
-                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
-                    label=f"Custom Extension URLs (Optional)",
                     visible=False
                 )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',

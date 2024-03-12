@@ -58,6 +58,9 @@ def check_custom_extensions(event: CreateEndpointEvent):
 
         logger.info(f"formatted custom_extensions: {event.custom_extensions}")
 
+        if len(extensions_array) >= 3:
+            raise BadRequestException(message="custom_extensions should be at most 3")
+
     return event
 
 
