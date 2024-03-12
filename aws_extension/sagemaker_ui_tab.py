@@ -611,7 +611,7 @@ def model_upload_tab():
 
             with gr.Column():
                 model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                elem_id="sagemaker_model_update_button", size=(200, 50))
+                                                elem_id="sagemaker_model_update_button")
                 webui_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button.click(fn=sagemaker_ui.sagemaker_upload_model_s3,
                                           # _js="model_update",
@@ -647,12 +647,10 @@ def model_upload_tab():
                 upload_percent_label = gr.HTML(label="upload percent process", elem_id="progress-percent")
             with gr.Column():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                      elem_id="sagemaker_model_update_button_local",
-                                                      size=(200, 50))
+                                                      elem_id="sagemaker_model_update_button_local")
                 mycomp_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button_local.click(_js="uploadFiles",
                                                 fn=sagemaker_ui.sagemaker_upload_model_s3_local,
-                                                # inputs=[sagemaker_ui.checkpoint_info],
                                                 outputs=[mycomp_upload_model_textbox]
                                                 )
 
@@ -673,8 +671,7 @@ def model_upload_tab():
                 file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
             with gr.Row():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                      elem_id="sagemaker_model_update_button_url",
-                                                      size=(200, 50))
+                                                      elem_id="sagemaker_model_update_button_url")
                 model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
                                                 inputs=[model_type_url_drop_down, file_upload_url_component,
                                                         file_upload_params_component],
