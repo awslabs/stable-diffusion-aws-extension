@@ -12,6 +12,7 @@ Parameters:
     Description: EC2 Instance Type of the ESD to deploy
     Type: String
     AllowedValues:
+      - c5.2xlarge
       - c5.4xlarge
       - g5.2xlarge
       - g5.4xlarge
