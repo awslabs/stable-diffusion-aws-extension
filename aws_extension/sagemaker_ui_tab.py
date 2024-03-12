@@ -10,6 +10,7 @@ from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
 
+import subprocess
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -96,9 +97,38 @@ def on_ui_tabs():
             with gr.Row():
                 sagemaker_part = sagemaker_endpoint_tab()
                 endpoint_list_df = list_sagemaker_endpoints_tab()
-        with gr.Tab(label='Create AWS dataset', variant='panel'):
+        with gr.Tab(label='Dataset Management', variant='panel'):
             with gr.Row():
-                dataset_asset = dataset_tab()
+                dataset_tab()
+        with gr.Tab(label='Tools', variant='panel'):
+            with gr.Row():
+                with gr.Column():
+                    def service_restart():
+                        try:
+                            result = subprocess.run('sudo systemctl restart sd-webui.service',
+                                                    check=True,
+                                                    capture_output=True,
+                                                    text=True)
+                            return result.stdout
+                        except Exception as e:
+                            return e
+
+                    restart_info = gr.Textbox(show_label=False, value=f'Restart your WebUI Service, need refresh page')
+                    restart = gr.Button(value="Restart Service", variant="primary")
+                    restart.click(fn=service_restart, inputs=[], outputs=[restart_info])
+                with gr.Column():
+                    def ec2_reboot():
+                        try:
+                            result = subprocess.run('sudo reboot',
+                                                    check=True,
+                                                    capture_output=True,
+                                                    text=True)
+                            return result.stdout
+                        except Exception as e:
+                            return e
+                    reboot_info = gr.Textbox(show_label=False, value=f'Reboot your EC2, need refresh page')
+                    reboot = gr.Button(value="Reboot EC2", variant="primary")
+                    reboot.click(fn=ec2_reboot, inputs=[], outputs=[reboot_info])
 
         def get_version_info():
             if not hasattr(shared.demo.server_app, 'api_version'):
