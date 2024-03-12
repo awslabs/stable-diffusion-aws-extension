@@ -167,10 +167,9 @@ Resources:
           sudo apt install nginx -y
           sudo ufw allow 'Nginx HTTP'
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502_initializing.html
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502.html
           sudo systemctl enable nginx
           sudo systemctl restart nginx
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502_starting.html
           
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
@@ -219,9 +218,29 @@ Resources:
           sudo chown root:root /etc/systemd/system/sd-webui.service
           sudo systemctl enable sd-webui.service
           
-          su ubuntu
-          cd /home/ubuntu/stable-diffusion-webui
-          /home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
+          cat > sd-webui-init.service <<EOF
+          [Unit]
+          Description=Stable Diffusion UI server
+          After=network.target
+          StartLimitIntervalSec=0
+
+          [Service]
+          WorkingDirectory=/home/ubuntu/stable-diffusion-webui
+          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
+          Type=simple
+          Restart=always
+          RestartSec=3
+          User=ubuntu
+          StartLimitAction=reboot
+
+          [Install]
+          WantedBy=default.target
+
+          EOF
+          sudo mv sd-webui-init.service /etc/systemd/system
+          sudo chown root:root /etc/systemd/system/sd-webui-init.service
+          sudo systemctl disable sd-webui-init.service
+          sudo systemctl start sd-webui-init.service
 
   WebUiEIP:
     Type: AWS::EC2::EIP
