@@ -14,6 +14,34 @@ then
     exit 1
 fi
 
+if [ -d "stable-diffusion-webui" ]; then
+    echo "Removing existing project..."
+    rm -rf stable-diffusion-webui
+fi
+
+# Sync github repo contents
+cp ../install.sh .
+sh install.sh
+rm install.sh
+
+if [ "$mode" = "" ]
+then
+    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+    git checkout master
+    git pull
+    cd -
+else
+    cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
+    git checkout $mode
+    git pull
+    if [ -n "$commit_id" ]
+    then
+        git reset --hard $commit_id
+        echo `git rev-parse HEAD`
+    fi
+    cd -
+fi
+
 if [ "$tag" = "" ]
 then
     tag=latest
@@ -56,8 +84,8 @@ cp ${dockerfile} .
 fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 echo $fullname
 
-docker build -t ${image_name}:${tag} -f ${dockerfile} .
-docker tag ${image_name}:${tag} ${fullname}
+docker build  -t ${image_name}:${tag} -f ${dockerfile} .
+docker tag ${image_name} ${fullname}
 docker push ${fullname}
 echo "docker push ${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 echo "Completed"
