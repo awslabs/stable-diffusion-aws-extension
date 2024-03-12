@@ -1,7 +1,7 @@
 [model]
 v2 = false
 v_parameterization = false
-pretrained_model_name_or_path = "./sd-models/v1-5-pruned-emaonly.safetensors"
+pretrained_model_name_or_path = "models/Stable-diffusion/sd_xl_base_1.0.safetensors"
 
 [dataset]
 train_data_dir = "./train/input"
@@ -56,3 +56,5 @@ max_bucket_reso = 1024
 caption_extension = ".txt"
 max_token_length = 225
 seed = 1337
+no_half_vae = true
+
