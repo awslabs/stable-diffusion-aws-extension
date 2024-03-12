@@ -11,6 +11,7 @@ from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
 
 import subprocess
+import threading
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -62,8 +63,18 @@ for resource in all_resources:
         all_permissions.append(f'{resource}:{action}')
 
 
+def run_command():
+    subprocess.run(["sleep", "5"])
+    subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
+
+
+def restart_sd_webui_service():
+    thread = threading.Thread(target=run_command)
+    thread.start()
+    return "Restarting the service after 5 seconds..."
+
+
 def on_ui_tabs():
-    buildin_model_list = ['AWS JumpStart Model', 'AWS BedRock Model', 'Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
         invisible_user_name_for_ui = gr.Textbox(type='text', visible=False, interactive=False, container=False,
                                                 show_label=False, elem_id='invisible_user_name_for_ui')
@@ -97,38 +108,9 @@ def on_ui_tabs():
             with gr.Row():
                 sagemaker_part = sagemaker_endpoint_tab()
                 endpoint_list_df = list_sagemaker_endpoints_tab()
-        with gr.Tab(label='Dataset Management', variant='panel'):
+        with gr.Tab(label='Create AWS dataset', variant='panel'):
             with gr.Row():
-                dataset_tab()
-        with gr.Tab(label='Tools', variant='panel'):
-            with gr.Row():
-                with gr.Column():
-                    def service_restart():
-                        try:
-                            result = subprocess.run('sudo systemctl restart sd-webui.service',
-                                                    check=True,
-                                                    capture_output=True,
-                                                    text=True)
-                            return result.stdout
-                        except Exception as e:
-                            return e
-
-                    restart_info = gr.Textbox(show_label=False, value=f'Restart your WebUI Service, need refresh page')
-                    restart = gr.Button(value="Restart Service", variant="primary")
-                    restart.click(fn=service_restart, inputs=[], outputs=[restart_info])
-                with gr.Column():
-                    def ec2_reboot():
-                        try:
-                            result = subprocess.run('sudo reboot',
-                                                    check=True,
-                                                    capture_output=True,
-                                                    text=True)
-                            return result.stdout
-                        except Exception as e:
-                            return e
-                    reboot_info = gr.Textbox(show_label=False, value=f'Reboot your EC2, need refresh page')
-                    reboot = gr.Button(value="Reboot EC2", variant="primary")
-                    reboot.click(fn=ec2_reboot, inputs=[], outputs=[reboot_info])
+                dataset_asset = dataset_tab()
 
         def get_version_info():
             if not hasattr(shared.demo.server_app, 'api_version'):
@@ -1253,6 +1235,11 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
             return f'{message}, but update setting failed'
     except Exception as e:
         return f'{message}, but update setting failed: {e}'
+
+    if os.path.exists("/etc/systemd/system/sd-webui.service"):
+        restart_sd_webui_service()
+        return f"Setting Updated, Service will restart in 5 seconds"
+
     return f"{message} & Setting Updated"
 
 
