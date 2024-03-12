@@ -770,7 +770,7 @@ def model_upload_tab():
 
 
 def sagemaker_endpoint_tab():
-    with gr.Column() as sagemaker_tab:
+    with (gr.Column() as sagemaker_tab):
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
         with gr.Column(variant="panel"):
@@ -845,6 +845,13 @@ def sagemaker_endpoint_tab():
                     label=f"Custom Docker Image URI (Optional)",
                     visible=False
                 )
+                custom_extensions = gr.Textbox(
+                    value="",
+                    lines=5,
+                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
+                    label=f"Custom Extension URLs (Optional)",
+                    visible=False
+                )
             sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
             create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
@@ -855,6 +862,7 @@ def sagemaker_endpoint_tab():
                                            scale_count,
                                            autoscale,
                                            docker_image_uri,
+                                           custom_extensions,
                                            target_user_roles,
                                            min_instance_number,
                                            pr: gr.Request):
@@ -865,6 +873,7 @@ def sagemaker_endpoint_tab():
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
                                                     custom_docker_image_uri=docker_image_uri,
+                                                    custom_extensions=custom_extensions,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     min_instance_number=min_instance_number,
@@ -878,19 +887,21 @@ def sagemaker_endpoint_tab():
                                                   instance_count_dropdown,
                                                   autoscaling_enabled,
                                                   custom_docker_image_uri,
+                                                  custom_extensions,
                                                   user_roles,
                                                   min_instance_number_dropdown,
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
-            show_custom_docker_image = False
+            show_byoc = False
             if checkbox_state:
                 username = cloud_auth_manager.username
                 user = api_manager.get_user_by_username(username=username, user_token=username)
                 if 'roles' in user:
-                    show_custom_docker_image = 'byoc' in user['roles']
-            return gr.update(visible=checkbox_state), custom_docker_image_uri.update(visible=show_custom_docker_image)
+                    show_byoc = 'byoc' in user['roles']
+            return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
+                visible=show_byoc), custom_extensions.update(visible=show_byoc)
 
         def toggle_autoscaling_enabled_rows(checkbox_state):
             if checkbox_state:
@@ -913,7 +924,7 @@ def sagemaker_endpoint_tab():
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
-            outputs=[filter_row, custom_docker_image_uri]
+            outputs=[filter_row, custom_docker_image_uri, custom_extensions]
         )
 
         autoscaling_enabled.change(

@@ -62,6 +62,7 @@ class CloudApiManager:
                          instance_type,
                          initial_instance_count=1,
                          custom_docker_image_uri="",
+                         custom_extensions="",
                          autoscaling_enabled=True,
                          user_roles=None,
                          min_instance_number=1,
@@ -87,6 +88,7 @@ class CloudApiManager:
             'max_instance_number': initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
+            "custom_extensions": custom_extensions,
             'assign_to_roles': user_roles,
             "creator": user_token,
         }

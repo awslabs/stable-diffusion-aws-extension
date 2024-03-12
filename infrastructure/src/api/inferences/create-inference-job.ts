@@ -79,6 +79,9 @@ export class CreateInferenceJobApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          custom_extensions: {
+            type: JsonSchemaType.STRING,
+          },
           inference_type: {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],

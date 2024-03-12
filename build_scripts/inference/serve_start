@@ -16,6 +16,7 @@ echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "CREATED_AT: $CREATED_AT"
 echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
+echo "EXTENSIONS: $EXTENSIONS"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
 
