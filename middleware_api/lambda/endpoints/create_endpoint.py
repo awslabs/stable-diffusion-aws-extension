@@ -210,7 +210,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 300,  # Specify the health checkup timeout in seconds
         }
     ]
 
