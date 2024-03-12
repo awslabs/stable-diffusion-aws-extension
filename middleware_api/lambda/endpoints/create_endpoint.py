@@ -44,23 +44,28 @@ class CreateEndpointEvent:
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
+    custom_extensions: str = None
+
+
+def check_custom_extensions(event: CreateEndpointEvent):
+    if event.custom_extensions:
+        logger.info(f"custom_extensions: {event.custom_extensions}")
+        extensions_array = re.split('[ ,\n]+', event.custom_extensions)
+        extensions_array = list(set(extensions_array))
+        extensions_array = list(filter(None, extensions_array))
+        # make extensions_array to string again
+        event.custom_extensions = ','.join(extensions_array)
+
+        logger.info(f"formatted custom_extensions: {event.custom_extensions}")
+
+    return event
 
 
 def get_docker_image_uri(event: CreateEndpointEvent):
-    image_url = INFERENCE_ECR_IMAGE_URL
-
     if event.custom_docker_image_uri:
-        image_url = event.custom_docker_image_uri
+        return event.custom_docker_image_uri
 
-        if aws_region.startswith('cn-'):
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com\.cn)/([^/]+)/([^:]+):(.+)$'
-        else:
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com)/([^/]+)/([^:]+):(.+)$'
-
-        if not re.match(pattern, image_url):
-            raise Exception(f"Invalid docker image uri {image_url}")
-
-    return image_url
+    return INFERENCE_ECR_IMAGE_URL
 
 
 # POST /endpoints
@@ -85,6 +90,8 @@ def handler(raw_event, ctx):
             if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
                 raise BadRequestException(
                     f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
+
+        event = check_custom_extensions(event)
 
         endpoint_id = str(uuid.uuid4())
         short_id = endpoint_id[:7]
@@ -116,7 +123,7 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id)
+        _create_sagemaker_model(model_name, image_url, model_data_url, endpoint_name, endpoint_id, event)
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
@@ -169,17 +176,18 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
-def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id):
+def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
             'BUCKET_NAME': S3_BUCKET_NAME,
-            'INSTANCE_TYPE': instance_type,
+            'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
             'ESD_FILE_VERSION': ESD_FILE_VERSION,
+            'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
         },
     }
