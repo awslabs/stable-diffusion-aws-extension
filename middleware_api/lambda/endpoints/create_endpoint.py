@@ -58,6 +58,9 @@ def check_custom_extensions(event: CreateEndpointEvent):
 
         logger.info(f"formatted custom_extensions: {event.custom_extensions}")
 
+        if len(extensions_array) >= 3:
+            raise BadRequestException(message="custom_extensions should be at most 3")
+
     return event
 
 
@@ -210,7 +213,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 300,  # Specify the health checkup timeout in seconds
         }
     ]
 

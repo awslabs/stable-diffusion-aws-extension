@@ -1,10 +1,18 @@
 #!/bin/bash
+echo "Running in $(bash --version)"
+trap 'echo "error_lock" > error_lock; exit 1' ERR
 
+if [ -f "error_lock" ]; then
+    echo "init failed, please check the log"
+    sleep 10
+    exit 1
+fi
+
+echo "---------------------------------------------------------------------------------"
 cat serve_start
-echo "---------------------------------------------------------------------------------"
 
-printenv
 echo "---------------------------------------------------------------------------------"
+printenv
 
 mkdir -p ~/.aws
 echo "[default]
@@ -19,7 +27,7 @@ echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
 echo "EXTENSIONS: $EXTENSIONS"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
-
+echo "---------------------------------------------------------------------------------"
 instance_package="g5"
 if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
     instance_package="g4"
@@ -44,7 +52,7 @@ echo "decompress files: $cost seconds"
 
 start_at=$(date +%s)
 if [ -d "/opt/ml/code/extensions" ]; then
-    echo "/opt/ml/code/extensions exists"
+    echo "/opt/ml/code/extensions already exists, backup and remove it"
     mv -f /opt/ml/code/extensions/* $instance_package/stable-diffusion-webui/extensions/
     rm -rf /opt/ml/code/extensions
 fi
@@ -63,12 +71,32 @@ end_at=$(date +%s)
 cost=$((end_at-total_start_at))
 echo "total cost: $cost seconds"
 
+# if $EXTENSIONS is not empty, it will be executed
+if [ -n "$EXTENSIONS" ]; then
+    echo "---------------------------------------------------------------------------------"
+    cd /opt/ml/code/extensions/ || exit 1
+
+    read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
+
+    for git_repo in "${array[@]}"; do
+      start_at=$(date +%s)
+      echo "git clone $git_repo"
+      git clone "$git_repo"
+      end_at=$(date +%s)
+      cost=$((end_at-start_at))
+      echo "git clone $git_repo: $cost seconds"
+    done
+fi
+
+cd /opt/ml/code || exit 1
+
 # Uncomment the lines below if you need to uninstall and install `accelerate`
 # pip uninstall -y accelerate
 # pip install accelerate
 
 chmod +x /opt/conda/bin/*
 
+echo "---------------------------------------------------------------------------------"
 echo "accelerate launch..."
 
 accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-torch-cuda-test --skip-install --skip-version-check --no-hashing --nowebui
