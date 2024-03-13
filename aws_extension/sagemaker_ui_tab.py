@@ -1053,11 +1053,12 @@ def dataset_tab():
                 return file_paths
 
             file_output = gr.File()
-            upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"],
+            upload_button = gr.UploadButton("Click to Upload a File",
+                                            file_types=["image", "video", "text"],
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
-            def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
+            def create_dataset(files, dataset_name, dataset_prefix, dataset_desc, pr: gr.Request):
                 if not files:
                     return 'Error: No files selected', None, None, None, None
                 if not dataset_name:
@@ -1079,6 +1080,7 @@ def dataset_tab():
                 payload = {
                     "dataset_name": dataset_name,
                     "content": dataset_content,
+                    "prefix": dataset_prefix,
                     "params": {
                         "description": dataset_desc
                     },
@@ -1123,12 +1125,14 @@ def dataset_tab():
                                                     placeholder="Please input dataset description",
                                                     label="Dataset Description",
                                                     elem_id="sd_dataset_description_textbox")
+            dataset_prefix = gr.Textbox(value="", lines=1, placeholder="",
+                                        label="Path Prefix (Optional)", elem_id="sd_dataset_prefix_textbox")
             create_dataset_button = gr.Button("Create Dataset", variant="primary",
                                               elem_id="sagemaker_dataset_create_button")  # size=(200, 50)
             dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
             create_dataset_button.click(
                 fn=create_dataset,
-                inputs=[upload_button, dataset_name_upload, dataset_description_upload],
+                inputs=[upload_button, dataset_name_upload, dataset_prefix, dataset_description_upload],
                 outputs=[
                     dataset_create_result,
                     dataset_name_upload,
