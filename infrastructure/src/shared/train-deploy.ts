@@ -98,6 +98,7 @@ export class TrainDeploy {
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       logLevel: props.logLevel,
+      multiUserTable: multiUserTable,
     });
 
     // GET /checkpoints
@@ -229,6 +230,7 @@ export class TrainDeploy {
       router: props.routers.trainings,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
+      multiUserTable: multiUserTable,
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
@@ -243,6 +245,7 @@ export class TrainDeploy {
       router: trainJobRouter,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
+      multiUserTable: multiUserTable,
       httpMethod: 'GET',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,

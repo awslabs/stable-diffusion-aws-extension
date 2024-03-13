@@ -157,6 +157,9 @@ def get_user_name(event: any):
 def permissions_check(event: any, permissions: [str]):
     username = get_user_name(event)
 
+    if not user_table:
+        raise Exception("MULTI_USER_TABLE not set")
+
     user = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
         'sort_key': username,
