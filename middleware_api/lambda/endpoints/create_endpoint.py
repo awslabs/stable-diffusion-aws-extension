@@ -44,7 +44,7 @@ class CreateEndpointEvent:
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
-    custom_extensions: str = None
+    custom_extensions: str = ""
 
 
 def check_custom_extensions(event: CreateEndpointEvent):
@@ -166,6 +166,7 @@ def handler(raw_event, ctx):
             endpoint_type=event.endpoint_type,
             min_instance_number=event.min_instance_number,
             max_instance_number=event.max_instance_number,
+            custom_extensions=event.custom_extensions
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
