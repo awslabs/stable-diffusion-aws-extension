@@ -64,7 +64,7 @@ def handler(event, context):
                 'key': item.sort_key,
                 'name': item.name,
                 'type': item.type,
-                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(), expires=3600 * 24,
+                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(dataset_info.prefix), expires=3600 * 24,
                                                     method='get_object'),
                 'dataStatus': item.data_status.value,
                 **item.params
@@ -73,6 +73,7 @@ def handler(event, context):
         return ok(data={
             'dataset_name': dataset_name,
             'datasetName': dataset_info.dataset_name,
+            'prefix': dataset_info.prefix,
             's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
             'status': dataset_info.dataset_status.value,
             'timestamp': dataset_info.timestamp,
