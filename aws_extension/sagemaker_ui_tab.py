@@ -1177,7 +1177,7 @@ def dataset_tab():
             with gr.Row():
                 dataset_gallery = gr.Gallery(
                     label="Dataset images", show_label=False, elem_id="gallery",
-                    columns=[2], rows=[2], object_fit="contain", height="auto"
+                    columns=3, object_fit="contain"
                 )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
