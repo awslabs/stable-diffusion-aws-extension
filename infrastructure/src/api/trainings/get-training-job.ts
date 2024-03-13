@@ -11,6 +11,7 @@ export interface GetTrainingJobApiProps {
   router: Resource;
   httpMethod: string;
   trainingTable: Table;
+  multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -23,6 +24,7 @@ export class GetTrainingJobApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly trainingTable: Table;
+  private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
@@ -34,6 +36,7 @@ export class GetTrainingJobApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -57,6 +60,7 @@ export class GetTrainingJobApi {
         role: this.iamRole(),
         memorySize: 2048,
         environment: {
+          MULTI_USER_TABLE: this.multiUserTable.tableName,
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
           LOG_LEVEL: this.logLevel.valueAsString,
@@ -87,9 +91,13 @@ export class GetTrainingJobApi {
       actions: [
         // get a training job
         'dynamodb:GetItem',
+        'dynamodb:BatchGetItem',
+        'dynamodb:Scan',
+        'dynamodb:Query',
       ],
       resources: [
         this.trainingTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 

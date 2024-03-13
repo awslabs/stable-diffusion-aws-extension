@@ -213,6 +213,8 @@ def _create_training_job(raw_event, context):
     logger.info(json.dumps(json.loads(raw_event["body"])))
     _lora_train_type = event.lora_train_type
 
+    username = permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+
     if _lora_train_type.lower() == LoraTrainType.KOHYA.value:
         # Kohya training
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
@@ -263,7 +265,7 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
+    user_roles = get_user_roles(ddb_service, user_table, username)
     ckpt_type = const.CheckPointType.LORA
     if "config_params" in event.params and \
             "additional_network" in event.params["config_params"] and \
@@ -292,7 +294,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[raw_event["headers"]["username"]],
+        allowed_roles_or_users=[username],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -300,13 +302,20 @@ def _create_training_job(raw_event, context):
 
 
 def handler(raw_event, context):
+    job_id = None
     try:
         logger.info(json.dumps(raw_event))
-        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
         return ok(data=job_info, decimal=True)
     except Exception as e:
+        if job_id:
+            ddb_service.update_item(
+                table=train_table,
+                key={"id": job_id},
+                field_name="job_status",
+                value=TrainJobStatus.Failed.value,
+            )
         return response_error(e)
