@@ -1,7 +1,0 @@
-Dockerfile
-Dockerfile*
-node_modules
-coverage
-test-reports
-**/*.md
-cdk.out

@@ -7,17 +7,14 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
 from create_user import _check_action_permission
 from libs.data_types import PARTITION_KEYS
-from libs.utils import KeyEncryptService, permissions_check, response_error
+from libs.utils import permissions_check, response_error
 
 user_table = os.environ.get('MULTI_USER_TABLE')
-kms_key_id = os.environ.get('KEY_ID')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-
-password_encryptor = KeyEncryptService()
 
 
 def handler(event, ctx):

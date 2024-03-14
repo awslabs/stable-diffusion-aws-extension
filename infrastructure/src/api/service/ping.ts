@@ -65,12 +65,12 @@ export class PingApi {
       {
         entry: `${this.src}/service`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'ping.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         layers: [this.layer],
         environment: {
           LOG_LEVEL: this.logLevel.valueAsString,

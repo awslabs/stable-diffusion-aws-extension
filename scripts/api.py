@@ -29,6 +29,7 @@ def dummy_function(*args, **kwargs):
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
+
 def merge_model_on_cloud(req):
     def modelmerger(*args):
         try:
@@ -153,6 +154,15 @@ def get_output_img_type(payload: dict):
         return None
 
 
+def parse_constant(c: str) -> float:
+    if c == "NaN":
+        raise ValueError("NaN is not valid JSON")
+
+    if c == 'Infinity':
+        return sys.float_info.max
+
+    return float(c)
+
 
 def sagemaker_api(_, app: FastAPI):
     logger.debug("Loading Sagemaker API Endpoints.")
@@ -185,21 +195,15 @@ def sagemaker_api(_, app: FastAPI):
 
                 logger.info(f"task is {req.task}")
                 logger.info(f"models is {req.models}")
-                payload = {}
-                # if it has endpoint_payload, use it
-                if req.endpoint_payload:
-                    payload = req.endpoint_payload
+
+                payload_string = None
+                # if it has payload_string, use it
+                if req.payload_string:
+                    payload_string = req.payload_string
                 elif req.param_s3:
-                    def parse_constant(c: str) -> float:
-                        if c == "NaN":
-                            raise ValueError("NaN is not valid JSON")
+                    payload_string = read_from_s3(req.param_s3)
 
-                        if c == 'Infinity':
-                            return sys.float_info.max
-
-                        return float(c)
-
-                    payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
+                payload = json.loads(payload_string, parse_constant=parse_constant)
 
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
@@ -362,6 +366,7 @@ def sagemaker_api(_, app: FastAPI):
     def ping():
         return {'status': 'Healthy'}
 
+
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -369,12 +374,14 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+
 def get_file_md5_dict(path):
     file_dict = {}
     for root, dirs, files in os.walk(path):
         for file in files:
             file_dict[file] = md5(os.path.join(root, file))
     return file_dict
+
 
 def move_model_to_tmp(_, app: FastAPI):
     # os.system("rm -rf models")
