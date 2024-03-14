@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Current shell: $SHELL"
 echo "Running in $(bash --version)"
 trap 'echo "error_lock" > error_lock; exit 1' ERR
 
