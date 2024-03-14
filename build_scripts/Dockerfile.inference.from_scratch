@@ -4,6 +4,7 @@ FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py
 
 # COPY stable-diffusion-webui /opt/ml/code/
 COPY inference/serve_start /opt/ml/code/
+RUN chmod +x /opt/ml/code/serve_start
 
 WORKDIR /opt/ml/code
 
