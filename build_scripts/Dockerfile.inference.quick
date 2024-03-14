@@ -33,6 +33,4 @@ RUN apt-get update -y && \
     apt-get autoremove -y && \
     apt-get autoclean -y
 
-SHELL ["/bin/bash", "-c"]
-
 ENTRYPOINT ["bash", "/opt/ml/code/serve_start"]
