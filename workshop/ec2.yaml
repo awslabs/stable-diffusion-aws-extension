@@ -228,11 +228,7 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
-  WebUINginxURL:
-    Description: URL for Stable Diffusion WebUI
-    # add port 7860 to the end of the URL
-    Value: !Sub http://${WebUiEIP}
   WebUIURL:
     Description: URL for Stable Diffusion WebUI
     # add port 7860 to the end of the URL
-    Value: !Sub http://${WebUiEIP}:7860
+    Value: !Sub http://${WebUiEIP}
