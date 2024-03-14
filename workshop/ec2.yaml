@@ -203,7 +203,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/home/ubuntu/stable-diffusion-webui
-          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model --skip-prepare-environment
+          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
           Type=simple
           Restart=always
           RestartSec=3
@@ -217,30 +217,7 @@ Resources:
           sudo mv sd-webui.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/sd-webui.service
           sudo systemctl enable sd-webui.service
-          
-          cat > sd-webui-init.service <<EOF
-          [Unit]
-          Description=Stable Diffusion UI server
-          After=network.target
-          StartLimitIntervalSec=0
-
-          [Service]
-          WorkingDirectory=/home/ubuntu/stable-diffusion-webui
-          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
-          Type=simple
-          Restart=always
-          RestartSec=3
-          User=ubuntu
-          StartLimitAction=reboot
-
-          [Install]
-          WantedBy=default.target
-
-          EOF
-          sudo mv sd-webui-init.service /etc/systemd/system
-          sudo chown root:root /etc/systemd/system/sd-webui-init.service
-          sudo systemctl disable sd-webui-init.service
-          sudo systemctl start sd-webui-init.service
+          sudo systemctl start sd-webui.service
 
   WebUiEIP:
     Type: AWS::EC2::EIP
