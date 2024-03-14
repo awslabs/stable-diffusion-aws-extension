@@ -71,4 +71,4 @@ RUN apt-get update -y && \
 # RUN trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 
 #ENTRYPOINT ["python", "/opt/ml/code/quick_serve"]
-ENTRYPOINT ["sh", "/opt/ml/code/serve_start"]
+ENTRYPOINT ["bash", "/opt/ml/code/serve_start"]
