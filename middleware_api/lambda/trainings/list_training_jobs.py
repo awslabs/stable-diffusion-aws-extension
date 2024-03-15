@@ -66,6 +66,15 @@ def handler(event, context):
                 # superuser can view the legacy data
                 train_jobs.append(train_job_dto)
 
+        train_jobs = sort_jobs(train_jobs)
+
         return ok(data={'trainings': train_jobs}, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_jobs(train_jobs):
+    if len(train_jobs) == 0:
+        return train_jobs
+
+    return sorted(train_jobs, key=lambda x: x['created'], reverse=True)

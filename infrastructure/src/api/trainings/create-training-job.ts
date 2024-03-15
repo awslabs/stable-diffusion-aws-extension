@@ -201,7 +201,7 @@ export class CreateTrainingJobApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
-      memorySize: 2048,
+      memorySize: 4089,
       environment: {
         S3_BUCKET: this.props.s3Bucket.bucketName,
         TRAIN_TABLE: this.props.trainTable.tableName,

@@ -222,13 +222,22 @@ def _create_training_job(raw_event, context):
 
         if (
                 "training_params" not in event.params
-                or "s3_model_path" not in event.params["training_params"]
-                or "s3_data_path" not in event.params["training_params"]
+                or "model" not in event.params["training_params"]
+                or "dataset" not in event.params["training_params"]
                 or "fm_type" not in event.params["training_params"]
         ):
             raise ValueError(
-                "Missing train parameters, fm_type, s3_model_path and s3_data_path should be in training_params"
+                "Missing train parameters model, dataset and fm_type should be in training_params"
             )
+
+        # todo get checkpoint by model name
+        event.params["training_params"][
+            "s3_model_path"] = f"s3://{bucket_name}/dataset/{event.params['training_params']['model']}"
+
+        event.params["training_params"][
+            "s3_data_path"] = f"s3://{bucket_name}/dataset/{event.params['training_params']['dataset']}"
+
+        return ok(data=event, decimal=True)
 
         fm_type = event.params["training_params"]["fm_type"]
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:

@@ -995,10 +995,9 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(target_task_type, username, usertoken, first_load="first"):
+def load_inference_job_list(target_task_type, username, first_load="first"):
     inference_jobs = [None_Option_For_On_Cloud_Model]
-    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, usertoken,
-                                                                        first_load)
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, first_load)
 
     temp_list = []
     for obj in inferences_jobs_list:
@@ -1019,44 +1018,47 @@ def load_inference_job_list(target_task_type, username, usertoken, first_load="f
     return inference_jobs
 
 
-def load_model_list(username, user_token):
+def load_model_list(username):
     models_on_cloud = []
     if 'sd_model_checkpoint' in opts.quicksettings_list:
         models_on_cloud = [None_Option_For_On_Cloud_Model]
 
-    models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token)]))
+    models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username)]))
     return models_on_cloud
 
 
-def load_lora_models(username, user_token):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='Lora')]))
+def load_lora_models(username):
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='Lora')]))
 
 
-def load_hypernetworks_models(username, user_token):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
+def load_hypernetworks_models(username):
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='hypernetworks')]))
 
 
-def load_vae_list(username, user_token):
+def load_vae_list(username):
     vae_model_on_cloud = ['Automatic', 'None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
+    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='VAE')]))
     return vae_model_on_cloud
 
 
-def load_controlnet_list(username, user_token):
-    controlnet_model_on_cloud = ['None']
-    controlnet_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
-    return controlnet_model_on_cloud
-
-
-def load_xyz_controlnet_list(username, user_token):
+def load_controlnet_list(username):
     controlnet_model_on_cloud = ['None']
     controlnet_model_on_cloud += list(
-        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 
-def load_embeddings_list(username, user_token):
-    embedding_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+def load_xyz_controlnet_list(username):
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(
+        set([os.path.splitext(model['name'])[0] for model in
+             api_manager.list_models_on_cloud(username, types='ControlNet')]))
+    return controlnet_model_on_cloud
+
+
+def load_embeddings_list(username):
+    embedding_model_on_cloud = list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, types='embeddings')]))
     return embedding_model_on_cloud
 
 
@@ -1095,7 +1097,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_vae_list(username, username)
+                                                        'choices': load_vae_list(username)
                                                     }, 'refresh_cloud_vae_down')
                 with gr.Column():
                     with gr.Row():
@@ -1107,7 +1109,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(lora_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_lora_models(username, username)
+                                                        'choices': load_lora_models(username)
                                                     }, 'refresh_lora_dropdown')
                         lora_dropdown = lora_dropdown_local
 
@@ -1122,7 +1124,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(embedding_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_embeddings_list(username, username)
+                                                        'choices': load_embeddings_list(username)
                                                     }, 'refresh_embedding_dropdown')
                         embedding_dropdown = embedding_dropdown_local
                 with gr.Column():
@@ -1135,7 +1137,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(hypernet_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_hypernetworks_models(username, username)
+                                                        'choices': load_hypernetworks_models(username)
                                                     }, 'refresh_hypernet_dropdown')
                         hypernet_dropdown = hypernet_dropdown_local
 
@@ -1166,21 +1168,21 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "first")
                                               }, 'refresh_inference_job_down', '⇤')
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "previous")
                                               }, 'refresh_inference_job_down_previous', '←')
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "next")
                                               }, 'refresh_inference_job_down_next', '→')
 
@@ -1204,15 +1206,15 @@ def create_ui(is_img2img):
             with gr.Row():
 
                 def setup_inference_for_plugin(pr: gr.Request):
-                    models_on_cloud = load_model_list(pr.username, pr.username)
-                    vae_model_on_cloud = load_vae_list(pr.username, pr.username)
-                    lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
-                    hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
-                    embedding_model_on_cloud = load_embeddings_list(pr.username, pr.username)
-                    controlnet_list = load_controlnet_list(pr.username, pr.username)
-                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
+                    models_on_cloud = load_model_list(pr.username)
+                    vae_model_on_cloud = load_vae_list(pr.username)
+                    lora_models_on_cloud = load_lora_models(username=pr.username)
+                    hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username)
+                    embedding_model_on_cloud = load_embeddings_list(pr.username)
+                    controlnet_list = load_controlnet_list(pr.username)
+                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username)
 
-                    inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
+                    inference_jobs = load_inference_job_list(inference_task_type, pr.username)
                     lora_hypernets = {
                         "lora": lora_models_on_cloud,
                         "hypernet": hypernetworks_models_on_cloud,

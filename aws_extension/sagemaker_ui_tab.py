@@ -108,9 +108,12 @@ def on_ui_tabs():
             with gr.Row():
                 sagemaker_part = sagemaker_endpoint_tab()
                 endpoint_list_df = list_sagemaker_endpoints_tab()
-        with gr.Tab(label='Create AWS dataset', variant='panel'):
+        with gr.Tab(label='Datasets Management', variant='panel'):
             with gr.Row():
-                dataset_asset = dataset_tab()
+                dataset_tab()
+        with gr.Tab(label='Trainings Management', variant='panel'):
+            with gr.Row():
+                trainings_tab()
 
         def get_version_info():
             if not hasattr(shared.demo.server_app, 'api_version'):
@@ -135,7 +138,7 @@ def on_ui_tabs():
 
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
-            user = api_manager.get_user_by_username(username=req.username, user_token=req.username)
+            user = api_manager.get_user_by_username(username=req.username)
             admin_visible = False
             sagemaker_create_visible = False
             role_management_visible = False
@@ -155,7 +158,7 @@ def on_ui_tabs():
                 gr.update(visible=admin_visible), \
                 gr.update(visible=role_management_visible), \
                 gr.update(visible=sagemaker_create_visible), \
-                _list_models(req.username, req.username)[0:10], \
+                _list_models(req.username)[0:10], \
                 _list_sagemaker_endpoints(req.username), \
                 req.username, \
                 _list_users(req.username, None, None)[:user_table_size], \
@@ -269,8 +272,8 @@ def ui_user_settings_tab():
     return username_textbox, password_textbox, ui_user_setting
 
 
-def roles(user_token):
-    resp = api_manager.list_roles(user_token=user_token)
+def roles(username):
+    resp = api_manager.list_roles(username=username)
     return [role['role_name'] for role in resp['roles']]
 
 
@@ -299,8 +302,7 @@ def user_settings_tab():
                     if not password or len(password) < 1:
                         return f'Password should not be none.'
                     resp = api_manager.upsert_user(username=username.rstrip(), password=password,
-                                                   roles=user_roles, creator=pr.username,
-                                                   user_token=pr.username)
+                                                   roles=user_roles, creator=pr.username)
                     if resp:
                         return f'User upsert complete "{username}"'
                 except Exception as e:
@@ -414,8 +416,7 @@ def role_settings_tab():
 
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
-                                                       creator=pr.username,
-                                                       user_token=cloud_auth_manager.username)
+                                                       creator=pr.username)
                         if resp:
                             return f'Role upsert complete "{role_name}"'
                     except Exception as e:
@@ -466,8 +467,8 @@ def role_settings_tab():
     return ui_role_setting, upsert_role_form, role_table
 
 
-def _list_models(username, user_token):
-    result = api_manager.list_models_on_cloud(username=username, user_token=user_token, types=None, status=None)
+def _list_models(username):
+    result = api_manager.list_models_on_cloud(username=username, types=None, status=None)
     models = []
     for model in result:
         allowed = ''
@@ -483,7 +484,7 @@ def _list_models(username, user_token):
 
 
 def _get_roles_table(username):
-    resp = api_manager.list_roles(user_token=username)
+    resp = api_manager.list_roles(username=username)
     table = []
     for role in resp['roles']:
         table.append([role['role_name'], ', '.join(role['permissions']), role['creator']])
@@ -491,7 +492,7 @@ def _get_roles_table(username):
 
 
 def _list_users(username, name, role):
-    resp = api_manager.list_users(user_token=username)
+    resp = api_manager.list_users(username=username)
     if not resp['users']:
         return []
 
@@ -697,13 +698,13 @@ def model_upload_tab():
             if paging == 0:
                 return gr.skip(), gr.skip()
 
-            result = _list_models(rq.username, rq.username)
+            result = _list_models(rq.username)
             start = paging - 10 if paging - 10 >= 0 else 0
             end = start + 10
             return result[start: end], start
 
         def list_models_next(paging, rq: gr.Request):
-            result = _list_models(rq.username, rq.username)
+            result = _list_models(rq.username)
             if paging >= len(result):
                 return gr.skip(), gr.skip()
 
@@ -886,7 +887,7 @@ def sagemaker_endpoint_tab():
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     min_instance_number=min_instance_number,
-                                                    user_token=pr.username
+                                                    username=pr.username
                                                     )
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
@@ -906,7 +907,7 @@ def sagemaker_endpoint_tab():
             show_byoc = False
             if checkbox_state:
                 username = cloud_auth_manager.username
-                user = api_manager.get_user_by_username(username=username, user_token=username)
+                user = api_manager.get_user_by_username(username=username)
                 if 'roles' in user:
                     show_byoc = 'byoc' in user['roles']
             return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
@@ -1005,6 +1006,27 @@ def _list_sagemaker_endpoints(username):
             ])
     return endpoints
 
+
+def _list_trainings_job(username):
+    jobs = []
+    items = api_manager.list_all_train_jobs_raw(username=username)
+    for item in items:
+        jobs.append([
+            item['sagemakerTrainName'],
+            item['id'],
+            item['modelName'],
+            item['status'],
+            item['trainType'],
+        ])
+    return jobs
+
+
+def _list_trainings_job_for_delete(username):
+    jobs = []
+    items = api_manager.list_all_train_jobs_raw(username=username)
+    for item in items:
+        jobs.append(item['id'])
+    return jobs
 
 def list_sagemaker_endpoints_tab():
     with gr.Column():
@@ -1192,6 +1214,178 @@ def dataset_tab():
     return dt
 
 
+def trainings_tab():
+    with gr.Row():
+        with gr.Column(variant='panel', scale=1):
+            gr.HTML(value="<u><b>Create a Training Job</b></u>")
+
+            def create_training_job(files, dataset_name, dataset_prefix, dataset_desc, pr: gr.Request):
+                if not files:
+                    return 'Error: No files selected', None, None, None, None
+                if not dataset_name:
+                    return 'Error: No dataset name', None, None, None, None
+                dataset_content = []
+                file_path_lookup = {}
+                for file in files:
+                    orig_name = file.name.split(os.sep)[-1]
+                    file_path_lookup[orig_name] = file.name
+                    dataset_content.append(
+                        {
+                            "filename": orig_name,
+                            "name": orig_name,
+                            "type": "image",
+                            "params": {}
+                        }
+                    )
+
+                payload = {
+                    "dataset_name": dataset_name,
+                    "content": dataset_content,
+                    "prefix": dataset_prefix,
+                    "params": {
+                        "description": dataset_desc
+                    },
+                    "creator": pr.username
+                }
+
+                url = get_variable_from_json('api_gateway_url') + 'datasets'
+                api_key = get_variable_from_json('api_token')
+
+                if not has_config():
+                    return f'Please config api url and token', None, None, None, None
+
+                raw_response = requests.post(url=url, json=payload,
+                                             headers={'x-api-key': api_key, "username": pr.username})
+                logger.info(raw_response.json())
+
+                if raw_response.status_code != 201:
+                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
+                response = raw_response.json()['data']
+
+                logger.info(f"Start upload sample files response:\n{response}")
+                for filename, presign_url in response['s3PresignUrl'].items():
+                    file_path = file_path_lookup[filename]
+                    with open(file_path, 'rb') as f:
+                        response = requests.put(presign_url, f)
+                        logger.info(response)
+                        response.raise_for_status()
+
+                payload = {
+                    "status": "Enabled"
+                }
+
+                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload,
+                                            headers={'x-api-key': api_key, "username": pr.username})
+                raw_response.raise_for_status()
+                logger.debug(raw_response.json())
+                return f'Complete Dataset {dataset_name} creation', None, None, None, None
+
+            training_instance_types = ["ml.g5.2xlarge", "ml.g5.4xlarge"]
+            lora_train_type = gr.Dropdown(label="Lora Train Type", choices=["kohya"], value="kohya")
+            training_instance_type = gr.Dropdown(label="Training Instance Type", choices=training_instance_types,
+                                                 value="ml.g5.2xlarge")
+
+            with gr.Row():
+                model_name = gr.Dropdown(label="Model", choices=[], elem_id='train_model_dp')
+                refresh_button = ToolButton(value='\U0001f504', elem_id='train_model_name')
+
+                def refresh_model_name(rq: gr.Request):
+                    choices = list(set([model['name'] for model in api_manager.list_models_on_cloud(rq.username)]))
+                    return model_name.update(choices=choices)
+
+                refresh_button.click(
+                    fn=refresh_model_name,
+                    inputs=[],
+                    outputs=[model_name]
+                )
+
+            with gr.Row():
+                dataset_name = gr.Dropdown(label="Dataset", choices=[], elem_id='train_dataset_dp')
+                refresh_dt_button = ToolButton(value='\U0001f504', elem_id='train_dataset_name')
+
+                def refresh_dt_name(rq: gr.Request):
+                    choices = [ds['datasetName'] for ds in get_sorted_cloud_dataset(rq.username)]
+                    return dataset_name.update(choices=choices)
+
+                refresh_dt_button.click(
+                    fn=refresh_dt_name,
+                    inputs=[],
+                    outputs=[dataset_name]
+                )
+
+            output_name = gr.Textbox(value="", lines=1, placeholder="Please input output_name", label="output_name")
+
+            save_every_n_epochs = gr.Number(value=1000, label="save_every_n_epochs", minimum=0)
+
+            max_train_epochs = gr.Number(value=100, label="max_train_epochs", minimum=0)
+
+            create_dataset_button = gr.Button("Create Training Job", variant="primary")
+            dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+
+        with gr.Column(scale=2):
+            with gr.Row():
+                with gr.Column(variant='panel'):
+                    gr.HTML(value="<u><b>Trainings List</b></u>")
+
+                    with gr.Row():
+                        train_list_df = gr.Dataframe(
+                            headers=['sagemakerTrainName', 'id', 'modelName', 'status', 'trainType'],
+                            datatype=['str', 'str', 'str', 'str', 'str']
+                        )
+
+                        def list_ep_prev(paging, rq: gr.Request):
+                            if paging == 0:
+                                return gr.skip(), gr.skip()
+
+                            result = _list_trainings_job(rq.username)
+                            start = paging - 10 if paging - 10 >= 0 else 0
+                            end = start + 10
+                            return result[start: end], start
+
+                        def list_ep_next(paging, rq: gr.Request):
+                            result = _list_trainings_job(rq.username)
+                            if paging >= len(result):
+                                return gr.skip(), gr.skip()
+
+                            start = paging + 10 if paging + 10 < len(result) else paging
+                            end = start + 10 if start + 10 < len(result) else len(result)
+                            return result[start: end], start
+
+                        current_page = gr.State(0)
+
+                    with gr.Row():
+                        t_list_load_btn = gr.Button(value='Load First')
+                        t_list_prev_btn = gr.Button(value='Previous')
+                        t_list_next_btn = gr.Button(value='Next')
+                        t_list_load_btn.click(fn=list_ep_next, inputs=[current_page], outputs=[train_list_df, current_page])
+                        t_list_next_btn.click(fn=list_ep_next, inputs=[current_page], outputs=[train_list_df, current_page])
+                        t_list_prev_btn.click(fn=list_ep_prev, inputs=[current_page], outputs=[train_list_df, current_page])
+
+            with gr.Row():
+                with gr.Column(variant='panel'):
+                    with gr.Row():
+                        gr.HTML(value="<u><b>Delete Training Job</b></u>")
+                    with gr.Row():
+                        train_delete_dropdown = gr.Dropdown(
+                            choices=_list_trainings_job_for_delete("admin"),
+                            multiselect=True,
+                            label="Select Train Jobs")
+                        modules.ui.create_refresh_button(train_delete_dropdown,
+                                                         lambda: None,
+                                                         lambda: {"choices": _list_trainings_job_for_delete("admin")},
+                                                         "refresh_train_delete")
+                    with gr.Row():
+                        train_delete_button = gr.Button(value="Delete", variant='primary')
+
+                    with gr.Row():
+                        delete_train_output = gr.Textbox(interactive=False, show_label=False)
+
+                    def _train_delete(trains, pr: gr.Request):
+                        return api_manager.trains_delete(list=trains, username=pr.username)
+                    train_delete_button.click(_train_delete, inputs=[train_delete_dropdown], outputs=[delete_train_output])
+
+
+
 def delete_dataset(selected_value):
     logger.debug(f"selected value is {selected_value}")
     if selected_value:
@@ -1235,7 +1429,7 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
     sagemaker_ui.init_refresh_resource_list_from_cloud(username)
     try:
         if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
-                                       initial=initial, user_token=username):
+                                       initial=initial):
             return f'{message}, but update setting failed'
     except Exception as e:
         return f'{message}, but update setting failed: {e}'

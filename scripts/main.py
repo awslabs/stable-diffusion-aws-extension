@@ -779,7 +779,7 @@ class SageMakerUI(scripts.Script):
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
-                result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+                result.append(gr.update(choices=load_model_list(pr.username)))
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
                 controlnet_models = load_controlnet_list(pr.username, pr.username)
