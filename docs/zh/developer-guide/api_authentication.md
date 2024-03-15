@@ -3,7 +3,7 @@
 所有 API 使用 API 密钥进行安全验证，所有 API 请求都应在 HTTP 标头中包含您的 API 密钥，`x-api-key` 如下所示：
 
 ```config
-x-api-key: 09876743201987654321
+x-api-key: xxxxxxxxxxxxxxxxxxxx
 ```
 
 **用户验证**

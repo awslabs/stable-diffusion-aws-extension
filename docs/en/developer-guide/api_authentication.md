@@ -1,7 +1,7 @@
 **Security Authentication**
 All APIs use API keys for security verification, and all API requests should include your API key in the HTTP header. The `x-api-key` is as follows:
 ```Config
-X-api-key: 09876743201987654321
+X-api-key: xxxxxxxxxxxxxxxxxxxx
 ```
 **User Authentication**
 > Tip: User authentication will be removed in the next version.
