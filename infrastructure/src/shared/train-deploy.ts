@@ -6,10 +6,6 @@ import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition'
 import { Construct } from 'constructs';
 import { Database } from './database';
 import { ResourceProvider } from './resource-provider';
-import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
-import { DeleteCheckpointsApi } from '../api/checkpoints/delete-checkpoints';
-import { ListCheckPointsApi } from '../api/checkpoints/list-chekpoints';
-import { UpdateCheckPointApi } from '../api/checkpoints/update-chekpoint';
 import { CreateDatasetApi } from '../api/datasets/create-dataset';
 import { DeleteDatasetsApi } from '../api/datasets/delete-datasets';
 import { GetDatasetApi } from '../api/datasets/get-dataset';
@@ -99,43 +95,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
     });
 
-    // GET /checkpoints
-    new ListCheckPointsApi(scope, 'ListCheckPoints', {
-      s3Bucket: props.s3Bucket,
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'GET',
-      router: routers.checkpoints,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
-    });
-
-    // POST /checkpoint
-    const createCheckPointApi = new CreateCheckPointApi(scope, 'CreateCheckPoint', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
-      httpMethod: 'POST',
-      router: routers.checkpoints,
-      s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
-    });
-
-    // PUT /checkpoints/{id}
-    const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
-      checkpointTable: checkPointTable,
-      userTable: multiUserTable,
-      commonLayer: commonLayer,
-      httpMethod: 'PUT',
-      router: routers.checkpoints,
-      s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
-    });
-    updateCheckPointApi.model.node.addDependency(createCheckPointApi.model);
-    updateCheckPointApi.requestValidator.node.addDependency(createCheckPointApi.requestValidator);
 
     // POST /datasets
     const createDatasetApi = new CreateDatasetApi(scope, 'CreateDataset', {
@@ -149,8 +108,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
     });
-    createDatasetApi.model.node.addDependency(updateCheckPointApi.model);
-    createDatasetApi.requestValidator.node.addDependency(updateCheckPointApi.requestValidator);
 
     // PUT /datasets/{id}
     const updateDatasetApi = new UpdateDatasetApi(scope, 'UpdateDataset', {
@@ -192,21 +149,6 @@ export class TrainDeploy {
       logLevel: props.logLevel,
     });
 
-    // DELETE /checkpoints
-    const deleteCheckpointsApi = new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
-      router: props.routers.checkpoints,
-      commonLayer: props.commonLayer,
-      checkPointsTable: checkPointTable,
-      userTable: multiUserTable,
-      httpMethod: 'DELETE',
-      s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
-    },
-    );
-    deleteCheckpointsApi.model.node.addDependency(updateDatasetApi.model);
-    deleteCheckpointsApi.requestValidator.node.addDependency(updateDatasetApi.requestValidator);
-
     // DELETE /datasets
     const deleteDatasetsApi = new DeleteDatasetsApi(scope, 'DeleteDatasets', {
       router: props.routers.datasets,
@@ -220,8 +162,8 @@ export class TrainDeploy {
       logLevel: props.logLevel,
     },
     );
-    deleteDatasetsApi.model.node.addDependency(deleteCheckpointsApi.model);
-    deleteDatasetsApi.requestValidator.node.addDependency(deleteCheckpointsApi.requestValidator);
+    deleteDatasetsApi.model.node.addDependency(updateDatasetApi.model);
+    deleteDatasetsApi.requestValidator.node.addDependency(updateDatasetApi.requestValidator);
 
     // DELETE /trainings
     const deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, 'DeleteTrainingJobs', {
