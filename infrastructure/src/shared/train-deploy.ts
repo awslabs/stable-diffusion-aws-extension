@@ -26,7 +26,6 @@ import { SagemakerTrainingEvents } from '../events/trainings-event';
 export interface TrainDeployProps extends StackProps {
   createModelSuccessTopic: aws_sns.Topic;
   createModelFailureTopic: aws_sns.Topic;
-  ecr_image_tag: CfnParameter;
   database: Database;
   routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;
@@ -83,7 +82,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
       logLevel: props.logLevel,
       userTopic: props.snsTopic,
-      ecr_image_tag: props.ecr_image_tag,
       resourceProvider: this.resourceProvider,
       accountId: props.accountId,
     });

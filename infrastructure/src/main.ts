@@ -61,13 +61,6 @@ export class Middleware extends Stack {
       default: 'dev',
     });
 
-    // todo - remove this parameter when training tag same as inference tag
-    const trainEcrImageTagParam = new CfnParameter(this, 'TrainEcrImageTag', {
-      type: 'String',
-      description: 'Training Public ECR Image tag, example: stable|dev',
-      default: 'kohya-65bf90a',
-    });
-
     const logLevel = new CfnParameter(this, 'LogLevel', {
       type: 'String',
       description: 'Log level, example: ERROR|INFO|DEBUG',
@@ -168,7 +161,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
-      ecr_image_tag: trainEcrImageTagParam,
       database: ddbTables,
       routers: restApi.routers,
       s3Bucket: s3Bucket,

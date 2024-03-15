@@ -1,6 +1,8 @@
 import datetime
 import logging
 import os
+import subprocess
+import threading
 
 import gradio as gr
 import modules.ui
@@ -10,8 +12,6 @@ from modules.ui_common import create_refresh_button
 from modules.ui_components import FormRow
 from modules.ui_components import ToolButton
 
-import subprocess
-import threading
 import utils
 from aws_extension import sagemaker_ui
 from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
@@ -65,7 +65,7 @@ for resource in all_resources:
 
 def run_command():
     subprocess.run(["sleep", "5"])
-    subprocess.run(["sudo", "reboot"])
+    subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
 
 
 def restart_sd_webui_service():
