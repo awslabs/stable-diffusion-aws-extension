@@ -130,7 +130,7 @@ def enable_autoscaling_async(item, variant_name):
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
-        PolicyName="Invocations-ScalingPolicy",
+        PolicyName=f"{endpoint_name}-Invocations-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,  # Endpoint name
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
@@ -188,7 +188,7 @@ def enable_autoscaling_async(item, variant_name):
         logger.info(response)
 
     step_policy_response = autoscaling_client.put_scaling_policy(
-        PolicyName="HasBacklogWithoutCapacity-ScalingPolicy",
+        PolicyName=f"{endpoint_name}-HasBacklogWithoutCapacity-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the service that provides the resource.
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
@@ -211,7 +211,7 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Put step scaling policy response: {step_policy_response}")
 
     cw_client.put_metric_alarm(
-        AlarmName='stable-diffusion-hasbacklogwithoutcapacity-alarm',
+        AlarmName=f'{endpoint_name}-hasbacklogwithoutcapacity-alarm',
         MetricName='HasBacklogWithoutCapacity',
         Namespace='AWS/SageMaker',
         Statistic='Average',
@@ -237,7 +237,7 @@ def enable_autoscaling_real_time(item, variant_name):
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
-        PolicyName="Invocations-ScalingPolicy",
+        PolicyName=f"{endpoint_name}-Invocations-ScalingPolicy",
         ServiceNamespace="sagemaker",  # The namespace of the AWS service that provides the resource.
         ResourceId='endpoint/' + endpoint_name + '/variant/' + variant_name,  # Endpoint name
         ScalableDimension="sagemaker:variant:DesiredInstanceCount",  # SageMaker supports only Instance Count
