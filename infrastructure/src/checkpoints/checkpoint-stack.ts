@@ -1,8 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_s3, CfnParameter, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { BucketDeploymentProps } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
 import { DeleteCheckpointsApi, DeleteCheckpointsApiProps } from '../api/checkpoints/delete-checkpoints';
@@ -28,13 +26,6 @@ export class CheckpointStack {
 
   constructor(scope: Construct, id: string, props: CheckpointStackProps) {
     this.id = id;
-
-    // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(scope, `${this.id}-DeployApiTemplate`, <BucketDeploymentProps>{
-      sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
-      destinationBucket: props.s3Bucket,
-      destinationKeyPrefix: 'template',
-    });
 
     const commonLayer = props.commonLayer;
     const routers = props.routers;

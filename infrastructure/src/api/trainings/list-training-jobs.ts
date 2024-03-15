@@ -12,6 +12,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { Resource } from 'aws-cdk-lib/aws-apigateway';
 
 
 export interface ListTrainingJobsApiProps {
@@ -27,7 +28,7 @@ export interface ListTrainingJobsApiProps {
 
 export class ListTrainingJobsApi {
   private readonly src;
-  private readonly router: aws_apigateway.Resource;
+  private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly trainTable: aws_dynamodb.Table;

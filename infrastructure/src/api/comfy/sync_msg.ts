@@ -126,7 +126,7 @@ export class SyncMsgApi {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'sync_msg.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
