@@ -24,11 +24,13 @@ export interface CheckpointStackProps extends StackProps {
 
 export class CheckpointStack {
   private readonly srcRoot = '../middleware_api/lambda';
+  private readonly id: string;
 
-  constructor(scope: Construct, props: CheckpointStackProps) {
+  constructor(scope: Construct, id: string, props: CheckpointStackProps) {
+    this.id = id;
 
     // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', <BucketDeploymentProps>{
+    new s3deploy.BucketDeployment(scope, `${this.id}-DeployApiTemplate`, <BucketDeploymentProps>{
       sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
       destinationBucket: props.s3Bucket,
       destinationKeyPrefix: 'template',
@@ -41,7 +43,7 @@ export class CheckpointStack {
     const multiUserTable = props.multiUserTable;
 
     // GET /checkpoints
-    new ListCheckPointsApi(scope, 'ListCheckPoints', {
+    new ListCheckPointsApi(scope, `${this.id}-ListCheckPoints`, {
       s3Bucket: props.s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
@@ -53,7 +55,7 @@ export class CheckpointStack {
     });
 
     // POST /checkpoint
-    const createCheckPointApi= new CreateCheckPointApi(scope, 'CreateCheckPoint', {
+    const createCheckPointApi= new CreateCheckPointApi(scope, `${this.id}-CreateCheckPoint`, {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -65,7 +67,7 @@ export class CheckpointStack {
     });
 
     // PUT /checkpoints/{id}
-    const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
+    const updateCheckPointApi = new UpdateCheckPointApi(scope, `${this.id}-UpdateCheckPoint`, {
       checkpointTable: checkPointTable,
       userTable: multiUserTable,
       commonLayer: commonLayer,
@@ -80,7 +82,7 @@ export class CheckpointStack {
 
     // DELETE /checkpoints
     const deleteCheckpointsApi = new DeleteCheckpointsApi(
-      scope, 'DeleteCheckpoints',
+      scope, `${this.id}-DeleteCheckpoints`,
             <DeleteCheckpointsApiProps>{
               router: props.routers.checkpoints,
               commonLayer: props.commonLayer,

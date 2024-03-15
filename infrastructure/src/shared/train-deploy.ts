@@ -35,13 +35,15 @@ export interface TrainDeployProps extends StackProps {
 export class TrainDeploy {
   private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
+  private readonly id: string;
 
-  constructor(scope: Construct, props: TrainDeployProps) {
+  constructor(scope: Construct, id: string, props: TrainDeployProps) {
 
     this.resourceProvider = props.resourceProvider;
+    this.id = id;
 
     // Upload api template file to the S3 bucket
-    new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', {
+    new s3deploy.BucketDeployment(scope, `${this.id}-DeployApiTemplate`, {
       sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
       destinationBucket: props.s3Bucket,
       destinationKeyPrefix: 'template',
@@ -54,7 +56,7 @@ export class TrainDeploy {
     const multiUserTable = props.database.multiUserTable;
 
     // GET /trainings
-    new ListTrainingJobsApi(scope, 'ListTrainingJobs', {
+    new ListTrainingJobsApi(scope, `${this.id}-ListTrainingJobs`, {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trainings,
@@ -66,7 +68,7 @@ export class TrainDeploy {
     });
 
     // POST /trainings
-    const createTrainingJobApi = new CreateTrainingJobApi(scope, 'CreateTrainingJob', {
+    const createTrainingJobApi = new CreateTrainingJobApi(scope, `${this.id}-CreateTrainingJob`, {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -85,7 +87,7 @@ export class TrainDeploy {
     const trainJobRouter = routers.trainings.addResource('{id}');
 
     // PUT /trainings/{id}/stop
-    new StopTrainingJobApi(scope, 'StopTrainingJob', {
+    new StopTrainingJobApi(scope, `${this.id}-StopTrainingJob`, {
       commonLayer: commonLayer,
       httpMethod: 'PUT',
       router: trainJobRouter,
@@ -97,7 +99,7 @@ export class TrainDeploy {
 
 
     // POST /datasets
-    const createDatasetApi = new CreateDatasetApi(scope, 'CreateDataset', {
+    const createDatasetApi = new CreateDatasetApi(scope, `${this.id}-CreateDataset`, {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -110,7 +112,7 @@ export class TrainDeploy {
     });
 
     // PUT /datasets/{id}
-    const updateDatasetApi = new UpdateDatasetApi(scope, 'UpdateDataset', {
+    const updateDatasetApi = new UpdateDatasetApi(scope, `${this.id}-UpdateDataset`, {
       commonLayer: commonLayer,
       userTable: multiUserTable,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -125,7 +127,7 @@ export class TrainDeploy {
     updateDatasetApi.requestValidator.node.addDependency(createDatasetApi.requestValidator);
 
     // GET /datasets
-    new ListDatasetsApi(scope, 'ListDatasets', {
+    new ListDatasetsApi(scope, `${this.id}-ListDatasets`, {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
@@ -137,7 +139,7 @@ export class TrainDeploy {
     });
 
     // GET /dataset/{dataset_name}
-    new GetDatasetApi(scope, 'GetDataset', {
+    new GetDatasetApi(scope, `${this.id}-GetDataset`, {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemsTable: props.database.datasetItemTable,
@@ -150,7 +152,7 @@ export class TrainDeploy {
     });
 
     // DELETE /datasets
-    const deleteDatasetsApi = new DeleteDatasetsApi(scope, 'DeleteDatasets', {
+    const deleteDatasetsApi = new DeleteDatasetsApi(scope, `${this.id}-DeleteDatasets`, {
       router: props.routers.datasets,
       commonLayer: props.commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -166,7 +168,7 @@ export class TrainDeploy {
     deleteDatasetsApi.requestValidator.node.addDependency(updateDatasetApi.requestValidator);
 
     // DELETE /trainings
-    const deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, 'DeleteTrainingJobs', {
+    const deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, `${this.id}-DeleteTrainingJobs`, {
       router: props.routers.trainings,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
@@ -181,7 +183,7 @@ export class TrainDeploy {
     deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
 
     // DELETE /trainings/{id}
-    new GetTrainingJobApi(scope, 'GetTrainingJob', {
+    new GetTrainingJobApi(scope, `${this.id}-GetTrainingJob`, {
       router: trainJobRouter,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
@@ -193,7 +195,7 @@ export class TrainDeploy {
     },
     );
 
-    new SagemakerTrainingEvents(scope, 'SagemakerTrainingEvents', {
+    new SagemakerTrainingEvents(scope, `${this.id}-SagemakerTrainingEvents`, {
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
       checkpointTable: props.database.checkpointTable,

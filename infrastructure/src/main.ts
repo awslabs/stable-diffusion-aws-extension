@@ -196,7 +196,7 @@ export class Middleware extends Stack {
         resourceProvider,
       });
 
-      new TrainDeploy(this, {
+      new TrainDeploy(this, 'SD', {
         commonLayer: commonLayers.commonLayer,
         // env: devEnv,
         synthesizer: props.synthesizer,
@@ -211,7 +211,7 @@ export class Middleware extends Stack {
         accountId,
       });
 
-      new CheckpointStack(this, {
+      new CheckpointStack(this, 'SD', {
         // env: devEnv,
         synthesizer: props.synthesizer,
         checkpointTable: ddbTables.checkpointTable,
@@ -267,7 +267,7 @@ export class Middleware extends Stack {
       });
       apis.node.addDependency(ddbComfyTables);
 
-      new TrainDeploy(this, {
+      new TrainDeploy(this, 'Comfy', {
         commonLayer: commonLayers.commonLayer,
         // env: devEnv,
         synthesizer: props.synthesizer,
@@ -282,7 +282,7 @@ export class Middleware extends Stack {
         accountId,
       });
 
-      new CheckpointStack(this, {
+      new CheckpointStack(this, 'Comfy', {
         // env: devEnv,
         synthesizer: props.synthesizer,
         checkpointTable: ddbTables.checkpointTable,
