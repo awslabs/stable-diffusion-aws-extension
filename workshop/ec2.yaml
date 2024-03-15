@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: (SO8032) - Stable-Diffusion AWS Extension Workshop - EC2 Instance
+Description: (SO8032) - Extension for Stable Diffusion on AWS - EC2 Instance
 Parameters:
   Branch:
     Description: Branch of the ESD to deploy
@@ -8,6 +8,15 @@ Parameters:
       - main
       - dev
     Default: main
+  InstanceType:
+    Description: EC2 Instance Type of the ESD to deploy
+    Type: String
+    AllowedValues:
+      - c5.2xlarge
+      - c5.4xlarge
+      - g5.2xlarge
+      - g5.4xlarge
+    Default: c5.4xlarge
 
 Mappings:
   RegionToAmiId:
@@ -49,9 +58,45 @@ Mappings:
       AMI: ami-008fe2fc65df48dac
 
 Resources:
-  SecurityGroup:
+  WebUiVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  WebUiSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref WebUiVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+
+  WebUiInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ec2.amazonaws.com ]
+            Action: [ 'sts:AssumeRole' ]
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  WebUiInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: WebUiInstanceRole
+
+  WebUiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      VpcId: !Ref WebUiVPC
       GroupName: !Sub ${AWS::StackName}-sg
       GroupDescription: Security group for SD WebUI EC2 instance
       SecurityGroupIngress:
@@ -60,30 +105,72 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
           FromPort: 7860
           ToPort: 7860
           CidrIp: 0.0.0.0/0
-  EC2Instance:
+
+  WebUiInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  WebUiVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref WebUiVPC
+      InternetGatewayId: !Ref WebUiInternetGateway
+
+  WebUiRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref WebUiVPC
+
+  WebUiRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref WebUiRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref WebUiInternetGateway
+
+  WebUiSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WebUiSubnet
+      RouteTableId: !Ref WebUiRouteTable
+
+  WebUiEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: c5.4xlarge
-      ImageId: !FindInMap [RegionToAmiId, !Ref AWS::Region, AMI]
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref WebUiInstanceProfile
+      SubnetId: !Ref WebUiSubnet
+      ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
-            VolumeSize: 300
-            VolumeType: gp2
-      "Tags" : [
-        {"Key" : "Name", "Value" : !Sub "sd-on-aws-${Branch}"},
+            VolumeSize: 1024
+            VolumeType: gp3
+      SecurityGroupIds:
+        - !GetAtt WebUiSecurityGroup.GroupId
+      Tags: [
+        { "Key": "Name", "Value": !Sub "sd-on-aws-${Branch}" },
       ]
-      SecurityGroups:
-        - Ref: SecurityGroup
       UserData:
         'Fn::Base64': !Sub |
           #!/bin/bash
           set -euxo pipefail
           
           sudo apt-get update
+          
+          sudo apt install nginx -y
+          sudo ufw allow 'Nginx HTTP'
+          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/nginx_proxy.conf
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502.html
+          sudo systemctl enable nginx
+          sudo systemctl restart nginx
+          
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
           sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 libtcmalloc-minimal4 -y
@@ -93,16 +180,18 @@ Resources:
           
           curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
           
-          cd stable-diffusion-webui/extensions/stable-diffusion-aws-extension
-          git checkout ${Branch}
-          cd ../../
+          cd stable-diffusion-webui/extensions
+          git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
           
-          wget -qP models/Stable-diffusion/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/sd_xl_base_1.0.safetensors
-          wget -qP models/Stable-diffusion/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Stable-diffusion/v1-5-pruned-emaonly.safetensors
-          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth
-          wget -qP models/ControlNet/ https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth
-          wget -qP models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_xl.safetensors
-          wget -qP models/Lora/ https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors
+          cd stable-diffusion-aws-extension
+          git checkout ${Branch}
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          export AWS_REGION=us-east-1
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/models.txt
+          sudo mv s5cmd /usr/bin/
+          s5cmd run models.txt
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
@@ -114,7 +203,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/home/ubuntu/stable-diffusion-webui
-          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen
+          ExecStart=/home/ubuntu/stable-diffusion-webui/webui.sh --enable-insecure-extension-access --skip-torch-cuda-test --no-half --listen --no-download-sd-model
           Type=simple
           Restart=always
           RestartSec=3
@@ -127,20 +216,19 @@ Resources:
           EOF
           sudo mv sd-webui.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/sd-webui.service
-
           sudo systemctl enable sd-webui.service
           sudo systemctl start sd-webui.service
 
-  MyEIP:
+  WebUiEIP:
     Type: AWS::EC2::EIP
-  MyEIPAssociation:
+  WebUiEIPAssociation:
     Type: AWS::EC2::EIPAssociation
     Properties:
-      AllocationId: !GetAtt MyEIP.AllocationId
-      InstanceId: !Ref EC2Instance
+      AllocationId: !GetAtt WebUiEIP.AllocationId
+      InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
   WebUIURL:
-    Description: URL for Stable Diffusion Web UI
+    Description: URL for Stable Diffusion WebUI
     # add port 7860 to the end of the URL
-    Value: !Sub http://${MyEIP}:7860
+    Value: !Sub http://${WebUiEIP}

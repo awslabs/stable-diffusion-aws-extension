@@ -39,6 +39,6 @@ def handler(event, ctx):
             'train_type': item['train_type'],
         }
 
-        return ok(data=data)
+        return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)

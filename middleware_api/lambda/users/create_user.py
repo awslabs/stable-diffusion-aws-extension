@@ -9,7 +9,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username, \
-    permissions_check, response_error
+    permissions_check, response_error, get_user_name
 from roles.create_role import handler as upsert_role
 
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -39,7 +39,7 @@ def handler(raw_event, ctx):
         event = UpsertUserEvent(**json.loads(raw_event['body']))
 
         if event.initial:
-            username = raw_event['headers']['username']
+            username = get_user_name(raw_event)
         else:
             username = permissions_check(raw_event, [PERMISSION_USER_ALL])
 

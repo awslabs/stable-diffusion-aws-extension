@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
-MAX_WORKERS = 10
 
 
 # GET /checkpoints?username=USER_NAME&types=value&status=value

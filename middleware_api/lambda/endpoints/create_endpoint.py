@@ -17,7 +17,6 @@ from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
@@ -45,23 +44,31 @@ class CreateEndpointEvent:
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
+    custom_extensions: str = ""
+
+
+def check_custom_extensions(event: CreateEndpointEvent):
+    if event.custom_extensions:
+        logger.info(f"custom_extensions: {event.custom_extensions}")
+        extensions_array = re.split('[ ,\n]+', event.custom_extensions)
+        extensions_array = list(set(extensions_array))
+        extensions_array = list(filter(None, extensions_array))
+        # make extensions_array to string again
+        event.custom_extensions = ','.join(extensions_array)
+
+        logger.info(f"formatted custom_extensions: {event.custom_extensions}")
+
+        if len(extensions_array) >= 3:
+            raise BadRequestException(message="custom_extensions should be at most 3")
+
+    return event
 
 
 def get_docker_image_uri(event: CreateEndpointEvent):
-    image_url = INFERENCE_ECR_IMAGE_URL
-
     if event.custom_docker_image_uri:
-        image_url = event.custom_docker_image_uri
+        return event.custom_docker_image_uri
 
-        if aws_region.startswith('cn-'):
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com\.cn)/([^/]+)/([^:]+):(.+)$'
-        else:
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com)/([^/]+)/([^:]+):(.+)$'
-
-        if not re.match(pattern, image_url):
-            raise Exception(f"Invalid docker image uri {image_url}")
-
-    return image_url
+    return INFERENCE_ECR_IMAGE_URL
 
 
 # POST /endpoints
@@ -86,6 +93,8 @@ def handler(raw_event, ctx):
             if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
                 raise BadRequestException(
                     f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
+
+        event = check_custom_extensions(event)
 
         endpoint_id = str(uuid.uuid4())
         short_id = endpoint_id[:7]
@@ -117,7 +126,7 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id)
+        _create_sagemaker_model(model_name, image_url, model_data_url, endpoint_name, endpoint_id, event)
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
@@ -157,6 +166,7 @@ def handler(raw_event, ctx):
             endpoint_type=event.endpoint_type,
             min_instance_number=event.min_instance_number,
             max_instance_number=event.max_instance_number,
+            custom_extensions=event.custom_extensions
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
@@ -170,17 +180,18 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
-def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id):
+def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
             'BUCKET_NAME': S3_BUCKET_NAME,
-            'INSTANCE_TYPE': instance_type,
+            'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
             'ESD_FILE_VERSION': ESD_FILE_VERSION,
+            'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
         },
     }
@@ -203,7 +214,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 1800,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 300,  # Specify the health checkup timeout in seconds
         }
     ]
 

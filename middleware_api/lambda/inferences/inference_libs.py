@@ -9,7 +9,7 @@ import boto3
 from PIL import Image
 from botocore.exceptions import ClientError
 
-from libs.utils import log_execution_time
+from libs.utils import log_execution_time, log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -25,19 +25,18 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 
 @log_execution_time
-def parse_result(sagemaker_out, inference_id, task_type, endpoint_name):
+def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name):
     update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
     try:
         if task_type in ["interrogate_clip", "interrogate_deepbooru"]:
             interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id)
         elif task_type in ["txt2img", "img2img"]:
-            txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name)
+            txt2_img_img(sagemaker_out, inference_id, endpoint_name)
         elif task_type in ["extra-single-image", "rembg"]:
             esi_rembg(sagemaker_out, inference_id, endpoint_name)
 
         update_inference_job_table(inference_id, 'status', 'succeed')
     except Exception as e:
-        logger.error(f"Error occurred: {str(e)}")
         update_inference_job_table(inference_id, 'status', 'failed')
         raise e
 
@@ -55,7 +54,7 @@ def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # Upload the file
     try:
         s3_client.upload_file(file_name, bucket, object_name)
-        print(f"File {file_name} uploaded to {bucket}/{object_name}")
+        log_json(f"File {file_name} uploaded to {bucket}/{object_name}")
     except Exception as e:
         print(f"Error occurred while uploading {file_name} to {bucket}/{object_name}: {e}")
         return False
@@ -135,7 +134,7 @@ def interrogate_clip_interrogate_deepbooru(sagemaker_out, inference_id):
     )
 
 
-def txt2_img_img(sagemaker_out, inference_id, task_type, endpoint_name):
+def txt2_img_img(sagemaker_out, inference_id, endpoint_name):
     for count, b64image in enumerate(sagemaker_out["images"]):
         output_img_type = None
         if 'output_img_type' in sagemaker_out and sagemaker_out['output_img_type']:
@@ -207,7 +206,7 @@ def save_inference_parameters(sagemaker_out, inference_id, endpoint_name):
 
     update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
 
-    print(f"Complete inference parameters {inference_parameters}")
+    log_json(f"Complete inference parameters", inference_parameters)
 
 
 @log_execution_time

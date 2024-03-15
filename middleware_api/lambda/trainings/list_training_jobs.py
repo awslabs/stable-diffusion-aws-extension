@@ -37,7 +37,7 @@ def handler(event, context):
 
         resp = ddb_service.scan(table=train_table, filters=_filter)
         if resp is None or len(resp) == 0:
-            return ok(data={'trainJobs': []})
+            return ok(data={'trainings': []})
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
@@ -66,6 +66,6 @@ def handler(event, context):
                 # superuser can view the legacy data
                 train_jobs.append(train_job_dto)
 
-        return ok(data={'trainJobs': train_jobs}, decimal=True)
+        return ok(data={'trainings': train_jobs}, decimal=True)
     except Exception as e:
         return response_error(e)

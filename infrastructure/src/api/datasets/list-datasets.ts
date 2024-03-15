@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -85,15 +84,15 @@ export class ListDatasetsApi {
   }
 
   private listAllDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'list_datasets.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
@@ -103,7 +102,7 @@ export class ListDatasetsApi {
       layers: [this.layer],
     });
 
-    const listDatasetsIntegration = new apigw.LambdaIntegration(
+    const listDatasetsIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

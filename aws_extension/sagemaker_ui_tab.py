@@ -1,6 +1,8 @@
 import datetime
 import logging
 import os
+import subprocess
+import threading
 
 import gradio as gr
 import modules.ui
@@ -61,8 +63,18 @@ for resource in all_resources:
         all_permissions.append(f'{resource}:{action}')
 
 
+def run_command():
+    subprocess.run(["sleep", "5"])
+    subprocess.run(["sudo", "systemctl", "restart", "sd-webui.service"])
+
+
+def restart_sd_webui_service():
+    thread = threading.Thread(target=run_command)
+    thread.start()
+    return "Restarting the service after 5 seconds..."
+
+
 def on_ui_tabs():
-    buildin_model_list = ['AWS JumpStart Model', 'AWS BedRock Model', 'Hugging Face Model']
     with gr.Blocks() as sagemaker_interface:
         invisible_user_name_for_ui = gr.Textbox(type='text', visible=False, interactive=False, container=False,
                                                 show_label=False, elem_id='invisible_user_name_for_ui')
@@ -611,7 +623,7 @@ def model_upload_tab():
 
             with gr.Column():
                 model_update_button = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                elem_id="sagemaker_model_update_button", size=(200, 50))
+                                                elem_id="sagemaker_model_update_button")
                 webui_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button.click(fn=sagemaker_ui.sagemaker_upload_model_s3,
                                           # _js="model_update",
@@ -647,12 +659,10 @@ def model_upload_tab():
                 upload_percent_label = gr.HTML(label="upload percent process", elem_id="progress-percent")
             with gr.Column():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                      elem_id="sagemaker_model_update_button_local",
-                                                      size=(200, 50))
+                                                      elem_id="sagemaker_model_update_button_local")
                 mycomp_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button_local.click(_js="uploadFiles",
                                                 fn=sagemaker_ui.sagemaker_upload_model_s3_local,
-                                                # inputs=[sagemaker_ui.checkpoint_info],
                                                 outputs=[mycomp_upload_model_textbox]
                                                 )
 
@@ -673,8 +683,7 @@ def model_upload_tab():
                 file_upload_result_component = gr.Label(elem_id="model_upload_result_value_ele_id")
             with gr.Row():
                 model_update_button_local = gr.Button(value="Upload Models to Cloud", variant="primary",
-                                                      elem_id="sagemaker_model_update_button_url",
-                                                      size=(200, 50))
+                                                      elem_id="sagemaker_model_update_button_url")
                 model_update_button_local.click(fn=sagemaker_ui.sagemaker_upload_model_s3_url,
                                                 inputs=[model_type_url_drop_down, file_upload_url_component,
                                                         file_upload_params_component],
@@ -770,7 +779,7 @@ def model_upload_tab():
 
 
 def sagemaker_endpoint_tab():
-    with gr.Column() as sagemaker_tab:
+    with (gr.Column() as sagemaker_tab):
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
         with gr.Column(variant="panel"):
@@ -838,6 +847,13 @@ def sagemaker_endpoint_tab():
                     with gr.Row(visible=True) as autoscaling_enabled_filter_row:
                         min_instance_number_dropdown = gr.Number(value=0, label="Min Instance Number", minimum=0,
                                                                  visible=True)
+                custom_extensions = gr.Textbox(
+                    value="",
+                    lines=5,
+                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
+                    label=f"Custom Extension URLs (Optional) - Please separate with line breaks",
+                    visible=False
+                )
                 custom_docker_image_uri = gr.Textbox(
                     value="",
                     lines=1,
@@ -855,6 +871,7 @@ def sagemaker_endpoint_tab():
                                            scale_count,
                                            autoscale,
                                            docker_image_uri,
+                                           custom_extensions,
                                            target_user_roles,
                                            min_instance_number,
                                            pr: gr.Request):
@@ -865,6 +882,7 @@ def sagemaker_endpoint_tab():
                                                     instance_type=instance_type,
                                                     initial_instance_count=scale_count,
                                                     custom_docker_image_uri=docker_image_uri,
+                                                    custom_extensions=custom_extensions,
                                                     autoscaling_enabled=autoscale,
                                                     user_roles=target_user_roles,
                                                     min_instance_number=min_instance_number,
@@ -878,19 +896,21 @@ def sagemaker_endpoint_tab():
                                                   instance_count_dropdown,
                                                   autoscaling_enabled,
                                                   custom_docker_image_uri,
+                                                  custom_extensions,
                                                   user_roles,
                                                   min_instance_number_dropdown,
                                                   ],
                                           outputs=[create_ep_output_textbox])  # todo: make a new output
 
         def toggle_new_rows(checkbox_state):
-            show_custom_docker_image = False
+            show_byoc = False
             if checkbox_state:
                 username = cloud_auth_manager.username
                 user = api_manager.get_user_by_username(username=username, user_token=username)
                 if 'roles' in user:
-                    show_custom_docker_image = 'byoc' in user['roles']
-            return gr.update(visible=checkbox_state), custom_docker_image_uri.update(visible=show_custom_docker_image)
+                    show_byoc = 'byoc' in user['roles']
+            return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
+                visible=show_byoc), custom_extensions.update(visible=show_byoc)
 
         def toggle_autoscaling_enabled_rows(checkbox_state):
             if checkbox_state:
@@ -913,7 +933,7 @@ def sagemaker_endpoint_tab():
         endpoint_advance_config_enabled.change(
             fn=toggle_new_rows,
             inputs=endpoint_advance_config_enabled,
-            outputs=[filter_row, custom_docker_image_uri]
+            outputs=[filter_row, custom_docker_image_uri, custom_extensions]
         )
 
         autoscaling_enabled.change(
@@ -1033,11 +1053,12 @@ def dataset_tab():
                 return file_paths
 
             file_output = gr.File()
-            upload_button = gr.UploadButton("Click to Upload a File", file_types=["image", "video"],
+            upload_button = gr.UploadButton("Click to Upload a File",
+                                            file_types=["image", "video", "text"],
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
-            def create_dataset(files, dataset_name, dataset_desc, pr: gr.Request):
+            def create_dataset(files, dataset_name, dataset_prefix, dataset_desc, pr: gr.Request):
                 if not files:
                     return 'Error: No files selected', None, None, None, None
                 if not dataset_name:
@@ -1059,6 +1080,7 @@ def dataset_tab():
                 payload = {
                     "dataset_name": dataset_name,
                     "content": dataset_content,
+                    "prefix": dataset_prefix,
                     "params": {
                         "description": dataset_desc
                     },
@@ -1103,12 +1125,14 @@ def dataset_tab():
                                                     placeholder="Please input dataset description",
                                                     label="Dataset Description",
                                                     elem_id="sd_dataset_description_textbox")
+            dataset_prefix = gr.Textbox(value="", lines=1, placeholder="",
+                                        label="Path Prefix (Optional)", elem_id="sd_dataset_prefix_textbox")
             create_dataset_button = gr.Button("Create Dataset", variant="primary",
                                               elem_id="sagemaker_dataset_create_button")  # size=(200, 50)
             dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
             create_dataset_button.click(
                 fn=create_dataset,
-                inputs=[upload_button, dataset_name_upload, dataset_description_upload],
+                inputs=[upload_button, dataset_name_upload, dataset_prefix, dataset_description_upload],
                 outputs=[
                     dataset_create_result,
                     dataset_name_upload,
@@ -1153,7 +1177,7 @@ def dataset_tab():
             with gr.Row():
                 dataset_gallery = gr.Gallery(
                     label="Dataset images", show_label=False, elem_id="gallery",
-                    columns=[2], rows=[2], object_fit="contain", height="auto"
+                    columns=3, object_fit="contain"
                 )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
@@ -1215,6 +1239,11 @@ def update_connect_config(api_url, api_token, username=None, password=None, init
             return f'{message}, but update setting failed'
     except Exception as e:
         return f'{message}, but update setting failed: {e}'
+
+    if os.path.exists("/etc/systemd/system/sd-webui.service"):
+        restart_sd_webui_service()
+        return f"Setting Updated, Service will restart in 5 seconds"
+
     return f"{message} & Setting Updated"
 
 

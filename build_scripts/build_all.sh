@@ -15,7 +15,4 @@ then
 fi
 
 ./build_and_push_inference.sh Dockerfile.inference.from_scratch aigc-webui-inference $mode $tag $commit_id
-
-./build_and_push.sh Dockerfile.utils.from_scratch aigc-webui-utils $mode $tag $commit_id
-
 ./build_and_push.sh Dockerfile.dreambooth.from_scratch aigc-webui-dreambooth-training $mode $tag $commit_id

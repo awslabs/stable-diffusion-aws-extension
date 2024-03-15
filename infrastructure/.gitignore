@@ -52,3 +52,4 @@ junit.xml
 .parcel-cache/
 yarn.lock
 package-lock.json
+pnpm-lock.yaml

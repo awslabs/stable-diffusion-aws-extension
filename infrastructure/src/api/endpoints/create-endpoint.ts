@@ -1,4 +1,4 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
@@ -15,7 +15,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import {ESD_FILE_VERSION} from "../../shared/resource-provider";
+import { ESD_FILE_VERSION } from '../../shared/const';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -271,15 +271,15 @@ export class CreateEndpointApi {
 
     const role = this.iamRole();
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_endpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: role,
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,

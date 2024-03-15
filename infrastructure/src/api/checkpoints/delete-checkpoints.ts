@@ -105,12 +105,12 @@ export class DeleteCheckpointsApi {
       {
         entry: `${this.src}/checkpoints`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_checkpoints.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
           MULTI_USER_TABLE: this.userTable.tableName,

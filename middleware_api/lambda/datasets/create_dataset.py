@@ -36,6 +36,7 @@ class DatasetCreateEvent:
     dataset_name: str
     content: List[DataUploadEvent]
     params: dict[str, Any]
+    prefix: str = ""
     # todo will be removed
     creator: str = ""
 
@@ -66,6 +67,7 @@ def handler(raw_event, context):
             dataset_status=DatasetStatus.Initialed,
             params=event.params,
             allowed_roles_or_users=user_roles,
+            prefix=event.prefix,
         )
 
         presign_url_map = get_s3_presign_urls(

@@ -1,14 +1,13 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
-  aws_apigateway as apigw,
   aws_apigateway,
-  aws_dynamodb,
   aws_iam,
   aws_lambda,
   CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -16,7 +15,8 @@ import { Construct } from 'constructs';
 export interface StopTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  trainTable: aws_dynamodb.Table;
+  trainTable: Table;
+  multiUserTable: Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
@@ -30,7 +30,8 @@ export class StopTrainingJobApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly httpMethod: string;
   private readonly router: aws_apigateway.Resource;
-  private readonly trainTable: aws_dynamodb.Table;
+  private readonly trainTable: Table;
+  private readonly multiUserTable: Table;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: StopTrainingJobApiProps) {
@@ -41,6 +42,7 @@ export class StopTrainingJobApi {
     this.httpMethod = props.httpMethod;
     this.router = props.router;
     this.trainTable = props.trainTable;
+    this.multiUserTable = props.multiUserTable;
     this.logLevel = props.logLevel;
 
     this.stopTrainJobLambda();
@@ -58,9 +60,13 @@ export class StopTrainingJobApi {
       actions: [
         'dynamodb:GetItem',
         'dynamodb:UpdateItem',
+        'dynamodb:BatchGetItem',
+        'dynamodb:Scan',
+        'dynamodb:Query',
       ],
       resources: [
         this.trainTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
@@ -91,23 +97,24 @@ export class StopTrainingJobApi {
   }
 
   private stopTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'stop_training_job.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
+        MULTI_USER_TABLE: this.multiUserTable.tableName,
         TRAIN_TABLE: this.trainTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
 
-    const integration = new apigw.LambdaIntegration(
+    const integration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,

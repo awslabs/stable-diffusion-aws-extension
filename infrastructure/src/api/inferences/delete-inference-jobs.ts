@@ -105,12 +105,12 @@ export class DeleteInferenceJobsApi {
       {
         entry: `${this.src}/inferences`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_inference_jobs.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           MULTI_USER_TABLE: this.userTable.tableName,
           INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,

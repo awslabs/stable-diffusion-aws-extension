@@ -13,8 +13,6 @@ from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStat
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-dynamodb = boto3.resource('dynamodb')
-
 train_table = os.environ.get('TRAINING_JOB_TABLE')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 user_topic_arn = os.environ.get('USER_EMAIL_TOPIC_ARN')

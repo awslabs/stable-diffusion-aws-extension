@@ -36,10 +36,10 @@ region = os.environ.get("AWS_REGION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 image_uri = os.environ.get("TRAIN_ECR_URL")
-user_topic_arn = os.environ.get("USER_EMAIL_TOPIC_ARN")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL") or logging.ERROR)
+
 ddb_service = DynamoDbUtilsService(logger=logger)
 s3 = boto3.client("s3", region_name=region)
 
@@ -213,6 +213,8 @@ def _create_training_job(raw_event, context):
     logger.info(json.dumps(json.loads(raw_event["body"])))
     _lora_train_type = event.lora_train_type
 
+    username = permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
+
     if _lora_train_type.lower() == LoraTrainType.KOHYA.value:
         # Kohya training
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
@@ -227,7 +229,7 @@ def _create_training_job(raw_event, context):
             raise ValueError(
                 "Missing train parameters, fm_type, s3_model_path and s3_data_path should be in training_params"
             )
-        
+
         fm_type = event.params["training_params"]["fm_type"]
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
@@ -263,7 +265,7 @@ def _create_training_job(raw_event, context):
         )
 
     event.params["training_type"] = _lora_train_type.lower()
-    user_roles = get_user_roles(ddb_service, user_table, raw_event["headers"]["username"])
+    user_roles = get_user_roles(ddb_service, user_table, username)
     ckpt_type = const.CheckPointType.LORA
     if "config_params" in event.params and \
             "additional_network" in event.params["config_params"] and \
@@ -292,7 +294,7 @@ def _create_training_job(raw_event, context):
         input_s3_location=train_input_s3_location,
         checkpoint_id=checkpoint.id,
         timestamp=datetime.datetime.now().timestamp(),
-        allowed_roles_or_users=[raw_event["headers"]["username"]],
+        allowed_roles_or_users=[username],
     )
     ddb_service.put_items(table=train_table, entries=train_job.__dict__)
 
@@ -300,13 +302,20 @@ def _create_training_job(raw_event, context):
 
 
 def handler(raw_event, context):
+    job_id = None
     try:
         logger.info(json.dumps(raw_event))
-        permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
         return ok(data=job_info, decimal=True)
     except Exception as e:
+        if job_id:
+            ddb_service.update_item(
+                table=train_table,
+                key={"id": job_id},
+                field_name="job_status",
+                value=TrainJobStatus.Failed.value,
+            )
         return response_error(e)
