@@ -29,6 +29,7 @@ export interface CreateTrainingJobApiProps {
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
+  datasetInfoTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
@@ -109,6 +110,7 @@ export class CreateTrainingJobApi {
         this.props.trainTable.tableArn,
         this.props.checkpointTable.tableArn,
         this.props.multiUserTable.tableArn,
+        this.props.datasetInfoTable.tableArn,
       ],
     }));
 
@@ -206,6 +208,7 @@ export class CreateTrainingJobApi {
         S3_BUCKET: this.props.s3Bucket.bucketName,
         TRAIN_TABLE: this.props.trainTable.tableName,
         MODEL_TABLE: this.props.modelTable.tableName,
+        DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
         MULTI_USER_TABLE: this.props.multiUserTable.tableName,
         LOG_LEVEL: this.props.logLevel.valueAsString,

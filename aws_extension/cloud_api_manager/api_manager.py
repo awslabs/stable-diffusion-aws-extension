@@ -276,7 +276,7 @@ class CloudApiManager:
             logger.error(f"list_all_ckpts: {e}")
             return []
 
-    def get_user_by_username(self, username='', show_password=False):
+    def get_user_by_username(self, username='', h_username='', show_password=False):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
@@ -287,7 +287,7 @@ class CloudApiManager:
                                     'username': username,
                                     'show_password': show_password
                                 },
-                                headers=self._get_headers_by_user(username))
+                                headers=self._get_headers_by_user(h_username))
         raw_resp.raise_for_status()
         logger.debug(raw_resp.json())
         resp = raw_resp.json()['data']

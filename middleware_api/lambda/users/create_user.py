@@ -44,7 +44,7 @@ def handler(raw_event, ctx):
             username = permissions_check(raw_event, [PERMISSION_USER_ALL])
 
         if event.initial:
-            role_names = [Default_Role]
+            role_names = [Default_Role, 'byoc']
 
             ddb_service.put_items(user_table, User(
                 kind=PARTITION_KEYS.user,

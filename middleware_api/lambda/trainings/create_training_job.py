@@ -15,10 +15,12 @@ import tomli_w
 from common import const
 from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import BadRequestException
 from common.response import (
     ok,
-    not_found,
+    not_found, created,
 )
+from common.util import query_data
 from libs.common_tools import DecimalEncoder
 from libs.data_types import (
     CheckPoint,
@@ -26,16 +28,19 @@ from libs.data_types import (
     TrainJob,
     TrainJobStatus,
 )
-from libs.utils import get_user_roles, permissions_check, response_error
+from libs.utils import get_user_roles, permissions_check, response_error, log_json
 
 bucket_name = os.environ.get("S3_BUCKET")
 train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
+dataset_info_table = os.environ.get("DATASET_INFO_TABLE")
 region = os.environ.get("AWS_REGION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 image_uri = os.environ.get("TRAIN_ECR_URL")
+
+ddb_client = boto3.client('dynamodb')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get("LOG_LEVEL") or logging.ERROR)
@@ -202,6 +207,31 @@ def _start_training_job(train_job_id: str):
     }
 
 
+def get_model_location(model_name):
+    resp = ddb_client.scan(
+        TableName=checkpoint_table,
+    )
+
+    for item in resp['Items']:
+        if 'checkpoint_names' not in item:
+            continue
+        if item['checkpoint_names']['L'][0]['S'] == model_name:
+            return f'{item["s3_location"]["S"]}/{model_name}'
+
+    raise BadRequestException("Model not found")
+
+
+def get_dataset_location(dataset_name):
+    dataset_items = ddb_service.query_items(table=dataset_info_table, key_values={
+        'dataset_name': dataset_name,
+    })
+
+    if len(dataset_items) == 0:
+        raise BadRequestException("Dataset not found")
+
+    return f"s3://{bucket_name}/dataset/{dataset_name}"
+
+
 def _create_training_job(raw_event, context):
     """Create a training job
 
@@ -220,26 +250,19 @@ def _create_training_job(raw_event, context):
         base_key = f"{_lora_train_type.lower()}/train/{request_id}"
         input_location = f"{base_key}/input"
 
-        if (
-                "training_params" not in event.params
-                or "model" not in event.params["training_params"]
-                or "dataset" not in event.params["training_params"]
-                or "fm_type" not in event.params["training_params"]
-        ):
-            raise ValueError(
-                "Missing train parameters model, dataset and fm_type should be in training_params"
-            )
+        model_name = query_data(event.params, ['training_params', 'model'])
+        dataset_name = query_data(event.params, ['training_params', 'dataset'])
+        fm_type = query_data(event.params, ['training_params', 'fm_type'])
+        query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
 
-        # todo get checkpoint by model name
-        event.params["training_params"][
-            "s3_model_path"] = f"s3://{bucket_name}/dataset/{event.params['training_params']['model']}"
+        event.params["training_params"]["s3_model_path"] = get_model_location(model_name)
+        del event.params['training_params']['model']
 
-        event.params["training_params"][
-            "s3_data_path"] = f"s3://{bucket_name}/dataset/{event.params['training_params']['dataset']}"
+        event.params["training_params"]["s3_data_path"] = get_dataset_location(dataset_name)
+        del event.params['training_params']['dataset']
 
-        return ok(data=event, decimal=True)
+        log_json('params', event.__dict__)
 
-        fm_type = event.params["training_params"]["fm_type"]
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
             toml_template_path = "template/" + const.KOHYA_TOML_FILE_NAME
@@ -247,7 +270,7 @@ def _create_training_job(raw_event, context):
             toml_dest_path = f"{input_location}/{const.KOHYA_XL_TOML_FILE_NAME}"
             toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
         else:
-            raise ValueError(
+            raise BadRequestException(
                 f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
             )
 
@@ -269,7 +292,7 @@ def _create_training_job(raw_event, context):
             "s3_toml_path"
         ] = f"s3://{bucket_name}/{toml_dest_path}"
     else:
-        raise ValueError(
+        raise BadRequestException(
             f"Invalid lora train type: {_lora_train_type}, the valid value is {LoraTrainType.KOHYA.value}."
         )
 
@@ -318,13 +341,10 @@ def handler(raw_event, context):
         job_id = _create_training_job(raw_event, context)
         job_info = _start_training_job(job_id)
 
-        return ok(data=job_info, decimal=True)
+        return created(data=job_info, decimal=True)
     except Exception as e:
         if job_id:
-            ddb_service.update_item(
-                table=train_table,
-                key={"id": job_id},
-                field_name="job_status",
-                value=TrainJobStatus.Failed.value,
-            )
+            ddb_service.delete_item(train_table, keys={
+                'id': job_id,
+            })
         return response_error(e)

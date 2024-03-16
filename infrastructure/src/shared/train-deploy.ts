@@ -83,6 +83,7 @@ export class TrainDeploy {
       userTopic: props.snsTopic,
       resourceProvider: this.resourceProvider,
       accountId: props.accountId,
+      datasetInfoTable: props.database.datasetInfoTable,
     });
 
     const trainJobRouter = routers.trainings.addResource('{id}');

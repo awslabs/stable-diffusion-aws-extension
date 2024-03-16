@@ -138,7 +138,7 @@ def on_ui_tabs():
 
         def ui_tab_setup(req: gr.Request):
             logger.debug(f'user {req.username} logged in')
-            user = api_manager.get_user_by_username(username=req.username)
+            user = api_manager.get_user_by_username(username=req.username, h_username=req.username)
             admin_visible = False
             sagemaker_create_visible = False
             role_management_visible = False
@@ -337,7 +337,8 @@ def user_settings_tab():
                     return gr.skip(), gr.skip(), gr.skip()
 
                 # todo: to be done
-                user = api_manager.get_user_by_username(evt.value, cloud_auth_manager.username, show_password=True)
+                user = api_manager.get_user_by_username(username=evt.value, h_username=cloud_auth_manager.username,
+                                                        show_password=True)
                 return user['username'], user['password'], user['roles']
 
             def search_users(name: str, role: str, paging, rq: gr.Request):
@@ -907,7 +908,7 @@ def sagemaker_endpoint_tab():
             show_byoc = False
             if checkbox_state:
                 username = cloud_auth_manager.username
-                user = api_manager.get_user_by_username(username=username)
+                user = api_manager.get_user_by_username(username=username, h_username=username)
                 if 'roles' in user:
                     show_byoc = 'byoc' in user['roles']
             return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
@@ -1012,8 +1013,8 @@ def _list_trainings_job(username):
     items = api_manager.list_all_train_jobs_raw(username=username)
     for item in items:
         jobs.append([
-            item['sagemakerTrainName'],
             item['id'],
+            item['sagemakerTrainName'],
             item['modelName'],
             item['status'],
             item['trainType'],
@@ -1219,71 +1220,11 @@ def trainings_tab():
         with gr.Column(variant='panel', scale=1):
             gr.HTML(value="<u><b>Create a Training Job</b></u>")
 
-            def create_training_job(files, dataset_name, dataset_prefix, dataset_desc, pr: gr.Request):
-                if not files:
-                    return 'Error: No files selected', None, None, None, None
-                if not dataset_name:
-                    return 'Error: No dataset name', None, None, None, None
-                dataset_content = []
-                file_path_lookup = {}
-                for file in files:
-                    orig_name = file.name.split(os.sep)[-1]
-                    file_path_lookup[orig_name] = file.name
-                    dataset_content.append(
-                        {
-                            "filename": orig_name,
-                            "name": orig_name,
-                            "type": "image",
-                            "params": {}
-                        }
-                    )
-
-                payload = {
-                    "dataset_name": dataset_name,
-                    "content": dataset_content,
-                    "prefix": dataset_prefix,
-                    "params": {
-                        "description": dataset_desc
-                    },
-                    "creator": pr.username
-                }
-
-                url = get_variable_from_json('api_gateway_url') + 'datasets'
-                api_key = get_variable_from_json('api_token')
-
-                if not has_config():
-                    return f'Please config api url and token', None, None, None, None
-
-                raw_response = requests.post(url=url, json=payload,
-                                             headers={'x-api-key': api_key, "username": pr.username})
-                logger.info(raw_response.json())
-
-                if raw_response.status_code != 201:
-                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
-                response = raw_response.json()['data']
-
-                logger.info(f"Start upload sample files response:\n{response}")
-                for filename, presign_url in response['s3PresignUrl'].items():
-                    file_path = file_path_lookup[filename]
-                    with open(file_path, 'rb') as f:
-                        response = requests.put(presign_url, f)
-                        logger.info(response)
-                        response.raise_for_status()
-
-                payload = {
-                    "status": "Enabled"
-                }
-
-                raw_response = requests.put(url=f"{url}/{dataset_name}", json=payload,
-                                            headers={'x-api-key': api_key, "username": pr.username})
-                raw_response.raise_for_status()
-                logger.debug(raw_response.json())
-                return f'Complete Dataset {dataset_name} creation', None, None, None, None
-
             training_instance_types = ["ml.g5.2xlarge", "ml.g5.4xlarge"]
             lora_train_type = gr.Dropdown(label="Lora Train Type", choices=["kohya"], value="kohya")
             training_instance_type = gr.Dropdown(label="Training Instance Type", choices=training_instance_types,
                                                  value="ml.g5.2xlarge")
+            fm_type = gr.Dropdown(label="FM Type", choices=["sd_1_5", "sd_xl"], value="sd_1_5")
 
             with gr.Row():
                 model_name = gr.Dropdown(label="Model", choices=[], elem_id='train_model_dp')
@@ -1319,8 +1260,43 @@ def trainings_tab():
 
             max_train_epochs = gr.Number(value=100, label="max_train_epochs", minimum=0)
 
-            create_dataset_button = gr.Button("Create Training Job", variant="primary")
-            dataset_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+            create_train_button = gr.Button("Create Training Job", variant="primary")
+            train_create_result = gr.Textbox(value="", label="Create Result", interactive=False)
+
+            def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name, output_name,
+                             save_every_n_epochs, max_train_epochs, rq: gr.Request):
+                data = {
+                    "lora_train_type": lora_train_type,
+                    "params": {
+                        "training_params": {
+                            "training_instance_type": training_instance_type,
+                            "model": model_name,
+                            "dataset": dataset_name,
+                            "fm_type": fm_type
+                        },
+                        "config_params": {
+                            "saving_arguments": {
+                                "output_name": output_name,
+                                "save_every_n_epochs": save_every_n_epochs
+                            },
+                            "training_arguments": {
+                                "max_train_epochs": max_train_epochs
+                            }
+                        }
+                    }
+                }
+                api.set_username(rq.username)
+
+                if not has_config():
+                    return [], 'Please config api url and token first'
+
+                resp = api.create_training_job(data=data)
+                return resp.json()['message']
+
+            create_train_button.click(fn=create_train,
+                                      inputs=[lora_train_type, training_instance_type, fm_type, model_name,
+                                              dataset_name, output_name,
+                                              save_every_n_epochs, max_train_epochs], outputs=[train_create_result])
 
         with gr.Column(scale=2):
             with gr.Row():
@@ -1329,7 +1305,7 @@ def trainings_tab():
 
                     with gr.Row():
                         train_list_df = gr.Dataframe(
-                            headers=['sagemakerTrainName', 'id', 'modelName', 'status', 'trainType'],
+                            headers=['id', 'sagemakerTrainName', 'modelName', 'status', 'trainType'],
                             datatype=['str', 'str', 'str', 'str', 'str']
                         )
 
