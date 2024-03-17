@@ -733,7 +733,7 @@ def model_upload_tab():
             total = resp.json()['data']['total']
             pages = resp.json()['data']['pages']
 
-            if len(resp.json()['data']['checkpoints']):
+            if len(resp.json()['data']['checkpoints']) == 0:
                 return [['', '', '', '', '']], 'No data'
 
             for model in resp.json()['data']['checkpoints']:
@@ -774,7 +774,7 @@ def model_upload_tab():
                     choices=roles(cloud_auth_manager.username),
                     label="Roles")
         with gr.Row():
-            refresh_button = gr.Button(value="Refresh", variant="primary")
+            refresh_button = gr.Button(value="Refresh", variant="primary", elem_id="refresh_ckpts_button_id")
             refresh_button.click(
                 fn=list_ckpts_data,
                 inputs=[query_types, query_status, query_roles, current_page],
