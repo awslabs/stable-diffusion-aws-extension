@@ -1,7 +1,12 @@
 import { execFile } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import { promisify } from 'util';
-import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient, UpdateTableCommand } from '@aws-sdk/client-dynamodb';
+import {
+  CreateTableCommand,
+  CreateTableCommandInput,
+  DynamoDBClient, PutItemCommand, PutItemCommandInput,
+  UpdateTableCommand,
+} from '@aws-sdk/client-dynamodb';
 import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import {
@@ -71,6 +76,7 @@ export async function handler(event: Event, context: Object) {
 async function createAndCheckResources() {
   await createBucket();
   await createTables();
+  await putItemUsersTable();
   await createGlobalSecondaryIndex('SDInferenceJobTable');
   await createKms(
     'sd-extension-password-key',
@@ -304,6 +310,70 @@ async function createTables() {
 
 }
 
+async function putItemUsersTable() {
+
+  await putItem('MultiUserTable', {
+    kind: { S: 'role' },
+    sort_key: { S: 'IT Operator' },
+    creator: { S: 'ESD' },
+    permissions: {
+      L: [
+        { S: 'train:all' },
+        { S: 'checkpoint:all' },
+        { S: 'inference:all' },
+        { S: 'sagemaker_endpoint:all' },
+        { S: 'user:all' },
+        { S: 'role:all' },
+      ],
+    },
+  });
+
+  await putItem('MultiUserTable', {
+    kind: { S: 'role' },
+    sort_key: { S: 'byoc' },
+    creator: { S: 'ESD' },
+    permissions: {
+      L: [
+        { S: 'train:all' },
+        { S: 'checkpoint:all' },
+        { S: 'inference:all' },
+        { S: 'sagemaker_endpoint:all' },
+        { S: 'user:all' },
+        { S: 'role:all' },
+      ],
+    },
+  });
+
+  await putItem('MultiUserTable', {
+    kind: { S: 'user' },
+    sort_key: { S: 'api' },
+    creator: { S: 'ESD' },
+    roles: {
+      L: [
+        {
+          S: 'IT Operator',
+        },
+      ],
+    },
+  });
+
+}
+
+async function putItem(tableName: string, item: any) {
+  try {
+    const putItemCommandInput: PutItemCommandInput = {
+      TableName: tableName,
+      Item: item,
+    };
+    const putItemCommand = new PutItemCommand(putItemCommandInput);
+    await ddbClient.send(putItemCommand);
+    console.log(`putItem into ${tableName}`);
+    console.log(item);
+  } catch (err: any) {
+    console.log(err);
+  }
+}
+
 async function createGlobalSecondaryIndex(tableName: string) {
   const params: UpdateTableCommandInput = {
     TableName: tableName,
@@ -344,7 +414,7 @@ async function createGlobalSecondaryIndex(tableName: string) {
     const response = await ddbClient.send(command);
     console.log('Success', response);
   } catch (error) {
-    console.error('Error', error);
+    console.log('Error', error);
   }
 }
 

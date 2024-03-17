@@ -12,6 +12,7 @@ import { ESD_FILE_VERSION } from './const';
 export interface ResourceProviderProps {
   bucketName?: string;
   ecrImageTag?: string;
+  version?: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -91,6 +92,7 @@ export class ResourceProvider extends Construct {
       actions: [
         'dynamodb:CreateTable',
         'dynamodb:UpdateTable',
+        'dynamodb:PutItem',
         'sns:CreateTopic',
         'iam:ListRolePolicies',
         'iam:PutRolePolicy',
