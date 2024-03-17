@@ -694,6 +694,7 @@ def async_loop_wrapper(f):
 
 
 def process_result_by_inference_id(inference_id_or_data, endpoint_type):
+    print(f"process_result_by_inference_id {inference_id_or_data} {endpoint_type}")
     if endpoint_type == 'Async':
         resp = get_inference_job(inference_id_or_data)
         inference_id = inference_id_or_data
@@ -1082,7 +1083,7 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(sd_model_on_cloud_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_model_list(username, username)
+                                                  'choices': load_model_list(username)
                                               }, 'refresh_cloud_model_down')
 
                 infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time"],

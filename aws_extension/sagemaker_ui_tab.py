@@ -111,7 +111,7 @@ def on_ui_tabs():
         with gr.Tab(label='Datasets Management', variant='panel'):
             with gr.Row():
                 dataset_tab()
-        with gr.Tab(label='Trainings Management', variant='panel'):
+        with gr.Tab(label='Train Management', variant='panel'):
             with gr.Row():
                 trainings_tab()
 
