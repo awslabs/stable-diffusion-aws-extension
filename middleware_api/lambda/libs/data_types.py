@@ -95,9 +95,9 @@ class BaseMultiUserEntity:
 
 @dataclass
 class User(BaseMultiUserEntity):
-    password: bytes
     roles: [str]
     params: Optional[dict[str, Any]] = None
+    password: bytes = None
 
     def __post_init__(self):
         if type(self.password) in (boto3.dynamodb.types.Binary, boto3.dynamodb.types.BINARY):
