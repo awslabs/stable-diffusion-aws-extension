@@ -36,7 +36,7 @@ def query_data(data, paths):
         value = value.get(path)
         if not value:
             path_string = reduce(lambda x, y: f"{x}.{y}", paths)
-            raise ValueError(f"Could not find {path_string}")
+            raise ValueError(f"Missing {path_string}")
 
     return value
 

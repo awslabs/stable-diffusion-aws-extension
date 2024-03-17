@@ -10,7 +10,6 @@ from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username, \
     permissions_check, response_error, get_user_name
-from roles.create_role import handler as upsert_role
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
@@ -53,35 +52,6 @@ def handler(raw_event, ctx):
                 roles=[role_names[0]],
                 creator=username,
             ).__dict__)
-
-            for rn in role_names:
-                role_event = {
-                    'role_name': rn,
-                    'initial': event.initial,
-                    'permissions': [
-                        'train:all',
-                        'checkpoint:all',
-                        'inference:all',
-                        'sagemaker_endpoint:all',
-                        'user:all',
-                        'role:all'
-                    ],
-                }
-
-                @dataclass
-                class MockContext:
-                    aws_request_id: str
-                    from_sd_local: bool
-
-                # todo will be remove, not use api
-                create_role_event = {
-                    'body': json.dumps(role_event),
-                    'headers': raw_event['headers'],
-                }
-                resp = upsert_role(create_role_event, MockContext(aws_request_id='', from_sd_local=True))
-
-                if resp['statusCode'] != 201:
-                    return resp
 
             data = {
                 'user': {

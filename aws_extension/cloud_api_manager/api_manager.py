@@ -138,7 +138,7 @@ class CloudApiManager:
             return "Delete Checkpoints Successfully"
         except Exception as e:
             logger.error(e)
-            return f"Failed to delete checkpoints with exception: {e}"
+            return f"Failed to delete checkpoint with exception: {e}"
 
     def ckpt_rename(self, ckpt, name, user_token=""):
         logger.debug(f"ckpts: {ckpt}")
@@ -150,6 +150,7 @@ class CloudApiManager:
         }
 
         try:
+            api.set_username(user_token)
             resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
             return resp.json()['message']
         except Exception as e:

@@ -56,6 +56,7 @@ def handler(event, context):
                 'trainType': train_job.train_type,
                 'created': train_job.timestamp,
                 'sagemakerTrainName': train_job.sagemaker_train_name,
+                'params': train_job.params,
             }
             if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users,
                                                                            requestor_roles, requestor_name):
