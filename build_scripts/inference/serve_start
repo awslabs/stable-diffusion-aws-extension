@@ -47,7 +47,6 @@ start_at=$(date +%s)
 tar -xf bin.tar
 tar -xf site-packages.tar
 tar -xf stable-diffusion-webui.tar
-tar -xf inswapper_128.onnx
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
@@ -66,6 +65,7 @@ mv -f site-packages/triton/_C/*                   /opt/conda/lib/python3.10/site
 mv -f site-packages/llvmlite/binding/*            /opt/conda/lib/python3.10/site-packages/llvmlite/binding/
 mv -f $instance_package/stable-diffusion-webui/*  /opt/ml/code/
 mv -f conda_lib/*                                 /opt/conda/lib/
+tar -xf inswapper_128.onnx
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "move files: $cost seconds"
