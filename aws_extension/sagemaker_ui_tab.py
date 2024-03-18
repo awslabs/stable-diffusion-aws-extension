@@ -113,7 +113,7 @@ def on_ui_tabs():
                 dataset_tab()
         with gr.Tab(label='Train Management', variant='panel'):
             with gr.Row():
-                trainings_tab()
+                train_list = trainings_tab()
 
         def get_version_info():
             if not hasattr(shared.demo.server_app, 'api_version'):
@@ -159,6 +159,7 @@ def on_ui_tabs():
                 gr.update(visible=role_management_visible), \
                 gr.update(visible=sagemaker_create_visible), \
                 _list_models(req.username)[0:10], \
+                _list_trainings_job(req.username), \
                 _list_sagemaker_endpoints(req.username), \
                 req.username, \
                 _list_users(req.username, None, None)[:user_table_size], \
@@ -173,6 +174,7 @@ def on_ui_tabs():
             role_form,
             sagemaker_part,
             model_list_dataframe,
+            train_list,
             endpoint_list_df,
             invisible_user_name_for_ui,
             user_table,
@@ -775,7 +777,6 @@ def model_upload_tab():
                                         value="Please select one checkpoint to delete or rename",)
             ckpt_list_selected = gr.Textbox(show_label=False, interactive=False, visible=False)
         with gr.Row():
-            delete_ckpt_btn = gr.Button(value='Delete \U0001F5D1', elem_id="delete_ckpt")
 
             new_name_textbox = gr.TextArea(placeholder="Input new Checkpoint name",
                                            show_label=False,
@@ -796,18 +797,6 @@ def model_upload_tab():
                 return message, model_name
             model_list.select(fn=choose_model, inputs=[model_list], outputs=[ckpt_list_info, ckpt_list_selected])
 
-            def _delete_ckpt(ckpt_id, pr: gr.Request):
-                show_output = ckpt_list_info.update(visible=True)
-                if not ckpt_id:
-                    message = "Please select one checkpoint to delete."
-                else:
-                    message = api_manager.ckpts_delete(ckpts=[ckpt_id], user_token=pr.username)
-                return show_output, message, ''
-
-            delete_ckpt_btn.click(fn=_delete_ckpt,
-                                  inputs=[ckpt_list_selected],
-                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
-
             def _rename_ckpt(ckpt_id, new_name, pr: gr.Request):
                 show_output = ckpt_list_info.update(visible=True)
                 if not ckpt_id:
@@ -819,6 +808,19 @@ def model_upload_tab():
             ckpts_rename_button.click(_rename_ckpt,
                                       inputs=[ckpt_list_selected, new_name_textbox],
                                       outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
+
+            def _delete_ckpt(ckpt_id, pr: gr.Request):
+                show_output = ckpt_list_info.update(visible=True)
+                if not ckpt_id:
+                    message = "Please select one checkpoint to delete."
+                else:
+                    message = api_manager.ckpts_delete(ckpts=[ckpt_id], user_token=pr.username)
+                return show_output, message, ''
+
+            delete_ckpt_btn = gr.Button(value='Delete \U0001F5D1', elem_id="delete_ckpt")
+            delete_ckpt_btn.click(fn=_delete_ckpt,
+                                  inputs=[ckpt_list_selected],
+                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
             # ---- bind functions end ----
 
     return upload_tab, model_list
@@ -1426,6 +1428,8 @@ def trainings_tab():
                         train_delete_btn.click(_train_delete,
                                                inputs=[train_selected],
                                                outputs=[train_list_info, train_selected, train_list])
+
+    return train_list
 
 
 def delete_dataset(selected_value):
