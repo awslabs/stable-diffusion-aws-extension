@@ -125,13 +125,12 @@ class CloudApiManager:
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
 
-        checkpoint_id_list = [item.split(string_separator)[2] for item in ckpts]
-        logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
         data = {
-            "checkpoint_id_list": checkpoint_id_list,
+            "checkpoint_id_list": ckpts,
         }
 
         try:
+            api.set_username(user_token)
             resp = api.delete_checkpoints(data=data)
             if resp.status_code != 204:
                 raise Exception(resp.json()['message'])
@@ -140,18 +139,14 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete checkpoint with exception: {e}"
 
-    def ckpt_rename(self, ckpt, name, user_token=""):
-        logger.debug(f"ckpts: {ckpt}")
-
-        checkpoint_id = ckpt.split(string_separator)[2]
-        logger.debug(f"checkpoint_id: {checkpoint_id}")
+    def ckpt_rename(self, ckpt_id, name, user_token=""):
         data = {
             "name": name,
         }
 
         try:
             api.set_username(user_token)
-            resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
+            resp = api.update_checkpoint(checkpoint_id=ckpt_id, data=data)
             return resp.json()['message']
         except Exception as e:
             logger.error(e)

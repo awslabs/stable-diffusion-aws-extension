@@ -525,7 +525,10 @@ def _list_models(username):
             model['type'],
             allowed,
             model['status'],
-            datetime.datetime.fromtimestamp(model['created'])])
+            datetime.datetime.fromtimestamp(model['created']),
+            model['id'],
+        ],
+        ),
     return models
 
 
@@ -551,51 +554,6 @@ def _list_users(username, name, role):
         table.append([user['username'], ', '.join(user['roles']), user['creator']])
 
     return table
-
-
-def ckpt_rename_block():
-    with gr.Column(title="CheckPoint Management", variant='panel'):
-        gr.HTML(value="<u><b>CheckPoint Management</b></u>")
-        with gr.Row():
-            ckpt_rename_dropdown = gr.Dropdown(multiselect=False, label="Select Cloud CheckPoint")
-            modules.ui.create_refresh_button(ckpt_rename_dropdown,
-                                             lambda: None,
-                                             lambda: {"choices": api_manager.list_all_ckpts(
-                                                 username=cloud_auth_manager.username,
-                                                 user_token=cloud_auth_manager.username)},
-                                             "refresh_ckpts_delete")
-
-            delete_ckpt_btn = ToolButton(value='\U0001F5D1', elem_id="delete_ckpt")
-
-        new_name_textbox = gr.TextArea(label="Input new Checkpoint name",
-                                       lines=1,
-                                       elem_id="new_ckpt_value_ele_id")
-
-        ckpts_rename_button = gr.Button(value="Rename Checkpoint", variant='primary', elem_id="ckpts_rename_btn")
-
-        ckpt_manage_output = gr.Textbox(interactive=False, show_label=False, visible=False)
-
-        def _delete_ckpt(ckpts, pr: gr.Request):
-            show_output = ckpt_manage_output.update(visible=True)
-            if not ckpts:
-                message = "Please select one checkpoint to delete."
-            else:
-                message = api_manager.ckpts_delete(ckpts=[ckpts], user_token=pr.username)
-            return message, show_output
-        delete_ckpt_btn.click(fn=_delete_ckpt,
-                              inputs=[ckpt_rename_dropdown],
-                              outputs=[ckpt_manage_output, ckpt_manage_output])
-
-        def _rename_ckpt(ckpt, name, pr: gr.Request):
-            show_output = ckpt_manage_output.update(visible=True)
-            if not ckpt:
-                return 'Please select one checkpoint to rename.', show_output
-            if not name:
-                return 'Please input new name.', show_output
-            return api_manager.ckpt_rename(ckpt=ckpt, name=name, user_token=pr.username), show_output
-        ckpts_rename_button.click(_rename_ckpt,
-                                  inputs=[ckpt_rename_dropdown, new_name_textbox],
-                                  outputs=[ckpt_manage_output, ckpt_manage_output])
 
 
 def model_upload_tab():
@@ -670,7 +628,6 @@ def model_upload_tab():
                                                 elem_id="sagemaker_model_update_button")
                 webui_upload_model_textbox = gr.Textbox(interactive=False, show_label=False)
                 model_update_button.click(fn=sagemaker_ui.sagemaker_upload_model_s3,
-                                          # _js="model_update",
                                           inputs=[sd_checkpoints_path, textual_inversion_path, lora_path,
                                                   hypernetwork_path, controlnet_model_path, vae_path],
                                           outputs=[webui_upload_model_textbox, sd_checkpoints_path,
@@ -734,26 +691,7 @@ def model_upload_tab():
                                                 outputs=[file_upload_result_component]
                                                 )
 
-        ckpt_rename_block()
-
     with gr.Column(scale=2):
-        def list_models_prev(paging, rq: gr.Request):
-            if paging == 0:
-                return gr.skip(), gr.skip()
-
-            result = _list_models(rq.username)
-            start = paging - 10 if paging - 10 >= 0 else 0
-            end = start + 10
-            return result[start: end], start
-
-        def list_models_next(paging, rq: gr.Request):
-            result = _list_models(rq.username)
-            if paging >= len(result):
-                return gr.skip(), gr.skip()
-
-            start = paging + 10 if paging + 10 < len(result) else paging
-            end = start + 10 if start + 10 < len(result) else len(result)
-            return result[start: end], start
 
         def list_ckpts_data(query_types, query_status, query_roles, current_page, rq: gr.Request):
             params = {
@@ -795,13 +733,15 @@ def model_upload_tab():
                     model['id'],
                 ])
 
-            return models, f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
+            show_page_info = page_info.update(visible=True)
+            return models, show_page_info, f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
 
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time', 'id'],
-                                     datatype=['str', 'str', 'str', 'str', 'str', 'str']
-                                     )
-        page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False)
+        model_list = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time', 'id'],
+                                  datatype=['str', 'str', 'str', 'str', 'str', 'str'],
+                                  interactive=False,
+                                  )
+        page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False, visible=False)
         with gr.Row():
             with gr.Column():
                 current_page = gr.Number(label="Page Number", value=1, minimum=1, step=1)
@@ -821,14 +761,67 @@ def model_upload_tab():
                     choices=roles(cloud_auth_manager.username),
                     label="Roles")
         with gr.Row():
-            refresh_button = gr.Button(value="Refresh", variant="primary", elem_id="refresh_ckpts_button_id")
+            refresh_button = gr.Button(value="Refresh List", elem_id="refresh_ckpts_button_id")
             refresh_button.click(
                 fn=list_ckpts_data,
                 inputs=[query_types, query_status, query_roles, current_page],
-                outputs=[model_list_df, page_info]
+                outputs=[model_list, page_info, page_info]
             )
+        with gr.Row():
+            gr.HTML(value="<b>Cloud Model Delete or Rename</b>")
+        with gr.Row():
+            ckpt_list_info = gr.Textbox(show_label=False,
+                                        interactive=False,
+                                        value="Please select one checkpoint to delete or rename",)
+            ckpt_list_selected = gr.Textbox(show_label=False, interactive=False, visible=False)
+        with gr.Row():
+            delete_ckpt_btn = gr.Button(value='Delete \U0001F5D1', elem_id="delete_ckpt")
 
-    return upload_tab, model_list_df
+            new_name_textbox = gr.TextArea(placeholder="Input new Checkpoint name",
+                                           show_label=False,
+                                           lines=1,
+                                           elem_id="new_ckpt_value_ele_id")
+
+            ckpts_rename_button = gr.Button(value='Rename Checkpoint', elem_id="ckpts_rename_btn")
+
+            # ---- bind functions start ----
+            def choose_model(evt: gr.SelectData, models):
+                row_index = evt.index[0]
+                model_name = models.values[row_index][5]
+                if model_name:
+                    message = f"You selected model is: {model_name}"
+                else:
+                    message = "No model selected"
+                    model_name = ""
+                return message, model_name
+            model_list.select(fn=choose_model, inputs=[model_list], outputs=[ckpt_list_info, ckpt_list_selected])
+
+            def _delete_ckpt(ckpt_id, pr: gr.Request):
+                show_output = ckpt_list_info.update(visible=True)
+                if not ckpt_id:
+                    message = "Please select one checkpoint to delete."
+                else:
+                    message = api_manager.ckpts_delete(ckpts=[ckpt_id], user_token=pr.username)
+                return show_output, message, ''
+
+            delete_ckpt_btn.click(fn=_delete_ckpt,
+                                  inputs=[ckpt_list_selected],
+                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
+
+            def _rename_ckpt(ckpt_id, new_name, pr: gr.Request):
+                show_output = ckpt_list_info.update(visible=True)
+                if not ckpt_id:
+                    return 'Please select one checkpoint to rename.', show_output, ''
+                if not new_name:
+                    return 'Please input new name.', show_output, ''
+                return api_manager.ckpt_rename(ckpt_id=ckpt_id, name=new_name, user_token=pr.username), show_output, ''
+
+            ckpts_rename_button.click(_rename_ckpt,
+                                      inputs=[ckpt_list_selected, new_name_textbox],
+                                      outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
+            # ---- bind functions end ----
+
+    return upload_tab, model_list
 
 
 def ep_create_tab():
