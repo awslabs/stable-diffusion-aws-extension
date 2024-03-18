@@ -14,6 +14,8 @@ x-api-key: xxxxxxxxxxxxxxxxxxxx
 username: admin
 ```
 
+> API 部署完成后，会内置名为 `api` 的用户，如果您不使用 WebUI 进行初始化或者没有通过 API 创建新的用户，可使用 `api` 作为用户名。
+
 ## 1.4.0 或更低版本
 
 应在 HTTP 标头中包含 `Authorization`，如下所示：
