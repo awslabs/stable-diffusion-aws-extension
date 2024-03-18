@@ -47,6 +47,7 @@ start_at=$(date +%s)
 tar -xf bin.tar
 tar -xf site-packages.tar
 tar -xf stable-diffusion-webui.tar
+tar -xf inswapper_128.onnx
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
