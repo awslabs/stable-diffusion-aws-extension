@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import os
 import subprocess
@@ -36,7 +37,6 @@ else:
                          "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
     inference_choices_default = "ml.g5.2xlarge"
 
-test_connection_result = None
 api_gateway_url = None
 api_key = None
 user_table_size = 10
@@ -106,8 +106,8 @@ def on_ui_tabs():
 
         with gr.Tab(label='Inference Endpoint Management', variant='panel'):
             with gr.Row():
-                sagemaker_part = sagemaker_endpoint_tab()
-                endpoint_list_df = list_sagemaker_endpoints_tab()
+                sagemaker_part = ep_create_tab()
+                endpoint_list_df = ep_list_tab()
         with gr.Tab(label='Datasets Management', variant='panel'):
             with gr.Row():
                 dataset_tab()
@@ -195,7 +195,7 @@ def api_setting_tab():
         api_key = get_variable_from_json('api_token')
         with gr.Row() as api_url_form:
             api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1,
-                                         placeholder="Please enter API Url of Middle", label="API Url",
+                                         placeholder="Please enter API Url of Middle", label="API URL",
                                          elem_id="aws_middleware_api")
 
             def update_api_gateway_url():
@@ -220,15 +220,59 @@ def api_setting_tab():
                                              "refresh_api_token")
         username_textbox, password_textbox, user_settings_form = ui_user_settings_tab()
         with gr.Row():
-            global test_connection_result
-            test_connection_result = gr.Label(title="Output")
+            connection_output = gr.Label(title="Output", visible=False, show_label=False)
         with gr.Row():
-            aws_connect_button = gr.Button(value="Test Connection & Update Setting", variant='primary',
+            aws_connect_button = gr.Button(value="Test Connection & Update Setting",
+                                           variant='primary',
                                            elem_id="aws_config_save")
+
+            def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
+                show_output = connection_output.update(visible=True)
+                if api_url == 'cancelled':
+                    return show_output, "cancelled"
+
+                if not api_url:
+                    return show_output, "Please input api url"
+
+                if not api_token:
+                    return show_output, "Please input api token"
+
+                # Check if api_url ends with '/', if not append it
+                if not api_url.endswith('/'):
+                    api_url += '/'
+
+                if not test_aws_connect_config(api_url, api_token):
+                    return show_output, "Failed to connect to backend server, please check your API version or url and token"
+
+                message = "Successfully Connected"
+                save_variable_to_json('api_gateway_url', api_url)
+                save_variable_to_json('api_token', api_token)
+                save_variable_to_json('username', username)
+                global api_gateway_url
+                api_gateway_url = get_variable_from_json('api_gateway_url')
+                global api_key
+                api_key = get_variable_from_json('api_token')
+                sagemaker_ui.init_refresh_resource_list_from_cloud(username)
+                try:
+                    if not api_manager.upsert_user(username=username,
+                                                   password=password,
+                                                   roles=[],
+                                                   creator=username,
+                                                   initial=initial):
+                        return show_output, f'{message}, but update setting failed'
+                except Exception as e:
+                    return show_output, f'{message}, but update setting failed, because {e}'
+
+                if os.path.exists("/etc/systemd/system/sd-webui.service"):
+                    restart_sd_webui_service()
+                    return show_output, f"Setting Updated, Service will restart in 5 seconds"
+
+                return show_output, f"{message} & Setting Updated"
+
             aws_connect_button.click(_js="update_auth_settings",
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
-                                     outputs=[test_connection_result])
+                                     outputs=[connection_output, connection_output])
 
     with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
@@ -254,17 +298,15 @@ def api_setting_tab():
 
 def ui_user_settings_tab():
     with gr.Column() as ui_user_setting:
-        gr.HTML('<b>Username</b>')
         with gr.Row():
             username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True,
-                                          placeholder='Please enter username', show_label=False)
+                                          placeholder='Please enter username', label="Username")
             modules.ui.create_refresh_button(username_textbox, lambda: get_variable_from_json('username'),
                                              lambda: {"value": get_variable_from_json('username')},
                                              "refresh_username")
-        gr.HTML('<b>Password</b>')
         with gr.Row():
             password_textbox = gr.Textbox(type='password', interactive=True,
-                                          placeholder='Please enter your password', show_label=False)
+                                          placeholder='Please enter your password', label="Password")
             modules.ui.create_refresh_button(password_textbox, lambda: None,
                                              lambda: {"placeholder": 'Please reset your password!'},
                                              "refresh_password")
@@ -291,25 +333,27 @@ def user_settings_tab():
                                               lambda *args: None,
                                               lambda username: {"choices": roles(username)},
                                               "refresh_create_user_roles")
-            upsert_user_button = gr.Button(value="Upsert a User", variant='primary')
+            upsert_user_button = gr.Button(value="Insert or Update a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
-            user_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
+            user_setting_output = gr.Textbox(interactive=False, show_label=False, visible=False)
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
+                show_output = user_setting_output.update(visible=True)
                 try:
                     if not username.rstrip() or len(username.rstrip()) < 1:
-                        return f'Please trim trailing spaces. Username should not be none.'
+                        return f'Please trim trailing spaces. Username should not be none.', show_output
                     if not password or len(password) < 1:
-                        return f'Password should not be none.'
+                        return f'Password should not be none.', show_output
+
                     resp = api_manager.upsert_user(username=username.rstrip(), password=password,
                                                    roles=user_roles, creator=pr.username)
                     if resp:
-                        return f'User upsert complete "{username}"'
+                        return f'User upsert complete "{username}"', show_output
                 except Exception as e:
-                    return f'User upsert failed: {e}'
+                    return f'User upsert failed: {e}', show_output
 
             upsert_user_button.click(fn=upsert_user, inputs=[username_textbox, pwd_textbox, user_roles_dropdown],
-                                     outputs=[user_setting_out_textbox])
+                                     outputs=[user_setting_output, user_setting_output])
 
             def delete_user(username):
                 if not username or len(username) < 1:
@@ -322,7 +366,7 @@ def user_settings_tab():
                 except Exception as e:
                     return f'User delete failed: {e}'
 
-            delete_user_button.click(fn=delete_user, inputs=[username_textbox], outputs=[user_setting_out_textbox])
+            delete_user_button.click(fn=delete_user, inputs=[username_textbox], outputs=[user_setting_output])
             # todo: need reload the user table
         with gr.Column(scale=2):
             gr.HTML(value="<b>Users Table</b>")
@@ -404,28 +448,29 @@ def role_settings_tab():
         with gr.Row(variant='panel') as role_tab:
             with gr.Column(scale=1) as upsert_role_form:
                 gr.HTML(value="<b>Update a Role</b>")
-                rolename_textbox = gr.Textbox(placeholder="Please Enter a role name", label="Role name")
+                role_name_textbox = gr.Textbox(placeholder="Please Enter a role name", label="Role name")
                 permissions_dropdown = gr.Dropdown(choices=all_permissions,
                                                    multiselect=True,
                                                    label="Role Permissions")
-                upsert_role_button = gr.Button(value="Upsert a Role", variant='primary')
-                role_setting_out_textbox = gr.Textbox(interactive=False, show_label=False)
+                upsert_role_button = gr.Button(value="Insert or Update a Role", variant='primary')
+                role_setting_output = gr.Textbox(interactive=False, show_label=False, visible=False)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
+                    show_output = role_setting_output.update(visible=True)
                     if not role_name or not permissions:
-                        return 'Please input role name and permissions.'
+                        return 'Please input role name and permissions.', show_output
 
                     try:
                         resp = api_manager.upsert_role(role_name=role_name, permissions=permissions,
                                                        creator=pr.username)
                         if resp:
-                            return f'Role upsert complete "{role_name}"'
+                            return f'Role upsert complete "{role_name}"', show_output
                     except Exception as e:
-                        return f'Role upsert failed: {e}'
+                        return f'Role upsert failed: {e}', show_output
 
                 upsert_role_button.click(fn=upsert_role,
-                                         inputs=[rolename_textbox, permissions_dropdown],
-                                         outputs=[role_setting_out_textbox]
+                                         inputs=[role_name_textbox, permissions_dropdown],
+                                         outputs=[role_setting_output, role_setting_output]
                                          )
 
             with gr.Column(scale=2):
@@ -520,36 +565,37 @@ def ckpt_rename_block():
                                                  user_token=cloud_auth_manager.username)},
                                              "refresh_ckpts_delete")
 
-            delete_inference_job_button = ToolButton(value='\U0001F5D1', elem_id="delete_inference_job")
+            delete_ckpt_btn = ToolButton(value='\U0001F5D1', elem_id="delete_ckpt")
 
         new_name_textbox = gr.TextArea(label="Input new Checkpoint name",
                                        lines=1,
                                        elem_id="new_ckpt_value_ele_id")
 
-        ckpts_rename_button = gr.Button(value="Rename", variant='primary', elem_id="ckpts_delete_button")
+        ckpts_rename_button = gr.Button(value="Rename Checkpoint", variant='primary', elem_id="ckpts_rename_btn")
 
-        output_textbox = gr.Textbox(interactive=False, show_label=False)
+        ckpt_manage_output = gr.Textbox(interactive=False, show_label=False, visible=False)
 
-        def _endpoint_ckpts(ckpts, pr: gr.Request):
+        def _delete_ckpt(ckpts, pr: gr.Request):
+            show_output = ckpt_manage_output.update(visible=True)
             if not ckpts:
-                return "Please select one checkpoint to delete."
-            delete_result = api_manager.ckpts_delete(ckpts=[ckpts], user_token=pr.username)
-            return delete_result
-
-        delete_inference_job_button.click(fn=_endpoint_ckpts, inputs=[ckpt_rename_dropdown],
-                                          outputs=[output_textbox])
+                message = "Please select one checkpoint to delete."
+            else:
+                message = api_manager.ckpts_delete(ckpts=[ckpts], user_token=pr.username)
+            return message, show_output
+        delete_ckpt_btn.click(fn=_delete_ckpt,
+                              inputs=[ckpt_rename_dropdown],
+                              outputs=[ckpt_manage_output, ckpt_manage_output])
 
         def _rename_ckpt(ckpt, name, pr: gr.Request):
+            show_output = ckpt_manage_output.update(visible=True)
             if not ckpt:
-                return 'Please select one checkpoint to rename.'
+                return 'Please select one checkpoint to rename.', show_output
             if not name:
-                return 'Please input new name.'
-            return api_manager.ckpt_rename(ckpt=ckpt,
-                                           name=name,
-                                           user_token=pr.username)
+                return 'Please input new name.', show_output
+            return api_manager.ckpt_rename(ckpt=ckpt, name=name, user_token=pr.username), show_output
         ckpts_rename_button.click(_rename_ckpt,
                                   inputs=[ckpt_rename_dropdown, new_name_textbox],
-                                  outputs=[output_textbox])
+                                  outputs=[ckpt_manage_output, ckpt_manage_output])
 
 
 def model_upload_tab():
@@ -585,34 +631,34 @@ def model_upload_tab():
                 create_refresh_button(sd_checkpoints_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("ckpt"))},
                                       "refresh_sd_ckpt")
-
+            with FormRow(elem_id="model_upload_form_row_02"):
                 textual_inversion_path = gr.Dropdown(label="Textual Inversion",
                                                      choices=sorted(scan_local_model_files_by_suffix("text")),
                                                      elem_id="textual_inversion_model_dropdown")
                 create_refresh_button(textual_inversion_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("text"))},
                                       "refresh_textual_inversion_model")
-            with FormRow(elem_id="model_upload_form_row_02"):
+            with FormRow(elem_id="model_upload_form_row_03"):
                 lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_local_model_files_by_suffix("lora")),
                                         elem_id="lora_model_dropdown")
                 create_refresh_button(lora_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("lora"))},
                                       "refresh_lora_model", )
-
+            with FormRow(elem_id="model_upload_form_row_04"):
                 controlnet_model_path = gr.Dropdown(label="ControlNet model",
                                                     choices=sorted(scan_local_model_files_by_suffix("control")),
                                                     elem_id="controlnet_model_dropdown")
                 create_refresh_button(controlnet_model_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("control"))},
                                       "refresh_controlnet_models")
-            with FormRow(elem_id="model_upload_form_row_03"):
+            with FormRow(elem_id="model_upload_form_row_05"):
                 hypernetwork_path = gr.Dropdown(label="Hypernetwork",
                                                 choices=sorted(scan_local_model_files_by_suffix("hyper")),
                                                 elem_id="hyper_model_dropdown")
                 create_refresh_button(hypernetwork_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("hyper"))},
                                       "refresh_hyper_models")
-
+            with FormRow(elem_id="model_upload_form_row_06"):
                 vae_path = gr.Dropdown(label="VAE", choices=sorted(scan_local_model_files_by_suffix("vae")),
                                        elem_id="vae_model_dropdown")
                 create_refresh_button(vae_path, lambda: None,
@@ -726,7 +772,7 @@ def model_upload_tab():
             models = []
 
             if 'data' not in resp.json():
-                return [['', '', '', '', '']], 'No data'
+                return [['', '', '', '', '', '']], 'No data'
 
             page = resp.json()['data']['page']
             per_page = resp.json()['data']['per_page']
@@ -734,7 +780,7 @@ def model_upload_tab():
             pages = resp.json()['data']['pages']
 
             if len(resp.json()['data']['checkpoints']) == 0:
-                return [['', '', '', '', '']], 'No data'
+                return [['', '', '', '', '', '']], 'No data'
 
             for model in resp.json()['data']['checkpoints']:
                 allowed = ''
@@ -745,14 +791,15 @@ def model_upload_tab():
                     model['type'],
                     allowed,
                     model['status'],
-                    datetime.datetime.fromtimestamp(float(model['created']))
+                    datetime.datetime.fromtimestamp(float(model['created'])),
+                    model['id'],
                 ])
-            page_info = f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
-            return models, page_info
+
+            return models, f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
 
         gr.HTML(value="<b>Cloud Model List</b>")
-        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time'],
-                                     datatype=['str', 'str', 'str', 'str', 'str']
+        model_list_df = gr.Dataframe(headers=['name', 'type', 'user/roles', 'status', 'time', 'id'],
+                                     datatype=['str', 'str', 'str', 'str', 'str', 'str']
                                      )
         page_info = gr.Textbox(label="Page Info", interactive=False, show_label=False)
         with gr.Row():
@@ -784,7 +831,7 @@ def model_upload_tab():
     return upload_tab, model_list_df
 
 
-def sagemaker_endpoint_tab():
+def ep_create_tab():
     with (gr.Column() as sagemaker_tab):
         gr.HTML(value="<b>Deploy New SageMaker Endpoint</b>")
 
@@ -814,6 +861,7 @@ def sagemaker_endpoint_tab():
                         </table>
                     """
             gr.HTML(value=default_table)
+
             with gr.Row():
                 user_roles = gr.Dropdown(choices=roles(cloud_auth_manager.username), multiselect=True,
                                          label="User Role (Required)")
@@ -860,6 +908,7 @@ def sagemaker_endpoint_tab():
                     label=f"Custom Extension URLs (Optional) - Please separate with line breaks",
                     visible=False
                 )
+
                 custom_docker_image_uri = gr.Textbox(
                     value="",
                     lines=1,
@@ -867,9 +916,10 @@ def sagemaker_endpoint_tab():
                     label=f"Custom Docker Image URI (Optional)",
                     visible=False
                 )
-            sagemaker_deploy_button = gr.Button(value="Deploy", variant='primary',
+
+            sagemaker_deploy_button = gr.Button(value="Deploy Endpoint", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
-            create_ep_output_textbox = gr.Textbox(interactive=False, show_label=False)
+            ep_create_info = gr.Textbox(interactive=False, show_label=False, visible=False)
 
             def _create_sagemaker_endpoint(endpoint_name,
                                            endpoint_type,
@@ -882,18 +932,20 @@ def sagemaker_endpoint_tab():
                                            min_instance_number,
                                            pr: gr.Request):
                 if not target_user_roles:
-                    return 'Please select at least one user role.'
-                return api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
-                                                    endpoint_type=endpoint_type,
-                                                    instance_type=instance_type,
-                                                    initial_instance_count=scale_count,
-                                                    custom_docker_image_uri=docker_image_uri,
-                                                    custom_extensions=custom_extensions,
-                                                    autoscaling_enabled=autoscale,
-                                                    user_roles=target_user_roles,
-                                                    min_instance_number=min_instance_number,
-                                                    username=pr.username
-                                                    )
+                    message = "Please select at least one user role."
+                else:
+                    message = api_manager.sagemaker_deploy(endpoint_name=endpoint_name,
+                                                           endpoint_type=endpoint_type,
+                                                           instance_type=instance_type,
+                                                           initial_instance_count=scale_count,
+                                                           custom_docker_image_uri=docker_image_uri,
+                                                           custom_extensions=custom_extensions,
+                                                           autoscaling_enabled=autoscale,
+                                                           user_roles=target_user_roles,
+                                                           min_instance_number=min_instance_number,
+                                                           username=pr.username
+                                                           )
+                return ep_create_info.update(value=message, visible=True)
 
             sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
                                           inputs=[endpoint_name_textbox,
@@ -906,7 +958,7 @@ def sagemaker_endpoint_tab():
                                                   user_roles,
                                                   min_instance_number_dropdown,
                                                   ],
-                                          outputs=[create_ep_output_textbox])  # todo: make a new output
+                                          outputs=[ep_create_info])
 
         def toggle_new_rows(checkbox_state):
             show_byoc = False
@@ -916,7 +968,7 @@ def sagemaker_endpoint_tab():
                 if 'roles' in user:
                     show_byoc = 'byoc' in user['roles']
             return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
-                visible=show_byoc), custom_extensions.update(visible=show_byoc)
+                visible=show_byoc), custom_extensions.update(visible=False)
 
         def toggle_autoscaling_enabled_rows(checkbox_state):
             if checkbox_state:
@@ -1016,23 +1068,15 @@ def _list_trainings_job_for_delete(username):
     return jobs
 
 
-def list_sagemaker_endpoints_tab():
+def ep_list_tab():
     with gr.Column(scale=2):
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
 
-        ep_list_df = gr.Dataframe(
+        ep_list = gr.Dataframe(
             headers=['Name', 'Type', 'Owners', 'Autoscaling', 'Status', 'Instance', 'Instance Type', 'Created Time'],
             datatype=['str', 'str', 'str', 'str', 'str', 'str', 'str', 'str'],
             interactive=False,
         )
-
-        def list_ep_prev(rq: gr.Request):
-            result = _list_sagemaker_endpoints(rq.username)
-            return result
-
-        def list_ep_next(rq: gr.Request):
-            result = _list_sagemaker_endpoints(rq.username)
-            return result
 
         with gr.Row():
             ep_list_prev_btn = gr.Button(value='Previous Page', elem_id="sagemaker_endpoint_list_prev_btn")
@@ -1040,29 +1084,46 @@ def list_sagemaker_endpoints_tab():
             ep_delete_btn = gr.Button(value='Delete \U0001F5D1', elem_id="sagemaker_endpoint_delete_btn")
 
         with gr.Row():
-            ep_select_result = gr.Textbox(value="", show_label=False, interactive=False)
+            ep_list_info = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
             ep_selected = gr.Textbox(value="", label="Selected Endpoint item", visible=False)
 
-            def choose_ep(evt: gr.SelectData, dataset):
-                row_index = evt.index[0]
-                ep_name = dataset.values[row_index][0]
-                if ep_name:
-                    return f"You selected endpoint is: {ep_name}", ep_name
-                return "", ""
-            ep_list_df.select(fn=choose_ep, inputs=[ep_list_df], outputs=[ep_select_result, ep_selected])
+        # ----- events and bind functions start -----
+        def list_ep_prev(rq: gr.Request):
+            result = _list_sagemaker_endpoints(rq.username)
+            return result, '', ep_list_info.update(value="", visible=False)
 
-            ep_list_next_btn.click(fn=list_ep_next, inputs=[], outputs=[ep_list_df])
-            ep_list_prev_btn.click(fn=list_ep_prev, inputs=[], outputs=[ep_list_df])
+        def list_ep_next(rq: gr.Request):
+            result = _list_sagemaker_endpoints(rq.username)
+            return result, '', ep_list_info.update(value="", visible=False)
 
-            def delete_endpoint(ep, rq: gr.Request):
-                if not ep:
-                    return 'Error: No endpoint selected', '', _list_sagemaker_endpoints(rq.username)
-                delete_result = api_manager.sagemaker_endpoint_delete(delete_endpoint_list=[ep], username=rq.username)
-                return delete_result, '', _list_sagemaker_endpoints(rq.username)
+        def choose_ep(evt: gr.SelectData, dataset):
+            row_index = evt.index[0]
+            ep_name = dataset.values[row_index][0]
+            if ep_name:
+                message = f"You selected endpoint is: {ep_name}"
+                visible = True
+            else:
+                message = ""
+                visible = False
+                ep_name = ""
+            return ep_list_info.update(value=message, visible=visible), ep_name
+        ep_list.select(fn=choose_ep, inputs=[ep_list], outputs=[ep_list_info, ep_selected])
 
-            ep_delete_btn.click(fn=delete_endpoint, inputs=[ep_selected],
-                                outputs=[ep_select_result, ep_selected, ep_list_df])
-        return ep_list_df
+        ep_list_next_btn.click(fn=list_ep_next, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
+        ep_list_prev_btn.click(fn=list_ep_prev, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
+
+        def delete_ep(ep, rq: gr.Request):
+            new_list = _list_sagemaker_endpoints(rq.username)
+            if not ep:
+                message = 'No endpoint selected'
+            else:
+                message = api_manager.sagemaker_endpoint_delete(delete_endpoint_list=[ep], username=rq.username)
+            return ep_list_info.update(value=message, visible=True), '', new_list
+
+        ep_delete_btn.click(fn=delete_ep, inputs=[ep_selected], outputs=[ep_list_info, ep_selected, ep_list])
+        # ----- events and bind functions end -----
+
+        return ep_list
 
 
 def dataset_tab():
@@ -1075,16 +1136,18 @@ def dataset_tab():
                 return file_paths
 
             file_output = gr.File()
-            upload_button = gr.UploadButton("Click to Upload a File",
+            upload_button = gr.UploadButton("Click to Upload Files",
                                             file_types=["image", "video", "text"],
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
             def create_dataset(files, dataset_name, dataset_prefix, dataset_desc, pr: gr.Request):
                 if not files:
-                    return 'Error: No files selected', None, None, None, None
+                    message = 'No files selected'
+                    return dataset_create_result.update(value=message, visible=True), None, None, None, None
                 if not dataset_name:
-                    return 'Error: No dataset name', None, None, None, None
+                    message = 'No dataset name'
+                    return dataset_create_result.update(value=message, visible=True), None, None, None, None
                 dataset_content = []
                 file_path_lookup = {}
                 for file in files:
@@ -1113,14 +1176,16 @@ def dataset_tab():
                 api_key = get_variable_from_json('api_token')
 
                 if not has_config():
-                    return f'Please config api url and token', None, None, None, None
+                    message = f'Please config api url and token'
+                    return dataset_create_result.update(value=message, visible=True), None, None, None, None
 
                 raw_response = requests.post(url=url, json=payload,
                                              headers={'x-api-key': api_key, "username": pr.username})
                 logger.info(raw_response.json())
 
                 if raw_response.status_code != 201:
-                    return f'Error: {raw_response.json()["message"]}', None, None, None, None
+                    message = f'{raw_response.json()["message"]}'
+                    return dataset_create_result.update(value=message, visible=True), None, None, None, None
                 response = raw_response.json()['data']
 
                 logger.info(f"Start upload sample files response:\n{response}")
@@ -1139,7 +1204,8 @@ def dataset_tab():
                                             headers={'x-api-key': api_key, "username": pr.username})
                 raw_response.raise_for_status()
                 logger.debug(raw_response.json())
-                return f'Complete Dataset {dataset_name} creation', None, None, None, None
+                message = f'Complete Dataset {dataset_name} creation'
+                return dataset_create_result.update(value=message, visible=True), None, None, None, None
 
             dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name",
                                              label="Dataset Name", elem_id="sd_dataset_name_textbox")
@@ -1151,7 +1217,7 @@ def dataset_tab():
                                         label="Path Prefix (Optional)", elem_id="sd_dataset_prefix_textbox")
             create_dataset_button = gr.Button("Create Dataset", variant="primary",
                                               elem_id="sagemaker_dataset_create_button")
-            dataset_create_result = gr.Textbox(value="", show_label=False, interactive=False)
+            dataset_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
             create_dataset_button.click(
                 fn=create_dataset,
                 inputs=[upload_button, dataset_name_upload, dataset_prefix, dataset_description_upload],
@@ -1192,8 +1258,7 @@ def dataset_tab():
                     outputs=[]
                 )
             with gr.Row():
-                dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True,
-                                               type='text', show_copy_button=True)
+                dataset_s3_output = gr.Textbox(label='dataset s3 location', show_label=True, type='text')
             with gr.Row():
                 dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
             with gr.Row():
@@ -1218,13 +1283,14 @@ def trainings_tab():
     with gr.Row():
         with gr.Column(variant='panel', scale=1):
             gr.HTML(value="<u><b>Create a Training Job</b></u>")
-
-            training_instance_types = ["ml.g5.2xlarge", "ml.g5.4xlarge"]
-            lora_train_type = gr.Dropdown(label="Lora Train Type", choices=["kohya"], value="kohya")
-            training_instance_type = gr.Dropdown(label="Training Instance Type", choices=training_instance_types,
-                                                 value="ml.g5.2xlarge")
-            fm_type = gr.Dropdown(label="FM Type", choices=["sd_1_5", "sd_xl"], value="sd_1_5")
-
+            with gr.Row():
+                train_type = gr.Dropdown(label="Train Type", choices=["Lora"], value="Lora")
+                lora_train_type = gr.Dropdown(label="Train Method", choices=["kohya"], value="kohya")
+            with gr.Row():
+                training_instance_types = ["ml.g5.2xlarge", "ml.g5.4xlarge"]
+                training_instance_type = gr.Dropdown(label="Training Instance Type", choices=training_instance_types,
+                                                     value="ml.g5.2xlarge")
+                fm_type = gr.Dropdown(label="FM Type", choices=["sd_1_5", "sd_xl"], value="sd_1_5")
             with gr.Row():
                 model_name = gr.Dropdown(label="Model", choices=[], elem_id='train_model_dp')
                 refresh_button = ToolButton(value='\U0001f504', elem_id='train_model_name')
@@ -1253,17 +1319,26 @@ def trainings_tab():
                     outputs=[dataset_name]
                 )
 
-            output_name = gr.Textbox(value="", lines=1, placeholder="Please input output_name", label="output_name")
+            default_config = {
+                "saving_arguments": {
+                    "output_name": "model_name",
+                    "save_every_n_epochs": 1000
+                },
+                "training_arguments": {
+                    "max_train_epochs": 100
+                }
+            }
+            config_params = gr.TextArea(value=json.dumps(default_config, indent=4), label="config_params",
+                                        elem_id="config_params")
 
-            save_every_n_epochs = gr.Number(value=1000, label="save_every_n_epochs", minimum=0)
+            with gr.Row():
+                format_config_params = gr.Button("Format Config Params")
+                create_train_button = gr.Button("Create Training Job", variant="primary")
+            with gr.Row():
+                train_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
 
-            max_train_epochs = gr.Number(value=100, label="max_train_epochs", minimum=0)
-
-            create_train_button = gr.Button("Create Training Job", variant="primary")
-            train_create_result = gr.Textbox(value="", show_label=False, interactive=False)
-
-            def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name, output_name,
-                             save_every_n_epochs, max_train_epochs, rq: gr.Request):
+            def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
+                             config_params, rq: gr.Request):
                 data = {
                     "lora_train_type": lora_train_type,
                     "params": {
@@ -1273,15 +1348,7 @@ def trainings_tab():
                             "dataset": dataset_name,
                             "fm_type": fm_type
                         },
-                        "config_params": {
-                            "saving_arguments": {
-                                "output_name": output_name,
-                                "save_every_n_epochs": save_every_n_epochs
-                            },
-                            "training_arguments": {
-                                "max_train_epochs": max_train_epochs
-                            }
-                        }
+                        "config_params": json.loads(config_params)
                     }
                 }
                 api.set_username(rq.username)
@@ -1290,12 +1357,14 @@ def trainings_tab():
                     return [], 'Please config api url and token first'
 
                 resp = api.create_training_job(data=data)
-                return resp.json()['message']
+                return train_create_result.update(value=resp.json()['message'], visible=True)
 
+            format_config_params.click(fn=lambda x: json.dumps(json.loads(x), indent=4), inputs=[config_params],
+                                       outputs=[config_params])
             create_train_button.click(fn=create_train,
                                       inputs=[lora_train_type, training_instance_type, fm_type, model_name,
-                                              dataset_name, output_name,
-                                              save_every_n_epochs, max_train_epochs], outputs=[train_create_result])
+                                              dataset_name, config_params],
+                                      outputs=[train_create_result])
 
         with gr.Column(scale=2):
             with gr.Row():
@@ -1303,51 +1372,67 @@ def trainings_tab():
                     gr.HTML(value="<u><b>Trainings List</b></u>")
 
                     with gr.Row():
-                        train_list_df = gr.Dataframe(
+                        train_list = gr.Dataframe(
                             headers=['id', 'sagemakerTrainName', 'output_name', 'modelName', 'status', 'trainType'],
                             datatype=['str', 'str', 'str', 'str', 'str', 'str'],
                             interactive=False,
                         )
 
-                        def choose_training(evt: gr.SelectData, dataset):
-                            row_index = evt.index[0]
-                            train_id = dataset.values[row_index][0]
-                            if train_id:
-                                return f"You selected training is: {train_id}", train_id
-                            return "", ""
-
                         def list_ep_first(rq: gr.Request):
                             result = _list_trainings_job(rq.username)
-                            return result
+                            return result, train_list_info.update(value="", visible=False), ""
 
                         def list_ep_prev(rq: gr.Request):
                             result = _list_trainings_job(rq.username)
-                            return result
+                            return result, train_list_info.update(value="", visible=False), ""
 
                         def list_ep_next(rq: gr.Request):
                             result = _list_trainings_job(rq.username)
-                            return result
+                            return result, train_list_info.update(value="", visible=False), ""
 
                     with gr.Row():
                         t_list_load_btn = gr.Button(value='First Page')
                         t_list_prev_btn = gr.Button(value='Previous Page')
                         t_list_next_btn = gr.Button(value='Next Page')
-                        t_list_delete_btn = gr.Button(value='Delete \U0001F5D1')
-
-                        t_list_load_btn.click(fn=list_ep_first, inputs=[], outputs=[train_list_df])
-                        t_list_next_btn.click(fn=list_ep_next, inputs=[], outputs=[train_list_df])
-                        t_list_prev_btn.click(fn=list_ep_prev, inputs=[], outputs=[train_list_df])
+                        train_delete_btn = gr.Button(value='Delete \U0001F5D1')
                     with gr.Row():
-                        train_select_result = gr.Textbox(value="", show_label=False, interactive=False)
+                        train_list_info = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
                         train_selected = gr.Textbox(value="", label="Selected Training item", visible=False)
-                        train_list_df.select(fn=choose_training, inputs=[train_list_df], outputs=[train_select_result, train_selected])
+
+                        t_list_load_btn.click(fn=list_ep_first, inputs=[],
+                                              outputs=[train_list, train_list_info, train_selected])
+                        t_list_next_btn.click(fn=list_ep_next, inputs=[],
+                                              outputs=[train_list, train_list_info, train_selected])
+                        t_list_prev_btn.click(fn=list_ep_prev, inputs=[],
+                                              outputs=[train_list, train_list_info, train_selected])
+
+                        def choose_training(evt: gr.SelectData, dataset):
+                            row_index = evt.index[0]
+                            train_id = dataset.values[row_index][0]
+                            if train_id:
+                                message = f"You selected training is: {train_id}"
+                                visible = True
+                            else:
+                                train_id = ""
+                                message = ""
+                                visible = False
+                            return train_list_info.update(value=message, visible=visible), train_id
+
+                        train_list.select(fn=choose_training,
+                                          inputs=[train_list],
+                                          outputs=[train_list_info, train_selected])
 
                         def _train_delete(train, pr: gr.Request):
-                            new_train_list = list_ep_prev(pr)
+                            new_train_list = _list_trainings_job(pr.username)
                             if not train:
-                                return 'Please select a training job to delete', '', new_train_list
-                            return api_manager.trains_delete(list=[train], username=pr.username), "", new_train_list
-                        t_list_delete_btn.click(_train_delete, inputs=[train_selected], outputs=[train_select_result, train_selected, train_list_df])
+                                message = 'Please select a training job to delete'
+                            else:
+                                message = api_manager.trains_delete(list=[train], username=pr.username)
+                            return train_list_info.update(value=message, visible=True), "", new_train_list
+
+                        train_delete_btn.click(_train_delete,
+                                               inputs=[train_selected],
+                                               outputs=[train_list_info, train_selected, train_list])
 
 
 def delete_dataset(selected_value):
@@ -1365,46 +1450,6 @@ def delete_dataset(selected_value):
         gr.Warning('Please select a dataset to delete')
 
 
-def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
-    if api_url == 'cancelled':
-        return "cancelled"
-
-    if not api_url:
-        return "Please input api url"
-
-    if not api_token:
-        return "Please input api token"
-
-    # Check if api_url ends with '/', if not append it
-    if not api_url.endswith('/'):
-        api_url += '/'
-
-    if not test_aws_connect_config(api_url, api_token):
-        return "Failed to connect to backend server, please check your API version or url and token"
-
-    message = "Successfully Connected"
-    save_variable_to_json('api_gateway_url', api_url)
-    save_variable_to_json('api_token', api_token)
-    save_variable_to_json('username', username)
-    global api_gateway_url
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    global api_key
-    api_key = get_variable_from_json('api_token')
-    sagemaker_ui.init_refresh_resource_list_from_cloud(username)
-    try:
-        if not api_manager.upsert_user(username=username, password=password, roles=[], creator=username,
-                                       initial=initial):
-            return f'{message}, but update setting failed'
-    except Exception as e:
-        return f'{message}, but update setting failed: {e}'
-
-    if os.path.exists("/etc/systemd/system/sd-webui.service"):
-        restart_sd_webui_service()
-        return f"Setting Updated, Service will restart in 5 seconds"
-
-    return f"{message} & Setting Updated"
-
-
 def test_aws_connect_config(api_url, api_token):
     if not api_url.endswith('/'):
         api_url += '/'
@@ -1419,5 +1464,5 @@ def test_aws_connect_config(api_url, api_token):
         response.raise_for_status()  # Raise an exception if the HTTP request resulted in an error
         return response.json()['message'] == 'pong'
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error: Failed to get server request. Details: {e}")
+        logger.error(f"Failed to get server request. Details: {e}")
         return False
