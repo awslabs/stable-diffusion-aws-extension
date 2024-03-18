@@ -2,7 +2,7 @@
 
 All APIs use API keys for security verification, and all API requests should include your API key in the HTTP header. The `x-api-key` is as follows:
 ```Config
-X-api-key: 09876743201987654321
+X-api-key: xxxxxxxxxxxxxxxxxxxx
 ```
 
 ## User Authentication
@@ -12,6 +12,9 @@ Please include `username` in the HTTP header. For example, if the username confi
 ```config
 username: admin
 ```
+
+> After the API is deployed, a user named `api` is built in. If you do not use the WebUI for initialization or create a new user through the API, you can use `api` as the username.
+
 
 ## Version 1.4.0 or earlier
 

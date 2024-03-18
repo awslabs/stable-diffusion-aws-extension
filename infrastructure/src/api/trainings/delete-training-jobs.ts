@@ -181,6 +181,16 @@ export class DeleteTrainingJobsApi {
     newRole.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
+        'sagemaker:StopTrainingJob',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`,
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
         'logs:CreateLogGroup',
         'logs:CreateLogStream',
         'logs:PutLogEvents',

@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from typing import Dict
-
+from functools import reduce
 import boto3
 
 s3 = boto3.client('s3')
@@ -28,6 +28,17 @@ def get_query_param(event, param_name: str, default=None):
             return queries[param_name]
 
     return default
+
+
+def query_data(data, paths):
+    value = data
+    for path in paths:
+        value = value.get(path)
+        if not value:
+            path_string = reduce(lambda x, y: f"{x}.{y}", paths)
+            raise ValueError(f"Missing {path_string}")
+
+    return value
 
 
 def publish_msg(topic_arn, msg, subject):

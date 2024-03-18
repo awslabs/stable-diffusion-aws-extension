@@ -17,6 +17,7 @@ training_job_table = dynamodb.Table(os.environ.get('TRAINING_JOB_TABLE'))
 
 s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3 = boto3.resource('s3')
+sagemaker = boto3.client('sagemaker')
 bucket = s3.Bucket(s3_bucket_name)
 
 
@@ -42,9 +43,15 @@ def handler(event, ctx):
             if 'Item' not in training:
                 continue
 
+            training = training['Item']
+
             logger.info(f'training: {training}')
 
-            training = training['Item']
+            # delete all status training jobs for robustness
+            try:
+                sagemaker.stop_training_job(TrainingJobName=training['sagemaker_train_name'])
+            except Exception as e:
+                logger.error(e)
 
             if 'input_s3_location' in training:
                 prefix = training['input_s3_location'].replace(f"s3://{s3_bucket_name}/", "")

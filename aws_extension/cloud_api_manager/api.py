@@ -3,6 +3,7 @@ import logging
 
 import requests
 from modules import shared
+
 from aws_extension.sagemaker_ui_utils import warning
 from utils import host_url, api_key
 
@@ -320,14 +321,6 @@ class Api:
         return self.req(
             "PUT",
             f"trainings/{training_id}/start",
-            headers=headers,
-            data=data
-        )
-
-    def stop_training_job(self, training_id: str, headers=None, data=None):
-        return self.req(
-            "PUT",
-            f"trainings/{training_id}/stop",
             headers=headers,
             data=data
         )
