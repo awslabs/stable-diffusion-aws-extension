@@ -53,8 +53,9 @@ def handler(event, context):
             return ok(data={'datasets': []})
 
         datasets = []
-        for tr in scan_rows:
-            dataset_info = DatasetInfo(*tr)
+        for row in scan_rows:
+
+            dataset_info = DatasetInfo(**row)
 
             logger.info(f'dataset_info: {dataset_info}')
 
@@ -78,11 +79,20 @@ def handler(event, context):
                 # superuser can view the legacy data
                 datasets.append(dataset_info_dto)
 
+        datasets = sort_datasets(datasets)
+
         data = {
-            'endpoints': datasets,
+            'datasets': datasets,
             'last_evaluated_key': last_evaluated_key
         }
 
         return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_datasets(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['timestamp'], reverse=True)

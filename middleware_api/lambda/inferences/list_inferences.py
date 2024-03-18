@@ -69,6 +69,8 @@ def handler(event, ctx):
             else:
                 results.append(inference.__dict__)
 
+        results = sort_inferences(results)
+
         data = {
             'inferences': results,
             'last_evaluated_key': last_evaluated_key
@@ -77,3 +79,10 @@ def handler(event, ctx):
         return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_inferences(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['createTime'], reverse=True)

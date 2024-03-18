@@ -88,6 +88,8 @@ def handler(event, ctx):
             if 'current_instance_count' not in result:
                 result['current_instance_count'] = 'N/A'
 
+        results = sort_endpoints(results)
+
         data = {
             'endpoints': results,
             'last_evaluated_key': last_evaluated_key
@@ -96,3 +98,10 @@ def handler(event, ctx):
         return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_endpoints(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['startTime'], reverse=True)

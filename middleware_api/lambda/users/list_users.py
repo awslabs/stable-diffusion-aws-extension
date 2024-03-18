@@ -87,6 +87,8 @@ def handler(event, ctx):
             elif user.sort_key == requester_name:
                 result.append(user_resp)
 
+        result = sort_users(result)
+
         data = {
             'users': result,
             'previous_evaluated_key': "not_applicable",
@@ -96,3 +98,10 @@ def handler(event, ctx):
         return ok(data=data)
     except Exception as e:
         return response_error(e)
+
+
+def sort_users(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['username'], reverse=True)

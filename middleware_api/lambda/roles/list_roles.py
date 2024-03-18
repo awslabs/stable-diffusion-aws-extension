@@ -65,6 +65,8 @@ def handler(event, ctx):
                     'list' in requestor_permissions['role']:
                 result.append(role_dto)
 
+        result = sort_roles(result)
+
         data = {
             'roles': result,
             'previous_evaluated_key': 'not_applicable',
@@ -74,3 +76,10 @@ def handler(event, ctx):
         return ok(data=data)
     except Exception as e:
         return response_error(e)
+
+
+def sort_roles(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['role_name'], reverse=True)

@@ -86,6 +86,8 @@ def handler(event, context):
                     'allowed_roles_or_users': ckpt.allowed_roles_or_users
                 })
 
+        ckpts = sort_checkpoints(ckpts)
+
         data = {
             'page': page,
             'per_page': per_page,
@@ -104,3 +106,10 @@ def page_data(data, page, per_page):
     start = (page - 1) * per_page
     end = page * per_page
     return data[start:end]
+
+
+def sort_checkpoints(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['created'], reverse=True)

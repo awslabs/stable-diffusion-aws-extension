@@ -38,7 +38,31 @@ echo "instance_package: $instance_package"
 
 total_start_at=$(date +%s)
 start_at=$(date +%s)
-/opt/ml/code/tools/s5cmd --log=error sync "s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/*" ./
+
+source_path="aws-gcr-solutions-${AWS_REGION}/extension-for-stable-diffusion-on-aws/${ESD_FILE_VERSION}-$instance_package";
+
+echo "cp s3://${source_path}/bin.tar ./"                    > commands.txt
+echo "cp s3://${source_path}/site-packages.tar ./"          >> commands.txt
+echo "cp s3://${source_path}/stable-diffusion-webui.tar ./" >> commands.txt
+echo "cp s3://${source_path}/site-packages/llvmlite/binding/libllvmlite.so      /opt/conda/lib/python3.10/site-packages/llvmlite/binding/" >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcublas.so.11            /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcublasLt.so.11          /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_adv_infer.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_adv_train.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_cnn_infer.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_cnn_train.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_ops_infer.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libcudnn_ops_train.so.8    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libnvrtc-672ee683.so.11.2  /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libtorch_cpu.so            /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libtorch_cuda.so           /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/torch/lib/libtorch_cuda_linalg.so    /opt/conda/lib/python3.10/site-packages/torch/lib/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/triton/_C/libtriton.so               /opt/conda/lib/python3.10/site-packages/triton/_C/"        >> commands.txt
+echo "cp s3://${source_path}/site-packages/xformers/_C.so                       /opt/conda/lib/python3.10/site-packages/xformers/"         >> commands.txt
+echo "cp s3://${source_path}/site-packages/xformers/_C_flashattention.so        /opt/conda/lib/python3.10/site-packages/xformers/"         >> commands.txt
+
+/opt/ml/code/tools/s5cmd --log=error run commands.txt
+
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "download tar from s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/*: $cost seconds"
@@ -60,9 +84,6 @@ fi
 mv -f $instance_package/bin/*                     /opt/conda/bin/
 mv -f $instance_package/site-packages/*           /opt/conda/lib/python3.10/site-packages/
 mv -f site-packages/torch/lib/*                   /opt/conda/lib/python3.10/site-packages/torch/lib/
-mv -f site-packages/xformers/*                    /opt/conda/lib/python3.10/site-packages/xformers/
-mv -f site-packages/triton/_C/*                   /opt/conda/lib/python3.10/site-packages/triton/_C/
-mv -f site-packages/llvmlite/binding/*            /opt/conda/lib/python3.10/site-packages/llvmlite/binding/
 mv -f $instance_package/stable-diffusion-webui/*  /opt/ml/code/
 end_at=$(date +%s)
 cost=$((end_at-start_at))

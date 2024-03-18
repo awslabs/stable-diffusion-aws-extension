@@ -101,30 +101,13 @@ async function copyFiles() {
 
   const destination_path = `${bucketName}/${ESD_FILE_VERSION}`;
 
-  const commands = `cp "s3://${source_path}-g4/bin.tar" "s3://${destination_path}-g4/"
-cp "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/"
+  const commands = `cp "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/"
   
-cp "s3://${source_path}-g4/site-packages.tar" "s3://${destination_path}-g4/"
 cp "s3://${source_path}-g5/site-packages.tar" "s3://${destination_path}-g5/"
 
-cp "s3://${source_path}-g4/stable-diffusion-webui.tar" "s3://${destination_path}-g4/"
 cp "s3://${source_path}-g5/stable-diffusion-webui.tar" "s3://${destination_path}-g5/"
 
-cp "s3://${source_path}-g4/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g4/site-packages/llvmlite/binding/"
 cp "s3://${source_path}-g5/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g5/site-packages/llvmlite/binding/"
-
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
 
 cp "s3://${source_path}-g5/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
 cp "s3://${source_path}-g5/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
@@ -139,13 +122,10 @@ cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cpu.so" "s3://${dest
 cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
 cp "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
 
-cp "s3://${source_path}-g4/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g4/site-packages/triton/_C/"
 cp "s3://${source_path}-g5/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g5/site-packages/triton/_C/"
 
-cp "s3://${source_path}-g4/site-packages/xformers/_C.so" "s3://${destination_path}-g4/site-packages/xformers/"
 cp "s3://${source_path}-g5/site-packages/xformers/_C.so" "s3://${destination_path}-g5/site-packages/xformers/"
 
-cp "s3://${source_path}-g4/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g4/site-packages/xformers/"
 cp "s3://${source_path}-g5/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g5/site-packages/xformers/"`;
 
   console.log(commands);
