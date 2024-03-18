@@ -531,6 +531,10 @@ def _list_models(username):
             model['id'],
         ],
         ),
+
+    if len(models) == 0:
+        return [['', '', '', '', '', '']]
+
     return models
 
 
@@ -696,6 +700,9 @@ def model_upload_tab():
     with gr.Column(scale=2):
 
         def list_ckpts_data(query_types, query_status, query_roles, current_page, rq: gr.Request):
+            default_list = [['', '', '', '', '', '']]
+            show_page_info = page_info.update(visible=True)
+
             params = {
                 'types': query_types,
                 'status': query_status,
@@ -706,13 +713,13 @@ def model_upload_tab():
             api.set_username(rq.username)
 
             if not has_config():
-                return [], 'Please config api url and token first'
+                return default_list, show_page_info, 'Please config api url and token first'
 
             resp = api.list_checkpoints(params=params)
             models = []
 
             if 'data' not in resp.json():
-                return [['', '', '', '', '', '']], 'No data'
+                return default_list, show_page_info, 'No data'
 
             page = resp.json()['data']['page']
             per_page = resp.json()['data']['per_page']
@@ -720,7 +727,7 @@ def model_upload_tab():
             pages = resp.json()['data']['pages']
 
             if len(resp.json()['data']['checkpoints']) == 0:
-                return [['', '', '', '', '', '']], 'No data'
+                return default_list, show_page_info, 'No data'
 
             for model in resp.json()['data']['checkpoints']:
                 allowed = ''
@@ -735,7 +742,6 @@ def model_upload_tab():
                     model['id'],
                 ])
 
-            show_page_info = page_info.update(visible=True)
             return models, show_page_info, f"Page: {page}/{pages}    Total: {total} items    PerPage: {per_page}"
 
         gr.HTML(value="<b>Cloud Model List</b>")
