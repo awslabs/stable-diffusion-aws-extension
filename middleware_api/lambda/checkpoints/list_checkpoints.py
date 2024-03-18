@@ -5,7 +5,7 @@ import os
 from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from common.util import get_multi_query_params
+from common.util import get_multi_query_params, get_query_param
 from libs.data_types import CheckPoint, PARTITION_KEYS, Role
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
     response_error
@@ -27,9 +27,10 @@ def handler(event, context):
         _filter = {}
         requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST])
         user_roles = ['*']
-        username = None
-        page = 1
-        per_page = 10
+
+        page = get_query_param(event, 'page', 1)
+        per_page = get_query_param(event, 'per_page', 10)
+        username = get_query_param(event, 'username', None)
 
         roles = get_multi_query_params(event, 'roles', default=[])
 
@@ -41,15 +42,8 @@ def handler(event, context):
         if types:
             _filter['checkpoint_type'] = types
 
-        parameters = event['queryStringParameters']
-        if parameters:
-            page = int(parameters['page']) if 'page' in parameters and parameters['page'] else 1
-            per_page = int(parameters['per_page']) if 'per_page' in parameters and parameters['per_page'] else 10
-
-            # todo: support multi user fetch later
-            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-            if username:
-                user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
+        if username:
+            user_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=username)
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_created_roles_rows = ddb_service.scan(table=user_table, filters={

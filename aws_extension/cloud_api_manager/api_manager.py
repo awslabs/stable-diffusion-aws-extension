@@ -448,22 +448,22 @@ class CloudApiManager:
         if first_load == "next":
             if last_evaluated_key[last_key_next]:
                 last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
-                params['last_evaluated_key'] = last_evaluated_key[last_key_next]
+                params['exclusive_start_key'] = last_evaluated_key[last_key_next]
             else:
                 return last_evaluated_key[last_key_cur]
         elif first_load == "previous":
             if len(last_evaluated_key[last_key_previous]) > 0:
                 pre_key = last_evaluated_key[last_key_previous].pop()
                 if pre_key != last_evaluated_key[last_key_cur_key]:
-                    params['last_evaluated_key'] = pre_key
+                    params['exclusive_start_key'] = pre_key
                 elif len(last_evaluated_key[last_key_previous]) > 0:
-                    params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
+                    params['exclusive_start_key'] = last_evaluated_key[last_key_previous].pop()
         else:
             last_evaluated_key[last_key_next] = None
             last_evaluated_key[last_key_previous] = []
 
-        if 'last_evaluated_key' in params:
-            last_evaluated_key[last_key_cur_key] = params['last_evaluated_key']
+        if 'exclusive_start_key' in params:
+            last_evaluated_key[last_key_cur_key] = params['exclusive_start_key']
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
                                 headers=self._get_headers_by_user(username))

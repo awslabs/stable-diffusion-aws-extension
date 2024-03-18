@@ -67,6 +67,8 @@ def _update_toml_file_in_s3(
         updated_params (_type_): parameters to be merged
     """
     try:
+        logger.info('updated_params:')
+        logger.info(updated_params)
         response = s3.get_object(Bucket=bucket_name, Key=file_key)
         toml_content = response["Body"].read().decode("utf-8")
         toml_data = tomli.loads(toml_content)
@@ -80,6 +82,8 @@ def _update_toml_file_in_s3(
                 toml_data[section] = params
 
         updated_toml_content = tomli_w.dumps(toml_data)
+        logger.info('updated_toml_content:')
+        logger.info(updated_toml_content)
         s3.put_object(Bucket=bucket_name, Key=new_file_key, Body=updated_toml_content)
         logger.info(f"Updated '{file_key}' in '{bucket_name}' successfully.")
 
@@ -255,13 +259,17 @@ def _create_training_job(raw_event, context):
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
         query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
 
+        save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
+
+        max_train_epochs = query_data(event.params, ['config_params', 'training_arguments', 'max_train_epochs'])
+
         event.params["training_params"]["s3_model_path"] = get_model_location(model_name)
         del event.params['training_params']['model']
 
         event.params["training_params"]["s3_data_path"] = get_dataset_location(dataset_name)
         del event.params['training_params']['dataset']
 
-        log_json('params', event.__dict__)
+        log_json('event', event.__dict__)
 
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"

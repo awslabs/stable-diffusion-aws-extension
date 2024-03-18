@@ -5,6 +5,7 @@ import os
 from common.const import PERMISSION_USER_ALL, PERMISSION_USER_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.util import get_query_param
 from libs.data_types import User, PARTITION_KEYS, Role
 from libs.utils import KeyEncryptService, get_permissions_by_username, response_error, permissions_check
 
@@ -25,14 +26,9 @@ def handler(event, ctx):
 
     try:
         logger.info(json.dumps(event))
-        parameters = event['queryStringParameters']
 
-        show_password = 0
-        username = 0
-        if parameters:
-            show_password = parameters['show_password'] if 'show_password' in parameters and parameters[
-                'show_password'] else 0
-            username = parameters['username'] if 'username' in parameters and parameters['username'] else 0
+        show_password = get_query_param(event, 'show_password', 0)
+        username = get_query_param(event, 'username', 0)
 
         requester_name = permissions_check(event, [PERMISSION_USER_ALL, PERMISSION_USER_LIST])
 
