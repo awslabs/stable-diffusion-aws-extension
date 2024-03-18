@@ -28,6 +28,8 @@ echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
 echo "EXTENSIONS: $EXTENSIONS"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
+ESD_FILE_VERSION='1.8.0-reactor'
+
 echo "---------------------------------------------------------------------------------"
 instance_package="g5"
 if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
