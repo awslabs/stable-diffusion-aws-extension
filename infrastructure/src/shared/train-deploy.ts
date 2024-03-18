@@ -19,7 +19,6 @@ import { CreateTrainingJobApi } from '../api/trainings/create-training-job';
 import { DeleteTrainingJobsApi } from '../api/trainings/delete-training-jobs';
 import { GetTrainingJobApi } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
-import { StopTrainingJobApi } from '../api/trainings/stop-training-job';
 import { SagemakerTrainingEvents } from '../events/trainings-event';
 
 // ckpt -> create_model -> model -> training -> ckpt -> inference
@@ -84,20 +83,10 @@ export class TrainDeploy {
       userTopic: props.snsTopic,
       resourceProvider: this.resourceProvider,
       accountId: props.accountId,
+      datasetInfoTable: props.database.datasetInfoTable,
     });
 
     const trainJobRouter = routers.trainings.addResource('{id}');
-
-    // PUT /trainings/{id}/stop
-    new StopTrainingJobApi(scope, 'StopTrainingJob', {
-      commonLayer: commonLayer,
-      httpMethod: 'PUT',
-      router: trainJobRouter,
-      srcRoot: this.srcRoot,
-      trainTable: props.database.trainingTable,
-      logLevel: props.logLevel,
-      multiUserTable: multiUserTable,
-    });
 
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {

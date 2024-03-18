@@ -56,6 +56,7 @@ def handler(event, context):
                 'trainType': train_job.train_type,
                 'created': train_job.timestamp,
                 'sagemakerTrainName': train_job.sagemaker_train_name,
+                'params': train_job.params,
             }
             if train_job.allowed_roles_or_users and check_user_permissions(train_job.allowed_roles_or_users,
                                                                            requestor_roles, requestor_name):
@@ -66,6 +67,15 @@ def handler(event, context):
                 # superuser can view the legacy data
                 train_jobs.append(train_job_dto)
 
+        train_jobs = sort_jobs(train_jobs)
+
         return ok(data={'trainings': train_jobs}, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_jobs(train_jobs):
+    if len(train_jobs) == 0:
+        return train_jobs
+
+    return sorted(train_jobs, key=lambda x: x['created'], reverse=True)
