@@ -13,6 +13,9 @@ Please include `username` in the HTTP header. For example, if the username confi
 username: admin
 ```
 
+> After the API is deployed, a user named `api` is built in. If you do not use the WebUI for initialization or create a new user through the API, you can use `api` as the username.
+
+
 ## Version 1.4.0 or earlier
 
 Your `Authorization` should be included in the HTTP header as follows:

@@ -91,6 +91,7 @@ export class ResourceProvider extends Construct {
       actions: [
         'dynamodb:CreateTable',
         'dynamodb:UpdateTable',
+        'dynamodb:PutItem',
         'sns:CreateTopic',
         'iam:ListRolePolicies',
         'iam:PutRolePolicy',
