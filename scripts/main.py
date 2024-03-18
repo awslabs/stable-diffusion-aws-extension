@@ -8,7 +8,7 @@ import time
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_xyz_controlnet_list
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
@@ -779,10 +779,10 @@ class SageMakerUI(scripts.Script):
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
-                result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+                result.append(gr.update(choices=load_model_list(pr.username)))
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
-                controlnet_models = load_controlnet_list(pr.username, pr.username)
+                controlnet_models = load_controlnet_list(pr.username)
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
 
@@ -982,7 +982,7 @@ class SageMakerUI(scripts.Script):
 
         p.setup_conds()
 
-        models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user, p.user)
+        models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user)
 
         err = None
         try:

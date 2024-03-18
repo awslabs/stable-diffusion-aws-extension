@@ -414,7 +414,7 @@ async function createGlobalSecondaryIndex(tableName: string) {
     const response = await ddbClient.send(command);
     console.log('Success', response);
   } catch (error) {
-    console.error('Error', error);
+    console.log('Error', error);
   }
 }
 
