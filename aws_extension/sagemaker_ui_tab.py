@@ -37,8 +37,6 @@ else:
                          "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
     inference_choices_default = "ml.g5.2xlarge"
 
-api_gateway_url = None
-api_key = None
 user_table_size = 10
 
 all_resources = [
@@ -191,38 +189,45 @@ def api_setting_tab():
     with gr.Column() as api_setting:
         gr.HTML(value="<u><b>AWS Connection Setting</b></u>")
         gr.HTML(value="Enter your API URL & Token to start the connection.")
-        global api_gateway_url
-        api_gateway_url = get_variable_from_json('api_gateway_url')
-        global api_key
-        api_key = get_variable_from_json('api_token')
-        with gr.Row() as api_url_form:
-            api_url_textbox = gr.Textbox(value=api_gateway_url, lines=1,
-                                         placeholder="Please enter API Url of Middle", label="API URL",
-                                         elem_id="aws_middleware_api")
 
-            def update_api_gateway_url():
-                global api_gateway_url
-                api_gateway_url = get_variable_from_json('api_gateway_url')
-                return api_gateway_url
-
-            # modules.ui.create_refresh_button(api_url_textbox,
-            # get_variable_from_json('api_gateway_url'),
-            # lambda: {"value": get_variable_from_json('api_gateway_url')}, "refresh_api_gate_way")
-            modules.ui.create_refresh_button(api_url_textbox, update_api_gateway_url,
-                                             lambda: {"value": api_gateway_url}, "refresh_api_gateway_url")
-        with gr.Row() as api_token_form:
-            def update_api_key():
-                global api_key
-                api_key = get_variable_from_json('api_token')
-                return api_key
-
-            api_token_textbox = gr.Textbox(value=api_key, lines=1, placeholder="Please enter API Token",
-                                           label="API Token", elem_id="aws_middleware_token")
-            modules.ui.create_refresh_button(api_token_textbox, update_api_key, lambda: {"value": api_key},
-                                             "refresh_api_token")
-        username_textbox, password_textbox, user_settings_form = ui_user_settings_tab()
         with gr.Row():
-            connection_output = gr.Label(title="Output", visible=False, show_label=False)
+            api_url_textbox = gr.Textbox(value=utils.host_url(),
+                                         lines=1,
+                                         placeholder="Please enter API URL",
+                                         label="API URL (ApiGatewayUrl)",
+                                         interactive=True,
+                                         elem_id="aws_api_url")
+            modules.ui.create_refresh_button(api_url_textbox, lambda: utils.host_url(),
+                                             lambda: {"value": utils.host_url()},
+                                             "refresh_url_btn")
+        with gr.Row():
+            api_token_textbox = gr.Textbox(value=utils.api_key(),
+                                           lines=1,
+                                           placeholder="Please enter API Token",
+                                           label="API Token (ApiGatewayUrlToken)",
+                                           interactive=True,
+                                           elem_id="aws_api_gateway_url_token")
+            modules.ui.create_refresh_button(api_token_textbox, lambda: utils.api_key(),
+                                             lambda: {"value": utils.api_key()},
+                                             "refresh_api_token")
+        with gr.Row():
+            username_textbox = gr.Textbox(value=utils.username(),
+                                          interactive=True,
+                                          placeholder='Please enter username',
+                                          label="Username")
+            modules.ui.create_refresh_button(username_textbox, lambda: utils.username(),
+                                             lambda: {"value": utils.username()},
+                                             "refresh_username")
+        with gr.Row():
+            password_textbox = gr.Textbox(type='password',
+                                          interactive=True,
+                                          placeholder='Please enter your password',
+                                          label="Password")
+            modules.ui.create_refresh_button(password_textbox, lambda: None,
+                                             lambda: {"placeholder": 'Please reset your password!'},
+                                             "refresh_password")
+        with gr.Row():
+            connection_output = gr.Label(title="Output", visible=True, show_label=False)
         with gr.Row():
             aws_connect_button = gr.Button(value="Test Connection & Update Setting",
                                            variant='primary',
@@ -250,10 +255,6 @@ def api_setting_tab():
                 save_variable_to_json('api_gateway_url', api_url)
                 save_variable_to_json('api_token', api_token)
                 save_variable_to_json('username', username)
-                global api_gateway_url
-                api_gateway_url = get_variable_from_json('api_gateway_url')
-                global api_key
-                api_key = get_variable_from_json('api_token')
                 sagemaker_ui.init_refresh_resource_list_from_cloud(username)
                 try:
                     if not api_manager.upsert_user(username=username,
@@ -296,24 +297,6 @@ def api_setting_tab():
         logout_btn.click(fn=lambda: None, _js="logout", inputs=[], outputs=[])
 
     return api_setting, disclaimer_tab, whoami_label
-
-
-def ui_user_settings_tab():
-    with gr.Column() as ui_user_setting:
-        with gr.Row():
-            username_textbox = gr.Textbox(value=get_variable_from_json('username'), interactive=True,
-                                          placeholder='Please enter username', label="Username")
-            modules.ui.create_refresh_button(username_textbox, lambda: get_variable_from_json('username'),
-                                             lambda: {"value": get_variable_from_json('username')},
-                                             "refresh_username")
-        with gr.Row():
-            password_textbox = gr.Textbox(type='password', interactive=True,
-                                          placeholder='Please enter your password', label="Password")
-            modules.ui.create_refresh_button(password_textbox, lambda: None,
-                                             lambda: {"placeholder": 'Please reset your password!'},
-                                             "refresh_password")
-
-    return username_textbox, password_textbox, ui_user_setting
 
 
 def roles(username):
