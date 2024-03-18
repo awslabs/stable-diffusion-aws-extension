@@ -17,7 +17,6 @@ from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import (
-    ok,
     not_found, created,
 )
 from common.util import query_data
@@ -253,7 +252,7 @@ def _create_training_job(raw_event, context):
         model_name = query_data(event.params, ['training_params', 'model'])
         dataset_name = query_data(event.params, ['training_params', 'dataset'])
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
-        query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+        output_name = query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
 
         save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
         event.params["config_params"]["saving_arguments"]["save_every_n_epochs"] = int(save_every_n_epochs)
@@ -315,6 +314,7 @@ def _create_training_job(raw_event, context):
     checkpoint = CheckPoint(
         id=request_id,
         checkpoint_type=ckpt_type,
+        checkpoint_names=[output_name],
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),

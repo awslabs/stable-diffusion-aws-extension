@@ -28,8 +28,8 @@ def handler(event, context):
         requestor_name = permissions_check(event, [PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_LIST])
         user_roles = ['*']
 
-        page = get_query_param(event, 'page', 1)
-        per_page = get_query_param(event, 'per_page', 10)
+        page = int(get_query_param(event, 'page', 1))
+        per_page = int(get_query_param(event, 'per_page', 10))
         username = get_query_param(event, 'username', None)
 
         roles = get_multi_query_params(event, 'roles', default=[])
