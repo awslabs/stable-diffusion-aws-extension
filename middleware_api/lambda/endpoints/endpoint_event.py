@@ -126,7 +126,6 @@ def enable_autoscaling(item, variant_name):
 
 def enable_autoscaling_async(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
-    target_value = 5.0
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
@@ -167,10 +166,12 @@ def enable_autoscaling_async(item, variant_name):
             period = cool_down_period  # 15 minutes
             evaluation_periods = 4
             datapoints_to_alarm = 4
+            target_value = 1
         else:
             period = 30
             evaluation_periods = 1
             datapoints_to_alarm = 1
+            target_value = 3
         response = cw_client.put_metric_alarm(
             AlarmName=alarm_name,
             Namespace='AWS/SageMaker',
@@ -233,7 +234,6 @@ def enable_autoscaling_async(item, variant_name):
 
 def enable_autoscaling_real_time(item, variant_name):
     endpoint_name = item['endpoint_name']['S']
-    target_value = 5.0
 
     # Define scaling policy
     response = autoscaling_client.put_scaling_policy(
@@ -271,10 +271,12 @@ def enable_autoscaling_real_time(item, variant_name):
             period = cool_down_period  # 15 minutes
             evaluation_periods = 4
             datapoints_to_alarm = 4
+            target_value = 1
         else:
             period = 30
             evaluation_periods = 1
             datapoints_to_alarm = 1
+            target_value = 5
         response = cw_client.put_metric_alarm(
             AlarmName=alarm_name,
             Namespace='AWS/SageMaker',

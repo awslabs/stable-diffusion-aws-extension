@@ -38,7 +38,7 @@ def handler(raw_event, ctx):
         event = UpsertUserEvent(**json.loads(raw_event['body']))
 
         if event.initial:
-            username = get_user_name(raw_event)
+            username = 'ESD'
         else:
             username = permissions_check(raw_event, [PERMISSION_USER_ALL])
 
