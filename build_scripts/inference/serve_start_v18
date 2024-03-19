@@ -33,7 +33,7 @@ created_time_seconds=$(date -d "$CREATED_AT" +%s)
 current_time=$(date "+%Y-%m-%dT%H:%M:%S.%6N")
 current_time_seconds=$(date -d "$current_time" +%s)
 init_seconds=$(( current_time_seconds - created_time_seconds ))
-echo "Now At: $current_time"
+echo "NOW_AT: $current_time"
 echo "Init from Create: $init_seconds seconds"
 
 echo "---------------------------------------------------------------------------------"
