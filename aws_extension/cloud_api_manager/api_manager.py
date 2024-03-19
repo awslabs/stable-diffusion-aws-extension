@@ -125,13 +125,12 @@ class CloudApiManager:
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
 
-        checkpoint_id_list = [item.split(string_separator)[2] for item in ckpts]
-        logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
         data = {
-            "checkpoint_id_list": checkpoint_id_list,
+            "checkpoint_id_list": ckpts,
         }
 
         try:
+            api.set_username(user_token)
             resp = api.delete_checkpoints(data=data)
             if resp.status_code != 204:
                 raise Exception(resp.json()['message'])
@@ -140,18 +139,14 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete checkpoint with exception: {e}"
 
-    def ckpt_rename(self, ckpt, name, user_token=""):
-        logger.debug(f"ckpts: {ckpt}")
-
-        checkpoint_id = ckpt.split(string_separator)[2]
-        logger.debug(f"checkpoint_id: {checkpoint_id}")
+    def ckpt_rename(self, ckpt_id, name, user_token=""):
         data = {
             "name": name,
         }
 
         try:
             api.set_username(user_token)
-            resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
+            resp = api.update_checkpoint(checkpoint_id=ckpt_id, data=data)
             return resp.json()['message']
         except Exception as e:
             logger.error(e)
@@ -448,22 +443,22 @@ class CloudApiManager:
         if first_load == "next":
             if last_evaluated_key[last_key_next]:
                 last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
-                params['last_evaluated_key'] = last_evaluated_key[last_key_next]
+                params['exclusive_start_key'] = last_evaluated_key[last_key_next]
             else:
                 return last_evaluated_key[last_key_cur]
         elif first_load == "previous":
             if len(last_evaluated_key[last_key_previous]) > 0:
                 pre_key = last_evaluated_key[last_key_previous].pop()
                 if pre_key != last_evaluated_key[last_key_cur_key]:
-                    params['last_evaluated_key'] = pre_key
+                    params['exclusive_start_key'] = pre_key
                 elif len(last_evaluated_key[last_key_previous]) > 0:
-                    params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
+                    params['exclusive_start_key'] = last_evaluated_key[last_key_previous].pop()
         else:
             last_evaluated_key[last_key_next] = None
             last_evaluated_key[last_key_previous] = []
 
-        if 'last_evaluated_key' in params:
-            last_evaluated_key[last_key_cur_key] = params['last_evaluated_key']
+        if 'exclusive_start_key' in params:
+            last_evaluated_key[last_key_cur_key] = params['exclusive_start_key']
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
                                 headers=self._get_headers_by_user(username))

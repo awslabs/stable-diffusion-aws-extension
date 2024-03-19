@@ -5,6 +5,7 @@ import os
 from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.util import get_query_param
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import get_permissions_by_username, get_user_roles, permissions_check, response_error
 
@@ -24,14 +25,11 @@ def handler(event, ctx):
         logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST])
 
-        parameters = event['queryStringParameters']
-
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
 
-        role = 0
-        if parameters:
-            role = parameters['role'] if 'role' in parameters and parameters['role'] else 0
+        role = get_query_param(event, 'role', 0)
+
         last_token = None
         if not role:
             result = ddb_service.query_items(user_table,
@@ -67,6 +65,8 @@ def handler(event, ctx):
                     'list' in requestor_permissions['role']:
                 result.append(role_dto)
 
+        result = sort_roles(result)
+
         data = {
             'roles': result,
             'previous_evaluated_key': 'not_applicable',
@@ -76,3 +76,10 @@ def handler(event, ctx):
         return ok(data=data)
     except Exception as e:
         return response_error(e)
+
+
+def sort_roles(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['role_name'], reverse=True)

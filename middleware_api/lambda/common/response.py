@@ -7,7 +7,7 @@ from typing import Optional, Any
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-x_api_version = "1.4.0"
+x_api_version = "1.5.0"
 
 
 class HttpStatusCode:
