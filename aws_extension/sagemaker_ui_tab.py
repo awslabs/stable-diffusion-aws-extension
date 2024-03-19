@@ -1319,7 +1319,7 @@ def trainings_tab():
                 format_config_params = gr.Button("Format Config Params")
                 create_train_button = gr.Button("Create Training Job", variant="primary")
             with gr.Row():
-                train_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
+                train_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=True)
 
             def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
                              config_params, rq: gr.Request):
