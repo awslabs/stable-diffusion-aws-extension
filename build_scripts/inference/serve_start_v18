@@ -3,8 +3,8 @@
 trap 'echo "error_lock" > /error_lock; exit 1' ERR
 
 if [ -f "/error_lock" ]; then
-    echo "init failed, please check the log"
-    sleep 20
+    echo "start failed, please check the log"
+    sleep 30
     exit 1
 fi
 
@@ -26,14 +26,13 @@ echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
-echo "EXTENSIONS: $EXTENSIONS"
 echo "CREATED_AT: $CREATED_AT"
 created_time_seconds=$(date -d "$CREATED_AT" +%s)
 current_time=$(date "+%Y-%m-%dT%H:%M:%S.%6N")
 current_time_seconds=$(date -d "$current_time" +%s)
-difference=$(( current_time_seconds - created_time_seconds ))
+init_seconds=$(( current_time_seconds - created_time_seconds ))
 echo "Now At: $current_time"
-echo "Init seconds: $difference"
+echo "Init from Create: $init_seconds seconds"
 
 ESD_FILE_VERSION='1.8.0-base'
 
@@ -55,6 +54,7 @@ echo "download files: $cost seconds"
 
 start_at=$(date +%s)
 tar -xf stable-diffusion-webui.tar
+#tar -xf nvidia.tar
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
@@ -71,7 +71,11 @@ echo "move files: $cost seconds"
 
 end_at=$(date +%s)
 cost=$((end_at-total_start_at))
-echo "total cost: $cost seconds"
+echo "files total cost: $cost seconds"
+
+echo "---------------------------------------------------------------------------------"
+total_cost=$((cost+init_seconds))
+echo "total cost: $total_cost seconds"
 
 # if $EXTENSIONS is not empty, it will be executed
 if [ -n "$EXTENSIONS" ]; then
