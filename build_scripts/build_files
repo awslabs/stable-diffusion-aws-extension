@@ -8,6 +8,8 @@ region = $AWS_DEFAULT_REGION" > ~/.aws/config
 
 nvidia-smi
 
+ESD_FILE_VERSION='1.8.0-base'
+
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
@@ -16,8 +18,6 @@ echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
 echo "EXTENSIONS: $EXTENSIONS"
 echo "CREATED_AT: $CREATED_AT"
 echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-
-ESD_FILE_VERSION='1.8.0-base'
 
 echo "---------------------------------------------------------------------------------"
 instance_package="g5"

@@ -21,6 +21,8 @@ mkdir -p ~/.aws
 echo "[default]
 region = $AWS_DEFAULT_REGION" > ~/.aws/config
 
+ESD_FILE_VERSION='1.8.0-base'
+
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
@@ -33,8 +35,6 @@ current_time_seconds=$(date -d "$current_time" +%s)
 init_seconds=$(( current_time_seconds - created_time_seconds ))
 echo "Now At: $current_time"
 echo "Init from Create: $init_seconds seconds"
-
-ESD_FILE_VERSION='1.8.0-base'
 
 echo "---------------------------------------------------------------------------------"
 instance_package="g5"
