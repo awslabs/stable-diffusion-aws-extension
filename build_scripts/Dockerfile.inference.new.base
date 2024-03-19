@@ -13,19 +13,19 @@ SHELL ["/bin/bash", "-c"]
 
 RUN adduser --disabled-password --gecos '' ubuntu
 
-RUN apt-get update -y
-RUN apt-get install -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc
+RUN apt-get update -y && \
+    apt-get install -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc
 
 # not needed in endpoint
 RUN apt-get install -y pkg-config
 RUN apt-get install -y libcairo2-dev
 RUN apt-get install -y file
 RUN apt-get install -y curl
-RUN apt-get install -y build-essential
-RUN apt-get install -y cmake
 RUN apt-get install -y libprotobuf-dev
 RUN apt-get install -y protobuf-compiler
 RUN apt-get install -y mesa-utils
+RUN apt-get install -y build-essential
+RUN apt-get install -y cmake
 
 WORKDIR /home/ubuntu/
 
