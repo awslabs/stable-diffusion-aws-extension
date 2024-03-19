@@ -70,6 +70,8 @@ echo "cp $files_s3_path/site-packages/xformers/_C_flashattention.so       ./xfor
 
 echo "cp $files_s3_path/site-packages/xformers/_C.so                      ./xformers/" >> commands.txt
 
+echo "cp $files_s3_path/site-packages/nvidia/nccl/lib/libnccl.so.2        ./nvidia/nccl/lib/" >> commands.txt
+
 echo "cp $files_s3_path/site-packages/nvidia/cublas/lib/libcublasLt.so.12 ./nvidia/cublas/lib/" >> commands.txt
 echo "cp $files_s3_path/site-packages/nvidia/cublas/lib/libcublas.so.12   ./nvidia/cublas/lib/" >> commands.txt
 
@@ -98,6 +100,7 @@ mv -f llvmlite/binding/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3
 mv -f torch/lib/*           /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/torch/lib/
 mv -f triton/_C/*           /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/triton/_C/
 mv -f xformers/*            /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/xformers/
+mv -f nvidia/nccl/lib/*     /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/nccl/lib/
 mv -f nvidia/cudnn/lib/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cudnn/lib/
 mv -f nvidia/cublas/lib/*   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cublas/lib/
 mv -f nvidia/cusparse/lib/* /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cusparse/lib/
