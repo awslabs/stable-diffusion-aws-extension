@@ -1,0 +1,31 @@
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+RUN adduser --disabled-password --gecos '' ubuntu
+RUN chown -R ubuntu:ubuntu /home/ubuntu
+RUN apt-get update -y
+RUN apt-get install -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc
+# maybe not needed
+RUN apt-get install -y pkg-config libcairo2-dev file git curl
+RUN apt-get install -y build-essential cmake pkg-config libprotobuf-dev protobuf-compiler
+RUN apt-get install -y mesa-utils
+RUN cd /home/ubuntu && curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install.sh | bash
+RUN cd stable-diffusion-webui
+# RUN cd /home/ubuntu/stable-diffusion-webui && \
+#   python3 -m venv venv && \
+#   source venv/bin/activate && \
+#   python -m pip install --upgrade pip && \
+# RUN apt-get install -y wget && \
+#   wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz -O /home/ubuntu/stable-diffusion-webui/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+#   tar xzvf /home/ubuntu/stable-diffusion-webui/tools/s5cmd_2.2.2_Linux-64bit.tar.gz -C /home/ubuntu/stable-diffusion-webui/tools/ && \
+#   rm /home/ubuntu/stable-diffusion-webui/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
+
+COPY inference/serve_start_v18 /home/ubuntu/stable-diffusion-webui/
+# RUN chmod +x /home/ubuntu/stable-diffusion-webui/serve_start
+
+# WORKDIR /home/ubuntu/stable-diffusion-webui
+
+ENV ON_DOCKER true
+
+# install libtcmalloc to solve memory leak for multi model switch
+# https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
+# RUN apt-get install -y libtcmalloc-minimal4
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
