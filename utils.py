@@ -277,6 +277,10 @@ def get_variable_from_json(variable_name, filename='sagemaker_ui.json'):
     return variable_value
 
 
+def username():
+    return get_variable_from_json('username')
+
+
 def host_url():
     return get_variable_from_json('api_gateway_url')
 

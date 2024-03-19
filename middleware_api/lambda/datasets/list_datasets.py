@@ -2,17 +2,21 @@ import json
 import logging
 import os
 
+import boto3
+
 from common.const import PERMISSION_TRAIN_ALL
-from libs.data_types import DatasetInfo
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, unauthorized
+from common.response import ok, bad_request
+from common.util import get_query_param
+from libs.data_types import DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
-    response_error
+    response_error, decode_last_key, encode_last_key
 
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET')
 user_table = os.environ.get('MULTI_USER_TABLE')
-
+ddb = boto3.resource('dynamodb')
+table = ddb.Table(dataset_info_table)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -21,16 +25,20 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 # GET /datasets
 def handler(event, context):
-    _filter = {}
-
-    parameters = event['queryStringParameters']
-    if parameters:
-        if 'dataset_status' in parameters and len(parameters['dataset_status']) > 0:
-            _filter['dataset_status'] = parameters['dataset_status']
-
     try:
         logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_TRAIN_ALL])
+
+        exclusive_start_key = get_query_param(event, 'exclusive_start_key')
+        dataset_status = get_query_param(event, 'dataset_status')
+        limit = int(get_query_param(event, 'limit', 10))
+
+        scan_kwargs = {
+            'Limit': limit,
+        }
+
+        if exclusive_start_key:
+            scan_kwargs['ExclusiveStartKey'] = decode_last_key(exclusive_start_key)
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
@@ -38,13 +46,22 @@ def handler(event, context):
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
             return bad_request(message='user has no permission to train')
 
-        resp = ddb_service.scan(table=dataset_info_table, filters=_filter)
-        if not resp or len(resp) == 0:
+        response = table.scan(**scan_kwargs)
+        scan_rows = response.get('Items', [])
+        last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))
+        if not scan_rows or len(scan_rows) == 0:
             return ok(data={'datasets': []})
 
         datasets = []
-        for tr in resp:
-            dataset_info = DatasetInfo(**(ddb_service.deserialize(tr)))
+        for row in scan_rows:
+
+            dataset_info = DatasetInfo(**row)
+
+            logger.info(f'dataset_info: {dataset_info}')
+
+            if dataset_status and dataset_info.dataset_status.value != dataset_status:
+                continue
+
             dataset_info_dto = {
                 'datasetName': dataset_info.dataset_name,
                 's3': f's3://{bucket_name}/{dataset_info.get_s3_key()}',
@@ -62,6 +79,20 @@ def handler(event, context):
                 # superuser can view the legacy data
                 datasets.append(dataset_info_dto)
 
-        return ok(data={'datasets': datasets}, decimal=True)
+        datasets = sort_datasets(datasets)
+
+        data = {
+            'datasets': datasets,
+            'last_evaluated_key': last_evaluated_key
+        }
+
+        return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_datasets(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['timestamp'], reverse=True)

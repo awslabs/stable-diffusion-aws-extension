@@ -17,7 +17,6 @@ from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import (
-    ok,
     not_found, created,
 )
 from common.util import query_data
@@ -253,7 +252,13 @@ def _create_training_job(raw_event, context):
         model_name = query_data(event.params, ['training_params', 'model'])
         dataset_name = query_data(event.params, ['training_params', 'dataset'])
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
-        query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+        output_name = query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+
+        save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
+        event.params["config_params"]["saving_arguments"]["save_every_n_epochs"] = int(save_every_n_epochs)
+
+        max_train_epochs = query_data(event.params, ['config_params', 'training_arguments', 'max_train_epochs'])
+        event.params["config_params"]["training_arguments"]["max_train_epochs"] = int(max_train_epochs)
 
         event.params["training_params"]["s3_model_path"] = get_model_location(model_name)
         del event.params['training_params']['model']
@@ -261,7 +266,7 @@ def _create_training_job(raw_event, context):
         event.params["training_params"]["s3_data_path"] = get_dataset_location(dataset_name)
         del event.params['training_params']['dataset']
 
-        log_json('params', event.__dict__)
+        log_json('event', event.__dict__)
 
         if fm_type.lower() == const.TrainFMType.SD_1_5.value:
             toml_dest_path = f"{input_location}/{const.KOHYA_TOML_FILE_NAME}"
@@ -309,6 +314,7 @@ def _create_training_job(raw_event, context):
     checkpoint = CheckPoint(
         id=request_id,
         checkpoint_type=ckpt_type,
+        checkpoint_names=[output_name],
         s3_location=f"s3://{bucket_name}/{base_key}/output",
         checkpoint_status=CheckPointStatus.Initial,
         timestamp=datetime.datetime.now().timestamp(),
