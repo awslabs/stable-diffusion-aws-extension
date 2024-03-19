@@ -84,6 +84,13 @@ echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_ops_train.so.8 .
 
 echo "cp $files_s3_path/site-packages/nvidia/cusparse/lib/libcusparse.so.12    ./nvidia/cusparse/lib/" >> commands.txt
 
+echo "cp $files_s3_path/site-packages/nvidia/cufft/lib/libcufft.so.11          ./nvidia/cufft/lib/" >> commands.txt
+
+echo "cp $files_s3_path/site-packages/nvidia/curand/lib/libcurand.so.10        ./nvidia/curand/lib/" >> commands.txt
+
+echo "cp $files_s3_path/site-packages/nvidia/cusolver/lib/libcusolver.so.11        ./nvidia/cusolver/lib/" >> commands.txt
+echo "cp $files_s3_path/site-packages/nvidia/cusolver/lib/libcusolverMg.so.11      ./nvidia/cusolver/lib/" >> commands.txt
+
 s5cmd --log=error run commands.txt
 end_at=$(date +%s)
 cost=$((end_at-start_at))
@@ -104,6 +111,9 @@ mv -f nvidia/nccl/lib/*     /home/ubuntu/stable-diffusion-webui/venv/lib/python3
 mv -f nvidia/cudnn/lib/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cudnn/lib/
 mv -f nvidia/cublas/lib/*   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cublas/lib/
 mv -f nvidia/cusparse/lib/* /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cusparse/lib/
+mv -f nvidia/cusolver/lib/* /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cusolver/lib/
+mv -f nvidia/cufft/lib/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cufft/lib/
+mv -f nvidia/curand/lib/*   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/curand/lib/
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "move files: $cost seconds"
