@@ -47,76 +47,22 @@ echo "files_s3_path: $files_s3_path"
 
 total_start_at=$(date +%s)
 start_at=$(date +%s)
-
-echo "cp $files_s3_path/stable-diffusion-webui.tar ./" > commands.txt
-echo "cp $files_s3_path/site-packages/llvmlite/binding/libllvmlite.so     ./llvmlite/binding/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/torch/lib/libcublas.so.11           ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcublasLt.so.11         ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_adv_infer.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_adv_train.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_cnn_infer.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_cnn_train.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_ops_infer.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libcudnn_ops_train.so.8   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libnvrtc-672ee683.so.11.2 ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libtorch_cpu.so           ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libtorch_cuda_linalg.so   ./torch/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/torch/lib/libtorch_cuda.so          ./torch/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/triton/_C/libtriton.so              ./triton/_C/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/xformers/_C_flashattention.so       ./xformers/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/xformers/_C.so                      ./xformers/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/nccl/lib/libnccl.so.2        ./nvidia/nccl/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/cublas/lib/libcublasLt.so.12 ./nvidia/cublas/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cublas/lib/libcublas.so.12   ./nvidia/cublas/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_adv_infer.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_adv_train.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_cnn_infer.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_cnn_train.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_ops_infer.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cudnn/lib/libcudnn_ops_train.so.8 ./nvidia/cudnn/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/cusparse/lib/libcusparse.so.12    ./nvidia/cusparse/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/cufft/lib/libcufft.so.11          ./nvidia/cufft/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/curand/lib/libcurand.so.10        ./nvidia/curand/lib/" >> commands.txt
-
-echo "cp $files_s3_path/site-packages/nvidia/cusolver/lib/libcusolver.so.11        ./nvidia/cusolver/lib/" >> commands.txt
-echo "cp $files_s3_path/site-packages/nvidia/cusolver/lib/libcusolverMg.so.11      ./nvidia/cusolver/lib/" >> commands.txt
-
-s5cmd --log=error run commands.txt
+s5cmd --log=error cp "$files_s3_path"/webui.tar ./
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "download files: $cost seconds"
 
 start_at=$(date +%s)
-tar -xf stable-diffusion-webui.tar
+tar -xf webui.tar
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
 
 start_at=$(date +%s)
-mv -f llvmlite/binding/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/llvmlite/binding/
-mv -f torch/lib/*           /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/torch/lib/
-mv -f triton/_C/*           /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/triton/_C/
-mv -f xformers/*            /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/xformers/
-mv -f nvidia/nccl/lib/*     /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/nccl/lib/
-mv -f nvidia/cudnn/lib/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cudnn/lib/
-mv -f nvidia/cublas/lib/*   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cublas/lib/
-mv -f nvidia/cusparse/lib/* /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cusparse/lib/
-mv -f nvidia/cusolver/lib/* /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cusolver/lib/
-mv -f nvidia/cufft/lib/*    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/cufft/lib/
-mv -f nvidia/curand/lib/*   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/nvidia/curand/lib/
+s5cmd --log=error run /home/ubuntu/stable-diffusion-webui/commands.txt
 end_at=$(date +%s)
 cost=$((end_at-start_at))
-echo "move files: $cost seconds"
+echo "download big files: $cost seconds"
 
 end_at=$(date +%s)
 cost=$((end_at-total_start_at))
