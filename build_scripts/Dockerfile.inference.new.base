@@ -16,8 +16,16 @@ RUN adduser --disabled-password --gecos '' ubuntu
 RUN apt-get update -y
 RUN apt-get install -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc
 
-# maybe not needed
-RUN apt-get install -y pkg-config libcairo2-dev file curl build-essential cmake pkg-config libprotobuf-dev protobuf-compiler mesa-utils
+# not needed in endpoint
+RUN apt-get install -y pkg-config
+RUN apt-get install -y libcairo2-dev
+RUN apt-get install -y file
+RUN apt-get install -y curl
+RUN apt-get install -y build-essential
+RUN apt-get install -y cmake
+RUN apt-get install -y libprotobuf-dev
+RUN apt-get install -y protobuf-compiler
+RUN apt-get install -y mesa-utils
 
 WORKDIR /home/ubuntu/
 

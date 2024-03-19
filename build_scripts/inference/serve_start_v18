@@ -1,13 +1,15 @@
 #!/bin/bash
-echo "Current shell: $SHELL"
-echo "Running in $(bash --version)"
+
 trap 'echo "error_lock" > /error_lock; exit 1' ERR
 
 if [ -f "/error_lock" ]; then
     echo "init failed, please check the log"
-    sleep 10
+    sleep 20
     exit 1
 fi
+
+echo "Current shell: $SHELL"
+echo "Running in $(bash --version)"
 
 echo "---------------------------------------------------------------------------------"
 cat "$0"
@@ -26,7 +28,12 @@ echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
 echo "EXTENSIONS: $EXTENSIONS"
 echo "CREATED_AT: $CREATED_AT"
-echo "Now At: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+created_time_seconds=$(date -d "$CREATED_AT" +%s)
+current_time=$(date "+%Y-%m-%dT%H:%M:%S.%6N")
+current_time_seconds=$(date -d "$current_time" +%s)
+difference=$(( current_time_seconds - created_time_seconds ))
+echo "Now At: $current_time"
+echo "Init seconds: $difference"
 
 ESD_FILE_VERSION='1.8.0-base'
 
@@ -36,33 +43,31 @@ if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
     instance_package="g4"
 fi
 
-echo "instance_package: $instance_package"
+files_s3_path="s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/*"
+echo "files_s3_path: $files_s3_path"
 
 total_start_at=$(date +%s)
 start_at=$(date +%s)
-s5cmd --log=error cp "s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/stable-diffusion-webui.tar" ./
+s5cmd --log=error sync "$files_s3_path" ./
 end_at=$(date +%s)
 cost=$((end_at-start_at))
-echo "download tar from s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package/stable-diffusion-webui.tar: $cost seconds"
+echo "download files: $cost seconds"
 
 start_at=$(date +%s)
-cd /home/ubuntu || exit 1
 tar -xf stable-diffusion-webui.tar
-ls -la
-#tar -xf repositories.tar
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
 
-#start_at=$(date +%s)
-#mv -f $instance_package/site-packages/*           /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/
-#mv -f site-packages/torch/lib/*                   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/torch/lib/
-#mv -f site-packages/xformers/*                    /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/xformers/
-#mv -f site-packages/triton/_C/*                   /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/triton/_C/
-#mv -f site-packages/llvmlite/binding/*            /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/llvmlite/binding/
-#end_at=$(date +%s)
-#cost=$((end_at-start_at))
-#echo "move files: $cost seconds"
+start_at=$(date +%s)
+mv -f nvidia                            /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/
+mv -f site-packages/torch/lib/*         /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/torch/lib/
+mv -f site-packages/xformers/*          /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/xformers/
+mv -f site-packages/triton/_C/*         /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/triton/_C/
+mv -f site-packages/llvmlite/binding/*  /home/ubuntu/stable-diffusion-webui/venv/lib/python3.10/site-packages/llvmlite/binding/
+end_at=$(date +%s)
+cost=$((end_at-start_at))
+echo "move files: $cost seconds"
 
 end_at=$(date +%s)
 cost=$((end_at-total_start_at))
@@ -87,11 +92,9 @@ fi
 
 cd /home/ubuntu/stable-diffusion-webui || exit 1
 
-# Uncomment the lines below if you need to uninstall and install `accelerate`
-# pip uninstall -y accelerate
-# pip install accelerate
-
-#chmod +x /home/ubuntu/stable-diffusion-webui/venv/bin/*
+# s5cmd
+mkdir tools
+cp /usr/local/bin/s5cmd ./tools/
 
 source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
 
