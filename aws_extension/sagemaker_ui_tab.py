@@ -320,7 +320,7 @@ def user_settings_tab():
                                               "refresh_create_user_roles")
             upsert_user_button = gr.Button(value="Insert or Update a User", variant='primary')
             delete_user_button = gr.Button(value="Delete a User", variant='primary')
-            user_setting_output = gr.Textbox(interactive=False, show_label=False, visible=False)
+            user_setting_output = gr.Textbox(interactive=False, show_label=False, visible=True)
 
             def upsert_user(username, password, user_roles, pr: gr.Request):
                 show_output = user_setting_output.update(visible=True)
@@ -438,7 +438,7 @@ def role_settings_tab():
                                                    multiselect=True,
                                                    label="Role Permissions")
                 upsert_role_button = gr.Button(value="Insert or Update a Role", variant='primary')
-                role_setting_output = gr.Textbox(interactive=False, show_label=False, visible=False)
+                role_setting_output = gr.Textbox(interactive=False, show_label=False, visible=True)
 
                 def upsert_role(role_name, permissions, pr: gr.Request):
                     show_output = role_setting_output.update(visible=True)
@@ -901,9 +901,9 @@ def ep_create_tab():
                     visible=False
                 )
 
-            sagemaker_deploy_button = gr.Button(value="Deploy Endpoint", variant='primary',
+            ep_deploy_btn = gr.Button(value="Deploy Endpoint", variant='primary',
                                                 elem_id="sagemaker_deploy_endpoint_button")
-            ep_create_info = gr.Textbox(interactive=False, show_label=False, visible=False)
+            ep_create_info = gr.Textbox(interactive=False, show_label=False, visible=True)
 
             def _create_sagemaker_endpoint(endpoint_name,
                                            endpoint_type,
@@ -931,18 +931,18 @@ def ep_create_tab():
                                                            )
                 return ep_create_info.update(value=message, visible=True)
 
-            sagemaker_deploy_button.click(fn=_create_sagemaker_endpoint,
-                                          inputs=[endpoint_name_textbox,
-                                                  endpoint_type_dropdown,
-                                                  instance_type_dropdown,
-                                                  instance_count_dropdown,
-                                                  autoscaling_enabled,
-                                                  custom_docker_image_uri,
-                                                  custom_extensions,
-                                                  user_roles,
-                                                  min_instance_number_dropdown,
-                                                  ],
-                                          outputs=[ep_create_info])
+            ep_deploy_btn.click(fn=_create_sagemaker_endpoint,
+                                inputs=[endpoint_name_textbox,
+                                        endpoint_type_dropdown,
+                                        instance_type_dropdown,
+                                        instance_count_dropdown,
+                                        autoscaling_enabled,
+                                        custom_docker_image_uri,
+                                        custom_extensions,
+                                        user_roles,
+                                        min_instance_number_dropdown,
+                                        ],
+                                outputs=[ep_create_info])
 
         def toggle_new_rows(checkbox_state):
             show_byoc = False

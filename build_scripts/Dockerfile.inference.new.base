@@ -1,0 +1,34 @@
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
+
+RUN apt-get update -y
+RUN apt-get install -y wget
+RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+
+COPY --from=builder /s5cmd /usr/local/bin/s5cmd
+
+SHELL ["/bin/bash", "-c"]
+
+RUN adduser --disabled-password --gecos '' ubuntu
+
+RUN apt-get update -y
+RUN apt-get install -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc
+
+# maybe not needed
+RUN apt-get install -y pkg-config libcairo2-dev file curl build-essential cmake pkg-config libprotobuf-dev protobuf-compiler mesa-utils
+
+WORKDIR /home/ubuntu/
+
+ENV ON_DOCKER true
+
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+RUN chown -R ubuntu:ubuntu /home/ubuntu
+
+COPY inference/serve_start_v18 /
+
+RUN chmod +x /serve_start_v18
+
+ENTRYPOINT ["bash", "/serve_start_v18"]

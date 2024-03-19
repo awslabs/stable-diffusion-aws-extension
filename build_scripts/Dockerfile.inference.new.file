@@ -1,0 +1,5 @@
+FROM 860660600690.dkr.ecr.ap-northeast-1.amazonaws.com/esd-inference:base
+
+COPY build_files /
+
+ENTRYPOINT ["bash", "/build_files"]

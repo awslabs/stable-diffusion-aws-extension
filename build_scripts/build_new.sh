@@ -39,7 +39,7 @@ fi
 region=$(aws configure get region)
 # region=${region:-us-west-2}
 
-image_name="stable-diffusion-aws-extension/${image}"
+image_name="${image}"
 fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 
 # If the repository doesn't exist in ECR, create it.
@@ -56,7 +56,7 @@ then
     fi
 fi
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
+#aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
 #aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
 aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
