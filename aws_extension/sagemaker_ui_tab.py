@@ -890,7 +890,8 @@ def ep_create_tab():
                     lines=5,
                     placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
                     label=f"Custom Extension URLs (Optional) - Please separate with line breaks",
-                    visible=False
+                    visible=False,
+                    info="If you fill in this field, the endpoint will be deployed with the environment check, it's slow."
                 )
 
                 custom_docker_image_uri = gr.Textbox(
@@ -898,7 +899,8 @@ def ep_create_tab():
                     lines=1,
                     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
                     label=f"Custom Docker Image URI (Optional)",
-                    visible=False
+                    visible=False,
+                    info="If you fill in this field, the endpoint will be deployed with the value of this field."
                 )
 
             ep_deploy_btn = gr.Button(value="Deploy Endpoint", variant='primary',
@@ -952,7 +954,7 @@ def ep_create_tab():
                 if 'roles' in user:
                     show_byoc = 'byoc' in user['roles']
             return gr.update(visible=checkbox_state), custom_docker_image_uri.update(
-                visible=show_byoc), custom_extensions.update(visible=False)
+                visible=show_byoc), custom_extensions.update(visible=show_byoc)
 
         def toggle_autoscaling_enabled_rows(checkbox_state):
             if checkbox_state:

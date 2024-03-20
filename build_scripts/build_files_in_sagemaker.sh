@@ -12,11 +12,18 @@ echo "Running in $(bash --version)"
 
 nvidia-smi
 
+echo "---------------------------------------------------------------------------------"
+cat $0
+
+echo "---------------------------------------------------------------------------------"
+printenv
+
 ESD_FILE_VERSION='1.5.0'
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
 echo "INSTANCE_PACKAGE: $INSTANCE_PACKAGE"
+echo "IMAGE_URL: $IMAGE_URL"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
@@ -29,6 +36,7 @@ echo "NOW_AT: $current_time"
 echo "Init from Create: $init_seconds seconds"
 
 echo "---------------------------------------------------------------------------------"
+echo "set conda"
 export AWS_REGION="us-west-2"
 s5cmd --log=error cp "s3://aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10" /opt/conda/lib/
 s5cmd --log=error cp "s3://aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10" /opt/conda/lib/
@@ -36,16 +44,51 @@ export LD_LIBRARY_PATH=/opt/conda/lib:$LD_LIBRARY_PATH
 export AWS_REGION=$AWS_DEFAULT_REGION
 echo "---------------------------------------------------------------------------------"
 
+tar_file="$ENDPOINT_NAME.tar"
+
+if [ -n "$EXTENSIONS" ]; then
+
+  echo "Check endpoint file..."
+
+  output=$(s5cmd ls s3://$BUCKET_NAME/)
+  if echo "$output" | grep -q "$tar_file"; then
+
+    start_at=$(date +%s)
+    s5cmd --log=error sync "s3://${BUCKET_NAME}/${tar_file}" ./
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "download file: $cost seconds"
+
+    start_at=$(date +%s)
+    tar --overwrite -xf $tar_file -C /home/ubuntu/
+    rm -rf $tar_file
+    mv -f home/ubuntu/stable-diffusion-webui /home/ubuntu/
+    end_at=$(date +%s)
+    cost=$((end_at-start_at))
+    echo "decompress file: $cost seconds"
+
+    cd /home/ubuntu/stable-diffusion-webui
+    rm -rf models
+    source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
+
+    echo "---------------------------------------------------------------------------------"
+    echo "accelerate launch..."
+
+    accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-install --skip-version-check --no-hashing --nowebui
+
+  fi
+
+fi
+
 check_ready() {
   while true; do
     PID=$(lsof -i :8080 | awk 'NR!=1 {print $2}' | head -1)
 
     if [ -n "$PID" ]; then
-      tar_file="esd-$ESD_FILE_VERSION-$INSTANCE_PACKAGE.tar"
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
       echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/"
       tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/ > /dev/null 2>&1
-      s5cmd sync $tar_file "s3://$BUCKET_NAME/"
+      s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/"
       break
     else
       echo "Port 8080 is not in use, waiting for 10 seconds..."
@@ -100,5 +143,6 @@ if [ -n "$EXTENSIONS" ]; then
     done
 fi
 
+echo "---------------------------------------------------------------------------------"
 cd /home/ubuntu/stable-diffusion-webui
 accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test
