@@ -13,6 +13,7 @@ echo "Running in $(bash --version)"
 nvidia-smi
 
 ESD_FILE_VERSION='1.5.0'
+export BUCKET_NAME="aws-gcr-solutions-$AWS_DEFAULT_REGION"
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
@@ -31,13 +32,8 @@ echo "Init from Create: $init_seconds seconds"
 target_path="s3://$BUCKET_NAME/$ESD_FILE_VERSION-$INSTANCE_PACKAGE"
 
 echo "---------------------------------------------------------------------------------"
-#cuda_file="cuda_11.8.0_520.61.05_linux.run"
-#echo "download $cuda_file"
-#wget -q https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/$cuda_file
-#echo "install $cuda_file"
-#sh $cuda_file --toolkit --override
-#s5cmd sync /opt/conda/* "$target_path/opt/conda/"
-s5cmd sync "s3://elonniu/conda/*" "/opt/conda/lib/"
+s5cmd --log=error cp "s3://$BUCKET_NAME/esd/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/conda/libcufft.so.10" /opt/conda/lib/
+s5cmd --log=error cp "s3://$BUCKET_NAME/esd/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/conda/libcurand.so.10" /opt/conda/lib/
 export LD_LIBRARY_PATH=/opt/conda/lib:$LD_LIBRARY_PATH
 echo "---------------------------------------------------------------------------------"
 
@@ -48,7 +44,6 @@ check_ready() {
     if [ -n "$PID" ]; then
       tar_file="webui-$INSTANCE_PACKAGE.tar"
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
-      # kill $PID
       echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/"
       tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/ > /dev/null 2>&1
       s5cmd sync $tar_file "$target_path/"
