@@ -89,7 +89,7 @@ cp ${dockerfile} .
 # with the full name.
 
 docker build  -t ${image_name}:${tag} -f ${dockerfile} .
-docker tag ${image_name} ${fullname}
+docker tag ${image_name}:${tag} ${fullname}
 
 docker push ${fullname}
 echo $fullname
