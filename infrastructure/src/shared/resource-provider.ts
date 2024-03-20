@@ -1,13 +1,11 @@
-import * as path from 'path';
 import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Code, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { ESD_FILE_VERSION } from './const';
 
 export interface ResourceProviderProps {
   bucketName?: string;
@@ -28,13 +26,6 @@ export class ResourceProvider extends Construct {
 
     this.role = this.iamRole();
 
-
-    const binaryLayer = new LayerVersion(this, 'ResourceManagerLayer', {
-      code: Code.fromAsset(path.join(__dirname, 'resource-provider-layer.zip')),
-      compatibleRuntimes: [Runtime.NODEJS_18_X],
-      description: 'A layer that contains a s5cmd',
-    });
-
     this.handler = new NodejsFunction(scope, 'ResourceManagerHandler', {
       runtime: Runtime.NODEJS_18_X,
       handler: 'handler',
@@ -47,12 +38,9 @@ export class ResourceProvider extends Construct {
       role: this.role,
       memorySize: 10240,
       ephemeralStorageSize: Size.gibibytes(10),
-      layers: [binaryLayer],
       environment: {
         ROLE_ARN: this.role.roleArn,
         BUCKET_NAME: props.bucketName ?? '',
-        // if files are not changed, then the version should not be changed
-        ESD_FILE_VERSION: ESD_FILE_VERSION,
       },
     });
 

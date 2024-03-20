@@ -22,7 +22,6 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-ESD_FILE_VERSION = os.environ.get("ESD_FILE_VERSION")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -181,6 +180,7 @@ def handler(raw_event, ctx):
 
 
 def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+    instance_package = "g4" if event.instance_type.startswith("ml.g4") else "g5"
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
@@ -190,9 +190,9 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
-            'ESD_FILE_VERSION': ESD_FILE_VERSION,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
+            'INSTANCE_PACKAGE': instance_package,
         },
     }
 
@@ -214,7 +214,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 300,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 600,  # Specify the health checkup timeout in seconds
         }
     ]
 

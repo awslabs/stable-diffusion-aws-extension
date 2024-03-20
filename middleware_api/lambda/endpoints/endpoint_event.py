@@ -35,12 +35,23 @@ def handler(event, context):
         logger.error(f"No matching DynamoDB record found for endpoint: {endpoint_name}")
         return {'statusCode': 200}
 
-    endpoint_deployment_job_id = endpoint['EndpointDeploymentJobId']
+    ep_id = endpoint['EndpointDeploymentJobId']
 
     try:
         business_status = get_business_status(endpoint_status)
 
-        update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', business_status)
+        update_endpoint_field(ep_id, 'endpoint_status', business_status)
+
+        if business_status == EndpointStatus.IN_SERVICE.value:
+            # start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
+            # deploy_seconds = int((datetime.now() - start_time).total_seconds())
+            # update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', deploy_seconds)
+            current_time = str(datetime.now())
+            update_endpoint_field(ep_id, 'endTime', current_time)
+
+            # if it is the first time in service
+            if 'endTime' not in endpoint:
+                check_and_enable_autoscaling(endpoint, 'prod')
 
         # update the instance count if the endpoint is not deleting or deleted
         if business_status not in [EndpointStatus.DELETING.value, EndpointStatus.DELETED.value]:
@@ -48,11 +59,11 @@ def handler(event, context):
             logger.info(f"Endpoint status: {status}")
             if 'ProductionVariants' in status:
                 instance_count = status['ProductionVariants'][0]['CurrentInstanceCount']
-                update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', instance_count)
+                update_endpoint_field(ep_id, 'current_instance_count', instance_count)
         else:
             # sometime sagemaker don't send deleted event, so just use deleted status when deleting
-            update_endpoint_field(endpoint_deployment_job_id, 'endpoint_status', EndpointStatus.DELETED.value)
-            update_endpoint_field(endpoint_deployment_job_id, 'current_instance_count', 0)
+            update_endpoint_field(ep_id, 'endpoint_status', EndpointStatus.DELETED.value)
+            update_endpoint_field(ep_id, 'current_instance_count', 0)
 
         # if endpoint is deleted, update the instance count to 0 and delete the config and model
         if business_status == EndpointStatus.DELETED.value:
@@ -64,21 +75,11 @@ def handler(event, context):
             except Exception as e:
                 logger.error(f"error deleting endpoint config and model with exception: {e}")
 
-        if business_status == EndpointStatus.IN_SERVICE.value:
-            # start_time = datetime.strptime(endpoint['startTime']['S'], "%Y-%m-%d %H:%M:%S.%f")
-            # deploy_seconds = int((datetime.now() - start_time).total_seconds())
-            # update_endpoint_field(endpoint_deployment_job_id, 'deploy_seconds', deploy_seconds)
-            current_time = str(datetime.now())
-            update_endpoint_field(endpoint_deployment_job_id, 'endTime', current_time)
-
-            # if it is the first time in service
-            if 'endTime' not in endpoint:
-                check_and_enable_autoscaling(endpoint, 'prod')
-
         if business_status == EndpointStatus.FAILED.value:
-            update_endpoint_field(endpoint_deployment_job_id, 'error', event['FailureReason'])
+            update_endpoint_field(ep_id, 'error', event['FailureReason'])
+
     except Exception as e:
-        update_endpoint_field(endpoint_deployment_job_id, 'error', str(e))
+        update_endpoint_field(ep_id, 'error', str(e))
         logger.error(f"Error processing event with exception: {e}")
 
     return {'statusCode': 200}
@@ -125,6 +126,7 @@ def enable_autoscaling(item, variant_name):
 
 
 def enable_autoscaling_async(item, variant_name):
+    target_value = 3
     endpoint_name = item['endpoint_name']['S']
 
     # Define scaling policy
@@ -233,6 +235,7 @@ def enable_autoscaling_async(item, variant_name):
 
 
 def enable_autoscaling_real_time(item, variant_name):
+    target_value = 5
     endpoint_name = item['endpoint_name']['S']
 
     # Define scaling policy
