@@ -98,9 +98,8 @@ export class CreateEndpointApi {
         's3:GetObject',
       ],
       resources: [
-        this.s3Bucket.bucketArn,
-        `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+        // for get files from solution's bucket
+        '*',
       ],
     });
 
