@@ -92,5 +92,22 @@ export XFORMERS_PACKAGE="xformers==0.0.20"
 cd /home/ubuntu/stable-diffusion-webui/extensions
 git clone https://github.com/Gourieff/sd-webui-reactor.git
 
+# if $EXTENSIONS is not empty, it will be executed
+if [ -n "$EXTENSIONS" ]; then
+    echo "---------------------------------------------------------------------------------"
+    cd /home/ubuntu/stable-diffusion-webui/extensions/ || exit 1
+
+    read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
+
+    for git_repo in "${array[@]}"; do
+      start_at=$(date +%s)
+      echo "git clone $git_repo"
+      git clone "$git_repo"
+      end_at=$(date +%s)
+      cost=$((end_at-start_at))
+      echo "git clone $git_repo: $cost seconds"
+    done
+fi
+
 cd /home/ubuntu/stable-diffusion-webui
 accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test

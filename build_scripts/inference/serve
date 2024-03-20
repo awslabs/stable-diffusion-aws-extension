@@ -59,23 +59,6 @@ echo "--------------------------------------------------------------------------
 total_cost=$((cost+init_seconds))
 echo "total cost: $total_cost seconds"
 
-# if $EXTENSIONS is not empty, it will be executed
-if [ -n "$EXTENSIONS" ]; then
-    echo "---------------------------------------------------------------------------------"
-    cd /home/ubuntu/stable-diffusion-webui/extensions/ || exit 1
-
-    read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
-
-    for git_repo in "${array[@]}"; do
-      start_at=$(date +%s)
-      echo "git clone $git_repo"
-      git clone "$git_repo"
-      end_at=$(date +%s)
-      cost=$((end_at-start_at))
-      echo "git clone $git_repo: $cost seconds"
-    done
-fi
-
 cd /home/ubuntu/stable-diffusion-webui || exit 1
 
 # s5cmd
