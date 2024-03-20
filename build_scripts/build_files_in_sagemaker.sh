@@ -12,7 +12,7 @@ echo "Running in $(bash --version)"
 
 nvidia-smi
 
-ESD_FILE_VERSION='1.8.0-base'
+ESD_FILE_VERSION='1.5.0'
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
@@ -46,7 +46,7 @@ check_ready() {
     PID=$(lsof -i :8080 | awk 'NR!=1 {print $2}' | head -1)
 
     if [ -n "$PID" ]; then
-      tar_file="webui.tar"
+      tar_file="webui-$INSTANCE_PACKAGE.tar"
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
       # kill $PID
       echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/"
