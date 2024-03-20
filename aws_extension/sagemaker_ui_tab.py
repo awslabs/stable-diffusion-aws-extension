@@ -752,7 +752,7 @@ def model_upload_tab():
                     choices=roles(cloud_auth_manager.username),
                     label="Roles")
         with gr.Row():
-            refresh_button = gr.Button(value="Refresh List", elem_id="refresh_ckpts_button_id")
+            refresh_button = gr.Button(value="Refresh List",  variant="primary", elem_id="refresh_ckpts_button_id")
             refresh_button.click(
                 fn=list_ckpts_data,
                 inputs=[query_types, query_status, query_roles, current_page],
