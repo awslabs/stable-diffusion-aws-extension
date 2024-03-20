@@ -173,7 +173,7 @@ Resources:
           
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
-          sudo apt install wget git python3.10 python3.10-venv build-essential net-tools libgl1 libtcmalloc-minimal4 -y
+          sudo apt install wget git python3.10 python3.10-venv python3-dev build-essential net-tools libgl1 libtcmalloc-minimal4 -y
           sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
           
           cd /home/ubuntu
