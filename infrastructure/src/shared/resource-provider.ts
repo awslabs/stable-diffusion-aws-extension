@@ -10,7 +10,6 @@ import { Construct } from 'constructs';
 export interface ResourceProviderProps {
   bucketName?: string;
   ecrImageTag?: string;
-  version?: string;
 }
 
 export class ResourceProvider extends Construct {
