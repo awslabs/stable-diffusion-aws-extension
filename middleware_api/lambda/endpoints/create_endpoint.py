@@ -181,6 +181,7 @@ def handler(raw_event, ctx):
 
 
 def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+    instance_package = "g4" if event.instance_type.startswith("ml.g4") else "g5"
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
@@ -193,6 +194,7 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'ESD_FILE_VERSION': ESD_FILE_VERSION,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
+            'INSTANCE_PACKAGE': instance_package,
         },
     }
 
@@ -214,7 +216,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 300,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 600,  # Specify the health checkup timeout in seconds
         }
     ]
 

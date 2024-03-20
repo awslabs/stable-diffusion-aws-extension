@@ -1,7 +1,6 @@
 #!/bin/bash
 
 trap 'echo "error_lock" > /error_lock; exit 1' ERR
-
 if [ -f "/error_lock" ]; then
     echo "start failed, please check the log"
     sleep 30
@@ -25,6 +24,7 @@ ESD_FILE_VERSION='1.8.0-base'
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
+echo "INSTANCE_PACKAGE: $INSTANCE_PACKAGE"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
 echo "ESD_FILE_VERSION: $ESD_FILE_VERSION"
@@ -37,12 +37,8 @@ echo "NOW_AT: $current_time"
 echo "Init from Create: $init_seconds seconds"
 
 echo "---------------------------------------------------------------------------------"
-instance_package="g5"
-if [ "${INSTANCE_TYPE%"${INSTANCE_TYPE#ml.g4}"}" = "ml.g4" ]; then
-    instance_package="g4"
-fi
 
-files_s3_path="s3://$BUCKET_NAME/$ESD_FILE_VERSION-$instance_package"
+files_s3_path="s3://$BUCKET_NAME/$ESD_FILE_VERSION-$INSTANCE_PACKAGE"
 echo "files_s3_path: $files_s3_path"
 
 total_start_at=$(date +%s)
@@ -59,7 +55,8 @@ cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
 
 start_at=$(date +%s)
-s5cmd --log=error run /home/ubuntu/stable-diffusion-webui/commands.txt
+list_file="commands_$INSTANCE_PACKAGE.txt"
+s5cmd --log=error run /home/ubuntu/stable-diffusion-webui/$list_file
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "download big files: $cost seconds"

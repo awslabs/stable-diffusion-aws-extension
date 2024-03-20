@@ -1,5 +1,9 @@
 FROM 860660600690.dkr.ecr.ap-northeast-1.amazonaws.com/esd-inference:base
 
-COPY build_files /
+RUN apt-get update -y && \
+    apt-get install --no-install-recommends -y lsof tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake && \
+    rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ["bash", "/build_files"]
+COPY build_files_in_sagemaker.sh /
+
+ENTRYPOINT ["bash", "/build_files_in_sagemaker.sh"]
