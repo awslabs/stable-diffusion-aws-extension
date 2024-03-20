@@ -89,9 +89,6 @@ export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
 export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
 export XFORMERS_PACKAGE="xformers==0.0.20"
 
-cd /home/ubuntu/stable-diffusion-webui/extensions
-git clone https://github.com/Gourieff/sd-webui-reactor.git
-
 # if $EXTENSIONS is not empty, it will be executed
 if [ -n "$EXTENSIONS" ]; then
     echo "---------------------------------------------------------------------------------"
