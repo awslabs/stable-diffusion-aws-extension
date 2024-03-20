@@ -13,7 +13,6 @@ echo "Running in $(bash --version)"
 nvidia-smi
 
 ESD_FILE_VERSION='1.5.0'
-export BUCKET_NAME="aws-gcr-solutions-$AWS_DEFAULT_REGION"
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
@@ -29,12 +28,12 @@ init_seconds=$(( current_time_seconds - created_time_seconds ))
 echo "NOW_AT: $current_time"
 echo "Init from Create: $init_seconds seconds"
 
-target_path="s3://$BUCKET_NAME/$ESD_FILE_VERSION-$INSTANCE_PACKAGE"
-
 echo "---------------------------------------------------------------------------------"
-s5cmd --log=error cp "s3://$BUCKET_NAME/esd/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/conda/libcufft.so.10" /opt/conda/lib/
-s5cmd --log=error cp "s3://$BUCKET_NAME/esd/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/conda/libcurand.so.10" /opt/conda/lib/
+export AWS_REGION="us-west-2"
+s5cmd --log=error cp "s3://aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10" /opt/conda/lib/
+s5cmd --log=error cp "s3://aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10" /opt/conda/lib/
 export LD_LIBRARY_PATH=/opt/conda/lib:$LD_LIBRARY_PATH
+export AWS_REGION=$AWS_DEFAULT_REGION
 echo "---------------------------------------------------------------------------------"
 
 check_ready() {
@@ -42,11 +41,11 @@ check_ready() {
     PID=$(lsof -i :8080 | awk 'NR!=1 {print $2}' | head -1)
 
     if [ -n "$PID" ]; then
-      tar_file="webui-$INSTANCE_PACKAGE.tar"
+      tar_file="esd-$ESD_FILE_VERSION-$INSTANCE_PACKAGE.tar"
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
       echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/"
       tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/ > /dev/null 2>&1
-      s5cmd sync $tar_file "$target_path/"
+      s5cmd sync $tar_file "s3://$BUCKET_NAME/"
       break
     else
       echo "Port 8080 is not in use, waiting for 10 seconds..."

@@ -17,6 +17,10 @@ echo "--------------------------------------------------------------------------
 printenv
 
 ESD_FILE_VERSION='1.5.0'
+
+export AWS_DEFAULT_REGION="us-west-2"
+export AWS_REGION="us-west-2"
+
 export BUCKET_NAME="aws-gcr-solutions-$AWS_DEFAULT_REGION"
 
 echo "---------------------------------------------------------------------------------"
@@ -37,7 +41,7 @@ echo "--------------------------------------------------------------------------
 
 total_start_at=$(date +%s)
 start_at=$(date +%s)
-s5cmd --log=error cp "s3://$BUCKET_NAME/esd/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/commands.txt" ./
+s5cmd --log=error cp "s3://$BUCKET_NAME/extension-for-stable-diffusion-on-aws/$ESD_FILE_VERSION-$INSTANCE_PACKAGE/commands.txt" ./
 s5cmd --log=error run commands.txt
 end_at=$(date +%s)
 cost=$((end_at-start_at))
