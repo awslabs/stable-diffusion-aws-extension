@@ -44,9 +44,8 @@ cost=$((end_at-start_at))
 echo "download files: $cost seconds"
 
 start_at=$(date +%s)
-tar -xf webui.tar
-pwd
-ls -la
+tar --overwrite -xf webui.tar -C /home/ubuntu/
+rm -rf webui.tar
 end_at=$(date +%s)
 cost=$((end_at-start_at))
 echo "decompress files: $cost seconds"
@@ -60,10 +59,6 @@ total_cost=$((cost+init_seconds))
 echo "total cost: $total_cost seconds"
 
 cd /home/ubuntu/stable-diffusion-webui || exit 1
-
-# s5cmd
-mkdir tools
-cp /usr/local/bin/s5cmd ./tools/
 
 source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
 
