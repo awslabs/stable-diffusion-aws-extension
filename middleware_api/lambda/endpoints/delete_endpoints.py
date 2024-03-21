@@ -71,8 +71,8 @@ def delete_endpoint(endpoint_item):
         for ProductionVariant in config['ProductionVariants']:
             sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
 
-    response = cw_client.delete_metric_alarm(
-        AlarmName=f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm',
+    response = cw_client.delete_alarms(
+        AlarmNames=[f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm'],
     )
     logger.info(f"delete_metric_alarm response: {response}")
 
