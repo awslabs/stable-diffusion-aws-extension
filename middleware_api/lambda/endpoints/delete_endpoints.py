@@ -15,6 +15,7 @@ sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
+cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -69,6 +70,11 @@ def delete_endpoint(endpoint_item):
         sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
         for ProductionVariant in config['ProductionVariants']:
             sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
+
+    response = cw_client.delete_metric_alarm(
+        AlarmName=f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm',
+    )
+    logger.info(f"delete_metric_alarm response: {response}")
 
     # delete ddb item
     delete_endpoint_item(endpoint_item)

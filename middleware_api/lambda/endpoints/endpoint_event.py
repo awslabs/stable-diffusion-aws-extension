@@ -214,7 +214,7 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Put step scaling policy response: {step_policy_response}")
 
     cw_client.put_metric_alarm(
-        AlarmName=f'{endpoint_name}-hasbacklogwithoutcapacity-alarm',
+        AlarmName=f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm',
         MetricName='HasBacklogWithoutCapacity',
         Namespace='AWS/SageMaker',
         Statistic='Average',
