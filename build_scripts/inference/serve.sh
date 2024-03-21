@@ -1,9 +1,10 @@
 #!/bin/bash
 
+export ESD_CODE_BRANCH=main
 export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
 
-
 if [[ $ECR_IMAGE_TAG == *"dev"* ]]; then
+  export ESD_CODE_BRANCH=dev
   export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install.sh
   trap 'echo "error_lock" > /error_lock; exit 1' ERR
   if [ -f "/error_lock" ]; then
@@ -148,7 +149,10 @@ check_ready() {
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
+      rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
       rm -rf /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
+      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
+      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
 
       echo "delete git..."
       find "/home/ubuntu/stable-diffusion-webui" -type d -name '.git' -exec rm -rf {} +

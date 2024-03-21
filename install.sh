@@ -1,5 +1,12 @@
 #!/bin/bash
 
+branch=main
+
+# if ESD_CODE_BRANCH is dev, then use dev branch
+if [[ $ESD_CODE_BRANCH == "dev" ]]; then
+  branch=dev
+fi
+
 # Warning: This script is used to install the initial support for client and workshop
 # Warning: For keeping the same version of the initial support
 
@@ -22,7 +29,7 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch main
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch $branch --single-branch
 # Checkout aigc branch
 cd stable-diffusion-aws-extension
 cd ..
