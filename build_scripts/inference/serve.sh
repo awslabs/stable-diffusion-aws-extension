@@ -157,15 +157,14 @@ check_ready() {
       find "/home/ubuntu/stable-diffusion-webui" -type f -name 'LICENSE.md' -exec rm -rf {} +
       find "/home/ubuntu/stable-diffusion-webui" -type f -name 'NOTICE.md' -exec rm -rf {} +
 
-      echo "upload big files..."
-      filelist=$(mktemp)
+      echo "colection big files..."
+      upload_files=$(mktemp)
       big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +10240k)
       for file in $big_files; do
          key=$(echo "$file" | cut -d'/' -f4-)
-         echo "cp $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$filelist"
+         echo "sync $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$upload_files"
       done
-      s5cmd run "$filelist"
-
+      
       echo "tar files..."
       filelist=$(mktemp)
       # shellcheck disable=SC2164
@@ -173,11 +172,12 @@ check_ready() {
       find "./" \( -type f -o -type l \) -size -10250k > "$filelist"
       tar -cf $tar_file -T "$filelist"
 
-      echo "upload tar file..."
-      s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/$S3_LOCATION/"
+      echo "sync $tar_file s3://$BUCKET_NAME/$S3_LOCATION/" >> "$upload_files"
+      echo "sync /home/ubuntu/conda/* s3://$BUCKET_NAME/$S3_LOCATION/conda/" >> "$upload_files"
+      echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$BUCKET_NAME/$S3_LOCATION/insightface/" >> "$upload_files"
 
-      s5cmd --log=error sync "/home/ubuntu/conda/*" "s3://$BUCKET_NAME/$S3_LOCATION/conda/"
-      s5cmd --log=error sync "/home/ubuntu/stable-diffusion-webui/models/insightface/*" "s3://$BUCKET_NAME/$S3_LOCATION/insightface/"
+      echo "upload files..."
+      s5cmd run "$upload_files"
 
       break
     else
