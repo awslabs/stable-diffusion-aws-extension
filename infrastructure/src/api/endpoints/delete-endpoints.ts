@@ -96,6 +96,8 @@ export class DeleteEndpointsApi {
       effect: Effect.ALLOW,
       actions: [
         'application-autoscaling:DeregisterScalableTarget',
+        'cloudwatch:DeleteAlarms',
+        'cloudwatch:DescribeAlarms',
       ],
       resources: [
         '*',
