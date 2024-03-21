@@ -178,13 +178,13 @@ Resources:
           
           cd /home/ubuntu
           
+          export ESD_CODE_BRANCH=${Branch}
           curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
           
           cd stable-diffusion-webui/extensions
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
           
           cd stable-diffusion-aws-extension
-          git checkout ${Branch}
 
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz

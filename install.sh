@@ -29,7 +29,7 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch $branch --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch $branch
 # Checkout aigc branch
 cd stable-diffusion-aws-extension
 cd ..
