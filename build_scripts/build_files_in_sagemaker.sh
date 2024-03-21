@@ -86,9 +86,54 @@ check_ready() {
 
     if [ -n "$PID" ]; then
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
-      echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/"
-      tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/ > /dev/null 2>&1
-      s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/"
+      
+      rm -rf /home/ubuntu/stable-diffusion-webui/models/extensions/stable-diffusion-aws-extension/docs
+      rm -rf /home/ubuntu/stable-diffusion-webui/models/extensions/stable-diffusion-aws-extension/infrastructure
+      rm -rf /home/ubuntu/stable-diffusion-webui/models/extensions/stable-diffusion-aws-extension/middleware_api
+
+      echo "delete git..."
+      find "/home/ubuntu/stable-diffusion-webui" -type d -name '.git' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type d -name '.github' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name '.gitignore' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'README.md' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CHANGELOG.md' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CODE_OF_CONDUCT.md' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'LICENSE.md' -exec rm -rf {} +
+      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'NOTICE.md' -exec rm -rf {} +
+
+      # filelist=$(mktemp)
+      # find "/home/ubuntu/stable-diffusion-webui" -type f -size -20480k > "$filelist"
+      # tar -czvf "output.tar" -T "$filelist" > /dev/null 2>&1
+      echo "tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui"
+      # tar -cvf $tar_file /home/ubuntu/stable-diffusion-webui/ > /dev/null 2>&1
+      s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/$ENDPOINT_NAME/"
+      
+      echo "cp s3://$BUCKET_NAME/$ENDPOINT_NAME/webui.tar ./" > commands.txt
+      echo "cp s3://$BUCKET_NAME/$ENDPOINT_NAME/conda/libcufft.so.10 /opt/conda/lib/" >> commands.txt
+      echo "cp s3://$BUCKET_NAME/$ENDPOINT_NAME/conda/libcurand.so.10 /opt/conda/lib/" >> commands.txt
+      echo "cp s3://$BUCKET_NAME/$ENDPOINT_NAME/insightface/reactor/inswapper_128.onnx /home/ubuntu/stable-diffusion-webui/models/insightface/" >> commands.txt
+
+      dist_path=s3://aws-gcr-solutions-us-west-2/extension-for-stable-diffusion-on-aws/1.5.0-$IINSTANCE_PACKAGE
+      echo "cp $dist_path/webui.tar ./" > commands_us.txt
+      echo "cp $dist_path/conda/libcufft.so.10 /opt/conda/lib/" >> commands_us.txt
+      echo "cp $dist_path/conda/libcurand.so.10 /opt/conda/lib/" >> commands_us.txt
+      echo "cp $dist_path/insightface/reactor/inswapper_128.onnx /home/ubuntu/stable-diffusion-webui/models/insightface/" >> commands_us.txt
+
+      # big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +20480k)
+      # for file in $big_files; do
+      #    key=$(echo "$file" | cut -d'/' -f5-)
+      #    s5cmd sync "$file" "s3://$BUCKET_NAME/$ENDPOINT_NAME/$key"
+      #    echo "cp "s3://$BUCKET_NAME/$ENDPOINT_NAME/$key" /home/ubuntu/$file" >> commands.txt
+      #    echo "cp "$dist_path/$key" /home/ubuntu/$file" >> commands_us.txt
+      #    echo "$file"
+      # done
+
+      s5cmd --log=error sync "/opt/conda/lib/*" "s3://$BUCKET_NAME/$ENDPOINT_NAME/conda/"
+      # s5cmd --log=error sync "/home/ubuntu/stable-diffusion-webui/models/insightface/*" "s3://$BUCKET_NAME/$ENDPOINT_NAME/insightface/"
+      
+      s5cmd --log=error sync commands.txt "s3://$BUCKET_NAME/$ENDPOINT_NAME/"
+      s5cmd --log=error sync commands_us.txt "s3://$BUCKET_NAME/$ENDPOINT_NAME/"
+
       break
     else
       echo "Port 8080 is not in use, waiting for 10 seconds..."
