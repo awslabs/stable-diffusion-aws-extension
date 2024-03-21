@@ -105,9 +105,6 @@ python3 -m venv venv
 
 source venv/bin/activate
 
-mkdir tools
-cp /usr/local/bin/s5cmd ./tools/
-
 python -m pip install --upgrade pip
 python -m pip install accelerate
 python -m pip install markdown
@@ -164,7 +161,7 @@ check_ready() {
          key=$(echo "$file" | cut -d'/' -f4-)
          echo "sync $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$upload_files"
       done
-      
+
       echo "tar files..."
       filelist=$(mktemp)
       # shellcheck disable=SC2164
