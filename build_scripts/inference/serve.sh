@@ -63,9 +63,9 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   end_at=$(date +%s)
   cost=$((end_at-start_at))
   echo "decompress file: $cost seconds"
-  
+
   cd /home/ubuntu/stable-diffusion-webui/
-  
+
   # remove soft link
   rm -rf /home/ubuntu/stable-diffusion-webui/models
   s5cmd --log=error sync "s3://$BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
@@ -74,7 +74,7 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   mkdir -p /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion
   mkdir -p /home/ubuntu/stable-diffusion-webui/models/Lora
   mkdir -p /home/ubuntu/stable-diffusion-webui/models/hypernetworks
-  
+
   # ls -la venv/bin/*
   # chmod +x venv/bin/*
   source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
@@ -82,7 +82,7 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   echo "---------------------------------------------------------------------------------"
   echo "accelerate launch..."
 
-  accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --skip-prepare-environment --no-download-sd-model --skip-python-version-check --skip-install --skip-version-check --no-hashing --nowebui
+  accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check
 fi
 
 export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install.sh
@@ -177,7 +177,7 @@ check_ready() {
       s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/$S3_LOCATION/"
 
       s5cmd --log=error sync "/home/ubuntu/conda/*" "s3://$BUCKET_NAME/$S3_LOCATION/conda/"
-      s5cmd --log=error sync "/home/ubuntu/stable-diffusion-webui/models/insightface/*" "s3://$BUCKET_NAME/$S3_LOCATION/insightface/" 
+      s5cmd --log=error sync "/home/ubuntu/stable-diffusion-webui/models/insightface/*" "s3://$BUCKET_NAME/$S3_LOCATION/insightface/"
 
       break
     else
@@ -192,4 +192,4 @@ check_ready &
 
 echo "---------------------------------------------------------------------------------"
 cd /home/ubuntu/stable-diffusion-webui
-accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test
+accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle
