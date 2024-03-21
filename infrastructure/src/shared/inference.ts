@@ -54,8 +54,6 @@ export class Inference {
     props: InferenceProps,
   ) {
 
-    const inferenceECR_url = `${props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag.valueAsString}`;
-
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
@@ -151,7 +149,8 @@ export class Inference {
         srcRoot: srcRoot,
         s3Bucket: props.s3_bucket,
         userNotifySNS: props.snsTopic,
-        inferenceECRUrl: inferenceECR_url,
+        accountId: props.accountId,
+        ecrImageTag: props.ecr_image_tag,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
         logLevel: props.logLevel,
@@ -251,7 +250,6 @@ export class Inference {
         SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
         SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
         NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-        INFERENCE_ECR_IMAGE_URL: inferenceECR_url,
         LOG_LEVEL: props.logLevel.valueAsString,
       },
       layers: [props.commonLayer],

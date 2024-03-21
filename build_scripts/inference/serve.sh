@@ -1,10 +1,16 @@
 #!/bin/bash
 
-trap 'echo "error_lock" > /error_lock; exit 1' ERR
-if [ -f "/error_lock" ]; then
-    echo "start failed, please check the log"
-    sleep 30
-    exit 1
+export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
+
+
+if [[ $ECR_IMAGE_TAG == *"dev"* ]]; then
+  export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install.sh
+  trap 'echo "error_lock" > /error_lock; exit 1' ERR
+  if [ -f "/error_lock" ]; then
+      echo "start failed, please check the log"
+      sleep 30
+      exit 1
+  fi
 fi
 
 echo "*********************************************************************************"
@@ -24,6 +30,7 @@ export ESD_VERSION='1.5.0'
 
 echo "---------------------------------------------------------------------------------"
 echo "INSTANCE_TYPE: $INSTANCE_TYPE"
+echo "ECR_IMAGE_TAG: $ECR_IMAGE_TAG"
 echo "IMAGE_URL: $IMAGE_URL"
 echo "ENDPOINT_NAME: $ENDPOINT_NAME"
 echo "ENDPOINT_ID: $ENDPOINT_ID"
@@ -84,8 +91,6 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check
 fi
 
-export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install.sh
-
 cd /home/ubuntu
 curl -sSL "$INSTALL_SCRIPT" | bash;
 
@@ -143,6 +148,7 @@ check_ready() {
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
       rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
+      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
 
       echo "delete git..."
       find "/home/ubuntu/stable-diffusion-webui" -type d -name '.git' -exec rm -rf {} +
@@ -156,7 +162,7 @@ check_ready() {
 
       echo "colection big files..."
       upload_files=$(mktemp)
-      big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +10240k)
+      big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +2520k)
       for file in $big_files; do
          key=$(echo "$file" | cut -d'/' -f4-)
          echo "sync $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$upload_files"
@@ -166,7 +172,7 @@ check_ready() {
       filelist=$(mktemp)
       # shellcheck disable=SC2164
       cd /home/ubuntu/stable-diffusion-webui
-      find "./" \( -type f -o -type l \) -size -10250k > "$filelist"
+      find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
       tar -cf $tar_file -T "$filelist"
 
       echo "sync $tar_file s3://$BUCKET_NAME/$S3_LOCATION/" >> "$upload_files"
@@ -177,11 +183,10 @@ check_ready() {
       s5cmd run "$upload_files"
 
       break
-    else
-      echo "Port 8080 is not in use, waiting for 5 seconds..."
     fi
 
-    sleep 5
+    echo "Port 8080 is not in use, waiting for 10 seconds..."
+    sleep 10
   done
 }
 
