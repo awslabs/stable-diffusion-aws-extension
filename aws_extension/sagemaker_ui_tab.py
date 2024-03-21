@@ -578,34 +578,36 @@ def model_upload_tab():
                 create_refresh_button(sd_checkpoints_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("ckpt"))},
                                       "refresh_sd_ckpt")
-            with FormRow(elem_id="model_upload_form_row_02"):
+
                 textual_inversion_path = gr.Dropdown(label="Textual Inversion",
                                                      choices=sorted(scan_local_model_files_by_suffix("text")),
                                                      elem_id="textual_inversion_model_dropdown")
                 create_refresh_button(textual_inversion_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("text"))},
                                       "refresh_textual_inversion_model")
-            with FormRow(elem_id="model_upload_form_row_03"):
+
+            with FormRow(elem_id="model_upload_form_row_02"):
                 lora_path = gr.Dropdown(label="LoRA model", choices=sorted(scan_local_model_files_by_suffix("lora")),
                                         elem_id="lora_model_dropdown")
                 create_refresh_button(lora_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("lora"))},
                                       "refresh_lora_model", )
-            with FormRow(elem_id="model_upload_form_row_04"):
+
                 controlnet_model_path = gr.Dropdown(label="ControlNet model",
                                                     choices=sorted(scan_local_model_files_by_suffix("control")),
                                                     elem_id="controlnet_model_dropdown")
                 create_refresh_button(controlnet_model_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("control"))},
                                       "refresh_controlnet_models")
-            with FormRow(elem_id="model_upload_form_row_05"):
+
+            with FormRow(elem_id="model_upload_form_row_03"):
                 hypernetwork_path = gr.Dropdown(label="Hypernetwork",
                                                 choices=sorted(scan_local_model_files_by_suffix("hyper")),
                                                 elem_id="hyper_model_dropdown")
                 create_refresh_button(hypernetwork_path, lambda: None,
                                       lambda: {"choices": sorted(scan_local_model_files_by_suffix("hyper"))},
                                       "refresh_hyper_models")
-            with FormRow(elem_id="model_upload_form_row_06"):
+
                 vae_path = gr.Dropdown(label="VAE", choices=sorted(scan_local_model_files_by_suffix("vae")),
                                        elem_id="vae_model_dropdown")
                 create_refresh_button(vae_path, lambda: None,

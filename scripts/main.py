@@ -1044,11 +1044,6 @@ class SageMakerUI(scripts.Script):
 script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
 
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-
-if cloud_auth_manager.enableAuth:
-    cmd_opts.gradio_auth = cloud_auth_manager.create_config()
-
 
 def fetch_user_data():
     while True:
@@ -1059,11 +1054,15 @@ def fetch_user_data():
         time.sleep(30)
 
 
-thread = threading.Thread(target=fetch_user_data)
-thread.daemon = True
-thread.start()
-
 if os.environ.get('ON_DOCKER', "false") != "true":
+    from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+    if cloud_auth_manager.enableAuth:
+        cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+    thread = threading.Thread(target=fetch_user_data)
+    thread.daemon = True
+    thread.start()
+
     from modules import call_queue, fifo_lock
 
     class ImprovedFiFoLock(fifo_lock.FIFOLock):

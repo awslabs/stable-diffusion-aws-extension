@@ -26,7 +26,6 @@ export interface CreateEndpointApiProps {
   inferenceJobTable: Table;
   srcRoot: string;
   inferenceECRUrl: string;
-  inferenceFileECRUrl: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
   userNotifySNS: Topic;
@@ -48,7 +47,6 @@ export class CreateEndpointApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly inferenceECRUrl: string;
-  private readonly inferenceFileECRUrl: string;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
@@ -67,7 +65,6 @@ export class CreateEndpointApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.inferenceECRUrl = props.inferenceECRUrl;
-    this.inferenceFileECRUrl = props.inferenceFileECRUrl;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
@@ -290,7 +287,6 @@ export class CreateEndpointApi {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
         INFERENCE_ECR_IMAGE_URL: this.inferenceECRUrl,
-        INFERENCE_FILE_ECR_IMAGE_URL: this.inferenceFileECRUrl,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
