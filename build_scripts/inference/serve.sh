@@ -159,7 +159,7 @@ check_ready() {
 
       echo "upload big files..."
       filelist=$(mktemp)
-      big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +15480k)
+      big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +10240k)
       for file in $big_files; do
          key=$(echo "$file" | cut -d'/' -f4-)
          echo "cp $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$filelist"
@@ -170,10 +170,10 @@ check_ready() {
       filelist=$(mktemp)
       # shellcheck disable=SC2164
       cd /home/ubuntu/stable-diffusion-webui
-      find "./" \( -type f -o -type l \) -size -15490k > "$filelist"
+      find "./" \( -type f -o -type l \) -size -10250k > "$filelist"
       tar -cf $tar_file -T "$filelist"
 
-      cho "upload tar file..."
+      echo "upload tar file..."
       s5cmd --log=error sync $tar_file "s3://$BUCKET_NAME/$S3_LOCATION/"
 
       s5cmd --log=error sync "/home/ubuntu/conda/*" "s3://$BUCKET_NAME/$S3_LOCATION/conda/"
