@@ -55,7 +55,6 @@ export class Inference {
   ) {
 
     const inferenceECR_url = `${props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${props.ecr_image_tag.valueAsString}`;
-    const inferenceFileECR_url = `${props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:file`;
 
     const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
@@ -153,7 +152,6 @@ export class Inference {
         s3Bucket: props.s3_bucket,
         userNotifySNS: props.snsTopic,
         inferenceECRUrl: inferenceECR_url,
-        inferenceFileECRUrl: inferenceFileECR_url,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
         logLevel: props.logLevel,

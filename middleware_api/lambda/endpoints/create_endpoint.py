@@ -22,7 +22,6 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-INFERENCE_FILE_ECR_IMAGE_URL = os.environ.get("INFERENCE_FILE_ECR_IMAGE_URL")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -66,9 +65,6 @@ def check_custom_extensions(event: CreateEndpointEvent):
 
 def get_docker_image_uri(event: CreateEndpointEvent):
     # if it has custom extensions, then start from file image
-    if event.custom_extensions:
-        return INFERENCE_FILE_ECR_IMAGE_URL
-
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
@@ -188,7 +184,6 @@ def handler(raw_event, ctx):
 
 
 def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
-    instance_package = "g4" if event.instance_type.startswith("ml.g4") else "g5"
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
@@ -201,7 +196,6 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'ENDPOINT_ID': endpoint_id,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
-            'INSTANCE_PACKAGE': instance_package,
         },
     }
 
