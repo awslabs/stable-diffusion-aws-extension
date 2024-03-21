@@ -183,7 +183,7 @@ def permissions_check(event: any, permissions: [str]):
             if permission in role.permissions:
                 return username
 
-    return ForbiddenException(f"User {username} has no permissions: {permissions}")
+    raise ForbiddenException(f"User {username} has no permissions: {permissions}")
 
 
 def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_name: str) -> bool:

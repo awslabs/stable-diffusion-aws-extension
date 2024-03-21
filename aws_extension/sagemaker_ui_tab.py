@@ -232,6 +232,9 @@ def api_setting_tab():
             aws_connect_button = gr.Button(value="Test Connection & Update Setting",
                                            variant='primary',
                                            elem_id="aws_config_save")
+        with gr.Row():
+            restart_service = gr.Button(value="Restart WebUI",
+                                        elem_id="restart_service")
 
             def update_connect_config(api_url, api_token, username=None, password=None, initial=True):
                 show_output = connection_output.update(visible=True)
@@ -276,6 +279,8 @@ def api_setting_tab():
                                      fn=update_connect_config,
                                      inputs=[api_url_textbox, api_token_textbox, username_textbox, password_textbox],
                                      outputs=[connection_output, connection_output])
+
+            restart_service.click(fn=restart_sd_webui_service, inputs=[], outputs=[connection_output])
 
     with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
@@ -704,6 +709,7 @@ def model_upload_tab():
             models = []
 
             if 'data' not in resp.json():
+                logger.error(f"list_checkpoints: {resp.json()}")
                 return default_list, show_page_info, 'No data'
 
             page = resp.json()['data']['page']

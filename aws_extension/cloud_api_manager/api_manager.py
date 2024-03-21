@@ -165,10 +165,9 @@ class CloudApiManager:
                                     'username': username,
                                 },
                                 headers=self._get_headers_by_user(username))
-        response.raise_for_status()
         r = response.json()
         if not r or r['statusCode'] != 200:
-            logger.info(f"The API response is empty for trainings().{r['message']}")
+            logger.error(f"list_trainings: {r}")
             return []
 
         return r['data']['trainings']
@@ -185,10 +184,14 @@ class CloudApiManager:
                                     'username': username,
                                 },
                                 headers=self._get_headers_by_user(user_token))
-        response.raise_for_status()
+
+        if response.status_code != 200:
+            logger.error(f"list_endpoints: {response.json()}")
+            return []
+
         r = response.json()
         if not r or r['statusCode'] != 200:
-            logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['message']}")
+            logger.info(f"The API response is empty for list_endpoints().{r['message']}")
             return []
 
         return r['data']['endpoints']
@@ -284,7 +287,13 @@ class CloudApiManager:
                                     'show_password': show_password
                                 },
                                 headers=self._get_headers_by_user(h_username))
-        raw_resp.raise_for_status()
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_users: {raw_resp.json()}")
+            return {
+                'users': []
+            }
+
         logger.debug(raw_resp.json())
         resp = raw_resp.json()['data']
         return resp['users'][0]
@@ -298,7 +307,13 @@ class CloudApiManager:
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
                                 params={},
                                 headers=self._get_headers_by_user(username))
-        raw_resp.raise_for_status()
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_users: {raw_resp.json()}")
+            return {
+                'users': []
+            }
+
         return raw_resp.json()['data']
 
     def list_roles(self, username=""):
@@ -308,7 +323,13 @@ class CloudApiManager:
             }
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(username))
-        raw_resp.raise_for_status()
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_roles: {raw_resp.json()}")
+            return {
+                'roles': []
+            }
+
         return raw_resp.json()['data']
 
     def upsert_role(self, role_name, permissions, creator):
@@ -325,6 +346,7 @@ class CloudApiManager:
                                  headers=self._get_headers_by_user(creator))
         resp = raw_resp.json()
         if raw_resp.status_code != 200 and raw_resp.status_code != 201:
+            logger.error(f"upsert_role: {resp}")
             raise Exception(resp['message'])
 
         return True
@@ -388,7 +410,10 @@ class CloudApiManager:
         headers = self._get_headers_by_user(username)
         raw_resp = api.list_checkpoints(params=params, headers=headers)
 
-        raw_resp.raise_for_status()
+        if raw_resp.status_code != 200:
+            logger.error(f"list_checkpoints: {raw_resp.json()}")
+            return []
+
         checkpoints = []
 
         if 'data' not in raw_resp.json():
@@ -462,7 +487,11 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
                                 headers=self._get_headers_by_user(username))
-        raw_resp.raise_for_status()
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_inferences: {raw_resp.json()}")
+            return []
+
         resp = raw_resp.json()
 
         if 'last_evaluated_key' in resp['data']:
