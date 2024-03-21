@@ -115,7 +115,7 @@ def merge_model_on_cloud(req):
     else:
         os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} ")
 
-    os.system(f'./tools/s5cmd cp {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
+    os.system(f's5cmd sync {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
     os.system(f'rm {new_merge_model_name_complete_path}')
     os.system(f'rm {new_model_yaml_complete_path}')
 
