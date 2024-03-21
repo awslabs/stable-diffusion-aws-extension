@@ -167,7 +167,7 @@ class CloudApiManager:
                                 headers=self._get_headers_by_user(username))
         r = response.json()
         if not r or r['statusCode'] != 200:
-            logger.error(f"list_train_jobs: {r}")
+            logger.error(f"list_trainings: {r}")
             return []
 
         return r['data']['trainings']
@@ -184,7 +184,11 @@ class CloudApiManager:
                                     'username': username,
                                 },
                                 headers=self._get_headers_by_user(user_token))
-        response.raise_for_status()
+
+        if response.status_code != 200:
+            logger.error(f"list_endpoints: {response.json()}")
+            return []
+
         r = response.json()
         if not r or r['statusCode'] != 200:
             logger.info(f"The API response is empty for list_endpoints().{r['message']}")
@@ -483,7 +487,11 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
                                 headers=self._get_headers_by_user(username))
-        raw_resp.raise_for_status()
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_inferences: {raw_resp.json()}")
+            return []
+
         resp = raw_resp.json()
 
         if 'last_evaluated_key' in resp['data']:
