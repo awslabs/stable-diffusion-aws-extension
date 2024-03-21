@@ -10,7 +10,7 @@ from typing import Any
 import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request
+from common.response import bad_request, forbidden
 from libs.common_tools import get_base_checkpoint_s3_key, \
     multipart_upload_from_url
 from libs.data_types import CheckPoint, CheckPointStatus
@@ -92,7 +92,7 @@ def handler(raw_event, context):
 
     if 'checkpoint' not in creator_permissions or \
             ('all' not in creator_permissions['checkpoint'] and 'create' not in creator_permissions['checkpoint']):
-        return bad_request(message=f"user has no permissions to create a model")
+        return forbidden(message=f"user has no permissions to create a model")
 
     cannot_download = concurrent_upload(event.url, base_key, file_names, checkpoint_params['multipart_upload'])
     if cannot_download:

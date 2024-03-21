@@ -55,6 +55,7 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   cost=$((end_at-start_at))
   echo "download file: $cost seconds"
 
+  echo "set conda environment..."
   export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 
   start_at=$(date +%s)
@@ -75,8 +76,6 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   mkdir -p /home/ubuntu/stable-diffusion-webui/models/Lora
   mkdir -p /home/ubuntu/stable-diffusion-webui/models/hypernetworks
 
-  # ls -la venv/bin/*
-  # chmod +x venv/bin/*
   source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
 
   echo "---------------------------------------------------------------------------------"

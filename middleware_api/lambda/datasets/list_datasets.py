@@ -6,7 +6,7 @@ import boto3
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok, bad_request, forbidden
 from common.util import get_query_param
 from libs.data_types import DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
@@ -44,7 +44,7 @@ def handler(event, context):
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
         if 'train' not in requestor_permissions or \
                 ('all' not in requestor_permissions['train'] and 'list' not in requestor_permissions['train']):
-            return bad_request(message='user has no permission to train')
+            return forbidden(message='user has no permission to train')
 
         response = table.scan(**scan_kwargs)
         scan_rows = response.get('Items', [])

@@ -558,6 +558,7 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
         response = requests.post(url=url, json=payload, headers={'x-api-key': api_key, "username": pr.username})
 
         if response.status_code not in [201, 202]:
+            logger.error(f"create_checkpoint: {response.json()}")
             return response.json()['message'], None, None, None, None, None, None
 
         try:

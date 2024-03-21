@@ -704,6 +704,7 @@ def model_upload_tab():
             models = []
 
             if 'data' not in resp.json():
+                logger.error(f"list_checkpoints: {resp.json()}")
                 return default_list, show_page_info, 'No data'
 
             page = resp.json()['data']['page']
