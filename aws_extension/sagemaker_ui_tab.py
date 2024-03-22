@@ -1038,11 +1038,19 @@ def _list_sagemaker_endpoints(username):
 def _list_trainings_job(username):
     jobs = []
     items = api_manager.list_all_train_jobs_raw(username=username)
+
     for item in items:
+        output_name = ""
+
+        try:
+            output_name = item['params']['config_params']['saving_arguments']['output_name']
+        except Exception as e:
+            pass
+
         jobs.append([
             item['id'],
             item['sagemakerTrainName'],
-            item['params']['config_params']['saving_arguments']['output_name'],
+            output_name,
             item['modelName'],
             item['status'],
             item['trainType'],
