@@ -14,12 +14,15 @@ SHELL ["/bin/bash", "-c"]
 RUN adduser --disabled-password --gecos '' ubuntu
 
 RUN apt-get update -y && \
-    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc && \
+    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc nginx && \
     # may not needed in endpoint
     apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
     # for env install
     apt-get install --no-install-recommends -y lsof tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/www/html/*
+
+COPY nginx_proxy.conf /etc/nginx/sites-available/default
 
 WORKDIR /home/ubuntu/
 

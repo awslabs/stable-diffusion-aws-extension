@@ -1,5 +1,7 @@
 #!/bin/bash
 
+nginx &
+
 export ESD_CODE_BRANCH=main
 export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/install.sh
 
@@ -88,8 +90,7 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
 
   echo "---------------------------------------------------------------------------------"
   echo "accelerate launch..."
-
-  accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check
+  accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 7860 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check
 fi
 
 cd /home/ubuntu
@@ -139,30 +140,30 @@ if [ -n "$EXTENSIONS" ]; then
     done
 fi
 
+rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
+rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
+rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
+rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
+rm -rf /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
+rm -rf /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
+rm -rf /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
+
+echo "delete git..."
+find "/home/ubuntu/stable-diffusion-webui" -type d -name '.git' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type d -name '.github' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name '.gitignore' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name 'README.md' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CHANGELOG.md' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CODE_OF_CONDUCT.md' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name 'LICENSE.md' -exec rm -rf {} +
+find "/home/ubuntu/stable-diffusion-webui" -type f -name 'NOTICE.md' -exec rm -rf {} +
+
 check_ready() {
   while true; do
     PID=$(lsof -i :8080 | awk 'NR!=1 {print $2}' | head -1)
 
     if [ -n "$PID" ]; then
       echo "Port 8080 is in use by PID: $PID. tar files and upload to S3"
-
-      rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
-      rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
-      rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
-      rm -rf /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
-      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
-      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
-      rm -rf /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
-
-      echo "delete git..."
-      find "/home/ubuntu/stable-diffusion-webui" -type d -name '.git' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type d -name '.github' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name '.gitignore' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'README.md' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CHANGELOG.md' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'CODE_OF_CONDUCT.md' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'LICENSE.md' -exec rm -rf {} +
-      find "/home/ubuntu/stable-diffusion-webui" -type f -name 'NOTICE.md' -exec rm -rf {} +
 
       echo "collection big files..."
       upload_files=$(mktemp)
@@ -190,12 +191,13 @@ check_ready() {
     fi
 
     echo "Port 8080 is not in use, waiting for 10 seconds..."
-    sleep 10
+    sleep 1
   done
 }
 
 check_ready &
 
-echo "---------------------------------------------------------------------------------"
 cd /home/ubuntu/stable-diffusion-webui
-accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 8080 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle
+echo "---------------------------------------------------------------------------------"
+echo "accelerate launch..."
+accelerate launch --num_cpu_threads_per_process=6 launch.py --api --listen --port 7860 --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle
