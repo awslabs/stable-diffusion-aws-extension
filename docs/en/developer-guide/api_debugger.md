@@ -30,3 +30,5 @@ After completing an inference job, open the API request record in the following 
 ## API Inference Debugger Log
 
 ![debugger_log](../images/api_debugger_log.png)
+
+> **Note**: Due to Postman sending requests with its own information, it may result in signature errors. It is recommended to directly use code for requests or refer to the API information provided on the UI.

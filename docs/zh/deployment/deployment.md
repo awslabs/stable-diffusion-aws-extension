@@ -21,21 +21,13 @@
 
 ### 步骤0 - Linux：部署 Stable Diffusion WebUI (Linux)。
 
-1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，进入[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)。
-
-2. 在**堆栈**页面上，选择**创建堆栈**，然后选择**使用新资源（标准）**。
-
-3. 在**指定模板**页面上，选择**模板准备就绪**，选择**上传模板文件**，选择步骤1中下载的模板，最后选择**下一步**。
-
-4. 在**指定堆栈名称和参数**页面上，输入堆栈名称到堆栈名称框中，然后选择**下一步**。
-
-5. 在**设置堆栈选项**页面上，选择**下一步**。
-
-6. 在**审核**页面上，查看堆栈的详细信息，然后选择**提交**。
-
-7. 等待堆栈创建完成。
-
-8. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。
+1. 登录到[AWS管理控制台](https://console.aws.amazon.com/)，点击[WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml)。
+2. 在**创建堆栈**页面，选择**下一步**。
+3. 在**指定堆栈名称和参数**页面上，输入堆栈名称到堆栈名称框中，按需调整对应选项后，选择**下一步**。
+4. 在**设置堆栈选项**页面上，选择**下一步**。
+5. 在**审核**页面上，查看堆栈的详细信息，勾选*I acknowledge that AWS CloudFormation might create IAM resources.*，然后选择**提交**。
+6. 等待堆栈创建完成。
+7. 查找CloudFormation堆栈的输出值，并通过单击**WebUIURL**值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。
 
 ### 步骤0 - Windows：部署 Stable Diffusion WebUI (Windows)。
 1. 启动一台Windows Server，通过RDP登录。
