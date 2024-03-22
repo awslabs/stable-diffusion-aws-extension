@@ -19,70 +19,73 @@ phases:
       - echo "nothing to do in install"
   pre_build:
     commands:
-      - cd infrastructure
-      - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
-      - echo "Installing dependencies and executing unit tests completed `date`"
-      - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
-      - export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
-      # Retry logic for fetching TAG_NAME
-      - |-
-        MAX_RETRIES=5
-        RETRY_COUNT=0
-        until [[ ! -z "$TAG_NAME" || $RETRY_COUNT -eq $MAX_RETRIES ]]
-        do
-          export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
-          if [[ -z "$TAG_NAME" ]]; then
-            let RETRY_COUNT=RETRY_COUNT+1
-            echo "TAG_NAME is empty, retrying ($RETRY_COUNT/$MAX_RETRIES)..."
-            sleep 5 # wait for 5 seconds before retrying
-          fi
-        done
-
-        if [[ -z "$TAG_NAME" ]]; then
-          echo "Failed to fetch TAG_NAME after $MAX_RETRIES attempts."
-          exit 1
-        fi
-      - export BUILD_VERSION=${TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
-      - export CN_ASSETS='cn/'
-      - export TAG_NUMBER="${TAG_NAME#v}"
-      - |-
-        set -euxo pipefail
-        __dir="${CODEBUILD_SRC_DIR}/deployment"
-        function join_by { local IFS="$1"; shift; echo "$*"; }
-        export CN_ECR_REPOS=$(join_by , `cat "${__dir}/cn-ecr-repos"`)
-      - export GLOBAL_ASSETS='custom-domain/,default/'
+      - echo "nothing to do in install"
+#      - cd infrastructure
+#      - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
+#      - echo "Installing dependencies and executing unit tests completed `date`"
+#      - export BSS_IMAGE_ASSET_REPOSITORY_NAME='stable-diffusion-aws-extension'
+#      - export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
+#      # Retry logic for fetching TAG_NAME
+#      - |-
+#        MAX_RETRIES=5
+#        RETRY_COUNT=0
+#        until [[ ! -z "$TAG_NAME" || $RETRY_COUNT -eq $MAX_RETRIES ]]
+#        do
+#          export TAG_NAME=$(curl -s https://api.github.com/repos/awslabs/stable-diffusion-aws-extension/tags | jq -r '.[0].name')
+#          if [[ -z "$TAG_NAME" ]]; then
+#            let RETRY_COUNT=RETRY_COUNT+1
+#            echo "TAG_NAME is empty, retrying ($RETRY_COUNT/$MAX_RETRIES)..."
+#            sleep 5 # wait for 5 seconds before retrying
+#          fi
+#        done
+#
+#        if [[ -z "$TAG_NAME" ]]; then
+#          echo "Failed to fetch TAG_NAME after $MAX_RETRIES attempts."
+#          exit 1
+#        fi
+#      - export BUILD_VERSION=${TAG_NAME}-${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+#      - export CN_ASSETS='cn/'
+#      - export TAG_NUMBER="${TAG_NAME#v}"
+#      - |-
+#        set -euxo pipefail
+#        __dir="${CODEBUILD_SRC_DIR}/deployment"
+#        function join_by { local IFS="$1"; shift; echo "$*"; }
+#        export CN_ECR_REPOS=$(join_by , `cat "${__dir}/cn-ecr-repos"`)
+#      - export GLOBAL_ASSETS='custom-domain/,default/'
   build:
     commands:
-      - echo "Starting build the public ECR"
-      - cd ../build_scripts
-      - chmod +x ./build_all.sh
-      - chmod +x ./build_and_push.sh
-      - chmod +x ./source_image_update.sh
-      - chmod +x ./update_private_ecr.sh
-      - json_output=$(aws sts assume-role  --role-arn "$AWS_ASSET_PUBLISH_ROLE"  --role-session-name "asset-publishing-role"  --duration-seconds "3600"  2>&1)
-      - set +x
-      - export AWS_ACCESS_KEY_ID=$(echo "${json_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]")
-      - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
-      - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
-      - echo "BUILD VERSION is ${BUILD_VERSION}"
-      - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
-      - echo "" > ../infrastructure/src/common/dockerImageTag.ts
-      - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts 
-      - echo "checking the updated image name"
-      - cat ../infrastructure/src/common/dockerImageTag.ts
-      - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
-      - cat ../aws_extension/cloud_api_manager/api.py
-      - sed -i "s/x_api_version = \"[0-9.]*\"/x_api_version = \"$TAG_NUMBER\"/" ../middleware_api/lambda/common/response.py
-      - cat ../middleware_api/lambda/common/response.py
-      - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
-      - set -x
-      - echo "Starting build `date` in `pwd`"
-      - cd ../deployment
-      - chmod +x ./build-s3-dist.sh && ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $BUILD_VERSION
-      - echo "Build completed `date`"
-      - echo "Starting open-source-dist `date` in `pwd`"
-      - chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh $SOLUTION_NAME
-      - echo "Open Source Dist completed `date`"
+      - echo "nothing to do in install"
+#    commands:
+#      - echo "Starting build the public ECR"
+#      - cd ../build_scripts
+#      - chmod +x ./build_all.sh
+#      - chmod +x ./build_and_push.sh
+#      - chmod +x ./source_image_update.sh
+#      - chmod +x ./update_private_ecr.sh
+#      - json_output=$(aws sts assume-role  --role-arn "$AWS_ASSET_PUBLISH_ROLE"  --role-session-name "asset-publishing-role"  --duration-seconds "3600"  2>&1)
+#      - set +x
+#      - export AWS_ACCESS_KEY_ID=$(echo "${json_output}" | jq --raw-output ".Credentials[\"AccessKeyId\"]")
+#      - export AWS_SECRET_ACCESS_KEY=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SecretAccessKey\"]")
+#      - export AWS_SESSION_TOKEN=$(echo "${json_output}" | jq --raw-output ".Credentials[\"SessionToken\"]")
+#      - echo "BUILD VERSION is ${BUILD_VERSION}"
+#      - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
+#      - echo "" > ../infrastructure/src/common/dockerImageTag.ts
+#      - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts
+#      - echo "checking the updated image name"
+#      - cat ../infrastructure/src/common/dockerImageTag.ts
+#      - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
+#      - cat ../aws_extension/cloud_api_manager/api.py
+#      - sed -i "s/x_api_version = \"[0-9.]*\"/x_api_version = \"$TAG_NUMBER\"/" ../middleware_api/lambda/common/response.py
+#      - cat ../middleware_api/lambda/common/response.py
+#      - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+#      - set -x
+#      - echo "Starting build `date` in `pwd`"
+#      - cd ../deployment
+#      - chmod +x ./build-s3-dist.sh && ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $BUILD_VERSION
+#      - echo "Build completed `date`"
+#      - echo "Starting open-source-dist `date` in `pwd`"
+#      - chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh $SOLUTION_NAME
+#      - echo "Open Source Dist completed `date`"
 
   post_build:
     commands:
