@@ -18,7 +18,7 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
 
-export interface ExecuteApiProps {
+export interface PrepareApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   srcRoot: string;
@@ -32,7 +32,7 @@ export interface ExecuteApiProps {
   logLevel: CfnParameter;
 }
 
-export class ExecuteApi {
+export class PrepareApi {
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
@@ -47,7 +47,7 @@ export class ExecuteApi {
   private readonly nodeTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
-  constructor(scope: Construct, id: string, props: ExecuteApiProps) {
+  constructor(scope: Construct, id: string, props: PrepareApiProps) {
     this.scope = scope;
     this.httpMethod = props.httpMethod;
     this.baseId = id;
@@ -62,7 +62,7 @@ export class ExecuteApi {
     this.logLevel = props.logLevel;
     this.queue = props.queue;
 
-    this.executeApi();
+    this.prepareApi();
   }
 
   private iamRole(): aws_iam.Role {
@@ -133,12 +133,12 @@ export class ExecuteApi {
     return newRole;
   }
 
-  private executeApi() {
+  private prepareApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
-      index: 'execute.py',
+      index: 'prepare.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
@@ -164,49 +164,25 @@ export class ExecuteApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          prompt_id: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          prompt: {
-            type: JsonSchemaType.OBJECT,
-            minItems: 1,
-            additionalProperties: true,
-          },
           endpoint_name: {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          inference_type: {
+          s3_source_path: {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          need_sync: {
-            type: JsonSchemaType.BOOLEAN,
-            minLength: 1,
-          },
-          number: {
+          local_target_path: {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          front: {
-            type: JsonSchemaType.BOOLEAN,
-            minLength: 1,
-          },
-          extra_data: {
-            type: JsonSchemaType.OBJECT,
-            minLength: 1,
-            additionalProperties: true,
-          },
-          client_id: {
+          prepare_type: {
             type: JsonSchemaType.STRING,
-            minLength: 1,
+            enum: ['default', 'inputs', 'nodes', 'models', 'custom'],
           },
         },
         required: [
-          'prompt_id',
-          'prompt',
-          'need_sync',
+          'endpoint_name',
         ],
       },
       contentType: 'application/json',

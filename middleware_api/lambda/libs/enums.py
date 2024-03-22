@@ -57,3 +57,16 @@ class DatasetStatus(Enum):
     Initialed = 'Initialed'
     Enabled = 'Enabled'
     Disabled = 'Disabled'
+
+
+class ComfyEnvPrepareType(Enum):
+    ALL = 'default'
+    INPUTS = 'inputs'
+    NODES = 'nodes'
+    MODELS = 'models'
+    CUSTOM = 'custom'
+
+
+class ComfyTaskType(Enum):
+    PREPARE = 'prepare'
+    INFERENCE = 'inference'

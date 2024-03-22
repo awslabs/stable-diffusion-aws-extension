@@ -4,13 +4,14 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
+import { SqsStack } from './comfy-sqs';
 import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
+import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_prompt';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
+import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-import { SqsStack } from './comfy-sqs';
 // import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
 
 export interface ComfyInferenceStackProps extends StackProps {
@@ -98,20 +99,19 @@ export class ComfyApiStack extends Construct {
       logLevel: props.logLevel,
     });
 
-    new CreateSageMakerEndpoint(scope, 'ComfyEndpoint',
-            <CreateSageMakerEndpointProps>{
-              dockerImageUrl: srcImg,
-              modelDataUrl: model_data_url,
-              s3Bucket: props.s3Bucket,
-              machineType: 'ml.g4dn.2xlarge',
-              rootSrc: srcRoot,
-              configTable: this.configTable,
-              modelTable: this.modelTable,
-              nodeTable: this.nodeTable,
-              commonLayer: this.layer,
-              queue: sqsStack.queue,
-              logLevel: props.logLevel,
-            });
+    new CreateSageMakerEndpoint(scope, 'ComfyEndpoint', <CreateSageMakerEndpointProps>{
+      dockerImageUrl: srcImg,
+      modelDataUrl: model_data_url,
+      s3Bucket: props.s3Bucket,
+      machineType: 'ml.g4dn.2xlarge',
+      rootSrc: srcRoot,
+      configTable: this.configTable,
+      modelTable: this.modelTable,
+      nodeTable: this.nodeTable,
+      commonLayer: this.layer,
+      queue: sqsStack.queue,
+      logLevel: props.logLevel,
+    });
     // new EndpointStack(
     //   scope, 'Comfy',
     //         <EndpointStackProps>{
@@ -131,35 +131,49 @@ export class ComfyApiStack extends Construct {
 
     // POST /execute
     new ExecuteApi(
-      scope, 'Execute',
-            <ExecuteApiProps>{
-              httpMethod: 'POST',
-              router: props.routers.execute,
-              srcRoot: srcRoot,
-              s3Bucket: props.s3Bucket,
-              configTable: this.configTable,
-              executeTable: this.executeTable,
-              modelTable: this.modelTable,
-              nodeTable: this.nodeTable,
-              queue: sqsStack.queue,
-              commonLayer: this.layer,
-              logLevel: props.logLevel,
-            },
+      scope, 'Execute', <ExecuteApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.execute,
+        srcRoot: srcRoot,
+        s3Bucket: props.s3Bucket,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        modelTable: this.modelTable,
+        nodeTable: this.nodeTable,
+        queue: sqsStack.queue,
+        commonLayer: this.layer,
+        logLevel: props.logLevel,
+      },
+    );
+    // POST /prepare
+    new PrepareApi(
+      scope, 'Prepare', <PrepareApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.prepare,
+        srcRoot: srcRoot,
+        s3Bucket: props.s3Bucket,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        modelTable: this.modelTable,
+        nodeTable: this.nodeTable,
+        queue: sqsStack.queue,
+        commonLayer: this.layer,
+        logLevel: props.logLevel,
+      },
     );
 
     // GET /execute/{id}
     new GetExecuteApi(
-      scope, 'GetExecute',
-            <GetExecuteApiProps>{
-              httpMethod: 'GET',
-              router: executeGetRouter,
-              srcRoot: srcRoot,
-              s3Bucket: props.s3Bucket,
-              configTable: this.configTable,
-              executeTable: this.executeTable,
-              commonLayer: this.layer,
-              logLevel: props.logLevel,
-            },
+      scope, 'GetExecute', <GetExecuteApiProps>{
+        httpMethod: 'GET',
+        router: executeGetRouter,
+        srcRoot: srcRoot,
+        s3Bucket: props.s3Bucket,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        commonLayer: this.layer,
+        logLevel: props.logLevel,
+      },
     );
   }
 }

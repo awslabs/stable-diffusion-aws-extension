@@ -5,6 +5,7 @@ import os
 import time
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 import boto3
 import sagemaker
@@ -12,6 +13,7 @@ from sagemaker import Predictor
 from sagemaker.base_deserializers import JSONDeserializer
 from sagemaker.base_serializers import JSONSerializer
 
+from libs.enums import ComfyTaskType
 from response import ok
 
 logger = logging.getLogger(__name__)
@@ -26,14 +28,13 @@ sqs_url = os.environ.get('SQS_URL')
 class ExecuteEvent:
     prompt_id: str
     prompt: dict
-    endpoint_name: str
+    endpoint_name: Optional[str] = ''
+    inference_type: Optional[str] = None
     need_sync: bool = True
-    need_prepare: bool = True
     number: str = None
     front: bool = None
     extra_data: dict = None
     client_id: str = None
-    callback_url: str = None
 
 
 def build_s3_images_request(prompt_id, bucket_name, s3_path):
@@ -55,14 +56,13 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
     # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
-    #            "endpoint_name": "ComfyEndpoint-endpoint", "need_prepare": True, "need_sync": True}
+    #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
     payload = event.__dict__
-    # if payload['need_prepare']:
+    payload['task_type'] = ComfyTaskType.INFERENCE
     payload["bucket_name"] = bucket_name
     payload["sqs_url"] = sqs_url
     payload["region"] = region
-
-    logger.info('payload: {}'.format(payload))
+    logger.info('inference payload: {}'.format(payload))
     session = boto3.Session(region_name=region)
     sagemaker_session = sagemaker.Session(boto_session=session)
     predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)

@@ -14,15 +14,27 @@ global need_sync
 global prompt_id
 
 
-async def prepare_environment(json_data):
+async def prepare_comfy_env(json_data):
     print("prepare_environment start")
     global bucket_name_using, sqs_url_using, region_using
     bucket_name_using = json_data['bucket_name']
     sqs_url_using = json_data['sqs_url']
     region_using = json_data['region']
-    sync_s3_models_or_inputs_to_local(bucket_name_using, 'models', '/opt/ml/code/models', False)
-    sync_s3_models_or_inputs_to_local(bucket_name_using, 'input', '/opt/ml/code/input', False)
-    sync_s3_models_or_inputs_to_local(bucket_name_using, 'nodes', '/opt/ml/code/custom_nodes', True)
+
+    prepare_type = json_data['prepare_type']
+    if prepare_type in ['default', 'models']:
+        sync_s3_files_or_folders_to_local(bucket_name_using, 'models', '/opt/ml/code/models', False)
+    if prepare_type in ['default', 'inputs']:
+        sync_s3_files_or_folders_to_local(bucket_name_using, 'input', '/opt/ml/code/input', False)
+    if prepare_type in ['default', 'nodes']:
+        sync_s3_files_or_folders_to_local(bucket_name_using, 'nodes', '/opt/ml/code/custom_nodes', True)
+    if prepare_type == 'custom':
+        sync_source_path = json_data['s3_source_path']
+        local_target_path = json_data['local_target_path']
+        if not sync_source_path or not local_target_path:
+            raise Exception("s3_source_path and local_target_path should not be empty")
+        sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
+                                           f'/opt/ml/code/{local_target_path}', False)
     print("prepare_environment end")
 
 
@@ -34,11 +46,13 @@ async def prepare_environment(json_data):
 #         tar.add(source_file, arcname=os.path.basename(source_file))
 
 
-def sync_s3_models_or_inputs_to_local(bucket_name, s3_path, local_path, need_un_tar):
+def sync_s3_files_or_folders_to_local(bucket_name, s3_path, local_path, need_un_tar):
     print("sync_s3_models_or_inputs_to_local start")
-    s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
+    # s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
+    s5cmd_command = f'/opt/ml/code/tools/s5cmd sync "s3://{bucket_name}/{s3_path}/" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
+        # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         print(s5cmd_command)
         os.system(s5cmd_command)
         print(f'Files copied from "s3://{bucket_name}/{s3_path}/*" to "{local_path}/"')
@@ -72,22 +86,20 @@ async def invocations(request):
     global need_sync
     global prompt_id
     json_data = await request.json()
+    print(f"invocations start json_data:{json_data}")
+
     try:
-        print(f"invocations start json_data:{json_data}")
-
-        need_sync = json_data['need_sync']
-
-        if bool(json_data['need_prepare']):
-            # TODO 待优化记录 是否初始化过 或者拆分单独方法处理准备工作
-            await prepare_environment(json_data)
+        task_type = json_data['task_type']
+        if task_type == 'prepare':
+            await prepare_comfy_env(json_data)
+            return web.Response(status=200)
 
         if not bucket_name_using:
-            print("No sqs url or bucket name")
+            print("No bucket name")
             return web.Response(status=500)
 
         print(
             f'bucket_name_using: {bucket_name_using}, region_using: {region_using}, need_sync: {need_sync}')
-
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
@@ -98,19 +110,18 @@ async def invocations(request):
                 if json_data['front']:
                     number = -number
             server_instance.number += 1
-
         valid = execution.validate_prompt(json_data['prompt'])
-
         if not valid[0]:
-            await prepare_environment(json_data)
-
+            json_data['prepare_type'] = 'all'
+            await prepare_comfy_env(json_data)
+            print("the environment is not ready valid[0] is false, need to resync")
+            return web.Response(status=500)
         extra_data = {}
         if "extra_data" in json_data:
             extra_data = json_data["extra_data"]
         if "client_id" in json_data:
             extra_data["client_id"] = json_data["client_id"]
         if valid[0]:
-            # prompt_id = str(uuid.uuid4())
             prompt_id = json_data['prompt_id']
             e = execution.PromptExecutor(server_instance)
             outputs_to_execute = valid[2]
@@ -121,7 +132,6 @@ async def invocations(request):
         return web.Response(status=200)
     except Exception as e:
         print("exception occurred", e)
-        await prepare_environment(json_data)
         return web.Response(status=500)
 
 
