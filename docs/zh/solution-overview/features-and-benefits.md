@@ -3,17 +3,18 @@
 本解决方案支持以下 Stable Diffusion WebUI 的原生功能/第三方插件的云上工作：
 
 
-| **功能**  | **支持版本** |  **注释** |
+| **功能**             | **支持版本** |  **注释** |
 | ------------- | ------------- | ------------- |
-| [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.7.0  | 支持Stable Diffusion XL 1.0和refiner|
-| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.7.0  | |
-| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.7.0  | 支持除batch外的所有功能|
+| [Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.8.0  | 新增支持LCM进入官方sampler，SDXL-inpaint models等|
+| [txt2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.8.0  | |
+| [img2img](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.8.0  | 支持除batch外的所有功能|
 | [LoRa](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.2.1  | |
 | [ControlNet](https://github.com/Mikubill/sd-webui-controlnet){:target="_blank"}  | V1.1.410  | 支持SDXL + ControlNet推理 |
 | [Tiled Diffusion & VAE](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git){:target="_blank"}  | f9f8073e64f4e682838f255215039ba7884553bf  |
-| [Extras](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.7.0  | API|
-| [rembg](https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git){:target="_blank"}  | 3d9eedbbf0d585207f97d5b21e42f32c0042df70  | API
-
+| [ReActor for Stable Diffusion](https://github.com/Gourieff/sd-webui-reactor{:target="_blank"}) | 0.6.1 |
+| [Extras](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.8.0  | API|
+| [rembg](https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git){:target="_blank"}  | 3d9eedbbf0d585207f97d5b21e42f32c0042df70  | API |
+| [kohya_ss](https://github.com/bmaltais/kohya_ss){:target="_blank"}  |   |
 
 
 ## 产品优势
