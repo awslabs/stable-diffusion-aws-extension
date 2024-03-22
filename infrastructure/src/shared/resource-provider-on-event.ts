@@ -1,7 +1,13 @@
-import { execFile } from 'child_process';
-import { promises as fsPromises } from 'fs';
-import { promisify } from 'util';
-import { CreateTableCommand, CreateTableCommandInput, DynamoDBClient, UpdateTableCommand } from '@aws-sdk/client-dynamodb';
+import {
+  CreateTableCommand,
+  CreateTableCommandInput,
+  DescribeTableCommand,
+  DynamoDBClient,
+  PutItemCommand,
+  PutItemCommandInput,
+  UpdateTableCommand,
+} from '@aws-sdk/client-dynamodb';
+import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import {
   GetRoleCommand,
@@ -25,9 +31,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { CreateTopicCommand, SNSClient } from '@aws-sdk/client-sns';
-import { UpdateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand";
 
-const execFilePromise = promisify(execFile);
 
 const s3Client = new S3Client({});
 const ddbClient = new DynamoDBClient({});
@@ -40,7 +44,6 @@ const {
   AWS_REGION,
   ROLE_ARN,
   BUCKET_NAME,
-  ESD_VERSION,
 } = process.env;
 const partition = AWS_REGION?.startsWith('cn-') ? 'aws-cn' : 'aws';
 const accountId = ROLE_ARN?.split(':')[4] || '';
@@ -71,102 +74,42 @@ export async function handler(event: Event, context: Object) {
 async function createAndCheckResources() {
   await createBucket();
   await createTables();
-  await createGlobalSecondaryIndex('SDInferenceJobTable');
   await createKms(
     'sd-extension-password-key',
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
   await createPolicyForOldRole();
-  // make copy files at last because it may take a long time
-  await copyFiles();
+  await waitTableReady('MultiUserTable');
+  await putItemUsersTable();
+  await waitTableReady('SDInferenceJobTable');
+  await createGlobalSecondaryIndex('SDInferenceJobTable');
 }
 
+async function waitTableReady(tableName: string) {
+  const params = {
+    TableName: tableName,
+  };
 
-async function copyFiles() {
-
-  const bucketName = getBucketName();
-
-  const start_time = new Date().getTime();
-
-  const binaryPath = '/opt/s5cmd';
-
-  const source_path = AWS_REGION?.startsWith('cn-') ?
-    `aws-gcr-solutions/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`
-    : `aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/1.7.0/${ESD_VERSION}`;
-
-  const source = AWS_REGION?.startsWith('cn-') ?
-    'cn-north-1'
-    : 'us-east-1';
-
-  const destination = AWS_REGION || '';
-  const destination_path = `${bucketName}/${ESD_VERSION}`;
-
-  const commands = `cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/bin.tar" "s3://${destination_path}-g4/bin.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/bin.tar" "s3://${destination_path}-g5/bin.tar"
-  
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages.tar" "s3://${destination_path}-g4/site-packages.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages.tar" "s3://${destination_path}-g5/site-packages.tar"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/stable-diffusion-webui.tar" "s3://${destination_path}-g4/stable-diffusion-webui.tar"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/stable-diffusion-webui.tar" "s3://${destination_path}-g5/stable-diffusion-webui.tar"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g4/site-packages/llvmlite/binding/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/llvmlite/binding/libllvmlite.so" "s3://${destination_path}-g5/site-packages/llvmlite/binding/"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g4/site-packages/torch/lib/"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcublas.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcublasLt.so.11" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_adv_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_cnn_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_infer.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libcudnn_ops_train.so.8" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libnvrtc-672ee683.so.11.2" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cpu.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/torch/lib/libtorch_cuda_linalg.so" "s3://${destination_path}-g5/site-packages/torch/lib/"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g4/site-packages/triton/_C/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/triton/_C/libtriton.so" "s3://${destination_path}-g5/site-packages/triton/_C/"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/xformers/_C.so" "s3://${destination_path}-g4/site-packages/xformers/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/xformers/_C.so" "s3://${destination_path}-g5/site-packages/xformers/"
-
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g4/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g4/site-packages/xformers/"
-cp --source-region ${source} --destination-region ${destination} "s3://${source_path}-g5/site-packages/xformers/_C_flashattention.so" "s3://${destination_path}-g5/site-packages/xformers/"`;
-
-  console.log(commands);
-  await fsPromises.writeFile('/tmp/commands.txt', commands);
-
-  const args = [
-    '--log=error',
-    'run',
-    '/tmp/commands.txt',
-  ];
-
-  const { stdout, stderr } = await execFilePromise(binaryPath, args);
-  console.log('s5cmd cp output:', stdout);
-  if (stderr) {
-    throw new Error(stderr);
+  const command = new DescribeTableCommand(params);
+  let isReady = false;
+  let count = 0;
+  while (!isReady) {
+    try {
+      const data = await ddbClient.send(command);
+      if (data.Table?.TableStatus === 'ACTIVE') {
+        isReady = true;
+      }
+    } catch (err: any) {
+      console.log(err);
+    }
+    if (count > 10) {
+      throw new Error(`Table ${tableName} is not ready.`);
+    }
+    count++;
+    console.log(`Waiting for table ${tableName} to be ready ${count}.`);
+    await new Promise(r => setTimeout(r, 1000));
   }
-
-  const end_time = new Date().getTime();
-  const cost = (end_time - start_time) / 1000;
-  console.log(`Sync files cost ${cost} seconds.`);
 }
 
 
@@ -213,6 +156,22 @@ async function createTables() {
   }
 
   const tables: { [key: string]: tableProperties } = {
+    SDInferenceJobTable: {
+      partitionKey: {
+        name: 'InferenceJobId',
+        type: AttributeType.STRING,
+      },
+    },
+    MultiUserTable: {
+      partitionKey: {
+        name: 'kind',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'sort_key',
+        type: AttributeType.STRING,
+      },
+    },
     ModelTable: {
       partitionKey: {
         name: 'id',
@@ -247,25 +206,9 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
-    SDInferenceJobTable: {
-      partitionKey: {
-        name: 'InferenceJobId',
-        type: AttributeType.STRING,
-      },
-    },
     SDEndpointDeploymentJobTable: {
       partitionKey: {
         name: 'EndpointDeploymentJobId',
-        type: AttributeType.STRING,
-      },
-    },
-    MultiUserTable: {
-      partitionKey: {
-        name: 'kind',
-        type: AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'sort_key',
         type: AttributeType.STRING,
       },
     },
@@ -307,48 +250,112 @@ async function createTables() {
 
 }
 
-async function createGlobalSecondaryIndex(tableName: string) {
-    const params: UpdateTableCommandInput = {
-        TableName: tableName,
-        AttributeDefinitions: [
-            {
-                AttributeName: "taskType",
-                AttributeType: "S"
-            },
-            {
-                AttributeName: "createTime",
-                AttributeType: "S"
-            }
-        ],
-        GlobalSecondaryIndexUpdates: [
-            {
-                Create: {
-                    IndexName: "taskType-createTime-index",
-                    KeySchema: [
-                        {
-                            AttributeName: "taskType",
-                            KeyType: "HASH"
-                        },
-                        {
-                            AttributeName: "createTime",
-                            KeyType: "RANGE"
-                        }
-                    ],
-                    Projection: {
-                        ProjectionType: "ALL"
-                    },
-                },
-            },
-        ],
-    };
+async function putItemUsersTable() {
 
-    try {
-        const command = new UpdateTableCommand(params);
-        const response = await ddbClient.send(command);
-        console.log("Success", response);
-    } catch (error) {
-        console.error("Error", error);
-    }
+  await putItem('MultiUserTable', {
+    kind: { S: 'role' },
+    sort_key: { S: 'IT Operator' },
+    creator: { S: 'ESD' },
+    permissions: {
+      L: [
+        { S: 'train:all' },
+        { S: 'checkpoint:all' },
+        { S: 'inference:all' },
+        { S: 'sagemaker_endpoint:all' },
+        { S: 'user:all' },
+        { S: 'role:all' },
+      ],
+    },
+  });
+
+  await putItem('MultiUserTable', {
+    kind: { S: 'role' },
+    sort_key: { S: 'byoc' },
+    creator: { S: 'ESD' },
+    permissions: {
+      L: [
+        { S: 'train:all' },
+        { S: 'checkpoint:all' },
+        { S: 'inference:all' },
+        { S: 'sagemaker_endpoint:all' },
+        { S: 'user:all' },
+        { S: 'role:all' },
+      ],
+    },
+  });
+
+  await putItem('MultiUserTable', {
+    kind: { S: 'user' },
+    sort_key: { S: 'api' },
+    creator: { S: 'ESD' },
+    roles: {
+      L: [
+        {
+          S: 'IT Operator',
+        },
+      ],
+    },
+  });
+
+}
+
+async function putItem(tableName: string, item: any) {
+  try {
+    const putItemCommandInput: PutItemCommandInput = {
+      TableName: tableName,
+      Item: item,
+    };
+    const putItemCommand = new PutItemCommand(putItemCommandInput);
+    await ddbClient.send(putItemCommand);
+    console.log(`putItem ${tableName} Success`);
+    console.log(item);
+  } catch (err: any) {
+    console.log(`putItem ${tableName} Error`, err);
+  }
+}
+
+async function createGlobalSecondaryIndex(tableName: string) {
+  const params: UpdateTableCommandInput = {
+    TableName: tableName,
+    AttributeDefinitions: [
+      {
+        AttributeName: 'taskType',
+        AttributeType: 'S',
+      },
+      {
+        AttributeName: 'createTime',
+        AttributeType: 'S',
+      },
+    ],
+    GlobalSecondaryIndexUpdates: [
+      {
+        Create: {
+          IndexName: 'taskType-createTime-index',
+          KeySchema: [
+            {
+              AttributeName: 'taskType',
+              KeyType: 'HASH',
+            },
+            {
+              AttributeName: 'createTime',
+              KeyType: 'RANGE',
+            },
+          ],
+          Projection: {
+            ProjectionType: 'ALL',
+          },
+        },
+      },
+    ],
+  };
+
+  try {
+    const command = new UpdateTableCommand(params);
+    const response = await ddbClient.send(command);
+    console.log('createGlobalSecondaryIndex Success', response);
+  } catch (err) {
+    console.log('createGlobalSecondaryIndex Error', err);
+  }
 }
 
 async function createBucket() {

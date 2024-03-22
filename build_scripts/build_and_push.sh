@@ -81,7 +81,7 @@ fi
 
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
 #aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
-# aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
 cp ${dockerfile} .
 
@@ -89,15 +89,15 @@ cp ${dockerfile} .
 # with the full name.
 
 docker build  -t ${image_name}:${tag} -f ${dockerfile} .
-# docker tag ${image_name} ${fullname}
-
-# docker push ${fullname}
-# echo $fullname
-
-# Push to public ecr
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
-
-fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
 docker tag ${image_name}:${tag} ${fullname}
+
 docker push ${fullname}
 echo $fullname
+
+# Push to public ecr
+# aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
+
+# fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
+# docker tag ${image_name}:${tag} ${fullname}
+# docker push ${fullname}
+# echo $fullname

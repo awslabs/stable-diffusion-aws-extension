@@ -5,15 +5,15 @@ import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
-import { SDAsyncInferenceStack, SDAsyncInferenceStackProps } from './sd-inference/sd-async-inference-stack';
-import { SdTrainDeployStack } from './sd-train/sd-train-deploy-stack';
-import { MultiUsersStack } from './sd-users/multi-users-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
+import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
+import { Inference } from './shared/inference';
+import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
-import { AuthorizerLambda } from './shared/sd-authorizer-lambda';
 import { SnsTopics } from './shared/sns-topics';
+import { TrainDeploy } from './shared/train-deploy';
 
 const app = new App();
 
@@ -39,16 +39,7 @@ export class Middleware extends Stack {
       default: '09876543210987654321',
     });
 
-    const utilInstanceType = new CfnParameter(this, 'UtilsCpuInstType', {
-      type: 'String',
-      description: 'ec2 instance type for operation including ckpt merge, model create etc.',
-      allowedValues: ['ml.r5.large', 'ml.r5.xlarge', 'ml.c6i.2xlarge', 'ml.c6i.4xlarge'],
-      // API Key value should be at least 20 characters
-      default: 'ml.r5.large',
-    });
-
     // Create CfnParameters here
-
     const s3BucketName = new CfnParameter(this, 'Bucket', {
       type: 'String',
       description: 'New bucket name or Existing Bucket name',
@@ -67,7 +58,7 @@ export class Middleware extends Stack {
 
     const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
-      description: 'Public ECR Image tag, example: stable|dev',
+      description: 'Inference Public ECR Image tag, example: 1.5.0|dev',
       default: ECR_IMAGE_TAG,
     });
 
@@ -77,6 +68,14 @@ export class Middleware extends Stack {
       default: 'ERROR',
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
+
+    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
+
+    const accountId = Fn.conditionIf(
+      isChinaCondition.logicalId,
+      '753680513547',
+      '366590864501',
+    );
 
     // Create resources here
 
@@ -106,14 +105,8 @@ export class Middleware extends Stack {
 
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
-    const authorizerLambda = new AuthorizerLambda(this, 'sd-authorizer', {
-      commonLayer: commonLayers.commonLayer,
-      multiUserTable: ddbTables.multiUserTable,
-    });
-
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       'ping',
-      'models',
       'checkpoints',
       'datasets',
       'inference',
@@ -124,18 +117,15 @@ export class Middleware extends Stack {
       'trainings',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
-    const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
     cfnApi.addPropertyOverride('EndpointConfiguration', {
       Types: [Fn.conditionIf(isChinaCondition.logicalId, 'REGIONAL', 'EDGE').toString()],
     });
 
-    new MultiUsersStack(this, {
+    new MultiUsers(this, {
       synthesizer: props.synthesizer,
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      passwordKeyAlias: authorizerLambda.passwordKeyAlias,
-      authorizer: authorizerLambda.authorizer,
       logLevel,
     });
 
@@ -149,13 +139,12 @@ export class Middleware extends Stack {
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
 
-    new SDAsyncInferenceStack(this, <SDAsyncInferenceStackProps>{
+    new Inference(this, {
       routers: restApi.routers,
-      // env: devEnv,
       s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
+      ecr_image_tag: ecrImageTagParam,
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
@@ -164,26 +153,24 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
-      authorizer: authorizerLambda.authorizer,
+      accountId,
       logLevel,
       resourceProvider,
     });
 
-    new SdTrainDeployStack(this, {
+    new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
-      modelInfInstancetype: utilInstanceType.valueAsString,
-      ecr_image_tag: ecrImageTagParam.valueAsString,
       database: ddbTables,
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
       createModelFailureTopic: snsTopics.createModelFailureTopic,
       createModelSuccessTopic: snsTopics.createModelSuccessTopic,
-      authorizer: authorizerLambda.authorizer,
       logLevel,
       resourceProvider,
+      accountId,
     });
 
     // Add ResourcesProvider dependency to all resources
@@ -222,7 +209,7 @@ export class Middleware extends Stack {
 
 new Middleware(
   app,
-  'Extension-for-Stable-Diffusion-on-AWS',
+  STACK_ID,
   {
     // env: devEnv,
     synthesizer: synthesizer(),

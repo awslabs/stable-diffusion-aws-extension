@@ -7,7 +7,7 @@ from typing import Optional, Any
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-x_api_version = "1.4.0"
+x_api_version = "1.5.0"
 
 
 class HttpStatusCode:
@@ -16,6 +16,7 @@ class HttpStatusCode:
     Accepted = 202
     NoContent: int = 204
     BadRequest = 400
+    Unauthorized = 401
     Forbidden = 403
     NotFound = 404
     InternalServerError = 500
@@ -28,6 +29,7 @@ http_status_descriptions = {
     HttpStatusCode.Accepted: "Accepted",
     HttpStatusCode.NoContent: "No Content",
     HttpStatusCode.BadRequest: "Bad Request",
+    HttpStatusCode.Unauthorized: "Unauthorized",
     HttpStatusCode.Forbidden: "Forbidden",
     HttpStatusCode.NotFound: "Not Found",
     HttpStatusCode.InternalServerError: "Internal Server Error"
@@ -129,6 +131,14 @@ def bad_request(data=None,
                 decimal=None
                 ):
     return response(HttpStatusCode.BadRequest, data, message, headers, decimal)
+
+
+def unauthorized(data=None,
+                 message: str = http_status_descriptions[HttpStatusCode.Unauthorized],
+                 headers: Optional[dict[str, Any]] = None,
+                 decimal=None
+                 ):
+    return response(HttpStatusCode.Unauthorized, data, message, headers, decimal)
 
 
 def forbidden(data=None,

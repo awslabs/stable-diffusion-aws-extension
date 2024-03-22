@@ -6,7 +6,6 @@ import time
 import json
 import gradio
 import requests
-import base64
 import gradio as gr
 
 from aws_extension.cloud_api_manager.api_logger import ApiLogger
@@ -103,21 +102,6 @@ modelTypeMap = {
 def plaintext_to_html(text):
     text = "<p>" + "<br>\n".join([f"{html.escape(x)}" for x in text.split('\n')]) + "</p>"
     return text
-
-
-def server_request_post(path, params):
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    list_endpoint_url = f'{api_gateway_url}{path}'
-    response = requests.post(list_endpoint_url, json=params, headers=headers)
-    return response
 
 
 def server_request_get(path, params):
@@ -314,6 +298,8 @@ def get_inference_job(inference_job_id):
                        desc=f"Get inference job detail from cloud by ID ({inference_job_id}), "
                             f"end request if data.status == succeed, "
                             f"ID from previous step: CreateInference -> data -> inference -> id")
+    if 'data' not in response.json():
+        raise Exception(response.json())
     return response.json()['data']
 
 
@@ -385,10 +371,9 @@ def get_model_list_by_type(model_type, username=""):
         url += f"&types={model_type}"
 
     try:
-        encode_type = "utf-8"
         response = requests.get(url=url, headers={
             'x-api-key': api_key,
-            'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
+            'username': username
         })
         response.raise_for_status()
         json_response = response.json()
@@ -480,14 +465,12 @@ def refresh_all_models(username):
     if not has_config():
         return []
 
-    encode_type = "utf-8"
-
     try:
         for rp, name in zip(checkpoint_type, checkpoint_name):
             url = api_gateway_url + f"checkpoints?status=Active&types={rp}"
             response = requests.get(url=url, headers={
                 'x-api-key': api_key,
-                'Authorization': f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}',
+                'username': username,
             })
             json_response = response.json()
             logger.debug(f"response url json for model {rp} is {json_response}")
@@ -572,9 +555,10 @@ def sagemaker_upload_model_s3(sd_checkpoints_path, textual_inversion_path, lora_
 
         logger.debug(f"Post request for upload s3 presign url: {url}")
 
-        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key})
+        response = requests.post(url=url, json=payload, headers={'x-api-key': api_key, "username": pr.username})
 
         if response.status_code not in [201, 202]:
+            logger.error(f"create_checkpoint: {response.json()}")
             return response.json()['message'], None, None, None, None, None, None
 
         try:
@@ -710,93 +694,8 @@ def async_loop_wrapper(f):
     return result
 
 
-def async_loop_wrapper_with_input(sagemaker_endpoint, type):
-    global loop
-    # check if there are any running or queued tasks inside the event loop
-    if loop.is_running():
-        # Calculate the number of running tasks
-        while len([task for task in asyncio.all_tasks(loop) if not task.done()]) > MAX_RUNNING_LIMIT:
-            logger.debug(f'Waiting for {MAX_RUNNING_LIMIT} running tasks to complete')
-            time.sleep(1)
-    else:
-        # check if loop is closed and create a new one
-        if loop.is_closed():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            # log this event since it should never happen
-            logger.debug('Event loop was closed, created a new one')
-
-    # Add new task to the event loop
-    result = loop.run_until_complete(call_remote_inference(sagemaker_endpoint, type))
-    return result
-
-
-def call_interrogate_clip(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
-                          init_img_inpaint, init_mask_inpaint):
-    return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_clip')
-
-
-def call_interrogate_deepbooru(sagemaker_endpoint, init_img, sketch, init_img_with_mask, inpaint_color_sketch,
-                               init_img_inpaint, init_mask_inpaint):
-    return async_loop_wrapper_with_input(sagemaker_endpoint, 'interrogate_deepbooru')
-
-
-async def call_remote_inference(sagemaker_endpoint, type):
-    logger.debug(f"chosen ep {sagemaker_endpoint}")
-    logger.debug(f"inference type is {type}")
-
-    if sagemaker_endpoint == '':
-        image_list = []  # Return an empty list if selected_value is None
-        info_text = ''
-        infotexts = "Failed! Please choose the endpoint in 'InService' states "
-        return image_list, info_text, plaintext_to_html(infotexts)
-    elif sagemaker_endpoint == 'FAILURE':
-        image_list = []  # Return an empty list if selected_value is None
-        info_text = ''
-        infotexts = "Failed upload the config to cloud  "
-        return image_list, info_text, plaintext_to_html(infotexts)
-
-    sagemaker_endpoint_status = sagemaker_endpoint.split("+")[1]
-
-    if sagemaker_endpoint_status != "InService":
-        image_list = []  # Return an empty list if selected_value is None
-        info_text = ''
-        infotexts = "Failed! Please choose the endpoint in 'InService' states "
-        return image_list, info_text, plaintext_to_html(infotexts)
-
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-
-    # stage 2: inference using endpoint_name
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-    checkpoint_info['sagemaker_endpoint'] = sagemaker_endpoint.split("+")[0]
-    payload = checkpoint_info
-    payload['task_type'] = type
-    logger.info(f"checkpointinfo is {payload}")
-
-    inference_url = f"{api_gateway_url}inference/run-sagemaker-inference"
-    response = requests.post(inference_url, json=payload, headers=headers)
-    logger.info(f"Raw server response: {response.text}")
-    try:
-        r = response.json()
-    except JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON response: {e}")
-        logger.error(f"Raw server response: {response.text}")
-    else:
-        inference_id = r.get('inference_id')  # Assuming the response contains 'inference_id' field
-        try:
-            return process_result_by_inference_id(inference_id)
-        except Exception as e:
-            logger.error(f"Failed to get inference job {inference_id}, error: {e}")
-
-
 def process_result_by_inference_id(inference_id_or_data, endpoint_type):
+    print(f"process_result_by_inference_id {inference_id_or_data} {endpoint_type}")
     if endpoint_type == 'Async':
         resp = get_inference_job(inference_id_or_data)
         inference_id = inference_id_or_data
@@ -855,47 +754,6 @@ def process_result_by_inference_id(inference_id_or_data, endpoint_type):
                 return image_list, info_text, plaintext_to_html(infotexts), infotexts
         else:
             return image_list, info_text, plaintext_to_html(infotexts), infotexts
-
-
-
-def modelmerger_on_cloud_func(primary_model_name, secondary_model_name, teritary_model_name):
-    logger.debug(f"function under development, current checkpoint_info is {checkpoint_info}")
-    api_gateway_url = get_variable_from_json('api_gateway_url')
-    # Check if api_url ends with '/', if not append it
-    if not api_gateway_url.endswith('/'):
-        api_gateway_url += '/'
-    api_key = get_variable_from_json('api_token')
-
-    if api_gateway_url is None:
-        logger.debug(f"modelmerger: failed to get the api-gateway url, can not fetch remote data")
-        return []
-    modelmerge_url = f"{api_gateway_url}inference/run-model-merge"
-
-    payload = {
-        "primary_model_name": primary_model_name,
-        "secondary_model_name": secondary_model_name,
-        "tertiary_model_name": teritary_model_name
-    }
-
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json"
-    }
-
-    response = requests.post(modelmerge_url, json=payload, headers=headers)
-
-    try:
-        r = response.json()
-    except JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON response: {e}")
-        logger.error(f"Raw server response: {response.text}")
-    else:
-        logger.debug(f"response for rest api {r}")
-
-
-# def txt2img_config_save():
-#     # placeholder for saving txt2img config
-#     pass
 
 
 def update_prompt_with_embedding(selected_items, prompt, lora_and_hypernet_models_state):
@@ -1139,10 +997,9 @@ def on_img_time_change(start_time, end_time):
     return query_inference_job_list(img_task_type, img_status, img_endpoint, img_checkpoint, "img2img")
 
 
-def load_inference_job_list(target_task_type, username, usertoken, first_load="first"):
+def load_inference_job_list(target_task_type, username, first_load="first"):
     inference_jobs = [None_Option_For_On_Cloud_Model]
-    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, usertoken,
-                                                                        first_load)
+    inferences_jobs_list = api_manager.list_all_inference_jobs_on_cloud(target_task_type, username, first_load)
 
     temp_list = []
     for obj in inferences_jobs_list:
@@ -1163,44 +1020,47 @@ def load_inference_job_list(target_task_type, username, usertoken, first_load="f
     return inference_jobs
 
 
-def load_model_list(username, user_token):
+def load_model_list(username):
     models_on_cloud = []
     if 'sd_model_checkpoint' in opts.quicksettings_list:
         models_on_cloud = [None_Option_For_On_Cloud_Model]
 
-    models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token)]))
+    models_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username)]))
     return models_on_cloud
 
 
-def load_lora_models(username, user_token):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='Lora')]))
+def load_lora_models(username):
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='Lora')]))
 
 
-def load_hypernetworks_models(username, user_token):
-    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='hypernetworks')]))
+def load_hypernetworks_models(username):
+    return list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='hypernetworks')]))
 
 
-def load_vae_list(username, user_token):
+def load_vae_list(username):
     vae_model_on_cloud = ['Automatic', 'None']
-    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='VAE')]))
+    vae_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, types='VAE')]))
     return vae_model_on_cloud
 
 
-def load_controlnet_list(username, user_token):
-    controlnet_model_on_cloud = ['None']
-    controlnet_model_on_cloud += list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
-    return controlnet_model_on_cloud
-
-
-def load_xyz_controlnet_list(username, user_token):
+def load_controlnet_list(username):
     controlnet_model_on_cloud = ['None']
     controlnet_model_on_cloud += list(
-        set([os.path.splitext(model['name'])[0] for model in api_manager.list_models_on_cloud(username, user_token, types='ControlNet')]))
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, types='ControlNet')]))
     return controlnet_model_on_cloud
 
 
-def load_embeddings_list(username, user_token):
-    embedding_model_on_cloud = list(set([model['name'] for model in api_manager.list_models_on_cloud(username, user_token, types='embeddings')]))
+def load_xyz_controlnet_list(username):
+    controlnet_model_on_cloud = ['None']
+    controlnet_model_on_cloud += list(
+        set([os.path.splitext(model['name'])[0] for model in
+             api_manager.list_models_on_cloud(username, types='ControlNet')]))
+    return controlnet_model_on_cloud
+
+
+def load_embeddings_list(username):
+    embedding_model_on_cloud = list(
+        set([model['name'] for model in api_manager.list_models_on_cloud(username, types='embeddings')]))
     return embedding_model_on_cloud
 
 
@@ -1224,7 +1084,7 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(sd_model_on_cloud_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_model_list(username, username)
+                                                  'choices': load_model_list(username)
                                               }, 'refresh_cloud_model_down')
 
                 infer_endpoint_dropdown = gr.Dropdown(choices=["Async", "Real-time"],
@@ -1239,7 +1099,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(sd_vae_on_cloud_dropdown,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_vae_list(username, username)
+                                                        'choices': load_vae_list(username)
                                                     }, 'refresh_cloud_vae_down')
                 with gr.Column():
                     with gr.Row():
@@ -1251,7 +1111,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(lora_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_lora_models(username, username)
+                                                        'choices': load_lora_models(username)
                                                     }, 'refresh_lora_dropdown')
                         lora_dropdown = lora_dropdown_local
 
@@ -1266,7 +1126,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(embedding_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_embeddings_list(username, username)
+                                                        'choices': load_embeddings_list(username)
                                                     }, 'refresh_embedding_dropdown')
                         embedding_dropdown = embedding_dropdown_local
                 with gr.Column():
@@ -1279,7 +1139,7 @@ def create_ui(is_img2img):
                         create_refresh_button_by_user(hypernet_dropdown_local,
                                                     lambda *args: None,
                                                     lambda username: {
-                                                        'choices': load_hypernetworks_models(username, username)
+                                                        'choices': load_hypernetworks_models(username)
                                                     }, 'refresh_hypernet_dropdown')
                         hypernet_dropdown = hypernet_dropdown_local
 
@@ -1310,21 +1170,21 @@ def create_ui(is_img2img):
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "first")
                                               }, 'refresh_inference_job_down', '⇤')
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "previous")
                                               }, 'refresh_inference_job_down_previous', '←')
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
                                               lambda username: {
-                                                  'choices': load_inference_job_list(inference_task_type, username,
+                                                  'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "next")
                                               }, 'refresh_inference_job_down_next', '→')
 
@@ -1348,15 +1208,15 @@ def create_ui(is_img2img):
             with gr.Row():
 
                 def setup_inference_for_plugin(pr: gr.Request):
-                    models_on_cloud = load_model_list(pr.username, pr.username)
-                    vae_model_on_cloud = load_vae_list(pr.username, pr.username)
-                    lora_models_on_cloud = load_lora_models(username=pr.username, user_token=pr.username)
-                    hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username, pr.username)
-                    embedding_model_on_cloud = load_embeddings_list(pr.username, pr.username)
-                    controlnet_list = load_controlnet_list(pr.username, pr.username)
-                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username, pr.username)
+                    models_on_cloud = load_model_list(pr.username)
+                    vae_model_on_cloud = load_vae_list(pr.username)
+                    lora_models_on_cloud = load_lora_models(username=pr.username)
+                    hypernetworks_models_on_cloud = load_hypernetworks_models(pr.username)
+                    embedding_model_on_cloud = load_embeddings_list(pr.username)
+                    controlnet_list = load_controlnet_list(pr.username)
+                    controlnet_xyz_list = load_xyz_controlnet_list(pr.username)
 
-                    inference_jobs = load_inference_job_list(inference_task_type, pr.username, pr.username)
+                    inference_jobs = load_inference_job_list(inference_task_type, pr.username)
                     lora_hypernets = {
                         "lora": lora_models_on_cloud,
                         "hypernet": hypernetworks_models_on_cloud,

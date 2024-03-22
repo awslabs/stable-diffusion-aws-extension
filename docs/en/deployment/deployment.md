@@ -17,28 +17,17 @@ Use the following steps to deploy this solution on AWS.
     This solution provides two usage options: through UI interface and by directly calling the backend API. Step 0 only needs to be executed if the user intends to use the UI interface. This step involves installing another open-source project Stable Diffusion webUI, allowing business operations to be conducted through the webUI.
 
 
-。
-
-
 ## Deployment steps
 
 ### Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).
 
-1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} to launch the AWS CloudFormation template.
-
-2. On the Stacks page, choose **Create stack**, and then choose **With new resources (standard)**.
-
-3. On the **Specify template** page, choose **Template is ready**, choose **Upload a template file**, and then browse for the template that is downloaded in step 1, and then choose **Next**.
-
-4. On the **Specify stack details** page, type a stack name in the Stack name box, then choose **Next**.
-
-5. On the **Configure stack options** page, choose **Next**.
-
-6. On the **Review** page, review the details of your stack, and choose **Submit**.
-
-7. Wait until the stack is created.
-
-8. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait an extra 5 minutes to wait for the internal setup complete after the stack been created successfully.
+1. Sign in to the [AWS Management Console](https://console.aws.amazon.com/) and use [WebUI on EC2](https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml){:target="_blank"} to create the stack.
+2. On the **Create Stack** page, choose **Next**.
+3. On the **Specify stack details** page, type a stack name in the Stack name box, adjust parameters as need, then choose **Next**.
+4. On the **Configure stack options** page, choose **Next**.
+5. On the **Review** page, review the details of your stack, check capabilities as required, and choose **Submit**.
+6. Wait until the stack is created.
+7. Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the **WebUIURL** value, note you need to wait an extra 30 minutes to wait for the internal setup complete after the stack been created successfully.
 
 ### Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).
 1. Start a Windows Server and log in via RDP.

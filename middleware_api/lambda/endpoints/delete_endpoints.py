@@ -7,16 +7,15 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import forbidden, no_content, bad_request
-from libs.enums import EndpointStatus
-from libs.utils import get_permissions_by_username
+from common.response import no_content
+from libs.utils import response_error
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
+cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -24,20 +23,19 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class DeleteEndpointEvent:
     endpoint_name_list: [str]
-    username: str
+    # todo will be removed
+    username: str = ""
 
 
 # DELETE /endpoints
 def handler(raw_event, ctx):
     try:
+        logger.info(json.dumps(raw_event))
+        # todo will be removed
+        # permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL])
+
         # delete sagemaker endpoints in the same loop
         event = DeleteEndpointEvent(**json.loads(raw_event['body']))
-
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.username)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
-                    'sagemaker_endpoint']):
-            return forbidden(message=f"User {event.username} has no permission to delete a Sagemaker endpoint")
 
         for endpoint_name in event.endpoint_name_list:
             endpoint_item = get_endpoint_with_endpoint_name(endpoint_name)
@@ -46,8 +44,7 @@ def handler(raw_event, ctx):
 
         return no_content(message="Endpoints Deleted")
     except Exception as e:
-        logger.error(f"{e}")
-        return bad_request(message=f"{e}")
+        return response_error(e)
 
 
 def delete_endpoint(endpoint_item):
@@ -73,6 +70,11 @@ def delete_endpoint(endpoint_item):
         sagemaker.delete_endpoint_config(EndpointConfigName=endpoint['EndpointConfigName'])
         for ProductionVariant in config['ProductionVariants']:
             sagemaker.delete_model(ModelName=ProductionVariant['ModelName'])
+
+    response = cw_client.delete_alarms(
+        AlarmNames=[f'{endpoint_name}-HasBacklogWithoutCapacity-Alarm'],
+    )
+    logger.info(f"delete_metric_alarm response: {response}")
 
     # delete ddb item
     delete_endpoint_item(endpoint_item)

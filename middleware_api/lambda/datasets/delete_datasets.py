@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import boto3
 
 from common.response import no_content
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -25,40 +26,44 @@ class DeleteDatasetsEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
+    try:
+        logger.info(json.dumps(event))
+        body = DeleteDatasetsEvent(**json.loads(event['body']))
 
-    body = DeleteDatasetsEvent(**json.loads(event['body']))
+        # todo will be removed
+        # permissions_check(event, [PERMISSION_TRAIN_ALL])
 
-    # unique list for preventing duplicate delete
-    dataset_name_list = list(set(body.dataset_name_list))
+        # unique list for preventing duplicate delete
+        dataset_name_list = list(set(body.dataset_name_list))
 
-    for dataset_name in dataset_name_list:
+        for dataset_name in dataset_name_list:
 
-        # get dataset items
-        files = dataset_item_table.query(
-            KeyConditionExpression='dataset_name = :dataset_name',
-            ExpressionAttributeValues={
-                ':dataset_name': dataset_name
-            }
-        )
+            # get dataset items
+            files = dataset_item_table.query(
+                KeyConditionExpression='dataset_name = :dataset_name',
+                ExpressionAttributeValues={
+                    ':dataset_name': dataset_name
+                }
+            )
 
-        if 'Items' in files:
-            logger.info(f"files: {files['Items']}")
-            for file in files['Items']:
-                dataset_item_table.delete_item(
-                    Key={
-                        'dataset_name': dataset_name,
-                        'sort_key': file['sort_key']
-                    }
-                )
+            if 'Items' in files:
+                logger.info(f"files: {files['Items']}")
+                for file in files['Items']:
+                    dataset_item_table.delete_item(
+                        Key={
+                            'dataset_name': dataset_name,
+                            'sort_key': file['sort_key']
+                        }
+                    )
 
-        prefix = f"dataset/{dataset_name}/"
-        logger.info(f'delete prefix: {prefix}')
+            prefix = f"dataset/{dataset_name}/"
+            logger.info(f'delete prefix: {prefix}')
 
-        response = bucket.objects.filter(Prefix=prefix).delete()
-        logger.info(f'delete response: {response}')
+            response = bucket.objects.filter(Prefix=prefix).delete()
+            logger.info(f'delete response: {response}')
 
-        dataset_info_table.delete_item(Key={'dataset_name': dataset_name})
+            dataset_info_table.delete_item(Key={'dataset_name': dataset_name})
 
-    return no_content(message='datasets deleted')
+        return no_content(message='datasets deleted')
+    except Exception as e:
+        return response_error(e)

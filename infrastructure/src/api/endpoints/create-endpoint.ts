@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
-  IAuthorizer,
   JsonSchemaType,
   JsonSchemaVersion,
   LambdaIntegration,
@@ -16,6 +15,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -26,14 +26,14 @@ export interface CreateEndpointApiProps {
   multiUserTable: Table;
   inferenceJobTable: Table;
   srcRoot: string;
-  inferenceECRUrl: string;
   commonLayer: LayerVersion;
-  authorizer: IAuthorizer;
   s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   logLevel: CfnParameter;
+  ecrImageTag: CfnParameter;
+  accountId:  ICfnRuleConditionExpression;
 }
 
 export class CreateEndpointApi {
@@ -48,8 +48,8 @@ export class CreateEndpointApi {
   private readonly inferenceJobTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly inferenceECRUrl: string;
-  private readonly authorizer: IAuthorizer;
+  private readonly ecrImageTag: CfnParameter;
+  private readonly accountId: ICfnRuleConditionExpression;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
@@ -64,15 +64,15 @@ export class CreateEndpointApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.inferenceECRUrl = props.inferenceECRUrl;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
+    this.ecrImageTag = props.ecrImageTag;
+    this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -102,9 +102,8 @@ export class CreateEndpointApi {
         's3:GetObject',
       ],
       resources: [
-        this.s3Bucket.bucketArn,
-        `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+        // for get files from solution's bucket
+        '*',
       ],
     });
 
@@ -221,12 +220,23 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
             enum: ['Real-time', 'Serverless', 'Async'],
           },
+          cool_down_time: {
+            type: JsonSchemaType.STRING,
+            enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
+          },
           instance_type: {
             type: JsonSchemaType.STRING,
           },
           initial_instance_count: {
             type: JsonSchemaType.NUMBER,
             minimum: 1,
+          },
+          min_instance_number: {
+            type: JsonSchemaType.NUMBER,
+            minimum: 0,
+          },
+          max_instance_number: {
+            type: JsonSchemaType.NUMBER,
           },
           autoscaling_enabled: {
             type: JsonSchemaType.BOOLEAN,
@@ -267,20 +277,21 @@ export class CreateEndpointApi {
 
     const role = this.iamRole();
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_endpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: role,
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: this.inferenceECRUrl,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${this.ecrImageTag.valueAsString}`,
+        ECR_IMAGE_TAG: this.ecrImageTag.valueAsString,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
@@ -300,7 +311,6 @@ export class CreateEndpointApi {
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,

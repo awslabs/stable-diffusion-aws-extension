@@ -5,6 +5,7 @@ import os
 import boto3
 
 from common.response import ok, not_found
+from libs.utils import response_error, log_execution_time, log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -17,14 +18,17 @@ s3 = boto3.client('s3')
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
+    try:
+        logger.info(json.dumps(event))
 
-    inference_id = event['pathParameters']['id']
+        inference_id = event['pathParameters']['id']
 
-    return get_infer_data(inference_id)
+        return get_infer_data(inference_id)
+    except Exception as e:
+        return response_error(e)
 
 
+@log_execution_time
 def get_infer_data(inference_id: str):
     inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
 
@@ -33,8 +37,7 @@ def get_infer_data(inference_id: str):
 
     item = inference['Item']
 
-    logger.info(f'inference')
-    logger.info(json.dumps(item))
+    log_json("inference job", item)
 
     img_presigned_urls = []
     if 'image_names' in item:
@@ -52,7 +55,7 @@ def get_infer_data(inference_id: str):
         **item,
     }
 
-    return ok(data=data)
+    return ok(data=data, decimal=True)
 
 
 def generate_presigned_url(bucket_name: str, key: str, expiration=3600) -> str:

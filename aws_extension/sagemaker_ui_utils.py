@@ -3,7 +3,6 @@ import gradio as gr
 import threading
 import time
 from aws_extension import sagemaker_ui
-from dreambooth_on_cloud.train import async_cloud_train
 from modules.ui_components import ToolButton
 from aws_extension.constant import MODEL_TYPE
 
@@ -54,53 +53,6 @@ def warning(msg, seconds: int = 3600):
 def on_after_component_callback(component, **_kwargs):
     global db_model_name, db_use_txt2img, db_sagemaker_train, db_save_config, cloud_db_model_name, \
         cloud_train_instance_type, training_job_dashboard
-
-    is_dreambooth_train = type(component) is gr.Button and getattr(component, 'elem_id', None) == 'db_train'
-    is_dreambooth_model_name = type(component) is gr.Dropdown and \
-        (getattr(component, 'elem_id', None) == 'model_name' or
-         (getattr(component, 'label', None) == 'Model' and getattr(
-            component.parent.parent.parent.parent, 'elem_id', None) == 'ModelPanel'))
-    is_cloud_dreambooth_model_name = type(component) is gr.Dropdown and \
-        getattr(component, 'elem_id', None) == 'cloud_db_model_name'
-    is_machine_type_for_train = type(component) is gr.Dropdown and \
-        getattr(component, 'elem_id', None) == 'cloud_train_instance_type'
-    is_dreambooth_use_txt2img = type(component) is gr.Checkbox and getattr(component, 'label', None) == 'Use txt2img'
-    is_training_job_dashboard = type(component) is gr.Dataframe and getattr(component, 'elem_id',
-                                                                            None) == 'training_job_dashboard'
-    is_db_save_config = getattr(component, 'elem_id', None) == 'db_save_config'
-    if is_dreambooth_train:
-        db_sagemaker_train = gr.Button(value="SageMaker Train", elem_id="db_sagemaker_train", variant='primary')
-    if is_dreambooth_model_name:
-        db_model_name = component
-    if is_cloud_dreambooth_model_name:
-        cloud_db_model_name = component
-    if is_training_job_dashboard:
-        training_job_dashboard = component
-    if is_machine_type_for_train:
-        cloud_train_instance_type = component
-    if is_dreambooth_use_txt2img:
-        db_use_txt2img = component
-    if is_db_save_config:
-        db_save_config = component
-    # After all requiment comment is loaded, add the SageMaker training button click callback function.
-    if training_job_dashboard is not None and cloud_train_instance_type is not None and \
-            cloud_db_model_name is not None and db_model_name is not None and \
-            db_use_txt2img is not None and db_sagemaker_train is not None and \
-            (
-                    is_dreambooth_train or is_dreambooth_model_name or is_dreambooth_use_txt2img
-                    or is_cloud_dreambooth_model_name or is_machine_type_for_train or is_training_job_dashboard):
-        db_model_name.value = "dummy_local_model"
-        db_sagemaker_train.click(
-            fn=async_cloud_train,
-            _js="db_start_sagemaker_train",
-            inputs=[
-                db_model_name,
-                cloud_db_model_name,
-                db_use_txt2img,
-                cloud_train_instance_type
-            ],
-            outputs=[training_job_dashboard]
-        )
     # Hook image display logic
     global txt2img_gallery, txt2img_generation_info, txt2img_html_info, \
         txt2img_show_hook, txt2img_prompt, txt2img_lora_show_hook, \

@@ -1,8 +1,7 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -21,6 +20,7 @@ export interface UpdateCheckPointApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
+  userTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
@@ -35,6 +35,7 @@ export class UpdateCheckPointApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
+  private readonly userTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly role: aws_iam.Role;
@@ -49,6 +50,7 @@ export class UpdateCheckPointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
+    this.userTable = props.userTable;
     this.s3Bucket = props.s3Bucket;
     this.logLevel = props.logLevel;
     this.role = this.iamRole();
@@ -62,6 +64,7 @@ export class UpdateCheckPointApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-update-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -71,7 +74,10 @@ export class UpdateCheckPointApi {
         'dynamodb:Query',
         'dynamodb:UpdateItem',
       ],
-      resources: [this.checkpointTable.tableArn],
+      resources: [
+        this.userTable.tableArn,
+        this.checkpointTable.tableArn,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -167,10 +173,11 @@ export class UpdateCheckPointApi {
   }
 
   private updateCheckpointApi() {
-    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, <PythonFunctionProps>{
+
+    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint_rename.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -185,16 +192,17 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 4048,
       environment: {
+        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
@@ -203,13 +211,13 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-
-    const createModelIntegration = new apigw.LambdaIntegration(
+    const createModelIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, createModelIntegration,
         {

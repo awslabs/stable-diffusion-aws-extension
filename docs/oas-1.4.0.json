@@ -1168,7 +1168,7 @@
                         "checkpoints": [
                           {
                             "id": "7e759754-7e29-42c5-8d52-f8dca53c9c8a",
-                            "s3Location": "s3://elonniu/ControlNet/checkpoint/custom/7e759754-7e29-42c5-8d52-f8dca53c9c8a",
+                            "s3Location": "s3://xxxx/ControlNet/checkpoint/custom/7e759754-7e29-42c5-8d52-f8dca53c9c8a",
                             "type": "ControlNet",
                             "status": "Active",
                             "name": [
@@ -1179,7 +1179,7 @@
                               "creator": "admin",
                               "multipart_upload": {
                                 "control_v11p_sd15_canny.pth": {
-                                  "bucket": "elonniu",
+                                  "bucket": "xxxx",
                                   "upload_id": "soO9TZvZJq5Ksa_VPfFeMVwyyfCuETs_8jV0FxE7FmWdAEOb70nrHdMOlmC4XoUCktgKbj9vmqE4h0tpz1U1zVUQvAVLdEKz.6nVQ76AqdfMdeM7Ggdj2LsKlJLbCal26WxjXlS9a_eGYDlxB3yyuT2NDzT2348BZtF6UOXwsi6uVjpaak4YGi92.xKtx.OR9gE21o.ABxcZz8QDk7ry.NpIbXnBsxOs8i45L055OeY-",
                                   "key": "ControlNet/checkpoint/custom/7e759754-7e29-42c5-8d52-f8dca53c9c8a/control_v11p_sd15_canny.pth"
                                 }
@@ -1194,7 +1194,7 @@
                           },
                           {
                             "id": "d98471d5-d522-46e0-913c-3c169084435c",
-                            "s3Location": "s3://elonniu/Stable-diffusion/checkpoint/custom/d98471d5-d522-46e0-913c-3c169084435c",
+                            "s3Location": "s3://xxxx/Stable-diffusion/checkpoint/custom/d98471d5-d522-46e0-913c-3c169084435c",
                             "type": "Stable-diffusion",
                             "status": "Active",
                             "name": [
@@ -1205,7 +1205,7 @@
                               "creator": "admin",
                               "multipart_upload": {
                                 "LahCuteCartoonSDXL_alpha.safetensors": {
-                                  "bucket": "elonniu",
+                                  "bucket": "xxxx",
                                   "upload_id": "e9j98hWLC40yFYdDPHkqnzO0c0FJsrY9FcOYL4P5o_ZsajgEzXtfjJ5Auxls4Dfndz9MwwqSP6LBaaa_c4WXGhidalIVktTuZ6lDo0yKXIh93mklE3k1AtCYgoKPvAi877RzemvaFM3G4.QIK.eenrBpyk.SBGguGaTd_m_FlrHxa8LewTjubZyuF5cvIsH_KBgsbLSNVcPP4S2qPVvSeBwy73TYYnKu_Uw74K0Sq9U-",
                                   "key": "Stable-diffusion/checkpoint/custom/d98471d5-d522-46e0-913c-3c169084435c/LahCuteCartoonSDXL_alpha.safetensors"
                                 }
@@ -1220,7 +1220,7 @@
                           },
                           {
                             "id": "86068f5d-7cfa-416a-af66-0e78b7e1d8f4",
-                            "s3Location": "s3://elonniu/Lora/checkpoint/custom/86068f5d-7cfa-416a-af66-0e78b7e1d8f4",
+                            "s3Location": "s3://xxxx/Lora/checkpoint/custom/86068f5d-7cfa-416a-af66-0e78b7e1d8f4",
                             "type": "Lora",
                             "status": "Active",
                             "name": [
@@ -1231,7 +1231,7 @@
                               "creator": "admin",
                               "multipart_upload": {
                                 "nendoroid_xl_v7.safetensors": {
-                                  "bucket": "elonniu",
+                                  "bucket": "xxxx",
                                   "upload_id": "3XvVonX27A4nn9MeC2ekzXkA2hlA6b.ENNEYh8dXaoH.srbhs.l3KJvwFdV5Rhko8UYwaFbMilPGLAIbo3nAI03YJAbtfTDa3UGnO82mlx7Vd7Ds1Ccief2IvQ8ZjOit8JchGtmsGa0.W66HVruzSQdRx9IAo58teX08IlpH5efBhA9xOwHGDfyycTYIrAP4xOQUXBmo93xtN.oaTZccHH0xFjwbOP1jLrZ_Jsi28GY-",
                                   "key": "Lora/checkpoint/custom/86068f5d-7cfa-416a-af66-0e78b7e1d8f4/nendoroid_xl_v7.safetensors"
                                 }
@@ -1246,7 +1246,7 @@
                           },
                           {
                             "id": "83983f01-f71e-429c-83f0-9b9d5721b3c0",
-                            "s3Location": "s3://elonniu/ControlNet/checkpoint/custom/83983f01-f71e-429c-83f0-9b9d5721b3c0",
+                            "s3Location": "s3://xxxx/ControlNet/checkpoint/custom/83983f01-f71e-429c-83f0-9b9d5721b3c0",
                             "type": "ControlNet",
                             "status": "Active",
                             "name": [
@@ -1257,7 +1257,7 @@
                               "creator": "admin",
                               "multipart_upload": {
                                 "control_v11p_sd15_openpose.pth": {
-                                  "bucket": "elonniu",
+                                  "bucket": "xxxx",
                                   "upload_id": "fad698w0tlzK4y6VkIHYLu6wengx5dCLo2HGb5LfHUnbffPbbaBDR9RsY7girPXOOi1Lk.nFzZzN8F5jR4quldQlU8GuAu5EJ4tC_CHym4cAtUeitDjQp4pHe30Qqf56OhPL_IXctwh6GhTqWll0VmUAnwazAaRXxhe7qYbA6TWsbUaRUht5gbrVc4MqIfMRbNfgetprwW3K455GM9fjLQYbuPMwW1eGjOk_oDfSLGQ-",
                                   "key": "ControlNet/checkpoint/custom/83983f01-f71e-429c-83f0-9b9d5721b3c0/control_v11p_sd15_openpose.pth"
                                 }
@@ -1272,7 +1272,7 @@
                           },
                           {
                             "id": "32a7af23-3763-4289-a6af-2156a2331878",
-                            "s3Location": "s3://elonniu/Stable-diffusion/checkpoint/custom/32a7af23-3763-4289-a6af-2156a2331878",
+                            "s3Location": "s3://xxxx/Stable-diffusion/checkpoint/custom/32a7af23-3763-4289-a6af-2156a2331878",
                             "type": "Stable-diffusion",
                             "status": "Active",
                             "name": [
@@ -1283,7 +1283,7 @@
                               "creator": "admin",
                               "multipart_upload": {
                                 "v1-5-pruned-emaonly.safetensors": {
-                                  "bucket": "elonniu",
+                                  "bucket": "xxxx",
                                   "upload_id": "0lZ9V2zTHVeflFpkbFGxJyW.4Sq5tqJjzlVUDvsgxfV_R55iL.ZBD0vXmLJex_Qkf..EvtSR8N52SdwGup2n0w70hHJsvdTXlY1uNmOpR2OOTfqnavtVZciEUpQEXUmG8a_6v.WTS5XCnCMo412SdgZwMoPOoTXXD_NsOULGq.u818BuANSvH7ObxvbhJdLOEccP7T4jni9hAmjI58C7PC7X3ow.xhaI8KmdHl7B_QY-",
                                   "key": "Stable-diffusion/checkpoint/custom/32a7af23-3763-4289-a6af-2156a2331878/v1-5-pruned-emaonly.safetensors"
                                 }
@@ -1615,6 +1615,7 @@
               },
               "example": {
                 "endpoint_name": "test",
+                "endpoint_type": "Async",
                 "instance_type": "ml.g5.2xlarge",
                 "initial_instance_count": "1",
                 "autoscaling_enabled": false,
@@ -2287,7 +2288,7 @@
                           "inference_id": "f3421ce5-9ab9-40a2-b33b-3f126de70a52",
                           "status": "inprogress",
                           "endpoint_name": "esd-async-97fce5e",
-                          "output_path": "s3://elonniu/sagemaker_output/48159016-c040-4b49-8a1c-b57445946918.out"
+                          "output_path": "s3://xxxx/sagemaker_output/48159016-c040-4b49-8a1c-b57445946918.out"
                         }
                       },
                       "message": "Accepted"
@@ -2595,10 +2596,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "checkpoint_id": {
-                    "type": "string",
-                    "description": "模型文件ID（Checkpoint ID）"
-                  },
                   "status": {
                     "type": "string",
                     "description": "状态（Status）"
@@ -2632,13 +2629,11 @@
                   }
                 },
                 "required": [
-                  "checkpoint_id",
                   "status",
                   "multi_parts_tags"
                 ]
               },
               "example": {
-                "checkpoint_id": "5b47fc8f-c1b0-47ad-9d85-ad0f08526e28",
                 "status": "Active",
                 "multi_parts_tags": {
                   "v1-5-pruned-emaonly.safetensors": [

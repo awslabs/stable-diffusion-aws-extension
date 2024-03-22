@@ -21,6 +21,7 @@ nav:
         - Supported regions: plan-deployment/regions.md
         - Quotas: plan-deployment/quotas.md
     - Deploy the solution:
+        - Permissions: deployment/permissions.md
         - AWS CloudFormation template: deployment/template.md
         - Deployment step: deployment/deployment.md
         - Deployment step from existing resource: deployment/deployment_for_existing_users.md
@@ -33,7 +34,7 @@ nav:
         - txt2img guide: user-guide/txt2img-guide.md
         - img2img guide: user-guide/img2img-guide.md
         - controlNet guide: user-guide/controlnet-guide.md
-        - Dreambooth guide: user-guide/dreambooth-guide.md
+        - Training guide: user-guide/training-guide.md
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md
@@ -43,6 +44,7 @@ nav:
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
         - API Call:
+            - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md
         - OpenAPI Specification: developer-guide/oas.md
         - Custom Container: developer-guide/byoc.md

@@ -18,6 +18,7 @@ export interface DeleteTrainingJobsApiProps {
   router: Resource;
   httpMethod: string;
   trainingTable: Table;
+  multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -32,6 +33,7 @@ export class DeleteTrainingJobsApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly trainingTable: Table;
+  private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
@@ -43,6 +45,7 @@ export class DeleteTrainingJobsApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
+    this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -102,13 +105,14 @@ export class DeleteTrainingJobsApi {
       {
         entry: `${this.src}/trainings`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_training_jobs.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
+          MULTI_USER_TABLE: this.multiUserTable.tableName,
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
           LOG_LEVEL: this.logLevel.valueAsString,
@@ -151,9 +155,13 @@ export class DeleteTrainingJobsApi {
         'dynamodb:GetItem',
         // delete a training job
         'dynamodb:DeleteItem',
+        'dynamodb:BatchGetItem',
+        'dynamodb:Scan',
+        'dynamodb:Query',
       ],
       resources: [
         this.trainingTable.tableArn,
+        this.multiUserTable.tableArn,
       ],
     }));
 
@@ -167,6 +175,16 @@ export class DeleteTrainingJobsApi {
       resources: [
         `${this.s3Bucket.bucketArn}`,
         `${this.s3Bucket.bucketArn}/*`,
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sagemaker:StopTrainingJob',
+      ],
+      resources: [
+        `arn:${Aws.PARTITION}:sagemaker:${Aws.REGION}:${Aws.ACCOUNT_ID}:training-job/*`,
       ],
     }));
 

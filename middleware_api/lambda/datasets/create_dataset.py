@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, List
 
+from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, internal_server_error, created
+from common.response import created
 from common.util import get_s3_presign_urls
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
-from libs.utils import get_permissions_by_username, get_user_roles
+from libs.utils import get_user_roles, permissions_check, response_error
 
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
@@ -35,7 +36,9 @@ class DatasetCreateEvent:
     dataset_name: str
     content: List[DataUploadEvent]
     params: dict[str, Any]
-    creator: str
+    prefix: str = ""
+    # todo will be removed
+    creator: str = ""
 
     def get_filenames(self):
         return [f.filename for f in self.content]
@@ -50,15 +53,13 @@ class DatasetCreateEvent:
 
 # POST /datasets
 def handler(raw_event, context):
-    event = DatasetCreateEvent(**json.loads(raw_event['body']))
-
     try:
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'train' not in creator_permissions \
-                or ('all' not in creator_permissions['train'] and 'create' not in creator_permissions['train']):
-            return bad_request(message=f'user {event.creator} has not permission to create a train job')
+        logger.info(json.dumps(raw_event))
+        event = DatasetCreateEvent(**json.loads(raw_event['body']))
+        # todo compatibility with old version
+        username = permissions_check(raw_event, [PERMISSION_TRAIN_ALL])
 
-        user_roles = get_user_roles(ddb_service, user_table, event.creator)
+        user_roles = get_user_roles(ddb_service, user_table, username)
         timestamp = datetime.now().timestamp()
         new_dataset_info = DatasetInfo(
             dataset_name=event.dataset_name,
@@ -66,6 +67,7 @@ def handler(raw_event, context):
             dataset_status=DatasetStatus.Initialed,
             params=event.params,
             allowed_roles_or_users=user_roles,
+            prefix=event.prefix,
         )
 
         presign_url_map = get_s3_presign_urls(
@@ -102,5 +104,4 @@ def handler(raw_event, context):
 
         return created(data=data)
     except Exception as e:
-        logger.error(e)
-        return internal_server_error(message=str(e))
+        return response_error(e)

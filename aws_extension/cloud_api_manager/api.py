@@ -1,16 +1,16 @@
-import base64
 import json
 import logging
 
 import requests
 from modules import shared
+
 from aws_extension.sagemaker_ui_utils import warning
 from utils import host_url, api_key
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-client_api_version = "1.4.0"
+client_api_version = "1.5.0"
 
 
 def upgrade_info(resp):
@@ -59,7 +59,7 @@ class Api:
             headers['Content-Type'] = 'application/json'
 
         if self.username:
-            headers['Authorization'] = f'Bearer {base64.b16encode(self.username.encode("utf-8")).decode("utf-8")}'
+            headers['username'] = self.username
 
         if self.debug:
             logger.info(f"{method} {url}")
@@ -321,14 +321,6 @@ class Api:
         return self.req(
             "PUT",
             f"trainings/{training_id}/start",
-            headers=headers,
-            data=data
-        )
-
-    def stop_training_job(self, training_id: str, headers=None, data=None):
-        return self.req(
-            "PUT",
-            f"trainings/{training_id}/stop",
             headers=headers,
             data=data
         )

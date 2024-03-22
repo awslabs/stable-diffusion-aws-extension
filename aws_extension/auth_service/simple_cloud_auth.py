@@ -1,4 +1,3 @@
-import base64
 import json
 import logging
 import os
@@ -6,8 +5,6 @@ import os
 import requests
 
 import utils
-
-encode_type = "utf-8"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
@@ -44,7 +41,7 @@ class CloudAuthLoader:
     def update_gradio_auth(self):
         from modules import shared
         if not shared.demo:
-            print('shared.demo not set yet, cannot update auth temporarily')
+            print('shared.demo not set yet or in API mode, not update auth temporarily')
             return
         user_cred_str = self.create_config()
         if user_cred_str:
@@ -83,10 +80,9 @@ class CloudAuthLoader:
         self.username = username
         # password = utils.get_variable_from_json('password')
         # todo: not sure how to get current login user's password from gradio
-        self._auth_token = f'Bearer {base64.b16encode(username.encode(encode_type)).decode(encode_type)}'
         self._headers = {
             'x-api-key': self.api_key,
-            'Authorization': self._auth_token
+            'username': username
         }
         self.enableAuth = True
 

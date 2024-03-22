@@ -8,8 +8,7 @@ import time
 import utils
 from aws_extension.cloud_infer_service.simple_sagemaker_infer import SimpleSagemakerInfer
 import modules.scripts as scripts
-from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list, load_xyz_controlnet_list
-from dreambooth_on_cloud.ui import ui_tabs_callback
+from aws_extension.sagemaker_ui import None_Option_For_On_Cloud_Model, load_model_list, load_controlnet_list
 from modules import script_callbacks, sd_models, processing, extra_networks, shared
 from modules.api.models import StableDiffusionTxt2ImgProcessingAPI, StableDiffusionImg2ImgProcessingAPI
 from modules.sd_hijack import model_hijack
@@ -25,7 +24,6 @@ from modules.ui_components import ToolButton
 from scripts import global_state
 from scripts.xyz_grid import list_to_csv_string, csv_string_to_list_strip
 
-dreambooth_available = True
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 CONTROLNET_MODEL_COUNT = 3
@@ -48,33 +46,6 @@ IMG_SCRIPT_IDX = 7
 
 def dummy_function(*args, **kwargs):
     return []
-
-
-try:
-    from dreambooth_on_cloud.train import (
-        async_cloud_train,
-        get_cloud_db_model_name_list,
-        wrap_load_model_params,
-        get_train_job_list,
-        get_sorted_cloud_dataset
-    )
-    from dreambooth_on_cloud.create_model import (
-        get_sd_cloud_models,
-        get_create_model_job_list,
-        cloud_create_model,
-    )
-except Exception as e:
-    logging.warning(
-        "[main]dreambooth_on_cloud is not installed or can not be imported, using dummy function to proceed.")
-    dreambooth_available = False
-    cloud_train = dummy_function
-    get_cloud_db_model_name_list = dummy_function
-    wrap_load_model_params = dummy_function
-    get_train_job_list = dummy_function
-    get_sorted_cloud_dataset = dummy_function
-    get_sd_cloud_models = dummy_function
-    get_create_model_job_list = dummy_function
-    cloud_create_model = dummy_function
 
 
 class SageMakerUI(scripts.Script):
@@ -808,10 +779,10 @@ class SageMakerUI(scripts.Script):
             if not on_cloud:
                 result.append(gr.update(choices=sd_models.checkpoint_tiles()))
             else:
-                result.append(gr.update(choices=load_model_list(pr.username, pr.username)))
+                result.append(gr.update(choices=load_model_list(pr.username)))
             max_models = shared.opts.data.get("control_net_unit_count", CONTROLNET_MODEL_COUNT)
             if max_models > 0:
-                controlnet_models = load_controlnet_list(pr.username, pr.username)
+                controlnet_models = load_controlnet_list(pr.username)
                 for i in range(max_models):
                     result.append(gr.update(choices=controlnet_models))
 
@@ -924,13 +895,13 @@ class SageMakerUI(scripts.Script):
             all_used_models = []
             script_args = p.script_args[script.args_from:script.args_to]
             if script.alwayson:
-                logger.debug(f'{script.name} {script.args_from} {script.args_to}')
-                api_param.alwayson_scripts[script.name] = {}
-                api_param.alwayson_scripts[script.name]['args'] = []
+                logger.debug(f'{script.title().lower()} {script.args_from} {script.args_to}')
+                api_param.alwayson_scripts[script.title().lower()] = {}
+                api_param.alwayson_scripts[script.title().lower()]['args'] = []
                 for _id, arg in enumerate(script_args):
-                    parsed_args, used_models = process_args_by_plugin(api_param, script.name, arg, _id, script_args, args[-1], self.is_txt2img)
+                    parsed_args, used_models = process_args_by_plugin(api_param, script.title().lower(), arg, _id, script_args, args[-1], self.is_txt2img)
                     all_used_models.append(used_models)
-                    api_param.alwayson_scripts[script.name]['args'].append(parsed_args)
+                    api_param.alwayson_scripts[script.title().lower()]['args'].append(parsed_args)
             elif selected_script_name == script.name:
                 api_param.script_name = script.name
                 for _id, arg in enumerate(script_args):
@@ -979,6 +950,7 @@ class SageMakerUI(scripts.Script):
             if key == 'lora':
                 if not args[-1] or not args[-1]['lora']:
                     logger.error("please upload lora models!!!!")
+                    logger.error(args)
                     continue
                 for val in vals:
                     if 'Lora' not in models:
@@ -1010,7 +982,7 @@ class SageMakerUI(scripts.Script):
 
         p.setup_conds()
 
-        models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user, p.user)
+        models['embeddings'] = sagemaker_ui.load_embeddings_list(p.user)
 
         err = None
         try:
@@ -1071,12 +1043,6 @@ class SageMakerUI(scripts.Script):
 
 script_callbacks.on_after_component(on_after_component_callback)
 script_callbacks.on_ui_tabs(on_ui_tabs)
-script_callbacks.ui_tabs_callback = ui_tabs_callback
-
-from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
-
-if cloud_auth_manager.enableAuth:
-    cmd_opts.gradio_auth = cloud_auth_manager.create_config()
 
 
 def fetch_user_data():
@@ -1088,11 +1054,15 @@ def fetch_user_data():
         time.sleep(30)
 
 
-thread = threading.Thread(target=fetch_user_data)
-thread.daemon = True
-thread.start()
-
 if os.environ.get('ON_DOCKER', "false") != "true":
+    from aws_extension.auth_service.simple_cloud_auth import cloud_auth_manager
+    if cloud_auth_manager.enableAuth:
+        cmd_opts.gradio_auth = cloud_auth_manager.create_config()
+
+    thread = threading.Thread(target=fetch_user_data)
+    thread.daemon = True
+    thread.start()
+
     from modules import call_queue, fifo_lock
 
     class ImprovedFiFoLock(fifo_lock.FIFOLock):

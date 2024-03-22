@@ -1,8 +1,7 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   Aws,
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -25,7 +24,6 @@ export interface GetDatasetApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -39,7 +37,6 @@ export class GetDatasetApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
@@ -54,7 +51,6 @@ export class GetDatasetApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
 
     this.getDatasetApi();
@@ -105,15 +101,15 @@ export class GetDatasetApi {
   }
 
   private getDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'get_dataset.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
@@ -124,7 +120,7 @@ export class GetDatasetApi {
       layers: [this.layer],
     });
 
-    const listDatasetItemsIntegration = new apigw.LambdaIntegration(
+    const listDatasetItemsIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -134,7 +130,6 @@ export class GetDatasetApi {
     this.router.getResource('{id}')
       ?.addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        authorizer: this.authorizer,
       });
   }
 }

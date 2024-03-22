@@ -1,4 +1,3 @@
-import base64
 import logging
 
 import requests
@@ -10,7 +9,6 @@ from utils import has_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
-encode_type = "utf-8"
 string_separator = "___"
 last_evaluated_key = {}
 
@@ -19,22 +17,20 @@ class CloudApiManager:
     def __init__(self):
         self.auth_manger = cloud_auth_manager
 
-    # todo: not sure how to get current login user's password from gradio
-    # todo: use username only for authorize checking for now only, e.g. user_token = username
-    def _get_headers_by_user(self, user_token):
-        if not user_token:
+    def _get_headers_by_user(self, username):
+        if not username:
             return {
                 'x-api-key': self.auth_manger.api_key,
                 'Content-Type': 'application/json',
             }
-        _auth_token = f'Bearer {base64.b16encode(user_token.encode(encode_type)).decode(encode_type)}'
+
         return {
-            'Authorization': _auth_token,
+            'username': username,
             'x-api-key': self.auth_manger.api_key,
             'Content-Type': 'application/json',
         }
 
-    def sagemaker_endpoint_delete(self, delete_endpoint_list, user_token=""):
+    def sagemaker_endpoint_delete(self, delete_endpoint_list, username=""):
 
         if not delete_endpoint_list:
             return "No endpoint to delete"
@@ -46,13 +42,12 @@ class CloudApiManager:
         logger.debug(f"delete endpoint list: {delete_endpoint_list}")
         payload = {
             "endpoint_name_list": delete_endpoint_list,
-            "username": user_token,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            resp = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            resp = requests.delete(deployment_url, json=payload, headers=self._get_headers_by_user(username))
             if resp.status_code != 204:
                 raise Exception(resp.json()['message'])
             return "Delete Endpoint Successfully"
@@ -60,14 +55,36 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to delete sagemaker endpoint with exception: {e}"
 
+    def trains_delete(self, list, username=""):
+        if not list:
+            return "No trains to delete"
+
+        payload = {
+            "training_id_list": list,
+        }
+
+        url = f"{self.auth_manger.api_url}trainings"
+
+        try:
+            resp = requests.delete(url, json=payload, headers=self._get_headers_by_user(username))
+            if resp.status_code != 204:
+                raise Exception(resp.json()['message'])
+            return "Delete Trainings Successfully"
+        except Exception as e:
+            logger.error(e)
+            return f"Failed to delete trainings with exception: {e}"
+
+
     def sagemaker_deploy(self, endpoint_name,
                          endpoint_type,
                          instance_type,
                          initial_instance_count=1,
                          custom_docker_image_uri="",
+                         custom_extensions="",
                          autoscaling_enabled=True,
                          user_roles=None,
-                         user_token=""):
+                         min_instance_number=1,
+                         username=""):
         """ Create SageMaker endpoint for GPU inference.
         Args:
             instance_type (string): the ML compute instance type.
@@ -84,16 +101,20 @@ class CloudApiManager:
             "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
+            'min_instance_number': min_instance_number,
+            # use initial_instance_count for user experience
+            'max_instance_number': initial_instance_count,
             "autoscaling_enabled": autoscaling_enabled,
             "custom_docker_image_uri": custom_docker_image_uri,
+            "custom_extensions": custom_extensions,
             'assign_to_roles': user_roles,
-            "creator": user_token,
+            "creator": username,
         }
 
         deployment_url = f"{self.auth_manger.api_url}endpoints"
 
         try:
-            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(user_token))
+            response = requests.post(deployment_url, json=payload, headers=self._get_headers_by_user(username))
             r = response.json()
             logger.debug(f"response for rest api {r}")
             return r['message']
@@ -104,36 +125,52 @@ class CloudApiManager:
     def ckpts_delete(self, ckpts, user_token=""):
         logger.debug(f"ckpts: {ckpts}")
 
-        checkpoint_id_list = [item.split(string_separator)[2] for item in ckpts]
-        logger.debug(f"checkpoint_id_list: {checkpoint_id_list}")
         data = {
-            "checkpoint_id_list": checkpoint_id_list,
+            "checkpoint_id_list": ckpts,
         }
 
         try:
+            api.set_username(user_token)
             resp = api.delete_checkpoints(data=data)
             if resp.status_code != 204:
                 raise Exception(resp.json()['message'])
             return "Delete Checkpoints Successfully"
         except Exception as e:
             logger.error(e)
-            return f"Failed to delete checkpoints with exception: {e}"
+            return f"Failed to delete checkpoint with exception: {e}"
 
-    def ckpt_rename(self, ckpt, name, user_token=""):
-        logger.debug(f"ckpts: {ckpt}")
-
-        checkpoint_id = ckpt.split(string_separator)[2]
-        logger.debug(f"checkpoint_id: {checkpoint_id}")
+    def ckpt_rename(self, ckpt_id, name, user_token=""):
         data = {
             "name": name,
         }
 
         try:
-            resp = api.update_checkpoint(checkpoint_id=checkpoint_id, data=data)
+            api.set_username(user_token)
+            resp = api.update_checkpoint(checkpoint_id=ckpt_id, data=data)
             return resp.json()['message']
         except Exception as e:
             logger.error(e)
             return f"Failed to rename checkpoint with exception: {e}"
+
+
+    def list_all_train_jobs_raw(self, username=None):
+        if self.auth_manger.enableAuth and not username:
+            return []
+
+        if not self.auth_manger.api_url:
+            return []
+
+        response = requests.get(f'{self.auth_manger.api_url}trainings',
+                                params={
+                                    'username': username,
+                                },
+                                headers=self._get_headers_by_user(username))
+        r = response.json()
+        if not r or r['statusCode'] != 200:
+            logger.error(f"list_trainings: {r}")
+            return []
+
+        return r['data']['trainings']
 
     def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
         if self.auth_manger.enableAuth and not user_token:
@@ -147,10 +184,14 @@ class CloudApiManager:
                                     'username': username,
                                 },
                                 headers=self._get_headers_by_user(user_token))
-        response.raise_for_status()
+
+        if response.status_code != 200:
+            logger.error(f"list_endpoints: {response.json()}")
+            return []
+
         r = response.json()
         if not r or r['statusCode'] != 200:
-            logger.info(f"The API response is empty for update_sagemaker_endpoints().{r['message']}")
+            logger.info(f"The API response is empty for list_endpoints().{r['message']}")
             return []
 
         return r['data']['endpoints']
@@ -234,7 +275,7 @@ class CloudApiManager:
             logger.error(f"list_all_ckpts: {e}")
             return []
 
-    def get_user_by_username(self, username='', user_token='', show_password=False):
+    def get_user_by_username(self, username='', h_username='', show_password=False):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
@@ -245,13 +286,19 @@ class CloudApiManager:
                                     'username': username,
                                     'show_password': show_password
                                 },
-                                headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
+                                headers=self._get_headers_by_user(h_username))
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_users: {raw_resp.json()}")
+            return {
+                'users': []
+            }
+
         logger.debug(raw_resp.json())
         resp = raw_resp.json()['data']
         return resp['users'][0]
 
-    def list_users(self, user_token=""):
+    def list_users(self, username=""):
         if not self.auth_manger.enableAuth:
             return {
                 'users': []
@@ -259,21 +306,33 @@ class CloudApiManager:
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}users',
                                 params={},
-                                headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
+                                headers=self._get_headers_by_user(username))
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_users: {raw_resp.json()}")
+            return {
+                'users': []
+            }
+
         return raw_resp.json()['data']
 
-    def list_roles(self, user_token=""):
+    def list_roles(self, username=""):
         if not self.auth_manger.enableAuth or not has_config():
             return {
                 'roles': []
             }
 
-        raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
+        raw_resp = requests.get(url=f'{self.auth_manger.api_url}roles', headers=self._get_headers_by_user(username))
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_roles: {raw_resp.json()}")
+            return {
+                'roles': []
+            }
+
         return raw_resp.json()['data']
 
-    def upsert_role(self, role_name, permissions, creator, user_token=""):
+    def upsert_role(self, role_name, permissions, creator):
         if not self.auth_manger.enableAuth:
             return {}
 
@@ -284,14 +343,15 @@ class CloudApiManager:
         }
 
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}roles', json=payload,
-                                 headers=self._get_headers_by_user(user_token))
+                                 headers=self._get_headers_by_user(creator))
         resp = raw_resp.json()
         if raw_resp.status_code != 200 and raw_resp.status_code != 201:
+            logger.error(f"upsert_role: {resp}")
             raise Exception(resp['message'])
 
         return True
 
-    def upsert_user(self, username, password, roles, creator, initial=False, user_token=""):
+    def upsert_user(self, username, password, roles, creator, initial=False):
         if not self.auth_manger.enableAuth and not initial:
             return {}
         if not password or len(password) < 1:
@@ -311,7 +371,7 @@ class CloudApiManager:
 
         raw_resp = requests.post(f'{cloud_auth_manager.api_url}users',
                                  json=payload,
-                                 headers=self._get_headers_by_user(user_token)
+                                 headers=self._get_headers_by_user(creator)
                                  )
         resp = raw_resp.json()
         if raw_resp.status_code != 201:
@@ -338,20 +398,27 @@ class CloudApiManager:
             raise Exception(raw_resp.json()['message'])
         return True
 
-    def list_models_on_cloud(self, username, user_token="", types='Stable-diffusion', status='Active'):
+    def list_models_on_cloud(self, username, types='Stable-diffusion', status='Active'):
         if not self.auth_manger.enableAuth:
             return []
 
-        params={
+        params = {
             'username': username,
             'types': types,
             'status': status
         }
-        headers=self._get_headers_by_user(user_token)
+        headers = self._get_headers_by_user(username)
         raw_resp = api.list_checkpoints(params=params, headers=headers)
 
-        raw_resp.raise_for_status()
+        if raw_resp.status_code != 200:
+            logger.error(f"list_checkpoints: {raw_resp.json()}")
+            return []
+
         checkpoints = []
+
+        if 'data' not in raw_resp.json():
+            return checkpoints
+
         resp = raw_resp.json()['data']
         for ckpt in resp['checkpoints']:
             if not ckpt or 'name' not in ckpt or not ckpt['name']:
@@ -371,7 +438,7 @@ class CloudApiManager:
 
         return checkpoints
 
-    def list_all_inference_jobs_on_cloud(self, target_task_type, username, user_token="", first_load="first"):
+    def list_all_inference_jobs_on_cloud(self, target_task_type, username, first_load="first"):
         if not self.auth_manger.enableAuth:
             return []
 
@@ -401,26 +468,30 @@ class CloudApiManager:
         if first_load == "next":
             if last_evaluated_key[last_key_next]:
                 last_evaluated_key[last_key_previous].append(last_evaluated_key[last_key_next])
-                params['last_evaluated_key'] = last_evaluated_key[last_key_next]
+                params['exclusive_start_key'] = last_evaluated_key[last_key_next]
             else:
                 return last_evaluated_key[last_key_cur]
         elif first_load == "previous":
             if len(last_evaluated_key[last_key_previous]) > 0:
                 pre_key = last_evaluated_key[last_key_previous].pop()
                 if pre_key != last_evaluated_key[last_key_cur_key]:
-                    params['last_evaluated_key'] = pre_key
+                    params['exclusive_start_key'] = pre_key
                 elif len(last_evaluated_key[last_key_previous]) > 0:
-                    params['last_evaluated_key'] = last_evaluated_key[last_key_previous].pop()
+                    params['exclusive_start_key'] = last_evaluated_key[last_key_previous].pop()
         else:
             last_evaluated_key[last_key_next] = None
             last_evaluated_key[last_key_previous] = []
 
-        if 'last_evaluated_key' in params:
-            last_evaluated_key[last_key_cur_key] = params['last_evaluated_key']
+        if 'exclusive_start_key' in params:
+            last_evaluated_key[last_key_cur_key] = params['exclusive_start_key']
 
         raw_resp = requests.get(url=f'{self.auth_manger.api_url}inferences', params=params,
-                                headers=self._get_headers_by_user(user_token))
-        raw_resp.raise_for_status()
+                                headers=self._get_headers_by_user(username))
+
+        if raw_resp.status_code != 200:
+            logger.error(f"list_inferences: {raw_resp.json()}")
+            return []
+
         resp = raw_resp.json()
 
         if 'last_evaluated_key' in resp['data']:
@@ -439,9 +510,8 @@ class CloudApiManager:
         raw_response = requests.get(url=f'{self.auth_manger.api_url}datasets/{dataset_name}',
                                     headers=self._get_headers_by_user(user_token))
         raw_response.raise_for_status()
-        # todo: the s3 presign url is not ready as content type to img
-        resp = raw_response.json()['data']
-        return resp
+
+        return raw_response.json()['data']
 
 
 api_manager = CloudApiManager()

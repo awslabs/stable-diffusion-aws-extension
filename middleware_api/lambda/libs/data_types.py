@@ -95,9 +95,9 @@ class BaseMultiUserEntity:
 
 @dataclass
 class User(BaseMultiUserEntity):
-    password: bytes
     roles: [str]
     params: Optional[dict[str, Any]] = None
+    password: bytes = None
 
     def __post_init__(self):
         if type(self.password) in (boto3.dynamodb.types.Binary, boto3.dynamodb.types.BINARY):
@@ -124,7 +124,10 @@ class DatasetItem:
         if type(self.data_status) == str:
             self.data_status = DataStatus[self.data_status]
 
-    def get_s3_key(self):
+    def get_s3_key(self, prefix: str = ""):
+        if prefix:
+            return f'dataset/{self.dataset_name}/{prefix}/{self.name}'
+
         return f'dataset/{self.dataset_name}/{self.name}'
 
 
@@ -135,12 +138,16 @@ class DatasetInfo:
     dataset_status: DatasetStatus
     params: Optional[dict[str, Any]] = None
     allowed_roles_or_users: Optional[list[str]] = None
+    prefix: str = ""
 
     def __post_init__(self):
         if type(self.dataset_status) == str:
             self.dataset_status = DatasetStatus[self.dataset_status]
 
     def get_s3_key(self):
+        if self.prefix:
+            return f'dataset/{self.dataset_name}/{self.prefix}'
+
         return f'dataset/{self.dataset_name}'
 
 
@@ -158,6 +165,7 @@ class InferenceJob:
     completeTime: Optional[Any] = None
     params: Optional[dict[str, Any]] = None
     inference_type: Optional[str] = None
+    payload_string: Optional[str] = None
 
 
 @dataclass
@@ -175,6 +183,8 @@ class EndpointDeploymentJob:
     error: Optional[str] = None
     endpoint_type: Optional[str] = "Async"
     owner_group_or_role: Optional[List[str]] = None
+    min_instance_number: str = None
+    custom_extensions: str = ""
 
 
 # a copy of aws_extensions.models.InvocationsRequest
@@ -182,5 +192,6 @@ class EndpointDeploymentJob:
 class InvocationsRequest:
     task: str
     username: Optional[str]
-    param_s3: str
     models: Optional[dict]
+    param_s3: Optional[str] = None
+    payload_string: Optional[str] = None

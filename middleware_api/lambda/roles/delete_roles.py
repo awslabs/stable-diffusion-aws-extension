@@ -7,6 +7,7 @@ import boto3
 
 from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
+from libs.utils import response_error
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -21,27 +22,31 @@ class DeleteRolesEvent:
 
 
 def handler(event, ctx):
-    logger.info(f'event: {event}')
-    logger.info(f'ctx: {ctx}')
+    try:
+        logger.info(json.dumps(event))
+        body = DeleteRolesEvent(**json.loads(event['body']))
 
-    body = DeleteRolesEvent(**json.loads(event['body']))
+        # todo compatibility with old version
+        # permissions_check(event, [PERMISSION_ROLE_ALL])
 
-    # unique role_name_list for preventing duplicate delete
-    role_name_list = list(set(body.role_name_list))
+        # unique role_name_list for preventing duplicate delete
+        role_name_list = list(set(body.role_name_list))
 
-    if Default_Role in role_name_list:
-        return bad_request(message='cannot delete default role')
+        if Default_Role in role_name_list:
+            return bad_request(message='cannot delete default role')
 
-    for role_name in role_name_list:
-        update_users_with_role(role_name)
-        user_table.delete_item(
-            Key={
-                'kind': PARTITION_KEYS.role,
-                'sort_key': role_name
-            }
-        )
+        for role_name in role_name_list:
+            update_users_with_role(role_name)
+            user_table.delete_item(
+                Key={
+                    'kind': PARTITION_KEYS.role,
+                    'sort_key': role_name
+                }
+            )
 
-    return no_content(message='roles deleted')
+        return no_content(message='roles deleted')
+    except Exception as e:
+        return response_error(e)
 
 
 def update_users_with_role(role_name: str):

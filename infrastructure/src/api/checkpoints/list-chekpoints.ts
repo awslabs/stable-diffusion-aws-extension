@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -23,7 +22,6 @@ export interface ListCheckPointsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -36,7 +34,6 @@ export class ListCheckPointsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
@@ -50,7 +47,6 @@ export class ListCheckPointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
 
     this.listCheckpointsApi();
@@ -85,10 +81,10 @@ export class ListCheckPointsApi {
   }
 
   private listCheckpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'list_checkpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
@@ -103,15 +99,15 @@ export class ListCheckPointsApi {
       layers: [this.layer],
     });
 
-    const listCheckpointsIntegration = new apigw.LambdaIntegration(
+    const listCheckpointsIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

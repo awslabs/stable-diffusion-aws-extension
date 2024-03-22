@@ -6,9 +6,10 @@ import boto3
 from boto3.dynamodb.conditions import Key
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request
+from common.response import ok
+from common.util import get_query_param
 from libs.data_types import InferenceJob
-from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key
+from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, response_error
 
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -22,25 +23,19 @@ ddb = boto3.resource('dynamodb')
 table = ddb.Table(inference_table_name)
 
 
-# GET /inferences?last_evaluated_key=xxx&limit=10&username=USER_NAME&name=SageMaker_Endpoint_Name&filter=key:value,key:value
+# GET /inferences?last_evaluated_key=xxx&limit=10
 def handler(event, ctx):
-    logger.info(json.dumps(event))
-    _filter = {}
-
-    parameters = event['queryStringParameters']
-
-    username = None
-    limit = 10
-    last_evaluated_key = None
-    inference_type = "txt2img"
-
     try:
-        if parameters:
-            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
-            limit = int(parameters['limit']) if 'limit' in parameters and parameters['limit'] else limit
-            last_evaluated_key = parameters['last_evaluated_key'] if 'last_evaluated_key' in parameters and parameters[
-                'last_evaluated_key'] else None
-            inference_type = parameters['type'] if 'type' in parameters and parameters['type'] else inference_type
+        logger.info(json.dumps(event))
+        _filter = {}
+
+        # todo compatibility with old version
+        # permissions_check(event, [PERMISSION_INFERENCE_ALL])
+
+        username = get_query_param(event, 'username')
+        exclusive_start_key = get_query_param(event, 'exclusive_start_key')
+        inference_type = get_query_param(event, 'type', 'txt2img')
+        limit = int(get_query_param(event, 'limit', 10))
 
         scan_kwargs = {
             'Limit': limit,
@@ -49,14 +44,14 @@ def handler(event, ctx):
             "ScanIndexForward": False
         }
 
-        if last_evaluated_key:
-            scan_kwargs['ExclusiveStartKey'] = decode_last_key(last_evaluated_key)
+        if exclusive_start_key:
+            scan_kwargs['ExclusiveStartKey'] = decode_last_key(exclusive_start_key)
 
         logger.info(scan_kwargs)
 
         response = table.query(**scan_kwargs)
 
-        logger.info(json.dumps(response))
+        logger.info(json.dumps(response, default=str))
 
         items = response.get('Items', [])
         last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))
@@ -74,6 +69,8 @@ def handler(event, ctx):
             else:
                 results.append(inference.__dict__)
 
+        results = sort_inferences(results)
+
         data = {
             'inferences': results,
             'last_evaluated_key': last_evaluated_key
@@ -81,4 +78,11 @@ def handler(event, ctx):
 
         return ok(data=data, decimal=True)
     except Exception as e:
-        return bad_request(message=str(e))
+        return response_error(e)
+
+
+def sort_inferences(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['createTime'], reverse=True)

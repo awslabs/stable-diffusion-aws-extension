@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_kms,
@@ -22,7 +21,6 @@ export interface CreateUserApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -37,7 +35,6 @@ export class CreateUserApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateUserApiProps) {
@@ -49,7 +46,6 @@ export class CreateUserApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -121,10 +117,6 @@ export class CreateUserApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
           initial: {
             type: JsonSchemaType.BOOLEAN,
             default: false,
@@ -141,7 +133,6 @@ export class CreateUserApi {
         },
         required: [
           'username',
-          'creator',
         ],
       },
       contentType: 'application/json',
@@ -159,15 +150,15 @@ export class CreateUserApi {
   }
 
   private upsertUserApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/users`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_user.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
@@ -177,15 +168,15 @@ export class CreateUserApi {
     });
 
 
-    const upsertUserIntegration = new apigw.LambdaIntegration(
+    const upsertUserIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,

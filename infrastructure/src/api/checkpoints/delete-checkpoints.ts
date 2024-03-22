@@ -18,6 +18,7 @@ export interface DeleteCheckpointsApiProps {
   router: Resource;
   httpMethod: string;
   checkPointsTable: Table;
+  userTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -32,6 +33,7 @@ export class DeleteCheckpointsApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkPointsTable: Table;
+  private readonly userTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly s3Bucket: Bucket;
@@ -43,6 +45,7 @@ export class DeleteCheckpointsApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.checkPointsTable = props.checkPointsTable;
+    this.userTable = props.userTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -102,14 +105,15 @@ export class DeleteCheckpointsApi {
       {
         entry: `${this.src}/checkpoints`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_checkpoints.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
+          MULTI_USER_TABLE: this.userTable.tableName,
           S3_BUCKET_NAME: this.s3Bucket.bucketName,
           LOG_LEVEL: this.logLevel.valueAsString,
         },
@@ -153,9 +157,13 @@ export class DeleteCheckpointsApi {
         'dynamodb:GetItem',
         // delete checkpoint
         'dynamodb:DeleteItem',
+        // query users
+        'dynamodb:Query',
+        'dynamodb:Scan',
       ],
       resources: [
         this.checkPointsTable.tableArn,
+        this.userTable.tableArn,
       ],
     }));
 

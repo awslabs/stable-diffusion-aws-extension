@@ -1,10 +1,11 @@
 from modules.api.models import *
+from typing import Optional
+
 
 class InvocationsRequest(BaseModel):
     task: str
     username: Optional[str]
     # checkpoint_info:Optional[dict]
-    param_s3: str
     models: Optional[dict]
     # txt2img_payload: Optional[StableDiffusionTxt2ImgProcessingAPI]
     # img2img_payload: Optional[StableDiffusionImg2ImgProcessingAPI]
@@ -13,6 +14,9 @@ class InvocationsRequest(BaseModel):
     interrogate_payload: Optional[InterrogateRequest]
     db_create_model_payload: Optional[str]
     merge_checkpoint_payload: Optional[dict]
+    param_s3: Optional[str] = None
+    payload_string: Optional[str] = None
+
 
 class PingResponse(BaseModel):
     status: str

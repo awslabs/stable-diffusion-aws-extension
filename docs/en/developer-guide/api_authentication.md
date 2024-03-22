@@ -1,22 +1,37 @@
-**Security Authentication**
+## Security Authentication
+
 All APIs use API keys for security verification, and all API requests should include your API key in the HTTP header. The `x-api-key` is as follows:
 ```Config
 X-api-key: xxxxxxxxxxxxxxxxxxxx
 ```
-**User Authentication**
-> Tip: User authentication will be removed in the next version.
 
-In addition to using `x-api-key` as basic security verification, some APIs also require user verification. Your `Authorization` should be included in the HTTP header as follows:
+## User Authentication
+
+Please include `username` in the HTTP header. For example, if the username configured on WebUI is `admin`, then:
+
+```config
+username: admin
+```
+
+> After the API is deployed, a user named `api` is built in. If you do not use the WebUI for initialization or create a new user through the API, you can use `api` as the username.
+
+
+## Version 1.4.0 or earlier
+
+Your `Authorization` should be included in the HTTP header as follows:
 
 ```Config
-Authorization: Bearer YOU_TOKEN
+Authorization: Bearer {TOKEN}
 ```
+
 Token algorithm (Python example):
+
 ```Python
 Import base64
 Username="your username on webui"
 Token=base64.b16encode (username. encode ("utf-8")). decode ("utf-8")
 ```
+
 For example, if the username configured on WebUI is `admin`, then:
 ```Config
 Authorization: Bearer 61646D696E

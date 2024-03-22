@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -55,6 +54,7 @@ export class CreateRoleApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -98,10 +98,6 @@ export class CreateRoleApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
           permissions: {
             type: JsonSchemaType.ARRAY,
             items: {
@@ -114,7 +110,6 @@ export class CreateRoleApi {
         },
         required: [
           'role_name',
-          'creator',
           'permissions',
         ],
       },
@@ -133,15 +128,15 @@ export class CreateRoleApi {
   }
 
   private createRoleApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/roles`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'create_role.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         LOG_LEVEL: this.logLevel.valueAsString,
@@ -150,12 +145,13 @@ export class CreateRoleApi {
     });
 
 
-    const upsertRoleIntegration = new apigw.LambdaIntegration(
+    const upsertRoleIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, upsertRoleIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,

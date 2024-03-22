@@ -6,7 +6,6 @@ import traceback
 import time
 import copy
 
-import requests
 from fastapi import FastAPI
 
 from modules import sd_models
@@ -18,7 +17,6 @@ import requests
 from utils import get_bucket_name_from_s3_path, get_path_from_s3_path, download_folder_from_s3_by_tar, \
     upload_folder_to_s3_by_tar, read_from_s3
 
-dreambooth_available = True
 THREAD_CHECK_COUNT = 1
 CONDITION_POOL_MAX_COUNT = 10
 CONDITION_WAIT_TIME_OUT = 100000
@@ -27,20 +25,10 @@ CONDITION_WAIT_TIME_OUT = 100000
 def dummy_function(*args, **kwargs):
     return None
 
-try:
-    sys.path.append("extensions/sd_dreambooth_extension")
-    from dreambooth.ui_functions import create_model
-except Exception as e:
-    logging.warning("[api]Dreambooth is not installed or can not be imported, using dummy function to proceed.")
-    dreambooth_available = False
-    create_model = dummy_function
 
 logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-if os.environ.get("DEBUG_API", False):
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.INFO)
 
 def merge_model_on_cloud(req):
     def modelmerger(*args):
@@ -127,13 +115,53 @@ def merge_model_on_cloud(req):
     else:
         os.system(f"tar cvf {new_merge_model_name} {new_merge_model_name_complete_path} ")
 
-    os.system(f'./tools/s5cmd cp {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
+    os.system(f's5cmd sync {new_merge_model_name} {merge_model_s3_pos}{new_merge_model_name}')
     os.system(f'rm {new_merge_model_name_complete_path}')
     os.system(f'rm {new_model_yaml_complete_path}')
 
     logger.info(f"output model path is {output_model_position}")
 
     return output_model_position
+
+
+def get_output_img_type(payload: dict):
+    try:
+        if not payload or 'alwayson_scripts' not in payload.keys() or not payload['alwayson_scripts']:
+            logger.debug("not using alwayson_scripts ,image type not set")
+            return None
+        # about animatediff out
+        if 'animatediff' in payload['alwayson_scripts'].keys() and payload['alwayson_scripts']['animatediff']:
+            if ('args' not in payload['alwayson_scripts']['animatediff']
+                    or not payload['alwayson_scripts']['animatediff']['args']
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]):
+                logger.debug("not using alwayson_scripts or args null,image type not set")
+                return None
+
+            if ('enable' not in payload['alwayson_scripts']['animatediff']['args'][0]
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]['enable']):
+                logger.debug("not using alwayson_scripts or not enable ,image type not set")
+                return None
+
+            if ('format' not in payload['alwayson_scripts']['animatediff']['args'][0]
+                    or not payload['alwayson_scripts']['animatediff']['args'][0]['format']):
+                logger.debug("not using alwayson_scripts or not set format ,image type not set")
+                return None
+            images_types = payload['alwayson_scripts']['animatediff']['args'][0]['format']
+            logger.debug(f"using alwayson_scripts ,image type set:{images_types}")
+            return images_types
+    except Exception as e:
+        logger.debug(f"get_output_img_type error:{e}")
+        return None
+
+
+def parse_constant(c: str) -> float:
+    if c == "NaN":
+        raise ValueError("NaN is not valid JSON")
+
+    if c == 'Infinity':
+        return sys.float_info.max
+
+    return float(c)
 
 
 def sagemaker_api(_, app: FastAPI):
@@ -152,9 +180,7 @@ def sagemaker_api(_, app: FastAPI):
         @return:
         """
         logger.info('-------invocation------')
-
-        def show_slim_dict(payload):
-            pass
+        logger.info(json.dumps(req.__dict__, default=str))
 
         with condition:
             try:
@@ -169,48 +195,46 @@ def sagemaker_api(_, app: FastAPI):
 
                 logger.info(f"task is {req.task}")
                 logger.info(f"models is {req.models}")
-                payload = {}
-                if req.param_s3:
-                    def parse_constant(c: str) -> float:
-                        if c == "NaN":
-                            raise ValueError("NaN is not valid JSON")
 
-                        if c == 'Infinity':
-                            return sys.float_info.max
+                payload_string = None
+                # if it has payload_string, use it
+                if req.payload_string:
+                    payload_string = req.payload_string
+                elif req.param_s3:
+                    payload_string = read_from_s3(req.param_s3)
 
-                        return float(c)
-
-                    payload = json.loads(read_from_s3(req.param_s3), parse_constant=parse_constant)
-                    show_slim_dict(payload)
-
-                logger.info(f"extra_single_payload is: ")
-                extra_single_payload = {} if req.extras_single_payload is None else json.loads(
-                    req.extras_single_payload.json())
-                show_slim_dict(extra_single_payload)
-                logger.info(f"extra_batch_payload is: ")
-                extra_batch_payload = {} if req.extras_batch_payload is None else json.loads(
-                    req.extras_batch_payload.json())
-                show_slim_dict(extra_batch_payload)
-                logger.info(f"interrogate_payload is: ")
-                interrogate_payload = {} if req.interrogate_payload is None else json.loads(req.interrogate_payload.json())
-                show_slim_dict(interrogate_payload)
+                payload = json.loads(payload_string, parse_constant=parse_constant)
 
                 if req.task == 'txt2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img start !!!!!!!!")
                     checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    image_type = get_output_img_type(payload)
+                    logger.debug(f"image_type:{image_type}")
+                    resp = {}
+                    if image_type:
+                        logger.debug(f"set output_img_type:{image_type}")
+                        resp["output_img_type"] = image_type
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/txt2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img end !!!!!!!! {len(response.json())}")
-                    return response.json()
+                    resp.update(response.json())
+                    return resp
                 elif req.task == 'img2img':
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img start!!!!!!!!")
                     checkspace_and_update_models(req.models)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ txt2img models update !!!!!!!!")
+                    image_type = get_output_img_type(payload)
+                    logger.debug(f"image_type:{image_type}")
+                    resp = {}
+                    if image_type:
+                        logger.debug(f"set output_img_type:{image_type}")
+                        resp["output_img_type"] = image_type
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/img2img',
                                              json=payload)
                     logger.info(f"{threading.current_thread().ident}_{threading.current_thread().name}_______ img2img end !!!!!!!!{len(response.json())}")
-                    return response.json()
+                    resp.update(response.json())
+                    return resp
                 elif req.task == 'interrogate_clip' or req.task == 'interrogate_deepbooru':
                     response = requests.post(url=f'http://0.0.0.0:8080/sdapi/v1/interrogate',
                                              json=json.loads(req.interrogate_payload.json()))
@@ -342,7 +366,7 @@ def sagemaker_api(_, app: FastAPI):
     def ping():
         return {'status': 'Healthy'}
 
-import hashlib
+
 def md5(fname):
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -350,12 +374,14 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+
 def get_file_md5_dict(path):
     file_dict = {}
     for root, dirs, files in os.walk(path):
         for file in files:
             file_dict[file] = md5(os.path.join(root, file))
     return file_dict
+
 
 def move_model_to_tmp(_, app: FastAPI):
     # os.system("rm -rf models")

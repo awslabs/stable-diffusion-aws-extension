@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import {
   aws_apigateway,
-  aws_apigateway as apigw,
   aws_dynamodb,
   aws_iam,
   aws_lambda,
@@ -22,7 +21,6 @@ export interface ListInferencesApiProps {
   inferenceJobTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  authorizer: aws_apigateway.IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -36,7 +34,6 @@ export class ListInferencesApi {
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly authorizer: aws_apigateway.IAuthorizer;
   private readonly logLevel: CfnParameter;
 
 
@@ -48,7 +45,6 @@ export class ListInferencesApi {
     this.multiUserTable = props.multiUserTable;
     this.inferenceJobTable = props.inferenceJobTable;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
@@ -90,15 +86,15 @@ export class ListInferencesApi {
   }
 
   private listAllSageMakerInferenceJobApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/inferences`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'list_inferences.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
@@ -108,15 +104,15 @@ export class ListInferencesApi {
       layers: [this.layer],
     });
 
-    const listSagemakerInferencesIntegration = new apigw.LambdaIntegration(
+    const listInferencesIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, listSagemakerInferencesIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, listInferencesIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
     });
   }
 }

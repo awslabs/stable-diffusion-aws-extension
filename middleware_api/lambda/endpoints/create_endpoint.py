@@ -1,25 +1,28 @@
 import json
 import logging
 import os
+import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-import re
+
 import boto3
 
+from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import bad_request, accepted, forbidden
+from common.excepts import BadRequestException
+from common.response import bad_request, accepted
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
-from libs.utils import get_permissions_by_username
+from libs.utils import response_error, permissions_check
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
-user_table = os.environ.get('MULTI_USER_TABLE')
 aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
+ECR_IMAGE_TAG = os.environ.get("ECR_IMAGE_TAG")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -31,55 +34,83 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 @dataclass
 class CreateEndpointEvent:
     instance_type: str
-    initial_instance_count: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
     creator: str
+    initial_instance_count: str
+    max_instance_number: str = "1"
+    min_instance_number: str = "0"
     endpoint_name: str = None
     # real-time / serverless / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
+    custom_extensions: str = ""
+
+
+def check_custom_extensions(event: CreateEndpointEvent):
+    if event.custom_extensions:
+        logger.info(f"custom_extensions: {event.custom_extensions}")
+        extensions_array = re.split('[ ,\n]+', event.custom_extensions)
+        extensions_array = list(set(extensions_array))
+        extensions_array = list(filter(None, extensions_array))
+        # make extensions_array to string again
+        event.custom_extensions = ','.join(extensions_array)
+
+        logger.info(f"formatted custom_extensions: {event.custom_extensions}")
+
+        if len(extensions_array) >= 3:
+            raise BadRequestException(message="custom_extensions should be at most 3")
+
+    return event
+
 
 def get_docker_image_uri(event: CreateEndpointEvent):
-    image_url = INFERENCE_ECR_IMAGE_URL
-
+    # if it has custom extensions, then start from file image
     if event.custom_docker_image_uri:
-        image_url = event.custom_docker_image_uri
+        return event.custom_docker_image_uri
 
-        if aws_region.startswith('cn-'):
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com\.cn)/([^/]+)/([^:]+):(.+)$'
-        else:
-            pattern = rf'^([a-zA-Z0-9][a-zA-Z0-9.-]*\.dkr\.ecr\.{aws_region}\.amazonaws\.com)/([^/]+)/([^:]+):(.+)$'
+    return INFERENCE_ECR_IMAGE_URL
 
-        if not re.match(pattern, image_url):
-            raise Exception(f"Invalid docker image uri {image_url}")
-
-    return image_url
 
 # POST /endpoints
 def handler(raw_event, ctx):
-    logger.info(f"Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-    event = CreateEndpointEvent(**json.loads(raw_event['body']))
-
-    if event.endpoint_type == EndpointType.Serverless.value:
-        return bad_request(message="Serverless endpoint is not supported yet")
-
-    if event.endpoint_type == EndpointType.RealTime.value and event.autoscaling_enabled:
-        return bad_request(message="Autoscaling is not supported for real-time endpoint")
-
-    endpoint_id = str(uuid.uuid4())
-    short_id = endpoint_id[:7]
-
-    if event.endpoint_name:
-        short_id = event.endpoint_name
-
-    endpoint_type = event.endpoint_type.lower()
-    model_name = f"esd-model-{endpoint_type}-{short_id}"
-    endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
-    endpoint_name = f"esd-{endpoint_type}-{short_id}"
-
     try:
+        logger.info(json.dumps(raw_event))
+        event = CreateEndpointEvent(**json.loads(raw_event['body']))
+
+        if event.custom_extensions and event.custom_docker_image_uri:
+            raise BadRequestException(message="custom_extensions and custom_docker_image_uri cannot be used together")
+
+        permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE])
+
+        if event.endpoint_type not in EndpointType.List.value:
+            raise BadRequestException(message=f"{event.endpoint_type} endpoint is not supported yet")
+
+        if int(event.initial_instance_count) < 1:
+            raise BadRequestException(f"initial_instance_count should be at least 1: {event.endpoint_name}")
+
+        if event.autoscaling_enabled:
+            if event.endpoint_type == EndpointType.RealTime.value and int(event.min_instance_number) < 1:
+                raise BadRequestException(
+                    f"min_instance_number should be at least 1 for real-time endpoint: {event.endpoint_name}")
+
+            if event.endpoint_type == EndpointType.Async.value and int(event.min_instance_number) < 0:
+                raise BadRequestException(
+                    f"min_instance_number should be at least 0 for async endpoint: {event.endpoint_name}")
+
+        event = check_custom_extensions(event)
+
+        endpoint_id = str(uuid.uuid4())
+        short_id = endpoint_id[:7]
+
+        if event.endpoint_name:
+            short_id = event.endpoint_name
+
+        endpoint_type = event.endpoint_type.lower()
+        model_name = f"esd-model-{endpoint_type}-{short_id}"
+        endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
+        endpoint_name = f"esd-{endpoint_type}-{short_id}"
+
         image_url = get_docker_image_uri(event)
 
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
@@ -88,13 +119,6 @@ def handler(raw_event, ctx):
 
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
-
-        # check if roles have already linked to an endpoint?
-        creator_permissions = get_permissions_by_username(ddb_service, user_table, event.creator)
-        if 'sagemaker_endpoint' not in creator_permissions or \
-                ('all' not in creator_permissions['sagemaker_endpoint'] and 'create' not in creator_permissions[
-                    'sagemaker_endpoint']):
-            return forbidden(message=f"Creator {event.creator} has no permission to create Sagemaker")
 
         endpoint_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
         for endpoint_row in endpoint_rows:
@@ -106,7 +130,7 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id)
+        _create_sagemaker_model(model_name, image_url, model_data_url, endpoint_name, endpoint_id, event)
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
@@ -139,12 +163,14 @@ def handler(raw_event, ctx):
             endpoint_name=endpoint_name,
             startTime=str(datetime.now()),
             endpoint_status=EndpointStatus.CREATING.value,
-            max_instance_number=event.initial_instance_count,
             autoscaling=event.autoscaling_enabled,
             owner_group_or_role=event.assign_to_roles,
             current_instance_count="0",
             instance_type=instance_type,
             endpoint_type=event.endpoint_type,
+            min_instance_number=event.min_instance_number,
+            max_instance_number=event.max_instance_number,
+            custom_extensions=event.custom_extensions
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
@@ -155,22 +181,23 @@ def handler(raw_event, ctx):
             data=data
         )
     except Exception as e:
-        logger.error(e)
-        return bad_request(message=str(e))
+        return response_error(e)
 
 
-def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endpoint_name, endpoint_id):
+def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
-            'EndpointID': 'OUR_ID',
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
             'BUCKET_NAME': S3_BUCKET_NAME,
-            'INSTANCE_TYPE': instance_type,
+            'IMAGE_URL': image_url,
+            'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
+            'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
+            'ECR_IMAGE_TAG': ECR_IMAGE_TAG,
         },
     }
 
@@ -184,16 +211,22 @@ def _create_sagemaker_model(name, image_url, model_data_url, instance_type, endp
     logger.info(f"Successfully created model resource: {response}")
 
 
-def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
-                                        instance_type):
-    production_variants = [
+def get_production_variants(model_name, instance_type, initial_instance_count):
+    return [
         {
             'VariantName': 'prod',
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type
+            'InstanceType': instance_type,
+            "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 600,  # Specify the health checkup timeout in seconds
         }
     ]
+
+
+def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
+                                        instance_type):
+    production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
 
     logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
 
@@ -238,14 +271,7 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
         }
     }
 
-    production_variants = [
-        {
-            'VariantName': 'prod',
-            'ModelName': model_name,
-            'InitialInstanceCount': initial_instance_count,
-            'InstanceType': instance_type
-        }
-    ]
+    production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
 
     logger.info(f"Creating endpoint configuration AsyncInferenceConfig: {async_inference_config}")
     logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")

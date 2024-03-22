@@ -1,7 +1,6 @@
-import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
+import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
-  IAuthorizer,
   JsonSchemaType,
   JsonSchemaVersion,
   LambdaIntegration,
@@ -22,7 +21,6 @@ export interface DeleteEndpointsApiProps {
   multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  authorizer: IAuthorizer;
   logLevel: CfnParameter;
 }
 
@@ -37,7 +35,6 @@ export class DeleteEndpointsApi {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly authorizer: IAuthorizer;
   private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
@@ -47,7 +44,6 @@ export class DeleteEndpointsApi {
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
-    this.authorizer = props.authorizer;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
@@ -100,6 +96,8 @@ export class DeleteEndpointsApi {
       effect: Effect.ALLOW,
       actions: [
         'application-autoscaling:DeregisterScalableTarget',
+        'cloudwatch:DeleteAlarms',
+        'cloudwatch:DescribeAlarms',
       ],
       resources: [
         '*',
@@ -138,13 +136,9 @@ export class DeleteEndpointsApi {
             minItems: 1,
             maxItems: 10,
           },
-          username: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_name_list',
-          'username',
         ],
       },
       contentType: 'application/json',
@@ -159,15 +153,15 @@ export class DeleteEndpointsApi {
   }
 
   private deleteEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_9,
+      runtime: Runtime.PYTHON_3_10,
       index: 'delete_endpoints.py',
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
@@ -184,10 +178,8 @@ export class DeleteEndpointsApi {
       },
     );
 
-
     this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      authorizer: this.authorizer,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,

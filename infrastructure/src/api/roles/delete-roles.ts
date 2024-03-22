@@ -67,6 +67,8 @@ export class DeleteRolesApi {
         'dynamodb:UpdateItem',
         // delete role
         'dynamodb:DeleteItem',
+        // scan users
+        'dynamodb:Scan',
       ],
       resources: [
         this.multiUserTable.tableArn,
@@ -135,12 +137,12 @@ export class DeleteRolesApi {
       {
         entry: `${this.src}/roles`,
         architecture: Architecture.X86_64,
-        runtime: Runtime.PYTHON_3_9,
+        runtime: Runtime.PYTHON_3_10,
         index: 'delete_roles.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
-        memorySize: 1024,
+        memorySize: 2048,
         environment: {
           MULTI_USER_TABLE: this.multiUserTable.tableName,
           LOG_LEVEL: this.logLevel.valueAsString,
