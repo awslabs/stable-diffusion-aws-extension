@@ -4,6 +4,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
+import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
@@ -57,8 +58,8 @@ export class Middleware extends Stack {
 
     const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
-      description: 'Inference Public ECR Image tag, example: stable|dev',
-      default: 'dev',
+      description: 'Inference Public ECR Image tag, example: 1.5.0|dev',
+      default: ECR_IMAGE_TAG,
     });
 
     const logLevel = new CfnParameter(this, 'LogLevel', {
