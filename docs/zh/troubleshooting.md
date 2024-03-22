@@ -13,3 +13,9 @@
 当您的系统默认使用Python 3.9，而Ubuntu 20.04使用的是Python 3.8时，会出现此错误。用户可以使用`sudo apt install python3.8-venv`安装venv包，以显式地指定Python的完整版本。
 
 
+**错误： 我在使用webUI时，右上角出现Error提示**
+
+出现webUI右上角类似Connection Error提示，基本判定由于开源项目webUI自行挂了，可以通过手动重启webUI来完成。手动重启按钮推荐使用**Restart webUI**按钮来完成。 
+![Restart webUI](./images/restart_UI.png)
+
+

@@ -27,3 +27,5 @@ sudo systemctl restart sd-webui
 ## API 推理调试器 日志
 
 ![debugger_log](../images/api_debugger_log.png)
+
+> **提示**: 因为postman发送请求会携带自己的信息，导致签名错误，建议直接使用代码请求。或者查看界面上的API。
