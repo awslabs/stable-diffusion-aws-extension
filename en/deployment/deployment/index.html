@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -674,6 +674,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../template/" class="md-nav__link">
         
   
@@ -1035,11 +1056,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1258,6 +1279,27 @@
             API Call
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1557,34 +1599,16 @@
 <p class="admonition-title">Notice</p>
 <p>This solution provides two usage options: through UI interface and by directly calling the backend API. Step 0 only needs to be executed if the user intends to use the UI interface. This step involves installing another open-source project Stable Diffusion webUI, allowing business operations to be conducted through the webUI.</p>
 </div>
-<p>。</p>
 <h2 id="deployment-steps">Deployment steps</h2>
 <h3 id="step-0-linux-deploy-stable-diffusion-webui-linux">Step 0 - Linux: Deploy Stable Diffusion WebUI (Linux).</h3>
 <ol>
-<li>
-<p>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml" target="_blank">WebUI on EC2</a> to launch the AWS CloudFormation template.</p>
-</li>
-<li>
-<p>On the Stacks page, choose <strong>Create stack</strong>, and then choose <strong>With new resources (standard)</strong>.</p>
-</li>
-<li>
-<p>On the <strong>Specify template</strong> page, choose <strong>Template is ready</strong>, choose <strong>Upload a template file</strong>, and then browse for the template that is downloaded in step 1, and then choose <strong>Next</strong>.</p>
-</li>
-<li>
-<p>On the <strong>Specify stack details</strong> page, type a stack name in the Stack name box, then choose <strong>Next</strong>.</p>
-</li>
-<li>
-<p>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</p>
-</li>
-<li>
-<p>On the <strong>Review</strong> page, review the details of your stack, and choose <strong>Submit</strong>.</p>
-</li>
-<li>
-<p>Wait until the stack is created.</p>
-</li>
-<li>
-<p>Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the <strong>WebUIURL</strong> value, note you need to wait an extra 5 minutes to wait for the internal setup complete after the stack been created successfully.</p>
-</li>
+<li>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml" target="_blank">WebUI on EC2</a> to create the stack.</li>
+<li>On the <strong>Create Stack</strong> page, choose <strong>Next</strong>.</li>
+<li>On the <strong>Specify stack details</strong> page, type a stack name in the Stack name box, adjust parameters as need, then choose <strong>Next</strong>.</li>
+<li>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</li>
+<li>On the <strong>Review</strong> page, review the details of your stack, check capabilities as required, and choose <strong>Submit</strong>.</li>
+<li>Wait until the stack is created.</li>
+<li>Find the output value of the CloudFormation stack, and navigate to the WebUI by clicking the link in the <strong>WebUIURL</strong> value, note you need to wait an extra 30 minutes to wait for the internal setup complete after the stack been created successfully.</li>
 </ol>
 <h3 id="step-0-windows-deploy-stable-diffusion-webui-windows">Step 0 - Windows: Deploy Stable Diffusion WebUI (Windows).</h3>
 <ol>
@@ -1682,7 +1706,7 @@ After successful stack creation, you can find relevant information in the **Outp
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

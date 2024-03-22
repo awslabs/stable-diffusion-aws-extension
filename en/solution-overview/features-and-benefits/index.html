@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -728,6 +728,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -984,11 +1005,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1207,6 +1228,27 @@
             API Call
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1453,17 +1495,17 @@
 <tbody>
 <tr>
 <td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui" target="_blank">Stable Diffusion WebUI</a></td>
-<td>V1.7.0</td>
-<td>Support Stable Diffusion XL 1.0 and refiner</td>
+<td>V1.8.0</td>
+<td>Support LCM as official sampler, SDXL-Inpaint, etc</td>
 </tr>
 <tr>
 <td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui" target="_blank">img2img</a></td>
-<td>V1.7.0</td>
+<td>V1.8.0</td>
 <td>Support all features except batch</td>
 </tr>
 <tr>
 <td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui" target="_blank">txt2img</a></td>
-<td>V1.7.0</td>
+<td>V1.8.0</td>
 <td></td>
 </tr>
 <tr>
@@ -1477,24 +1519,29 @@
 <td>Support SDXL + ControlNet Inference</td>
 </tr>
 <tr>
-<td><a href="https://github.com/d8ahazard/sd_dreambooth_extension" target="_blank">Dreambooth</a></td>
-<td>V1.0.14</td>
-<td></td>
-</tr>
-<tr>
 <td><a href="https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git" target="_blank">Tiled Diffusion &amp; VAE</a></td>
 <td>f9f8073e64f4e682838f255215039ba7884553bf</td>
 <td></td>
 </tr>
 <tr>
+<td><a href="https://github.com/Gourieff/sd-webui-reactor{:target=&quot;_blank&quot;}">ReActor for Stable Diffusion</a></td>
+<td>0.6.1</td>
+<td></td>
+</tr>
+<tr>
 <td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui" target="_blank">Extras</a></td>
-<td>V1.7.0</td>
+<td>V1.8.0</td>
 <td>API</td>
 </tr>
 <tr>
 <td><a href="https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git" target="_blank">rembg</a></td>
 <td>3d9eedbbf0d585207f97d5b21e42f32c0042df70</td>
 <td>API</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bmaltais/kohya_ss" target="_blank">kohya_ss</a></td>
+<td></td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -1504,7 +1551,7 @@
 <p><strong>Convenient Installation</strong>: This solution leverages CloudFormation for easy deployment of AWS middleware. Combined with the installation of the native Stable Diffusion WebUI (WebUI) features and third-party extensions, users can quickly utilize Amazon SageMaker's cloud resources for inference, training and finetuning tasks.</p>
 </li>
 <li>
-<p><strong>Community Native</strong>: This solution is implemented as an extension, allowing users to seamlessly use their existing WebUI without any changes. Additionally, the solution's code is open source and follows a non-intrusive design, enabling users to keep up with community-related feature iterations, such as popular plugins like Dreambooth, ControlNet, and LoRa.</p>
+<p><strong>Community Native</strong>: This solution is implemented as an extension, allowing users to seamlessly use their existing WebUI without any changes. Additionally, the solution's code is open source and follows a non-intrusive design, enabling users to keep up with community-related feature iterations, such as popular plugins like ControlNet, and LoRa.</p>
 </li>
 <li>
 <p><strong>High Scalability</strong>: This solution decouples the WebUI interface from the backend, allowing the WebUI to launch on supported terminals without GPU restrictions. Existing training, inference, and other tasks can be migrated to Amazon SageMaker through the provided extension functionalities, providing users with elastic computing resources, cost reduction, flexibility, and scalability.</p>
@@ -1554,7 +1601,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

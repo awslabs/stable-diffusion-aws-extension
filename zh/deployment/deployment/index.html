@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -676,6 +676,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../template/" class="md-nav__link">
         
   
@@ -767,18 +788,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#0-linuxstable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#0-linux-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤0 - Linux：部署Stable Diffusion WebUI (Linux)。
+      步骤0 - Linux：部署 Stable Diffusion WebUI (Linux)。
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#0-windowsstable-diffusion-webui-windows" class="md-nav__link">
+  <a href="#0-windows-stable-diffusion-webui-windows" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤0 - Windows：部署Stable Diffusion WebUI (Windows)。
+      步骤0 - Windows：部署 Stable Diffusion WebUI (Windows)。
     </span>
   </a>
   
@@ -794,9 +815,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-api-urlapi-token" class="md-nav__link">
+  <a href="#2-api-url-api-token" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤2: 配置API Url和API Token
+      步骤2：配置 API URL 和 API Token
     </span>
   </a>
   
@@ -1037,11 +1058,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth指南
+    训练指南
   </span>
   
 
@@ -1268,6 +1289,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../developer-guide/api/1.4.0/" class="md-nav__link">
         
   
@@ -1484,18 +1526,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#0-linuxstable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#0-linux-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤0 - Linux：部署Stable Diffusion WebUI (Linux)。
+      步骤0 - Linux：部署 Stable Diffusion WebUI (Linux)。
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#0-windowsstable-diffusion-webui-windows" class="md-nav__link">
+  <a href="#0-windows-stable-diffusion-webui-windows" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤0 - Windows：部署Stable Diffusion WebUI (Windows)。
+      步骤0 - Windows：部署 Stable Diffusion WebUI (Windows)。
     </span>
   </a>
   
@@ -1511,9 +1553,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-api-urlapi-token" class="md-nav__link">
+  <a href="#2-api-url-api-token" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤2: 配置API Url和API Token
+      步骤2：配置 API URL 和 API Token
     </span>
   </a>
   
@@ -1548,47 +1590,30 @@
 <p>部署时间：约 20 分钟</p>
 <h2 id="_1">前提条件</h2>
 <!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
-<p>用户需要提前准备一台运行linux系统的电脑</p>
+<p>用户需要提前准备一台运行 Linux 系统的电脑。</p>
 <h2 id="_2">部署概述</h2>
 <p>在亚马逊云科技上部署本解决方案主要包括以下过程：</p>
 <ul>
 <li>步骤0：部署Stable Diffusion WebUI（若您没有部署过Stable Diffusion WebUI开源项目）。</li>
 <li>步骤1：部署本解决方案中间件。</li>
-<li>步骤2: 配置API Url和API Token。</li>
+<li>步骤2：配置API Url和API Token。</li>
 </ul>
 <div class="admonition important">
 <p class="admonition-title">提示</p>
 <p>本解决方案提供两种使用方法：通过UI界面及通过后端API直接调用。只有当用户需要通过UI界面使用时，需要执行步骤0，以安装另一开源项目Stable Diffusion webUI，从而可以通过webUI的方式进行业务操作。</p>
 </div>
 <h2 id="_3">部署步骤</h2>
-<h3 id="0-linuxstable-diffusion-webui-linux">步骤0 - Linux：部署Stable Diffusion WebUI (Linux)。</h3>
+<h3 id="0-linux-stable-diffusion-webui-linux">步骤0 - Linux：部署 Stable Diffusion WebUI (Linux)。</h3>
 <ol>
-<li>
-<p>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，进入<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml">WebUI on EC2</a>。</p>
-</li>
-<li>
-<p>在<strong>堆栈</strong>页面上，选择<strong>创建堆栈</strong>，然后选择<strong>使用新资源（标准）</strong>。</p>
-</li>
-<li>
-<p>在<strong>指定模板</strong>页面上，选择<strong>模板准备就绪</strong>，选择<strong>上传模板文件</strong>，选择步骤1中下载的模板，最后选择<strong>下一步</strong>。</p>
-</li>
-<li>
-<p>在<strong>指定堆栈名称和参数</strong>页面上，输入堆栈名称到堆栈名称框中，然后选择<strong>下一步</strong>。</p>
-</li>
-<li>
-<p>在<strong>设置堆栈选项</strong>页面上，选择<strong>下一步</strong>。</p>
-</li>
-<li>
-<p>在<strong>审核</strong>页面上，查看堆栈的详细信息，然后选择<strong>提交</strong>。</p>
-</li>
-<li>
-<p>等待堆栈创建完成。</p>
-</li>
-<li>
-<p>查找CloudFormation堆栈的输出值，并通过单击<strong>WebUIURL</strong>值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。</p>
-</li>
+<li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml">WebUI on EC2</a>。</li>
+<li>在<strong>创建堆栈</strong>页面，选择<strong>下一步</strong>。</li>
+<li>在<strong>指定堆栈名称和参数</strong>页面上，输入堆栈名称到堆栈名称框中，按需调整对应选项后，选择<strong>下一步</strong>。</li>
+<li>在<strong>设置堆栈选项</strong>页面上，选择<strong>下一步</strong>。</li>
+<li>在<strong>审核</strong>页面上，查看堆栈的详细信息，勾选<em>I acknowledge that AWS CloudFormation might create IAM resources.</em>，然后选择<strong>提交</strong>。</li>
+<li>等待堆栈创建完成。</li>
+<li>查找CloudFormation堆栈的输出值，并通过单击<strong>WebUIURL</strong>值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。</li>
 </ol>
-<h3 id="0-windowsstable-diffusion-webui-windows">步骤0 - Windows：部署Stable Diffusion WebUI (Windows)。</h3>
+<h3 id="0-windows-stable-diffusion-webui-windows">步骤0 - Windows：部署 Stable Diffusion WebUI (Windows)。</h3>
 <ol>
 <li>启动一台Windows Server，通过RDP登录。</li>
 <li>参考<a href="https://docs.aws.amazon.com/zh_cn/AWSEC2/latest/WindowsGuide/install-nvidia-driver.html">链接</a>安装NVIDIA驱动程序。</li>
@@ -1624,7 +1649,7 @@
 </div>
 </li>
 </ol>
-<h3 id="2-api-urlapi-token">步骤2: 配置API Url和API Token</h3>
+<h3 id="2-api-url-api-token">步骤2：配置 API URL 和 API Token</h3>
 <p>堆栈创建成功后，您可以参考<a href="../../user-guide/multi-user/">这里</a>进行后续配置工作。</p>
 <!-- 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
 
@@ -1682,7 +1707,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

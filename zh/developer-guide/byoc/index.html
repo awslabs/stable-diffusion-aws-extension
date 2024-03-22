@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -674,6 +674,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -930,11 +951,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth指南
+    训练指南
   </span>
   
 
@@ -1163,6 +1184,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/1.4.0/" class="md-nav__link">
         
   
@@ -1377,119 +1419,39 @@
 <h1 id="stable-diffusion-train-and-deploy-api">自定义容器镜像</h1>
 
 <h1 id="_1">概述</h1>
-<p>Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，您可以随时替换 SageMaker Endpoint 模型的容器镜像，也可以随时恢复到默认镜像。</p>
+<p>Stable Diffusion 亚马逊云科技插件解决方案具有极高的灵活性，您可以随时替换 SageMaker Endpoint 模型的容器镜像。</p>
 <p>为了实现这个能力，请按照以下步骤操作：</p>
 <ul>
 <li>第一步：构建容器镜像</li>
-<li>第二步：准备命令执行环境和权限</li>
-<li>第三步：将指定的 SageMaker Endpoint 模型镜像<strong>替换</strong>为您自己的容器镜像或<strong>恢复</strong>为默认镜像</li>
-<li>第四步：验证或诊断容器镜像是否正常工作</li>
+<li>第二步：使用自定义容器镜像创建 Endpoint</li>
+<li>第三步：验证或诊断容器镜像是否正常工作</li>
 </ul>
 <p><br></p>
 <h1 id="_2">准备容器镜像</h1>
 <p>您可自行构建容器镜像（<strong>强烈建议您在更换镜像前验证该镜像是否正常</strong>），验证后将镜像上传到和部署方案相同区域的 <a href="https://console.aws.amazon.com/ecr" target="_blank">Amazon ECR</a>
 中，详细请阅读 <a href="https://docs.aws.amazon.com/zh_cn/AmazonECR/latest/userguide/getting-started-cli.html" target="_blank">将 Amazon ECR 与 AWS CLI 结合使用</a>
 ，操作完成后，您将获得一个镜像 URI，如：</p>
-<div class="highlight"><pre><span></span><code><span class="m">123456789012</span>.dkr.ecr.cn-northwest-1.amazonaws.com.cn/your-image:latest
+<div class="highlight"><pre><span></span><code><span class="o">{</span>your_account_id<span class="o">}</span>.dkr.ecr.<span class="o">{</span>region<span class="o">}</span>.amazonaws.com/your-image:latest
 </code></pre></div>
 <p>Dockerfile 模板如下：</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Use a specific version for reproducibility</span>
-<span class="k">FROM</span><span class="w"> </span><span class="s">763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker</span>
+<div class="highlight"><pre><span></span><code><span class="c"># 建议在部署方案后，使用方案创建的 Image 作为基础镜像。</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">{your_account_id}.dkr.ecr.{region}.amazonaws.com/stable-diffusion-aws-extension/aigc-webui-inference:latest</span>
 
-<span class="c"># Set environment variables to non-interactive (this prevents some prompts)</span>
-<span class="k">ENV</span><span class="w"> </span><span class="nv">DEBIAN_FRONTEND</span><span class="o">=</span>non-interactive
-
-<span class="c"># Install system packages in a single RUN step to reduce image size</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span>-y<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>your-package<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
-
-<span class="c"># Set your entrypoint</span>
-<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/your/serve&quot;</span><span class="p">]</span>
+<span class="c"># 安装插件</span>
+<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/opt/ml/code/extensions/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>/opt/ml/code/extensions/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/**.git
 </code></pre></div>
 <p><br></p>
-<h1 id="_3">准备命令执行的权限环境</h1>
-<h2 id="_4">权限</h2>
-<p>请确保您的账户具备足够的权限，否则执行命令会因为权限不足而失败，请将该示例策略附加到您的 IAM 用户或角色，<strong>注意</strong>替换变量 <code>{Partition}</code>，<code>{Region}</code>  和 <code>{Account}</code> 为您自己的区域和账户：</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Statement&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StableDiffusionOnAWSExtensionEndpoint&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeEndpointConfig&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteEndpointConfig&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateEndpointConfig&quot;</span>
-<span class="w">      </span><span class="p">],</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:model/infer-model-*&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:endpoint/infer-endpoint-*&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:endpoint-config/infer-config-*&quot;</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;iam:PassRole&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arn:${Partition}:iam::${Account}:role/*createEndpoint*&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;application-autoscaling:DeregisterScalableTarget&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;*&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="_5">环境</h2>
-<p>关于执行后续命令的环境，有两种方式：</p>
-<ul>
-<li><strong>方式一（推荐）</strong>：打开并登录 <a href="https://docs.aws.amazon.com/zh_cn/cloudshell/latest/userguide/welcome.html" target="_blank">CloudShell</a> 更换为您方案部署的区域，如：} ，在终端初始化完成后执行命令，请将 {region<code>us-east-1</code><ul>
-<li>登录地址：https://{region}.console.aws.amazon.com/cloudshell/home</li>
-<li><img alt="CloudShell" src="../../images/CloudShell.png" /></li>
-</ul>
-</li>
-<li><strong>方式二</strong>：在您自己的环境中执行，您需要：<ul>
-<li>安装 <a href="https://curl.se/" target="_blank">CURL</a></li>
-<li>安装并配置 <a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html" target="_blank">AWS CLI</a></li>
-</ul>
-</li>
-</ul>
+<h1 id="endpoint">使用自定义容器镜像创建 Endpoint</h1>
+<p>创建名为 <code>byoc</code> 的角色，并将登陆用户添加至该角色，即可开启如下图功能：</p>
+<p><img alt="UpdateImage" src="../../images/byoc.png" /></p>
 <p><br></p>
-<h1 id="_6">使用自定义容器镜像</h1>
-<p>准备好镜像后，您只需替换以下命令中的变量，并执行命令，即可完成更换镜像：</p>
-<ul>
-<li><strong>{region}</strong>：方案部署的区域，如：<code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>：Endpoint 名称，如：<code>infer-endpoint-111111</code></li>
-<li><strong>{image-uri}</strong>：容器镜像 URI</li>
-</ul>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span><span class="o">{</span>region<span class="o">}</span><span class="w"> </span><span class="o">{</span>endpoint-name<span class="o">}</span><span class="w"> </span><span class="o">{</span>image-uri<span class="o">}</span>
-</code></pre></div>
-<p><br></p>
-<p>效果如下：</p>
-<p><img alt="UpdateImage" src="../../images/UpdateImage.png" /></p>
-<p><br></p>
-<h1 id="_7">恢复默认镜像</h1>
-<p>如欲恢复默认镜像，请替换以下命令中的变量，并执行命令，即可恢复到默认镜像：</p>
-<ul>
-<li><strong>{region}</strong>：方案部署的区域，如：<code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>：Endpoint 名称，如：<code>infer-endpoint-111111</code></li>
-</ul>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span><span class="o">{</span>region<span class="o">}</span><span class="w"> </span><span class="o">{</span>endpoint-name<span class="o">}</span><span class="w"> </span>default
-</code></pre></div>
-<p><br></p>
-<h1 id="_8">验证或诊断容器镜像</h1>
+<h1 id="_3">验证或诊断容器镜像</h1>
 <p>强烈建议您在更换镜像后验证或诊断容器镜像是否正常工作，如需查看日志，您可进入 Endpoint 的日志组查看日志：</p>
 <ul>
 <li><strong>{region}</strong>：方案部署的区域，如：<code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>：Endpoint 名称，如：<code>infer-endpoint-111111</code></li>
+<li><strong>{endpoint-name}</strong>：Endpoint 名称，如：<code>esd-type-111111</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code>https://<span class="o">{</span>region<span class="o">}</span>.console.aws.amazon.com/cloudwatch/home?region<span class="o">={</span>region<span class="o">}</span><span class="c1">#logsV2:log-groups$3FlogGroupNameFilter$3D{endpoint-name}</span>
 </code></pre></div>
@@ -1540,7 +1502,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -676,6 +676,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../template/" class="md-nav__link">
         
   
@@ -788,9 +809,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-linuxstable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#1-linux-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤1 - Linux：更新Stable Diffusion WebUI (Linux)
+      步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)
     </span>
   </a>
   
@@ -1046,11 +1067,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth指南
+    训练指南
   </span>
   
 
@@ -1277,6 +1298,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../developer-guide/api/1.4.0/" class="md-nav__link">
         
   
@@ -1493,9 +1535,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-linuxstable-diffusion-webui-linux" class="md-nav__link">
+  <a href="#1-linux-stable-diffusion-webui-linux" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤1 - Linux：更新Stable Diffusion WebUI (Linux)
+      步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)
     </span>
   </a>
   
@@ -1567,7 +1609,7 @@
 <h2 id="_1">前提条件</h2>
 <!-- 用户需提前部署好本地的[Stable Diffusion WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。 -->
 <ul>
-<li>用户需要提前准备一台运行linux系统的电脑。</li>
+<li>用户需要提前准备一台运行 Linux 系统的电脑。</li>
 <li>安装并且配置好了<a href="https://aws.amazon.com/cli/">aws cli</a>。</li>
 <li>部署过上一个版本的Stable Diffusion Webui AWS插件。</li>
 </ul>
@@ -1580,7 +1622,7 @@
 <li>步骤4：更新API Url和API Token。</li>
 </ul>
 <h2 id="_3">部署步骤</h2>
-<h3 id="1-linuxstable-diffusion-webui-linux">步骤1 - Linux：更新Stable Diffusion WebUI (Linux)</h3>
+<h3 id="1-linux-stable-diffusion-webui-linux">步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)</h3>
 <ol>
 <li>从 <a href="https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/extension-for-stable-diffusion-on-aws/ec2.yaml" target="_blank">链接</a> 下载CloudFormation模板。</li>
 <li>登录到<a href="https://console.aws.amazon.com/" target="_blank">AWS管理控制台</a>，进入<a href="https://console.aws.amazon.com/cloudformation/" target="_blank">CloudFormation控制台</a>。</li>
@@ -1590,7 +1632,7 @@
 <li>在<strong>设置堆栈选项</strong>页面上，选择<strong>下一步</strong>。</li>
 <li>在<strong>审核</strong>页面上，查看堆栈的详细信息，然后选择<strong>提交</strong>。</li>
 <li>等待堆栈创建完成。</li>
-<li>查找CloudFormation堆栈的输出值，并通过单击<strong>WebUIURL</strong>值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待5分钟以完成内部设置。</li>
+<li>查找CloudFormation堆栈的输出值，并通过单击<strong>WebUIURL</strong>值中的链接导航到Web界面，注意，在堆栈成功创建后，需要额外等待 30 分钟以完成内部设置。</li>
 </ol>
 <h3 id="1-windows-stable-diffusion-webui-windows">步骤1 - Windows：更新 Stable Diffusion WebUI (Windows)</h3>
 <ol>
@@ -1720,7 +1762,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

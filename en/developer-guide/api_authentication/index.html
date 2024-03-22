@@ -14,11 +14,11 @@
         <link rel="prev" href="../api_debugger/">
       
       
-        <link rel="next" href="../api/1.4.0/">
+        <link rel="next" href="../api/1.5.0/">
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -62,6 +62,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#security-authentication" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -667,6 +672,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -923,11 +949,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1104,6 +1130,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    API Authentication
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1113,6 +1150,50 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#security-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      User Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-140-or-earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version 1.4.0 or earlier
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1156,6 +1237,27 @@
             API Call
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1345,6 +1447,41 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#security-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      User Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version-140-or-earlier" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version 1.4.0 or earlier
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1363,23 +1500,27 @@
 
   <h1>API Authentication</h1>
 
-<p><strong>Security Authentication</strong>
-All APIs use API keys for security verification, and all API requests should include your API key in the HTTP header. The <code>x-api-key</code> is as follows:
+<h2 id="security-authentication">Security Authentication</h2>
+<p>All APIs use API keys for security verification, and all API requests should include your API key in the HTTP header. The <code>x-api-key</code> is as follows:
 <div class="highlight"><pre><span></span><code>X-api-key: xxxxxxxxxxxxxxxxxxxx
+</code></pre></div></p>
+<h2 id="user-authentication">User Authentication</h2>
+<p>Please include <code>username</code> in the HTTP header. For example, if the username configured on WebUI is <code>admin</code>, then:</p>
+<div class="highlight"><pre><span></span><code>username: admin
 </code></pre></div>
-<strong>User Authentication</strong></p>
 <blockquote>
-<p>Tip: User authentication will be removed in the next version.</p>
+<p>After the API is deployed, a user named <code>api</code> is built in. If you do not use the WebUI for initialization or create a new user through the API, you can use <code>api</code> as the username.</p>
 </blockquote>
-<p>In addition to using <code>x-api-key</code> as basic security verification, some APIs also require user verification. Your <code>Authorization</code> should be included in the HTTP header as follows:</p>
-<p><div class="highlight"><pre><span></span><code>Authorization: Bearer YOU_TOKEN
+<h2 id="version-140-or-earlier">Version 1.4.0 or earlier</h2>
+<p>Your <code>Authorization</code> should be included in the HTTP header as follows:</p>
+<div class="highlight"><pre><span></span><code>Authorization: Bearer {TOKEN}
 </code></pre></div>
-Token algorithm (Python example):
+<p>Token algorithm (Python example):</p>
 <div class="highlight"><pre><span></span><code><span class="n">Import</span> <span class="n">base64</span>
 <span class="n">Username</span><span class="o">=</span><span class="s2">&quot;your username on webui&quot;</span>
 <span class="n">Token</span><span class="o">=</span><span class="n">base64</span><span class="o">.</span><span class="n">b16encode</span> <span class="p">(</span><span class="n">username</span><span class="o">.</span> <span class="n">encode</span> <span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span> <span class="n">decode</span> <span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
 </code></pre></div>
-For example, if the username configured on WebUI is <code>admin</code>, then:
+<p>For example, if the username configured on WebUI is <code>admin</code>, then:
 <div class="highlight"><pre><span></span><code>Authorization: Bearer 61646D696E
 </code></pre></div></p>
 
@@ -1426,7 +1567,7 @@ For example, if the username configured on WebUI is <code>admin</code>, then:
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

@@ -11,14 +11,14 @@
         <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api/1.4.0/">
       
       
-        <link rel="prev" href="../../api_authentication/">
+        <link rel="prev" href="../1.5.0/">
       
       
         <link rel="next" href="../../oas/">
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -672,6 +672,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../deployment/template/" class="md-nav__link">
         
   
@@ -928,11 +949,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1155,6 +1176,27 @@
             API Call
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2397,7 +2439,6 @@ Update Checkpoint</p>
 <p>Body Parameters</p>
 </blockquote>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;checkpoint_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;5b47fc8f-c1b0-47ad-9d85-ad0f08526e28&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Active&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;multi_parts_tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;v1-5-pruned-emaonly.safetensors&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
@@ -2450,13 +2491,6 @@ Update Checkpoint</p>
 <td>object</td>
 <td>no</td>
 <td>none</td>
-</tr>
-<tr>
-<td>» checkpoint_id</td>
-<td>body</td>
-<td>string</td>
-<td>yes</td>
-<td>模型文件ID（Checkpoint ID）</td>
 </tr>
 <tr>
 <td>» status</td>
@@ -2968,6 +3002,7 @@ Create Endpoint</p>
 </blockquote>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">&quot;endpoint_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;test&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;endpoint_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Async&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;instance_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ml.g5.2xlarge&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;initial_instance_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">&quot;autoscaling_enabled&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
@@ -3704,7 +3739,7 @@ Start inference job</p>
 <span class="w">      </span><span class="nt">&quot;inference_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;f3421ce5-9ab9-40a2-b33b-3f126de70a52&quot;</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;inprogress&quot;</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">&quot;endpoint_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;esd-async-97fce5e&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;output_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;s3://elonniu/sagemaker_output/48159016-c040-4b49-8a1c-b57445946918.out&quot;</span>
+<span class="w">      </span><span class="nt">&quot;output_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;s3://xxxx/sagemaker_output/48159016-c040-4b49-8a1c-b57445946918.out&quot;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">  </span><span class="p">},</span>
 <span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Accepted&quot;</span>
@@ -4837,7 +4872,7 @@ Gets a specific inference job</p>
     <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

@@ -1,14 +1,16 @@
 
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="zh" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="Stable Diffusion 亚马逊云科技插件解决方案实施指南">
       
       
-        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/dreambooth-guide/">
+      
+        <link rel="canonical" href="https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/training-guide/">
       
       
         <link rel="prev" href="../controlnet-guide/">
@@ -18,15 +20,15 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
-        <title>Dreambooth guide - Extension for Stable Diffusion on AWS</title>
+        <title>训练指南 - Stable Diffusion 亚马逊云科技插件解决方案</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -64,8 +66,8 @@
     <div data-md-component="skip">
       
         
-        <a href="#dreambooth-guide" class="md-skip">
-          Skip to content
+        <a href="#_1" class="md-skip">
+          跳转至
         </a>
       
     </div>
@@ -81,8 +83,8 @@
       
 
 <header class="md-header" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Extension for Stable Diffusion on AWS" class="md-header__button md-logo" aria-label="Extension for Stable Diffusion on AWS" data-md-component="logo">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="Stable Diffusion 亚马逊云科技插件解决方案" class="md-header__button md-logo" aria-label="Stable Diffusion 亚马逊云科技插件解决方案" data-md-component="logo">
       
   <img src="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico" alt="logo">
 
@@ -95,13 +97,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Extension for Stable Diffusion on AWS
+            Stable Diffusion 亚马逊云科技插件解决方案
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Dreambooth guide
+              训练指南
             
           </span>
         </div>
@@ -115,7 +117,7 @@
       <div class="md-header__option">
   <div class="md-select">
     
-    <button class="md-header__button md-icon" aria-label="Select language">
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.52 17.52 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04M18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12m-2.62 7 1.62-4.33L19.12 17h-3.24Z"/></svg>
     </button>
     <div class="md-select__inner">
@@ -147,16 +149,16 @@
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
         
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
-      <nav class="md-search__options" aria-label="Search">
+      <nav class="md-search__options" aria-label="查找">
         
-        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
@@ -167,7 +169,7 @@
       <div class="md-search__scrollwrap" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
-            Initializing search
+            正在初始化搜索引擎
           </div>
           <ol class="md-search-result__list" role="presentation"></ol>
         </div>
@@ -178,7 +180,7 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/awslabs/stable-diffusion-aws-extension" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/awslabs/stable-diffusion-aws-extension" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
@@ -199,7 +201,7 @@
         
           
             
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
   <div class="md-grid">
     <ul class="md-tabs__list">
       
@@ -223,7 +225,7 @@
         <a href="../.." class="md-tabs__link">
           
   
-  Implementation Guide
+  实施指南
 
         </a>
       </li>
@@ -254,18 +256,18 @@
   
 
 
-<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Extension for Stable Diffusion on AWS" class="md-nav__button md-logo" aria-label="Extension for Stable Diffusion on AWS" data-md-component="logo">
+    <a href="../.." title="Stable Diffusion 亚马逊云科技插件解决方案" class="md-nav__button md-logo" aria-label="Stable Diffusion 亚马逊云科技插件解决方案" data-md-component="logo">
       
   <img src="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico" alt="logo">
 
     </a>
-    Extension for Stable Diffusion on AWS
+    Stable Diffusion 亚马逊云科技插件解决方案
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/awslabs/stable-diffusion-aws-extension" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/awslabs/stable-diffusion-aws-extension" title="前往仓库" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
@@ -307,7 +309,7 @@
             
   
   <span class="md-ellipsis">
-    Implementation Guide
+    实施指南
   </span>
   
 
@@ -317,7 +319,7 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
-            Implementation Guide
+            实施指南
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -345,7 +347,7 @@
             
   
   <span class="md-ellipsis">
-    Solution Overview
+    方案概述
   </span>
   
 
@@ -355,7 +357,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_1">
             <span class="md-nav__icon md-icon"></span>
-            Solution Overview
+            方案概述
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -370,7 +372,7 @@
         
   
   <span class="md-ellipsis">
-    Overview
+    概述
   </span>
   
 
@@ -391,7 +393,7 @@
         
   
   <span class="md-ellipsis">
-    Features and benefits
+    功能和优势
   </span>
   
 
@@ -420,7 +422,7 @@
         
   
   <span class="md-ellipsis">
-    Cost
+    成本预估
   </span>
   
 
@@ -454,7 +456,7 @@
             
   
   <span class="md-ellipsis">
-    Architecture Overview
+    架构概览
   </span>
   
 
@@ -464,7 +466,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_3">
             <span class="md-nav__icon md-icon"></span>
-            Architecture Overview
+            架构概览
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -479,7 +481,7 @@
         
   
   <span class="md-ellipsis">
-    Architecture diagram
+    架构图
   </span>
   
 
@@ -500,7 +502,7 @@
         
   
   <span class="md-ellipsis">
-    Architecture details
+    架构细节
   </span>
   
 
@@ -542,7 +544,7 @@
             
   
   <span class="md-ellipsis">
-    Plan your deployment
+    部署前的规划
   </span>
   
 
@@ -552,7 +554,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_4">
             <span class="md-nav__icon md-icon"></span>
-            Plan your deployment
+            部署前的规划
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -567,7 +569,7 @@
         
   
   <span class="md-ellipsis">
-    Security
+    安全信息
   </span>
   
 
@@ -588,7 +590,7 @@
         
   
   <span class="md-ellipsis">
-    Supported regions
+    区域支持
   </span>
   
 
@@ -609,7 +611,7 @@
         
   
   <span class="md-ellipsis">
-    Quotas
+    配额信息
   </span>
   
 
@@ -651,7 +653,7 @@
             
   
   <span class="md-ellipsis">
-    Deploy the solution
+    部署解决方案
   </span>
   
 
@@ -661,9 +663,30 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_5">
             <span class="md-nav__icon md-icon"></span>
-            Deploy the solution
+            部署解决方案
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -676,7 +699,7 @@
         
   
   <span class="md-ellipsis">
-    AWS CloudFormation template
+    模板信息
   </span>
   
 
@@ -697,7 +720,7 @@
         
   
   <span class="md-ellipsis">
-    Deployment step
+    新用户部署步骤
   </span>
   
 
@@ -718,7 +741,7 @@
         
   
   <span class="md-ellipsis">
-    Deployment step from existing resource
+    更新已有的部署
   </span>
   
 
@@ -747,7 +770,7 @@
         
   
   <span class="md-ellipsis">
-    Uninstall the solution
+    卸载解决方案
   </span>
   
 
@@ -783,7 +806,7 @@
             
   
   <span class="md-ellipsis">
-    Use the solution
+    用户指南
   </span>
   
 
@@ -793,7 +816,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1_7">
             <span class="md-nav__icon md-icon"></span>
-            Use the solution
+            用户指南
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -808,7 +831,7 @@
         
   
   <span class="md-ellipsis">
-    Preparation
+    准备工作
   </span>
   
 
@@ -829,7 +852,7 @@
         
   
   <span class="md-ellipsis">
-    Configure API and Users Management
+    配置API和多用户
   </span>
   
 
@@ -850,7 +873,7 @@
         
   
   <span class="md-ellipsis">
-    Cloud Assets Management
+    云上资源管理
   </span>
   
 
@@ -871,7 +894,7 @@
         
   
   <span class="md-ellipsis">
-    txt2img guide
+    txt2img指南
   </span>
   
 
@@ -892,7 +915,7 @@
         
   
   <span class="md-ellipsis">
-    img2img guide
+    img2img指南
   </span>
   
 
@@ -913,7 +936,7 @@
         
   
   <span class="md-ellipsis">
-    controlNet guide
+    controlNet指南
   </span>
   
 
@@ -943,7 +966,7 @@
           
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    训练指南
   </span>
   
 
@@ -954,7 +977,7 @@
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    训练指南
   </span>
   
 
@@ -962,7 +985,7 @@
       
         
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
@@ -971,25 +994,49 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      目录
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-model" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      Create Model
+      训练用户指南
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="训练用户指南">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      准备基础模型
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#train-model" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      Train Model
+      准备数据集
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      调用训练API
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1034,7 +1081,7 @@
             
   
   <span class="md-ellipsis">
-    Developer guide
+    开发者指南
   </span>
   
 
@@ -1044,7 +1091,7 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_8">
             <span class="md-nav__icon md-icon"></span>
-            Developer guide
+            开发者指南
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -1059,7 +1106,7 @@
         
   
   <span class="md-ellipsis">
-    Source code
+    源代码
   </span>
   
 
@@ -1080,7 +1127,7 @@
         
   
   <span class="md-ellipsis">
-    API Access Restriction
+    API 访问限制
   </span>
   
 
@@ -1101,7 +1148,7 @@
         
   
   <span class="md-ellipsis">
-    API Upload Checkpoint Process
+    API 上传模型文件流程
   </span>
   
 
@@ -1122,7 +1169,7 @@
         
   
   <span class="md-ellipsis">
-    API Inference Process
+    API 推理流程
   </span>
   
 
@@ -1143,7 +1190,7 @@
         
   
   <span class="md-ellipsis">
-    API Inference Debugger
+    API 推理调试器
   </span>
   
 
@@ -1164,7 +1211,7 @@
         
   
   <span class="md-ellipsis">
-    API Authentication
+    API 验证
   </span>
   
 
@@ -1198,7 +1245,7 @@
             
   
   <span class="md-ellipsis">
-    API Call
+    API 调用
   </span>
   
 
@@ -1208,9 +1255,30 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_8_7_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1_8_7">
             <span class="md-nav__icon md-icon"></span>
-            API Call
+            API 调用
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1273,7 +1341,7 @@
         
   
   <span class="md-ellipsis">
-    Custom Container
+    自定义容器镜像
   </span>
   
 
@@ -1302,7 +1370,7 @@
         
   
   <span class="md-ellipsis">
-    Troubleshooting
+    故障排除
   </span>
   
 
@@ -1323,7 +1391,7 @@
         
   
   <span class="md-ellipsis">
-    FAQ
+    常见问题解答
   </span>
   
 
@@ -1344,7 +1412,7 @@
         
   
   <span class="md-ellipsis">
-    Revisions
+    文档修订信息
   </span>
   
 
@@ -1365,7 +1433,7 @@
         
   
   <span class="md-ellipsis">
-    Notices
+    声明
   </span>
   
 
@@ -1395,7 +1463,7 @@
                   <div class="md-sidebar__inner">
                     
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+<nav class="md-nav md-nav--secondary" aria-label="目录">
   
   
   
@@ -1404,25 +1472,49 @@
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
-      Table of contents
+      目录
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-model" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      Create Model
+      训练用户指南
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="训练用户指南">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      准备基础模型
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#train-model" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      Train Model
+      准备数据集
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      调用训练API
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1444,58 +1536,23 @@
   
 
 
-<h1 id="dreambooth-guide">Dreambooth Guide</h1>
-<p>You can open <strong>Dreambooth</strong> tab, by combining the use with native Dreambooth, the tab <strong>Create from Cloud</strong> and <strong>Select from Cloud</strong> that newly added by the solution, you can achieve  cloud-based model creating and training in Dreambooth.</p>
-<h2 id="create-model">Create Model</h2>
-<ol>
-<li>Open <strong>Dreambooth</strong> tab, <strong>Model</strong> subtab <strong>Create From Cloud</strong>.
-<img alt="Creat model tab" src="../../images/open-create-model-tab.png" /></li>
-<li>
-<p>Enter a model name in the <strong>Name</strong> text box.</p>
-<div class="admonition important">
-<p class="admonition-title">Notice</p>
-<p>Please note the naming format requirements: the name can only contain alphanumeric characters and dashes ("-").</p>
-</div>
-</li>
-<li>
-<p>Select one checkpoint under <strong>Source Checkpoint</strong> dropdown list.</p>
-<blockquote>
-<p><strong>Note：</strong> The checkpoint files here include two sources: files starting with "local" are locally stored checkpoint files, while those starting with "cloud" are checkpoint files stored on Amazon S3. For first-time use, it is recommended to select a local checkpoint file.</p>
-</blockquote>
-</li>
-<li>
-<p>Click <strong>Create Model From Cloud</strong> to start model creation on cloud. <strong>Model Creation Jobs Details</strong> field will instantly update with the progress of the model creation job. When the status changes to <em>Complete</em>, it indicates that the model creation is finished.</p>
-</li>
-</ol>
-<h2 id="train-model">Train Model</h2>
-<ol>
-<li>Open <strong>Dreambooth</strong> tab, <strong>Model</strong> subtab, <strong>Select From Cloud</strong>.</li>
-<li>Fresh and select the model from <strong>Model</strong> drop down list that need to train.</li>
-<li>
-<p>Set corresponding parameters in <strong>Input</strong> session.</p>
-<ul>
-<li>Set training parameters<ul>
-<li>Checking <em>Lora</em> can accelerate the training process.</li>
-<li>The <em>Training Steps Per Image (Epochs)</em> represents the number of iterations for training a single image and can be left at the default value.
-<img alt="Input setting" src="../../images/dreambooth-input-settings.png" /> </li>
-</ul>
-</li>
-<li>Set the concepts that need to be trained. A total of four concepts can be set, and we will use the first concept as an example.<ul>
-<li>In the <em>Dataset Directory</em> field, enter the path to the images required for training. It can be a path on a web server or an S3 path. For S3 paths, you can obtain them by uploading the data through AWS Dataset Management or by uploading them to S3 on your own. The path should start with “s3://".</li>
-<li>In the <em>Instance Prompt</em> section under <em>Training Prompts</em>, enter the keywords for the concept. These keywords will be used to generate the concept during the training process in txt2img. Therefore, avoid using common English words (as they might get confused with other concepts in the base model).
-<img alt="Input concepts" src="../../images/dreambooth-input-concepts.png" /> </li>
-</ul>
-</li>
-<li>You need to check <strong>Save Checkpoint to Subdirectory</strong> to save the model to a subdirectory. </li>
-<li>If you need to save the lora model separately (the model file will be smaller, but it needs to be used with the SD basic model), please check <strong>Generate lora weights for extra networks</strong>.
-<img alt="Input saving" src="../../images/dreambooth-lora-save.png" /> </li>
-</ul>
-</li>
-<li>
-<p>Click <strong>SageMaker Train</strong> to start model training task. The <strong>Training Job Details</strong> section will be updated in real-time with the status of the model training job. When the status changes to <em>Complete</em>, an email notification will be sent to the email address provided during the initial deployment of the solution, indicating that the model training is complete.</p>
-</li>
-<li>Future steps. For example: Navigate to <strong>txt2img</strong> tab <strong>Amazon SageMaker Inference</strong> panel, check trained model by refreshing <strong>Stable Diffusion Checkpoint</strong> dropdown list.  </li>
-</ol>
+<h1 id="_1">训练指南</h1>
+<p>训练基于<a href="https://github.com/kohya-ss/sd-scripts">Kohya-SS</a>。 Kohya-SS是一个Python库，用于微调稳定扩散模型，适用于消费级GPU，并兼容稳定扩散WebUI。该解决方案可以在SDXL和SD 1.5上进行LoRA训练。</p>
+<h2 id="_2">训练用户指南</h2>
+<h3 id="_3">准备基础模型</h3>
+<p>通过以下命令将本地SD模型上传到S3存储桶
+<div class="highlight"><pre><span></span><code># 配置凭证
+aws configure
+# 将本地SD模型复制到S3存储桶
+aws s3 cp *safetensors s3://&lt;bucket_path&gt;/&lt;model_path&gt;
+</code></pre></div></p>
+<h3 id="_4">准备数据集</h3>
+<p>执行AWS CLI命令将数据集复制到S3存储桶
+<div class="highlight"><pre><span></span><code>aws s3 sync local_folder_name s3://&lt;bucket_name&gt;/&lt;folder_name&gt;
+</code></pre></div></p>
+<p>文件夹名称应以数字和下划线开头，例如100_demo。每个图像应与具有相同名称的txt文件配对，例如demo1.png，demo1.txt，demo1.txt包含demo1.png的标题。</p>
+<h3 id="api">调用训练API</h3>
+<p>参考<a href="https://awslabs.github.io/stable-diffusion-aws-extension/zh/developer-guide/api/1.5.0/">API文档</a>调用训练API。</p>
 
 
 
@@ -1537,10 +1594,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

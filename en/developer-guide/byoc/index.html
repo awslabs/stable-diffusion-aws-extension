@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -672,6 +672,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -928,11 +949,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user-guide/dreambooth-guide/" class="md-nav__link">
+      <a href="../../user-guide/training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1161,6 +1182,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/1.4.0/" class="md-nav__link">
         
   
@@ -1375,114 +1417,38 @@
 <h1 id="stable-diffusion-train-and-deploy-api">Custom Container</h1>
 
 <h1 id="overview">Overview</h1>
-<p>The <strong>Extension for Stable Diffusion on AWS</strong> is extremely flexible. You can replace the container image of the SageMaker Endpoint model at any time, or revert to the default image at any time.</p>
+<p>The <strong>Extension for Stable Diffusion on AWS</strong> is extremely flexible. You can replace the container image of the SageMaker Endpoint model at any time.</p>
 <p>To achieve this capability, follow these steps:</p>
 <ul>
 <li>Step 1: Build a Container Image</li>
-<li>Step 2: Prepare command execution environment and permissions</li>
-<li>Step 3: <strong>Replace</strong> the specified SageMaker Endpoint model image with your own‘s or <strong>Restore</strong> the default model image</li>
-<li>Step 4: Verify or diagnose whether the container image is work</li>
+<li>Step 2: Create Endpoint using custom container image</li>
+<li>Step 3: Verify or diagnose whether the container image is work</li>
 </ul>
 <p><br></p>
 <h1 id="build-a-container-image">Build a Container Image</h1>
 <p>You can build your own container image and upload it to <a href="https://console.aws.amazon.com/ecr" target="_blank">Amazon ECR</a> in the region where the solution is deployed, please read <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/getting-started-cli.html" target="_blank">Using Amazon ECR with the AWS CLI</a>
 , after the operation is complete, you will get a ECR URI, such as:</p>
-<div class="highlight"><pre><span></span><code><span class="m">123456789012</span>.dkr.<span class="w"> </span>ecr.cn-northwest-1.amazonaws.com<span class="w"> </span>.cn/your-image:latest
+<div class="highlight"><pre><span></span><code><span class="o">{</span>your_account_id<span class="o">}</span>.dkr.ecr.<span class="o">{</span>region<span class="o">}</span>.amazonaws.com/your-image:latest
 </code></pre></div>
 <p>Dockerfile template:</p>
-<div class="highlight"><pre><span></span><code><span class="c"># Use a specific version for reproducibility</span>
-<span class="k">FROM</span><span class="w"> </span><span class="s">763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker</span>
+<div class="highlight"><pre><span></span><code><span class="c"># It is recommended to use the Image created by the solution as the base image.</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">{your_account_id}.dkr.ecr.{region}.amazonaws.com/stable-diffusion-aws-extension/aigc-webui-inference:latest</span>
 
-<span class="c"># Set environment variables to non-interactive (this prevents some prompts)</span>
-<span class="k">ENV</span><span class="w"> </span><span class="nv">DEBIAN_FRONTEND</span><span class="o">=</span>non-interactive
-
-<span class="c"># Install system packages in a single RUN step to reduce image size</span>
-<span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span>-y<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>your-package<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
-
-<span class="c"># Set your entrypoint</span>
-<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;python&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;/your/serve&quot;</span><span class="p">]</span>
+<span class="c"># Download the extension</span>
+<span class="k">RUN</span><span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/opt/ml/code/extensions/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>/opt/ml/code/extensions/<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/**.git
 </code></pre></div>
 <p><br></p>
-<h1 id="prepare-permissions-and-environment">Prepare permissions and environment</h1>
-<h2 id="permissions">Permissions</h2>
-<p>Make sure your account has sufficient permissions; otherwise, executing the command will fail due to insufficient permissions. Please attach this example policy to your IAM user or role, <strong>note</strong> replace the variables <code>{Partition}</code>, <code>{Region}</code> and <code>{Account}</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">&quot;Version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2012-10-17&quot;</span><span class="p">,</span>
-<span class="w">  </span><span class="nt">&quot;Statement&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Sid&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;StableDiffusionOnAWSExtensionEndpoint&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DescribeEndpointConfig&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:DeleteEndpointConfig&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateModel&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateEndpoint&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;sagemaker:CreateEndpointConfig&quot;</span>
-<span class="w">      </span><span class="p">],</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:model/infer-model-*&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:endpoint/infer-endpoint-*&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="s2">&quot;arn:${Partition}:sagemaker:${Region}:${Account}:endpoint-config/infer-config-*&quot;</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;iam:PassRole&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;arn:${Partition}:iam::${Account}:role/*createEndpoint*&quot;</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">&quot;Effect&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Allow&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Action&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;application-autoscaling:DeregisterScalableTarget&quot;</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">&quot;Resource&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;*&quot;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2 id="environment">Environment</h2>
-<p>There are two ways to execute the following commands:</p>
-<p><strong>Method 1(Recommended)</strong>：On <a href="https://docs.aws.amazon.com/cloudshell/latest/userguide/welcome.html" target="_blank">CloudShell</a> with the region where the solution is deployed, such as: }，Please replace {region<code>us-east-1</code>
-    - Login URL: https://{region}.console.aws.amazon.com/cloudshell/home
-    - Please make sure that the account you logged in has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.
-    - <img alt="CloudShell" src="../../zh/images/CloudShell.png" />
-<strong>Method 2</strong>：To execute on your own environment, you need to:
-    - Install <a href="https://curl.se/" target="_blank">CURL</a>
-    - Install and Configure <a href="https://docs.aws.amazon.com/zh_cn/cli/latest/userguide/cli-chap-getting-started.html" target="_blank">AWS CLI</a>
-    - Please make sure that the account you configured has sufficient permissions (such as the permission to deploy the solution), otherwise the command will fail due to insufficient permissions.</p>
-<p><br></p>
-<h1 id="update-container-image">Update container image</h1>
-<p>Once the ECR image is ready, you only need to replace the variables in the following command and execute to complete the image replacement:</p>
-<ul>
-<li><strong>{region}</strong>: The region where the solution is deployed, such as: <code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>: Endpoint name, such as: <code>infer-endpoint-111111</code></li>
-<li><strong>{image-uri}</strong>: container image URI</li>
-</ul>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span><span class="o">{</span>region<span class="o">}</span><span class="w"> </span><span class="o">{</span>endpoint-name<span class="o">}</span><span class="w"> </span><span class="o">{</span>image-uri<span class="o">}</span>
-</code></pre></div>
-<p><br></p>
-<p>The following figure shows the successful execution of the command:</p>
-<p><img alt="UpdateImage" src="../../zh/images/UpdateImage.png" /></p>
-<p><br></p>
-<h1 id="restore-the-default-image">Restore the default image</h1>
-<p>To restore the default image, replace the variables in the following command and execute:</p>
-<ul>
-<li><strong>{region}</strong>: The region where the solution is deployed, such as: <code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>: Endpoint name, such as: <code>infer-endpoint-111111</code></li>
-</ul>
-<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-s<span class="w"> </span>https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/main/build_scripts/update_endpoint_image.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w"> </span>-s<span class="w"> </span><span class="o">{</span>region<span class="o">}</span><span class="w"> </span><span class="o">{</span>endpoint-name<span class="o">}</span><span class="w"> </span>default
-</code></pre></div>
+<h1 id="create-endpoint-using-custom-container-image">Create Endpoint using custom container image</h1>
+<p>Create a role named <code>byoc</code> and add the logged-in user to that role to activate the function shown in the following picture:</p>
+<p><img alt="UpdateImage" src="../../images/byoc.png" /></p>
 <p><br></p>
 <h1 id="verify-or-diagnose-whether-the-container-image-is-work">Verify or diagnose whether the container image is work</h1>
 <p>After the container image is replaced, you can verify whether the container image is working properly by viewing the logs of the SageMaker Endpoint, or diagnose the cause of the problem:</p>
 <ul>
 <li><strong>{region}</strong>: The region where the solution is deployed, such as: <code>us-east-1</code></li>
-<li><strong>{endpoint-name}</strong>: Endpoint name, such as: <code>infer-endpoint-111111</code></li>
+<li><strong>{endpoint-name}</strong>: Endpoint name, such as: <code>esd-type-111111</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code>https://<span class="o">{</span>region<span class="o">}</span>.console.aws.amazon.com/cloudwatch/home?region<span class="o">={</span>region<span class="o">}</span><span class="c1">#logsV2:log-groups$3FlogGroupNameFilter$3D{endpoint-name}</span>
 </code></pre></div>
@@ -1533,7 +1499,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -674,6 +674,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -1076,11 +1097,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../dreambooth-guide/" class="md-nav__link">
+      <a href="../training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth指南
+    训练指南
   </span>
   
 
@@ -1299,6 +1320,27 @@
             API 调用
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1672,8 +1714,8 @@
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块的<strong>Deploy New SageMaker Endpoint</strong>区域。</li>
 <li>方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击<strong>Deploy</strong>按钮启动Sagemaker endpoint的部署。</li>
-<li>
-<p>如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击<strong>Advanced Endpoint Configuration</strong>的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:</p>
+<li>如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击<strong>Advanced Endpoint Configuration</strong>的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:</li>
+</ol>
 <table>
 <thead>
 <tr>
@@ -1684,27 +1726,33 @@
 <tbody>
 <tr>
 <td>Endpoint Name (可选)</td>
-<td>如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为infer-endpoint-XXXXX</td>
+<td>如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为 esd-type-XXXXX</td>
+</tr>
+<tr>
+<td>Endpoint Type</td>
+<td>下拉框选择部署的Endpoint的推理类型 Async / Real-time</td>
 </tr>
 <tr>
 <td>Instance Type</td>
 <td>下拉框选择部署的Endpoint的实例类型</td>
 </tr>
 <tr>
-<td>Max Instance count</td>
-<td>下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩</td>
+<td>Max Instance Number</td>
+<td>下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，异步推理会根据平均每个实例队列积压情况在 0-Max Instance Number 之间弹性伸缩，同步推理会根据平均每个实例调用数在 1-Max Instance Number 之间弹性伸缩</td>
 </tr>
 <tr>
 <td>Enable Autoscaling</td>
-<td>如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在0-Max Instance count之间弹性伸缩, 否则Endpoint对应的instance数会固定在Max Instance count</td>
+<td>如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在 0-Max Instance Number 之间弹性伸缩, 否则Endpoint对应的instance数会固定在 Max Instance Number</td>
+</tr>
+<tr>
+<td>Min Instance Number</td>
+<td>如果选择了 Enable Autoscaling，该值将是 Endpoint 实例数的最小数量</td>
 </tr>
 </tbody>
 </table>
-</li>
-<li>
-<p>选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击<strong>Deploy</strong>, 可以在左侧<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
-<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></p>
-</li>
+<ol>
+<li>选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击<strong>Deploy</strong>, 可以在<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
+<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
 <li>您可进入<strong>txt2img</strong>或<strong>img2img</strong>的<strong>Amazon SageMaker Inference</strong>模块的下拉菜单<strong>Select Cloud SageMaker Endpoint</strong>，刷新并看到当前所有推理节点的部署状态。<blockquote>
 <p><strong>补充：</strong> 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。</p>
 </blockquote>
@@ -1781,7 +1829,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

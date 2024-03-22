@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -672,6 +672,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -880,6 +901,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multiple-user-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multiple User Management
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple User Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#role-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role Management
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissions-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permissions Description
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#users-management" class="md-nav__link">
     <span class="md-ellipsis">
       Users Management
@@ -904,6 +953,11 @@
       Manage Existing User
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1012,11 +1066,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../dreambooth-guide/" class="md-nav__link">
+      <a href="../training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1243,6 +1297,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../developer-guide/api/1.4.0/" class="md-nav__link">
         
   
@@ -1442,6 +1517,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#multiple-user-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Multiple User Management
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Multiple User Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#role-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Role Management
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissions-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Permissions Description
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#users-management" class="md-nav__link">
     <span class="md-ellipsis">
       Users Management
@@ -1466,6 +1569,11 @@
       Manage Existing User
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1498,12 +1606,58 @@
 <li>Open <a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation Console</a>, and select the main stack that successfully deployed.</li>
 <li>Navigate the <strong>Outputs</strong> tab, and copy the information under <strong>APIGatewayUrl</strong> and <strong>ApiGatewayUrlToken</strong>.</li>
 <li>Open Stable Diffusion webUI, navigate to the 'Amazon SageMaker' tab, paste information from step 2 into fields <strong>API URL</strong> and <strong>API Token</strong>. Create a super admin user name and password by entering information in field <strong>Username</strong> and <strong>Password</strong>. And click <strong>Test Connection &amp; Update Setting</strong>.</li>
-<li>Message <strong>Successfully Connected &amp; Setting Updated</strong> will be printed once front UI successfully connected with backend cloud resource. The configuration file has been updated to automatically display corresponding information upon future launches of the webUI.
-<img alt="config-setting" src="../images/API-Config-setting.png" /></li>
+<li>Message <strong>Successfully Connected &amp; Setting Updated</strong> will be printed once front UI successfully connected with backend cloud resource. The configuration file has been updated to automatically display corresponding information upon future launches of the webUI.</li>
 <li>Restart the WebUI in the background to ensure that all functionalities take effect.</li>
 </ol>
-<h2 id="users-management">Users Management</h2>
-<h3 id="add-new-user">Add New User</h3>
+<h2 id="multiple-user-management">Multiple User Management</h2>
+<p>IT Operator role users can log in and navigate to the <strong>Amazon SageMaker</strong> tab, and then to the <strong>API and User Settings</strong> sub-tab to manage roles and users.</p>
+<h3 id="role-management">Role Management</h3>
+<p>Under the <strong>Role Management</strong> tab, roles can be viewed, created, and configured with corresponding permissions. After
+creating a new role, click <strong>Next Page</strong> or refresh the page to update the <strong>Role Table</strong>.</p>
+<h3 id="permissions-description">Permissions Description</h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Scope</th>
+<th>Permissions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>role:all</td>
+<td>Role</td>
+<td>Create role, obtain role list, delete role</td>
+</tr>
+<tr>
+<td>user:all</td>
+<td>User</td>
+<td>Create users, obtain user lists, delete users, update users</td>
+</tr>
+<tr>
+<td>sagemaker_endpoint:all</td>
+<td>Endpoint</td>
+<td>Create endpoints, obtain endpoint list, delete endpoints</td>
+</tr>
+<tr>
+<td>inference:all</td>
+<td>Inference</td>
+<td>Create and start reasoning tasks, obtain reasoning task list, delete reasoning tasks</td>
+</tr>
+<tr>
+<td>checkpoint:all</td>
+<td>Checkpoint</td>
+<td>Create model files, obtain a list of model files, delete model files</td>
+</tr>
+<tr>
+<td>train:all</td>
+<td>Training</td>
+<td>Create training assignments, obtain training assignment list, delete training assignments</td>
+</tr>
+</tbody>
+</table>
+<h3 id="users-management">Users Management</h3>
+<h4 id="add-new-user">Add New User</h4>
 <ol>
 <li>
 <p>To meet your specific requirements, create new users, passwords, and roles. Once you click on "Next Page," the newly created users will be visible. To ensure the configuration changes related to the new users take effect in the web UI server, it is necessary to restart the web UI again.
@@ -1514,7 +1668,7 @@
 </li>
 <li>When accessing the Amazon SageMaker tab, the displayed content may vary for different users.</li>
 </ol>
-<h3 id="manage-existing-user">Manage Existing User</h3>
+<h4 id="manage-existing-user">Manage Existing User</h4>
 <ol>
 <li>Select the corresponding user from <strong>User Table</strong> that is expected to be updated, including <strong>Password</strong> or <strong>User Role</strong> update. The user information will be displayed in field <strong>Update a User Setting</strong>.</li>
 <li>Update the corresponding fields as need, and click <strong>Upsert a User</strong> to save the change. Otherwise click <strong>Delete a User</strong> to delete the selected user.</li>
@@ -1563,7 +1717,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

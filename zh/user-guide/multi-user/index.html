@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -674,6 +674,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    权限
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -903,6 +924,15 @@
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
+      权限说明
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
       用户管理
     </span>
   </a>
@@ -911,7 +941,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       创建新用户
     </span>
@@ -920,7 +950,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       管理现有用户
     </span>
@@ -1038,11 +1068,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../dreambooth-guide/" class="md-nav__link">
+      <a href="../training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth指南
+    训练指南
   </span>
   
 
@@ -1261,6 +1291,27 @@
             API 调用
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1489,6 +1540,15 @@
           <li class="md-nav__item">
   <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
+      权限说明
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
       用户管理
     </span>
   </a>
@@ -1497,7 +1557,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
       创建新用户
     </span>
@@ -1506,7 +1566,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       管理现有用户
     </span>
@@ -1546,29 +1606,69 @@
 <h2 id="api_1">配置API</h2>
 <ol>
 <li>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>，选择成功部署的本解决方案的主堆栈。</li>
-<li>打开输出（Outputs）标签页，找到<strong>APIGatewayUrl</strong>和<strong>ApiGatewayUrlToken</strong>对应的数值，并复制。</li>
-<li>打开Stable Diffusion WebUI中的<strong>Amazon SageMaker</strong>标签页，在<strong>API URL</strong>文本框粘贴步骤2得到的URL，在<strong>API Token</strong>输入步骤2得到的token。在<strong>Username</strong>及<strong>Password</strong>文本框请填入初始超级管理员角色名称及密码。点击<strong>Test Connection &amp; Update Setting</strong>。</li>
-<li>当提示信息<strong>Successfully Connected &amp; Setting Updated</strong>显示后，表明前端已经和后端云资源成功链接，同时配置文件得到更新，以便在未来启动webUI时能自动打出对应信息。
-<img alt="config-setting" src="../images/API-Config-setting.png" /></li>
-<li>在后台重启webUI，以使得全功能生效。</li>
+<li>打开输出（Outputs）标签页，找到 <strong>APIGatewayUrl</strong> 和 <strong>ApiGatewayUrlToken</strong> 对应的数值，并复制。</li>
+<li>打开 Stable Diffusion WebUI 中的 <strong>Amazon SageMaker</strong> 标签页，在 <strong>API URL</strong> 文本框粘贴步骤2得到的URL，在 <strong>API Token</strong> 输入步骤2得到的token。在 <strong>Username</strong> 及 <strong>Password</strong> 文本框请填入初始超级管理员角色名称及密码。点击 <strong>Test Connection &amp; Update Setting</strong>。</li>
+<li>当提示信息 <strong>Successfully Connected &amp; Setting Updated</strong> 显示后，表明前端已经和后端云资源成功链接，同时配置文件得到更新，以便在未来启动webUI时能自动打出对应信息。</li>
+<li>在后台重启 WebUI，以使得全功能生效。</li>
 </ol>
 <h2 id="_1">多用户管理</h2>
-<p>IT Operator角色用户登录成功后，进入到<strong>Amazon SageMaker</strong>标签页，<strong>API and User Settings</strong>子标签页下可以进行角色及用户管理页面。
-<img alt="add user" src="../images/Main-tab-user-mng.png" /></p>
+<p>IT Operator角色用户登录成功后，进入到 <strong>Amazon SageMaker</strong> 标签页，<strong>API and User Settings</strong> 子标签页下可以进行角色及用户管理页面。</p>
 <h3 id="_2">角色管理</h3>
-<p>在<strong>Role Management</strong>标签页下，可以按需求查看、创建角色并配置相应权限。新增角色后，可以通过点击<code>Next Page</code>或刷新页面来更新在<strong>Role Table</strong>中。</p>
-<h3 id="_3">用户管理</h3>
-<p>在<strong>User Management</strong>标签页下，可以按需查看、创建、更新或删除用户。</p>
-<h4 id="_4">创建新用户</h4>
+<p>在 <strong>Role Management</strong> 标签页下，可以按需求查看、创建角色并配置相应权限。新增角色后，可以通过点击 <strong>Next Page</strong> 或刷新页面来更新在 <strong>Role Table</strong> 中。</p>
+<h3 id="_3">权限说明</h3>
+<table>
+<thead>
+<tr>
+<th>权限</th>
+<th>范围</th>
+<th>详细权限</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>role:all</td>
+<td>角色</td>
+<td>创建角色、获取角色列表、删除角色</td>
+</tr>
+<tr>
+<td>user:all</td>
+<td>用户</td>
+<td>创建用户、获取用户列表、删除用户、更新用户</td>
+</tr>
+<tr>
+<td>sagemaker_endpoint:all</td>
+<td>推理端点</td>
+<td>创建端点、获取端点列表、删除端点</td>
+</tr>
+<tr>
+<td>inference:all</td>
+<td>推理</td>
+<td>创建和开始推理作业、获取推理作业列表、删除推理作业</td>
+</tr>
+<tr>
+<td>checkpoint:all</td>
+<td>模型文件</td>
+<td>创建模型文件、获取模型文件列表、删除模型文件</td>
+</tr>
+<tr>
+<td>train:all</td>
+<td>训练</td>
+<td>创建训练作业、获取训练作业列表、删除训练作业</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">用户管理</h3>
+<p>在 <strong>User Management</strong> 标签页下，可以按需查看、创建、更新或删除用户。</p>
+<h4 id="_5">创建新用户</h4>
 <ol>
-<li>根据具体需求，创建所有新的用户、密码和角色，点击<code>Next Page</code>后， 可以看到新创建的用户。</li>
+<li>根据具体需求，创建所有新的用户、密码和角色，点击 <strong>Next Page</strong> 后， 可以看到新创建的用户。</li>
 <li>打开另一个无痕浏览器，使用新创建的用户名、密码登录。</li>
-<li>进入到<strong>Amazon SageMaker</strong>页，不同的用户展示的内容有所不同。</li>
+<li>进入到 <strong>Amazon SageMaker</strong> 页，不同的用户展示的内容有所不同。</li>
 </ol>
-<h4 id="_5">管理现有用户</h4>
+<h4 id="_6">管理现有用户</h4>
 <ol>
-<li>在表<strong>User Table</strong>中选择需要更新的用户，区域<strong>Update a User Setting</strong>将会显示该选中的用户信息。</li>
-<li>在<strong>Password</strong>或<strong>User Role</strong>处按需更新信息，并点击<strong>Upsert a User</strong>以保存改动。抑或点击<strong>Delete a User</strong>已完成删除该用户的操作。</li>
+<li>在表 <strong>User Table</strong> 中选择需要更新的用户，区域 <strong>Update a User Setting</strong> 将会显示该选中的用户信息。</li>
+<li>在 <strong>Password</strong> 或 <strong>User Role</strong> 处按需更新信息，并点击 <strong>Upsert a User</strong> 以保存改动。抑或点击 <strong>Delete a User</strong> 已完成删除该用户的操作。</li>
 </ol>
 
 
@@ -1614,7 +1714,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>

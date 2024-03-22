@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
       
       
 
@@ -672,6 +672,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../deployment/permissions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Permissions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../deployment/template/" class="md-nav__link">
         
   
@@ -1012,11 +1033,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../dreambooth-guide/" class="md-nav__link">
+      <a href="../training-guide/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Dreambooth guide
+    Training guide
   </span>
   
 
@@ -1235,6 +1256,27 @@
             API Call
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer-guide/api/1.5.0/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    1.5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1546,25 +1588,33 @@
 <tbody>
 <tr>
 <td>Endpoint Name (Optional)</td>
-<td>If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be infer-endpoint-XXXXX.</td>
+<td>If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be esd-type-XXXXX.</td>
+</tr>
+<tr>
+<td>Endpoint Type</td>
+<td>Select the inference type Async/Real time for the deployed Endpoint</td>
 </tr>
 <tr>
 <td>Instance Type</td>
 <td>Select the instance type for the deployed endpoint from the dropdown list.</td>
 </tr>
 <tr>
-<td>Max Instance Count</td>
-<td>Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage.</td>
+<td>Max Instance Number</td>
+<td>Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Number based on average CPU usage.</td>
 </tr>
 <tr>
 <td>Enable Autoscaling</td>
-<td>If this checkbox is selected, Sagemaker will elastically scale between 0 and the Max Instance Count based on average CPU usage. Otherwise, the instance count for the endpoint will remain fixed at the Max Instance Count.</td>
+<td>If this checkbox is selected, Async inference will scale elastically between 0 and Max Instance Numbers based on the average backlog of each instance, while Real-time inference will scale elastically between 1 and Max Instance Numbers based on the average number of calls per instance.</td>
+</tr>
+<tr>
+<td>Min Instance Number</td>
+<td>If Enable Autoscaling is true, This value will be the minimum number of Endpoint instances</td>
 </tr>
 </tbody>
 </table>
 <ol>
 <li>
-<p>After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click <strong>Deploy</strong>. You'll see a message indicating <strong>Endpoint deployment started</strong> on the left side under <strong>Label</strong>.
+<p>After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click <strong>Deploy</strong>. You'll see a message indicating <strong>Endpoint deployment started</strong> under <strong>Label</strong>.
    <img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></p>
 </li>
 <li>
@@ -1646,7 +1696,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
       
     
   </body>
