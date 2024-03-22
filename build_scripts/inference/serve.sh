@@ -164,7 +164,7 @@ check_ready() {
       find "/home/ubuntu/stable-diffusion-webui" -type f -name 'LICENSE.md' -exec rm -rf {} +
       find "/home/ubuntu/stable-diffusion-webui" -type f -name 'NOTICE.md' -exec rm -rf {} +
 
-      echo "colection big files..."
+      echo "collection big files..."
       upload_files=$(mktemp)
       big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +2520k)
       for file in $big_files; do
