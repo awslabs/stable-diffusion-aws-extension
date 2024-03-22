@@ -212,6 +212,37 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
+
+    ComfyTemplateTable: {
+      partitionKey: {
+        name: 'template_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyConfigTable: {
+      partitionKey: {
+        name: 'config_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyExecuteTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyNodeTable: {
+      partitionKey: {
+        name: 'node_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyMessageTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+    },
   };
 
   for (let tableName in tables) {
