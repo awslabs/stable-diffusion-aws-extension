@@ -24,7 +24,11 @@ def get_sorted_cloud_dataset(username):
                 "username": username
             },
         )
-        raw_response.raise_for_status()
+
+        if raw_response.status_code != 200:
+            logger.error(f"list_datasets: {raw_response.json()}")
+            return []
+
         response = raw_response.json()
         logger.info(f"datasets response: {response}")
         datasets = response["data"]["datasets"]

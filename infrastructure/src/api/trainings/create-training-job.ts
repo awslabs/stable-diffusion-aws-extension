@@ -168,15 +168,75 @@ export class CreateTrainingJobApi {
         title: this.id,
         type: JsonSchemaType.OBJECT,
         properties: {
-          params: {
-            type: JsonSchemaType.OBJECT,
-          },
           lora_train_type: {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          params: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              training_params: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  training_instance_type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  model: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  dataset: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  fm_type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                },
+                required: [
+                  'training_instance_type',
+                  'model',
+                  'dataset',
+                  'fm_type',
+                ],
+              },
+              config_params: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  saving_arguments: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      output_name: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      save_every_n_epochs: {
+                        type: JsonSchemaType.INTEGER,
+                      },
+                    },
+                    required: ['output_name', 'save_every_n_epochs'],
+                  },
+                  training_arguments: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      max_train_epochs: {
+                        type: JsonSchemaType.INTEGER,
+                      },
+                    },
+                    required: ['max_train_epochs'],
+                  },
+                },
+                required: [
+                  'saving_arguments',
+                  'training_arguments',
+                ],
+              },
+            },
+            required: [
+              'training_params',
+              'config_params',
+            ],
+          },
         },
         required: [
+          'lora_train_type',
           'params',
         ],
       },
@@ -231,7 +291,7 @@ export class CreateTrainingJobApi {
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': this.model,
+        $default: this.model,
       },
     });
 

@@ -33,7 +33,7 @@ def handler(event, ctx):
         # permissions_check(event, [PERMISSION_INFERENCE_ALL])
 
         username = get_query_param(event, 'username')
-        last_evaluated_key = get_query_param(event, 'last_evaluated_key')
+        exclusive_start_key = get_query_param(event, 'exclusive_start_key')
         inference_type = get_query_param(event, 'type', 'txt2img')
         limit = int(get_query_param(event, 'limit', 10))
 
@@ -44,8 +44,8 @@ def handler(event, ctx):
             "ScanIndexForward": False
         }
 
-        if last_evaluated_key:
-            scan_kwargs['ExclusiveStartKey'] = decode_last_key(last_evaluated_key)
+        if exclusive_start_key:
+            scan_kwargs['ExclusiveStartKey'] = decode_last_key(exclusive_start_key)
 
         logger.info(scan_kwargs)
 
@@ -69,6 +69,8 @@ def handler(event, ctx):
             else:
                 results.append(inference.__dict__)
 
+        results = sort_inferences(results)
+
         data = {
             'inferences': results,
             'last_evaluated_key': last_evaluated_key
@@ -77,3 +79,10 @@ def handler(event, ctx):
         return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_inferences(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['createTime'], reverse=True)

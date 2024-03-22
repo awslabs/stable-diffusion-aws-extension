@@ -17,6 +17,7 @@ import { CreateEndpointApi, CreateEndpointApiProps } from '../api/endpoints/crea
 import { DeleteEndpointsApi, DeleteEndpointsApiProps } from '../api/endpoints/delete-endpoints';
 import { ListEndpointsApi, ListEndpointsApiProps } from '../api/endpoints/list-endpoints';
 import { SagemakerEndpointEvents, SagemakerEndpointEventsProps } from '../events/endpoints-event';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -35,7 +36,8 @@ export interface EndpointStackProps extends StackProps {
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   logLevel: CfnParameter;
-  ecrUrl: string;
+  ecrImageTag: CfnParameter;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class EndpointStack {
@@ -47,7 +49,6 @@ export class EndpointStack {
     props: EndpointStackProps,
   ) {
     this.id = id;
-    const inferenceECR_url = props.ecrUrl;
 
     const srcRoot = '../middleware_api/lambda';
 
@@ -99,7 +100,8 @@ export class EndpointStack {
               srcRoot: srcRoot,
               s3Bucket: props.s3Bucket,
               userNotifySNS: props.snsTopic,
-              inferenceECRUrl: inferenceECR_url,
+              accountId: props.accountId,
+              ecrImageTag: props.ecrImageTag,
               inferenceResultTopic: props.inferenceResultTopic,
               inferenceResultErrorTopic: props.inferenceErrorTopic,
               logLevel: props.logLevel,

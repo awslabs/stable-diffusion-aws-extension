@@ -15,7 +15,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { Construct } from 'constructs';
-import { ESD_FILE_VERSION } from '../../shared/const';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -25,13 +25,14 @@ export interface CreateEndpointApiProps {
   endpointDeploymentTable: Table;
   multiUserTable: Table;
   srcRoot: string;
-  inferenceECRUrl: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   logLevel: CfnParameter;
+  ecrImageTag: CfnParameter;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class CreateEndpointApi {
@@ -45,7 +46,8 @@ export class CreateEndpointApi {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly inferenceECRUrl: string;
+  private readonly ecrImageTag: CfnParameter;
+  private readonly accountId: ICfnRuleConditionExpression;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
@@ -62,11 +64,12 @@ export class CreateEndpointApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.inferenceECRUrl = props.inferenceECRUrl;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
+    this.ecrImageTag = props.ecrImageTag;
+    this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -96,9 +99,8 @@ export class CreateEndpointApi {
         's3:GetObject',
       ],
       resources: [
-        this.s3Bucket.bucketArn,
-        `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+        // for get files from solution's bucket
+        '*',
       ],
     });
 
@@ -284,11 +286,11 @@ export class CreateEndpointApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: this.inferenceECRUrl,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${this.ecrImageTag.valueAsString}`,
+        ECR_IMAGE_TAG: this.ecrImageTag.valueAsString,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
-        ESD_FILE_VERSION: ESD_FILE_VERSION,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],

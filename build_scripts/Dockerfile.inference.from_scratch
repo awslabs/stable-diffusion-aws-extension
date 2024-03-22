@@ -1,36 +1,36 @@
-FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-cpu-py310-ubuntu20.04-ec2
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
 
-# COPY stable-diffusion-webui /opt/ml/code/
-COPY inference/serve_start /opt/ml/code/
-RUN chmod +x /opt/ml/code/serve_start
+RUN apt-get update -y
+RUN apt-get install -y wget
+RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
 
-WORKDIR /opt/ml/code
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+
+COPY --from=builder /s5cmd /usr/local/bin/s5cmd
+
+SHELL ["/bin/bash", "-c"]
+
+RUN adduser --disabled-password --gecos '' ubuntu
+
+RUN apt-get update -y && \
+    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc && \
+    # may not needed in endpoint
+    apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
+    # for env install
+    apt-get install --no-install-recommends -y lsof tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /home/ubuntu/
 
 ENV ON_DOCKER true
 
-# install libtcmalloc to solve memory leak for multi model switch
-# https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/9323
-# RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-# update environment
-RUN apt-get update -y && \
-    apt-get install -y pkg-config && \
-    apt-get install -y libcairo2-dev && \
-    apt-get install -y file && \
-    apt-get install -y libtcmalloc-minimal4 && \
-    mkdir -p /opt/ml/code/tools && \
-    wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
-    tar xzvf /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz -C /opt/ml/code/tools/ && \
-    rm /opt/ml/code/tools/s5cmd_2.2.2_Linux-64bit.tar.gz && \
-    pip uninstall -y torch && \
-    pip uninstall -y torchvision && \
-    pip uninstall -y torchaudio && \
-    echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth" && \
-    rm -rf /opt/conda/lib/python3.10/site-packages/* && \
-    rm -rf /opt/conda/pkgs/* && \
-    apt-get clean && \
-    apt-get autoremove -y && \
-    apt-get autoclean -y
+RUN chown -R ubuntu:ubuntu /home/ubuntu
 
-ENTRYPOINT ["bash", "/opt/ml/code/serve_start"]
+COPY inference/serve.sh /
+
+RUN chmod +x /serve.sh
+
+ENTRYPOINT ["bash", "/serve.sh"]

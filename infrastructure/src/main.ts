@@ -117,7 +117,6 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         ecrImageTag: ecrImageTagParam.valueAsString,
-        version: 'v1.0.13',
       },
     );
 

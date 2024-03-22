@@ -2,17 +2,21 @@ import json
 import logging
 import os
 
+import boto3
+
 from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from common.util import get_query_param
 from libs.data_types import EndpointDeploymentJob, PARTITION_KEYS, Role
 from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
-    response_error
+    response_error, decode_last_key, encode_last_key
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
-
+ddb = boto3.resource('dynamodb')
+table = ddb.Table(sagemaker_endpoint_table)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -26,22 +30,29 @@ def handler(event, ctx):
     try:
         logger.info(json.dumps(event))
         requestor_name = permissions_check(event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST])
-        endpoint_deployment_job_id = None
-        username = None
-        parameters = event['queryStringParameters']
-        if parameters:
-            endpoint_deployment_job_id = parameters[
-                'endpointDeploymentJobId'] if 'endpointDeploymentJobId' in parameters and \
-                                              parameters[
-                                                  'endpointDeploymentJobId'] else None
-            username = parameters['username'] if 'username' in parameters and parameters['username'] else None
+
+        exclusive_start_key = get_query_param(event, 'exclusive_start_key')
+        limit = int(get_query_param(event, 'limit', 10))
+        last_evaluated_key = None
+
+        scan_kwargs = {
+            'Limit': limit,
+        }
+
+        if exclusive_start_key:
+            scan_kwargs['ExclusiveStartKey'] = decode_last_key(exclusive_start_key)
+
+        endpoint_deployment_job_id = get_query_param(event, 'endpointDeploymentJobId', None)
+        username = get_query_param(event, 'username', None)
 
         if endpoint_deployment_job_id:
             scan_rows = ddb_service.query_items(sagemaker_endpoint_table,
                                                 key_values={'EndpointDeploymentJobId': endpoint_deployment_job_id},
                                                 )
         else:
-            scan_rows = ddb_service.scan(sagemaker_endpoint_table, filters=None)
+            response = table.scan(**scan_kwargs)
+            scan_rows = response.get('Items', [])
+            last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))
 
         results = []
         user_roles = []
@@ -63,7 +74,7 @@ def handler(event, ctx):
             if 'status' in row and row['status']['S'] == 'deleted':
                 row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
-            endpoint = EndpointDeploymentJob(**(ddb_service.deserialize(row)))
+            endpoint = EndpointDeploymentJob(**row)
             if 'sagemaker_endpoint' in requestor_permissions and \
                     'list' in requestor_permissions['sagemaker_endpoint'] and \
                     endpoint.owner_group_or_role and \
@@ -77,10 +88,20 @@ def handler(event, ctx):
             if 'current_instance_count' not in result:
                 result['current_instance_count'] = 'N/A'
 
+        results = sort_endpoints(results)
+
         data = {
-            'endpoints': results
+            'endpoints': results,
+            'last_evaluated_key': last_evaluated_key
         }
 
         return ok(data=data, decimal=True)
     except Exception as e:
         return response_error(e)
+
+
+def sort_endpoints(data):
+    if len(data) == 0:
+        return data
+
+    return sorted(data, key=lambda x: x['startTime'], reverse=True)
