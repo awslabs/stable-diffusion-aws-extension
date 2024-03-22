@@ -259,7 +259,7 @@ export class Middleware extends Stack {
         configTable: ddbComfyTables.configTable,
         executeTable: ddbComfyTables.executeTable,
         modelTable: ddbTables.checkpointTable,
-        nodeTable: ddbComfyTables.nodeTable,
+        syncTable: ddbComfyTables.syncTable,
         msgTable: ddbComfyTables.msgTable,
         commonLayer: commonLayers.commonLayer,
         ecrRepositoryName: inferenceEcrRepositoryUrl,

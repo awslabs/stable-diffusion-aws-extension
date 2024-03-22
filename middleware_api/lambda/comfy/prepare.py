@@ -26,26 +26,30 @@ sqs_url = os.environ.get('SQS_URL')
 @dataclass
 class PrepareEnvEvent:
     endpoint_name: str
+    need_reboot: bool = False
     prepare_type: Optional[str] = 'default'
     # notice !!! must not be prefixed with "/"
     s3_source_path: Optional[str] = ''
     local_target_path: Optional[str] = ''
 
 
-def prepare_sagemaker_env(event: PrepareEnvEvent):
+def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
 
     # payload = {"endpoint_name": "ComfyEndpoint-endpoint", "prepare_type": "all"}
     payload = event.__dict__
     payload['task_type'] = ComfyTaskType.PREPARE
+
     payload["bucket_name"] = bucket_name
     payload["sqs_url"] = sqs_url
     payload["region"] = region
+
     payload["prepare_type"] = ComfyEnvPrepareType[event.prepare_type]
     payload["s3_source_path"] = event.s3_source_path
     payload["local_target_path"] = event.local_target_path
-    endpoint_name = event.endpoint_name
 
-    logger.info('payload: {}'.format(payload))
+    # TODO
+    payload["need_reboot"] = event.need_reboot
+    endpoint_name = event.endpoint_name
 
     # TODO 根据 endpoint_name 获取所有实例列表
     # TODO 逐一调用实例列表执行初始化接口-这个时间较长 可以按照异步调用 等待初始化结果
@@ -68,6 +72,8 @@ def prepare_sagemaker_env(event: PrepareEnvEvent):
 def handler(raw_event, ctx):
     logger.info(f"prepare env start... Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")
+    request_id = ctx.aws_request_id
+
     event = PrepareEnvEvent(**json.loads(raw_event['body']))
-    prepare_sagemaker_env(event)
+    prepare_sagemaker_env(request_id, event)
     return ok(data=event.endpoint_name)

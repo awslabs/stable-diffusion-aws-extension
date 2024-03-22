@@ -12,7 +12,7 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-// import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
+import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -21,7 +21,7 @@ export interface ComfyInferenceStackProps extends StackProps {
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
-  nodeTable: aws_dynamodb.Table;
+  syncTable: aws_dynamodb.Table;
   msgTable:aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
   ecrRepositoryName: string;
@@ -34,7 +34,7 @@ export class ComfyApiStack extends Construct {
   private configTable: aws_dynamodb.Table;
   private executeTable: aws_dynamodb.Table;
   private modelTable: aws_dynamodb.Table;
-  private nodeTable: aws_dynamodb.Table;
+  private syncTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
 
 
@@ -47,7 +47,7 @@ export class ComfyApiStack extends Construct {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.modelTable = props.modelTable;
-    this.nodeTable = props.nodeTable;
+    this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
 
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
@@ -58,6 +58,8 @@ export class ComfyApiStack extends Construct {
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
     const executeGetRouter = props.routers.execute.addResource('{id}');
+
+    const prepareGetRouter = props.routers.prepare.addResource('{id}');
 
     const inferenceLambdaRole = new iam.Role(scope, 'ComfyInferenceLambdaRole', {
       assumedBy: new iam.CompositePrincipal(
@@ -107,25 +109,27 @@ export class ComfyApiStack extends Construct {
       rootSrc: srcRoot,
       configTable: this.configTable,
       modelTable: this.modelTable,
-      nodeTable: this.nodeTable,
+      syncTable: this.syncTable,
       commonLayer: this.layer,
       queue: sqsStack.queue,
       logLevel: props.logLevel,
     });
+
     // new EndpointStack(
     //   scope, 'Comfy',
     //         <EndpointStackProps>{
     //           inferenceErrorTopic: props.inferenceErrorTopic,
     //           inferenceResultTopic: props.inferenceResultTopic,
     //           routers: props.routers,
-    //           s3Bucket: props?.s3Bucket,
+    //           s3Bucket: props?.s3_bucket,
     //           multiUserTable: props.multiUserTable,
     //           snsTopic: props?.snsTopic,
-    //           EndpointDeploymentJobTable: props.EndpointDeploymentJobTable,
-    //           checkpointTable: props.modelTable,
+    //           EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
+    //           checkpointTable: props.checkpointTable,
     //           commonLayer: props.commonLayer,
     //           logLevel: props.logLevel,
-    //           ecrUrl: srcImg,
+    //           accountId: props.accountId,
+    //           ecrImageTag: props.ecrImageTag,
     //         },
     // );
 
@@ -139,7 +143,7 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         modelTable: this.modelTable,
-        nodeTable: this.nodeTable,
+        syncTable: this.syncTable,
         queue: sqsStack.queue,
         commonLayer: this.layer,
         logLevel: props.logLevel,
@@ -153,9 +157,8 @@ export class ComfyApiStack extends Construct {
         srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
-        executeTable: this.executeTable,
+        syncTable: this.syncTable,
         modelTable: this.modelTable,
-        nodeTable: this.nodeTable,
         queue: sqsStack.queue,
         commonLayer: this.layer,
         logLevel: props.logLevel,
@@ -171,6 +174,20 @@ export class ComfyApiStack extends Construct {
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         executeTable: this.executeTable,
+        commonLayer: this.layer,
+        logLevel: props.logLevel,
+      },
+    );
+
+    // GET /execute/{id}
+    new GetPrepareApi(
+      scope, 'GetPrepare', <GetPrepareApiProps>{
+        httpMethod: 'GET',
+        router: prepareGetRouter,
+        srcRoot: srcRoot,
+        s3Bucket: props.s3Bucket,
+        configTable: this.configTable,
+        syncTable: this.syncTable,
         commonLayer: this.layer,
         logLevel: props.logLevel,
       },

@@ -37,6 +37,10 @@ async def prepare_comfy_env(json_data):
                                            f'/opt/ml/code/{local_target_path}', False)
     print("prepare_environment end")
 
+    # TODO
+    need_reboot = json_data["need_reboot"]
+
+
 
 # def create_tar_gz(source_file, target_tar_gz):
 #     # Example usage:
@@ -112,8 +116,6 @@ async def invocations(request):
             server_instance.number += 1
         valid = execution.validate_prompt(json_data['prompt'])
         if not valid[0]:
-            json_data['prepare_type'] = 'all'
-            await prepare_comfy_env(json_data)
             print("the environment is not ready valid[0] is false, need to resync")
             return web.Response(status=500)
         extra_data = {}

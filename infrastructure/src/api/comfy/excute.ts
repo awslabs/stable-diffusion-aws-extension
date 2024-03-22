@@ -26,7 +26,7 @@ export interface ExecuteApiProps {
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
-  nodeTable: aws_dynamodb.Table;
+  syncTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
@@ -44,7 +44,7 @@ export class ExecuteApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly modelTable: aws_dynamodb.Table;
-  private readonly nodeTable: aws_dynamodb.Table;
+  private readonly syncTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
@@ -57,7 +57,7 @@ export class ExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.modelTable = props.modelTable;
-    this.nodeTable = props.nodeTable;
+    this.syncTable = props.syncTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
     this.queue = props.queue;
@@ -83,7 +83,7 @@ export class ExecuteApi {
       ],
       resources: [
         this.modelTable.tableArn,
-        this.nodeTable.tableArn,
+        this.syncTable.tableArn,
         this.configTable.tableArn,
         this.executeTable.tableArn,
       ],
@@ -146,7 +146,7 @@ export class ExecuteApi {
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         MODEL_TABLE: this.modelTable.tableName,
-        NODE_TABLE: this.nodeTable.tableName,
+        SYNC_TABLE: this.syncTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
         SQS_URL: this.queue.queueUrl,
         BUCKET_NAME: this.s3Bucket.bucketName,

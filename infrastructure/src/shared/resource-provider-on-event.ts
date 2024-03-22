@@ -215,13 +215,21 @@ async function createTables() {
 
     ComfyTemplateTable: {
       partitionKey: {
-        name: 'template_id',
+        name: 'template_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
         type: AttributeType.STRING,
       },
     },
     ComfyConfigTable: {
       partitionKey: {
-        name: 'config_id',
+        name: 'config_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
         type: AttributeType.STRING,
       },
     },
@@ -231,9 +239,9 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
-    ComfyNodeTable: {
+    ComfySyncTable: {
       partitionKey: {
-        name: 'node_id',
+        name: 'request_id',
         type: AttributeType.STRING,
       },
     },

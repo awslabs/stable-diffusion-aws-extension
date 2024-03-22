@@ -12,7 +12,7 @@ export interface CreateSageMakerEndpointProps {
   rootSrc: string;
   configTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
-  nodeTable: aws_dynamodb.Table;
+  syncTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
   queue: aws_sqs.Queue;
   resourceProvider: ResourceProvider;
@@ -27,7 +27,7 @@ export class CreateSageMakerEndpoint {
   public modelEndpoint: aws_sagemaker.CfnEndpoint;
   private configTable: aws_dynamodb.Table;
   private modelTable: aws_dynamodb.Table;
-  private nodeTable: aws_dynamodb.Table;
+  private syncTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: CreateSageMakerEndpointProps) {
@@ -36,7 +36,7 @@ export class CreateSageMakerEndpoint {
     this.queue = props.queue;
     this.modelTable = props.modelTable;
     this.configTable = props.configTable;
-    this.nodeTable = props.nodeTable;
+    this.syncTable = props.syncTable;
 
     const role = this.sagemakerRole(scope);
 
@@ -116,7 +116,7 @@ export class CreateSageMakerEndpoint {
       ],
       resources: [
         this.modelTable.tableArn,
-        this.nodeTable.tableArn,
+        this.syncTable.tableArn,
         this.configTable.tableArn,
       ],
     }));

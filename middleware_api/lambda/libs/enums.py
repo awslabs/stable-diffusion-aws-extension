@@ -67,6 +67,12 @@ class ComfyEnvPrepareType(Enum):
     CUSTOM = 'custom'
 
 
+class ComfySyncStatus(Enum):
+    INIT = 'init'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
 class ComfyTaskType(Enum):
     PREPARE = 'prepare'
     INFERENCE = 'inference'
