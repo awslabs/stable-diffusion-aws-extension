@@ -217,6 +217,7 @@ check_ready() {
 
         echo "upload files..."
         s5cmd run "$upload_files"
+        
         end_at=$(date +%s)
         cost=$((end_at-start_at))
         echo "sync endpoint files: $cost seconds"
