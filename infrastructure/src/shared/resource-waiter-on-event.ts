@@ -33,7 +33,6 @@ export async function handler(event: Event, context: Object) {
 async function waitApiReady(event: Event) {
   while (true) {
     try {
-
       console.log('Checking API readiness...');
 
       const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
@@ -61,7 +60,7 @@ async function waitApiReady(event: Event) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
     } catch (error) {
-      console.error('API readiness error occurred: ', error);
+      console.error(error);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
