@@ -44,6 +44,8 @@ async function waitApiReady(event: Event) {
         throw new Error(`HTTP error! status: ${resp.status}`);
       }
 
+      console.log('Received resp from API: ', resp);
+
       const data = await resp.json();
 
       console.log('Received response from API: ', data);
