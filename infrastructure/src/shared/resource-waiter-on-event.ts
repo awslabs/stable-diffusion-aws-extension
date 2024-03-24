@@ -61,7 +61,7 @@ async function waitApiReady(event: Event) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
     } catch (error) {
-      console.error('Error occurred: ', error);
+      console.error('API readiness error occurred: ', error);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
