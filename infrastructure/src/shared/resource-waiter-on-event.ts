@@ -1,4 +1,5 @@
 import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import fetch from 'node-fetch';
 import { INFER_INDEX_NAME } from './resource-provider-on-event';
 
 const ddbClient = new DynamoDBClient({});
@@ -6,6 +7,11 @@ const ddbClient = new DynamoDBClient({});
 interface Event {
   RequestType: string;
   PhysicalResourceId: string;
+  ResourceProperties: {
+    ServiceToken: string;
+    apiUrl: string;
+    apiKey: string;
+  };
 }
 
 export async function handler(event: Event, context: Object) {
@@ -16,11 +22,46 @@ export async function handler(event: Event, context: Object) {
   const allow_types = ['Create', 'Update'];
 
   if (allow_types.includes(event.RequestType)) {
+    await waitApiReady(event);
     await waitTableIndexReady('SDInferenceJobTable', INFER_INDEX_NAME);
   }
 
   return response(event, true);
 
+}
+
+
+async function waitApiReady(event: Event) {
+  while (true) {
+    try {
+      const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
+        method: 'GET',
+        headers: {
+          'x-api-key': event.ResourceProperties.apiKey,
+        },
+      });
+
+      if (!resp.ok) {
+        throw new Error(`HTTP error! status: ${resp.status}`);
+      }
+
+      const data = await resp.json();
+
+      console.log('Received response from API: ', data);
+
+      if (data.message === 'pong') {
+        console.log('Received pong! Exiting loop.');
+        break;
+      }
+
+      console.log('Did not receive pong from API. Checking again in 1 second...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+    } catch (error) {
+      console.error('Error occurred: ', error);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
 }
 
 

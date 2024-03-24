@@ -43,8 +43,8 @@ export class ResourceWaiter extends Construct {
     new CustomResource(scope, 'ResourcesWaiterCustomResource', {
       serviceToken: provider.serviceToken,
       properties: {
+        apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
-        restApiId: props.restApiGateway.apiGateway.url,
       },
     });
 
