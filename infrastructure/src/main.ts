@@ -11,6 +11,7 @@ import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
+import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
@@ -172,6 +173,17 @@ export class Middleware extends Stack {
       resourceProvider,
       accountId,
     });
+
+    const resourceWaiter = new ResourceWaiter(
+      this,
+      'ResourcesWaiter',
+      {
+        resourceProvider: resourceProvider,
+        restApiGateway: restApi,
+        apiKeyParam: apiKeyParam,
+      },
+    );
+    resourceWaiter.node.addDependency(restApi.apiGateway);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
