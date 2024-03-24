@@ -52,7 +52,7 @@ async function waitTableIndexReady(tableName: string, indexName: string) {
 }
 
 
-export interface ResourceCheckerResponse {
+export interface ResourceWaiterResponse {
   Result: string;
 }
 
@@ -62,7 +62,7 @@ function response(event: Event, isComplete: boolean) {
     IsComplete: isComplete,
     Data: {
       Result: 'Success',
-    } as ResourceCheckerResponse,
+    } as ResourceWaiterResponse,
   };
 }
 

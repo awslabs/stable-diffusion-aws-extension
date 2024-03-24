@@ -21,7 +21,7 @@ export class ResourceWaiter extends Construct {
 
     const role = props.resourceProvider.role;
 
-    const handler = new NodejsFunction(scope, 'ResourceCheckerHandler', {
+    const handler = new NodejsFunction(scope, 'ResourceWaiterHandler', {
       runtime: Runtime.NODEJS_18_X,
       handler: 'handler',
       entry: 'src/shared/resource-waiter-on-event.ts',
@@ -35,12 +35,12 @@ export class ResourceWaiter extends Construct {
       ephemeralStorageSize: Size.gibibytes(10),
     });
 
-    const provider = new Provider(scope, 'ResourceChecker', {
+    const provider = new Provider(scope, 'ResourceWaiter', {
       onEventHandler: handler,
       logRetention: RetentionDays.ONE_DAY,
     });
 
-    new CustomResource(scope, 'ResourceChecker', {
+    new CustomResource(scope, 'ResourceWaiterCustomResource', {
       serviceToken: provider.serviceToken,
       properties: {
         apiKey: props.apiKeyParam.valueAsString,

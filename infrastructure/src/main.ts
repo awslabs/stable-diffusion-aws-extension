@@ -174,7 +174,7 @@ export class Middleware extends Stack {
       accountId,
     });
 
-    const resourceChecker = new ResourceWaiter(
+    const resourceWaiter = new ResourceWaiter(
       this,
       'ResourceWaiter',
       {
@@ -183,7 +183,7 @@ export class Middleware extends Stack {
         apiKeyParam: apiKeyParam,
       },
     );
-    resourceChecker.node.addDependency(restApi);
+    resourceWaiter.node.addDependency(restApi);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
