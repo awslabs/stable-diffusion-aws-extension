@@ -2,8 +2,8 @@ import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { INFER_INDEX_NAME } from './resource-provider-on-event';
 
 const ddbClient = new DynamoDBClient({});
-const startTime = Date.now();
-const thirteenMinutesInMilliseconds = 13 * 60 * 1000;
+const lambdaStartTime = Date.now();
+const timeoutMinutesInMilliseconds = 13 * 60 * 1000;
 
 interface Event {
   RequestType: string;
@@ -33,10 +33,13 @@ export async function handler(event: Event, context: Object) {
 
 
 async function waitApiReady(event: Event) {
+  const startCheckTime = Date.now();
 
   while (true) {
 
-    if (Date.now() - startTime > thirteenMinutesInMilliseconds) {
+    const currentTime = Date.now();
+
+    if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
       console.log('Time exceeded 13 minutes. Exiting loop.');
       break;
     }
@@ -61,7 +64,7 @@ async function waitApiReady(event: Event) {
 
       // @ts-ignore
       if (data && data.message === 'pong') {
-        console.log('Received pong! Exiting loop.');
+        console.log(`Received pong after ${currentTime - startCheckTime} seconds!`);
         break;
       }
 
@@ -79,9 +82,12 @@ async function waitApiReady(event: Event) {
 
 async function waitTableIndexReady(tableName: string, indexName: string) {
 
-  while (true) {
+  const startCheckTime = Date.now();
 
-    if (Date.now() - startTime > thirteenMinutesInMilliseconds) {
+  while (true) {
+    const currentTime = Date.now();
+
+    if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
       console.log('Time exceeded 13 minutes. Exiting loop.');
       break;
     }
@@ -94,7 +100,7 @@ async function waitTableIndexReady(tableName: string, indexName: string) {
     }
 
     if (index.IndexStatus === 'ACTIVE') {
-      console.log(`Index ${indexName} is active and ready to use.`);
+      console.log(`Index ${indexName} is active and ready to use after ${currentTime - startCheckTime} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
       console.log(`Index ${indexName} is still being created. Checking again in 1 second...`);
