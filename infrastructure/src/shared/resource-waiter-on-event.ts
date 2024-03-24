@@ -1,5 +1,4 @@
 import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import fetch from 'node-fetch';
 import { INFER_INDEX_NAME } from './resource-provider-on-event';
 
 const ddbClient = new DynamoDBClient({});
