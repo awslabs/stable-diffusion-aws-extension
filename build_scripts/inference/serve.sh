@@ -101,7 +101,7 @@ if [ -n "$EXTENSIONS" ]; then
 
     for git_repo in "${array[@]}"; do
       IFS='#' read -r -a repo <<< "$git_repo"
-      
+
       git_repo=${repo[0]}
       repo_name=$(basename -s .git "$git_repo")
       repo_branch=${repo[1]}
@@ -154,7 +154,7 @@ remove_unused(){
 
 remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
-  echo "deleteing big unused files..."
+  echo "deleting big unused files..."
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
@@ -163,12 +163,12 @@ remove_unused_list(){
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
 
-  echo "deleteing git dir..."
+  echo "deleting git dir..."
   find /home/ubuntu/stable-diffusion-webui -type d \( -name '.git' -o -name '.github' \) | while read dir; do
     remove_unused "$dir";
   done
 
-  echo "deleteing unused files..."
+  echo "deleting unused files..."
   find /home/ubuntu/stable-diffusion-webui -type f \( -name '.gitignore' -o -name 'README.md' -o -name 'CHANGELOG.md' \) | while read file; do
     remove_unused "$file";
   done
@@ -217,7 +217,7 @@ check_ready() {
 
         echo "upload files..."
         s5cmd run "$upload_files"
-        
+
         end_at=$(date +%s)
         cost=$((end_at-start_at))
         echo "sync endpoint files: $cost seconds"

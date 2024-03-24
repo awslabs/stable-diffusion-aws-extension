@@ -65,7 +65,7 @@ cp ${dockerfile} .
 
 docker build  -t ${fullname} -f ${dockerfile} .
 
-# if docker build faild, exit
+# if docker build failed, exit
 if [ $? -ne 0 ]
 then
     echo "docker build failed"
