@@ -10,6 +10,7 @@ import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
+import { ResourceChecker } from './shared/resource-check';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
@@ -172,6 +173,17 @@ export class Middleware extends Stack {
       resourceProvider,
       accountId,
     });
+
+    const resourceChecker = new ResourceChecker(
+      this,
+      'ResourceChecker',
+      {
+        resourceProvider: resourceProvider,
+        restApiGateway: restApi,
+        apiKeyParam: apiKeyParam,
+      },
+    );
+    resourceChecker.node.addDependency(restApi);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {

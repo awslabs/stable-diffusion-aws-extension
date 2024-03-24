@@ -9,13 +9,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/commands/UpdateTableCommand';
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
-import {
-  GetRoleCommand,
-  GetRoleCommandOutput,
-  IAMClient,
-  ListRolePoliciesCommand,
-  PutRolePolicyCommand,
-} from '@aws-sdk/client-iam';
+import { GetRoleCommand, GetRoleCommandOutput, IAMClient } from '@aws-sdk/client-iam';
 import {
   CreateAliasCommand,
   CreateKeyCommand,
@@ -45,8 +39,8 @@ const {
   ROLE_ARN,
   BUCKET_NAME,
 } = process.env;
-const partition = AWS_REGION?.startsWith('cn-') ? 'aws-cn' : 'aws';
 const accountId = ROLE_ARN?.split(':')[4] || '';
+export const INFER_INDEX_NAME = 'taskType-createTime-index';
 
 interface Event {
   RequestType: string;
@@ -79,7 +73,6 @@ async function createAndCheckResources() {
     'a custom key to encrypt and decrypt password',
   );
   await createTopics();
-  await createPolicyForOldRole();
   await waitTableReady('MultiUserTable');
   await putItemUsersTable();
   await waitTableReady('SDInferenceJobTable');
@@ -92,22 +85,20 @@ async function waitTableReady(tableName: string) {
   };
 
   const command = new DescribeTableCommand(params);
-  let isReady = false;
-  let count = 0;
-  while (!isReady) {
-    try {
-      const data = await ddbClient.send(command);
-      if (data.Table?.TableStatus === 'ACTIVE') {
-        isReady = true;
-      }
-    } catch (err: any) {
-      console.log(err);
+
+  while (true) {
+    const data = await ddbClient.send(command);
+
+    if (!data.Table) {
+      throw new Error(`Table ${tableName} does not exist.`);
     }
-    if (count > 10) {
-      throw new Error(`Table ${tableName} is not ready.`);
+
+    if (data.Table.TableStatus === 'ACTIVE') {
+      break;
     }
-    count++;
-    console.log(`Waiting for table ${tableName} to be ready ${count}.`);
+
+    console.log(`Table ${tableName} is still in ${data.Table.TableStatus}, Checking again in 1 second...`);
+
     await new Promise(r => setTimeout(r, 1000));
   }
 }
@@ -330,7 +321,7 @@ async function createGlobalSecondaryIndex(tableName: string) {
     GlobalSecondaryIndexUpdates: [
       {
         Create: {
-          IndexName: 'taskType-createTime-index',
+          IndexName: INFER_INDEX_NAME,
           KeySchema: [
             {
               AttributeName: 'taskType',
@@ -507,144 +498,6 @@ async function findKeyByAlias(aliasName: string) {
   } while (nextToken);
 
   return null;
-}
-
-async function createPolicyForOldRole() {
-  const name = 'LambdaStartDeployRole';
-
-  try {
-
-    // list policies from role
-    const listRolePoliciesCommand = new ListRolePoliciesCommand({
-      RoleName: name,
-    });
-    const listPolicies = await iamClient.send(listRolePoliciesCommand);
-
-    if (!listPolicies.PolicyNames || listPolicies.PolicyNames.includes('LambdaStartDeployPolicy')) {
-      return;
-    }
-
-    // put policy to the role
-    const putRolePolicyCommand = new PutRolePolicyCommand({
-      RoleName: name,
-      PolicyName: 'LambdaStartDeployPolicy',
-      PolicyDocument: JSON.stringify({
-        Version: '2012-10-17',
-        Statement: [
-          {
-            Action: [
-              'sns:Publish',
-              'sns:ListSubscriptionsByTopic',
-              'sns:ListTopics',
-            ],
-            Resource: [
-              `arn:${partition}:sns:*:*:StableDiffusionSnsUserTopic`,
-              `arn:${partition}:sns:*:*:ReceiveSageMakerInferenceSuccess`,
-              `arn:${partition}:sns:*:*:ReceiveSageMakerInferenceError`,
-            ],
-            Effect: 'Allow',
-          },
-          {
-            Action: [
-              's3:Get*',
-              's3:List*',
-              's3:PutObject',
-              's3:GetObject',
-            ],
-            Resource: [
-              `arn:${partition}:s3:::*`,
-              `arn:${partition}:s3:::*/*`,
-            ],
-            Effect: 'Allow',
-          },
-          {
-            Action: [
-              'sagemaker:DeleteModel',
-              'sagemaker:DeleteEndpoint',
-              'sagemaker:DescribeEndpoint',
-              'sagemaker:DeleteEndpointConfig',
-              'sagemaker:DescribeEndpointConfig',
-              'sagemaker:InvokeEndpoint',
-              'sagemaker:CreateModel',
-              'sagemaker:CreateEndpoint',
-              'sagemaker:CreateEndpointConfig',
-              'sagemaker:InvokeEndpointAsync',
-              'ecr:GetAuthorizationToken',
-              'ecr:BatchCheckLayerAvailability',
-              'ecr:GetDownloadUrlForLayer',
-              'ecr:GetRepositoryPolicy',
-              'ecr:DescribeRepositories',
-              'ecr:ListImages',
-              'ecr:DescribeImages',
-              'ecr:BatchGetImage',
-              'ecr:InitiateLayerUpload',
-              'ecr:UploadLayerPart',
-              'ecr:CompleteLayerUpload',
-              'ecr:PutImage',
-              'cloudwatch:PutMetricAlarm',
-              'cloudwatch:PutMetricData',
-              'cloudwatch:DeleteAlarms',
-              'cloudwatch:DescribeAlarms',
-              'sagemaker:UpdateEndpointWeightsAndCapacities',
-              'iam:CreateServiceLinkedRole',
-              'iam:PassRole',
-              'sts:AssumeRole',
-            ],
-            Resource: '*',
-            Effect: 'Allow',
-          },
-          {
-            Action: [
-              'dynamodb:Query',
-              'dynamodb:GetItem',
-              'dynamodb:PutItem',
-              'dynamodb:DeleteItem',
-              'dynamodb:UpdateItem',
-              'dynamodb:Describe*',
-              'dynamodb:List*',
-              'dynamodb:Scan',
-            ],
-            Resource: [
-              `arn:${partition}:dynamodb:*:*:table/SDEndpointDeploymentJobTable`,
-              `arn:${partition}:dynamodb:*:*:table/MultiUserTable`,
-              `arn:${partition}:dynamodb:*:*:table/SDInferenceJobTable`,
-            ],
-            Effect: 'Allow',
-          },
-          {
-            Action: [
-              'logs:CreateLogGroup',
-              'logs:CreateLogStream',
-              'logs:PutLogEvents',
-            ],
-            Resource: `arn:${partition}:logs:*:*:log-group:*:*`,
-            Effect: 'Allow',
-          },
-          {
-            Action: 'iam:PassRole',
-            Resource: `arn:${partition}:iam::*:role/ESDRoleForEndpoint-*`,
-            Effect: 'Allow',
-          },
-        ],
-      }),
-    });
-    await iamClient.send(putRolePolicyCommand);
-
-
-  } catch (err: any) {
-    // it's ok if the role not exists
-    if (err?.Error?.Message === `The role with name ${name} cannot be found.`) {
-      return;
-    }
-
-    if (err?.Error?.Code !== 'NoSuchEntity') {
-      console.log(err?.Error?.Code);
-      console.log(err?.Error?.Message);
-      throw err;
-    }
-
-  }
-
 }
 
 async function checkDeploy() {
