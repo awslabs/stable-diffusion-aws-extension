@@ -51,6 +51,7 @@ async function waitApiReady(event: Event) {
 
       console.log('Received response from API: ', data);
 
+      // @ts-ignore
       if (data && data.message === 'pong') {
         console.log('Received pong! Exiting loop.');
         break;
