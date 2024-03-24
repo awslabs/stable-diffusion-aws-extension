@@ -2,6 +2,8 @@ import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { INFER_INDEX_NAME } from './resource-provider-on-event';
 
 const ddbClient = new DynamoDBClient({});
+const startTime = Date.now();
+const thirteenMinutesInMilliseconds = 13 * 60 * 1000;
 
 interface Event {
   RequestType: string;
@@ -31,7 +33,14 @@ export async function handler(event: Event, context: Object) {
 
 
 async function waitApiReady(event: Event) {
+
   while (true) {
+
+    if (Date.now() - startTime > thirteenMinutesInMilliseconds) {
+      console.log('Time exceeded 13 minutes. Exiting loop.');
+      break;
+    }
+
     try {
       console.log('Checking API readiness...');
 
@@ -64,17 +73,20 @@ async function waitApiReady(event: Event) {
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
+
 }
 
 
 async function waitTableIndexReady(tableName: string, indexName: string) {
-  const params = {
-    TableName: tableName,
-  };
 
-  const command = new DescribeTableCommand(params);
   while (true) {
-    const data = await ddbClient.send(command);
+
+    if (Date.now() - startTime > thirteenMinutesInMilliseconds) {
+      console.log('Time exceeded 13 minutes. Exiting loop.');
+      break;
+    }
+
+    const data = await ddbClient.send(new DescribeTableCommand({ TableName: tableName }));
     const index = data.Table?.GlobalSecondaryIndexes?.find(idx => idx.IndexName === indexName);
 
     if (!index) {
@@ -91,6 +103,7 @@ async function waitTableIndexReady(tableName: string, indexName: string) {
     }
 
     await new Promise(r => setTimeout(r, 1000));
+
   }
 }
 
