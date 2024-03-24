@@ -10,7 +10,7 @@ import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
-import { ResourceChecker } from './shared/resource-check';
+import { ResourceChecker } from './shared/resource-checker';
 import { ResourceProvider } from './shared/resource-provider';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
