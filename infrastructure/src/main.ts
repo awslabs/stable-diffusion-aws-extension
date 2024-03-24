@@ -10,8 +10,8 @@ import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
-import { ResourceChecker } from './shared/resource-checker';
 import { ResourceProvider } from './shared/resource-provider';
+import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
@@ -174,7 +174,7 @@ export class Middleware extends Stack {
       accountId,
     });
 
-    const resourceChecker = new ResourceChecker(
+    const resourceChecker = new ResourceWaiter(
       this,
       'ResourceWaiter',
       {

@@ -8,15 +8,15 @@ import { Construct } from 'constructs';
 import { ResourceProvider } from './resource-provider';
 import { RestApiGateway } from './rest-api-gateway';
 
-export interface ResourceCheckerProps {
+export interface ResourceWaiterProps {
   resourceProvider: ResourceProvider;
   restApiGateway: RestApiGateway;
   apiKeyParam: CfnParameter;
 }
 
-export class ResourceChecker extends Construct {
+export class ResourceWaiter extends Construct {
 
-  constructor(scope: Construct, id: string, props: ResourceCheckerProps) {
+  constructor(scope: Construct, id: string, props: ResourceWaiterProps) {
     super(scope, id);
 
     const role = props.resourceProvider.role;
@@ -24,7 +24,7 @@ export class ResourceChecker extends Construct {
     const handler = new NodejsFunction(scope, 'ResourceCheckerHandler', {
       runtime: Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: 'src/shared/resource-checker-on-event.ts',
+      entry: 'src/shared/resource-waiter-on-event.ts',
       bundling: {
         minify: true,
         externalModules: ['aws-cdk-lib'],
