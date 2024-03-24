@@ -38,6 +38,7 @@ export interface TrainDeployProps extends StackProps {
 export class TrainDeploy {
   private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
+  public readonly deleteTrainingJobsApi: DeleteTrainingJobsApi;
 
   constructor(scope: Construct, props: TrainDeployProps) {
 
@@ -213,7 +214,7 @@ export class TrainDeploy {
     deleteDatasetsApi.requestValidator.node.addDependency(deleteCheckpointsApi.requestValidator);
 
     // DELETE /trainings
-    const deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, 'DeleteTrainingJobs', {
+    this.deleteTrainingJobsApi = new DeleteTrainingJobsApi(scope, 'DeleteTrainingJobs', {
       router: props.routers.trainings,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
@@ -224,8 +225,8 @@ export class TrainDeploy {
       logLevel: props.logLevel,
     },
     );
-    deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
-    deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
+    this.deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
+    this.deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(scope, 'GetTrainingJob', {

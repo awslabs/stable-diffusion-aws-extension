@@ -159,7 +159,7 @@ export class Middleware extends Stack {
       resourceProvider,
     });
 
-    new TrainDeploy(this, {
+    const train = new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
@@ -183,7 +183,7 @@ export class Middleware extends Stack {
         apiKeyParam: apiKeyParam,
       },
     );
-    resourceWaiter.node.addDependency(restApi.apiGateway);
+    resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {

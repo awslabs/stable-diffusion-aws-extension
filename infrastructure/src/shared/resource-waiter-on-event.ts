@@ -56,12 +56,12 @@ async function waitApiReady(event: Event) {
         break;
       }
 
-      console.log('Did not receive pong from API. Checking again in 1 second...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Did not receive pong from API. Checking again in 2 seconds...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
     } catch (error) {
       console.error(error);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
 }
