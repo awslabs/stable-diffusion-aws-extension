@@ -33,6 +33,9 @@ export async function handler(event: Event, context: Object) {
 async function waitApiReady(event: Event) {
   while (true) {
     try {
+
+      console.log('Checking API readiness...');
+
       const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
         method: 'GET',
         headers: {
@@ -44,13 +47,11 @@ async function waitApiReady(event: Event) {
         throw new Error(`HTTP error! status: ${resp.status}`);
       }
 
-      console.log('Received resp from API: ', resp);
-
       const data = await resp.json();
 
       console.log('Received response from API: ', data);
 
-      if (data.message === 'pong') {
+      if (data && data.message === 'pong') {
         console.log('Received pong! Exiting loop.');
         break;
       }
