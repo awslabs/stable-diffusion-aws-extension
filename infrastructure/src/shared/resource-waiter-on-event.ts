@@ -64,7 +64,7 @@ async function waitApiReady(event: Event) {
 
       // @ts-ignore
       if (data && data.message === 'pong') {
-        console.log(`Received pong after ${currentTime - startCheckTime} seconds!`);
+        console.log(`Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
@@ -100,7 +100,7 @@ async function waitTableIndexReady(tableName: string, indexName: string) {
     }
 
     if (index.IndexStatus === 'ACTIVE') {
-      console.log(`Index ${indexName} is active and ready to use after ${currentTime - startCheckTime} seconds!`);
+      console.log(`Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
       console.log(`Index ${indexName} is still being created. Checking again in 1 second...`);
