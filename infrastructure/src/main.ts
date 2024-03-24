@@ -176,7 +176,7 @@ export class Middleware extends Stack {
 
     const resourceChecker = new ResourceChecker(
       this,
-      'ResourceChecker',
+      'ResourceWaiter',
       {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
