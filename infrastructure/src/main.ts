@@ -183,7 +183,7 @@ export class Middleware extends Stack {
         apiKeyParam: apiKeyParam,
       },
     );
-    resourceWaiter.node.addDependency(restApi);
+    resourceWaiter.node.addDependency(restApi.apiGateway);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
