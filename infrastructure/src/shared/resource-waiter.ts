@@ -2,7 +2,6 @@ import { CfnParameter, CustomResource, Duration } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { ResourceProvider } from './resource-provider';
@@ -31,8 +30,7 @@ export class ResourceWaiter extends Construct {
       },
       timeout: Duration.seconds(900),
       role: role,
-      memorySize: 10240,
-      ephemeralStorageSize: Size.gibibytes(10),
+      memorySize: 4048,
     });
 
     const provider = new Provider(scope, 'ResourcesWaiterProvider', {
