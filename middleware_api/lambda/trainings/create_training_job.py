@@ -12,6 +12,7 @@ import time
 import tomli
 import tomli_w
 
+from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common import const
 from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
@@ -257,6 +258,9 @@ def _create_training_job(raw_event, context):
         dataset_name = query_data(event.params, ['training_params', 'dataset'])
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
         output_name = query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+        output_name = f"{output_name}.safetensors"
+
+        check_ckpt_name_unique([output_name])
 
         save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
         event.params["config_params"]["saving_arguments"]["save_every_n_epochs"] = int(save_every_n_epochs)
@@ -280,7 +284,8 @@ def _create_training_job(raw_event, context):
             toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
         else:
             raise BadRequestException(
-                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} "
+                f"and {const.TrainFMType.SD_XL.value}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket

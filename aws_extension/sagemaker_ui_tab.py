@@ -26,6 +26,7 @@ from utils import get_variable_from_json, save_variable_to_json, has_config, is_
 logger = logging.getLogger(__name__)
 logger.setLevel(utils.LOGGING_LEVEL)
 
+service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
 
 if is_gcr():
@@ -79,6 +80,9 @@ def run_command():
 
 
 def restart_sd_webui_service():
+    if not os.path.exists(service_file):
+        return f"Service file {service_file} not found, make sure you created the service by CloudFormation template."
+
     thread = threading.Thread(target=run_command)
     thread.start()
     return "Restarting the service after 5 seconds..."
@@ -281,7 +285,7 @@ def api_setting_tab():
                 except Exception as e:
                     return show_output, f'{message}, but update setting failed, because {e}'
 
-                if os.path.exists("/etc/systemd/system/sd-webui.service"):
+                if os.path.exists(service_file):
                     restart_sd_webui_service()
                     return show_output, f"Setting Updated, Service will restart in 5 seconds"
 
@@ -1221,17 +1225,28 @@ def dataset_tab():
                 message = f'Complete Dataset {dataset_name} creation'
                 return dataset_create_result.update(value=message, visible=True), None, None, None, None
 
-            dataset_name_upload = gr.Textbox(value="", lines=1, placeholder="Please input dataset name",
-                                             label="Dataset Name", elem_id="sd_dataset_name_textbox")
-            dataset_description_upload = gr.Textbox(value="", lines=1,
+            dataset_name_upload = gr.Textbox(value="",
+                                             lines=1,
+                                             placeholder="Please input dataset name",
+                                             label="Dataset Name",
+                                             elem_id="sd_dataset_name_textbox")
+            dataset_description_upload = gr.Textbox(value="",
+                                                    lines=1,
                                                     placeholder="Please input dataset description",
                                                     label="Dataset Description",
                                                     elem_id="sd_dataset_description_textbox")
-            dataset_prefix = gr.Textbox(value="", lines=1, placeholder="",
-                                        label="Path Prefix", elem_id="sd_dataset_prefix_textbox")
-            create_dataset_button = gr.Button("Create Dataset", variant="primary",
+            dataset_prefix = gr.Textbox(value="",
+                                        lines=1,
+                                        placeholder="Please input dataset directory prefix",
+                                        label="Path Prefix",
+                                        elem_id="sd_dataset_prefix_textbox")
+            create_dataset_button = gr.Button("Create Dataset",
+                                              variant="primary",
                                               elem_id="sagemaker_dataset_create_button")
-            dataset_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=False)
+            dataset_create_result = gr.Textbox(value="",
+                                               show_label=False,
+                                               interactive=False,
+                                               visible=False)
             create_dataset_button.click(
                 fn=create_dataset,
                 inputs=[upload_button, dataset_name_upload, dataset_prefix, dataset_description_upload],
