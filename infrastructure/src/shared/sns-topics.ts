@@ -11,6 +11,8 @@ export class SnsTopics {
   public readonly createModelFailureTopic: Topic;
   public readonly inferenceResultTopic: Topic;
   public readonly inferenceResultErrorTopic: Topic;
+  public readonly executeResultSuccessTopic: Topic;
+  public readonly executeResultFailTopic: Topic;
   private readonly scope: Construct;
   private readonly id: string;
 
@@ -27,6 +29,9 @@ export class SnsTopics {
     this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
     this.createModelSuccessTopic = this.createOrImportTopic('successCreateModel');
     this.createModelFailureTopic = this.createOrImportTopic('failureCreateModel');
+    this.executeResultSuccessTopic = this.createOrImportTopic('sageMakerExecuteSuccess');
+    this.executeResultFailTopic = this.createOrImportTopic('sageMakerExecuteFail');
+
   }
 
   private createOrImportTopic(topicName: string): Topic {

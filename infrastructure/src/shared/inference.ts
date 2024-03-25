@@ -204,8 +204,6 @@ export class Inference {
         S3_BUCKET_NAME: props?.s3_bucket.bucketName ?? '',
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION_NAME: Aws.REGION,
-        SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
-        SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
         NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
         LOG_LEVEL: props.logLevel.valueAsString,
       },

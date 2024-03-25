@@ -1,32 +1,40 @@
-import { Aws, aws_dynamodb, aws_lambda, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
+import { Aws, aws_dynamodb, aws_lambda, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { SqsStack } from './comfy-sqs';
 import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
-import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
+import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
-import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
-import { ResourceProvider } from '../shared/resource-provider';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
+import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
+import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
+import { ResourceProvider } from '../shared/resource-provider';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
-  ecrImageTag: string;
+  ecrImageTag: CfnParameter;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   modelTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   msgTable:aws_dynamodb.Table;
-  commonLayer: aws_lambda.LayerVersion;
+  multiUserTable: aws_dynamodb.Table;
+  endpointTable: aws_dynamodb.Table;
+  commonLayer: PythonLayerVersion;
   ecrRepositoryName: string;
+  executeSuccessTopic: sns.Topic;
+  executeFailTopic: sns.Topic;
+  snsTopic: aws_sns.Topic;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
@@ -39,6 +47,11 @@ export class ComfyApiStack extends Construct {
   private modelTable: aws_dynamodb.Table;
   private syncTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
+  private multiUserTable: aws_dynamodb.Table;
+  private endpointTable: aws_dynamodb.Table;
+  private executeSuccessTopic: sns.Topic;
+  private executeFailTopic: sns.Topic;
+  private snsTopic: aws_sns.Topic;
 
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
@@ -52,6 +65,11 @@ export class ComfyApiStack extends Construct {
     this.modelTable = props.modelTable;
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
+    this.executeSuccessTopic = props.executeSuccessTopic;
+    this.executeFailTopic = props.executeFailTopic;
+    this.snsTopic = props.snsTopic;
+    this.multiUserTable = props.multiUserTable;
+    this.endpointTable = props.endpointTable;
 
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
     const srcRoot = '../middleware_api/lambda';
@@ -118,21 +136,21 @@ export class ComfyApiStack extends Construct {
       logLevel: props.logLevel,
     });
 
-    // new EndpointStack(
-    //   scope, 'Comfy', <EndpointStackProps>{
-    //     inferenceErrorTopic: props.inferenceErrorTopic,
-    //     inferenceResultTopic: props.inferenceResultTopic,
-    //     routers: props.routers,
-    //     s3Bucket: props.s3Bucket,
-    //     multiUserTable: props.multiUserTable,
-    //     snsTopic: props?.snsTopic,
-    //     EndpointDeploymentJobTable: props.endpointTable,
-    //     commonLayer: props.commonLayer,
-    //     logLevel: props.logLevel,
-    //     accountId: props.accountId,
-    //     ecrImageTag: props.ecrImageTag,
-    //   },
-    // );
+    new EndpointStack(
+      scope, 'Comfy', <EndpointStackProps>{
+        inferenceErrorTopic: this.executeFailTopic,
+        inferenceResultTopic: this.executeSuccessTopic,
+        routers: props.routers,
+        s3Bucket: props.s3Bucket,
+        multiUserTable: this.multiUserTable,
+        snsTopic: this.snsTopic,
+        EndpointDeploymentJobTable: this.endpointTable,
+        commonLayer: props.commonLayer,
+        logLevel: props.logLevel,
+        accountId: props.accountId,
+        ecrImageTag: props.ecrImageTag,
+      },
+    );
 
     // POST /execute
     new ExecuteApi(
