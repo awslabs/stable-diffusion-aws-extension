@@ -86,7 +86,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     current_datetime = datetime.now()
     current_date_string = current_datetime.strftime("%Y-%m-%d")
     inference_job = ComfyExecuteTable(
-        prompt_date=current_date_string,
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
         inference_type=event.inference_type,

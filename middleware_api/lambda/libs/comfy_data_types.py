@@ -25,7 +25,6 @@ class ComfyConfigTable:
 
 @dataclass
 class ComfyExecuteTable:
-    prompt_date: str
     prompt_id: str
     endpoint_name: str
     inference_type: str
