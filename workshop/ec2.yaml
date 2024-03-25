@@ -230,5 +230,8 @@ Resources:
 Outputs:
   WebUIURL:
     Description: URL for Stable Diffusion WebUI
-    # add port 7860 to the end of the URL
     Value: !Sub http://${WebUiEIP}
+  WebUIRealURL:
+    Description: URL for Stable Diffusion WebUI
+    # add port 7860 to the end of the URL
+    Value: !Sub http://${WebUiEIP}:7860
