@@ -53,13 +53,7 @@ def handler(event, ctx):
             except Exception as e:
                 logger.error(e)
 
-            bucket.objects.filter(Prefix=f"kohya/{training_id_list}").delete()
-
-            if 'input_s3_location' in training:
-                prefix = training['input_s3_location'].replace(f"s3://{s3_bucket_name}/", "")
-                logger.info(f'delete prefix: {prefix}')
-                response = bucket.objects.filter(Prefix=prefix).delete()
-                logger.info(f'delete response: {response}')
+            bucket.objects.filter(Prefix=f"kohya/train/{training_id}").delete()
 
             training_job_table.delete_item(Key={'id': training_id})
 
