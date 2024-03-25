@@ -824,18 +824,21 @@ def model_upload_tab():
                                       inputs=[ckpt_list_selected, new_name_textbox],
                                       outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
 
-            def _delete_ckpt(ckpt_id, pr: gr.Request):
+            def _delete_ckpt(ckpt_id, query_types, query_status, query_roles, current_page, pr: gr.Request):
                 show_output = ckpt_list_info.update(visible=True)
                 if not ckpt_id:
                     message = "Please select one checkpoint to delete."
                 else:
                     message = api_manager.ckpts_delete(ckpts=[ckpt_id], user_token=pr.username)
-                return show_output, message, ''
+                new_model_list, new_page_info, new_page_info = list_ckpts_data(query_types, query_status, query_roles,
+                                                                               current_page, pr)
+                return show_output, message, '', new_model_list, new_page_info, new_page_info
 
             delete_ckpt_btn = gr.Button(value='Delete \U0001F5D1', elem_id="delete_ckpt")
             delete_ckpt_btn.click(fn=_delete_ckpt,
-                                  inputs=[ckpt_list_selected],
-                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
+                                  inputs=[ckpt_list_selected, query_types, query_status, query_roles, current_page],
+                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected, model_list, page_info,
+                                           page_info])
             # ---- bind functions end ----
 
     return upload_tab, model_list
@@ -1157,11 +1160,11 @@ def ep_list_tab():
         ep_list_prev_btn.click(fn=list_ep_first, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
 
         def delete_ep(ep, rq: gr.Request):
-            new_list = _list_sagemaker_endpoints(rq.username)
             if not ep:
                 message = 'No endpoint selected'
             else:
                 message = api_manager.sagemaker_endpoint_delete(delete_endpoint_list=[ep], username=rq.username)
+            new_list = _list_sagemaker_endpoints(rq.username)
             return ep_list_info.update(value=message, visible=True), '', new_list
 
         ep_delete_btn.click(fn=delete_ep, inputs=[ep_selected], outputs=[ep_list_info, ep_selected, ep_list])
@@ -1475,11 +1478,11 @@ def trainings_tab():
                                           outputs=[train_list_info, train_selected])
 
                         def _train_delete(train, pr: gr.Request):
-                            new_train_list = _list_trainings_job(pr.username)
                             if not train:
                                 message = 'Please select a training job to delete'
                             else:
                                 message = api_manager.trains_delete(list=[train], username=pr.username)
+                            new_train_list = _list_trainings_job(pr.username)
                             return train_list_info.update(value=message, visible=True), "", new_train_list
 
                         train_delete_btn.click(_train_delete,
