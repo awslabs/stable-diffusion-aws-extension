@@ -11,8 +11,7 @@ import requests
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, forbidden
-from libs.common_tools import get_base_checkpoint_s3_key, \
-    multipart_upload_from_url
+from libs.common_tools import get_base_checkpoint_s3_key, multipart_upload_from_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.utils import get_user_roles, get_permissions_by_username
 

@@ -61,7 +61,7 @@ def handler(event, context):
 
             train_job_dto = {
                 'id': train_job.id,
-                'modelName': get_output_model_name(train_job.params),
+                'modelName': get_model_name(train_job.params),
                 'status': train_job.job_status.value,
                 'trainType': train_job.train_type,
                 'created': train_job.timestamp,
@@ -96,7 +96,7 @@ def sort_jobs(train_jobs):
     return sorted(train_jobs, key=lambda x: x['created'], reverse=True)
 
 
-def get_output_model_name(params):
+def get_model_name(params):
     model_name = 'not_applied'
 
     try:

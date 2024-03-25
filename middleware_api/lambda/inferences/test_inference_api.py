@@ -1,6 +1,5 @@
 import dataclasses
 import os
-from datetime import datetime
 from unittest import TestCase
 
 os.environ.setdefault('AWS_PROFILE', 'env')
