@@ -27,16 +27,17 @@ class ComfyConfigTable:
 @dataclass
 class ComfyExecuteTable:
     prompt_id: str
-    prompt_params: str
-    prompt_path: Optional[str]
     endpoint_name: str
     inference_type: str
     need_sync: bool
+    status: str
+    # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
+    prompt_params: dict[str, Any]
     instance_id: Optional[str]
-    number: Optional[int]
-    front: Optional[str]
-    extra_data: Optional[str]
-    client_id: Optional[str]
+    prompt_path: Optional[str]
+    create_time: Optional[Any] = None
+    start_time: Optional[Any] = None
+    complete_time: Optional[Any] = None
 
 
 @dataclass
