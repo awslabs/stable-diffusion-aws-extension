@@ -61,15 +61,6 @@ def handler(event, ctx):
                 response = bucket.objects.filter(Prefix=prefix).delete()
                 logger.info(f'delete response: {response}')
 
-            if 'params' in training:
-                if 'training_params' in training['params']:
-                    if 's3_model_path' in training['params']['training_params']:
-                        s3_model_path = training['params']['training_params']['s3_model_path']
-                        prefix = s3_model_path.replace(f"s3://{s3_bucket_name}/", "")
-                        logger.info(f'delete prefix: {prefix}')
-                        response = bucket.objects.filter(Prefix=prefix).delete()
-                        logger.info(f'delete response: {response}')
-
             training_job_table.delete_item(Key={'id': training_id})
 
         return no_content(message='training jobs deleted')
