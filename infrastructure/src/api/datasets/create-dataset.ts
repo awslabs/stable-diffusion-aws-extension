@@ -161,6 +161,10 @@ export class CreateDatasetApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          prefix: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
           params: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -174,6 +178,7 @@ export class CreateDatasetApi {
           'dataset_name',
           'content',
           'creator',
+          'prefix',
         ],
       },
       contentType: 'application/json',
