@@ -280,7 +280,8 @@ def _create_training_job(raw_event, context):
             toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
         else:
             raise BadRequestException(
-                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} "
+                f"and {const.TrainFMType.SD_XL.value}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
