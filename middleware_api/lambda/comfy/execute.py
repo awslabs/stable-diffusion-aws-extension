@@ -5,7 +5,10 @@ import os
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
+
+from common.ddb_service.client import DynamoDbUtilsService
 
 import boto3
 import sagemaker
@@ -13,7 +16,8 @@ from sagemaker import Predictor
 from sagemaker.base_deserializers import JSONDeserializer
 from sagemaker.base_serializers import JSONSerializer
 
-from libs.enums import ComfyTaskType
+from libs.comfy_data_types import ComfyExecuteTable
+from libs.enums import ComfyTaskType, ComfyExecuteType
 from response import ok
 
 logger = logging.getLogger(__name__)
@@ -23,6 +27,7 @@ region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
 sqs_url = os.environ.get('SQS_URL')
 execute_table = os.environ.get('EXECUTE_TABLE')
+ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 @dataclass
@@ -32,10 +37,10 @@ class ExecuteEvent:
     endpoint_name: Optional[str] = ''
     inference_type: Optional[str] = None
     need_sync: bool = True
-    number: str = None
-    front: bool = None
-    extra_data: dict = None
-    client_id: str = None
+    number: Optional[str] = None
+    front: Optional[bool] = None
+    extra_data: Optional[dict] = None
+    client_id: Optional[str] = None
 
 
 def build_s3_images_request(prompt_id, bucket_name, s3_path):
@@ -64,6 +69,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     payload["sqs_url"] = sqs_url
     payload["region"] = region
     logger.info('inference payload: {}'.format(payload))
+    # TODO 同步异步推理的选择 以及endpoint的选择
     session = boto3.Session(region_name=region)
     sagemaker_session = sagemaker.Session(boto_session=session)
     predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)
@@ -76,7 +82,26 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     logger.info(f"Response object: {prediction}")
     r = prediction
     logger.info(r)
-    logger.info(f"Time taken: {time.time() - start}s")
+    # TODO 获取哪些可用的endpoint name 以及instance type 默认异步
+    inference_job = ComfyExecuteTable(
+        prompt_id=event.prompt_id,
+        endpoint_name=event.endpoint_name,
+        inference_type=event.inference_type,
+        # TODO shell脚本补全instanceId 补全id 知道推理环境
+        instance_id='',
+        need_sync=event.need_sync,
+        status=ComfyExecuteType.CREATED,
+        # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
+        prompt_params={'prompt': event.prompt, 'number': event.number, 'front': event.front,
+                       'extra_data': event.extra_data, 'client_id': event.client_id},
+        prompt_path='',
+        create_time=datetime.now(),
+        start_time=datetime.now(),
+        complete_time=None
+    )
+
+    save_ddb_resp = ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+    logger.info(f"Time taken: {time.time() - start}s save msg: {save_ddb_resp}")
 
 
 def handler(raw_event, ctx):

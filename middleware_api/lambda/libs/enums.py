@@ -67,6 +67,12 @@ class ComfyEnvPrepareType(Enum):
     CUSTOM = 'custom'
 
 
+class ComfyExecuteType(Enum):
+    CREATED = 'created'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
 class ComfySyncStatus(Enum):
     INIT = 'init'
     SUCCESS = 'success'
