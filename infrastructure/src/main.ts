@@ -104,7 +104,6 @@ export class Middleware extends Stack {
       'ping',
       'checkpoints',
       'datasets',
-      'inference',
       'users',
       'roles',
       'endpoints',

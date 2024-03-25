@@ -87,8 +87,6 @@ export class TrainDeploy {
       datasetInfoTable: props.database.datasetInfoTable,
     });
 
-    const trainJobRouter = routers.trainings.addResource('{id}');
-
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
       s3Bucket: props.s3Bucket,
@@ -230,7 +228,7 @@ export class TrainDeploy {
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(scope, 'GetTrainingJob', {
-      router: trainJobRouter,
+      router: props.routers.trainings,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
       multiUserTable: multiUserTable,

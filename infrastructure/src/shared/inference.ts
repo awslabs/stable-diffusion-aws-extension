@@ -53,7 +53,6 @@ export class Inference {
     props: InferenceProps,
   ) {
 
-    const inference = props.routers.inference;
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
 
@@ -226,11 +225,6 @@ export class Inference {
     );
     deleteInferenceJobsApi.model.node.addDependency(createEndpointApi.model);
     deleteInferenceJobsApi.requestValidator.node.addDependency(createEndpointApi.requestValidator);
-
-    // Add a POST method with prefix inference
-    if (!inference) {
-      throw new Error('inference is undefined');
-    }
 
     const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
       entry: `${srcRoot}/inferences`,

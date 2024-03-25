@@ -3,12 +3,12 @@ import datetime
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Optional
 
 import boto3
 import sagemaker
-import time
 import tomli
 import tomli_w
 
@@ -359,7 +359,7 @@ def handler(raw_event, context):
         return created(data=job_info, decimal=True)
     except Exception as e:
         if job_id:
-            ddb_service.delete_item(train_table, keys={
-                'id': job_id,
-            })
+            # Clean up the created job when an error occurs
+            ddb_service.delete_item(train_table, keys={'id': job_id})
+            ddb_service.delete_item(checkpoint_table, keys={'id': job_id})
         return response_error(e)
