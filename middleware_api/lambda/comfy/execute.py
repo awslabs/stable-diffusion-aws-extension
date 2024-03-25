@@ -97,6 +97,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
         prompt_params={'prompt': event.prompt, 'number': event.number, 'front': event.front,
                        'extra_data': event.extra_data, 'client_id': event.client_id},
+        # 带后期再看是否要将参数统一变成s3的文件来管理 此处为入参路径 优先级不高 一期先放
         prompt_path='',
         create_time=datetime.now(),
         start_time=datetime.now(),
