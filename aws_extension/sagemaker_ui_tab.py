@@ -1228,7 +1228,7 @@ def dataset_tab():
                                                     label="Dataset Description",
                                                     elem_id="sd_dataset_description_textbox")
             dataset_prefix = gr.Textbox(value="", lines=1, placeholder="",
-                                        label="Path Prefix (Optional)", elem_id="sd_dataset_prefix_textbox")
+                                        label="Path Prefix", elem_id="sd_dataset_prefix_textbox")
             create_dataset_button = gr.Button("Create Dataset", variant="primary",
                                               elem_id="sagemaker_dataset_create_button")
             dataset_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=False)

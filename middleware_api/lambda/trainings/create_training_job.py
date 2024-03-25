@@ -170,7 +170,7 @@ def _trigger_sagemaker_training_job(
         table=train_table,
         key=search_key,
         field_name="job_status",
-        value=TrainJobStatus.Training.value,
+        value=TrainJobStatus.Starting.value,
     )
 
 
@@ -198,7 +198,7 @@ def _start_training_job(train_job_id: str):
 
     return {
         "id": train_job.id,
-        "status": train_job.job_status.value,
+        "status": train_job.job_status.Starting.value,
         "created": str(train_job.timestamp),
         "params": train_job.params,
         "input_location": train_job.input_s3_location,
@@ -213,6 +213,10 @@ def get_model_location(model_name):
 
     for item in resp['Items']:
         if 'checkpoint_names' not in item:
+            continue
+        if 'L' not in item['checkpoint_names']:
+            continue
+        if len(item['checkpoint_names']['L']) == 0:
             continue
         if item['checkpoint_names']['L'][0]['S'] == model_name:
             return f'{item["s3_location"]["S"]}/{model_name}'
