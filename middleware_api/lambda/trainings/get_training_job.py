@@ -7,6 +7,7 @@ import boto3
 from common.const import PERMISSION_TRAIN_ALL
 from common.response import ok, not_found
 from libs.utils import response_error, permissions_check
+from trainings.list_training_jobs import get_output_model_name
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -31,6 +32,7 @@ def handler(event, ctx):
 
         data = {
             'id': item['id'],
+            'modelName': get_output_model_name(item['params']),
             'checkpoint_id': item['checkpoint_id'],
             'job_status': item['job_status'],
             'model_id': item['model_id'],

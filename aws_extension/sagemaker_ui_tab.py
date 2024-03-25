@@ -1056,24 +1056,17 @@ def _list_trainings_job(username):
     items = api_manager.list_all_train_jobs_raw(username=username)
 
     for item in items:
-        output_name = ""
-
-        try:
-            output_name = item['params']['config_params']['saving_arguments']['output_name']
-        except Exception as e:
-            pass
 
         jobs.append([
             item['id'],
             item['sagemakerTrainName'],
-            output_name,
             item['modelName'],
             item['status'],
             item['trainType'],
         ])
 
     if len(jobs) == 0:
-        jobs = [['', '', '', '', '', '']]
+        jobs = [['', '', '', '', '']]
 
     return jobs
 
@@ -1357,7 +1350,9 @@ def trainings_tab():
                     "max_train_epochs": 100
                 }
             }
-            config_params = gr.TextArea(value=json.dumps(default_config, indent=4), label="config_params",
+            config_params = gr.TextArea(value=json.dumps(default_config, indent=4),
+                                        label="config_params",
+                                        lines=10,
                                         elem_id="config_params")
 
             with gr.Row():
@@ -1402,8 +1397,8 @@ def trainings_tab():
 
                     with gr.Row():
                         train_list = gr.Dataframe(
-                            headers=['id', 'sagemakerTrainName', 'output_name', 'modelName', 'status', 'trainType'],
-                            datatype=['str', 'str', 'str', 'str', 'str', 'str'],
+                            headers=['id', 'sagemakerTrainName', 'modelName', 'status', 'trainType'],
+                            datatype=['str', 'str', 'str', 'str', 'str'],
                             interactive=False,
                         )
 

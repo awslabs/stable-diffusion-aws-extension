@@ -58,13 +58,10 @@ def handler(event, context):
         train_jobs = []
         for row in items:
             train_job = TrainJob(**row)
-            model_name = 'not_applied'
-            if 'training_params' in train_job.params and 'model_name' in train_job.params['training_params']:
-                model_name = train_job.params['training_params']['model_name']
 
             train_job_dto = {
                 'id': train_job.id,
-                'modelName': model_name,
+                'modelName': get_output_model_name(train_job.params),
                 'status': train_job.job_status.value,
                 'trainType': train_job.train_type,
                 'created': train_job.timestamp,
@@ -97,3 +94,16 @@ def sort_jobs(train_jobs):
         return train_jobs
 
     return sorted(train_jobs, key=lambda x: x['created'], reverse=True)
+
+
+def get_output_model_name(params):
+    model_name = 'not_applied'
+
+    try:
+        model_name = params['config_params']['saving_arguments']['output_name']
+        if model_name:
+            model_name = f"{model_name}.safetensors"
+    except Exception as e:
+        logger.info(f"Failed to get output name: {e}")
+
+    return model_name

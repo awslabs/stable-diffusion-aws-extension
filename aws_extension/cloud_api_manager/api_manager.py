@@ -152,7 +152,6 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to rename checkpoint with exception: {e}"
 
-
     def list_all_train_jobs_raw(self, username=None):
         if self.auth_manger.enableAuth and not username:
             return []
