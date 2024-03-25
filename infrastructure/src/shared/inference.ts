@@ -93,7 +93,6 @@ export class Inference {
               multiUserTable: props.multiUserTable,
               snsTopic: props?.snsTopic,
               EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
-              checkpointTable: props.checkpointTable,
               commonLayer: props.commonLayer,
               logLevel: props.logLevel,
               accountId: props.accountId,

@@ -7,12 +7,13 @@ import { Construct } from 'constructs';
 import { SqsStack } from './comfy-sqs';
 import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
+import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_prompt';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -27,6 +28,7 @@ export interface ComfyInferenceStackProps extends StackProps {
   ecrRepositoryName: string;
   logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
+  accountId: ICfnRuleConditionExpression;
 }
 
 export class ComfyApiStack extends Construct {
@@ -116,21 +118,19 @@ export class ComfyApiStack extends Construct {
     });
 
     // new EndpointStack(
-    //   scope, 'Comfy',
-    //         <EndpointStackProps>{
-    //           inferenceErrorTopic: props.inferenceErrorTopic,
-    //           inferenceResultTopic: props.inferenceResultTopic,
-    //           routers: props.routers,
-    //           s3Bucket: props?.s3_bucket,
-    //           multiUserTable: props.multiUserTable,
-    //           snsTopic: props?.snsTopic,
-    //           EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
-    //           checkpointTable: props.checkpointTable,
-    //           commonLayer: props.commonLayer,
-    //           logLevel: props.logLevel,
-    //           accountId: props.accountId,
-    //           ecrImageTag: props.ecrImageTag,
-    //         },
+    //   scope, 'Comfy', <EndpointStackProps>{
+    //     inferenceErrorTopic: props.inferenceErrorTopic,
+    //     inferenceResultTopic: props.inferenceResultTopic,
+    //     routers: props.routers,
+    //     s3Bucket: props.s3Bucket,
+    //     multiUserTable: props.multiUserTable,
+    //     snsTopic: props?.snsTopic,
+    //     EndpointDeploymentJobTable: props.endpointTable,
+    //     commonLayer: props.commonLayer,
+    //     logLevel: props.logLevel,
+    //     accountId: props.accountId,
+    //     ecrImageTag: props.ecrImageTag,
+    //   },
     // );
 
     // POST /execute

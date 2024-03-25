@@ -33,7 +33,6 @@ export interface EndpointStackProps extends StackProps {
   multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
   EndpointDeploymentJobTable: aws_dynamodb.Table;
-  checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   logLevel: CfnParameter;
   ecrImageTag: CfnParameter;

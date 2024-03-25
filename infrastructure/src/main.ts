@@ -264,6 +264,7 @@ export class Middleware extends Stack {
         commonLayer: commonLayers.commonLayer,
         ecrRepositoryName: inferenceEcrRepositoryUrl,
         logLevel: logLevel,
+        accountId: accountId,
       });
       apis.node.addDependency(ddbComfyTables);
 
