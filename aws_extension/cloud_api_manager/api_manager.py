@@ -152,16 +152,18 @@ class CloudApiManager:
             logger.error(e)
             return f"Failed to rename checkpoint with exception: {e}"
 
-    def list_all_train_jobs_raw(self, username=None):
+    def list_all_train_jobs_raw(self, username=None, last_key=None):
         if self.auth_manger.enableAuth and not username:
-            return []
+            return [], ''
 
         if not self.auth_manger.api_url:
-            return []
+            return [], ''
 
         response = requests.get(f'{self.auth_manger.api_url}trainings',
                                 params={
                                     'username': username,
+                                    'exclusive_start_key': last_key,
+                                    'limit': 10,
                                 },
                                 headers=self._get_headers_by_user(username))
         r = response.json()
@@ -169,31 +171,41 @@ class CloudApiManager:
             logger.error(f"list_trainings: {r}")
             return []
 
-        return r['data']['trainings']
+        last_ek = ''
+        if 'last_evaluated_key' in r['data']:
+            last_ek = r['data']['last_evaluated_key']
 
-    def list_all_sagemaker_endpoints_raw(self, username=None, user_token=""):
+        return r['data']['trainings'], last_ek
+
+    def list_all_sagemaker_endpoints_raw(self, username=None, user_token="", last_key: str = ""):
         if self.auth_manger.enableAuth and not user_token:
-            return []
+            return [], ''
 
         if not self.auth_manger.api_url:
-            return []
+            return [], ''
 
         response = requests.get(f'{self.auth_manger.api_url}endpoints',
                                 params={
                                     'username': username,
+                                    'exclusive_start_key': last_key,
+                                    'limit': 10,
                                 },
                                 headers=self._get_headers_by_user(user_token))
 
         if response.status_code != 200:
             logger.error(f"list_endpoints: {response.json()}")
-            return []
+            return [], ''
 
         r = response.json()
         if not r or r['statusCode'] != 200:
             logger.info(f"The API response is empty for list_endpoints().{r['message']}")
-            return []
+            return [], ''
 
-        return r['data']['endpoints']
+        last_ek = ''
+        if 'last_evaluated_key' in r['data']:
+            last_ek = r['data']['last_evaluated_key']
+
+        return r['data']['endpoints'], last_ek
 
     def list_all_sagemaker_endpoints(self, username=None, user_token=""):
         try:

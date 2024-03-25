@@ -29,6 +29,8 @@ logger.setLevel(utils.LOGGING_LEVEL)
 service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
 
+page_key = {}
+
 if is_gcr():
     inference_choices = ["ml.g4dn.2xlarge",
                          "ml.g4dn.4xlarge",
@@ -1013,8 +1015,13 @@ def ep_create_tab():
         return sagemaker_tab
 
 
-def _list_sagemaker_endpoints(username):
-    resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
+def _list_sagemaker_endpoints(username, last_key: str = ""):
+    resp, next_key = api_manager.list_all_sagemaker_endpoints_raw(username=username,
+                                                                  user_token=username,
+                                                                  last_key=last_key)
+
+    set_page_key(username, 'endpoints', next_key)
+
     endpoints = []
     for endpoint in resp:
         if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
@@ -1051,9 +1058,41 @@ def _list_sagemaker_endpoints(username):
     return endpoints
 
 
-def _list_trainings_job(username):
+def get_page_key_next(username: str, api_name: str):
+    global page_key
+    if username not in page_key:
+        return None
+    if api_name not in page_key[username]:
+        return None
+
+    if len(page_key[username][api_name]) < 1:
+        page_key[username][api_name] = []
+        return ""
+
+    return page_key[username][api_name].pop()
+
+
+def set_page_key(username: str, api_name: str, value: str):
+    global page_key
+    if username not in page_key:
+        page_key[username] = {}
+    if api_name not in page_key[username]:
+        page_key[username][api_name] = []
+    page_key[username][api_name].append(value)
+
+
+def set_page_key_empty(username: str, api_name: str):
+    global page_key
+    if username not in page_key:
+        page_key[username] = {}
+    page_key[username][api_name] = []
+
+
+def _list_trainings_job(username, last_key: str = ""):
     jobs = []
-    items = api_manager.list_all_train_jobs_raw(username=username)
+    items, next_key = api_manager.list_all_train_jobs_raw(username=username, last_key=last_key)
+
+    set_page_key(username, 'trainings', next_key)
 
     for item in items:
 
@@ -1071,14 +1110,6 @@ def _list_trainings_job(username):
     return jobs
 
 
-def _list_trainings_job_for_delete(username):
-    jobs = []
-    items = api_manager.list_all_train_jobs_raw(username=username)
-    for item in items:
-        jobs.append(item['id'])
-    return jobs
-
-
 def ep_list_tab():
     with gr.Column(scale=2):
         gr.HTML(value="<b>Sagemaker Endpoints List</b>")
@@ -1090,7 +1121,7 @@ def ep_list_tab():
         )
 
         with gr.Row():
-            ep_list_prev_btn = gr.Button(value='Previous Page', elem_id="sagemaker_endpoint_list_prev_btn")
+            ep_list_prev_btn = gr.Button(value='First Page', elem_id="sagemaker_endpoint_list_prev_btn")
             ep_list_next_btn = gr.Button(value='Next Page', elem_id="sagemaker_endpoint_list_next_btn")
             ep_delete_btn = gr.Button(value='Delete \U0001F5D1', elem_id="sagemaker_endpoint_delete_btn")
 
@@ -1099,12 +1130,14 @@ def ep_list_tab():
             ep_selected = gr.Textbox(value="", label="Selected Endpoint item", visible=False)
 
         # ----- events and bind functions start -----
-        def list_ep_prev(rq: gr.Request):
+        def list_ep_first(rq: gr.Request):
+            set_page_key_empty(rq.username, 'endpoints')
             result = _list_sagemaker_endpoints(rq.username)
             return result, '', ep_list_info.update(value="", visible=False)
 
         def list_ep_next(rq: gr.Request):
-            result = _list_sagemaker_endpoints(rq.username)
+            last_key = get_page_key_next(rq.username, 'endpoints')
+            result = _list_sagemaker_endpoints(rq.username, last_key)
             return result, '', ep_list_info.update(value="", visible=False)
 
         def choose_ep(evt: gr.SelectData, dataset):
@@ -1121,7 +1154,7 @@ def ep_list_tab():
         ep_list.select(fn=choose_ep, inputs=[ep_list], outputs=[ep_list_info, ep_selected])
 
         ep_list_next_btn.click(fn=list_ep_next, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
-        ep_list_prev_btn.click(fn=list_ep_prev, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
+        ep_list_prev_btn.click(fn=list_ep_first, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
 
         def delete_ep(ep, rq: gr.Request):
             new_list = _list_sagemaker_endpoints(rq.username)
@@ -1403,20 +1436,17 @@ def trainings_tab():
                         )
 
                         def list_ep_first(rq: gr.Request):
-                            result = _list_trainings_job(rq.username)
-                            return result, train_list_info.update(value="", visible=False), ""
-
-                        def list_ep_prev(rq: gr.Request):
+                            set_page_key_empty(rq.username, 'trainings')
                             result = _list_trainings_job(rq.username)
                             return result, train_list_info.update(value="", visible=False), ""
 
                         def list_ep_next(rq: gr.Request):
-                            result = _list_trainings_job(rq.username)
+                            last_key = get_page_key_next(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username, last_key)
                             return result, train_list_info.update(value="", visible=False), ""
 
                     with gr.Row():
                         t_list_load_btn = gr.Button(value='First Page')
-                        t_list_prev_btn = gr.Button(value='Previous Page')
                         t_list_next_btn = gr.Button(value='Next Page')
                         train_delete_btn = gr.Button(value='Delete \U0001F5D1')
                     with gr.Row():
@@ -1426,8 +1456,6 @@ def trainings_tab():
                         t_list_load_btn.click(fn=list_ep_first, inputs=[],
                                               outputs=[train_list, train_list_info, train_selected])
                         t_list_next_btn.click(fn=list_ep_next, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
-                        t_list_prev_btn.click(fn=list_ep_prev, inputs=[],
                                               outputs=[train_list, train_list_info, train_selected])
 
                         def choose_training(evt: gr.SelectData, dataset):
