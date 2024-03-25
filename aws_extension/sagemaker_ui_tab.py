@@ -1397,34 +1397,8 @@ def trainings_tab():
             with gr.Row():
                 train_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=True)
 
-            def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
-                             config_params, rq: gr.Request):
-                data = {
-                    "lora_train_type": lora_train_type,
-                    "params": {
-                        "training_params": {
-                            "training_instance_type": training_instance_type,
-                            "model": model_name,
-                            "dataset": dataset_name,
-                            "fm_type": fm_type
-                        },
-                        "config_params": json.loads(config_params)
-                    }
-                }
-                api.set_username(rq.username)
-
-                if not has_config():
-                    return [], 'Please config api url and token first'
-
-                resp = api.create_training_job(data=data)
-                return train_create_result.update(value=resp.json()['message'], visible=True)
-
             format_config_params.click(fn=lambda x: json.dumps(json.loads(x), indent=4), inputs=[config_params],
                                        outputs=[config_params])
-            create_train_button.click(fn=create_train,
-                                      inputs=[lora_train_type, training_instance_type, fm_type, model_name,
-                                              dataset_name, config_params],
-                                      outputs=[train_create_result])
 
         with gr.Column(scale=2):
             with gr.Row():
@@ -1488,6 +1462,35 @@ def trainings_tab():
                         train_delete_btn.click(_train_delete,
                                                inputs=[train_selected],
                                                outputs=[train_list_info, train_selected, train_list])
+
+        def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
+                         config_params, rq: gr.Request):
+            data = {
+                "lora_train_type": lora_train_type,
+                "params": {
+                    "training_params": {
+                        "training_instance_type": training_instance_type,
+                        "model": model_name,
+                        "dataset": dataset_name,
+                        "fm_type": fm_type
+                    },
+                    "config_params": json.loads(config_params)
+                }
+            }
+            api.set_username(rq.username)
+
+            if not has_config():
+                message = 'Please config api url and token first'
+            else:
+                message = api.create_training_job(data=data).json()['message']
+
+            new_train_list = _list_trainings_job(rq.username)
+
+            return train_create_result.update(value=message, visible=True), new_train_list
+        create_train_button.click(fn=create_train,
+                                  inputs=[lora_train_type, training_instance_type, fm_type, model_name,
+                                          dataset_name, config_params],
+                                  outputs=[train_create_result, train_list])
 
     return train_list
 
