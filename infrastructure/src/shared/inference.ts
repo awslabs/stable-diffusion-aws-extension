@@ -37,7 +37,6 @@ export interface InferenceProps extends StackProps {
   training_table: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
   snsTopic: aws_sns.Topic;
-  ecr_image_tag: CfnParameter;
   sd_inference_job_table: aws_dynamodb.Table;
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
@@ -150,7 +149,6 @@ export class Inference {
         s3Bucket: props.s3_bucket,
         userNotifySNS: props.snsTopic,
         accountId: props.accountId,
-        ecrImageTag: props.ecr_image_tag,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
         logLevel: props.logLevel,
@@ -175,6 +173,7 @@ export class Inference {
         props.sd_inference_job_table.tableArn,
       ],
     });
+
     const s3Statement = new iam.PolicyStatement({
       actions: [
         's3:Get*',
@@ -188,6 +187,7 @@ export class Inference {
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     });
+
     const snsStatement = new iam.PolicyStatement({
       actions: [
         'sns:Publish',

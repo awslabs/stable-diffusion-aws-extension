@@ -11,6 +11,7 @@ import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
+import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
@@ -56,12 +57,6 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
-      type: 'String',
-      description: 'Inference Public ECR Image tag, example: 1.5.0|dev',
-      default: ECR_IMAGE_TAG,
-    });
-
     const logLevel = new CfnParameter(this, 'LogLevel', {
       type: 'String',
       description: 'Log level, example: ERROR|INFO|DEBUG',
@@ -91,7 +86,7 @@ export class Middleware extends Stack {
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ecrImageTagParam.valueAsString,
+        ecrImageTag: ECR_IMAGE_TAG,
       },
     );
 
@@ -144,7 +139,6 @@ export class Middleware extends Stack {
       s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
-      ecr_image_tag: ecrImageTagParam,
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
@@ -158,7 +152,7 @@ export class Middleware extends Stack {
       resourceProvider,
     });
 
-    new TrainDeploy(this, {
+    const train = new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,
       // env: devEnv,
       synthesizer: props.synthesizer,
@@ -172,6 +166,17 @@ export class Middleware extends Stack {
       resourceProvider,
       accountId,
     });
+
+    const resourceWaiter = new ResourceWaiter(
+      this,
+      'ResourcesWaiter',
+      {
+        resourceProvider: resourceProvider,
+        restApiGateway: restApi,
+        apiKeyParam: apiKeyParam,
+      },
+    );
+    resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {

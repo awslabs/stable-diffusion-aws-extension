@@ -7,7 +7,7 @@ RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
 
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
 
-COPY --from=builder /s5cmd /usr/local/bin/s5cmd
+COPY --from=builder /s5cmd /usr/local/bin/
 
 SHELL ["/bin/bash", "-c"]
 
@@ -18,7 +18,8 @@ RUN apt-get update -y && \
     # may not needed in endpoint
     apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
     # for env install
-    apt-get install --no-install-recommends -y lsof tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    apt-get install --no-install-recommends -y tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    # clean up
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/ubuntu/
@@ -26,8 +27,6 @@ WORKDIR /home/ubuntu/
 ENV ON_DOCKER true
 
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-
-RUN chown -R ubuntu:ubuntu /home/ubuntu
 
 COPY inference/serve.sh /
 

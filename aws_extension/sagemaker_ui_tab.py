@@ -29,12 +29,24 @@ logger.setLevel(utils.LOGGING_LEVEL)
 endpoint_type_choices = ["Async", "Real-time"]
 
 if is_gcr():
-    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge"]
+    inference_choices = ["ml.g4dn.2xlarge",
+                         "ml.g4dn.4xlarge",
+                         "ml.g4dn.8xlarge",
+                         "ml.g4dn.12xlarge"
+                         ]
     inference_choices_default = "ml.g4dn.2xlarge"
 else:
-    inference_choices = ["ml.g4dn.2xlarge", "ml.g4dn.4xlarge", "ml.g4dn.8xlarge", "ml.g4dn.12xlarge",
+    inference_choices = ["ml.g4dn.2xlarge",
+                         "ml.g4dn.4xlarge",
+                         "ml.g4dn.8xlarge",
+                         "ml.g4dn.12xlarge",
                          "ml.g5.2xlarge",
-                         "ml.g5.4xlarge", "ml.g5.8xlarge", "ml.g5.12xlarge", "ml.g5.24xlarge"]
+                         "ml.g5.4xlarge",
+                         "ml.g5.8xlarge",
+                         "ml.g5.12xlarge",
+                         "ml.g5.24xlarge",
+                         "ml.p4d.24xlarge",
+                         ]
     inference_choices_default = "ml.g5.2xlarge"
 
 user_table_size = 10
@@ -896,10 +908,10 @@ def ep_create_tab():
                 custom_extensions = gr.Textbox(
                     value="",
                     lines=5,
-                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git",
+                    placeholder="https://github.com/awslabs/stable-diffusion-aws-extension.git#main#a096556799b7b0686e19ec94c0dbf2ca74d8ffbc",
                     label=f"Custom Extension URLs (Optional) - Please separate with line breaks",
                     visible=False,
-                    info="If you fill in this field, the endpoint will be deployed with the environment check, it's slow."
+                    info="The endpoint will set an environment variable named EXTENSIONS, default image will be install automatically."
                 )
 
                 custom_docker_image_uri = gr.Textbox(
@@ -908,7 +920,7 @@ def ep_create_tab():
                     placeholder="123456789.dkr.ecr.us-east-1.amazonaws.com/repo/image:latest",
                     label=f"Custom Docker Image URI (Optional)",
                     visible=False,
-                    info="If you fill in this field, the endpoint will be deployed with the value of this field."
+                    info="The endpoint will be deployed with your custom docker image."
                 )
 
             ep_deploy_btn = gr.Button(value="Deploy Endpoint", variant='primary',

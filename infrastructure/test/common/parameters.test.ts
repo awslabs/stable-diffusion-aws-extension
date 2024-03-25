@@ -11,118 +11,112 @@
  *  and limitations under the License.
  */
 
-import {App} from 'aws-cdk-lib';
-import {Template} from 'aws-cdk-lib/assertions';
-import {Middleware} from '../../src/main';
-import {getParameter} from '../utils';
+import { App } from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import { Middleware } from '../../src/main';
+import { getParameter } from '../utils';
 
 describe('common parameters test', () => {
-    const app = new App();
-    const testId = 'test-1';
-    const stack = new Middleware(app, testId + '-sd-on-aws', {});
-    const template = Template.fromStack(stack);
+  const app = new App();
+  const testId = 'test-1';
+  const stack = new Middleware(app, testId + '-sd-on-aws', {});
+  const template = Template.fromStack(stack);
 
-    beforeEach(() => {
+  beforeEach(() => {
+  });
+
+  test('Should has Parameter SdExtensionApiKey', () => {
+    template.hasParameter('SdExtensionApiKey', {
+      Type: 'String',
     });
+  });
 
-    test('Should has Parameter SdExtensionApiKey', () => {
-        template.hasParameter('SdExtensionApiKey', {
-            Type: 'String',
-        });
+  test('Should has Parameter UtilsCpuInstType', () => {
+    template.hasParameter('UtilsCpuInstType', {
+      Type: 'String',
     });
+  });
 
-    test('Should has Parameter UtilsCpuInstType', () => {
-        template.hasParameter('UtilsCpuInstType', {
-            Type: 'String',
-        });
+  test('Should has Parameter DeployedBefore', () => {
+    template.hasParameter('DeployedBefore', {
+      Type: 'String',
     });
+  });
 
-    test('Should has Parameter DeployedBefore', () => {
-        template.hasParameter('DeployedBefore', {
-            Type: 'String',
-        });
+  test('Parameter DeployedBefore must be `yes` or `no`', () => {
+    const allowedValues = getParameter(template, 'DeployedBefore').AllowedValues;
+
+    const validValues = [
+      'yes',
+      'no',
+    ];
+
+    for (const v of validValues) {
+      expect(allowedValues.includes(v)).toEqual(true);
+    }
+
+    const invalidValues = [
+      '',
+      'error',
+    ];
+
+    for (const v of invalidValues) {
+      expect(allowedValues.includes(v)).toEqual(false);
+    }
+  });
+
+  test('Should has parameter Email', () => {
+    template.hasParameter('Email', {
+      Type: 'String',
     });
+  });
 
-    test('Parameter DeployedBefore must be `yes` or `no`', () => {
-        const allowedValues = getParameter(template, 'DeployedBefore').AllowedValues;
-
-        const validValues = [
-            'yes',
-            'no',
-        ];
-
-        for (const v of validValues) {
-            expect(allowedValues.includes(v)).toEqual(true);
-        }
-
-        const invalidValues = [
-            '',
-            'error',
-        ];
-
-        for (const v of invalidValues) {
-            expect(allowedValues.includes(v)).toEqual(false);
-        }
+  test('Should has parameter Bucket', () => {
+    template.hasParameter('Bucket', {
+      Type: 'String',
     });
+  });
 
-    test('Should has parameter Email', () => {
-        template.hasParameter('Email', {
-            Type: 'String',
-        });
-    });
+  test('Should check S3 bucket pattern', () => {
 
-    test('Should has parameter EcrImageTag', () => {
-        template.hasParameter('EcrImageTag', {
-            Type: 'String',
-        });
-    });
+    const pattern = getParameter(template, 'Bucket').AllowedPattern;
+    const regex = new RegExp(`${pattern}`);
 
-    test('Should has parameter Bucket', () => {
-        template.hasParameter('Bucket', {
-            Type: 'String',
-        });
-    });
+    // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
+    const validValues = [
+      'abc',
+      'abc1',
+      'abctest',
+      'abc-test',
+      'abc.test',
+      'abctest-18511111111-20231019',
+      'docexamplebucket1',
+      'log-delivery-march-2020',
+      'my-hosted-content',
+      'docexamplewebsite.com',
+      'www.docexamplewebsite.com',
+      'my.example.s3.bucket',
+    ];
 
-    test('Should check S3 bucket pattern', () => {
+    for (const v of validValues) {
+      expect(v).toMatch(regex);
+    }
 
-        const pattern = getParameter(template, 'Bucket').AllowedPattern;
-        const regex = new RegExp(`${pattern}`);
+    const invalidValues = [
+      'ab',
+      'ab_test',
+      '',
+      'ABC',
+      'tooooooooooooooooooooooooooooooooooooooooloooooooooooooooooooong',
+      'doc_example_bucket',
+      'DocExampleBucket',
+      'doc-example-bucket-',
+    ];
 
-        // Bucket naming rules: https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
-        const validValues = [
-            'abc',
-            'abc1',
-            'abctest',
-            'abc-test',
-            'abc.test',
-            'abctest-18511111111-20231019',
-            'docexamplebucket1',
-            'log-delivery-march-2020',
-            'my-hosted-content',
-            'docexamplewebsite.com',
-            'www.docexamplewebsite.com',
-            'my.example.s3.bucket',
-        ];
+    for (const v of invalidValues) {
+      expect(v).not.toMatch(regex);
+    }
 
-        for (const v of validValues) {
-            expect(v).toMatch(regex);
-        }
-
-        const invalidValues = [
-            'ab',
-            'ab_test',
-            '',
-            'ABC',
-            'tooooooooooooooooooooooooooooooooooooooooloooooooooooooooooooong',
-            'doc_example_bucket',
-            'DocExampleBucket',
-            'doc-example-bucket-',
-        ];
-
-        for (const v of invalidValues) {
-            expect(v).not.toMatch(regex);
-        }
-
-    });
+  });
 
 });

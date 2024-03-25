@@ -56,8 +56,6 @@ then
     fi
 fi
 
-#aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
-#aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
 aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
 cp ${dockerfile} .
@@ -65,8 +63,15 @@ cp ${dockerfile} .
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-docker build  -t ${image_name}:${tag} -f ${dockerfile} .
-docker tag ${image_name}:${tag} ${fullname}
+docker build  -t ${fullname} -f ${dockerfile} .
+
+# if docker build failed, exit
+if [ $? -ne 0 ]
+then
+    echo "docker build failed"
+    exit 255
+fi
 
 docker push ${fullname}
-echo $fullname
+
+docker images $fullname

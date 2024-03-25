@@ -53,6 +53,15 @@ def check_custom_extensions(event: CreateEndpointEvent):
         extensions_array = re.split('[ ,\n]+', event.custom_extensions)
         extensions_array = list(set(extensions_array))
         extensions_array = list(filter(None, extensions_array))
+
+        for extension in extensions_array:
+            pattern = r'^https://github\.com/[^#/]+/[^#/]+\.git#[^#]+#[a-fA-F0-9]{40}$'
+            if not re.match(pattern, extension):
+                raise BadRequestException(
+                    message=f"extension format is invalid: {extension}, valid format is like "
+                            f"https://github.com/awslabs/stable-diffusion-aws-extension.git#main#"
+                            f"a096556799b7b0686e19ec94c0dbf2ca74d8ffbc")
+
         # make extensions_array to string again
         event.custom_extensions = ','.join(extensions_array)
 
@@ -77,9 +86,6 @@ def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
         event = CreateEndpointEvent(**json.loads(raw_event['body']))
-
-        if event.custom_extensions and event.custom_docker_image_uri:
-            raise BadRequestException(message="custom_extensions and custom_docker_image_uri cannot be used together")
 
         permissions_check(raw_event, [PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE])
 
@@ -218,8 +224,8 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'ModelName': model_name,
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
-            "ModelDataDownloadTimeoutInSeconds": 1800,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 600,  # Specify the health checkup timeout in seconds
+            "ModelDataDownloadTimeoutInSeconds": 60 * 30,  # Specify the model download timeout in seconds.
+            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 20,  # Specify the health checkup timeout in seconds
         }
     ]
 
