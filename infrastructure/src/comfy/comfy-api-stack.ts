@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_lambda, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_lambda, aws_sns, CfnParameter, Duration, StackProps} from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -18,6 +18,11 @@ import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execut
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 import { ResourceProvider } from '../shared/resource-provider';
+import * as python from "@aws-cdk/aws-lambda-python-alpha";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import {Size} from "aws-cdk-lib/core";
+import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import * as eventSources from "aws-cdk-lib/aws-lambda-event-sources";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -224,6 +229,82 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
         logLevel: props.logLevel,
       },
+    );
+
+    const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
+      entry: `${srcRoot}/comfy`,
+      runtime: lambda.Runtime.PYTHON_3_10,
+      handler: 'handler',
+      index: 'execute_async_events.py',
+      memorySize: 10240,
+      ephemeralStorageSize: Size.gibibytes(10),
+      timeout: Duration.seconds(900),
+      environment: {
+        INFERENCE_JOB_TABLE: props.executeTable.tableName,
+        S3_BUCKET_NAME: props.s3Bucket.bucketName ?? '',
+        ACCOUNT_ID: Aws.ACCOUNT_ID,
+        REGION_NAME: Aws.REGION,
+        NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
+        LOG_LEVEL: props.logLevel.valueAsString,
+      },
+      layers: [props.commonLayer],
+      logRetention: RetentionDays.ONE_WEEK,
+    },
+    );
+
+    const s3Statement = new iam.PolicyStatement({
+      actions: [
+        's3:Get*',
+        's3:List*',
+        's3:PutObject',
+        's3:GetObject',
+      ],
+      resources: [
+        props.s3Bucket.bucketArn,
+        `${props.s3Bucket.bucketArn}/*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+      ],
+    });
+
+    const snsStatement = new iam.PolicyStatement({
+      actions: [
+        'sns:Publish',
+        'sns:ListTopics',
+      ],
+      resources: [
+        props?.snsTopic.topicArn,
+        props.executeSuccessTopic.topicArn,
+        props.executeFailTopic.topicArn,
+      ],
+    });
+    const ddbStatement = new iam.PolicyStatement({
+      actions: [
+        'dynamodb:Query',
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Describe*',
+        'dynamodb:List*',
+        'dynamodb:Scan',
+      ],
+      resources: [
+        props.endpointTable.tableArn,
+        props.executeTable.tableArn,
+      ],
+    });
+
+    handler.addToRolePolicy(s3Statement);
+    handler.addToRolePolicy(ddbStatement);
+    handler.addToRolePolicy(snsStatement);
+
+    // Add the SNS topic as an event source for the Lambda function
+    handler.addEventSource(
+      new eventSources.SnsEventSource(props.executeSuccessTopic),
+    );
+
+    handler.addEventSource(
+      new eventSources.SnsEventSource(props.executeFailTopic),
     );
   }
 }

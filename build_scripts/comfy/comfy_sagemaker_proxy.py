@@ -128,6 +128,7 @@ async def invocations(request):
             e = execution.PromptExecutor(server_instance)
             outputs_to_execute = valid[2]
             e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
+            # TODO 看下是否需要 调整为利用 sg 的 output path
             sync_local_outputs_to_s3(bucket_name_using, f'output/{prompt_id}', '/opt/ml/code/output')
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
