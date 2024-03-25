@@ -22,6 +22,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
 sqs_url = os.environ.get('SQS_URL')
+execute_table = os.environ.get('EXECUTE_TABLE')
 
 
 @dataclass

@@ -25,8 +25,6 @@ export interface ExecuteApiProps {
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
-  modelTable: aws_dynamodb.Table;
-  syncTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
@@ -43,8 +41,6 @@ export class ExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
-  private readonly modelTable: aws_dynamodb.Table;
-  private readonly syncTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
@@ -56,8 +52,6 @@ export class ExecuteApi {
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
-    this.modelTable = props.modelTable;
-    this.syncTable = props.syncTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
     this.queue = props.queue;
@@ -82,8 +76,6 @@ export class ExecuteApi {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.modelTable.tableArn,
-        this.syncTable.tableArn,
         this.configTable.tableArn,
         this.executeTable.tableArn,
       ],
@@ -145,8 +137,6 @@ export class ExecuteApi {
       memorySize: 1024,
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
-        MODEL_TABLE: this.modelTable.tableName,
-        SYNC_TABLE: this.syncTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
         SQS_URL: this.queue.queueUrl,
         BUCKET_NAME: this.s3Bucket.bucketName,
