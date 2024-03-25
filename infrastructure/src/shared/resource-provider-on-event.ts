@@ -226,6 +226,10 @@ async function createTables() {
     },
     ComfyExecuteTable: {
       partitionKey: {
+        name: 'prompt_date',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
         name: 'prompt_id',
         type: AttributeType.STRING,
       },
