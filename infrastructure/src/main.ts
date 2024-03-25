@@ -57,12 +57,6 @@ export class Middleware extends Stack {
       default: 'example@example.com',
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
-      type: 'String',
-      description: 'Inference Public ECR Image tag, example: 1.5.0|dev',
-      default: ECR_IMAGE_TAG,
-    });
-
     const logLevel = new CfnParameter(this, 'LogLevel', {
       type: 'String',
       description: 'Log level, example: ERROR|INFO|DEBUG',
@@ -92,7 +86,7 @@ export class Middleware extends Stack {
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ecrImageTagParam.valueAsString,
+        ecrImageTag: ECR_IMAGE_TAG,
       },
     );
 
@@ -145,7 +139,6 @@ export class Middleware extends Stack {
       s3_bucket: s3Bucket,
       training_table: ddbTables.trainingTable,
       snsTopic: snsTopics.snsTopic,
-      ecr_image_tag: ecrImageTagParam,
       sd_inference_job_table: ddbTables.sDInferenceJobTable,
       sd_endpoint_deployment_job_table: ddbTables.sDEndpointDeploymentJobTable,
       checkpointTable: ddbTables.checkpointTable,
