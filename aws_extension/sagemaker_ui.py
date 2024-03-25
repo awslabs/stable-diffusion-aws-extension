@@ -1146,24 +1146,8 @@ def create_ui(is_img2img):
             with gr.Row(visible=is_img2img):
                 gr.HTML('<br/>')
 
-            # with gr.Row(visible=is_img2img):
-            #     global generate_on_cloud_button_with_js
-            #     # if not is_img2img:
-            #     #     generate_on_cloud_button_with_js = gr.Button(value="Generate on Cloud", variant='primary', elem_id="generate_on_cloud_with_cloud_config_button",queue=True, show_progress=True)
-            #     global generate_on_cloud_button_with_js_img2img
-            #     global interrogate_clip_on_cloud_button
-            #     global interrogate_deep_booru_on_cloud_button
-            #
-            #     interrogate_clip_on_cloud_button = gr.Button(value="Interrogate CLIP",  variant='primary',
-            #                                                  elem_id="interrogate_clip_on_cloud_button", visible=False)
-            #     interrogate_deep_booru_on_cloud_button = gr.Button(value="Interrogte DeepBooru",  variant='primary',
-            #                                                        elem_id="interrogate_deep_booru_on_cloud_button", visible=False)
-            # with gr.Row():
-            #     gr.HTML('<br/>')
-
             with gr.Row():
                 global inference_job_dropdown
-                # global txt2img_inference_job_ids
 
                 inference_job_dropdown = gr.Dropdown(choices=[], value=None_Option_For_Infer_Job,
                                                      label="Inference Job Histories: Time-Type-Status-UUID")
@@ -1172,7 +1156,7 @@ def create_ui(is_img2img):
                                               lambda username: {
                                                   'choices': load_inference_job_list(inference_task_type,
                                                                                      username, "first")
-                                              }, 'refresh_inference_job_down', '⇤')
+                                              }, 'refresh_inference_job_down')
 
                 create_refresh_button_by_user(inference_job_dropdown,
                                               lambda *args: None,
