@@ -71,7 +71,7 @@ def handler(event, ctx):
 
         for row in scan_rows:
             # Compatible with fields used in older data, must be 'deleted'
-            if 'status' in row and row['status']['S'] == 'deleted':
+            if 'status' in row and 'S' in row['status'] and row['status']['S'] == 'deleted':
                 row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
             endpoint = EndpointDeploymentJob(**row)
