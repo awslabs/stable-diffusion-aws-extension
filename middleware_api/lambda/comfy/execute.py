@@ -83,8 +83,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     r = prediction
     logger.info(r)
     # TODO 获取哪些可用的endpoint name 以及instance type 默认异步
-    current_datetime = datetime.now()
-    current_date_string = current_datetime.strftime("%Y-%m-%d")
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
