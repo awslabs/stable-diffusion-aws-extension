@@ -16,7 +16,6 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { TRAIN_ECR_TAG } from '../../common/dockerImageTag';
 import { ResourceProvider } from '../../shared/resource-provider';
 
 export interface CreateTrainingJobApiProps {
@@ -274,7 +273,7 @@ export class CreateTrainingJobApi {
         LOG_LEVEL: this.props.logLevel.valueAsString,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:${TRAIN_ECR_TAG}`,
+        TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,
         USER_EMAIL_TOPIC_ARN: this.props.userTopic.topicArn,
       },
       layers: [this.props.commonLayer],

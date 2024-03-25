@@ -130,6 +130,7 @@ export class Inference {
         props.sd_inference_job_table.tableArn,
       ],
     });
+
     const s3Statement = new iam.PolicyStatement({
       actions: [
         's3:Get*',
@@ -143,6 +144,7 @@ export class Inference {
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     });
+
     const snsStatement = new iam.PolicyStatement({
       actions: [
         'sns:Publish',

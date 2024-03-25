@@ -3,7 +3,6 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { Size } from 'aws-cdk-lib/core';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
@@ -35,8 +34,7 @@ export class ResourceProvider extends Construct {
       },
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 10240,
-      ephemeralStorageSize: Size.gibibytes(10),
+      memorySize: 4048,
       environment: {
         ROLE_ARN: this.role.roleArn,
         BUCKET_NAME: props.bucketName ?? '',

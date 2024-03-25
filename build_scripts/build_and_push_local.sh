@@ -9,12 +9,17 @@ dockerfile=$1
 image=$2
 mode=$3
 tag=$4
-commit_id=$5
+
 
 if [ "$image" = "" ] || [ "$dockerfile" = "" ]
 then
     echo "Usage: $0 <docker-file> <image-name>"
     exit 1
+fi
+
+if [ -d "stable-diffusion-webui" ]; then
+    echo "Removing existing project..."
+    rm -rf stable-diffusion-webui
 fi
 
 if [ "$tag" = "" ]
@@ -34,7 +39,7 @@ fi
 region=$(aws configure get region)
 # region=${region:-us-west-2}
 
-image_name="stable-diffusion-aws-extension/${image}"
+image_name="${image}"
 fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
 
 # If the repository doesn't exist in ECR, create it.
@@ -51,25 +56,22 @@ then
     fi
 fi
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
-#aws ecr get-login-password --region us-west-2 | docker login -u AWS --password-stdin 292282985366.dkr.ecr.us-west-2.amazonaws.com
-# aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
 
 cp ${dockerfile} .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 
-docker build  -t ${image_name}:${tag} -f ${dockerfile} .
-# docker tag ${image_name} ${fullname}
+docker build  -t ${fullname} -f ${dockerfile} .
 
-# docker push ${fullname}
-# echo $fullname
+# if docker build failed, exit
+if [ $? -ne 0 ]
+then
+    echo "docker build failed"
+    exit 255
+fi
 
-# Push to public ecr
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/aws-gcr-solutions
-
-fullname="public.ecr.aws/aws-gcr-solutions/${image_name}:${tag}"
-docker tag ${image_name}:${tag} ${fullname}
 docker push ${fullname}
-echo $fullname
+
+docker images $fullname

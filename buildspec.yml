@@ -19,6 +19,7 @@ phases:
       - echo "nothing to do in install"
   pre_build:
     commands:
+      - echo "nothing to do in install"
       - cd infrastructure
       - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"
@@ -67,13 +68,16 @@ phases:
       - echo "BUILD VERSION is ${BUILD_VERSION}"
       - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "" > ../infrastructure/src/common/dockerImageTag.ts
-      - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts 
+      - echo "export const ECR_IMAGE_TAG:string = '${BUILD_VERSION}'" >> ../infrastructure/src/common/dockerImageTag.ts
       - echo "checking the updated image name"
       - cat ../infrastructure/src/common/dockerImageTag.ts
       - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
       - cat ../aws_extension/cloud_api_manager/api.py
       - sed -i "s/x_api_version = \"[0-9.]*\"/x_api_version = \"$TAG_NUMBER\"/" ../middleware_api/lambda/common/response.py
       - cat ../middleware_api/lambda/common/response.py
+      - echo "upload ec2 template to s3"
+      - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/
+      - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/ec2.yaml" --acl public-read
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"
