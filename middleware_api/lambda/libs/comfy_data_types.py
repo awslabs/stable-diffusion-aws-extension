@@ -34,6 +34,8 @@ class ComfyExecuteTable:
     prompt_params: dict[str, Any]
     instance_id: Optional[str]
     prompt_path: Optional[str]
+    output_path: Optional[str]
+    output_files: Optional[List[str]] = None
     create_time: Optional[Any] = None
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None

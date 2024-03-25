@@ -8,12 +8,13 @@ import { SqsStack } from './comfy-sqs';
 import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
-import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_prompt';
+import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
+import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -147,6 +148,22 @@ export class ComfyApiStack extends Construct {
         logLevel: props.logLevel,
       },
     );
+
+    // POST /execute
+    new QueryExecuteApi(
+      scope, 'QueryExecute', <QueryExecuteApiProps>{
+        httpMethod: 'POST',
+        router: props.routers.queryExecute,
+        srcRoot: srcRoot,
+        s3Bucket: props.s3Bucket,
+        configTable: this.configTable,
+        executeTable: this.executeTable,
+        queue: sqsStack.queue,
+        commonLayer: this.layer,
+        logLevel: props.logLevel,
+      },
+    );
+
     // POST /prepare
     new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{

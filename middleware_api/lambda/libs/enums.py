@@ -82,3 +82,9 @@ class ComfySyncStatus(Enum):
 class ComfyTaskType(Enum):
     PREPARE = 'prepare'
     INFERENCE = 'inference'
+
+
+class ComfyExecuteRespType(Enum):
+    NAME_ONLY = 'name_only'
+    PRESIGN_URL = 'presign_url'
+    BASE64 = 'base64'

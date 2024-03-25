@@ -98,7 +98,9 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         prompt_path='',
         create_time=datetime.now(),
         start_time=datetime.now(),
-        complete_time=None
+        complete_time=None,
+        output_path='',
+        output_files=None
     )
 
     save_ddb_resp = ddb_service.put_items(execute_table, entries=inference_job.__dict__)
