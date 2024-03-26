@@ -4,7 +4,8 @@ import os
 
 import boto3
 
-from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job, send_message_to_sns
+from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job
+from sns_util import send_message_to_sns
 from start_inference_job import update_inference_job_table
 
 s3_resource = boto3.resource('s3')

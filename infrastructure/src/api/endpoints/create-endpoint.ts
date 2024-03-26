@@ -14,9 +14,8 @@ import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } f
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_IMAGE_TAG } from '../../common/dockerImageTag';
+import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -25,7 +24,6 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  inferenceJobTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -33,6 +31,7 @@ export interface CreateEndpointApiProps {
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   logLevel: CfnParameter;
+  ecrImageTag: CfnParameter;
   accountId: ICfnRuleConditionExpression;
 }
 
@@ -45,9 +44,9 @@ export class CreateEndpointApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
-  private readonly inferenceJobTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
+  private readonly ecrImageTag: CfnParameter;
   private readonly accountId: ICfnRuleConditionExpression;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
@@ -61,7 +60,6 @@ export class CreateEndpointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
@@ -70,6 +68,7 @@ export class CreateEndpointApi {
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.logLevel = props.logLevel;
+    this.ecrImageTag = props.ecrImageTag;
     this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -155,7 +154,6 @@ export class CreateEndpointApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.multiUserTable.tableArn,
-        this.inferenceJobTable.tableArn,
       ],
     });
 
@@ -288,8 +286,8 @@ export class CreateEndpointApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
-        ECR_IMAGE_TAG: ECR_IMAGE_TAG,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${this.ecrImageTag.valueAsString}`,
+        ECR_IMAGE_TAG: this.ecrImageTag.valueAsString,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,

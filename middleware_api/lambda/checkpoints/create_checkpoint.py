@@ -4,7 +4,7 @@ import logging
 import os
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import boto3
 import requests
@@ -37,6 +37,7 @@ class CreateCheckPointEvent:
     params: dict[str, Any]
     filenames: [MultipartFileReq] = None
     urls: [str] = None
+    customize_path: Optional[str] = None
 
 
 def handler(raw_event, context):
@@ -51,7 +52,7 @@ def handler(raw_event, context):
         check_filenames_unique(event)
 
         if event.urls:
-            return invoke_url_lambda(event)
+            return invoke_url_lambda(event, request_id)
 
         _type = event.checkpoint_type
 
@@ -116,9 +117,11 @@ def handler(raw_event, context):
         return response_error(e)
 
 
-def invoke_url_lambda(event: CreateCheckPointEvent):
+def invoke_url_lambda(event: CreateCheckPointEvent, request_id: str):
     urls = list(set(event.urls))
-
+    base_key = get_base_checkpoint_s3_key(event.checkpoint_type, 'custom', request_id)
+    if 'customize_path' in event and not event.customize_path:
+        base_key = event.customize_path
     for url in urls:
         resp = lambda_client.invoke(
             FunctionName=upload_by_url_lambda_name,
@@ -127,6 +130,7 @@ def invoke_url_lambda(event: CreateCheckPointEvent):
                 'checkpoint_type': event.checkpoint_type,
                 'params': event.params,
                 'url': url,
+                'base_key': base_key
             })
         )
         logger.info(resp)

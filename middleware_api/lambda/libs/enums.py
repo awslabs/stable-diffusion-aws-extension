@@ -57,3 +57,34 @@ class DatasetStatus(Enum):
     Initialed = 'Initialed'
     Enabled = 'Enabled'
     Disabled = 'Disabled'
+
+
+class ComfyEnvPrepareType(Enum):
+    ALL = 'default'
+    INPUTS = 'inputs'
+    NODES = 'nodes'
+    MODELS = 'models'
+    CUSTOM = 'custom'
+
+
+class ComfyExecuteType(Enum):
+    CREATED = 'created'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
+class ComfySyncStatus(Enum):
+    INIT = 'init'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
+class ComfyTaskType(Enum):
+    PREPARE = 'prepare'
+    INFERENCE = 'inference'
+
+
+class ComfyExecuteRespType(Enum):
+    NAME_ONLY = 'name_only'
+    PRESIGN_URL = 'presign_url'
+    BASE64 = 'base64'

@@ -203,6 +203,45 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
+
+    ComfyTemplateTable: {
+      partitionKey: {
+        name: 'template_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyConfigTable: {
+      partitionKey: {
+        name: 'config_name',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'tag',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyExecuteTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfySyncTable: {
+      partitionKey: {
+        name: 'request_id',
+        type: AttributeType.STRING,
+      },
+    },
+    ComfyMessageTable: {
+      partitionKey: {
+        name: 'prompt_id',
+        type: AttributeType.STRING,
+      },
+    },
   };
 
   for (let tableName in tables) {
