@@ -1,10 +1,15 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_dynamodb, aws_lambda, aws_sns, CfnParameter, Duration, StackProps} from 'aws-cdk-lib';
+import * as python from '@aws-cdk/aws-lambda-python-alpha';
+import { Aws, aws_dynamodb, aws_lambda, aws_sns, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { SqsStack } from './comfy-sqs';
@@ -18,11 +23,6 @@ import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execut
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 import { ResourceProvider } from '../shared/resource-provider';
-import * as python from "@aws-cdk/aws-lambda-python-alpha";
-import * as lambda from "aws-cdk-lib/aws-lambda";
-import {Size} from "aws-cdk-lib/core";
-import {RetentionDays} from "aws-cdk-lib/aws-logs";
-import * as eventSources from "aws-cdk-lib/aws-lambda-event-sources";
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
