@@ -66,7 +66,6 @@ class CreateCheckPointByUrlEvent:
     checkpoint_type: str
     params: dict[str, Any]
     url: str
-    base_key: str
 
 
 def handler(raw_event, context):
@@ -75,7 +74,7 @@ def handler(raw_event, context):
     request_id = context.aws_request_id
     event = CreateCheckPointByUrlEvent(**raw_event)
 
-    base_key = event.base_key
+    base_key = get_base_checkpoint_s3_key(event.checkpoint_type, 'custom', request_id)
     file_names = []
     logger.info(f"start to upload model:{event.url}")
     checkpoint_params = {}
