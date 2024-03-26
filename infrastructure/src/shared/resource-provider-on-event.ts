@@ -381,6 +381,7 @@ async function createGlobalSecondaryIndex(tableName: string) {
 
   try {
     const command = new UpdateTableCommand(params);
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const response = await ddbClient.send(command);
     console.log('createGlobalSecondaryIndex Success', response);
   } catch (err) {
