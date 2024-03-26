@@ -136,6 +136,7 @@ export class CreateTrainingJobApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:CreateBucket',
       ],
       resources: [`${this.props.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,

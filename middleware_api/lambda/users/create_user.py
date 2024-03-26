@@ -9,7 +9,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
 from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username, \
-    permissions_check, response_error, get_user_name
+    permissions_check, response_error
 
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
@@ -92,10 +92,15 @@ def handler(raw_event, ctx):
             if role not in roles_pool:
                 return bad_request(message=f'user roles "{role}" not exist')
 
+        try:
+            encrypted_text = password_encryptor.encrypt(key_id=kms_key_id, text=event.password)
+        except Exception as e:
+            return bad_request(str(e))
+
         ddb_service.put_items(user_table, User(
             kind=PARTITION_KEYS.user,
             sort_key=event.username,
-            password=password_encryptor.encrypt(key_id=kms_key_id, text=event.password),
+            password=encrypted_text,
             roles=event.roles,
             creator=username,
         ).__dict__)
