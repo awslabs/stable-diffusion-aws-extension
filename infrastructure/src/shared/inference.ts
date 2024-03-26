@@ -18,7 +18,7 @@ import { DeleteInferenceJobsApi } from '../api/inferences/delete-inference-jobs'
 import { GetInferenceJobApi } from '../api/inferences/get-inference-job';
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi } from '../api/inferences/start-inference-job';
-import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
+import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
