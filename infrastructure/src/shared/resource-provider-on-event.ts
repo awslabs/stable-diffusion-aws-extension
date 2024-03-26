@@ -434,8 +434,6 @@ async function createTopics() {
   const list = [
     'ReceiveSageMakerInferenceSuccess',
     'ReceiveSageMakerInferenceError',
-    'successCreateModel',
-    'failureCreateModel',
     'StableDiffusionSnsUserTopic',
   ];
 
