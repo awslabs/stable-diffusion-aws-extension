@@ -72,6 +72,13 @@ export class Middleware extends Stack {
       '366590864501',
     );
 
+    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
+      type: 'String',
+      description: 'Inference ECR Image tag',
+      default: `${accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
+      allowedValues: [`${accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`],
+    });
+
     // Create resources here
 
     // The solution currently does not support multi-region deployment, which makes it easy to failure.
@@ -86,7 +93,7 @@ export class Middleware extends Stack {
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ECR_IMAGE_TAG,
+        ecrImageTag: ecrImageTagParam.valueAsString,
       },
     );
 
