@@ -205,7 +205,7 @@ export class ComfyApiStack extends Construct {
       },
     );
 
-    const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
+    const handler = new python.PythonFunction(scope, 'ComfyInferenceResultNotification', {
       entry: `${srcRoot}/comfy`,
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',

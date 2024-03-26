@@ -126,6 +126,7 @@ export class Middleware extends Stack {
       'template',
       'model',
       'execute',
+      'queryExecute',
       'node',
       'config',
       'prepare',
@@ -201,12 +202,13 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       executeSuccessTopic: snsTopics.executeResultSuccessTopic,
       executeFailTopic: snsTopics.executeResultFailTopic,
+      snsTopic: snsTopics.snsTopic,
       logLevel: logLevel,
       accountId: accountId,
     });
     apis.node.addDependency(ddbComfyTables);
 
-    new EndpointStack(scope, {
+    new EndpointStack(this, {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       routers: restApi.routers,
