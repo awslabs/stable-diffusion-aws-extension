@@ -90,6 +90,28 @@ def restart_sd_webui_service():
     return "Restarting the service after 5 seconds..."
 
 
+def git_pull(directory):
+    try:
+        command = ["git", "pull"]
+        result = subprocess.run(command, cwd=directory, check=True, capture_output=True, text=True)
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("Error:", e.stderr)
+
+
+def update_extension():
+    pwd_dir = "/home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension"
+    if not os.path.exists(f"{pwd_dir}/.git"):
+        return f"You are not running in the environment created by CloudFormation, Please update manually."
+
+    git_pull(pwd_dir)
+
+    if not os.path.exists(service_file):
+        return f"You are not running in the environment created by CloudFormation, Please restart WebUI manually."
+
+    return restart_sd_webui_service()
+
+
 def on_ui_tabs():
     with gr.Blocks() as sagemaker_interface:
         invisible_user_name_for_ui = gr.Textbox(type='text', visible=False, interactive=False, container=False,
@@ -251,6 +273,8 @@ def api_setting_tab():
                                            variant='primary',
                                            elem_id="aws_config_save")
         with gr.Row():
+            update_extension_btn = gr.Button(value="Update Extension",
+                                             elem_id="update_extension")
             restart_service = gr.Button(value="Restart WebUI",
                                         elem_id="restart_service")
 
@@ -299,6 +323,7 @@ def api_setting_tab():
                                      outputs=[connection_output, connection_output])
 
             restart_service.click(fn=restart_sd_webui_service, inputs=[], outputs=[connection_output])
+            update_extension_btn.click(fn=update_extension, inputs=[], outputs=[connection_output])
 
     with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
@@ -1321,17 +1346,22 @@ def dataset_tab():
                 dataset_des_output = gr.Textbox(label='dataset description', show_label=True, type='text')
             with gr.Row():
                 dataset_gallery = gr.Gallery(
-                    label="Dataset images", show_label=False, elem_id="gallery",
-                    columns=3, object_fit="contain"
+                    label="Dataset images",
+                    show_label=False,
+                    elem_id="gallery",
+                    columns=3,
+                    object_fit="contain"
                 )
 
                 def get_results_from_datasets(dataset_name, pr: gr.Request):
                     resp = api_manager.get_dataset_items_from_dataset(dataset_name, pr.username)
                     dataset_items = [(item['preview_url'], item['key']) for item in
                                      resp['data']]
+                    print(dataset_items)
                     return resp['s3'], resp['description'], dataset_items
 
-                cloud_dataset_name.select(fn=get_results_from_datasets, inputs=[cloud_dataset_name],
+                cloud_dataset_name.select(fn=get_results_from_datasets,
+                                          inputs=[cloud_dataset_name],
                                           outputs=[dataset_s3_output, dataset_des_output, dataset_gallery])
 
     return dt

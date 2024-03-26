@@ -59,7 +59,7 @@ def handler(event, ctx):
         for row in scan_rows:
             user = User(**(ddb_service.deserialize(row)))
             logger.info(f'decrypted text: {user.password}')
-            password = '*' * 8
+            password = ''
             if user.password and show_password:
                 logger.info(f'decrypting for {user.sort_key}')
                 password = password_encryptor.decrypt(key_id=kms_key_id, cipher_text=user.password).decode()

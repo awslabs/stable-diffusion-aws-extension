@@ -73,7 +73,9 @@ def check_status(training_job: TrainJob):
             }
 
     if training_job_status == 'Completed':
+
         notify_user(training_job)
+
         # todo: update checkpoints
         raw_checkpoint = ddb_service.get_item(table=checkpoint_table, key_values={
             'id': training_job.checkpoint_id
@@ -112,6 +114,7 @@ def check_status(training_job: TrainJob):
             field_name='checkpoint_status',
             value=checkpoint.checkpoint_status.value
         )
+
         ddb_service.update_item(
             table=checkpoint_table,
             key={
