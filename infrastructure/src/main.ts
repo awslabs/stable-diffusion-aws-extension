@@ -75,8 +75,8 @@ export class Middleware extends Stack {
     const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
       type: 'String',
       description: 'Inference ECR Image tag',
-      default: `${accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
-      allowedValues: [`${accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`],
+      default: ECR_IMAGE_TAG,
+      allowedValues: [ECR_IMAGE_TAG],
     });
 
     // Create resources here
