@@ -31,6 +31,7 @@ class PrepareEnvEvent:
     # notice !!! must not be prefixed with "/"
     s3_source_path: Optional[str] = ''
     local_target_path: Optional[str] = ''
+    sync_script: Optional[str] = ''
 
 
 def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
@@ -49,6 +50,7 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
 
     # TODO
     payload["need_reboot"] = event.need_reboot
+    payload["sync_script"] = event.sync_script
     endpoint_name = event.endpoint_name
 
     # TODO 根据 endpoint_name 获取所有实例列表

@@ -15,41 +15,46 @@ global prompt_id
 
 
 async def prepare_comfy_env(json_data):
-    print("prepare_environment start")
-    global bucket_name_using, sqs_url_using, region_using
-    bucket_name_using = json_data['bucket_name']
-    sqs_url_using = json_data['sqs_url']
-    region_using = json_data['region']
+    gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+    try:
+        print("prepare_environment start")
+        global bucket_name_using, sqs_url_using, region_using
+        bucket_name_using = json_data['bucket_name']
+        sqs_url_using = json_data['sqs_url']
+        region_using = json_data['region']
 
-    prepare_type = json_data['prepare_type']
-    if prepare_type in ['default', 'models']:
-        sync_s3_files_or_folders_to_local(bucket_name_using, 'models', '/opt/ml/code/models', False)
-    if prepare_type in ['default', 'inputs']:
-        sync_s3_files_or_folders_to_local(bucket_name_using, 'input', '/opt/ml/code/input', False)
-    if prepare_type in ['default', 'nodes']:
-        sync_s3_files_or_folders_to_local(bucket_name_using, 'nodes', '/opt/ml/code/custom_nodes', True)
-    if prepare_type == 'custom':
-        sync_source_path = json_data['s3_source_path']
-        local_target_path = json_data['local_target_path']
-        if not sync_source_path or not local_target_path:
-            print("s3_source_path and local_target_path should not be empty")
+        prepare_type = json_data['prepare_type']
+        if prepare_type in ['default', 'models']:
+            sync_s3_files_or_folders_to_local(bucket_name_using, 'models', '/opt/ml/code/models', False)
+        if prepare_type in ['default', 'inputs']:
+            sync_s3_files_or_folders_to_local(bucket_name_using, 'input', '/opt/ml/code/input', False)
+        if prepare_type in ['default', 'nodes']:
+            sync_s3_files_or_folders_to_local(bucket_name_using, 'nodes', '/opt/ml/code/custom_nodes', True)
+        if prepare_type == 'custom':
+            sync_source_path = json_data['s3_source_path']
+            local_target_path = json_data['local_target_path']
+            if not sync_source_path or not local_target_path:
+                print("s3_source_path and local_target_path should not be empty")
+            else:
+                sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
+                                                  f'/opt/ml/code/{local_target_path}', False)
+        elif prepare_type == 'other':
+            sync_script = json_data['sync_script']
+            print("sync_script")
+            if sync_script:
+                # sync_script.startswith('s5cmd') 不允许
+                if sync_script.startswith("pip install") or sync_script.startswith("apt-get"):
+                    os.system(sync_script)
+
+        need_reboot = json_data['need_reboot']
+        if need_reboot and need_reboot.lower() == 'true':
+            os.environ['NEED_REBOOT'] = 'true'
         else:
-            sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
-                                              f'/opt/ml/code/{local_target_path}', False)
-    elif prepare_type == 'other':
-        sync_script = json_data['sync_script']
-        print("sync_script")
-        if sync_script:
-            # sync_script.startswith('s5cmd') 不允许
-            if sync_script.startswith("pip install") or sync_script.startswith("apt-get"):
-                os.system(sync_script)
-
-    need_reboot = json_data['need_reboot']
-    if need_reboot and need_reboot.lower() == 'true':
-        os.environ['NEED_REBOOT'] = 'true'
-    else:
-        os.environ['NEED_REBOOT'] = 'false'
-    print("prepare_environment end")
+            os.environ['NEED_REBOOT'] = 'false'
+        print("prepare_environment end")
+        return {"prepare_result": True, "gen_instance_id": gen_instance_id}
+    except Exception as e:
+        return {"prepare_result": False, "gen_instance_id": gen_instance_id, "error_msg": e}
 
 
 # def create_tar_gz(source_file, target_tar_gz):
@@ -105,12 +110,12 @@ async def invocations(request):
     try:
         task_type = json_data['task_type']
         if task_type == 'prepare':
-            await prepare_comfy_env(json_data)
-            return web.Response(status=200)
+            result_body = await prepare_comfy_env(json_data)
+            return web.Response(status=200, content_type='application/json', text=json.dumps(result_body))
 
         if not bucket_name_using:
             print("No bucket name")
-            return web.Response(status=500)
+            return web.Response(status=500, text="No bucket name")
 
         print(
             f'bucket_name_using: {bucket_name_using}, region_using: {region_using}, need_sync: {need_sync}')
@@ -127,7 +132,7 @@ async def invocations(request):
         valid = execution.validate_prompt(json_data['prompt'])
         if not valid[0]:
             print("the environment is not ready valid[0] is false, need to resync")
-            return web.Response(status=500)
+            return web.Response(status=500, text="the environment is not ready valid[0] is false")
         extra_data = {}
         if "extra_data" in json_data:
             extra_data = json_data["extra_data"]
@@ -142,7 +147,7 @@ async def invocations(request):
             sync_local_outputs_to_s3(bucket_name_using, f'output/{prompt_id}', '/opt/ml/code/output')
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
-        # TODO 回写instance id
+        # TODO 回写instance id 同步的放在body中 异步的放在s3的path中
         gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
 
         return web.Response(status=200)
