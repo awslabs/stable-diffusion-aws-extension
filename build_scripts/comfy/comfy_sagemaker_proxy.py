@@ -32,13 +32,24 @@ async def prepare_comfy_env(json_data):
         sync_source_path = json_data['s3_source_path']
         local_target_path = json_data['local_target_path']
         if not sync_source_path or not local_target_path:
-            raise Exception("s3_source_path and local_target_path should not be empty")
-        sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
-                                          f'/opt/ml/code/{local_target_path}', False)
-    print("prepare_environment end")
+            print("s3_source_path and local_target_path should not be empty")
+        else:
+            sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
+                                              f'/opt/ml/code/{local_target_path}', False)
+    elif prepare_type == 'other':
+        sync_script = json_data['sync_script']
+        print("sync_script")
+        if sync_script:
+            # sync_script.startswith('s5cmd') 不允许
+            if sync_script.startswith("pip install") or sync_script.startswith("apt-get"):
+                os.system(sync_script)
 
-    # TODO
-    need_reboot = json_data["need_reboot"]
+    need_reboot = json_data['need_reboot']
+    if need_reboot and need_reboot.lower() == 'true':
+        os.environ['NEED_REBOOT'] = 'true'
+    else:
+        os.environ['NEED_REBOOT'] = 'false'
+    print("prepare_environment end")
 
 
 # def create_tar_gz(source_file, target_tar_gz):

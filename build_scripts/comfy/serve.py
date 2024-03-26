@@ -64,6 +64,7 @@ class ComfyApp:
         # self.process.start()
         cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
         self.process = subprocess.Popen(cmd)
+        os.environ['ALREADY_INIT'] = 'true'
 
     def restart(self):
         # if self.process and self.process.is_alive():
@@ -72,6 +73,7 @@ class ComfyApp:
         # else:
         #     print("Comfy app process is not running.")
         if self.process and self.process.poll() is None:
+            os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
             self.process.wait()
         self.start()
