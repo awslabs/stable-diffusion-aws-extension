@@ -2,6 +2,7 @@ import os
 import subprocess
 import threading
 import time
+import uuid
 from multiprocessing import Process
 from threading import Lock
 
@@ -104,6 +105,9 @@ if __name__ == "__main__":
 
     comfy_app.process.join()
     api_process.join()
+
+    unique_id = str(uuid.uuid4())
+    os.environ['INSTANCE_UNIQUE_ID'] = unique_id
 
     while True:
         need_reboot = os.environ.get('NEED_REBOOT')
