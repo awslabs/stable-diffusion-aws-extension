@@ -10,9 +10,9 @@ export class RestApiGateway {
   public readonly routers: { [key: string]: Resource } = {};
   private readonly scope: Construct;
 
-  constructor(scope: Construct, id: string, apiKey: string, routes: string[]) {
+  constructor(scope: Construct, apiKey: string, routes: string[]) {
     this.scope = scope;
-    [this.apiGateway, this.apiKey] = this.createApigw(apiKey, id);
+    [this.apiGateway, this.apiKey] = this.createApigw(apiKey);
     for (let route of routes) {
       const pathList: string[] = route.split('/');
       // pathList has at least one item
@@ -25,14 +25,14 @@ export class RestApiGateway {
     }
   }
 
-  private createApigw(apiKeyStr: string, id: string): [apigw.RestApi, string] {
+  private createApigw(apiKeyStr: string): [apigw.RestApi, string] {
     const apiAccessLogGroup = new logs.LogGroup(
       this.scope,
-      id + '-api-logs',
+      'aigc-api-logs',
     );
 
     // Create an API Gateway, will merge with existing API Gateway
-    const api = new apigw.RestApi(this.scope, id + '-deploy-api', {
+    const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: this.scope.node.id,
       description: 'Extension for Stable Diffusion on AWS API',
       deployOptions: {
@@ -79,12 +79,12 @@ export class RestApiGateway {
     });
 
     // Add API Key to the API Gateway
-    const apiKey = api.addApiKey(id + '-api-key', {
-      apiKeyName: id + '-api-key',
+    const apiKey = api.addApiKey('sd-extension-api-key', {
+      apiKeyName: 'sd-extension-api-key',
       value: apiKeyStr,
     });
 
-    const usagePlan = api.addUsagePlan(id + '-api-usage-plan', {});
+    const usagePlan = api.addUsagePlan('sd-extension-api-usage-plan', {});
     usagePlan.addApiKey(apiKey);
     usagePlan.addApiStage({
       stage: api.deploymentStage,

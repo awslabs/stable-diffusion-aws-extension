@@ -3,15 +3,16 @@ import datetime
 import json
 import logging
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Optional
 
 import boto3
 import sagemaker
-import time
 import tomli
 import tomli_w
 
+from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common import const
 from common.const import LoraTrainType, PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
@@ -170,7 +171,7 @@ def _trigger_sagemaker_training_job(
         table=train_table,
         key=search_key,
         field_name="job_status",
-        value=TrainJobStatus.Training.value,
+        value=TrainJobStatus.Starting.value,
     )
 
 
@@ -198,7 +199,7 @@ def _start_training_job(train_job_id: str):
 
     return {
         "id": train_job.id,
-        "status": train_job.job_status.value,
+        "status": train_job.job_status.Starting.value,
         "created": str(train_job.timestamp),
         "params": train_job.params,
         "input_location": train_job.input_s3_location,
@@ -213,6 +214,10 @@ def get_model_location(model_name):
 
     for item in resp['Items']:
         if 'checkpoint_names' not in item:
+            continue
+        if 'L' not in item['checkpoint_names']:
+            continue
+        if len(item['checkpoint_names']['L']) == 0:
             continue
         if item['checkpoint_names']['L'][0]['S'] == model_name:
             return f'{item["s3_location"]["S"]}/{model_name}'
@@ -253,6 +258,9 @@ def _create_training_job(raw_event, context):
         dataset_name = query_data(event.params, ['training_params', 'dataset'])
         fm_type = query_data(event.params, ['training_params', 'fm_type'])
         output_name = query_data(event.params, ['config_params', 'saving_arguments', 'output_name'])
+        output_name = f"{output_name}.safetensors"
+
+        check_ckpt_name_unique([output_name])
 
         save_every_n_epochs = query_data(event.params, ['config_params', 'saving_arguments', 'save_every_n_epochs'])
         event.params["config_params"]["saving_arguments"]["save_every_n_epochs"] = int(save_every_n_epochs)
@@ -276,7 +284,8 @@ def _create_training_job(raw_event, context):
             toml_template_path = "template/" + const.KOHYA_XL_TOML_FILE_NAME
         else:
             raise BadRequestException(
-                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} and {const.TrainFMType.SD_XL.value}"
+                f"Invalid fm_type {fm_type}, the valid values are {const.TrainFMType.SD_1_5.value} "
+                f"and {const.TrainFMType.SD_XL.value}"
             )
 
         # Merge user parameter, if no config_params is defined, use the default value in S3 bucket
@@ -350,7 +359,7 @@ def handler(raw_event, context):
         return created(data=job_info, decimal=True)
     except Exception as e:
         if job_id:
-            ddb_service.delete_item(train_table, keys={
-                'id': job_id,
-            })
+            # Clean up the created job when an error occurs
+            ddb_service.delete_item(train_table, keys={'id': job_id})
+            ddb_service.delete_item(checkpoint_table, keys={'id': job_id})
         return response_error(e)

@@ -38,13 +38,23 @@ export class ResourceWaiter extends Construct {
       logRetention: RetentionDays.ONE_DAY,
     });
 
-    new CustomResource(scope, 'ResourcesWaiterCustomResource', {
+    const waiter1 = new CustomResource(scope, 'ResourcesWaiterCustomResource', {
       serviceToken: provider.serviceToken,
       properties: {
         apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
       },
     });
+
+    const waiter2 = new CustomResource(scope, 'ResourcesWaiterCustomResource2', {
+      serviceToken: provider.serviceToken,
+      properties: {
+        apiUrl: props.restApiGateway.apiGateway.url,
+        apiKey: props.apiKeyParam.valueAsString,
+      },
+    });
+
+    waiter2.node.addDependency(waiter1);
 
   }
 

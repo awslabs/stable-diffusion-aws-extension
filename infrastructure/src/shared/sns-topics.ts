@@ -21,6 +21,7 @@ export class SnsTopics {
     this.scope = scope;
     this.id = id;
 
+    // sd
     // Create an SNS topic to get async inference result
     this.snsTopic = this.createOrImportTopic('StableDiffusionSnsUserTopic');
     this.snsTopic.addSubscription(new EmailSubscription(emailParam.valueAsString));
@@ -29,6 +30,7 @@ export class SnsTopics {
     this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
     this.createModelSuccessTopic = this.createOrImportTopic('successCreateModel');
     this.createModelFailureTopic = this.createOrImportTopic('failureCreateModel');
+    // comfy
     this.executeResultSuccessTopic = this.createOrImportTopic('sageMakerExecuteSuccess');
     this.executeResultFailTopic = this.createOrImportTopic('sageMakerExecuteFail');
 
