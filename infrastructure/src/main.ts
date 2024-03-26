@@ -127,6 +127,7 @@ export class Middleware extends Stack {
       'execute',
       'node',
       'config',
+      'prepare',
       'endpoint',
       'sync',
     ]);
