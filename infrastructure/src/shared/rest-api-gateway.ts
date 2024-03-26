@@ -50,7 +50,7 @@ export class RestApiGateway {
     });
 
     // custom error response to return details of validation errors to the client.
-    api.addGatewayResponse('BAD_REQUEST_BODY', {
+    const responseBad = api.addGatewayResponse('BAD_REQUEST_BODY', {
       type: apigw.ResponseType.BAD_REQUEST_BODY,
       templates: {
         'application/json': JSON.stringify({
@@ -60,7 +60,7 @@ export class RestApiGateway {
       },
     });
 
-    api.addGatewayResponse('DEFAULT_4XX', {
+    const response400 = api.addGatewayResponse('DEFAULT_4XX', {
       type: apigw.ResponseType.DEFAULT_4XX,
       templates: {
         'application/json': JSON.stringify({
@@ -68,8 +68,9 @@ export class RestApiGateway {
         }),
       },
     });
+    response400.node.addDependency(responseBad);
 
-    api.addGatewayResponse('DEFAULT_5XX', {
+    const response500 =api.addGatewayResponse('DEFAULT_5XX', {
       type: apigw.ResponseType.DEFAULT_5XX,
       templates: {
         'application/json': JSON.stringify({
@@ -77,18 +78,21 @@ export class RestApiGateway {
         }),
       },
     });
+    response500.node.addDependency(response400);
 
     // Add API Key to the API Gateway
     const apiKey = api.addApiKey('sd-extension-api-key', {
       apiKeyName: 'sd-extension-api-key',
       value: apiKeyStr,
     });
+    apiKey.node.addDependency(response500);
 
     const usagePlan = api.addUsagePlan('sd-extension-api-usage-plan', {});
     usagePlan.addApiKey(apiKey);
     usagePlan.addApiStage({
       stage: api.deploymentStage,
     });
+    usagePlan.node.addDependency(apiKey);
 
     return [api, apiKeyStr];
   }
