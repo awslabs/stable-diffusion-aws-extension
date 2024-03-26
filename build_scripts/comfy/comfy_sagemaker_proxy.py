@@ -34,12 +34,11 @@ async def prepare_comfy_env(json_data):
         if not sync_source_path or not local_target_path:
             raise Exception("s3_source_path and local_target_path should not be empty")
         sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
-                                           f'/opt/ml/code/{local_target_path}', False)
+                                          f'/opt/ml/code/{local_target_path}', False)
     print("prepare_environment end")
 
     # TODO
     need_reboot = json_data["need_reboot"]
-
 
 
 # def create_tar_gz(source_file, target_tar_gz):

@@ -65,6 +65,7 @@ class ComfyEnvPrepareType(Enum):
     NODES = 'nodes'
     MODELS = 'models'
     CUSTOM = 'custom'
+    OTHER = 'other'
 
 
 class ComfyExecuteType(Enum):
