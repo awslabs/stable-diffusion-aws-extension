@@ -80,7 +80,6 @@ export class Inference {
       },
     );
 
-
     new ListInferencesApi(
       scope, 'ListInferenceJobs',
       {
@@ -94,7 +93,6 @@ export class Inference {
         logLevel: props.logLevel,
       },
     );
-
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
