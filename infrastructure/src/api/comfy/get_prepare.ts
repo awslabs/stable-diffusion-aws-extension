@@ -22,6 +22,7 @@ export interface GetPrepareApiProps {
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
 }
@@ -38,6 +39,7 @@ export class GetPrepareApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
+  private readonly instanceMonitorTable: aws_dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: GetPrepareApiProps) {
     this.scope = scope;
@@ -48,6 +50,7 @@ export class GetPrepareApi {
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.syncTable = props.syncTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
 
@@ -69,6 +72,7 @@ export class GetPrepareApi {
       resources: [
         this.configTable.tableArn,
         this.syncTable.tableArn,
+        this.instanceMonitorTable.tableArn,
       ],
     }));
 
@@ -111,6 +115,7 @@ export class GetPrepareApi {
       environment: {
         SYNC_TABLE: this.syncTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
+        INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         BUCKET_NAME: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },

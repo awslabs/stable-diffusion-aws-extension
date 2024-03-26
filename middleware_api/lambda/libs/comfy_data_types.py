@@ -59,6 +59,20 @@ class ComfySyncTable:
 
 
 @dataclass
+class ComfyInstanceMonitorTable:
+    endpoint_id: str
+    endpoint_name: str
+    gen_instance_id: str
+    sync_status: ComfySyncStatus
+    last_sync_request_id: str
+    last_sync_time: str
+    # period_config: str  move to config table
+    sync_list: Optional[List[str]]
+    create_time: datetime.datetime
+    last_heartbeat_time: Optional[Any] = None
+
+
+@dataclass
 class ComfyMessageTable:
     prompt_id: str
     msg_list: Optional[List[str]] = None

@@ -26,15 +26,12 @@ export class CreateSageMakerEndpoint {
   public modelConfig: aws_sagemaker.CfnEndpointConfig;
   public modelEndpoint: aws_sagemaker.CfnEndpoint;
   private configTable: aws_dynamodb.Table;
-  private modelTable: aws_dynamodb.Table;
   private syncTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: CreateSageMakerEndpointProps) {
     this.id = id;
-    this.modelTable = props.modelTable;
     this.queue = props.queue;
-    this.modelTable = props.modelTable;
     this.configTable = props.configTable;
     this.syncTable = props.syncTable;
 
@@ -115,7 +112,6 @@ export class CreateSageMakerEndpoint {
         'dynamodb:DeleteItem',
       ],
       resources: [
-        this.modelTable.tableArn,
         this.syncTable.tableArn,
         this.configTable.tableArn,
       ],

@@ -236,6 +236,16 @@ async function createTables() {
         type: AttributeType.STRING,
       },
     },
+    ComfyInstanceMonitorTable: {
+      partitionKey: {
+        name: 'endpoint_id',
+        type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'gen_instance_id',
+        type: AttributeType.STRING,
+      },
+    },
     ComfyMessageTable: {
       partitionKey: {
         name: 'prompt_id',
