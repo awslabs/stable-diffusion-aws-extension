@@ -1375,8 +1375,12 @@ def trainings_tab():
                 train_type = gr.Dropdown(label="Train Type", choices=["Lora"], value="Lora")
                 lora_train_type = gr.Dropdown(label="Train Method", choices=["kohya"], value="kohya")
             with gr.Row():
-                training_instance_types = ["ml.g5.2xlarge", "ml.g5.4xlarge"]
-                training_instance_type = gr.Dropdown(label="Training Instance Type", choices=training_instance_types,
+                training_instance_types = ["ml.g5.2xlarge",
+                                           "ml.g5.4xlarge",
+                                           "ml.g4dn.12xlarge"
+                                           ]
+                training_instance_type = gr.Dropdown(label="Training Instance Type",
+                                                     choices=training_instance_types,
                                                      value="ml.g5.2xlarge")
                 fm_type = gr.Dropdown(label="FM Type", choices=["sd_1_5", "sd_xl"], value="sd_1_5")
             with gr.Row():
