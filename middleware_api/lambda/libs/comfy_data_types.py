@@ -51,6 +51,7 @@ class ComfySyncTable:
     need_reboot: bool
     s3_source_path: Optional[str]
     local_target_path: Optional[str]
+    sync_script: Optional[str]
     endpoint_snapshot: Optional[Any]
     sync_status: ComfySyncStatus
     request_time: datetime.datetime

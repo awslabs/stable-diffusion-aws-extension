@@ -1,5 +1,7 @@
 import os
+import subprocess
 import threading
+import time
 from multiprocessing import Process
 from threading import Lock
 
@@ -27,7 +29,11 @@ async def invocations(request: Request):
 
 
 def ping():
-    return {'status': 'Healthy'}
+    init_already = os.environ.get('ALREADY_INIT')
+    if init_already and init_already.lower() == 'false':
+        raise HTTPException(status_code=500)
+    else:
+        return {'status': 'Healthy'}
 
 
 class Api:
@@ -46,20 +52,67 @@ class Api:
         uvicorn.run(self.app, host=server_name, port=port, timeout_keep_alive=TIMEOUT_KEEP_ALIVE)
 
 
-def start_comfy_app(host=LOCALHOST, port=COMFY_PORT):
-    cmd = "python main.py  --listen {} --port {}".format(host, port)
-    os.system(cmd)
+class ComfyApp:
+    def __init__(self, host=LOCALHOST, port=COMFY_PORT):
+        self.host = host
+        self.port = port
+        self.process = None
+
+    def start(self):
+        # cmd = "python main.py  --listen {} --port {}".format(self.host, self.port)
+        # self.process = Process(target=os.system, args=(cmd,))
+        # self.process.start()
+        cmd = ["python", "main.py", "--listen", self.host, "--port", str(self.port)]
+        self.process = subprocess.Popen(cmd)
+        os.environ['ALREADY_INIT'] = 'true'
+
+    def restart(self):
+        # if self.process and self.process.is_alive():
+        #     self.process.terminate()
+        #     self.start()
+        # else:
+        #     print("Comfy app process is not running.")
+        if self.process and self.process.poll() is None:
+            os.environ['ALREADY_INIT'] = 'false'
+            self.process.terminate()
+            self.process.wait()
+        self.start()
+
+
+# def start_comfy_app(host=LOCALHOST, port=COMFY_PORT):
+#     cmd = "python main.py  --listen {} --port {}".format(host, port)
+#     os.system(cmd)
 
 
 if __name__ == "__main__":
     queue_lock = threading.Lock()
     api = Api(app, queue_lock)
 
-    api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
-    comfy_process = Process(target=start_comfy_app, args=(LOCALHOST, COMFY_PORT))
+    # api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
+    # comfy_process = Process(target=start_comfy_app, args=(LOCALHOST, COMFY_PORT))
+    #
+    # comfy_process.start()
+    # api_process.start()
+    #
+    # comfy_process.join()
+    # api_process.join()
 
-    comfy_process.start()
+    comfy_app = ComfyApp()
+    api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
+    comfy_app.start()
     api_process.start()
 
-    comfy_process.join()
+    comfy_app.process.join()
     api_process.join()
+
+    while True:
+        need_reboot = os.environ.get('NEED_REBOOT')
+        print(f'need_reboot value check: {need_reboot} ！')
+        # for key, value in os.environ.items():
+        #     print(f"{key}: {value}")
+        if need_reboot and need_reboot.lower() == 'true':
+            os.environ['NEED_REBOOT'] = 'false'
+            print(f'need_reboot, reboot  start!')
+            comfy_app.restart()
+            print(f'need_reboot, reboot  finished!')
+            time.sleep(60 * 5)

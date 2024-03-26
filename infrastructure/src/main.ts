@@ -238,23 +238,6 @@ export class Middleware extends Stack {
     );
     resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
-    new CheckpointStack(this, {
-      // env: devEnv,
-      synthesizer: props.synthesizer,
-      checkpointTable: ddbTables.checkpointTable,
-      multiUserTable: ddbTables.multiUserTable,
-      routers: restApi.routers,
-      s3Bucket: s3Bucket,
-      commonLayer: commonLayers.commonLayer,
-      logLevel: logLevel,
-    });
-
-    new CfnOutput(this, 'SNSTopicName', {
-      value: snsTopics.snsTopic.topicName,
-      description: 'SNS Topic Name to get train and inference result notification',
-    });
-
-
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {
       if (!resourceProvider.instanceof(resource)) {
@@ -266,11 +249,26 @@ export class Middleware extends Stack {
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
 
+    // Adding Outputs for apiGateway and s3Bucket
+    new CfnOutput(this, 'ApiGatewayUrl', {
+      value: restApi.apiGateway.url,
+      description: 'API Gateway URL',
+    });
+
+    new CfnOutput(this, 'ApiGatewayUrlToken', {
+      value: apiKeyParam.valueAsString,
+      description: 'API Gateway Token',
+    });
+
     new CfnOutput(this, 'S3BucketName', {
       value: s3Bucket.bucketName,
       description: 'S3 Bucket Name',
     });
 
+    new CfnOutput(this, 'SNSTopicName', {
+      value: snsTopics.snsTopic.topicName,
+      description: 'SNS Topic Name to get train and inference result notification',
+    });
   }
 }
 
