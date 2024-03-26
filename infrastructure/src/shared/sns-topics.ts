@@ -26,10 +26,10 @@ export class SnsTopics {
 
     this.inferenceResultTopic = this.createOrImportTopic('ReceiveSageMakerInferenceSuccess');
     this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
+
     // comfy
     this.executeResultSuccessTopic = this.createOrImportTopic('sageMakerExecuteSuccess');
     this.executeResultFailTopic = this.createOrImportTopic('sageMakerExecuteFail');
-
   }
 
   private createOrImportTopic(topicName: string): Topic {

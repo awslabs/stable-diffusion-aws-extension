@@ -18,7 +18,7 @@ from sagemaker.base_serializers import JSONSerializer
 
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyTaskType, ComfyExecuteType
-from response import ok
+from common.response import ok
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
