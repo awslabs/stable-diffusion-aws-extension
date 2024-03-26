@@ -64,6 +64,13 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
+    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
+      type: 'String',
+      description: 'Inference ECR Image tag',
+      default: ECR_IMAGE_TAG,
+      allowedValues: [ECR_IMAGE_TAG],
+    });
+
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     const accountId = Fn.conditionIf(
@@ -71,13 +78,6 @@ export class Middleware extends Stack {
       '753680513547',
       '366590864501',
     );
-
-    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
-      type: 'String',
-      description: 'Inference ECR Image tag',
-      default: ECR_IMAGE_TAG,
-      allowedValues: [ECR_IMAGE_TAG],
-    });
 
     // Create resources here
 

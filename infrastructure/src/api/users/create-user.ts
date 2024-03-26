@@ -73,6 +73,7 @@ export class CreateUserApi {
         this.multiUserTable.tableArn,
       ],
     }));
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
