@@ -13,15 +13,12 @@ import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ResourceProvider } from './resource-provider';
-import { CreateEndpointApi } from '../api/endpoints/create-endpoint';
-import { DeleteEndpointsApi } from '../api/endpoints/delete-endpoints';
-import { ListEndpointsApi } from '../api/endpoints/list-endpoints';
 import { CreateInferenceJobApi } from '../api/inferences/create-inference-job';
 import { DeleteInferenceJobsApi } from '../api/inferences/delete-inference-jobs';
 import { GetInferenceJobApi } from '../api/inferences/get-inference-job';
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi } from '../api/inferences/start-inference-job';
-import { SagemakerEndpointEvents } from '../events/endpoints-event';
+import {EndpointStack, EndpointStackProps} from "../endpoints/endpoint-stack";
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -86,42 +83,6 @@ export class Inference {
       },
     );
 
-    new ListEndpointsApi(
-      scope, 'ListEndpoints', {
-        router: props.routers.endpoints,
-        commonLayer: props.commonLayer,
-        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-        multiUserTable: props.multiUserTable,
-        httpMethod: 'GET',
-        srcRoot: srcRoot,
-        logLevel: props.logLevel,
-      },
-    );
-
-    const deleteEndpointsApi = new DeleteEndpointsApi(
-      scope, 'DeleteEndpoints', {
-        router: props.routers.endpoints,
-        commonLayer: props.commonLayer,
-        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-        multiUserTable: props.multiUserTable,
-        httpMethod: 'DELETE',
-        srcRoot: srcRoot,
-        logLevel: props.logLevel,
-      },
-    );
-    deleteEndpointsApi.model.node.addDependency(createInferenceJobApi.model);
-    deleteEndpointsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
-
-    new SagemakerEndpointEvents(
-      scope, 'EndpointEvents', {
-        commonLayer: props.commonLayer,
-        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-        multiUserTable: props.multiUserTable,
-        srcRoot: srcRoot,
-        logLevel: props.logLevel,
-      },
-    );
-
     new ListInferencesApi(
       scope, 'ListInferenceJobs',
       {
@@ -136,24 +97,20 @@ export class Inference {
       },
     );
 
-    const createEndpointApi = new CreateEndpointApi(
-      scope, 'CreateEndpoint', {
-        router: props.routers.endpoints,
-        commonLayer: props.commonLayer,
-        endpointDeploymentTable: props.sd_endpoint_deployment_job_table,
-        multiUserTable: props.multiUserTable,
-        httpMethod: 'POST',
-        srcRoot: srcRoot,
-        s3Bucket: props.s3_bucket,
-        userNotifySNS: props.snsTopic,
-        accountId: props.accountId,
+    new EndpointStack(
+      scope, 'SD', <EndpointStackProps>{
+        inferenceErrorTopic: props.inferenceErrorTopic,
         inferenceResultTopic: props.inferenceResultTopic,
-        inferenceResultErrorTopic: props.inferenceErrorTopic,
+        routers: props.routers,
+        s3Bucket: props.s3_bucket,
+        multiUserTable: props.multiUserTable,
+        snsTopic: props.snsTopic,
+        EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
+        commonLayer: props.commonLayer,
         logLevel: props.logLevel,
+        accountId: props.accountId,
       },
     );
-    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
-    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
@@ -222,8 +179,8 @@ export class Inference {
         logLevel: props.logLevel,
       },
     );
-    deleteInferenceJobsApi.model.node.addDependency(createEndpointApi.model);
-    deleteInferenceJobsApi.requestValidator.node.addDependency(createEndpointApi.requestValidator);
+    deleteInferenceJobsApi.model.node.addDependency(createInferenceJobApi.model);
+    deleteInferenceJobsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
 
     const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
       entry: `${srcRoot}/inferences`,
