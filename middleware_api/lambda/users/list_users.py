@@ -58,10 +58,12 @@ def handler(event, ctx):
         result = []
         for row in scan_rows:
             user = User(**(ddb_service.deserialize(row)))
-            password = "*"
-            if user.password:
-                password = '*' * 8 if not show_password else password_encryptor.decrypt(
-                    key_id=kms_key_id, cipher_text=user.password).decode()
+            logger.info(f'decrypted text: {user.password}')
+            password = '*' * 8
+            if user.password and show_password:
+                logger.info(f'decrypting for {user.sort_key}')
+                password = password_encryptor.decrypt(key_id=kms_key_id, cipher_text=user.password).decode()
+
             user_resp = {
                 'username': user.sort_key,
                 'roles': user.roles,
@@ -69,6 +71,7 @@ def handler(event, ctx):
                 'permissions': set(),
                 'password': password,
             }
+
             for role in user.roles:
                 if role in roles_permission_lookup:
                     user_resp['permissions'].update(roles_permission_lookup[role])

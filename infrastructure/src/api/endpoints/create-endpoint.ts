@@ -100,7 +100,6 @@ export class CreateEndpointApi {
         's3:GetObject',
       ],
       resources: [
-        // for get files from solution's bucket
         '*',
       ],
     });
