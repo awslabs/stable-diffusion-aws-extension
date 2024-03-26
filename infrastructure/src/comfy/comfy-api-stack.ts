@@ -30,11 +30,11 @@ export interface ComfyInferenceStackProps extends StackProps {
   ecrImageTag: CfnParameter;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
-  modelTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   msgTable:aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   ecrRepositoryName: string;
   executeSuccessTopic: sns.Topic;
@@ -49,11 +49,11 @@ export class ComfyApiStack extends Construct {
   private readonly layer: aws_lambda.LayerVersion;
   private configTable: aws_dynamodb.Table;
   private executeTable: aws_dynamodb.Table;
-  private modelTable: aws_dynamodb.Table;
   private syncTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
   private multiUserTable: aws_dynamodb.Table;
   private endpointTable: aws_dynamodb.Table;
+  private instanceMonitorTable: aws_dynamodb.Table;
   private executeSuccessTopic: sns.Topic;
   private executeFailTopic: sns.Topic;
   private snsTopic: aws_sns.Topic;
@@ -67,7 +67,6 @@ export class ComfyApiStack extends Construct {
     this.layer = props.commonLayer;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
-    this.modelTable = props.modelTable;
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
     this.executeSuccessTopic = props.executeSuccessTopic;
@@ -75,6 +74,7 @@ export class ComfyApiStack extends Construct {
     this.snsTopic = props.snsTopic;
     this.multiUserTable = props.multiUserTable;
     this.endpointTable = props.endpointTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
 
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
     const srcRoot = '../middleware_api/lambda';
@@ -134,7 +134,6 @@ export class ComfyApiStack extends Construct {
       machineType: 'ml.g4dn.2xlarge',
       rootSrc: srcRoot,
       configTable: this.configTable,
-      modelTable: this.modelTable,
       syncTable: this.syncTable,
       commonLayer: this.layer,
       queue: sqsStack.queue,
@@ -196,7 +195,7 @@ export class ComfyApiStack extends Construct {
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         syncTable: this.syncTable,
-        modelTable: this.modelTable,
+        instanceMonitorTable: this.instanceMonitorTable,
         queue: sqsStack.queue,
         commonLayer: this.layer,
         logLevel: props.logLevel,
@@ -226,6 +225,7 @@ export class ComfyApiStack extends Construct {
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         syncTable: this.syncTable,
+        instanceMonitorTable: this.instanceMonitorTable,
         commonLayer: this.layer,
         logLevel: props.logLevel,
       },
@@ -291,6 +291,9 @@ export class ComfyApiStack extends Construct {
       resources: [
         props.endpointTable.tableArn,
         props.executeTable.tableArn,
+        props.syncTable.tableArn,
+        props.configTable.tableArn,
+        props.multiUserTable.tableArn,
       ],
     });
 
