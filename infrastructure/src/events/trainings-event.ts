@@ -102,14 +102,6 @@ export class SagemakerTrainingEvents {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
-        'kms:*',
-      ],
-      resources: ['*'],
-    }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
         's3:GetObject',
         's3:PutObject',
         's3:DeleteObject',
@@ -156,6 +148,11 @@ export class SagemakerTrainingEvents {
       },
       layers: [this.layer],
     });
+
+    lambdaFunction.addToRolePolicy(new PolicyStatement({
+      actions: ['sns:Publish'],
+      resources: [this.userSnsTopic.topicArn],
+    }));
 
     const rule = new Rule(this.scope, `${this.baseId}-rule`, {
       eventPattern: {

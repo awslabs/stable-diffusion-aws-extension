@@ -211,8 +211,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
-      createModelFailureTopic: snsTopics.createModelFailureTopic,
-      createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       logLevel,
       resourceProvider,
       accountId,

@@ -12,10 +12,7 @@ import { GetTrainingJobApi } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { SagemakerTrainingEvents } from '../events/trainings-event';
 
-
 export interface TrainDeployProps extends StackProps {
-  createModelSuccessTopic: aws_sns.Topic;
-  createModelFailureTopic: aws_sns.Topic;
   database: Database;
   routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;
