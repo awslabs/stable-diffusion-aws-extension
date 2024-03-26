@@ -102,7 +102,7 @@ export class SagemakerTrainingEvents {
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
-        'kms:GenerateDataKey',
+        'kms:*',
       ],
       resources: ['*'],
     }));
