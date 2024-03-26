@@ -21,7 +21,6 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
-import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 import { ResourceProvider } from '../shared/resource-provider';
 
 export interface ComfyInferenceStackProps extends StackProps {
@@ -51,12 +50,7 @@ export class ComfyApiStack extends Construct {
   private executeTable: aws_dynamodb.Table;
   private syncTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
-  private multiUserTable: aws_dynamodb.Table;
-  private endpointTable: aws_dynamodb.Table;
   private instanceMonitorTable: aws_dynamodb.Table;
-  private executeSuccessTopic: sns.Topic;
-  private executeFailTopic: sns.Topic;
-  private snsTopic: aws_sns.Topic;
 
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
@@ -69,11 +63,6 @@ export class ComfyApiStack extends Construct {
     this.executeTable = props.executeTable;
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
-    this.executeSuccessTopic = props.executeSuccessTopic;
-    this.executeFailTopic = props.executeFailTopic;
-    this.snsTopic = props.snsTopic;
-    this.multiUserTable = props.multiUserTable;
-    this.endpointTable = props.endpointTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
 
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
@@ -140,21 +129,6 @@ export class ComfyApiStack extends Construct {
       logLevel: props.logLevel,
     });
 
-    new EndpointStack(
-      scope, 'Comfy', <EndpointStackProps>{
-        inferenceErrorTopic: this.executeFailTopic,
-        inferenceResultTopic: this.executeSuccessTopic,
-        routers: props.routers,
-        s3Bucket: props.s3Bucket,
-        multiUserTable: this.multiUserTable,
-        snsTopic: this.snsTopic,
-        EndpointDeploymentJobTable: this.endpointTable,
-        commonLayer: props.commonLayer,
-        logLevel: props.logLevel,
-        accountId: props.accountId,
-        ecrImageTag: props.ecrImageTag,
-      },
-    );
 
     // POST /execute
     new ExecuteApi(

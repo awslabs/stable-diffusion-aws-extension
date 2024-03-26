@@ -8,6 +8,7 @@ import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
+import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
@@ -127,6 +128,7 @@ export class Middleware extends Stack {
       'execute',
       'node',
       'config',
+      'prepare',
       'endpoint',
       'sync',
     ]);
@@ -203,6 +205,21 @@ export class Middleware extends Stack {
       accountId: accountId,
     });
     apis.node.addDependency(ddbComfyTables);
+
+    new EndpointStack(scope, {
+      inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
+      inferenceResultTopic: snsTopics.inferenceResultTopic,
+      routers: restApi.routers,
+      s3Bucket: s3Bucket,
+      multiUserTable: ddbTables.multiUserTable,
+      snsTopic: snsTopics.snsTopic,
+      EndpointDeploymentJobTable: ddbTables.sDEndpointDeploymentJobTable,
+      commonLayer: commonLayers.commonLayer,
+      logLevel: logLevel,
+      accountId: accountId,
+      ecrImageTag: ecrImageTagParam,
+    },
+    );
 
     const train = new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,

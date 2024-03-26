@@ -1,4 +1,3 @@
-import * as path from 'path';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_sns, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
@@ -8,7 +7,6 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
@@ -18,7 +16,6 @@ import { DeleteInferenceJobsApi } from '../api/inferences/delete-inference-jobs'
 import { GetInferenceJobApi } from '../api/inferences/get-inference-job';
 import { ListInferencesApi } from '../api/inferences/list-inferences';
 import { StartInferenceJobApi } from '../api/inferences/start-inference-job';
-import { EndpointStack, EndpointStackProps } from '../endpoints/endpoint-stack';
 
 /*
 AWS CDK code to create API Gateway, Lambda and SageMaker inference endpoint for txt2img/img2img inference
@@ -83,6 +80,7 @@ export class Inference {
       },
     );
 
+
     new ListInferencesApi(
       scope, 'ListInferenceJobs',
       {
@@ -97,20 +95,6 @@ export class Inference {
       },
     );
 
-    new EndpointStack(
-      scope, 'SD', <EndpointStackProps>{
-        inferenceErrorTopic: props.inferenceErrorTopic,
-        inferenceResultTopic: props.inferenceResultTopic,
-        routers: props.routers,
-        s3Bucket: props.s3_bucket,
-        multiUserTable: props.multiUserTable,
-        snsTopic: props.snsTopic,
-        EndpointDeploymentJobTable: props.sd_endpoint_deployment_job_table,
-        commonLayer: props.commonLayer,
-        logLevel: props.logLevel,
-        accountId: props.accountId,
-      },
-    );
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
@@ -211,10 +195,6 @@ export class Inference {
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
 
-    //adding model to data directory of s3 bucket
-    if (props?.s3_bucket != undefined) {
-      this.uploadModelToS3(scope, props.s3_bucket);
-    }
 
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
@@ -227,18 +207,4 @@ export class Inference {
   }
 
 
-  private uploadModelToS3(scope: Construct, s3_bucket: s3.Bucket) {
-    // Create a folder in the bucket
-    const folderKey = 'data/';
-
-    // Upload a local file to the created folder
-    console.log(__dirname);
-    const modelPath = path.resolve(__dirname, '../', '../', 'models', 'model.zip');
-    new s3deploy.BucketDeployment(scope, 'DeployLocalFile', {
-      sources: [s3deploy.Source.asset(modelPath)],
-      destinationBucket: s3_bucket,
-      destinationKeyPrefix: folderKey,
-      retainOnDelete: false,
-    });
-  }
 }
