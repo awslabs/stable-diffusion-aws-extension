@@ -9,6 +9,7 @@ s3 = boto3.client('s3')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
+sns_client = boto3.client('sns')
 
 
 def get_multi_query_params(event, param_name: str, default=None):
@@ -42,8 +43,7 @@ def query_data(data, paths):
 
 
 def publish_msg(topic_arn, msg, subject):
-    client = boto3.client('sns')
-    client.publish(
+    sns_client.publish(
         TopicArn=topic_arn,
         Message=str(msg),
         Subject=subject

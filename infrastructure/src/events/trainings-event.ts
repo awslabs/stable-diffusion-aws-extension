@@ -149,6 +149,11 @@ export class SagemakerTrainingEvents {
       layers: [this.layer],
     });
 
+    lambdaFunction.addToRolePolicy(new PolicyStatement({
+      actions: ['sns:Publish'],
+      resources: [this.userSnsTopic.topicArn],
+    }));
+
     const rule = new Rule(this.scope, `${this.baseId}-rule`, {
       eventPattern: {
         source: ['aws.sagemaker'],

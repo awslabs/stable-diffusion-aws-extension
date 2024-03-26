@@ -21,10 +21,7 @@ import { GetTrainingJobApi } from '../api/trainings/get-training-job';
 import { ListTrainingJobsApi } from '../api/trainings/list-training-jobs';
 import { SagemakerTrainingEvents } from '../events/trainings-event';
 
-// ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface TrainDeployProps extends StackProps {
-  createModelSuccessTopic: aws_sns.Topic;
-  createModelFailureTopic: aws_sns.Topic;
   database: Database;
   routers: { [key: string]: Resource };
   s3Bucket: aws_s3.Bucket;
@@ -86,8 +83,6 @@ export class TrainDeploy {
       accountId: props.accountId,
       datasetInfoTable: props.database.datasetInfoTable,
     });
-
-    const trainJobRouter = routers.trainings.addResource('{id}');
 
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
@@ -230,7 +225,7 @@ export class TrainDeploy {
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(scope, 'GetTrainingJob', {
-      router: trainJobRouter,
+      router: props.routers.trainings,
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
       multiUserTable: multiUserTable,

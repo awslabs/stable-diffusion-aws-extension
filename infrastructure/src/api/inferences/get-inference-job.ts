@@ -76,7 +76,6 @@ export class GetInferenceJobApi {
       },
     );
 
-
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,

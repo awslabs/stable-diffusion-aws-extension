@@ -7,8 +7,6 @@ import { Construct } from 'constructs';
 export class SnsTopics {
 
   public readonly snsTopic: Topic;
-  public readonly createModelSuccessTopic: Topic;
-  public readonly createModelFailureTopic: Topic;
   public readonly inferenceResultTopic: Topic;
   public readonly inferenceResultErrorTopic: Topic;
   private readonly scope: Construct;
@@ -25,8 +23,6 @@ export class SnsTopics {
 
     this.inferenceResultTopic = this.createOrImportTopic('ReceiveSageMakerInferenceSuccess');
     this.inferenceResultErrorTopic = this.createOrImportTopic('ReceiveSageMakerInferenceError');
-    this.createModelSuccessTopic = this.createOrImportTopic('successCreateModel');
-    this.createModelFailureTopic = this.createOrImportTopic('failureCreateModel');
   }
 
   private createOrImportTopic(topicName: string): Topic {

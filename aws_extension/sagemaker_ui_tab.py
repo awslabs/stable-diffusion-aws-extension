@@ -29,6 +29,8 @@ logger.setLevel(utils.LOGGING_LEVEL)
 service_file = "/etc/systemd/system/sd-webui.service"
 endpoint_type_choices = ["Async", "Real-time"]
 
+page_key = {}
+
 if is_gcr():
     inference_choices = ["ml.g4dn.2xlarge",
                          "ml.g4dn.4xlarge",
@@ -822,18 +824,21 @@ def model_upload_tab():
                                       inputs=[ckpt_list_selected, new_name_textbox],
                                       outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
 
-            def _delete_ckpt(ckpt_id, pr: gr.Request):
+            def _delete_ckpt(ckpt_id, query_types, query_status, query_roles, current_page, pr: gr.Request):
                 show_output = ckpt_list_info.update(visible=True)
                 if not ckpt_id:
                     message = "Please select one checkpoint to delete."
                 else:
                     message = api_manager.ckpts_delete(ckpts=[ckpt_id], user_token=pr.username)
-                return show_output, message, ''
+                new_model_list, new_page_info, new_page_info = list_ckpts_data(query_types, query_status, query_roles,
+                                                                               current_page, pr)
+                return show_output, message, '', new_model_list, new_page_info, new_page_info
 
             delete_ckpt_btn = gr.Button(value='Delete \U0001F5D1', elem_id="delete_ckpt")
             delete_ckpt_btn.click(fn=_delete_ckpt,
-                                  inputs=[ckpt_list_selected],
-                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected])
+                                  inputs=[ckpt_list_selected, query_types, query_status, query_roles, current_page],
+                                  outputs=[ckpt_list_info, ckpt_list_info, ckpt_list_selected, model_list, page_info,
+                                           page_info])
             # ---- bind functions end ----
 
     return upload_tab, model_list
@@ -1013,8 +1018,13 @@ def ep_create_tab():
         return sagemaker_tab
 
 
-def _list_sagemaker_endpoints(username):
-    resp = api_manager.list_all_sagemaker_endpoints_raw(username=username, user_token=username)
+def _list_sagemaker_endpoints(username, last_key: str = ""):
+    resp, next_key = api_manager.list_all_sagemaker_endpoints_raw(username=username,
+                                                                  user_token=username,
+                                                                  last_key=last_key)
+
+    set_page_key(username, 'endpoints', next_key)
+
     endpoints = []
     for endpoint in resp:
         if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
@@ -1051,38 +1061,55 @@ def _list_sagemaker_endpoints(username):
     return endpoints
 
 
-def _list_trainings_job(username):
+def get_page_key_next(username: str, api_name: str):
+    global page_key
+    if username not in page_key:
+        return None
+    if api_name not in page_key[username]:
+        return None
+
+    if len(page_key[username][api_name]) < 1:
+        page_key[username][api_name] = []
+        return ""
+
+    return page_key[username][api_name].pop()
+
+
+def set_page_key(username: str, api_name: str, value: str):
+    global page_key
+    if username not in page_key:
+        page_key[username] = {}
+    if api_name not in page_key[username]:
+        page_key[username][api_name] = []
+    page_key[username][api_name].append(value)
+
+
+def set_page_key_empty(username: str, api_name: str):
+    global page_key
+    if username not in page_key:
+        page_key[username] = {}
+    page_key[username][api_name] = []
+
+
+def _list_trainings_job(username, last_key: str = ""):
     jobs = []
-    items = api_manager.list_all_train_jobs_raw(username=username)
+    items, next_key = api_manager.list_all_train_jobs_raw(username=username, last_key=last_key)
+
+    set_page_key(username, 'trainings', next_key)
 
     for item in items:
-        output_name = ""
-
-        try:
-            output_name = item['params']['config_params']['saving_arguments']['output_name']
-        except Exception as e:
-            pass
 
         jobs.append([
             item['id'],
             item['sagemakerTrainName'],
-            output_name,
             item['modelName'],
             item['status'],
             item['trainType'],
         ])
 
     if len(jobs) == 0:
-        jobs = [['', '', '', '', '', '']]
+        jobs = [['', '', '', '', '']]
 
-    return jobs
-
-
-def _list_trainings_job_for_delete(username):
-    jobs = []
-    items = api_manager.list_all_train_jobs_raw(username=username)
-    for item in items:
-        jobs.append(item['id'])
     return jobs
 
 
@@ -1097,7 +1124,7 @@ def ep_list_tab():
         )
 
         with gr.Row():
-            ep_list_prev_btn = gr.Button(value='Previous Page', elem_id="sagemaker_endpoint_list_prev_btn")
+            ep_list_prev_btn = gr.Button(value='First Page', elem_id="sagemaker_endpoint_list_prev_btn")
             ep_list_next_btn = gr.Button(value='Next Page', elem_id="sagemaker_endpoint_list_next_btn")
             ep_delete_btn = gr.Button(value='Delete \U0001F5D1', elem_id="sagemaker_endpoint_delete_btn")
 
@@ -1106,12 +1133,14 @@ def ep_list_tab():
             ep_selected = gr.Textbox(value="", label="Selected Endpoint item", visible=False)
 
         # ----- events and bind functions start -----
-        def list_ep_prev(rq: gr.Request):
+        def list_ep_first(rq: gr.Request):
+            set_page_key_empty(rq.username, 'endpoints')
             result = _list_sagemaker_endpoints(rq.username)
             return result, '', ep_list_info.update(value="", visible=False)
 
         def list_ep_next(rq: gr.Request):
-            result = _list_sagemaker_endpoints(rq.username)
+            last_key = get_page_key_next(rq.username, 'endpoints')
+            result = _list_sagemaker_endpoints(rq.username, last_key)
             return result, '', ep_list_info.update(value="", visible=False)
 
         def choose_ep(evt: gr.SelectData, dataset):
@@ -1128,14 +1157,14 @@ def ep_list_tab():
         ep_list.select(fn=choose_ep, inputs=[ep_list], outputs=[ep_list_info, ep_selected])
 
         ep_list_next_btn.click(fn=list_ep_next, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
-        ep_list_prev_btn.click(fn=list_ep_prev, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
+        ep_list_prev_btn.click(fn=list_ep_first, inputs=[], outputs=[ep_list, ep_selected, ep_list_info])
 
         def delete_ep(ep, rq: gr.Request):
-            new_list = _list_sagemaker_endpoints(rq.username)
             if not ep:
                 message = 'No endpoint selected'
             else:
                 message = api_manager.sagemaker_endpoint_delete(delete_endpoint_list=[ep], username=rq.username)
+            new_list = _list_sagemaker_endpoints(rq.username)
             return ep_list_info.update(value=message, visible=True), '', new_list
 
         ep_delete_btn.click(fn=delete_ep, inputs=[ep_selected], outputs=[ep_list_info, ep_selected, ep_list])
@@ -1357,7 +1386,9 @@ def trainings_tab():
                     "max_train_epochs": 100
                 }
             }
-            config_params = gr.TextArea(value=json.dumps(default_config, indent=4), label="config_params",
+            config_params = gr.TextArea(value=json.dumps(default_config, indent=4),
+                                        label="config_params",
+                                        lines=10,
                                         elem_id="config_params")
 
             with gr.Row():
@@ -1366,34 +1397,8 @@ def trainings_tab():
             with gr.Row():
                 train_create_result = gr.Textbox(value="", show_label=False, interactive=False, visible=True)
 
-            def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
-                             config_params, rq: gr.Request):
-                data = {
-                    "lora_train_type": lora_train_type,
-                    "params": {
-                        "training_params": {
-                            "training_instance_type": training_instance_type,
-                            "model": model_name,
-                            "dataset": dataset_name,
-                            "fm_type": fm_type
-                        },
-                        "config_params": json.loads(config_params)
-                    }
-                }
-                api.set_username(rq.username)
-
-                if not has_config():
-                    return [], 'Please config api url and token first'
-
-                resp = api.create_training_job(data=data)
-                return train_create_result.update(value=resp.json()['message'], visible=True)
-
             format_config_params.click(fn=lambda x: json.dumps(json.loads(x), indent=4), inputs=[config_params],
                                        outputs=[config_params])
-            create_train_button.click(fn=create_train,
-                                      inputs=[lora_train_type, training_instance_type, fm_type, model_name,
-                                              dataset_name, config_params],
-                                      outputs=[train_create_result])
 
         with gr.Column(scale=2):
             with gr.Row():
@@ -1402,26 +1407,23 @@ def trainings_tab():
 
                     with gr.Row():
                         train_list = gr.Dataframe(
-                            headers=['id', 'sagemakerTrainName', 'output_name', 'modelName', 'status', 'trainType'],
-                            datatype=['str', 'str', 'str', 'str', 'str', 'str'],
+                            headers=['id', 'sagemakerTrainName', 'modelName', 'status', 'trainType'],
+                            datatype=['str', 'str', 'str', 'str', 'str'],
                             interactive=False,
                         )
 
                         def list_ep_first(rq: gr.Request):
-                            result = _list_trainings_job(rq.username)
-                            return result, train_list_info.update(value="", visible=False), ""
-
-                        def list_ep_prev(rq: gr.Request):
+                            set_page_key_empty(rq.username, 'trainings')
                             result = _list_trainings_job(rq.username)
                             return result, train_list_info.update(value="", visible=False), ""
 
                         def list_ep_next(rq: gr.Request):
-                            result = _list_trainings_job(rq.username)
+                            last_key = get_page_key_next(rq.username, 'trainings')
+                            result = _list_trainings_job(rq.username, last_key)
                             return result, train_list_info.update(value="", visible=False), ""
 
                     with gr.Row():
                         t_list_load_btn = gr.Button(value='First Page')
-                        t_list_prev_btn = gr.Button(value='Previous Page')
                         t_list_next_btn = gr.Button(value='Next Page')
                         train_delete_btn = gr.Button(value='Delete \U0001F5D1')
                     with gr.Row():
@@ -1431,8 +1433,6 @@ def trainings_tab():
                         t_list_load_btn.click(fn=list_ep_first, inputs=[],
                                               outputs=[train_list, train_list_info, train_selected])
                         t_list_next_btn.click(fn=list_ep_next, inputs=[],
-                                              outputs=[train_list, train_list_info, train_selected])
-                        t_list_prev_btn.click(fn=list_ep_prev, inputs=[],
                                               outputs=[train_list, train_list_info, train_selected])
 
                         def choose_training(evt: gr.SelectData, dataset):
@@ -1452,16 +1452,45 @@ def trainings_tab():
                                           outputs=[train_list_info, train_selected])
 
                         def _train_delete(train, pr: gr.Request):
-                            new_train_list = _list_trainings_job(pr.username)
                             if not train:
                                 message = 'Please select a training job to delete'
                             else:
                                 message = api_manager.trains_delete(list=[train], username=pr.username)
+                            new_train_list = _list_trainings_job(pr.username)
                             return train_list_info.update(value=message, visible=True), "", new_train_list
 
                         train_delete_btn.click(_train_delete,
                                                inputs=[train_selected],
                                                outputs=[train_list_info, train_selected, train_list])
+
+        def create_train(lora_train_type, training_instance_type, fm_type, model_name, dataset_name,
+                         config_params, rq: gr.Request):
+            data = {
+                "lora_train_type": lora_train_type,
+                "params": {
+                    "training_params": {
+                        "training_instance_type": training_instance_type,
+                        "model": model_name,
+                        "dataset": dataset_name,
+                        "fm_type": fm_type
+                    },
+                    "config_params": json.loads(config_params)
+                }
+            }
+            api.set_username(rq.username)
+
+            if not has_config():
+                message = 'Please config api url and token first'
+            else:
+                message = api.create_training_job(data=data).json()['message']
+
+            new_train_list = _list_trainings_job(rq.username)
+
+            return train_create_result.update(value=message, visible=True), new_train_list
+        create_train_button.click(fn=create_train,
+                                  inputs=[lora_train_type, training_instance_type, fm_type, model_name,
+                                          dataset_name, config_params],
+                                  outputs=[train_create_result, train_list])
 
     return train_list
 

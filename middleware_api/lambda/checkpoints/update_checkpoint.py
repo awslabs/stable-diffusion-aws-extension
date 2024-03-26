@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 import boto3
 
-from checkpoints.create_checkpoint import check_ckpt_name_unique
+from create_checkpoint import check_ckpt_name_unique
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, bad_request, accepted
 from libs.common_tools import complete_multipart_upload

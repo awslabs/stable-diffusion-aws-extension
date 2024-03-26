@@ -6,7 +6,7 @@ from datetime import datetime
 import boto3
 
 from common.ddb_service.client import DynamoDbUtilsService
-from endpoints.delete_endpoints import get_endpoint_with_endpoint_name
+from delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus, EndpointType
 
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')

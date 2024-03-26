@@ -64,6 +64,13 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
+    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
+      type: 'String',
+      description: 'Inference ECR Image tag',
+      default: ECR_IMAGE_TAG,
+      allowedValues: [ECR_IMAGE_TAG],
+    });
+
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     const accountId = Fn.conditionIf(
@@ -86,7 +93,7 @@ export class Middleware extends Stack {
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ECR_IMAGE_TAG,
+        ecrImageTag: ecrImageTagParam.valueAsString,
       },
     );
 
@@ -104,7 +111,6 @@ export class Middleware extends Stack {
       'ping',
       'checkpoints',
       'datasets',
-      'inference',
       'users',
       'roles',
       'endpoints',
@@ -160,8 +166,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
-      createModelFailureTopic: snsTopics.createModelFailureTopic,
-      createModelSuccessTopic: snsTopics.createModelSuccessTopic,
       logLevel,
       resourceProvider,
       accountId,
