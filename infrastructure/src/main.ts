@@ -238,17 +238,6 @@ export class Middleware extends Stack {
     );
     resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
-    new CheckpointStack(this, {
-      // env: devEnv,
-      synthesizer: props.synthesizer,
-      checkpointTable: ddbTables.checkpointTable,
-      multiUserTable: ddbTables.multiUserTable,
-      routers: restApi.routers,
-      s3Bucket: s3Bucket,
-      commonLayer: commonLayers.commonLayer,
-      logLevel: logLevel,
-    });
-
     new CfnOutput(this, 'SNSTopicName', {
       value: snsTopics.snsTopic.topicName,
       description: 'SNS Topic Name to get train and inference result notification',
