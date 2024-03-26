@@ -142,6 +142,9 @@ async def invocations(request):
             sync_local_outputs_to_s3(bucket_name_using, f'output/{prompt_id}', '/opt/ml/code/output')
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
+        # TODO 回写instance id
+        gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+
         return web.Response(status=200)
     except Exception as e:
         print("exception occurred", e)
