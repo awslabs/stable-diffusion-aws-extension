@@ -5,7 +5,7 @@ import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk
 import { Construct } from 'constructs';
 import { PingApi } from './api/service/ping';
 import { LambdaCommonLayer } from './shared/common-layer';
-import { ECR_VERSION, STACK_ID } from './shared/const';
+import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
@@ -14,6 +14,7 @@ import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
+import { ECR_VERSION } from './shared/version';
 
 const app = new App();
 

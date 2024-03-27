@@ -68,7 +68,7 @@ phases:
       - echo "BUILD VERSION is ${BUILD_VERSION}"
       - ./build_all.sh dev ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - echo "" > ../infrastructure/src/shared/const.ts
-      - echo "export const ECR_VERSION:string = '${BUILD_VERSION}'" >> ../infrastructure/src/shared/const.ts
+      - echo "export const ECR_VERSION:string = '${BUILD_VERSION}';" >> ../infrastructure/src/shared/version.ts
       - echo "checking the updated image name"
       - cat ../infrastructure/src/shared/const.ts
       - sed -i "s/client_api_version = \"[0-9.]*\"/client_api_version = \"$TAG_NUMBER\"/" ../aws_extension/cloud_api_manager/api.py
