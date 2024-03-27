@@ -21,7 +21,7 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
-import { ECR_VERSION } from '../common/dockerImageTag';
+import { ECR_VERSION } from '../shared/const';
 import { ResourceProvider } from '../shared/resource-provider';
 
 export interface ComfyInferenceStackProps extends StackProps {
