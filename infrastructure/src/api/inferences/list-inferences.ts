@@ -21,7 +21,6 @@ export interface ListInferencesApiProps {
   inferenceJobTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class ListInferencesApi {
@@ -34,7 +33,6 @@ export class ListInferencesApi {
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
 
   constructor(scope: Construct, id: string, props: ListInferencesApiProps) {
@@ -47,7 +45,6 @@ export class ListInferencesApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.listAllSageMakerInferenceJobApi();
   }
@@ -99,7 +96,6 @@ export class ListInferencesApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

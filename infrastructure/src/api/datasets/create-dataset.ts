@@ -25,7 +25,6 @@ export interface CreateDatasetApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  logLevel: CfnParameter;
 }
 
 export class CreateDatasetApi {
@@ -40,7 +39,6 @@ export class CreateDatasetApi {
   private readonly datasetInfoTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: CreateDatasetApiProps) {
@@ -54,7 +52,6 @@ export class CreateDatasetApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.multiUserTable = props.multiUserTable;
-    this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -210,7 +207,6 @@ export class CreateDatasetApi {
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

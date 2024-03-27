@@ -16,7 +16,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_VERSION } from '../../shared/version';
+import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -32,7 +32,6 @@ export interface CreateEndpointApiProps {
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
-  logLevel: CfnParameter;
   accountId: ICfnRuleConditionExpression;
 }
 
@@ -53,7 +52,6 @@ export class CreateEndpointApi {
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -69,7 +67,6 @@ export class CreateEndpointApi {
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
-    this.logLevel = props.logLevel;
     this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -287,12 +284,10 @@ export class CreateEndpointApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_VERSION}`,
-        ECR_VERSION: ECR_VERSION,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

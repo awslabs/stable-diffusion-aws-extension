@@ -26,7 +26,6 @@ export interface StartInferenceJobApiProps {
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class StartInferenceJobApi {
@@ -42,7 +41,6 @@ export class StartInferenceJobApi {
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly userTable: aws_dynamodb.Table;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: StartInferenceJobApiProps) {
     this.id = id;
@@ -56,7 +54,6 @@ export class StartInferenceJobApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
-    this.logLevel = props.logLevel;
 
     this.updateTrainJobLambda();
   }
@@ -144,7 +141,6 @@ export class StartInferenceJobApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

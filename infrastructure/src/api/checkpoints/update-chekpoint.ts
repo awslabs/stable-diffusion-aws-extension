@@ -24,7 +24,6 @@ export interface UpdateCheckPointApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  logLevel: CfnParameter;
 }
 
 export class UpdateCheckPointApi {
@@ -39,7 +38,6 @@ export class UpdateCheckPointApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly role: aws_iam.Role;
-  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: UpdateCheckPointApiProps) {
@@ -52,7 +50,6 @@ export class UpdateCheckPointApi {
     this.checkpointTable = props.checkpointTable;
     this.userTable = props.userTable;
     this.s3Bucket = props.s3Bucket;
-    this.logLevel = props.logLevel;
     this.role = this.iamRole();
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -187,7 +184,6 @@ export class UpdateCheckPointApi {
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -206,7 +202,6 @@ export class UpdateCheckPointApi {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

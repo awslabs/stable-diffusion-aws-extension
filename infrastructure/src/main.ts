@@ -1,5 +1,6 @@
 import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
@@ -14,7 +15,7 @@ import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
-import { ECR_VERSION } from './shared/version';
+import { ESD_VERSION } from './shared/version';
 
 const app = new App();
 
@@ -81,11 +82,11 @@ export class Middleware extends Stack {
       this,
       'ResourcesProvider',
       {
-        // when props updated, resource manager will be executed
+        // when props updated, resource manager will be executed,
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        esdVersion: ECR_VERSION,
+        esdVersion: ESD_VERSION,
       },
     );
 
@@ -119,7 +120,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
-      logLevel,
     });
 
     new PingApi(this, 'Ping', {
@@ -127,7 +127,6 @@ export class Middleware extends Stack {
       httpMethod: 'GET',
       router: restApi.routers.ping,
       srcRoot: '../middleware_api/lambda',
-      logLevel,
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
@@ -146,7 +145,6 @@ export class Middleware extends Stack {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
       accountId,
-      logLevel,
       resourceProvider,
     });
 
@@ -158,7 +156,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
-      logLevel,
       resourceProvider,
       accountId,
     });
@@ -181,12 +178,15 @@ export class Middleware extends Stack {
       }
     }
 
+    this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
+    this.addEnvironmentVariableToAllLambdas('ESD_VERSION', ESD_VERSION);
+
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
 
     new CfnOutput(this, 'EsdVersion', {
-      value: ECR_VERSION,
+      value: ESD_VERSION,
       description: 'ESD Version',
     });
 
@@ -211,6 +211,15 @@ export class Middleware extends Stack {
       description: 'SNS Topic Name to get train and inference result notification',
     });
   }
+
+  addEnvironmentVariableToAllLambdas(variableName: string, value: string) {
+    this.node.children.forEach(child => {
+      if (child instanceof Function) {
+        child.addEnvironment(variableName, value);
+      }
+    });
+  }
+
 }
 
 new Middleware(

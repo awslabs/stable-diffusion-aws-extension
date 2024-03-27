@@ -26,7 +26,6 @@ export interface CreateInferenceJobApiProps {
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  logLevel: CfnParameter;
 }
 
 export class CreateInferenceJobApi {
@@ -44,7 +43,6 @@ export class CreateInferenceJobApi {
   private readonly router: aws_apigateway.Resource;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
@@ -58,7 +56,6 @@ export class CreateInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
     this.router = props.router;
-    this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -209,7 +206,6 @@ export class CreateInferenceJobApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

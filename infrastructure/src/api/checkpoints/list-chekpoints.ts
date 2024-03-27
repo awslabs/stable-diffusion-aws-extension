@@ -22,7 +22,6 @@ export interface ListCheckPointsApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  logLevel: CfnParameter;
 }
 
 export class ListCheckPointsApi {
@@ -34,7 +33,6 @@ export class ListCheckPointsApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
-  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: ListCheckPointsApiProps) {
@@ -47,7 +45,6 @@ export class ListCheckPointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.logLevel = props.logLevel;
 
     this.listCheckpointsApi();
   }
@@ -94,7 +91,6 @@ export class ListCheckPointsApi {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         S3_BUCKET: this.s3Bucket.bucketName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
