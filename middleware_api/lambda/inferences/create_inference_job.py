@@ -16,9 +16,10 @@ from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_execution_time
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error
 from start_inference_job import inference_start
 
+tracer = Tracer()
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
@@ -161,8 +162,9 @@ def handler(raw_event: dict, context: LambdaContext):
 
 
 # fixme: this is a very expensive function
-@log_execution_time
+@tracer.capture_method
 def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoint:
+    tracer.put_annotation('ckpt_name', ckpt_name)
     if model_type == 'VAE' and ckpt_name in ['None', 'Automatic']:
         return CheckPoint(
             id=model_type,
@@ -196,8 +198,9 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
-@log_execution_time
+@tracer.capture_method
 def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
+    tracer.put_annotation('endpoint_name', endpoint_name)
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
     if endpoint_name:

@@ -7,10 +7,11 @@ from datetime import datetime
 
 import boto3
 from PIL import Image
-from botocore.exceptions import ClientError
+from aws_lambda_powertools import Tracer
 
-from libs.utils import log_execution_time, log_json
+from libs.utils import log_json
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -24,7 +25,7 @@ inference_table = ddb_client.Table(inference_table_name)
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 
 
-@log_execution_time
+@tracer.capture_method
 def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name):
     update_inference_job_table(inference_id, 'completeTime', str(datetime.now()))
     try:
@@ -41,7 +42,7 @@ def parse_sagemaker_result(sagemaker_out, inference_id, task_type, endpoint_name
         raise e
 
 
-@log_execution_time
+@tracer.capture_method
 def upload_file_to_s3(file_name, bucket, directory=None, object_name=None):
     # If S3 object_name was not specified, use file_name
     if object_name is None:
@@ -180,7 +181,7 @@ def txt2_img_img(sagemaker_out, inference_id, endpoint_name):
     save_inference_parameters(sagemaker_out, inference_id, endpoint_name)
 
 
-@log_execution_time
+@tracer.capture_method
 def save_inference_parameters(sagemaker_out, inference_id, endpoint_name):
     inference_parameters = {}
 
@@ -209,7 +210,7 @@ def save_inference_parameters(sagemaker_out, inference_id, endpoint_name):
     log_json(f"Complete inference parameters", inference_parameters)
 
 
-@log_execution_time
+@tracer.capture_method
 def get_inference_job(inference_job_id):
     if not inference_job_id:
         logger.error("Invalid inference job id")

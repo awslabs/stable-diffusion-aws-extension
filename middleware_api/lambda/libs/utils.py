@@ -2,7 +2,6 @@ import base64
 import json
 import logging
 import os
-import time
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -28,17 +27,6 @@ def log_json(title, payload: any = None):
     logger.info(f"{title}: ")
     if payload:
         logger.info(json.dumps(payload, default=str))
-
-
-def log_execution_time(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        logger.info(f"executed {func.__name__} in {(end_time - start_time) * 1000:.2f}ms")
-        return result
-
-    return wrapper
 
 
 class KeyEncryptService:
@@ -84,7 +72,7 @@ class KeyEncryptService:
             return text
 
 
-@log_execution_time
+@tracer.capture_method
 def check_user_existence(ddb_service, user_table, username):
     creator = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -94,7 +82,7 @@ def check_user_existence(ddb_service, user_table, username):
     return not creator or len(creator) == 0
 
 
-@log_execution_time
+@tracer.capture_method
 def get_user_by_username(ddb_service, user_table, username):
     user_raw = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -107,7 +95,7 @@ def get_user_by_username(ddb_service, user_table, username):
     return User(**(ddb_service.deserialize(user_raw[0])))
 
 
-@log_execution_time
+@tracer.capture_method
 def get_user_roles(ddb_service, user_table_name, username):
     user = ddb_service.query_items(table=user_table_name, key_values={
         'kind': PARTITION_KEYS.user,
@@ -155,7 +143,6 @@ def get_user_name(event: any):
     return username
 
 
-@log_execution_time
 @tracer.capture_method
 def permissions_check(event: any, permissions: [str]):
     username = get_user_name(event)
@@ -202,7 +189,7 @@ def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_nam
     return False
 
 
-@log_execution_time
+@tracer.capture_method
 def get_permissions_by_username(ddb_service, user_table, username):
     creator_roles = get_user_roles(ddb_service, user_table, username)
     roles = ddb_service.scan(table=user_table, filters={

@@ -3,9 +3,12 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.response import ok, not_found
-from libs.utils import response_error, log_execution_time, log_json
+from libs.utils import response_error, log_json
+
+tracer = Tracer()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -28,7 +31,7 @@ def handler(event, ctx):
         return response_error(e)
 
 
-@log_execution_time
+@tracer.capture_method
 def get_infer_data(inference_id: str):
     inference = inference_job_table.get_item(Key={'InferenceJobId': inference_id})
 
