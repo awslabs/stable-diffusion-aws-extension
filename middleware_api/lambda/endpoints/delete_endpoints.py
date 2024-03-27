@@ -4,12 +4,14 @@ import os
 from dataclasses import dataclass
 
 import boto3
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
 from libs.utils import response_error
 
+tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ class DeleteEndpointEvent:
 
 
 # DELETE /endpoints
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))

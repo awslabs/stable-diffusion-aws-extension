@@ -5,12 +5,15 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from aws_lambda_powertools import Tracer
 from client import DynamoDbUtilsService
+from response import ok
+
 from libs.comfy_data_types import ComfySyncTable
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import ComfySyncStatus
-from response import ok
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -76,6 +79,7 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
     logger.info(str(save_sync_ddb_resp))
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     logger.info(f"prepare env start... Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")

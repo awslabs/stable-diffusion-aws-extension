@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
@@ -9,6 +11,7 @@ from create_user import _check_action_permission
 from libs.data_types import PARTITION_KEYS
 from libs.utils import permissions_check, response_error
 
+tracer = Tracer()
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -17,6 +20,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     try:
         logger.info(json.dumps(event))

@@ -4,6 +4,8 @@ import os
 from dataclasses import dataclass
 from typing import List, Optional
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_USER_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created, forbidden
@@ -11,6 +13,7 @@ from libs.data_types import User, PARTITION_KEYS, Role, Default_Role
 from libs.utils import KeyEncryptService, check_user_existence, get_permissions_by_username, get_user_by_username, \
     permissions_check, response_error
 
+tracer = Tracer()
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
 
@@ -32,6 +35,7 @@ class UpsertUserEvent:
     creator: str = ""
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))

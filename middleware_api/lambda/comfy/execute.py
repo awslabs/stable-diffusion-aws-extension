@@ -8,18 +8,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from common.ddb_service.client import DynamoDbUtilsService
-
 import boto3
 import sagemaker
+from aws_lambda_powertools import Tracer
 from sagemaker import Predictor
 from sagemaker.base_deserializers import JSONDeserializer
 from sagemaker.base_serializers import JSONSerializer
 
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
-from common.response import ok
 
+tracer = Tracer()
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
@@ -103,6 +104,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     logger.info(f"Time taken: {time.time() - start}s save msg: {save_ddb_resp}")
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     logger.info(f"execute start... Received event: {raw_event}")
     logger.info(f"Received ctx: {ctx}")

@@ -31,8 +31,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-tracer = Tracer()
-
 
 @dataclasses.dataclass
 class CreateInferenceEvent:

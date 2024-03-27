@@ -19,6 +19,7 @@ from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
 from libs.utils import response_error, permissions_check, log_json
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -26,7 +27,6 @@ inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-tracer = Tracer()
 predictors = {}
 
 

@@ -2,11 +2,13 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.utils import response_error
 
+tracer = Tracer()
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 
@@ -17,6 +19,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 s3_client = boto3.client('s3')
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     logger.info(f'event: {raw_event}')
 

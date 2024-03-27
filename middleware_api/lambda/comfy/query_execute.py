@@ -5,13 +5,15 @@ import os
 from dataclasses import dataclass
 
 import boto3
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
-
 from client import DynamoDbUtilsService
-from libs.comfy_data_types import ComfyExecuteTable
-from libs.enums import ComfyExecuteRespType
 from response import ok, not_found
 
+from libs.comfy_data_types import ComfyExecuteTable
+from libs.enums import ComfyExecuteRespType
+
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -88,6 +90,7 @@ def build_ddb_execute_response(prompt_id, resp_type):
     return response
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     logger.info(f"query execute start... Received event: {event}")
     logger.info(f"Received ctx: {ctx}")

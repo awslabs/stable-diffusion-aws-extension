@@ -8,6 +8,7 @@ from typing import Any
 
 import boto3
 import requests
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_CHECKPOINT_ALL, PERMISSION_CHECKPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
@@ -17,6 +18,7 @@ from libs.common_tools import get_base_checkpoint_s3_key, \
 from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
 from libs.utils import get_user_roles, permissions_check, response_error
 
+tracer = Tracer()
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
@@ -39,6 +41,7 @@ class CreateCheckPointEvent:
     urls: [str] = None
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     try:
         logger.info(json.dumps(raw_event))

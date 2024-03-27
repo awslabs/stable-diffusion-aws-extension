@@ -4,11 +4,13 @@ import os
 from datetime import datetime
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus, EndpointType
 
+tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,7 @@ cool_down_period = 15 * 60  # 15 minutes
 
 
 # lambda: handle sagemaker events
+@tracer.capture_lambda_handler
 def handler(event, context):
     logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']

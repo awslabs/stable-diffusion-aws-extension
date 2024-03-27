@@ -3,9 +3,10 @@ import logging
 import os
 
 import boto3
-
+from aws_lambda_powertools import Tracer
 from response import ok
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -49,6 +50,7 @@ def save_message_to_dynamodb(prompt_id, message):
         logger.error(f"Error saving message to DynamoDB: {e}")
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     logger.info("sync msg start...")
     logger.info(f"Received event: {raw_event}")
