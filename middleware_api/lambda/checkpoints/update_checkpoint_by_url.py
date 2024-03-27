@@ -30,6 +30,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 
 
+@tracer.capture_method
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict,
                                cannot_download: list):
     logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")

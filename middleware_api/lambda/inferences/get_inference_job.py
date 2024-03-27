@@ -20,6 +20,7 @@ s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 s3 = boto3.client('s3')
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     try:
         logger.info(json.dumps(event))

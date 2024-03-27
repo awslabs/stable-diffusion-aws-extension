@@ -99,7 +99,9 @@ def check_and_enable_autoscaling(item, variant_name):
         logger.info(f'autoscaling_enabled is {autoscaling}, no need to enable autoscaling')
 
 
+@tracer.capture_method
 def enable_autoscaling(item, variant_name):
+    tracer.put_annotation("variant_name", variant_name)
     endpoint_name = item['endpoint_name']['S']
     endpoint_type = item['endpoint_type']['S']
     max_instance_number = int(item['max_instance_number']['N'])
@@ -237,7 +239,9 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 
+@tracer.capture_method
 def enable_autoscaling_real_time(item, variant_name):
+    tracer.put_annotation("variant_name", variant_name)
     target_value = 5
     endpoint_name = item['endpoint_name']['S']
 

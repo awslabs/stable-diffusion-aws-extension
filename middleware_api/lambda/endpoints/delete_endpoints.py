@@ -50,7 +50,9 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+@tracer.capture_method
 def delete_endpoint(endpoint_item):
+    tracer.put_annotation("endpoint_item", endpoint_item)
     logger.info("endpoint_name")
     logger.info(json.dumps(endpoint_item))
 
@@ -83,6 +85,7 @@ def delete_endpoint(endpoint_item):
     delete_endpoint_item(endpoint_item)
 
 
+@tracer.capture_method
 def get_endpoint_in_sagemaker(endpoint_name):
     try:
         return sagemaker.describe_endpoint(EndpointName=endpoint_name)
@@ -98,7 +101,9 @@ def delete_endpoint_item(endpoint_item):
     )
 
 
+@tracer.capture_method
 def get_endpoint_with_endpoint_name(endpoint_name: str):
+    tracer.put_annotation("endpoint_name", endpoint_name)
     try:
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,

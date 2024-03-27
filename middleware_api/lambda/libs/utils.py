@@ -97,6 +97,7 @@ def get_user_by_username(ddb_service, user_table, username):
 
 @tracer.capture_method
 def get_user_roles(ddb_service, user_table_name, username):
+    tracer.put_annotation(key="username", value=username)
     user = ddb_service.query_items(table=user_table_name, key_values={
         'kind': PARTITION_KEYS.user,
         'sort_key': username,

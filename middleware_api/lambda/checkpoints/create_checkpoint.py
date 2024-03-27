@@ -154,6 +154,7 @@ def check_filenames_unique(event: CreateCheckPointEvent):
     check_ckpt_name_unique(names)
 
 
+@tracer.capture_method
 def check_ckpt_name_unique(names: [str]):
     if len(names) == 0:
         return
@@ -176,6 +177,7 @@ def check_ckpt_name_unique(names: [str]):
                             f'please use another or rename/delete exists')
 
 
+@tracer.capture_method
 def get_real_url(url: str):
     url = url.strip()
     if url.startswith('https://civitai.com/api/download/models/'):

@@ -62,6 +62,7 @@ def handler(raw_event, context):
         return response_error(e)
 
 
+@tracer.capture_method
 def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if event.multi_parts_tags is None or len(event.multi_parts_tags) == 0:
         return bad_request(message='multi parts tags is empty')
@@ -88,6 +89,7 @@ def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     return ok(data=data)
 
 
+@tracer.capture_method
 def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if checkpoint.checkpoint_status != CheckPointStatus.Active:
         return bad_request(message='only active can update name')

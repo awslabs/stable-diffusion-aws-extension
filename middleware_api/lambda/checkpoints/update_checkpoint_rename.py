@@ -47,6 +47,7 @@ def handler(raw_event, context):
         return response_error(e)
 
 
+@tracer.capture_method
 def rename_s3_object(old_key, new_key):
     # Copy the object to the new key
     s3_client.copy_object(Bucket=bucket_name, CopySource={'Bucket': bucket_name, 'Key': old_key}, Key=new_key)

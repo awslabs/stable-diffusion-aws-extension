@@ -197,7 +197,9 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+@tracer.capture_method
 def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+    tracer.put_annotation('endpoint_name', endpoint_name)
     image_url = get_docker_image_uri(event)
 
     primary_container = {
@@ -243,6 +245,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
     ]
 
 
+@tracer.capture_method
 def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
                                         instance_type):
     production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
@@ -256,6 +259,7 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+@tracer.capture_method
 def _create_endpoint_config_serverless(endpoint_config_name):
     production_variants = [
         {
@@ -273,6 +277,7 @@ def _create_endpoint_config_serverless(endpoint_config_name):
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+@tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type):
     async_inference_config = {
