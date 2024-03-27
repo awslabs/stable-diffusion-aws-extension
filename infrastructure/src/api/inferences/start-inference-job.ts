@@ -66,6 +66,7 @@ export class StartInferenceJobApi {
     const newRole = new aws_iam.Role(this.scope, `${this.id}-role`, {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
