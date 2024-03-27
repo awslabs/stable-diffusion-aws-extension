@@ -80,11 +80,6 @@ class ComfySyncStatus(Enum):
     FAILED = 'failed'
 
 
-class ComfyTaskType(Enum):
-    PREPARE = 'prepare'
-    INFERENCE = 'inference'
-
-
 class ComfyExecuteRespType(Enum):
     NAME_ONLY = 'name_only'
     PRESIGN_URL = 'presign_url'

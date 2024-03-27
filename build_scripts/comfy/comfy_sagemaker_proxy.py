@@ -116,15 +116,6 @@ async def invocations(request):
     print(f"invocations start json_data:{json_data}")
 
     try:
-        task_type = json_data['task_type']
-        if task_type == 'prepare':
-            result_body = await prepare_comfy_env(json_data)
-            return web.Response(status=200, content_type='application/json', text=json.dumps(result_body))
-
-        if not BUCKET:
-            print("No bucket name")
-            return web.Response(status=500, text="No bucket name")
-
         print(
             f'bucket_name: {BUCKET}, region: {REGION}, need_sync: {need_sync}')
         server_instance = server.PromptServer.instance

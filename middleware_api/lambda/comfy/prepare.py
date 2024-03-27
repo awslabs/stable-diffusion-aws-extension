@@ -1,22 +1,14 @@
 import json
 import logging
 import os
-import time
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-import boto3
-import sagemaker
-from sagemaker import Predictor
-from sagemaker.base_deserializers import JSONDeserializer
-from sagemaker.base_serializers import JSONSerializer
-
 from client import DynamoDbUtilsService
 from libs.comfy_data_types import ComfySyncTable
 from libs.data_types import EndpointDeploymentJob
-from libs.enums import ComfyEnvPrepareType, ComfyTaskType, ComfySyncStatus
+from libs.enums import ComfySyncStatus
 from response import ok
 
 logger = logging.getLogger(__name__)
@@ -57,20 +49,7 @@ def get_endpoint_info(endpoint_name: str):
     return EndpointDeploymentJob(**endpoint_info)
 
 
-def rebuild_payload(event):
-    payload = event.__dict__
-    payload['task_type'] = ComfyTaskType.PREPARE
-    payload["prepare_type"] = ComfyEnvPrepareType[event.prepare_type]
-    payload["s3_source_path"] = event.s3_source_path
-    payload["local_target_path"] = event.local_target_path
-    payload["need_reboot"] = event.need_reboot
-    payload["sync_script"] = event.sync_script
-    return payload
-
-
 def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
-    # payload = {"endpoint_name": "ComfyEndpoint-endpoint", "prepare_type": "all"}
-    payload = rebuild_payload(event)
     endpoint_name = event.endpoint_name
     if endpoint_name is None:
         raise Exception(f'endpoint name should not be null')
@@ -95,24 +74,6 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
     )
     save_sync_ddb_resp = ddb_service.put_items(sync_table, entries=sync_job.__dict__)
     logger.info(str(save_sync_ddb_resp))
-
-    # TODO endpoint上实时写入ComfyInstanceMonitorTable
-
-    # TODO 异步查询sync表的实例数 获取最新状态
-
-    session = boto3.Session(region_name=region)
-    sagemaker_session = sagemaker.Session(boto_session=session)
-    predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)
-    inference_id = str(uuid.uuid4())
-    predictor.serializer = JSONSerializer()
-    predictor.deserializer = JSONDeserializer()
-    logger.info("Start to prepare environment and to get response")
-    start = time.time()
-    prediction = predictor.predict(data=payload, inference_id=inference_id)
-    logger.info(f"Response object: {prediction}")
-    r = prediction
-    logger.info(r)
-    logger.info(f"Time taken: {time.time() - start}s")
 
 
 def handler(raw_event, ctx):

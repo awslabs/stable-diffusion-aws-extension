@@ -17,7 +17,7 @@ from sagemaker.base_deserializers import JSONDeserializer
 from sagemaker.base_serializers import JSONSerializer
 
 from libs.comfy_data_types import ComfyExecuteTable
-from libs.enums import ComfyTaskType, ComfyExecuteType
+from libs.enums import ComfyExecuteType
 from common.response import ok
 
 region = os.environ.get('AWS_REGION')
@@ -64,7 +64,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
     #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
     payload = event.__dict__
-    payload['task_type'] = ComfyTaskType.INFERENCE
     logger.info('inference payload: {}'.format(payload))
     # TODO 同步异步推理的选择 以及endpoint的选择
     session = boto3.Session(region_name=region)
