@@ -32,7 +32,6 @@ export interface EndpointStackProps extends StackProps {
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   logLevel: CfnParameter;
-  ecrImageTag: CfnParameter;
   accountId: ICfnRuleConditionExpression;
   queue: aws_sqs.Queue;
 }
