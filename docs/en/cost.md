@@ -3,7 +3,7 @@
 You are responsible for the cost of AWS services used when running this solution. 
 
 ## Use auto-scale Amazon SageMaker Inference Endpoint for Image Inference
-As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024*1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is **$310.45** per month.
+As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024 X 1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is **$310.45** per month.
 
 |  Service  | Usage | Cost/Month | 
 |  ----  | ----  | ----  |  
@@ -18,7 +18,8 @@ As of December 2023, for example, assuming that use will actively inference imag
 
 
 ## Use Amazon SageMaker to Train Model
-Assume that on the basis of inference images, users train for 300 hours per month as the calculation standard (using Dreambooth, fine-tuning a new safetensor model based on Stable Diffusion V1.5, 1000 steps of iteration, takes 387 seconds. 300 hours of training means one month of training **2790 models**), the estimated cost of using this solution would increase by **$526.18** in US East (N. Virginia) (us-east-1).
+Assume that on the basis of inference images, users train for 300 hours per month as the calculation standard (using Kohya, fine-tuning a new safetensor model based on Stable Diffusion V1.5, 1000 steps of iteration, takes 387 seconds. 300 hours of training means one month of training **2790 models**), the estimated cost of using this solution would increase by **$526.18** in US East (N. Virginia) (us-east-1).
+
 |  Service  | Usage | Cost/Month | 
 |  ----  | ----  | ----  |  
 | Amazon SageMaker | $526.18 | Storage (General Purpose SSD (gp2)), Instance name (ml.g5.2xlarge), Number of training jobs per month (300), Number of instances per job (1), Hour(s) per instance per job (1) |
