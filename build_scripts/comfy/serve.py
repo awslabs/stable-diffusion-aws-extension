@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 import threading
@@ -110,6 +111,8 @@ if __name__ == "__main__":
     os.environ['INSTANCE_UNIQUE_ID'] = unique_id
 
     while True:
+        response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
+        print(f"sync response:{response} time : {datetime.datetime.now()}")
         need_reboot = os.environ.get('NEED_REBOOT')
         print(f'need_reboot value check: {need_reboot} ！')
         # for key, value in os.environ.items():
@@ -119,4 +122,4 @@ if __name__ == "__main__":
             print(f'need_reboot, reboot  start!')
             comfy_app.restart()
             print(f'need_reboot, reboot  finished!')
-            time.sleep(60 * 5)
+            time.sleep(60 * 3)
