@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 
 os.environ.setdefault('AWS_PROFILE', 'env')
-os.environ.setdefault('S3_BUCKET', 'your-bucket')
+os.environ.setdefault('S3_BUCKET_NAME', 'your-bucket')
 os.environ.setdefault('DATASET_ITEM_TABLE', 'DatasetItemTable')
 os.environ.setdefault('DATASET_INFO_TABLE', 'DatasetInfoTable')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
