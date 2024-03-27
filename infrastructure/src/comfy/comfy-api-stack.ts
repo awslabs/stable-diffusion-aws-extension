@@ -21,12 +21,12 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
+import { ECR_VERSION } from '../common/dockerImageTag';
 import { ResourceProvider } from '../shared/resource-provider';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
-  ecrImageTag: CfnParameter;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
@@ -58,9 +58,6 @@ export class ComfyApiStack extends Construct {
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
     super(scope, id);
-    if (!props?.ecrImageTag) {
-      throw new Error('ecrImageTag is required');
-    }
     this.layer = props.commonLayer;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
@@ -70,7 +67,7 @@ export class ComfyApiStack extends Construct {
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
 
-    const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
+    const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + ECR_VERSION;
     const srcRoot = '../middleware_api/lambda';
 
     const model_data_url = 's3://' + props.s3Bucket.bucketName + '/data/model.tar.gz';

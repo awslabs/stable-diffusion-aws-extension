@@ -1,15 +1,4 @@
-import {
-  App,
-  Aspects,
-  Aws,
-  CfnCondition,
-  CfnOutput,
-  CfnParameter,
-  Fn,
-  Stack,
-  StackProps,
-  Tags
-} from 'aws-cdk-lib';
+import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
@@ -19,10 +8,9 @@ import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
-import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
-import { STACK_ID } from './shared/const';
+import { ECR_VERSION, STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
 import { Inference } from './shared/inference';
@@ -81,13 +69,6 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
-      type: 'String',
-      description: 'Inference ECR Image tag',
-      default: ECR_IMAGE_TAG,
-      allowedValues: [ECR_IMAGE_TAG],
-    });
-
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     const accountId = Fn.conditionIf(
@@ -106,11 +87,10 @@ export class Middleware extends Stack {
       'ResourcesProvider',
       {
         // when props updated, resource manager will be executed
-        // ecrImageTag is not used in the resource manager
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ecrImageTagParam.valueAsString,
+        esdVersion: ECR_VERSION,
       },
     );
 
@@ -208,7 +188,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       // env: devEnv,
       s3Bucket: s3Bucket,
-      ecrImageTag: ecrImageTagParam,
       configTable: ddbComfyTables.configTable,
       executeTable: ddbComfyTables.executeTable,
       syncTable: ddbComfyTables.syncTable,
@@ -239,7 +218,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       logLevel: logLevel,
       accountId: accountId,
-      ecrImageTag: ecrImageTagParam,
       queue: sqsStack.queue,
     },
     );
@@ -286,6 +264,11 @@ export class Middleware extends Stack {
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
+
+    new CfnOutput(this, 'EsdVersion', {
+      value: ECR_VERSION,
+      description: 'ESD Version',
+    });
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {

@@ -8,7 +8,7 @@ import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
   bucketName?: string;
-  ecrImageTag?: string;
+  esdVersion?: string;
 }
 
 export class ResourceProvider extends Construct {

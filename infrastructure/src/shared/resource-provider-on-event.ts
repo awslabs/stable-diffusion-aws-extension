@@ -487,9 +487,13 @@ async function putBucketCors(bucketName: string) {
 
 async function createTopics() {
   const list = [
+    // SD
     'ReceiveSageMakerInferenceSuccess',
     'ReceiveSageMakerInferenceError',
     'StableDiffusionSnsUserTopic',
+    // comfy
+    'sageMakerExecuteFail',
+    'sageMakerExecuteSuccess',
   ];
 
   for (let Name of list) {

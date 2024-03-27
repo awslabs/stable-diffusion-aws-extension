@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_dynamodb, aws_iam, aws_sqs, CfnParameter, Duration} from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_iam, aws_sqs, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -16,7 +16,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_IMAGE_TAG } from '../../common/dockerImageTag';
+import { ECR_VERSION } from '../../shared/const';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -301,11 +301,11 @@ export class CreateEndpointApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
-        ECR_IMAGE_TAG: ECR_IMAGE_TAG,
         QUEUE_URL: this.queue.queueUrl,
         SYNC_TABLE: this.syncTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_VERSION}`,
+        ECR_VERSION: ECR_VERSION,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
