@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import tarfile
@@ -7,36 +8,36 @@ import execution
 import server
 from aiohttp import web
 
-global bucket_name_using
 global sqs_url_using
-global region_using
 global need_sync
 global prompt_id
+
+region = os.environ.get('AWS_REGION')
+bucket_name = os.environ.get('BUCKET_NAME')
+
 
 
 async def prepare_comfy_env(json_data):
     gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
     try:
         print("prepare_environment start")
-        global bucket_name_using, sqs_url_using, region_using
-        bucket_name_using = json_data['bucket_name']
+        global sqs_url_using
         sqs_url_using = json_data['sqs_url']
-        region_using = json_data['region']
 
         prepare_type = json_data['prepare_type']
         if prepare_type in ['default', 'models']:
-            sync_s3_files_or_folders_to_local(bucket_name_using, 'models', '/opt/ml/code/models', False)
+            sync_s3_files_or_folders_to_local(bucket_name, 'models', '/opt/ml/code/models', False)
         if prepare_type in ['default', 'inputs']:
-            sync_s3_files_or_folders_to_local(bucket_name_using, 'input', '/opt/ml/code/input', False)
+            sync_s3_files_or_folders_to_local(bucket_name, 'input', '/opt/ml/code/input', False)
         if prepare_type in ['default', 'nodes']:
-            sync_s3_files_or_folders_to_local(bucket_name_using, 'nodes', '/opt/ml/code/custom_nodes', True)
+            sync_s3_files_or_folders_to_local(bucket_name, 'nodes', '/opt/ml/code/custom_nodes', True)
         if prepare_type == 'custom':
             sync_source_path = json_data['s3_source_path']
             local_target_path = json_data['local_target_path']
             if not sync_source_path or not local_target_path:
                 print("s3_source_path and local_target_path should not be empty")
             else:
-                sync_s3_files_or_folders_to_local(bucket_name_using, sync_source_path,
+                sync_s3_files_or_folders_to_local(bucket_name, sync_source_path,
                                                   f'/opt/ml/code/{local_target_path}', False)
         elif prepare_type == 'other':
             sync_script = json_data['sync_script']
@@ -100,9 +101,8 @@ def sync_local_outputs_to_s3(bucket_name, s3_path, local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    global bucket_name_using
-    global region_using
     global need_sync
+    # TODO 加锁
     global prompt_id
     json_data = await request.json()
     print(f"invocations start json_data:{json_data}")
@@ -113,12 +113,12 @@ async def invocations(request):
             result_body = await prepare_comfy_env(json_data)
             return web.Response(status=200, content_type='application/json', text=json.dumps(result_body))
 
-        if not bucket_name_using:
+        if not bucket_name:
             print("No bucket name")
             return web.Response(status=500, text="No bucket name")
 
         print(
-            f'bucket_name_using: {bucket_name_using}, region_using: {region_using}, need_sync: {need_sync}')
+            f'bucket_name: {bucket_name}, region: {region}, need_sync: {need_sync}')
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
@@ -144,11 +144,62 @@ async def invocations(request):
             outputs_to_execute = valid[2]
             e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
             # TODO 看下是否需要 调整为利用 sg 的 output path
-            sync_local_outputs_to_s3(bucket_name_using, f'output/{prompt_id}', '/opt/ml/code/output')
+            sync_local_outputs_to_s3(bucket_name, f'output/{prompt_id}', '/opt/ml/code/output')
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
         # TODO 回写instance id 同步的放在body中 异步的放在s3的path中
         gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+
+        return web.Response(status=200)
+    except Exception as e:
+        print("exception occurred", e)
+        return web.Response(status=500)
+
+
+def get_ddb_sync_record(endpoint_name: str):
+    dynamodb = boto3.resource('dynamodb', region_name=region)
+
+    # 获取表对象
+    table = dynamodb.Table('your_table_name')
+
+    # 定义查询条件，使用 KeyConditionExpression 进行查询，Limit 限制结果数量为 1
+    response = table.query(
+        KeyConditionExpression=Key('endpoint_name').eq('your_endpoint_name'),
+        Limit=1,
+        ScanIndexForward=False  # 根据 request_time 倒序排列
+    )
+
+    # 获取查询结果中的第一条记录
+    latest_record = response['Items'][0] if 'Items' in response and len(response['Items']) > 0 else None
+
+    # 打印最新记录
+    if latest_record:
+        print("最新记录:", latest_record)
+    else:
+        print("未找到符合条件的记录")
+
+
+
+@server.PromptServer.instance.routes.post("/sync_instance")
+async def sync_instance():
+    print(f"sync_instance start ！！ {datetime.datetime.now()}")
+    try:
+
+        gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+        endpoint_name = os.environ.get('ENDPOINT_NAME')
+        endpoint_id = os.environ.get('ENDPOINT_ID')
+
+        image_url = os.environ.get('IMAGE_URL')
+        ecr_image_tag = os.environ.get('ECR_IMAGE_TAG')
+        instance_type = os.environ.get('INSTANCE_TYPE')
+        created_at = os.environ.get('CREATED_AT')
+
+        # 定时获取ddb的sync记录 并将最新id的写入到环境变量中 比较 如果变更 那么就执行sync逻辑 否则继续轮训
+
+
+
+
+
 
         return web.Response(status=200)
     except Exception as e:
@@ -175,19 +226,18 @@ execution.validate_prompt = validate_prompt_proxy(execution.validate_prompt)
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
         global sqs_url_using
-        global region_using
         global need_sync
         global prompt_id
         print(f"send_sync_proxy start... {need_sync},{prompt_id}")
         if not need_sync:
             func(*args, **kwargs)
-        elif sqs_url_using and region_using:
-            print(f"send_sync_proxy params... {sqs_url_using},{region_using},{need_sync},{prompt_id}")
+        elif sqs_url_using and region:
+            print(f"send_sync_proxy params... {sqs_url_using},{region},{need_sync},{prompt_id}")
             event = args[1]
             data = args[2]
             sid = args[3] if len(args) == 4 else None
             queue_url = sqs_url_using
-            sqs_client = boto3.client('sqs', region_name=region_using)
+            sqs_client = boto3.client('sqs', region_name=region)
             message_body = {'prompt_id': prompt_id, 'event': event, 'data': data, 'sid': sid}
             response = sqs_client.send_message(
                 QueueUrl=queue_url,

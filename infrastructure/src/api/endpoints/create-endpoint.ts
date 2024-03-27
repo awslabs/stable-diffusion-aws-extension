@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import { Aws, aws_iam, aws_sqs, CfnParameter, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -31,6 +31,7 @@ export interface CreateEndpointApiProps {
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
+  queue: aws_sqs.Queue;
   logLevel: CfnParameter;
   accountId: ICfnRuleConditionExpression;
 }
@@ -49,6 +50,7 @@ export class CreateEndpointApi {
   private readonly accountId: ICfnRuleConditionExpression;
   private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
+  private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
   private readonly logLevel: CfnParameter;
@@ -66,6 +68,7 @@ export class CreateEndpointApi {
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
+    this.queue = props.queue;
     this.logLevel = props.logLevel;
     this.accountId = props.accountId;
     this.model = this.createModel();
@@ -164,6 +167,14 @@ export class CreateEndpointApi {
       resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
     });
 
+    const sqsStatement = new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sqs:SendMessage',
+      ],
+      resources: [this.queue.queueArn],
+    });
+
     const passStartDeployRole = new PolicyStatement({
       actions: [
         'iam:PassRole',
@@ -186,6 +197,7 @@ export class CreateEndpointApi {
     lambdaStartDeployRole.addToPolicy(endpointStatement);
     lambdaStartDeployRole.addToPolicy(ddbStatement);
     lambdaStartDeployRole.addToPolicy(logStatement);
+    lambdaStartDeployRole.addToPolicy(sqsStatement);
     lambdaStartDeployRole.addToPolicy(passStartDeployRole);
 
     return lambdaStartDeployRole;
@@ -285,6 +297,7 @@ export class CreateEndpointApi {
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
         ECR_IMAGE_TAG: ECR_IMAGE_TAG,
+        QUEUE_URL: this.queue.queueUrl,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,

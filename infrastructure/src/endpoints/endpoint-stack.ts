@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_dynamodb, aws_sns, aws_sqs, CfnParameter, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -32,6 +32,7 @@ export interface EndpointStackProps extends StackProps {
   logLevel: CfnParameter;
   ecrImageTag: CfnParameter;
   accountId: ICfnRuleConditionExpression;
+  queue: aws_sqs.Queue;
 }
 
 export class EndpointStack {
@@ -87,6 +88,7 @@ export class EndpointStack {
         srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         userNotifySNS: props.snsTopic,
+        queue: props.queue,
         accountId: props.accountId,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,

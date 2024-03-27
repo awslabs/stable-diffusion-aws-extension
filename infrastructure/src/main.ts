@@ -7,6 +7,7 @@ import { PingApi } from './api/service/ping';
 import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
+import { SqsStack } from './comfy/comfy-sqs';
 import { ECR_IMAGE_TAG } from './common/dockerImageTag';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
@@ -187,6 +188,11 @@ export class Middleware extends Stack {
 
     const ddbComfyTables = new ComfyDatabase(this, 'comfy-ddb');
 
+    const sqsStack = new SqsStack(this, 'comfy-sqs', {
+      name: 'SyncComfyMsgJob',
+      visibilityTimeout: 900,
+    });
+
     const apis = new ComfyApiStack(this, 'comfy-api', <ComfyInferenceStackProps>{
       routers: restApi.routers,
       // env: devEnv,
@@ -205,6 +211,7 @@ export class Middleware extends Stack {
       snsTopic: snsTopics.snsTopic,
       logLevel: logLevel,
       accountId: accountId,
+      queue: sqsStack.queue,
     });
     apis.node.addDependency(ddbComfyTables);
 
@@ -220,6 +227,7 @@ export class Middleware extends Stack {
       logLevel: logLevel,
       accountId: accountId,
       ecrImageTag: ecrImageTagParam,
+      queue: sqsStack.queue,
     },
     );
 

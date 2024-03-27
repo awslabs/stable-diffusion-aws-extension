@@ -60,7 +60,6 @@ def rebuild_payload(event):
     payload['task_type'] = ComfyTaskType.PREPARE
     payload["bucket_name"] = bucket_name
     payload["sqs_url"] = sqs_url
-    payload["region"] = region
     payload["prepare_type"] = ComfyEnvPrepareType[event.prepare_type]
     payload["s3_source_path"] = event.s3_source_path
     payload["local_target_path"] = event.local_target_path

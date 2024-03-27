@@ -67,7 +67,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     payload['task_type'] = ComfyTaskType.INFERENCE
     payload["bucket_name"] = bucket_name
     payload["sqs_url"] = sqs_url
-    payload["region"] = region
     logger.info('inference payload: {}'.format(payload))
     # TODO 同步异步推理的选择 以及endpoint的选择
     session = boto3.Session(region_name=region)

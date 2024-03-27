@@ -42,7 +42,7 @@ export class SyncMsgApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
-  private queue: aws_sqs.Queue;
+  private readonly queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: SyncMsgApiProps) {
     this.scope = scope;
