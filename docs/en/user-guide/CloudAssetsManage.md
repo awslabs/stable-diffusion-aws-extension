@@ -73,7 +73,7 @@ Method Three:
 In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.
 
 1. Navigate to main tab **Amazon SageMaker**, section **AWS Dataset Management**，sub-tab **Create**.
-![Create Dataset to S3](../images/Dataset-management.png)
+![Create Dataset to S3](../images/Dataset_management.png)
 
 2. Click **Click to Upload a File**, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.
 3. Enter file name in **Dataset Name**, enter file description in **Dataset Description**, click **Create Dataset**.
