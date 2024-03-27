@@ -1,15 +1,4 @@
-import {
-  App,
-  Aspects,
-  Aws,
-  CfnCondition,
-  CfnOutput,
-  CfnParameter,
-  Fn,
-  Stack,
-  StackProps,
-  Tags
-} from 'aws-cdk-lib';
+import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
@@ -19,7 +8,7 @@ import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
-import { ECR_IMAGE_TAG } from './common/dockerImageTag';
+import { ECR_VERSION } from './common/dockerImageTag';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
@@ -102,7 +91,7 @@ export class Middleware extends Stack {
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        esdVersion: ECR_IMAGE_TAG,
+        esdVersion: ECR_VERSION,
       },
     );
 
@@ -278,7 +267,7 @@ export class Middleware extends Stack {
     Tags.of(this).add('stackName', stackName);
 
     new CfnOutput(this, 'EsdVersion', {
-      value: ECR_IMAGE_TAG,
+      value: ECR_VERSION,
       description: 'ESD Version',
     });
 

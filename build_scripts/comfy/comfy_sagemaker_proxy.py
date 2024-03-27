@@ -238,7 +238,7 @@ async def sync_instance():
         endpoint_id = os.environ.get('ENDPOINT_ID')
 
         image_url = os.environ.get('IMAGE_URL')
-        ecr_image_tag = os.environ.get('ECR_IMAGE_TAG')
+        ecr_version = os.environ.get('ECR_VERSION')
         instance_type = os.environ.get('INSTANCE_TYPE')
         created_at = os.environ.get('CREATED_AT')
 
