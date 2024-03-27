@@ -203,7 +203,7 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'ENDPOINT_ID': endpoint_id,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
-            'ECR_IMAGE_TAG': ECR_IMAGE_TAG,
+            'ESD_VERSION': ECR_IMAGE_TAG,
         },
     }
 
