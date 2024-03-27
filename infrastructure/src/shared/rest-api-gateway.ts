@@ -70,7 +70,7 @@ export class RestApiGateway {
     });
     response400.node.addDependency(responseBad);
 
-    const response500 =api.addGatewayResponse('DEFAULT_5XX', {
+    const response500 = api.addGatewayResponse('DEFAULT_5XX', {
       type: apigw.ResponseType.DEFAULT_5XX,
       templates: {
         'application/json': JSON.stringify({

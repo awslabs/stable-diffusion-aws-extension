@@ -1,13 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_kms,
-  aws_lambda,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -21,7 +13,6 @@ export interface CreateUserApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
-  logLevel: CfnParameter;
 }
 
 export class CreateUserApi {
@@ -35,7 +26,6 @@ export class CreateUserApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateUserApiProps) {
     this.scope = scope;
@@ -46,7 +36,6 @@ export class CreateUserApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -163,7 +152,6 @@ export class CreateUserApi {
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

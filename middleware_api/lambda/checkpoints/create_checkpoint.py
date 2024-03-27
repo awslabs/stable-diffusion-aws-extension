@@ -18,7 +18,7 @@ from libs.data_types import CheckPoint, CheckPointStatus, MultipartFileReq
 from libs.utils import get_user_roles, permissions_check, response_error
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
 user_table = os.environ.get('MULTI_USER_TABLE')
 upload_by_url_lambda_name = os.environ.get('UPLOAD_BY_URL_LAMBDA_NAME')

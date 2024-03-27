@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_s3, aws_sns, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_s3, aws_sns, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
@@ -18,15 +18,14 @@ export interface TrainDeployProps extends StackProps {
   s3Bucket: aws_s3.Bucket;
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
-  logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
 }
 
 export class TrainDeploy {
+  public readonly deleteTrainingJobsApi: DeleteTrainingJobsApi;
   private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
-  public readonly deleteTrainingJobsApi: DeleteTrainingJobsApi;
 
   constructor(scope: Construct, props: TrainDeployProps) {
 
@@ -50,11 +49,9 @@ export class TrainDeploy {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trainings,
-      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
     });
 
     // POST /trainings
@@ -68,7 +65,6 @@ export class TrainDeploy {
       srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
       userTopic: props.snsTopic,
       resourceProvider: this.resourceProvider,
       accountId: props.accountId,
@@ -84,7 +80,6 @@ export class TrainDeploy {
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     },
     );
     this.deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
@@ -99,7 +94,6 @@ export class TrainDeploy {
       httpMethod: 'GET',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     },
     );
 
@@ -110,7 +104,6 @@ export class TrainDeploy {
       srcRoot: this.srcRoot,
       userTopic: props.snsTopic,
       s3Bucket: props.s3Bucket,
-      logLevel: props.logLevel,
     },
     );
 

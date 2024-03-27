@@ -1,14 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -26,7 +17,6 @@ export interface CreateInferenceJobApiProps {
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  logLevel: CfnParameter;
 }
 
 export class CreateInferenceJobApi {
@@ -44,7 +34,6 @@ export class CreateInferenceJobApi {
   private readonly router: aws_apigateway.Resource;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly multiUserTable: aws_dynamodb.Table;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
@@ -58,7 +47,6 @@ export class CreateInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
     this.router = props.router;
-    this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -204,12 +192,10 @@ export class CreateInferenceJobApi {
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       environment: {
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
