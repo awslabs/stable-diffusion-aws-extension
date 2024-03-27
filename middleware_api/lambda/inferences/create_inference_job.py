@@ -10,11 +10,11 @@ from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from common.util import generate_presign_url
-from start_inference_job import start_inference_job
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_execution_time
+from start_inference_job import inference_start
 
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
@@ -147,7 +147,7 @@ def handler(raw_event, context):
         ddb_service.put_items(inference_table_name, entries=inference_job.__dict__)
 
         if event.payload_string:
-            return start_inference_job(inference_job, username)
+            return inference_start(inference_job, username)
 
         return created(data=resp)
     except Exception as e:

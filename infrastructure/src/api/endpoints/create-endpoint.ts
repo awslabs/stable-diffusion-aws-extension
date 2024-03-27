@@ -16,7 +16,7 @@ import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_IMAGE_TAG } from '../../common/dockerImageTag';
+import { ECR_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -100,7 +100,6 @@ export class CreateEndpointApi {
         's3:GetObject',
       ],
       resources: [
-        // for get files from solution's bucket
         '*',
       ],
     });
@@ -288,8 +287,8 @@ export class CreateEndpointApi {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
-        ECR_IMAGE_TAG: ECR_IMAGE_TAG,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_VERSION}`,
+        ECR_VERSION: ECR_VERSION,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
