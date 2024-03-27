@@ -7,6 +7,7 @@ import boto3
 import execution
 import server
 from aiohttp import web
+from altair import Key
 
 global sqs_url_using
 global need_sync
@@ -14,15 +15,13 @@ global prompt_id
 
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
-
+queue_url = os.environ.get('QUEUE_URL')
 
 
 async def prepare_comfy_env(json_data):
     gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
     try:
         print("prepare_environment start")
-        global sqs_url_using
-        sqs_url_using = json_data['sqs_url']
 
         prepare_type = json_data['prepare_type']
         if prepare_type in ['default', 'models']:
@@ -88,7 +87,7 @@ def sync_s3_files_or_folders_to_local(bucket_name, s3_path, local_path, need_un_
         print(f"Error executing s5cmd command: {e}")
 
 
-def sync_local_outputs_to_s3(bucket_name, s3_path, local_path):
+def sync_local_outputs_to_s3(s3_path, local_path):
     print("sync_local_outputs_to_s3 start")
     s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "{local_path}/*" "s3://{bucket_name}/{s3_path}/" '
     try:
@@ -144,7 +143,7 @@ async def invocations(request):
             outputs_to_execute = valid[2]
             e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
             # TODO 看下是否需要 调整为利用 sg 的 output path
-            sync_local_outputs_to_s3(bucket_name, f'output/{prompt_id}', '/opt/ml/code/output')
+            sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
         # TODO 回写instance id 同步的放在body中 异步的放在s3的path中
@@ -196,11 +195,6 @@ async def sync_instance():
 
         # 定时获取ddb的sync记录 并将最新id的写入到环境变量中 比较 如果变更 那么就执行sync逻辑 否则继续轮训
 
-
-
-
-
-
         return web.Response(status=200)
     except Exception as e:
         print("exception occurred", e)
@@ -225,18 +219,16 @@ execution.validate_prompt = validate_prompt_proxy(execution.validate_prompt)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
-        global sqs_url_using
         global need_sync
         global prompt_id
         print(f"send_sync_proxy start... {need_sync},{prompt_id}")
         if not need_sync:
             func(*args, **kwargs)
-        elif sqs_url_using and region:
-            print(f"send_sync_proxy params... {sqs_url_using},{region},{need_sync},{prompt_id}")
+        elif queue_url and region:
+            print(f"send_sync_proxy params... {queue_url},{region},{need_sync},{prompt_id}")
             event = args[1]
             data = args[2]
             sid = args[3] if len(args) == 4 else None
-            queue_url = sqs_url_using
             sqs_client = boto3.client('sqs', region_name=region)
             message_body = {'prompt_id': prompt_id, 'event': event, 'data': data, 'sid': sid}
             response = sqs_client.send_message(

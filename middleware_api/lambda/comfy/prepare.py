@@ -24,7 +24,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
-sqs_url = os.environ.get('SQS_URL')
 inference_monitor_table = os.environ.get('INSTANCE_MONITOR_TABLE')
 sync_table = os.environ.get('SYNC_TABLE')
 endpoint_table = os.environ.get('ENDPOINT_TABLE')
@@ -58,8 +57,6 @@ def get_endpoint_info(endpoint_name: str):
 def rebuild_payload(event):
     payload = event.__dict__
     payload['task_type'] = ComfyTaskType.PREPARE
-    payload["bucket_name"] = bucket_name
-    payload["sqs_url"] = sqs_url
     payload["prepare_type"] = ComfyEnvPrepareType[event.prepare_type]
     payload["s3_source_path"] = event.s3_source_path
     payload["local_target_path"] = event.local_target_path

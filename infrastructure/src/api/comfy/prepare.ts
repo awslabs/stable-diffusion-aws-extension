@@ -6,7 +6,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_sqs,
   CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
@@ -27,7 +26,6 @@ export interface PrepareApiProps {
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
-  queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
 }
@@ -45,7 +43,6 @@ export class PrepareApi {
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
-  private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: PrepareApiProps) {
     this.scope = scope;
@@ -60,7 +57,6 @@ export class PrepareApi {
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
-    this.queue = props.queue;
 
     this.prepareApi();
   }
@@ -123,13 +119,6 @@ export class PrepareApi {
       resources: ['*'],
     }));
 
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sqs:SendMessage',
-      ],
-      resources: [this.queue.queueArn],
-    }));
     return newRole;
   }
 
@@ -148,7 +137,6 @@ export class PrepareApi {
         CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         ENDPOINT_TABLE: this.endpointTable.tableName,
-        SQS_URL: this.queue.queueUrl,
         BUCKET_NAME: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },

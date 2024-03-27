@@ -6,7 +6,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_sqs,
   CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
@@ -25,7 +24,6 @@ export interface ExecuteApiProps {
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
-  queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
 }
@@ -41,7 +39,6 @@ export class ExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
-  private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
     this.scope = scope;
@@ -54,7 +51,6 @@ export class ExecuteApi {
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
-    this.queue = props.queue;
 
     this.executeApi();
   }
@@ -114,14 +110,6 @@ export class ExecuteApi {
       ],
       resources: ['*'],
     }));
-
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sqs:SendMessage',
-      ],
-      resources: [this.queue.queueArn],
-    }));
     return newRole;
   }
 
@@ -138,7 +126,6 @@ export class ExecuteApi {
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
-        SQS_URL: this.queue.queueUrl,
         BUCKET_NAME: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,
       },
