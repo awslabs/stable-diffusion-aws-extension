@@ -1,6 +1,6 @@
 本章节将详细介绍本解决方案提供的便捷云上资源管理方式。
 
-## 上传训练模型
+## 上传模型
 如需在txt2img或img2img使用非云端推理模型，您可以选择按下列两种方式的步骤完成推理模型上传，即可按[txt2img](./txt2img-guide.md)或[img2img](./img2img-guide.md)相应步骤完成模型调用及推理。
 
 ### 从原生webUI上传模型至云上
@@ -79,11 +79,13 @@
 在模型微调等功能中，需要输入一个图片集，用以微调工作。该功能模块助力用户快速上传图片集到云端。
 
 1. 进入解决方案主标签页**Amazon SageMaker**，**AWS Dataset Management**区块，**Create**标签页。
-![Create Dataset to S3](../images/Dataset-management.png)
+![Create Dataset to S3](../images/Dataset_management.png)
 
 2. 点击**Click to Upload a File**，在弹出的本地文件列表中，确认选中一次模型微调所需的所有图片。
 3. 在**Dataset Name**输入该图片文件夹的名字，在**Dataset Description**输入该数据集的描述，点击**Create Dataset**。
 4. 等待几秒，下方的**Create Result**区域显示**Complete Dataset XXXX creation**，即表示该数据集已经成功上传到云上。
+
+
 
 ### 数据集浏览
 数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。
