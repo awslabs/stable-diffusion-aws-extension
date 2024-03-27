@@ -13,30 +13,39 @@ global sqs_url_using
 global need_sync
 global prompt_id
 
-region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
-queue_url = os.environ.get('QUEUE_URL')
+REGION = os.environ.get('AWS_REGION')
+BUCKET = os.environ.get('BUCKET_NAME')
+QUEUE_URL = os.environ.get('QUEUE_URL')
+GEN_INSTANCE_ID = os.environ.get('INSTANCE_UNIQUE_ID')
+ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
+ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
+
+INSTANCE_MONITOR_TABLE_NAME = os.environ.get('INSTANCE_MONITOR_TABLE')
+SYNC_TABLE_NAME = os.environ.get('SYNC_TABLE')
+
+dynamodb = boto3.resource('dynamodb', region_name=REGION)
+sync_table = dynamodb.Table(SYNC_TABLE_NAME)
+instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
 
 
 async def prepare_comfy_env(json_data):
-    gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
     try:
         print("prepare_environment start")
 
         prepare_type = json_data['prepare_type']
         if prepare_type in ['default', 'models']:
-            sync_s3_files_or_folders_to_local(bucket_name, 'models', '/opt/ml/code/models', False)
+            sync_s3_files_or_folders_to_local('models', '/opt/ml/code/models', False)
         if prepare_type in ['default', 'inputs']:
-            sync_s3_files_or_folders_to_local(bucket_name, 'input', '/opt/ml/code/input', False)
+            sync_s3_files_or_folders_to_local('input', '/opt/ml/code/input', False)
         if prepare_type in ['default', 'nodes']:
-            sync_s3_files_or_folders_to_local(bucket_name, 'nodes', '/opt/ml/code/custom_nodes', True)
+            sync_s3_files_or_folders_to_local('nodes', '/opt/ml/code/custom_nodes', True)
         if prepare_type == 'custom':
             sync_source_path = json_data['s3_source_path']
             local_target_path = json_data['local_target_path']
             if not sync_source_path or not local_target_path:
                 print("s3_source_path and local_target_path should not be empty")
             else:
-                sync_s3_files_or_folders_to_local(bucket_name, sync_source_path,
+                sync_s3_files_or_folders_to_local(sync_source_path,
                                                   f'/opt/ml/code/{local_target_path}', False)
         elif prepare_type == 'other':
             sync_script = json_data['sync_script']
@@ -52,9 +61,9 @@ async def prepare_comfy_env(json_data):
         else:
             os.environ['NEED_REBOOT'] = 'false'
         print("prepare_environment end")
-        return {"prepare_result": True, "gen_instance_id": gen_instance_id}
+        return {"prepare_result": True, "gen_instance_id": GEN_INSTANCE_ID}
     except Exception as e:
-        return {"prepare_result": False, "gen_instance_id": gen_instance_id, "error_msg": e}
+        return {"prepare_result": False, "gen_instance_id": GEN_INSTANCE_ID, "error_msg": e}
 
 
 # def create_tar_gz(source_file, target_tar_gz):
@@ -65,16 +74,16 @@ async def prepare_comfy_env(json_data):
 #         tar.add(source_file, arcname=os.path.basename(source_file))
 
 
-def sync_s3_files_or_folders_to_local(bucket_name, s3_path, local_path, need_un_tar):
+def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     print("sync_s3_models_or_inputs_to_local start")
     # s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
-    s5cmd_command = f'/opt/ml/code/tools/s5cmd sync "s3://{bucket_name}/{s3_path}/" "{local_path}/"'
+    s5cmd_command = f'/opt/ml/code/tools/s5cmd sync "s3://{BUCKET}/{s3_path}/" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
         # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         print(s5cmd_command)
         os.system(s5cmd_command)
-        print(f'Files copied from "s3://{bucket_name}/{s3_path}/*" to "{local_path}/"')
+        print(f'Files copied from "s3://{BUCKET}/{s3_path}/*" to "{local_path}/"')
         if need_un_tar:
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
@@ -89,11 +98,11 @@ def sync_s3_files_or_folders_to_local(bucket_name, s3_path, local_path, need_un_
 
 def sync_local_outputs_to_s3(s3_path, local_path):
     print("sync_local_outputs_to_s3 start")
-    s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "{local_path}/*" "s3://{bucket_name}/{s3_path}/" '
+    s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "{local_path}/*" "s3://{BUCKET}/{s3_path}/" '
     try:
         print(s5cmd_command)
         os.system(s5cmd_command)
-        print(f'Files copied local to "s3://{bucket_name}/{s3_path}/" to "{local_path}/"')
+        print(f'Files copied local to "s3://{BUCKET}/{s3_path}/" to "{local_path}/"')
     except Exception as e:
         print(f"Error executing s5cmd command: {e}")
 
@@ -101,7 +110,7 @@ def sync_local_outputs_to_s3(s3_path, local_path):
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
     global need_sync
-    # TODO 加锁
+    # TODO serve 级别加锁
     global prompt_id
     json_data = await request.json()
     print(f"invocations start json_data:{json_data}")
@@ -112,12 +121,12 @@ async def invocations(request):
             result_body = await prepare_comfy_env(json_data)
             return web.Response(status=200, content_type='application/json', text=json.dumps(result_body))
 
-        if not bucket_name:
+        if not BUCKET:
             print("No bucket name")
             return web.Response(status=500, text="No bucket name")
 
         print(
-            f'bucket_name: {bucket_name}, region: {region}, need_sync: {need_sync}')
+            f'bucket_name: {BUCKET}, region: {REGION}, need_sync: {need_sync}')
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
@@ -147,7 +156,7 @@ async def invocations(request):
             clean_cmd = 'rm -rf /opt/ml/code/output'
             os.system(clean_cmd)
         # TODO 回写instance id 同步的放在body中 异步的放在s3的path中
-        gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+        # GEN_INSTANCE_ID
 
         return web.Response(status=200)
     except Exception as e:
@@ -155,28 +164,33 @@ async def invocations(request):
         return web.Response(status=500)
 
 
-def get_ddb_sync_record(endpoint_name: str):
-    dynamodb = boto3.resource('dynamodb', region_name=region)
-
-    # 获取表对象
-    table = dynamodb.Table('your_table_name')
-
-    # 定义查询条件，使用 KeyConditionExpression 进行查询，Limit 限制结果数量为 1
-    response = table.query(
-        KeyConditionExpression=Key('endpoint_name').eq('your_endpoint_name'),
+def get_last_ddb_sync_record():
+    response = sync_table.query(
+        KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
         Limit=1,
-        ScanIndexForward=False  # 根据 request_time 倒序排列
+        ScanIndexForward=False
     )
-
-    # 获取查询结果中的第一条记录
     latest_record = response['Items'][0] if 'Items' in response and len(response['Items']) > 0 else None
-
-    # 打印最新记录
     if latest_record:
-        print("最新记录:", latest_record)
+        print("sync latest record:", latest_record)
+        return latest_record
     else:
-        print("未找到符合条件的记录")
+        print("no sync record fund")
+        return None
 
+
+def sync_ddb_instance_monitor():
+    response = sync_table.query(
+        KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
+        Limit=1,
+        ScanIndexForward=False
+    )
+    latest_record = response['Items'][0] if 'Items' in response and len(response['Items']) > 0 else None
+    if latest_record:
+        print("sync latest record:", latest_record)
+        return latest_record
+    else:
+        print("no sync record fund")
 
 
 @server.PromptServer.instance.routes.post("/sync_instance")
@@ -194,6 +208,11 @@ async def sync_instance():
         created_at = os.environ.get('CREATED_AT')
 
         # 定时获取ddb的sync记录 并将最新id的写入到环境变量中 比较 如果变更 那么就执行sync逻辑 否则继续轮训
+        syc_record = get_last_ddb_sync_record()
+        if not syc_record:
+            return True
+        if syc_record['']:
+            return True
 
         return web.Response(status=200)
     except Exception as e:
@@ -224,15 +243,15 @@ def send_sync_proxy(func):
         print(f"send_sync_proxy start... {need_sync},{prompt_id}")
         if not need_sync:
             func(*args, **kwargs)
-        elif queue_url and region:
-            print(f"send_sync_proxy params... {queue_url},{region},{need_sync},{prompt_id}")
+        elif QUEUE_URL and REGION:
+            print(f"send_sync_proxy params... {QUEUE_URL},{REGION},{need_sync},{prompt_id}")
             event = args[1]
             data = args[2]
             sid = args[3] if len(args) == 4 else None
-            sqs_client = boto3.client('sqs', region_name=region)
+            sqs_client = boto3.client('sqs', region_name=REGION)
             message_body = {'prompt_id': prompt_id, 'event': event, 'data': data, 'sid': sid}
             response = sqs_client.send_message(
-                QueueUrl=queue_url,
+                QueueUrl=QUEUE_URL,
                 MessageBody=json.dumps(message_body),
                 MessageGroupId=prompt_id
             )

@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_iam, aws_sqs, CfnParameter, Duration } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_iam, aws_sqs, CfnParameter, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -25,6 +25,8 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
+  syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
@@ -45,6 +47,8 @@ export class CreateEndpointApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
+  private readonly syncTable: Table;
+  private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly accountId: ICfnRuleConditionExpression;
@@ -62,6 +66,8 @@ export class CreateEndpointApi {
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
+    this.syncTable = props.syncTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
@@ -298,6 +304,8 @@ export class CreateEndpointApi {
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
         ECR_IMAGE_TAG: ECR_IMAGE_TAG,
         QUEUE_URL: this.queue.queueUrl,
+        SYNC_TABLE: this.syncTable.tableName,
+        INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,

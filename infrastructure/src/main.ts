@@ -1,4 +1,15 @@
-import { App, Aspects, Aws, CfnCondition, CfnOutput, CfnParameter, Fn, Stack, StackProps, Tags } from 'aws-cdk-lib';
+import {
+  App,
+  Aspects,
+  Aws,
+  CfnCondition,
+  CfnOutput,
+  CfnParameter,
+  Fn,
+  Stack,
+  StackProps,
+  Tags
+} from 'aws-cdk-lib';
 import { CfnRestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
@@ -223,6 +234,8 @@ export class Middleware extends Stack {
       multiUserTable: ddbTables.multiUserTable,
       snsTopic: snsTopics.snsTopic,
       EndpointDeploymentJobTable: ddbTables.sDEndpointDeploymentJobTable,
+      syncTable: ddbComfyTables.syncTable,
+      instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
       commonLayer: commonLayers.commonLayer,
       logLevel: logLevel,
       accountId: accountId,
