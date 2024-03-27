@@ -196,7 +196,7 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
         'ModelDataUrl': model_data_url,
         'Environment': {
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
-            'BUCKET_NAME': S3_BUCKET_NAME,
+            'S3_BUCKET_NAME': S3_BUCKET_NAME,
             'IMAGE_URL': image_url,
             'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,

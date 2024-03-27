@@ -13,7 +13,7 @@ from libs.utils import get_permissions_by_username, get_user_roles, check_user_p
     response_error, decode_last_key, encode_last_key
 
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 ddb = boto3.resource('dynamodb')
 table = ddb.Table(dataset_info_table)

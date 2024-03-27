@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import { Aws, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -117,7 +117,6 @@ export class DeleteDatasetsApi {
           MULTI_USER_TABLE: this.multiUserTable.tableName,
           DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
           DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
-          S3_BUCKET_NAME: this.s3Bucket.bucketName,
         },
         layers: [this.layer],
       });

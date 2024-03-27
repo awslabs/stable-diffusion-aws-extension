@@ -1,14 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -111,7 +102,6 @@ export class GetDatasetApi {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
       },
       layers: [this.layer],
     });

@@ -178,8 +178,9 @@ export class Middleware extends Stack {
       }
     }
 
-    this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvironmentVariableToAllLambdas('ESD_VERSION', ESD_VERSION);
+    this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
+    this.addEnvironmentVariableToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
@@ -202,7 +203,7 @@ export class Middleware extends Stack {
     });
 
     new CfnOutput(this, 'S3BucketName', {
-      value: s3Bucket.bucketName,
+      value: s3BucketName.valueAsString,
       description: 'S3 Bucket Name',
     });
 

@@ -1,14 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -201,7 +192,6 @@ export class CreateInferenceJobApi {
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       environment: {
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,

@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import { Aws, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -111,7 +111,6 @@ export class DeleteCheckpointsApi {
         environment: {
           CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
           MULTI_USER_TABLE: this.userTable.tableName,
-          S3_BUCKET_NAME: this.s3Bucket.bucketName,
         },
         layers: [this.layer],
       });

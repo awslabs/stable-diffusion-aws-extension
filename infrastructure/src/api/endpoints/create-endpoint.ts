@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import { Aws, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -12,7 +12,6 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
@@ -28,7 +27,6 @@ export interface CreateEndpointApiProps {
   inferenceJobTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
@@ -48,7 +46,6 @@ export class CreateEndpointApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly accountId: ICfnRuleConditionExpression;
-  private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
@@ -63,7 +60,6 @@ export class CreateEndpointApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.s3Bucket = props.s3Bucket;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
@@ -283,7 +279,6 @@ export class CreateEndpointApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,

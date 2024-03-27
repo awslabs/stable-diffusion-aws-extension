@@ -1,12 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';

@@ -16,7 +16,7 @@ from libs.data_types import CheckPoint, CheckPointStatus
 from libs.utils import get_user_roles, get_permissions_by_username
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
 user_table = os.environ.get('MULTI_USER_TABLE')
 CN_MODEL_EXTS = [".pt", ".pth", ".ckpt", ".safetensors", ".yaml"]
