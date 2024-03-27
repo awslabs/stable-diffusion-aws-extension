@@ -9,7 +9,6 @@ import server
 from aiohttp import web
 from altair import Key
 
-global sqs_url_using
 global need_sync
 global prompt_id
 
@@ -60,9 +59,10 @@ async def prepare_comfy_env(sync_item: dict):
         else:
             os.environ['NEED_REBOOT'] = 'false'
         print("prepare_environment end")
-        return {"prepare_result": True, "gen_instance_id": GEN_INSTANCE_ID}
+        os.environ['last_sync_request_id'] = sync_item['request_id']
+        return True
     except Exception as e:
-        return {"prepare_result": False, "gen_instance_id": GEN_INSTANCE_ID, "error_msg": e}
+        return False
 
 
 # def create_tar_gz(source_file, target_tar_gz):
@@ -154,105 +154,127 @@ async def invocations(request):
         return web.Response(status=500)
 
 
-async def check_and_get_last_ddb_sync_record():
+def get_last_ddb_sync_record():
     sync_response = sync_table.query(
         KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
         Limit=1,
         ScanIndexForward=False
     )
-    latest_sync_record = sync_response['Items'][0] if 'Items' in sync_response and len(sync_response['Items']) > 0 else None
+    latest_sync_record = sync_response['Items'][0] if ('Items' in sync_response
+                                                       and len(sync_response['Items']) > 0) else None
     if latest_sync_record:
-        print("sync latest record:", latest_sync_record)
-        key_condition_expression = ('endpoint_name = :endpoint_name_val AND gen_instance_id = :gen_instance_id_val '
-                                    'AND last_sync_request_id = :last_sync_request_id_val')
-        expression_attribute_values = {
-            ':endpoint_name_val': ENDPOINT_NAME,
-            ':gen_instance_id_val': GEN_INSTANCE_ID,
-            ':last_sync_request_id_val': latest_sync_record['last_sync_request_id']
-        }
-        instance_monitor_response = instance_monitor_table.query(
-            KeyConditionExpression=key_condition_expression,
-            ExpressionAttributeValues=expression_attribute_values
-        )
-        items = instance_monitor_response.get('Items', [])
+        print(f"latest_sync_record is：{latest_sync_record}")
+        return latest_sync_record
 
-        return True, latest_sync_record
-    else:
-        print("no sync record fund")
-        return False, None
+    print("no latest_sync_record found")
+    return None
 
 
-async def get_last_sync_instance_record():
-    response = sync_table.query(
-        KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
-        Limit=1,
-        ScanIndexForward=False
-    )
-    latest_record = response['Items'][0] if 'Items' in response and len(response['Items']) > 0 else None
-    if latest_record:
-        print("sync latest record:", latest_record)
-        return latest_record
-    else:
-        print("no sync record fund")
-        return None
-
-
-def sync_ddb_instance_monitor():
-    response = sync_table.query(
-        KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
-        Limit=1,
-        ScanIndexForward=False
-    )
-    latest_record = response['Items'][0] if 'Items' in response and len(response['Items']) > 0 else None
-    if latest_record:
-        print("sync latest record:", latest_record)
-        return latest_record
-    else:
-        print("no sync record fund")
-
-
-def update_sync_instance_count():
-    print(f"Updating DynamoDB {field_name} to {field_value} for: {endpoint_deployment_job_id}")
-    # 更新记录
-    update_expression = "SET sync_status = :status, endpoint_snapshot = :snapshot"
+def get_latest_ddb_instance_monitor_record():
+    key_condition_expression = ('endpoint_name = :endpoint_name_val '
+                                'AND gen_instance_id = :gen_instance_id_val')
     expression_attribute_values = {
-        ":status": new_sync_status,
-        ":snapshot": new_endpoint_snapshot
+        ':endpoint_name_val': ENDPOINT_NAME,
+        ':gen_instance_id_val': GEN_INSTANCE_ID
+    }
+    instance_monitor_response = instance_monitor_table.query(
+        KeyConditionExpression=key_condition_expression,
+        ExpressionAttributeValues=expression_attribute_values
+    )
+    instance_monitor_record = instance_monitor_response['Items'][0] \
+        if ('Items' in instance_monitor_response and len(instance_monitor_response['Items']) > 0) else None
+
+    if instance_monitor_record:
+        print(f"instance_monitor_record is {instance_monitor_record}")
+        return instance_monitor_record
+
+    print("no instance_monitor_record found")
+    return None
+
+
+def save_sync_instance_count(last_sync_request_id: str, sync_status: str):
+    gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+    endpoint_name = os.environ.get('ENDPOINT_NAME')
+    endpoint_id = os.environ.get('ENDPOINT_ID')
+
+    item = {
+        'endpoint_id': endpoint_id,
+        'endpoint_name': endpoint_name,
+        'gen_instance_id': gen_instance_id,
+        'sync_status': sync_status,
+        'last_sync_request_id': last_sync_request_id,
+        'last_sync_time': str(datetime.datetime.now()),
+        'sync_list': [],
+        'create_time': str(datetime.datetime.now()),
+        'last_heartbeat_time': str(datetime.datetime.now())
+    }
+    save_resp = instance_monitor_table.put_item(Item=item)
+    print(f"save instance item {save_resp}")
+    return save_resp
+
+
+def update_sync_instance_monitor(instance_monitor_record):
+    # 更新记录
+    update_expression = ("SET sync_status = : new_sync_status, last_sync_request_id = :sync_request_id, "
+                         "sync_list = :sync_list, last_sync_time = :sync_time, last_heartbeat_time = :heartbeat_time")
+    expression_attribute_values = {
+        ":new_sync_status": instance_monitor_record['sync_status'],
+        ":sync_request_id": instance_monitor_record['last_sync_request_id'],
+        ":sync_list": instance_monitor_record['sync_list'],
+        ":sync_time": str(datetime.datetime.now()),
+        ":heartbeat_time": str(datetime.datetime.now()),
     }
 
-    sync_table.update_item(
-        Key={'endpoint_name': endpoint_name},
+    response = sync_table.update_item(
+        Key={'endpoint_name': instance_monitor_record['endpoint_name'],
+             'gen_instance_id': instance_monitor_record['gen_instance_id']},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values
     )
-    print("记录更新成功")
+    print(f"update_sync_instance_monitor :{response}")
+    return response
 
 
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance():
     print(f"sync_instance start ！！ {datetime.datetime.now()}")
     try:
-
-        gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
-        endpoint_name = os.environ.get('ENDPOINT_NAME')
-        endpoint_id = os.environ.get('ENDPOINT_ID')
-
-        image_url = os.environ.get('IMAGE_URL')
-        ecr_image_tag = os.environ.get('ECR_IMAGE_TAG')
-        instance_type = os.environ.get('INSTANCE_TYPE')
-        created_at = os.environ.get('CREATED_AT')
-
-        # 定时获取ddb的sync记录 并将最新id的写入到环境变量中 比较 如果变更 那么就执行sync逻辑 否则继续轮训
-        need_sync, syc_record = check_and_get_last_ddb_sync_record()
-        if not syc_record:
+        last_sync_record = get_last_ddb_sync_record()
+        if not last_sync_record:
+            print("no last sync record found do not need sync")
             return True
-        await prepare_comfy_env(syc_record)
-        # update ddb instance and sync count
 
-        return web.Response(status=200)
+        if ('request_id' in last_sync_record and last_sync_record['request_id']
+                and os.environ.get('last_sync_request_id')
+                and os.environ.get('last_sync_request_id') == last_sync_record['request_id']):
+            print("last sync record already sync by os check")
+            return True
+
+        instance_monitor_record = get_latest_ddb_instance_monitor_record()
+        if not instance_monitor_record:
+            sync_already = await prepare_comfy_env(last_sync_record)
+            print("should init prepare instance_monitor_record")
+            sync_status = 'success' if sync_already else 'failed'
+            save_sync_instance_count(last_sync_record['request_id'], sync_status)
+        else:
+            if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
+                    and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
+                print("last sync record already sync")
+                return True
+
+            sync_already = await prepare_comfy_env(last_sync_record)
+            instance_monitor_record['sync_status'] = 'success' if sync_already else 'failed'
+            instance_monitor_record['last_sync_request_id'] = last_sync_record['request_id']
+            sync_list = instance_monitor_record['sync_list'] if 'sync_list' in instance_monitor_record and instance_monitor_record['sync_list'] else []
+            sync_list.append(last_sync_record['request_id'])
+
+            instance_monitor_record['sync_list'] = sync_list
+            print("should update prepare instance_monitor_record")
+            update_sync_instance_monitor(instance_monitor_record)
+        return True
     except Exception as e:
         print("exception occurred", e)
-        return web.Response(status=500)
+        return False
 
 
 def validate_prompt_proxy(func):

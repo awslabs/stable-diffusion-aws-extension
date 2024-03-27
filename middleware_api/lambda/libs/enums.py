@@ -75,7 +75,6 @@ class ComfyExecuteType(Enum):
 
 
 class ComfySyncStatus(Enum):
-    INIT = 'init'
     SUCCESS = 'success'
     FAILED = 'failed'
 
