@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
       
       
 
@@ -1025,6 +1025,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#train-the-lora-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Train the LoRa Model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#invoke-training-api" class="md-nav__link">
     <span class="md-ellipsis">
       Invoke Training API
@@ -1503,6 +1512,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#train-the-lora-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Train the LoRa Model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#invoke-training-api" class="md-nav__link">
     <span class="md-ellipsis">
       Invoke Training API
@@ -1537,7 +1555,10 @@
 <h1 id="training-guide">Training Guide</h1>
 <p>The training is based on <a href="https://github.com/kohya-ss/sd-scripts">Kohya-SS</a>. Kohya-SS is a Python library for finetuning stable diffusion model which is friendly for consumer-grade GPU and compatible with the Stable Diffusion WebUI. The solution can do LoRA training both on SDXL and SD 1.5.</p>
 <h2 id="training-user-guide">Training User Guide</h2>
+<p><img alt="Kohya Training" src="../../images/Kohya_training.png" /></p>
 <h3 id="prepare-foundation-model">Prepare Foundation Model</h3>
+<p>Please refresh and check the dropdown list under <strong>Model</strong> to ensure that the required base models for this training session are available. If not, you can use the <strong>Upload Models</strong> in <a href="../CloudAssetsManage/">Cloud Asset Management</a> to upload the base models under the <em>SD Checkpoints</em> category.</p>
+<p>Alternatively, you can also upload local SD models to an S3 bucket using the following command:</p>
 <p>Upload your local SD model to S3 bucket by following commands
 <div class="highlight"><pre><span></span><code># Configure credentials
 aws configure
@@ -1545,10 +1566,23 @@ aws configure
 aws s3 cp *safetensors s3://&lt;bucket_path&gt;/&lt;model_path&gt;
 </code></pre></div></p>
 <h3 id="prepare-dataset">Prepare Dataset</h3>
-<p>Execute AWS CLI command to copy the dataset to S3 bucket
+<p>The dataset is an indispensable input for model training and fine-tuning.</p>
+<p>Taking the example of training a LoRa model containing specific image style, users need to prepare a set of images in advance. These images should have a consistent theme or style, with moderate resolution, and a few dozen images are sufficient. For this image set, users need to preprocess it to adapt to the capabilities of the base model. For example, it is recommended to crop the images to a size of 512 x 512 pixels in preparation for training tasks on the LoRa model based on the base model SD 1.5.</p>
+<p>After preprocessing, it is necessary to annotate the images in  dataset, that is, add textual descriptions to each training image and save them as text files with the same name as the corresponding images. Image annotation can be complete through the built-in image annotation function in the SD WebUI or through multi-modal large models. The annotations made by the model may not be perfect, so manual review and adjustments are recommended to ensure the final effect.</p>
+<p>Please refer <strong>Dataset Management</strong> in <a href="../CloudAssetsManage/">Cloud Asset Management</a> to upload dataset to cloud.</p>
+<p>In addition, user could also upload dataset by execute AWS CLI command to copy the dataset to S3 bucket
 <div class="highlight"><pre><span></span><code>aws s3 sync local_folder_name s3://&lt;bucket_name&gt;/&lt;folder_name&gt;
 </code></pre></div></p>
-<p>The folder name should be started with a number and underline, eg. 100_demo. Each image should be paired with a txt file with the same name, eg. demo1.png, demo1.txt, the demo1.txt contains the captions of demo1.png.</p>
+<blockquote>
+<p><strong>Notice:</strong> The folder name should be started with a number and underline, eg. 100_demo. Each image should be paired with a txt file with the same name, eg. demo1.png, demo1.txt, the demo1.txt contains the captions of demo1.png.</p>
+</blockquote>
+<h3 id="train-the-lora-model">Train the LoRa Model</h3>
+<p>After the base model and dataset have been uploaded successfully, please follow these steps:
+1. Navigate to <strong>Train Mangement</strong> tab, select desired training instance type in <strong>Training Instance Type</strong>, select the base model type for this training job in the <strong>FM Type</strong> field (i.e., based on Stable Diffusion 1.5 or Stable Diffusion XL). Then, choose the base model for this training session using the <strong>Model</strong> option. Finally, select the dataset that this training session will depend on using the <strong>Dataset</strong> option.
+2. Update the trianing parameters in <strong>config_params</strong>, and click <strong>Format config Params</strong> to check and correct updated params file format.
+3. Click <strong>Create Training Job</strong> to submit training job.
+4. Refresh <strong>Trainings List</strong> to follow status of training job.
+5. The successfully trained LoRa model can be selected directly in <strong>txt2img</strong> or <strong>img2img</strong>, and used in image generation. More details refer to <a href="../txt2img-guide/">txt2img guide</a> or <a href="../img2img-guide/">img2img guide</a>.</p>
 <h3 id="invoke-training-api">Invoke Training API</h3>
 <p>Refer to <a href="https://awslabs.github.io/stable-diffusion-aws-extension/en/developer-guide/api/1.5.0/">API document</a> to invoke training API.</p>
 

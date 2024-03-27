@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
     
     
       
@@ -28,7 +28,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
       
       
 
@@ -829,25 +829,7 @@
           <li class="md-nav__item">
   <a href="#2-cloudformation-stable-diffusion-aws-extension" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤2：在 CloudFormation 中删除已有的 Stable Diffusion AWS Extension
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-stable-diffusion-aws-extension" class="md-nav__link">
-    <span class="md-ellipsis">
-      步骤3：重新部署 Stable Diffusion AWS Extension
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-api-url-api-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      步骤4: 配置 API URL 和 API Token
+      步骤2：在 CloudFormation 中更新已有的 Stable Diffusion AWS Extension
     </span>
   </a>
   
@@ -855,6 +837,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      注意事项
+    </span>
+  </a>
   
 </li>
       
@@ -1555,25 +1546,7 @@
           <li class="md-nav__item">
   <a href="#2-cloudformation-stable-diffusion-aws-extension" class="md-nav__link">
     <span class="md-ellipsis">
-      步骤2：在 CloudFormation 中删除已有的 Stable Diffusion AWS Extension
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-stable-diffusion-aws-extension" class="md-nav__link">
-    <span class="md-ellipsis">
-      步骤3：重新部署 Stable Diffusion AWS Extension
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-api-url-api-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      步骤4: 配置 API URL 和 API Token
+      步骤2：在 CloudFormation 中更新已有的 Stable Diffusion AWS Extension
     </span>
   </a>
   
@@ -1581,6 +1554,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      注意事项
+    </span>
+  </a>
   
 </li>
       
@@ -1617,9 +1599,7 @@
 <p>在亚马逊云科技上部署本解决方案主要包括以下过程：</p>
 <ul>
 <li>步骤1：更新Stable Diffusion WebUI及对应插件版本。</li>
-<li>步骤2：登录AWS Console后，在CloudFormation中删除已有的Stable Diffusion AWS extension模版。</li>
-<li>步骤3：重新部署本解决方案中间件。</li>
-<li>步骤4：更新API Url和API Token。</li>
+<li>步骤2：登录AWS Console后，在CloudFormation中更新已有的Stable Diffusion AWS extension模版。</li>
 </ul>
 <h2 id="_3">部署步骤</h2>
 <h3 id="1-linux-stable-diffusion-webui-linux">步骤1 - Linux：更新 Stable Diffusion WebUI (Linux)</h3>
@@ -1644,40 +1624,23 @@
 <li>在源码中，执行 install.bat。</li>
 <li>在下载的stable-diffusion-webui文件夹中，执行webui-user.bat。</li>
 </ol>
-<h3 id="2-cloudformation-stable-diffusion-aws-extension">步骤2：在 CloudFormation 中删除已有的 Stable Diffusion AWS Extension</h3>
+<h3 id="2-cloudformation-stable-diffusion-aws-extension">步骤2：在 CloudFormation 中更新已有的 Stable Diffusion AWS Extension</h3>
 <ol>
 <li>打开 AWS 管理控制台<a href="https://console.aws.amazon.com">（https://console.aws.amazon.com）</a>并登录。</li>
-<li>在服务菜单中选择 "CloudFormation"。</li>
-<li>在 CloudFormation 控制台中，你会看到列出的所有 CloudFormation 堆栈。找到你要删除的堆栈(已经部署的本方案的堆栈)，并选中它。</li>
-<li>点击页面上方的 "Actions" 按钮。</li>
-<li>在弹出的菜单中，选择 "Delete stack"。</li>
-<li>在确认删除的对话框中，确认删除操作。</li>
-<li>CloudFormation 将开始删除堆栈，这可能需要一些时间。你可以在 "Stacks" 页面上监视堆栈的状态。</li>
+<li>在服务菜单中选择 "CloudFormation"，找到之前已经部署的本方案的堆栈，并选中它，点击页面右上方的“Update”。</li>
+<li>在“Update Stack"中，选择 "Replace current template"，并在“Amazon S3 URL"部分填入最新<a href="https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json">部署模版链接</a>，点击“Next”。</li>
+<li>在“Specify Stack details"界面，选择EcrImageTag下拉列表中最新的版本号，点击“Next”。</li>
+<li>在“Configure stack options"界面，选择“Next”。</li>
+<li>在“Review”界面，勾选必要选择框并选择“Submit”。</li>
+<li>CloudFormation 将开始更新堆栈，这可能需要一些时间。你可以在 "Stacks" 页面上监视堆栈的状态。</li>
 </ol>
-<h3 id="3-stable-diffusion-aws-extension">步骤3：重新部署 Stable Diffusion AWS Extension</h3>
+<h2 id="_4">注意事项</h2>
 <ol>
-<li>登录到<a href="https://console.aws.amazon.com/">AWS管理控制台</a>，点击链接<a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json" target="_blank">Extension-for-Stable-Diffusion-on-AWS.template</a>。</li>
-<li>默认情况下，该模版将在您登录控制台后默认的区域启动。若需在指定的Amazon Web Service区域中启动该解决方案，请在控制台导航栏中的区域下拉列表中选择。</li>
-<li>在<strong>创建堆栈</strong>页面上，确认Amazon S3 URL文本框中显示正确的模板URL，然后选择<strong>下一步</strong>。</li>
-<li>在<strong>制定堆栈详细信息</strong>页面，为您的解决方案堆栈分配一个账户内唯一且符合命名要求的名称。</li>
-<li>
-<p>在<strong>参数</strong>部分，在<strong>Bucket</strong>中填入之前此项目中使用的s3桶的名字。在<strong>EcrImageTag</strong>字段选择方案对应的ECR镜像的tag（如果无需修改就保持默认值即可。更多tag的说明请点击这个<a href="../ecr_image_param/">link</a>）。在<strong>email</strong>处输入一个正确的电子邮件地址，以便接收将来的通知。在<strong>SdExtensionApiKey</strong>字段中请输入一个包含数字和字母组合的20个字符的字符串；如果未提供，默认为"09876543210987654321"。在<strong>LogLevel</strong>处选择您心仪的Lambda Log日志打印级别，默认ERROR才打印。在<strong>UtilsCpuInstType</strong>选择Amazon EC2的实例类型，主要用于包括模型创建、模型合并等操作。点击<strong>下一步</strong>。</p>
-<div class="admonition important">
-<p class="admonition-title">提示</p>
-<p>请不要自行改动<strong>EcrImageTag</strong>。如有需求，请联系解决方案团队。</p>
-</div>
-</li>
-<li>
-<p>在<strong>配置堆栈选项</strong>页面，选择<strong>下一步</strong>。</p>
-</li>
-<li>在<strong>审核</strong>页面，查看并确认设置。确保选中确认模板将创建Amazon Identity and Access Management（IAM）资源的复选框。并确保选中AWS CloudFormation需要的其它功能的复选框。选择<strong>提交</strong>以部署堆栈。</li>
-<li>
-<p>您可以在 AWS CloudFormation 控制台的 <strong>状态</strong> 列中查看堆栈的状态。您应该会在大约 15 分钟内收到<strong>CREATE_COMPLETE</strong>状态。</p>
-<div class="admonition important">
-<p class="admonition-title">提示</p>
-<p>请及时检查您预留邮箱的收件箱，并在主题为“AWS Notification - Subscription Confirmation”的邮件中，点击“Confirm subscription”超链接，按提示完成订阅。</p>
-</div>
-</li>
+<li>更新 1.5.0 需重新创建 Endpoint</li>
+<li>WebUI 客户端和中间件API的版本应保持一致</li>
+<li>WebUI 客户端建议创建新的 EC2 实例</li>
+<li>中间件 API 版本 1.4.0 可直接 Update，1.3.0 先卸载再安装</li>
+<li>如果涉及到已经通过 API 集成的服务，请浏览 API 文档<a href="https://awslabs.github.io/stable-diffusion-aws-extension/zh/developer-guide/api_authentication/">升级权限校验方式</a>，并做好上线前的测试工作</li>
 </ol>
 <!-- ### 步骤2：通过安装脚本安装插件Stable Diffusion AWS Extension。
 1. 在提前准备的运行linux的电脑的工作目录下，运行以下命令下载最新的安装脚本
@@ -1697,13 +1660,6 @@
 ./webui.sh
 ``` -->
 
-<h3 id="4-api-url-api-token">步骤4: 配置 API URL 和 API Token</h3>
-<ol>
-<li>访问<a href="https://console.aws.amazon.com/cloudformation/">AWS CloudFormation控制台</a>，选择成功部署的本解决方案的主堆栈。</li>
-<li>打开输出（Outputs）标签页，找到<strong>APIGatewayUrl</strong>和<strong>ApiGatewayUrlToken</strong>对应的数值，并复制。</li>
-<li>在启动webUI的环境目录下，找到文件sagemaker_ui.json，更新文件中的API配置数值并保存。</li>
-<li>启动 Stable Diffusion WebUI，新的链接即可生效。</li>
-</ol>
 <!-- 
 1. 访问[AWS CloudFormation控制台](https://console.aws.amazon.com/cloudformation/)。
 

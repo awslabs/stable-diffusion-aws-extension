@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
       
       
 
@@ -1487,7 +1487,7 @@
 <h1 id="cost">Cost</h1>
 <p>You are responsible for the cost of AWS services used when running this solution. </p>
 <h2 id="use-auto-scale-amazon-sagemaker-inference-endpoint-for-image-inference">Use auto-scale Amazon SageMaker Inference Endpoint for Image Inference</h2>
-<p>As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024<em>1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is </em><em>$310.45</em>* per month.</p>
+<p>As of December 2023, for example, assuming that use will actively inference image for 8 hours per day, 20 working days per month(Assuming that using the standard Stable Diffusion XL model to generate a 1024 X 1024 image takes an average of 7 seconds. This running time can generate 72000 images in one month), the estimated cost of using this solution in the US East (Virginia)(us-east-1) is <strong>$310.45</strong> per month.</p>
 <table>
 <thead>
 <tr>
@@ -1540,10 +1540,23 @@
 </tbody>
 </table>
 <h2 id="use-amazon-sagemaker-to-train-model">Use Amazon SageMaker to Train Model</h2>
-<p>Assume that on the basis of inference images, users train for 300 hours per month as the calculation standard (using Dreambooth, fine-tuning a new safetensor model based on Stable Diffusion V1.5, 1000 steps of iteration, takes 387 seconds. 300 hours of training means one month of training <strong>2790 models</strong>), the estimated cost of using this solution would increase by <strong>$526.18</strong> in US East (N. Virginia) (us-east-1).
-|  Service  | Usage | Cost/Month | 
-|  ----  | ----  | ----  |<br />
-| Amazon SageMaker | $526.18 | Storage (General Purpose SSD (gp2)), Instance name (ml.g5.2xlarge), Number of training jobs per month (300), Number of instances per job (1), Hour(s) per instance per job (1) |</p>
+<p>Assume that on the basis of inference images, users train for 300 hours per month as the calculation standard (using Kohya, fine-tuning a new safetensor model based on Stable Diffusion V1.5, 1000 steps of iteration, takes 387 seconds. 300 hours of training means one month of training <strong>2790 models</strong>), the estimated cost of using this solution would increase by <strong>$526.18</strong> in US East (N. Virginia) (us-east-1).</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Usage</th>
+<th>Cost/Month</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amazon SageMaker</td>
+<td>$526.18</td>
+<td>Storage (General Purpose SSD (gp2)), Instance name (ml.g5.2xlarge), Number of training jobs per month (300), Number of instances per job (1), Hour(s) per instance per job (1)</td>
+</tr>
+</tbody>
+</table>
 
 
 

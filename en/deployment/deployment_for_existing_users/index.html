@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
       
       
 
@@ -825,27 +825,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2delete-the-existing-stable-diffusion-aws-extension-template-in-cloudformation" class="md-nav__link">
+  <a href="#step-2update-the-existing-stable-diffusion-aws-extension-template-in-cloudformation" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2：Delete the existing Stable Diffusion AWS extension template in CloudFormation.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-deploy-a-new-solution-aws-cloudformation-as-middleware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 3: Deploy a new solution AWS CloudFormation as middleware.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-4-update-configuration-file-of-api-url-and-api-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 4: Update configuration file of API url and API token.
+      Step 2：Update the existing Stable Diffusion AWS extension template in CloudFormation.
     </span>
   </a>
   
@@ -853,6 +835,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notice
+    </span>
+  </a>
   
 </li>
       
@@ -1551,27 +1542,9 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#step-2delete-the-existing-stable-diffusion-aws-extension-template-in-cloudformation" class="md-nav__link">
+  <a href="#step-2update-the-existing-stable-diffusion-aws-extension-template-in-cloudformation" class="md-nav__link">
     <span class="md-ellipsis">
-      Step 2：Delete the existing Stable Diffusion AWS extension template in CloudFormation.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-deploy-a-new-solution-aws-cloudformation-as-middleware" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 3: Deploy a new solution AWS CloudFormation as middleware.
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-4-update-configuration-file-of-api-url-and-api-token" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 4: Update configuration file of API url and API token.
+      Step 2：Update the existing Stable Diffusion AWS extension template in CloudFormation.
     </span>
   </a>
   
@@ -1579,6 +1552,15 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notice" class="md-nav__link">
+    <span class="md-ellipsis">
+      Notice
+    </span>
+  </a>
   
 </li>
       
@@ -1614,9 +1596,7 @@
 <p>Use the following steps to deploy this solution on AWS.</p>
 <ul>
 <li>Step 1: Update Stable Diffusion WebUI.</li>
-<li>Step 2: After logging into the AWS Console, delete the existing Stable Diffusion AWS extension template in CloudFormation.</li>
-<li>Step 3: Update the solution as middleware.</li>
-<li>Step 4: Update the API url and API token.</li>
+<li>Step 2: After logging into the AWS Console, update the existing Stable Diffusion AWS extension template in CloudFormation.</li>
 </ul>
 <h2 id="deployment-steps">Deployment steps</h2>
 <h3 id="step-1-linuxupdate-stable-diffusion-webui-linux">Step 1 - Linux：Update Stable Diffusion WebUI (Linux).</h3>
@@ -1659,54 +1639,23 @@
 <li>Inside the source code directory, run <code>install.bat</code>.</li>
 <li>In the downloaded <code>stable-diffusion-webui</code> folder, run <code>webui-user.bat</code>.</li>
 </ol>
-<h3 id="step-2delete-the-existing-stable-diffusion-aws-extension-template-in-cloudformation">Step 2：Delete the existing Stable Diffusion AWS extension template in CloudFormation.</h3>
+<h3 id="step-2update-the-existing-stable-diffusion-aws-extension-template-in-cloudformation">Step 2：Update the existing Stable Diffusion AWS extension template in CloudFormation.</h3>
 <ol>
 <li>Open the AWS Management Console <a href="https://console.aws.amazon.com">(https://console.aws.amazon.com)</a> and log in.</li>
-<li>Select "CloudFormation" from the service menu.</li>
-<li>In the CloudFormation console, you will see a list of all CloudFormation stacks. Find the stack you want to delete (the stack deployed for this solution) and select it.</li>
-<li>Click the "Actions" button at the top of the page.</li>
-<li>In the pop-up menu, choose "Delete stack".</li>
-<li>Confirm the deletion in the confirmation dialog.</li>
-<li>CloudFormation will start deleting the stack, which may take some time. You can monitor the status of the stack on the "Stacks" page.</li>
+<li>Select "CloudFormation" from the service menu, find the stack deployed for this solution, and select it, click <strong>Update</strong> in the upper right.</li>
+<li>In <strong>Update Stack</strong>, select <strong>Replace current template</strong>, enter latest CloudFormation <a href="https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json">link</a> in <strong>Amazon S3 URL</strong> and click <strong>Next</strong>.</li>
+<li>In <strong>Specify Stack details</strong>, select dropdown option under <strong>EcrImageTag</strong>, click <strong>Next</strong>.</li>
+<li>In <strong>Configure stack options</strong>, click <strong>Next</strong>.</li>
+<li>In <strong>Review</strong>, select acknowledge option and click <strong>Submit</strong>. </li>
+<li>CloudFormation will start updating the stack, which may take some time. You can monitor the status of the stack on the <strong>Stacks</strong> page.</li>
 </ol>
-<h3 id="step-3-deploy-a-new-solution-aws-cloudformation-as-middleware">Step 3: Deploy a new solution AWS CloudFormation as  middleware.</h3>
+<h2 id="notice">Notice</h2>
 <ol>
-<li>Sign in to the <a href="https://console.aws.amazon.com/">AWS Management Console</a> and use <a href="https://console.aws.amazon.com/cloudformation/home?#/stacks/create/template?stackName=stable-diffusion-aws&amp;templateURL=https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json" target="_blank">Launch solution in AWS Standard Regions</a>  to launch the AWS CloudFormation template.   </li>
-<li>The template will launch in the default region when you log into the console by default. To launch this solution in a different AWS Region, use the Region selector in the console navigation bar.</li>
-<li>On the <strong>Create stack</strong> page, verify that the correct template URL is shown in the <strong>Amazon S3 URL</strong> text box and choose <strong>Next</strong>.</li>
-<li>On the <strong>Specify stack details</strong> page, assign a valid and account level unique name to your solution stack. </li>
-<li>
-<p>On the <strong>Parameters</strong> page, enter the existing bucket name that this solution used prior under <strong>Bucket</strong>. Enter a correct email address under <strong>email</strong> for future notice receiving. Select desired Amazon log level to be printed under <strong>LogLevel</strong>, only ERROR log will be printed by default. Enter a string of 20 characters that includes a combination of alphanumeric characters for <strong>SdExtensionApiKey</strong>, and it will be 09876543210987654321 by default. Select an instance type of Amazon EC2, which will mainly be used for operation including model creation, checkpoint merge, etc. To select the tag for the ECR image corresponding to the solution, please refer to the <strong>EcrImageTag</strong> field (if no modification is needed, you can keep the default value). For specific tag explanations, please click on this <a href="../ecr_image_param/">link</a>.Choose <strong>Next</strong>.</p>
-<div class="admonition important">
-<p class="admonition-title">Notice</p>
-<p>Please do not change <strong>EcrImageTag</strong> before a consulting solution team.</p>
-</div>
-</li>
-<li>
-<p>On the <strong>Configure stack options</strong> page, choose <strong>Next</strong>.</p>
-</li>
-<li>On the <strong>Review</strong> page, review and confirm the settings. Check the box acknowledging that the template will create AWS Identity and Access Management (IAM) resources. Choose <strong>Create stack</strong> to deploy the stack.</li>
-</ol>
-<p>You can view the status of the stack in the AWS CloudFormation Console in the <strong>Status</strong> column. You should receive a CREATE_COMPLETE status in approximately 15 minutes.</p>
-<div class="admonition important">
-<p class="admonition-title">Notice</p>
-<p>Please check the inbox of the email address you previously set up and click on the "Confirm subscription" hyperlink in the email with the subject "AWS Notification - Subscription Confirmation" to complete the subscription, and the message of 'Subscription confirmed!' appears.</p>
-</div>
-<h3 id="step-4-update-configuration-file-of-api-url-and-api-token">Step 4: Update configuration file of API url and API token.</h3>
-<ol>
-<li>Go to <a href="https://console.aws.amazon.com/cloudformation/">CloudFormation console</a>.</li>
-<li>
-<p>Select the root stack of the solution from the stack list, instead of a nested stack. Nested stacks in the list will be labeled as (NESTED) next to their names.</p>
-</li>
-<li>
-<p>Open the <strong>Outputs</strong> tab and locate the values corresponding to <strong>APIGatewayUrl</strong> and <strong>ApiGatewayUrlToken</strong>, and copy them.</p>
-</li>
-<li>
-<p>Open the <strong>Amazon SageMaker</strong> tab in the Stable Diffusion WebUI. Paste the URL obtained in step 3 into the <strong>API URL</strong> text box. Enter the token obtained in step 3 into the <strong>API Token</strong> field. Click <strong>Test Connection</strong> to receive a confirmation message of <strong>Successfully Connected</strong>.</p>
-</li>
-<li>
-<p>Click <strong>Update Setting</strong> to update the configuration file, so that you can receive the corresponding information next time.</p>
-</li>
+<li>SageMaker Inference Endpoints need to delete and deploy new after updating solution to V1.5.0</li>
+<li>The version of webUI and middleware should match.</li>
+<li>Recommend to deploy new webUI on EC2. </li>
+<li>Middleware API version 1.4.0 can be updated directly, while version 1.3.0 needs to be uninstalled first and then reinstalled.</li>
+<li>If it involves services already integrated through an API, please review the API documentation for <a href="https://awslabs.github.io/stable-diffusion-aws-extension/zh/developer-guide/api_authentication/">upgrading permission verification</a> methods, and conduct thorough testing before going live.</li>
 </ol>
 
 

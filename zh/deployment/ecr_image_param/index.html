@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.14">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
     
     
       
@@ -24,7 +24,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.10ba22f1.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
       
       
 
@@ -1399,7 +1399,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_INFERENCE</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-inference:&#39;</span><span class="p">;</span>
 <span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">AIGC_WEBUI_DREAMBOOTH_TRAINING</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;public.ecr.aws/aws-gcr-solutions/stable-diffusion-aws-extension/aigc-webui-dreambooth-training:&#39;</span><span class="p">;</span>
 </code></pre></div>
-2. infrastructure/src/common/dockerImageTag.ts
+2. infrastructure/src/shared/const.ts
 <div class="highlight"><pre><span></span><code><span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">ECR_IMAGE_TAG</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;dev&#39;</span><span class="p">;</span>
 </code></pre></div>
 TAG_NAME是由Cloudformation的部署参数 EcrImageTag 来定义，默认tag的值是方案发布CICD的pipeline每次编译的时候动态生成，比如‘v1.0.0-46f9d43’, 其中v1.0.0是方案的大版本tag，46f9d43是项目github的commit id。</p>
