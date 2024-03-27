@@ -45,6 +45,7 @@ class ComfyExecuteTable:
 class ComfySyncTable:
     request_id: str
     endpoint_name: str
+    endpoint_id: str
     instance_count: int
     sync_instance_count: int
     prepare_type: ComfyEnvPrepareType
@@ -55,7 +56,6 @@ class ComfySyncTable:
     endpoint_snapshot: Optional[Any]
     sync_status: ComfySyncStatus
     request_time: datetime.datetime
-    response_time: datetime.datetime
 
 
 @dataclass

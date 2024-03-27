@@ -51,6 +51,7 @@ export class ComfyApiStack extends Construct {
   private syncTable: aws_dynamodb.Table;
   private msgTable: aws_dynamodb.Table;
   private instanceMonitorTable: aws_dynamodb.Table;
+  private endpointTable: aws_dynamodb.Table;
 
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
@@ -64,6 +65,7 @@ export class ComfyApiStack extends Construct {
     this.syncTable = props.syncTable;
     this.msgTable = props.msgTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
+    this.endpointTable = props.endpointTable;
 
     const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
     const srcRoot = '../middleware_api/lambda';
@@ -170,6 +172,7 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         syncTable: this.syncTable,
         instanceMonitorTable: this.instanceMonitorTable,
+        endpointTable: this.endpointTable,
         queue: sqsStack.queue,
         commonLayer: this.layer,
         logLevel: props.logLevel,

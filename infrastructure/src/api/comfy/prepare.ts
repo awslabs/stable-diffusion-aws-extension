@@ -26,6 +26,7 @@ export interface PrepareApiProps {
   configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
+  endpointTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
   logLevel: CfnParameter;
@@ -43,6 +44,7 @@ export class PrepareApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
+  private readonly endpointTable: aws_dynamodb.Table;
   private queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: PrepareApiProps) {
@@ -55,6 +57,7 @@ export class PrepareApi {
     this.configTable = props.configTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
+    this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
     this.logLevel = props.logLevel;
     this.queue = props.queue;
@@ -82,6 +85,7 @@ export class PrepareApi {
         this.configTable.tableArn,
         this.syncTable.tableArn,
         this.instanceMonitorTable.tableArn,
+        this.endpointTable.tableArn,
       ],
     }));
 
@@ -143,6 +147,7 @@ export class PrepareApi {
         SYNC_TABLE: this.syncTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
+        ENDPOINT_TABLE: this.endpointTable.tableName,
         SQS_URL: this.queue.queueUrl,
         BUCKET_NAME: this.s3Bucket.bucketName,
         LOG_LEVEL: this.logLevel.valueAsString,

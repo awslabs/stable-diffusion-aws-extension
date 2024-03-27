@@ -4,6 +4,7 @@ import os
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 import boto3
@@ -12,7 +13,10 @@ from sagemaker import Predictor
 from sagemaker.base_deserializers import JSONDeserializer
 from sagemaker.base_serializers import JSONSerializer
 
-from libs.enums import ComfyEnvPrepareType, ComfyTaskType
+from client import DynamoDbUtilsService
+from libs.comfy_data_types import ComfySyncTable
+from libs.data_types import EndpointDeploymentJob
+from libs.enums import ComfyEnvPrepareType, ComfyTaskType, ComfySyncStatus
 from response import ok
 
 logger = logging.getLogger(__name__)
@@ -21,6 +25,12 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 region = os.environ.get('AWS_REGION')
 bucket_name = os.environ.get('BUCKET_NAME')
 sqs_url = os.environ.get('SQS_URL')
+inference_monitor_table = os.environ.get('INSTANCE_MONITOR_TABLE')
+sync_table = os.environ.get('SYNC_TABLE')
+endpoint_table = os.environ.get('ENDPOINT_TABLE')
+CONFIG_TABLE = os.environ.get('CONFIG_TABLE')
+
+ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 @dataclass
@@ -34,27 +44,62 @@ class PrepareEnvEvent:
     sync_script: Optional[str] = ''
 
 
-def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
+def get_endpoint_info(endpoint_name: str):
+    endpoint_raw = ddb_service.scan(endpoint_table, filters={'endpoint_name': endpoint_name})[0]
+    endpoint_raw = ddb_service.deserialize(endpoint_raw)
+    if endpoint_raw is None or len(endpoint_raw) == 0:
+        raise Exception(f'sagemaker endpoint with name {endpoint_name} is not found')
 
-    # payload = {"endpoint_name": "ComfyEndpoint-endpoint", "prepare_type": "all"}
+    if endpoint_raw['endpoint_status'] != 'InService':
+        raise Exception(f'sagemaker endpoint is not ready with status: {endpoint_raw["endpoint_status"]}')
+    return EndpointDeploymentJob(**endpoint_raw)
+
+
+def rebuild_payload(event):
     payload = event.__dict__
     payload['task_type'] = ComfyTaskType.PREPARE
-
     payload["bucket_name"] = bucket_name
     payload["sqs_url"] = sqs_url
     payload["region"] = region
-
     payload["prepare_type"] = ComfyEnvPrepareType[event.prepare_type]
     payload["s3_source_path"] = event.s3_source_path
     payload["local_target_path"] = event.local_target_path
-
-    # TODO
     payload["need_reboot"] = event.need_reboot
     payload["sync_script"] = event.sync_script
-    endpoint_name = event.endpoint_name
+    return payload
 
-    # TODO 根据 endpoint_name 获取所有实例列表
-    # TODO 逐一调用实例列表执行初始化接口-这个时间较长 可以按照异步调用 等待初始化结果
+
+def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
+    # payload = {"endpoint_name": "ComfyEndpoint-endpoint", "prepare_type": "all"}
+    payload = rebuild_payload(event)
+    endpoint_name = event.endpoint_name
+    if endpoint_name is None:
+        raise Exception(f'endpoint name should not be null')
+    endpoint_info = get_endpoint_info(endpoint_name)
+    if not endpoint_info:
+        raise Exception(f'endpoint not found with name {endpoint_name}')
+
+    sync_job = ComfySyncTable(
+        request_id=request_id,
+        endpoint_name=event.endpoint_name,
+        endpoint_id=endpoint_info.EndpointDeploymentJobId,
+        instance_count=endpoint_info.current_instance_count,
+        sync_instance_count=0,
+        prepare_type=event.prepare_type,
+        need_reboot=event.need_reboot,
+        s3_source_path=event.s3_source_path,
+        local_target_path=event.local_target_path,
+        sync_script=event.sync_script,
+        endpoint_snapshot=json.dumps(endpoint_info),
+        sync_status=ComfySyncStatus.INIT,
+        request_time=datetime.now(),
+    )
+    save_sync_ddb_resp = ddb_service.put_items(sync_table, entries=sync_job.__dict__)
+    logger.info(str(save_sync_ddb_resp))
+
+    # TODO endpoint上实时写入ComfyInstanceMonitorTable
+
+    # TODO 异步查询sync表的实例数 获取最新状态
 
     session = boto3.Session(region_name=region)
     sagemaker_session = sagemaker.Session(boto_session=session)
