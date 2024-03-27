@@ -77,6 +77,7 @@ async function createAndCheckResources() {
   await putItemUsersTable();
   await waitTableReady('SDInferenceJobTable');
   await createGlobalSecondaryIndex('SDInferenceJobTable');
+  // todo check kms key and enable sd-extension-password-key
 }
 
 async function waitTableReady(tableName: string) {

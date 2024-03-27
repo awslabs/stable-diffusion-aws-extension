@@ -50,13 +50,13 @@ def handler(event, _):
 
         job = InferenceJob(**inference_raw)
 
-        return start_inference_job(job, username)
+        return inference_start(job, username)
 
     except Exception as e:
         return response_error(e)
 
 
-def start_inference_job(job: InferenceJob, username):
+def inference_start(job: InferenceJob, username):
     endpoint_name = job.params['sagemaker_inference_endpoint_name']
     models = {}
     if 'used_models' in job.params:
