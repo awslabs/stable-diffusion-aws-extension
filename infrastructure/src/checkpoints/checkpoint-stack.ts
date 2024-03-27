@@ -33,14 +33,12 @@ export class CheckpointStack {
 
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
-      s3Bucket: props.s3Bucket,
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.checkpoints,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
     });
 
     // POST /checkpoint
@@ -52,7 +50,6 @@ export class CheckpointStack {
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
     });
 
     // PUT /checkpoints/{id}
@@ -64,7 +61,6 @@ export class CheckpointStack {
       router: routers.checkpoints,
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
     updateCheckPointApi.model.node.addDependency(createCheckPointApi.model);
     updateCheckPointApi.requestValidator.node.addDependency(createCheckPointApi.requestValidator);
@@ -78,7 +74,6 @@ export class CheckpointStack {
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     },
     );
     deleteCheckpointsApi.model.node.addDependency(updateCheckPointApi.model);
