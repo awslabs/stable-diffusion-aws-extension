@@ -79,6 +79,7 @@ export class ListDatasetsApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,

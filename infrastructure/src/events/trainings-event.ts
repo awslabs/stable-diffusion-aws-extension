@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
+import {Aws, aws_iam, aws_lambda, aws_s3, aws_sns, Duration} from 'aws-cdk-lib';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
@@ -137,6 +137,7 @@ export class SagemakerTrainingEvents {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAINING_JOB_TABLE: this.trainingTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,

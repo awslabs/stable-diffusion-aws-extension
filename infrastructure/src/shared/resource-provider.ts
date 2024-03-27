@@ -1,4 +1,4 @@
-import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
+import {Aws, aws_lambda, CustomResource, Duration} from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -35,6 +35,7 @@ export class ResourceProvider extends Construct {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 4048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         ROLE_ARN: this.role.roleArn,
       },

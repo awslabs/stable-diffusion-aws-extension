@@ -79,6 +79,7 @@ export class ListTrainingJobsApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.trainTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,

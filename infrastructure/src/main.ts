@@ -272,6 +272,10 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('ESD_VERSION', ESD_VERSION);
     this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvironmentVariableToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
+    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;

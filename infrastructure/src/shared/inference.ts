@@ -1,6 +1,6 @@
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_sns, Duration, StackProps } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_lambda, aws_sns, Duration, StackProps} from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -164,6 +164,7 @@ export class Inference {
       handler: 'handler',
       index: 'inference_async_events.py',
       memorySize: 10240,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {

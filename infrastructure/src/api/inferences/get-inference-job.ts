@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
 import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -56,6 +56,7 @@ export class GetInferenceJobApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
           MULTI_USER_TABLE: this.userTable.tableName,
           INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,

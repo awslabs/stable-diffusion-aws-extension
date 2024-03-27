@@ -171,6 +171,7 @@ export class UpdateCheckPointApi {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 10240,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
@@ -187,6 +188,7 @@ export class UpdateCheckPointApi {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 4048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,

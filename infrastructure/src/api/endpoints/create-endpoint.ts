@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_iam, aws_sqs, Duration } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -294,6 +294,7 @@ export class CreateEndpointApi {
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
