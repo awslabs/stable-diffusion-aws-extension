@@ -10,8 +10,8 @@ class ComfyTemplateTable:
     template_name: str
     tag: Optional[str]
     s3_path: str
-    create_time: datetime.datetime
-    modify_time: datetime.datetime
+    create_time: str
+    modify_time: Optional[str]
 
 
 @dataclass
@@ -19,8 +19,8 @@ class ComfyConfigTable:
     config_name: str
     tag: Optional[str]
     config_value: str
-    create_time: datetime.datetime
-    modify_time: datetime.datetime
+    create_time: str
+    modify_time: Optional[str]
 
 
 @dataclass
@@ -35,8 +35,8 @@ class ComfyExecuteTable:
     instance_id: Optional[str]
     prompt_path: Optional[str]
     output_path: Optional[str]
-    output_files: Optional[List[str]] = None
-    create_time: Optional[Any] = None
+    output_files: Optional[List[str]]
+    create_time: str
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None
 
@@ -47,7 +47,6 @@ class ComfySyncTable:
     endpoint_name: str
     endpoint_id: str
     instance_count: int
-    sync_instance_count: int
     prepare_type: ComfyEnvPrepareType
     need_reboot: bool
     s3_source_path: Optional[str]
@@ -55,7 +54,8 @@ class ComfySyncTable:
     sync_script: Optional[str]
     endpoint_snapshot: Optional[Any]
     sync_status: ComfySyncStatus
-    request_time: datetime.datetime
+    request_time: int
+    request_time_str: str
 
 
 @dataclass
@@ -68,8 +68,8 @@ class ComfyInstanceMonitorTable:
     last_sync_time: str
     # period_config: str  move to config table
     sync_list: Optional[List[str]]
-    create_time: datetime.datetime
-    last_heartbeat_time: Optional[Any] = None
+    create_time: str
+    last_heartbeat_time: str
 
 
 @dataclass

@@ -233,13 +233,17 @@ async function createTables() {
     },
     ComfySyncTable: {
       partitionKey: {
-        name: 'request_id',
+        name: 'endpoint_name',
         type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'request_time',
+        type: AttributeType.NUMBER,
       },
     },
     ComfyInstanceMonitorTable: {
       partitionKey: {
-        name: 'endpoint_id',
+        name: 'endpoint_name',
         type: AttributeType.STRING,
       },
       sortKey: {

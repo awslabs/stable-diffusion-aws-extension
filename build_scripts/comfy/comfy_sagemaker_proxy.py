@@ -28,11 +28,10 @@ sync_table = dynamodb.Table(SYNC_TABLE_NAME)
 instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
 
 
-async def prepare_comfy_env(json_data):
+async def prepare_comfy_env(sync_item: dict):
     try:
-        print("prepare_environment start")
-
-        prepare_type = json_data['prepare_type']
+        print(f"prepare_environment start sync_item:{sync_item}")
+        prepare_type = sync_item['prepare_type']
         if prepare_type in ['default', 'models']:
             sync_s3_files_or_folders_to_local('models', '/opt/ml/code/models', False)
         if prepare_type in ['default', 'inputs']:
@@ -40,22 +39,22 @@ async def prepare_comfy_env(json_data):
         if prepare_type in ['default', 'nodes']:
             sync_s3_files_or_folders_to_local('nodes', '/opt/ml/code/custom_nodes', True)
         if prepare_type == 'custom':
-            sync_source_path = json_data['s3_source_path']
-            local_target_path = json_data['local_target_path']
+            sync_source_path = sync_item['s3_source_path']
+            local_target_path = sync_item['local_target_path']
             if not sync_source_path or not local_target_path:
                 print("s3_source_path and local_target_path should not be empty")
             else:
                 sync_s3_files_or_folders_to_local(sync_source_path,
                                                   f'/opt/ml/code/{local_target_path}', False)
         elif prepare_type == 'other':
-            sync_script = json_data['sync_script']
+            sync_script = sync_item['sync_script']
             print("sync_script")
-            if sync_script:
-                # sync_script.startswith('s5cmd') 不允许
-                if sync_script.startswith("pip install") or sync_script.startswith("apt-get"):
-                    os.system(sync_script)
+            # sync_script.startswith('s5cmd') 不允许
+            if sync_script and (sync_script.startswith("pip install") or sync_script.startswith("apt-get")
+                                or sync_script.startswith("os.environ")):
+                os.system(sync_script)
 
-        need_reboot = json_data['need_reboot']
+        need_reboot = sync_item['need_reboot']
         if need_reboot and need_reboot.lower() == 'true':
             os.environ['NEED_REBOOT'] = 'true'
         else:
@@ -155,7 +154,35 @@ async def invocations(request):
         return web.Response(status=500)
 
 
-def get_last_ddb_sync_record():
+async def check_and_get_last_ddb_sync_record():
+    sync_response = sync_table.query(
+        KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
+        Limit=1,
+        ScanIndexForward=False
+    )
+    latest_sync_record = sync_response['Items'][0] if 'Items' in sync_response and len(sync_response['Items']) > 0 else None
+    if latest_sync_record:
+        print("sync latest record:", latest_sync_record)
+        key_condition_expression = ('endpoint_name = :endpoint_name_val AND gen_instance_id = :gen_instance_id_val '
+                                    'AND last_sync_request_id = :last_sync_request_id_val')
+        expression_attribute_values = {
+            ':endpoint_name_val': ENDPOINT_NAME,
+            ':gen_instance_id_val': GEN_INSTANCE_ID,
+            ':last_sync_request_id_val': latest_sync_record['last_sync_request_id']
+        }
+        instance_monitor_response = instance_monitor_table.query(
+            KeyConditionExpression=key_condition_expression,
+            ExpressionAttributeValues=expression_attribute_values
+        )
+        items = instance_monitor_response.get('Items', [])
+
+        return True, latest_sync_record
+    else:
+        print("no sync record fund")
+        return False, None
+
+
+async def get_last_sync_instance_record():
     response = sync_table.query(
         KeyConditionExpression=Key('endpoint_name').eq(ENDPOINT_NAME),
         Limit=1,
@@ -184,6 +211,23 @@ def sync_ddb_instance_monitor():
         print("no sync record fund")
 
 
+def update_sync_instance_count():
+    print(f"Updating DynamoDB {field_name} to {field_value} for: {endpoint_deployment_job_id}")
+    # 更新记录
+    update_expression = "SET sync_status = :status, endpoint_snapshot = :snapshot"
+    expression_attribute_values = {
+        ":status": new_sync_status,
+        ":snapshot": new_endpoint_snapshot
+    }
+
+    sync_table.update_item(
+        Key={'endpoint_name': endpoint_name},
+        UpdateExpression=update_expression,
+        ExpressionAttributeValues=expression_attribute_values
+    )
+    print("记录更新成功")
+
+
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance():
     print(f"sync_instance start ！！ {datetime.datetime.now()}")
@@ -199,11 +243,11 @@ async def sync_instance():
         created_at = os.environ.get('CREATED_AT')
 
         # 定时获取ddb的sync记录 并将最新id的写入到环境变量中 比较 如果变更 那么就执行sync逻辑 否则继续轮训
-        syc_record = get_last_ddb_sync_record()
+        need_sync, syc_record = check_and_get_last_ddb_sync_record()
         if not syc_record:
             return True
-        if syc_record['']:
-            return True
+        await prepare_comfy_env(syc_record)
+        # update ddb instance and sync count
 
         return web.Response(status=200)
     except Exception as e:

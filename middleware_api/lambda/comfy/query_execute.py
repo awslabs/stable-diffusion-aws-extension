@@ -28,7 +28,6 @@ class QueryExecuteEvent:
 
 
 def generate_presigned_url(bucket, key, expiration=3600):
-    """Generate a presigned URL for the S3 object."""
     s3_client = boto3.client('s3', region_name=region)
     try:
         response = s3_client.generate_presigned_url(

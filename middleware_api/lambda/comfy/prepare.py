@@ -62,7 +62,6 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
         endpoint_name=event.endpoint_name,
         endpoint_id=endpoint_info.EndpointDeploymentJobId,
         instance_count=endpoint_info.current_instance_count,
-        sync_instance_count=0,
         prepare_type=event.prepare_type,
         need_reboot=event.need_reboot,
         s3_source_path=event.s3_source_path,
@@ -70,7 +69,8 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
         sync_script=event.sync_script,
         endpoint_snapshot=json.dumps(endpoint_info),
         sync_status=ComfySyncStatus.INIT,
-        request_time=datetime.now(),
+        request_time=int(datetime.now().timestamp()),
+        request_time_str=str(datetime.now()),
     )
     save_sync_ddb_resp = ddb_service.put_items(sync_table, entries=sync_job.__dict__)
     logger.info(str(save_sync_ddb_resp))
