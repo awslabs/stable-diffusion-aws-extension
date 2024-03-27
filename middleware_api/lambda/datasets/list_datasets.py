@@ -3,15 +3,17 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok, bad_request, forbidden
+from common.response import ok, forbidden
 from common.util import get_query_param
 from libs.data_types import DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
     response_error, decode_last_key, encode_last_key
 
+tracer = Tracer()
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -24,6 +26,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 # GET /datasets
+@tracer.capture_lambda_handler
 def handler(event, context):
     try:
         logger.info(json.dumps(event))

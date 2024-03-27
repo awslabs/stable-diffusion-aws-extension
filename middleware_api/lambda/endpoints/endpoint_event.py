@@ -4,11 +4,13 @@ import os
 from datetime import datetime
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus, EndpointType
 
+tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,7 @@ cool_down_period = 15 * 60  # 15 minutes
 
 
 # lambda: handle sagemaker events
+@tracer.capture_lambda_handler
 def handler(event, context):
     logger.info(json.dumps(event))
     endpoint_name = event['detail']['EndpointName']
@@ -96,7 +99,9 @@ def check_and_enable_autoscaling(item, variant_name):
         logger.info(f'autoscaling_enabled is {autoscaling}, no need to enable autoscaling')
 
 
+@tracer.capture_method
 def enable_autoscaling(item, variant_name):
+    tracer.put_annotation("variant_name", variant_name)
     endpoint_name = item['endpoint_name']['S']
     endpoint_type = item['endpoint_type']['S']
     max_instance_number = int(item['max_instance_number']['N'])
@@ -234,7 +239,9 @@ def enable_autoscaling_async(item, variant_name):
     logger.info(f"Autoscaling has been enabled for the endpoint: {endpoint_name}")
 
 
+@tracer.capture_method
 def enable_autoscaling_real_time(item, variant_name):
+    tracer.put_annotation("variant_name", variant_name)
     target_value = 5
     endpoint_name = item['endpoint_name']['S']
 

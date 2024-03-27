@@ -5,14 +5,16 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 import boto3
+from aws_lambda_powertools import Tracer
 
-from create_checkpoint import check_ckpt_name_unique
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, bad_request, accepted
+from create_checkpoint import check_ckpt_name_unique
 from libs.common_tools import complete_multipart_upload
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.utils import response_error
 
+tracer = Tracer()
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 rename_lambda_name = os.environ.get('RENAME_LAMBDA_NAME')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
@@ -32,6 +34,7 @@ class UpdateCheckPointEvent:
 
 
 # PUT /checkpoints/{id}
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     try:
         logger.info(f'event: {raw_event}')
@@ -59,6 +62,7 @@ def handler(raw_event, context):
         return response_error(e)
 
 
+@tracer.capture_method
 def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if event.multi_parts_tags is None or len(event.multi_parts_tags) == 0:
         return bad_request(message='multi parts tags is empty')
@@ -85,6 +89,7 @@ def update_status(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     return ok(data=data)
 
 
+@tracer.capture_method
 def update_name(event: UpdateCheckPointEvent, checkpoint: CheckPoint):
     if checkpoint.checkpoint_status != CheckPointStatus.Active:
         return bad_request(message='only active can update name')

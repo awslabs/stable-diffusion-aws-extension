@@ -3,9 +3,10 @@ import logging
 import os
 
 import boto3
-
+from aws_lambda_powertools import Tracer
 from response import ok
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -97,6 +98,7 @@ def read_messages_from_dynamodb(prompt_id):
         return []
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     logger.info(f"get msg start... Received event: {event}")
     logger.info(f"Received ctx: {ctx}")

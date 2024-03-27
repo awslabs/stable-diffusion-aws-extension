@@ -3,6 +3,7 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 from boto3.dynamodb.conditions import Key
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -10,6 +11,8 @@ from common.response import ok
 from common.util import get_query_param
 from libs.data_types import InferenceJob
 from libs.utils import get_user_roles, check_user_permissions, decode_last_key, encode_last_key, response_error
+
+tracer = Tracer()
 
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
@@ -24,6 +27,7 @@ table = ddb.Table(inference_table_name)
 
 
 # GET /inferences?last_evaluated_key=xxx&limit=10
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     try:
         logger.info(json.dumps(event))

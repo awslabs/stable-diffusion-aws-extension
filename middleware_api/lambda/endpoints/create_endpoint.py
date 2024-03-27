@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
@@ -16,6 +17,7 @@ from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
+tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
 aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
@@ -87,6 +89,7 @@ def get_docker_image_uri(event: CreateEndpointEvent):
 
 
 # POST /endpoints
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
@@ -194,8 +197,9 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+@tracer.capture_method
 def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
-
+    tracer.put_annotation('endpoint_name', endpoint_name)
     image_url = get_docker_image_uri(event)
 
     primary_container = {
@@ -241,6 +245,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
     ]
 
 
+@tracer.capture_method
 def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
                                         instance_type):
     production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
@@ -254,6 +259,7 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+@tracer.capture_method
 def _create_endpoint_config_serverless(endpoint_config_name):
     production_variants = [
         {
@@ -271,6 +277,7 @@ def _create_endpoint_config_serverless(endpoint_config_name):
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
+@tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type):
     async_inference_config = {

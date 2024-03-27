@@ -4,12 +4,15 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import get_permissions_by_username, permissions_check, response_error, get_user_name
 
+tracer = Tracer()
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -27,6 +30,7 @@ class UpsertRoleEvent:
     creator: str = ""
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))

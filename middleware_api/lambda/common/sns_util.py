@@ -2,10 +2,11 @@ import json
 
 import boto3
 from aiohttp import ClientError
+from aws_lambda_powertools import Tracer
 
-from libs.utils import log_execution_time
-
+tracer = Tracer()
 sns = boto3.client('sns')
+
 
 def get_topic_arn(sns_topic):
     response = sns.list_topics()
@@ -15,7 +16,7 @@ def get_topic_arn(sns_topic):
     return None
 
 
-@log_execution_time
+@tracer.capture_method
 def send_message_to_sns(message_json, sns_topic):
     try:
         sns_topic_arn = get_topic_arn(sns_topic)

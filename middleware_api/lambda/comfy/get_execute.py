@@ -2,10 +2,11 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
-
 from response import ok
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -47,6 +48,7 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
     return {'prompt_id': prompt_id, 'image_video_data': image_video_dict}
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     logger.info(f"get execute start... Received event: {event}")
     logger.info(f"Received ctx: {ctx}")
