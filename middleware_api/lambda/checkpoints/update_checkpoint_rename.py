@@ -8,7 +8,7 @@ from common.response import ok
 from libs.utils import response_error
 
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)

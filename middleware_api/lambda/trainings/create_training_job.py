@@ -30,7 +30,7 @@ from libs.data_types import (
 )
 from libs.utils import get_user_roles, permissions_check, response_error, log_json
 
-bucket_name = os.environ.get("S3_BUCKET")
+bucket_name = os.environ.get("S3_BUCKET_NAME")
 train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")

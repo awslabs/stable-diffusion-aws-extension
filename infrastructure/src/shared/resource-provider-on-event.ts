@@ -37,7 +37,7 @@ const iamClient = new IAMClient({});
 const {
   AWS_REGION,
   ROLE_ARN,
-  BUCKET_NAME,
+  S3_BUCKET_NAME,
 } = process.env;
 const accountId = ROLE_ARN?.split(':')[4] || '';
 export const INFER_INDEX_NAME = 'taskType-createTime-index';
@@ -122,8 +122,8 @@ function response(event: Event, isComplete: boolean) {
 }
 
 function getBucketName() {
-  if (BUCKET_NAME) {
-    return BUCKET_NAME;
+  if (S3_BUCKET_NAME) {
+    return S3_BUCKET_NAME;
   }
 
   return `ESD-${accountId}-${AWS_REGION}`;
