@@ -81,13 +81,6 @@ export class Middleware extends Stack {
       allowedValues: ['ERROR', 'INFO', 'DEBUG'],
     });
 
-    const ecrImageTagParam = new CfnParameter(this, 'EcrImageTag', {
-      type: 'String',
-      description: 'Inference ECR Image tag',
-      default: ECR_IMAGE_TAG,
-      allowedValues: [ECR_IMAGE_TAG],
-    });
-
     const isChinaCondition = new CfnCondition(this, 'IsChina', { expression: Fn.conditionEquals(Aws.PARTITION, 'aws-cn') });
 
     const accountId = Fn.conditionIf(
@@ -106,11 +99,10 @@ export class Middleware extends Stack {
       'ResourcesProvider',
       {
         // when props updated, resource manager will be executed
-        // ecrImageTag is not used in the resource manager
         // but if it changes, the resource manager will be executed with 'Update'
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
-        ecrImageTag: ecrImageTagParam.valueAsString,
+        esdVersion: ECR_IMAGE_TAG,
       },
     );
 
@@ -208,7 +200,6 @@ export class Middleware extends Stack {
       routers: restApi.routers,
       // env: devEnv,
       s3Bucket: s3Bucket,
-      ecrImageTag: ecrImageTagParam,
       configTable: ddbComfyTables.configTable,
       executeTable: ddbComfyTables.executeTable,
       syncTable: ddbComfyTables.syncTable,
@@ -239,7 +230,6 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       logLevel: logLevel,
       accountId: accountId,
-      ecrImageTag: ecrImageTagParam,
       queue: sqsStack.queue,
     },
     );
@@ -286,6 +276,11 @@ export class Middleware extends Stack {
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
+
+    new CfnOutput(this, 'EsdVersion', {
+      value: ECR_IMAGE_TAG,
+      description: 'ESD Version',
+    });
 
     // Adding Outputs for apiGateway and s3Bucket
     new CfnOutput(this, 'ApiGatewayUrl', {
