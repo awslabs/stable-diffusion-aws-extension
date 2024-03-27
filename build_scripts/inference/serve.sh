@@ -68,18 +68,18 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   cost=$((end_at-start_at))
   echo "decompress file: $cost seconds"
 
-  cd /home/ubuntu/stable-diffusion-webui/
-
   # remove soft link
   rm -rf /home/ubuntu/stable-diffusion-webui/models
   s5cmd --log=error sync "s3://$BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
-  mkdir -p /home/ubuntu/stable-diffusion-webui/models/VAE
-  mkdir -p /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion
-  mkdir -p /home/ubuntu/stable-diffusion-webui/models/Lora
-  mkdir -p /home/ubuntu/stable-diffusion-webui/models/hypernetworks
+  cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
-  source /home/ubuntu/stable-diffusion-webui/venv/bin/activate
+  mkdir -p models/VAE
+  mkdir -p models/Stable-diffusion
+  mkdir -p models/Lora
+  mkdir -p models/hypernetworks
+
+  source venv/bin/activate
 
   echo "---------------------------------------------------------------------------------"
   echo "accelerate launch..."
@@ -88,64 +88,50 @@ fi
 
 echo "Not found files in S3, just install the environment..."
 
-cd /home/ubuntu
-curl -sSL "$INSTALL_SCRIPT" | bash;
+install_esd(){
+  cd /home/ubuntu || exit 1
 
-# if $EXTENSIONS is not empty, it will be executed
-if [ -n "$EXTENSIONS" ]; then
-    echo "---------------------------------------------------------------------------------"
-    echo "install extensions..."
-    cd /home/ubuntu/stable-diffusion-webui/extensions/ || exit 1
+  curl -sSL "$INSTALL_SCRIPT" | bash;
 
-    read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
+  # if $EXTENSIONS is not empty, it will be executed
+  if [ -n "$EXTENSIONS" ]; then
+      echo "---------------------------------------------------------------------------------"
+      echo "install extensions..."
+      cd /home/ubuntu/stable-diffusion-webui/extensions/ || exit 1
 
-    for git_repo in "${array[@]}"; do
-      IFS='#' read -r -a repo <<< "$git_repo"
+      read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
 
-      git_repo=${repo[0]}
-      repo_name=$(basename -s .git "$git_repo")
-      repo_branch=${repo[1]}
-      commit_sha=${repo[2]}
+      for git_repo in "${array[@]}"; do
+        IFS='#' read -r -a repo <<< "$git_repo"
 
-      echo "rm -rf $repo_name for install $git_repo"
-      rm -rf $repo_name
+        git_repo=${repo[0]}
+        repo_name=$(basename -s .git "$git_repo")
+        repo_branch=${repo[1]}
+        commit_sha=${repo[2]}
 
-      start_at=$(date +%s)
+        echo "rm -rf $repo_name for install $git_repo"
+        rm -rf $repo_name
 
-      echo "git clone $git_repo"
-      git clone "$git_repo"
+        start_at=$(date +%s)
 
-      cd $repo_name || exit 1
+        echo "git clone $git_repo"
+        git clone "$git_repo"
 
-      echo "git checkout $repo_branch"
-      git checkout "$repo_branch"
+        cd $repo_name || exit 1
 
-      echo "git reset --hard $commit_sha"
-      git reset --hard "$commit_sha"
-      cd ..
+        echo "git checkout $repo_branch"
+        git checkout "$repo_branch"
 
-      end_at=$(date +%s)
-      cost=$((end_at-start_at))
-      echo "git clone $git_repo: $cost seconds"
-    done
-fi
+        echo "git reset --hard $commit_sha"
+        git reset --hard "$commit_sha"
+        cd ..
 
-echo "---------------------------------------------------------------------------------"
-echo "creating venv and install packages..."
-
-cd /home/ubuntu/stable-diffusion-webui
-python3 -m venv venv
-
-source venv/bin/activate
-
-python -m pip install --upgrade pip
-python -m pip install accelerate
-python -m pip install onnxruntime-gpu
-python -m pip install insightface==0.7.3
-
-export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
-export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
-export XFORMERS_PACKAGE="xformers==0.0.20"
+        end_at=$(date +%s)
+        cost=$((end_at-start_at))
+        echo "git clone $git_repo: $cost seconds"
+      done
+  fi
+}
 
 remove_unused(){
   echo "rm $1"
@@ -239,7 +225,23 @@ export AWS_REGION=$AWS_DEFAULT_REGION
 echo "---------------------------------------------------------------------------------"
 nvidia-smi
 
-cd /home/ubuntu/stable-diffusion-webui
+echo "---------------------------------------------------------------------------------"
+echo "creating venv and install packages..."
+
+cd /home/ubuntu/stable-diffusion-webui || exit 1
+python3 -m venv venv
+
+source venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install accelerate
+python -m pip install onnxruntime-gpu
+python -m pip install insightface==0.7.3
+
+export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
+export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
+export XFORMERS_PACKAGE="xformers==0.0.20"
+
 echo "---------------------------------------------------------------------------------"
 echo "install webui..."
 accelerate launch --num_cpu_threads_per_process=$cup_core_nums launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --exit
