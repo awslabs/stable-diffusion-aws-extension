@@ -48,11 +48,12 @@ nvidia-smi
 echo "---------------------------------------------------------------------------------"
 
 install_esd(){
-  export INSTALL_SCRIPT=https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install.sh
+  echo "---------------------------------------------------------------------------------"
+  echo "install esd..."
 
   cd /home/ubuntu || exit 1
 
-  curl -sSL "$INSTALL_SCRIPT" | bash;
+  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install.sh" | bash;
 
   # if $EXTENSIONS is not empty, it will be executed
   if [ -n "$EXTENSIONS" ]; then
@@ -187,6 +188,8 @@ set_conda(){
 }
 
 build_for_launch(){
+  install_esd
+
   echo "---------------------------------------------------------------------------------"
   echo "creating venv and install packages..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
@@ -204,8 +207,8 @@ build_for_launch(){
   export XFORMERS_PACKAGE="xformers==0.0.20"
 
   echo "---------------------------------------------------------------------------------"
-  echo "install webui..."
-  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --disable-nan-check --no-tests --exit
+  echo "build for launch..."
+  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --disable-nan-check --exit
 }
 
 accelerate_launch(){
@@ -213,7 +216,7 @@ accelerate_launch(){
   echo "accelerate launch..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
-  accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check --no-tests
+  accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
 launch_from_s3(){
