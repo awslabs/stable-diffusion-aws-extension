@@ -10,7 +10,7 @@ import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
-import { ECR_VERSION, STACK_ID } from './shared/const';
+import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
 import { Inference } from './shared/inference';
@@ -20,6 +20,7 @@ import { ResourceWaiter } from './shared/resource-waiter';
 import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
+import { ECR_VERSION } from './shared/version';
 
 const app = new App();
 
