@@ -22,10 +22,10 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-ECR_IMAGE_TAG = os.environ.get("ECR_IMAGE_TAG")
 QUEUE_URL = os.environ.get('QUEUE_URL')
 SYNC_TABLE = os.environ.get('SYNC_TABLE')
 INSTANCE_MONITOR_TABLE = os.environ.get('INSTANCE_MONITOR_TABLE')
+ECR_VERSION = os.environ.get("ECR_VERSION")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -209,7 +209,7 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'QUEUE_URL': QUEUE_URL or '',
             'SYNC_TABLE': SYNC_TABLE or '',
             'INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
-            'ECR_IMAGE_TAG': ECR_IMAGE_TAG,
+            'ESD_VERSION': ECR_VERSION,
         },
     }
 
