@@ -1,4 +1,4 @@
-import { CfnParameter, CustomResource, Duration } from 'aws-cdk-lib';
+import {aws_lambda, CfnParameter, CustomResource, Duration} from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -31,6 +31,7 @@ export class ResourceWaiter extends Construct {
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 4048,
+      tracing: aws_lambda.Tracing.ACTIVE,
     });
 
     const provider = new Provider(scope, 'ResourcesWaiterProvider', {

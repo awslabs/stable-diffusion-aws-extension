@@ -189,6 +189,7 @@ export class ComfyApiStack extends Construct {
       handler: 'handler',
       index: 'execute_async_events.py',
       memorySize: 10240,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {

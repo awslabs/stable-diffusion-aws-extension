@@ -98,6 +98,7 @@ export class GetDatasetApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,

@@ -6,6 +6,9 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+from aws_lambda_powertools import Tracer
+from aws_lambda_powertools.utilities.typing import LambdaContext
+
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
@@ -27,6 +30,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+tracer = Tracer()
+
 
 @dataclasses.dataclass
 class CreateInferenceEvent:
@@ -41,7 +46,8 @@ class CreateInferenceEvent:
 
 
 # POST /inferences
-def handler(raw_event, context):
+@tracer.capture_lambda_handler
+def handler(raw_event: dict, context: LambdaContext):
     try:
         logger.info(json.dumps(raw_event, default=str))
         request_id = context.aws_request_id

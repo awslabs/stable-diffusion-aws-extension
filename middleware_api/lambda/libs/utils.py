@@ -2,9 +2,10 @@ import base64
 import json
 import logging
 import os
+import time
 
 import boto3
-import time
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -12,6 +13,7 @@ from common.excepts import ForbiddenException, UnauthorizedException, NotFoundEx
 from common.response import unauthorized, forbidden, not_found, bad_request
 from libs.data_types import PARTITION_KEYS, User, Role
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -154,8 +156,11 @@ def get_user_name(event: any):
 
 
 @log_execution_time
+@tracer.capture_method
 def permissions_check(event: any, permissions: [str]):
     username = get_user_name(event)
+
+    tracer.put_annotation(key="username", value=username)
 
     if not user_table:
         raise Exception("MULTI_USER_TABLE not set")

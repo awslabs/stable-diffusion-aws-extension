@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import urllib.parse
 from decimal import Decimal
 from typing import Optional, Any
 
@@ -75,6 +76,7 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
 
     body = {
         'statusCode': status_code,
+        'debug': get_debug(),
     }
 
     if data:
@@ -91,6 +93,35 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
     logger.info(payload['body'])
 
     return payload
+
+
+def get_debug():
+    aws_lambda_log_group_name = os.environ.get('AWS_LAMBDA_LOG_GROUP_NAME')
+    aws_lambda_function_name = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+    aws_lambda_log_stream_name = os.environ.get('AWS_LAMBDA_LOG_STREAM_NAME')
+    _x_amzn_trace_id = os.environ.get('_X_AMZN_TRACE_ID')
+    region = os.environ.get('AWS_DEFAULT_REGION')
+
+    log_group_name = urllib.parse.quote(aws_lambda_log_group_name, safe='')
+    log_stream_name = urllib.parse.quote(aws_lambda_log_stream_name, safe='')
+
+    log_url = (f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
+               f"#logsV2:log-groups/log-group/{log_group_name}/log-events/{log_stream_name}")
+
+    function_url = (f"https://{region}.console.aws.amazon.com/lambda/home?region={region}"
+                    f"#/functions/{aws_lambda_function_name}")
+
+    trace_url = None
+    if _x_amzn_trace_id:
+        trace_id = _x_amzn_trace_id.split(';')[0].split('=')[1]
+        trace_url = (f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
+                     f"#xray:traces/{trace_id}?~(query~()~context~())")
+
+    return {
+        'function_url': function_url,
+        'log_url': log_url,
+        'trace_url': trace_url,
+    }
 
 
 def ok(data=None,

@@ -123,6 +123,7 @@ export class StartInferenceJobApi {
       index: 'start_inference_job.py',
       handler: 'handler',
       memorySize: 10240,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),

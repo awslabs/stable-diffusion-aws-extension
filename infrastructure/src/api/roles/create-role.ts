@@ -127,6 +127,7 @@ export class CreateRoleApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MULTI_USER_TABLE: this.multiUserTable.tableName,
       },

@@ -8,3 +8,5 @@ pydantic~=1.10.13
 Pillow==10.2.0
 tomli==2.0.1
 tomli-w==1.0.0
+aws-lambda-powertools==2.35.1
+aws_xray_sdk==2.13.0

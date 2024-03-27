@@ -132,7 +132,8 @@ export class GetSyncMsgApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MSG_TABLE: this.msgTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,

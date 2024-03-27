@@ -3,6 +3,7 @@ import logging
 import os
 from datetime import datetime
 
+from aws_lambda_powertools import Tracer
 from sagemaker import Predictor
 from sagemaker.deserializers import JSONDeserializer
 from sagemaker.predictor_async import AsyncPredictor
@@ -16,7 +17,7 @@ from get_inference_job import get_infer_data
 from inference_libs import parse_sagemaker_result, update_inference_job_table
 from libs.data_types import InferenceJob, InvocationsRequest
 from libs.enums import EndpointType
-from libs.utils import response_error, permissions_check, log_execution_time, log_json
+from libs.utils import response_error, permissions_check, log_json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -25,10 +26,12 @@ inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+tracer = Tracer()
 predictors = {}
 
 
-def handler(event, _):
+@tracer.capture_lambda_handler
+def handler(event: dict, _):
     try:
         logger.info(json.dumps(event))
         _filter = {}
@@ -56,6 +59,7 @@ def handler(event, _):
         return response_error(e)
 
 
+@tracer.capture_method
 def inference_start(job: InferenceJob, username):
     endpoint_name = job.params['sagemaker_inference_endpoint_name']
     models = {}
@@ -83,7 +87,9 @@ def inference_start(job: InferenceJob, username):
     return async_inference(payload, job, endpoint_name)
 
 
+@tracer.capture_method
 def real_time_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
+    tracer.put_annotation(key="InferenceJobId", value=job.InferenceJobId)
     sagemaker_out = predictor_real_time_predict(endpoint_name=endpoint_name,
                                                 data=payload.__dict__,
                                                 inference_id=job.InferenceJobId,
@@ -98,8 +104,9 @@ def real_time_inference(payload: InvocationsRequest, job: InferenceJob, endpoint
     return get_infer_data(job.InferenceJobId)
 
 
-@log_execution_time
+@tracer.capture_method
 def get_real_time_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
     if endpoint_name in predictors:
         return predictors[endpoint_name]
 
@@ -112,8 +119,9 @@ def get_real_time_predict_client(endpoint_name):
     return predictor
 
 
-@log_execution_time
+@tracer.capture_method
 def get_async_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
     if endpoint_name in predictors:
         return predictors[endpoint_name]
 
@@ -127,20 +135,23 @@ def get_async_predict_client(endpoint_name):
     return predictor
 
 
-@log_execution_time
+@tracer.capture_method
 def predictor_real_time_predict(endpoint_name, data, inference_id):
     return get_real_time_predict_client(endpoint_name).predict(data=data, inference_id=inference_id)
 
 
-@log_execution_time
+@tracer.capture_method
 def predictor_async_predict(endpoint_name, data, inference_id):
+    tracer.put_annotation(key="inference_id", value=inference_id)
     initial_args = {"InvocationTimeoutSeconds": 3600}
     return get_async_predict_client(endpoint_name).predict_async(data=data,
                                                                  initial_args=initial_args,
                                                                  inference_id=inference_id)
 
 
+@tracer.capture_method
 def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
     prediction = predictor_async_predict(endpoint_name=endpoint_name,
                                          data=payload.__dict__,
                                          inference_id=job.InferenceJobId)
