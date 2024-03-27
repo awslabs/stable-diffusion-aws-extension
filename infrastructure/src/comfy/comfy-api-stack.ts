@@ -13,7 +13,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
@@ -21,7 +20,6 @@ import { GetSyncMsgApi, GetSyncMsgApiProps } from '../api/comfy/get_sync_msg';
 import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
-import { ECR_VERSION } from '../shared/const';
 import { ResourceProvider } from '../shared/resource-provider';
 
 export interface ComfyInferenceStackProps extends StackProps {
@@ -67,10 +65,7 @@ export class ComfyApiStack extends Construct {
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
 
-    const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + ECR_VERSION;
     const srcRoot = '../middleware_api/lambda';
-
-    const model_data_url = 's3://' + props.s3Bucket.bucketName + '/data/model.tar.gz';
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
@@ -88,7 +83,6 @@ export class ComfyApiStack extends Construct {
     inferenceLambdaRole.addManagedPolicy(
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
-
 
     new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
       httpMethod: 'POST',
@@ -113,20 +107,6 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
       logLevel: props.logLevel,
     });
-
-    new CreateSageMakerEndpoint(scope, 'ComfyEndpoint', <CreateSageMakerEndpointProps>{
-      dockerImageUrl: srcImg,
-      modelDataUrl: model_data_url,
-      s3Bucket: props.s3Bucket,
-      machineType: 'ml.g4dn.2xlarge',
-      rootSrc: srcRoot,
-      configTable: this.configTable,
-      syncTable: this.syncTable,
-      commonLayer: this.layer,
-      queue: this.queue,
-      logLevel: props.logLevel,
-    });
-
 
     // POST /execute
     new ExecuteApi(
