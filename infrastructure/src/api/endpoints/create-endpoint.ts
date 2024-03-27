@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_iam, aws_sqs, CfnParameter, Duration } from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_iam, aws_sqs, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -12,11 +12,10 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_VERSION } from '../../shared/version';
+import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -29,12 +28,10 @@ export interface CreateEndpointApiProps {
   instanceMonitorTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   queue: aws_sqs.Queue;
-  logLevel: CfnParameter;
   accountId: ICfnRuleConditionExpression;
 }
 
@@ -52,12 +49,10 @@ export class CreateEndpointApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly accountId: ICfnRuleConditionExpression;
-  private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -70,12 +65,10 @@ export class CreateEndpointApi {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.s3Bucket = props.s3Bucket;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.queue = props.queue;
-    this.logLevel = props.logLevel;
     this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -300,16 +293,13 @@ export class CreateEndpointApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
         QUEUE_URL: this.queue.queueUrl,
         SYNC_TABLE: this.syncTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_VERSION}`,
-        ECR_VERSION: ECR_VERSION,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

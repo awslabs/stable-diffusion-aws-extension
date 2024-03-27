@@ -8,7 +8,7 @@ import requests
 from checkpoints.create_checkpoint import get_real_url
 
 os.environ.setdefault('AWS_PROFILE', 'aws_profile')
-os.environ.setdefault('S3_BUCKET', 'bucket')
+os.environ.setdefault('S3_BUCKET_NAME', 'bucket')
 os.environ.setdefault('DYNAMODB_TABLE', 'ModelTable')
 os.environ.setdefault('MODEL_TABLE', 'ModelTable')
 os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')

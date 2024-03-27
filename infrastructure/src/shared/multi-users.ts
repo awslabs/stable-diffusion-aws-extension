@@ -1,5 +1,5 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_kms, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_dynamodb, aws_kms, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import { Construct } from 'constructs';
 import { KEY_ALIAS } from './const';
@@ -15,7 +15,6 @@ export interface MultiUsersStackProps extends StackProps {
   multiUserTable: aws_dynamodb.Table;
   routers: { [key: string]: Resource };
   commonLayer: PythonLayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class MultiUsers {
@@ -37,7 +36,6 @@ export class MultiUsers {
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
 
     // GET /roles
@@ -47,7 +45,6 @@ export class MultiUsers {
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
 
     // POST /users
@@ -58,7 +55,6 @@ export class MultiUsers {
       passwordKey: this.passwordKeyAlias,
       router: props.routers.users,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
     createUserApi.model.node.addDependency(createRoleApi.model);
     createUserApi.requestValidator.node.addDependency(createRoleApi.requestValidator);
@@ -70,7 +66,6 @@ export class MultiUsers {
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
     deleteUsersApi.model.node.addDependency(createUserApi.model);
     deleteUsersApi.requestValidator.node.addDependency(createUserApi.requestValidator);
@@ -83,7 +78,6 @@ export class MultiUsers {
       router: props.routers.users,
       srcRoot: this.srcRoot,
       passwordKey: this.passwordKeyAlias,
-      logLevel: props.logLevel,
     });
 
     // DELETE /roles
@@ -93,7 +87,6 @@ export class MultiUsers {
       multiUserTable: props.multiUserTable,
       httpMethod: 'DELETE',
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     },
     );
     deleteRolesApi.model.node.addDependency(deleteUsersApi.model);

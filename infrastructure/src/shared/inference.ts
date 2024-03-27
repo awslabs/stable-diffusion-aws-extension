@@ -1,6 +1,6 @@
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_sns, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_sns, Duration, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -35,7 +35,6 @@ export interface InferenceProps extends StackProps {
   sd_endpoint_deployment_job_table: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
 }
@@ -61,7 +60,6 @@ export class Inference {
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
         multiUserTable: props.multiUserTable,
-        logLevel: props.logLevel,
       },
     );
 
@@ -76,10 +74,8 @@ export class Inference {
         router: inferV2Router,
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
-
 
     new ListInferencesApi(
       scope, 'ListInferenceJobs',
@@ -91,10 +87,8 @@ export class Inference {
         httpMethod: 'GET',
         router: props.routers.inferences,
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
-
 
     const ddbStatement = new iam.PolicyStatement({
       actions: [
@@ -147,7 +141,6 @@ export class Inference {
       httpMethod: 'GET',
       s3Bucket: props.s3_bucket,
       srcRoot: srcRoot,
-      logLevel: props.logLevel,
     },
     );
 
@@ -160,7 +153,6 @@ export class Inference {
         httpMethod: 'DELETE',
         s3Bucket: props.s3_bucket,
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
     deleteInferenceJobsApi.model.node.addDependency(createInferenceJobApi.model);
@@ -178,13 +170,11 @@ export class Inference {
         INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
         DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
-        S3_BUCKET_NAME: props?.s3_bucket.bucketName ?? '',
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION_NAME: Aws.REGION,
         SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,
         SNS_INFERENCE_ERROR: props.inferenceErrorTopic.topicName,
         NOTICE_SNS_TOPIC: props?.snsTopic.topicArn ?? '',
-        LOG_LEVEL: props.logLevel.valueAsString,
       },
       layers: [props.commonLayer],
       logRetention: RetentionDays.ONE_WEEK,
