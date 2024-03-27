@@ -276,6 +276,7 @@ export class Middleware extends Stack {
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;
     Tags.of(this).add('stackName', stackName);
+    Tags.of(this).add('version', ESD_VERSION);
 
     new CfnOutput(this, 'EsdVersion', {
       value: ESD_VERSION,

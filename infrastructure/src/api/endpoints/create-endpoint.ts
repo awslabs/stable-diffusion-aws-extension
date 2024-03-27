@@ -228,6 +228,10 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
           },
+          service_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['sd', 'comfy'],
+          },
           instance_type: {
             type: JsonSchemaType.STRING,
           },

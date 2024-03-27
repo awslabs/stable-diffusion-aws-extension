@@ -185,6 +185,7 @@ class EndpointDeploymentJob:
     owner_group_or_role: Optional[List[str]] = None
     min_instance_number: str = None
     custom_extensions: str = ""
+    service_type: str = ""
 
 
 # a copy of aws_extensions.models.InvocationsRequest

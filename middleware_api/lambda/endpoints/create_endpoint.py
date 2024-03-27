@@ -48,6 +48,8 @@ class CreateEndpointEvent:
     endpoint_type: str = None
     custom_docker_image_uri: str = None
     custom_extensions: str = ""
+    # service for: sd / comfy
+    service_type: str = "sd"
 
 
 def check_custom_extensions(event: CreateEndpointEvent):
@@ -120,8 +122,6 @@ def handler(raw_event, ctx):
         endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
         endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
-        image_url = get_docker_image_uri(event)
-
         model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
 
         s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
@@ -139,7 +139,7 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url, endpoint_name, endpoint_id, event)
+        _create_sagemaker_model(model_name, model_data_url, endpoint_name, endpoint_id, event)
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
@@ -179,7 +179,8 @@ def handler(raw_event, ctx):
             endpoint_type=event.endpoint_type,
             min_instance_number=event.min_instance_number,
             max_instance_number=event.max_instance_number,
-            custom_extensions=event.custom_extensions
+            custom_extensions=event.custom_extensions,
+            service_type=event.service_type,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
@@ -193,7 +194,10 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
-def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+
+    image_url = get_docker_image_uri(event)
+
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
@@ -210,6 +214,7 @@ def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endp
             'SYNC_TABLE': SYNC_TABLE or '',
             'INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
             'ESD_VERSION': ESD_VERSION,
+            'SERVICE_TYPE': event.service_type,
         },
     }
 
