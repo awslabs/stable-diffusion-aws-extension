@@ -11,7 +11,7 @@ export interface ResourceWaiterProps {
   resourceProvider: ResourceProvider;
   restApiGateway: RestApiGateway;
   apiKeyParam: CfnParameter;
-  timestamp?: string;
+  timestamp: string;
 }
 
 export class ResourceWaiter extends Construct {
@@ -45,6 +45,7 @@ export class ResourceWaiter extends Construct {
       properties: {
         apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
+        timestamp: props.timestamp,
       },
     });
 

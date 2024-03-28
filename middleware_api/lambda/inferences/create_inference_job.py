@@ -16,7 +16,7 @@ from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_json
 from start_inference_job import inference_start
 
 tracer = Tracer()
@@ -231,5 +231,7 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
 
         if len(available_endpoints) == 0:
             raise Exception(f'no available {inference_type} endpoints for user "{user_id}"')
+
+        log_json('available_endpoints', available_endpoints)
 
         return random.choice(available_endpoints)

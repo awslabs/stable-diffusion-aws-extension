@@ -78,7 +78,8 @@ export class ExecuteApi {
       resources: [
         this.configTable.tableArn,
         this.executeTable.tableArn,
-        this.endpointTable.tableArn,
+        `${this.endpointTable.tableArn}`,
+        `${this.endpointTable.tableArn}/*`,
       ],
     }));
 

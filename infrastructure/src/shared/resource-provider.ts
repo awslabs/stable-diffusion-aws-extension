@@ -7,9 +7,9 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
-  bucketName?: string;
-  esdVersion?: string;
-  timestamp?: string;
+  bucketName: string;
+  esdVersion: string;
+  timestamp: string;
 }
 
 export class ResourceProvider extends Construct {

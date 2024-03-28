@@ -28,11 +28,11 @@ endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
 
 
 @tracer.capture_method
-def get_endpoint_by_name(endpoint_name):
+def get_endpoint_by_name(endpoint_name: str):
     tracer.put_annotation(key="endpoint_name", value=endpoint_name)
 
     scan_kwargs = {
-        'IndexName': "taskType-createTime-index",
+        'IndexName': "endpoint_name-startTime-index",
         'KeyConditionExpression': Key('endpoint_name').eq(endpoint_name),
     }
 
