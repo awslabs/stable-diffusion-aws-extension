@@ -10,10 +10,18 @@ if [ -z "$S3_BUCKET_NAME" ]; then
   exit 1
 fi
 
+if [ -z "$SERVICE_TYPE" ]; then
+  echo "SERVICE_TYPE is not set"
+  exit 1
+fi
+
 export ESD_CODE_BRANCH="main"
 export WEBUI_PORT=8080
-export TAR_FILE="webui.tar"
-export S3_LOCATION="esd-$INSTANCE_TYPE-$ESD_VERSION"
+export TAR_FILE="esd.tar"
+export S3_LOCATION="esd-$SERVICE_TYPE-$INSTANCE_TYPE-$ESD_VERSION"
+if [ -n "$EXTENSIONS" ]; then
+    export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
+fi
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
   export ESD_CODE_BRANCH="dev"
@@ -24,10 +32,6 @@ if [[ $IMAGE_URL == *"dev"* ]]; then
       sleep 30
       exit 1
   fi
-fi
-
-if [ -n "$EXTENSIONS" ]; then
-    export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 fi
 
 cores=$(lscpu | grep "^Core(s) per socket:" | awk '{print $4}')
@@ -52,7 +56,7 @@ echo "--------------------------------------------------------------------------
 nvidia-smi
 echo "---------------------------------------------------------------------------------"
 
-install_esd(){
+sd_install(){
   echo "---------------------------------------------------------------------------------"
   echo "install esd..."
 
@@ -105,7 +109,7 @@ remove_unused(){
   rm -rf "$1"
 }
 
-remove_unused_list(){
+sd_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting big unused files..."
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
@@ -139,7 +143,7 @@ remove_unused_list(){
   done
 }
 
-listen_ready() {
+sd_listen_ready() {
   while true; do
     RESPONSE_CODE=$(curl -o /dev/null -s -w "%{http_code}\n" localhost:8080/ping)
     if [ "$RESPONSE_CODE" -eq 200 ]; then
@@ -192,8 +196,8 @@ set_conda(){
   export AWS_REGION=$AWS_DEFAULT_REGION
 }
 
-build_for_launch(){
-  install_esd
+sd_build_for_launch(){
+  sd_install
 
   echo "---------------------------------------------------------------------------------"
   echo "creating venv and install packages..."
@@ -216,7 +220,7 @@ build_for_launch(){
   python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --disable-nan-check --exit
 }
 
-accelerate_launch(){
+sd_accelerate_launch(){
   echo "---------------------------------------------------------------------------------"
   echo "accelerate launch..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
@@ -224,7 +228,7 @@ accelerate_launch(){
   accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
-launch_from_s3(){
+sd_launch_from_s3(){
     start_at=$(date +%s)
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$S3_LOCATION/*" /home/ubuntu/
     end_at=$(date +%s)
@@ -252,22 +256,22 @@ launch_from_s3(){
     mkdir -p models/Lora
     mkdir -p models/hypernetworks
 
-    accelerate_launch
+    sd_accelerate_launch
 }
 
-launch_from_local(){
+sd_launch_from_local(){
   set_conda
-  build_for_launch
-  remove_unused_list
-  listen_ready &
-  accelerate_launch
+  sd_build_for_launch
+  sd_remove_unused_list
+  sd_listen_ready &
+  sd_accelerate_launch
 }
 
 echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$S3_LOCATION"; then
-  launch_from_s3
+  if [ "$SERVICE_TYPE" == "sd" ]; then sd_launch_from_s3; else sd_launch_from_s3; fi
 fi
 
 echo "No files in S3, just install the environment and launch from local..."
-launch_from_local
+if [ "$SERVICE_TYPE" == "sd" ]; then sd_launch_from_local; else sd_launch_from_local; fi
