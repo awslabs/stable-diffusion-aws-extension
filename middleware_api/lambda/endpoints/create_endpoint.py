@@ -41,7 +41,6 @@ class CreateEndpointEvent:
     instance_type: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
-    creator: str
     initial_instance_count: str
     max_instance_number: str = "1"
     min_instance_number: str = "0"
@@ -52,6 +51,8 @@ class CreateEndpointEvent:
     custom_extensions: str = ""
     # service for: sd / comfy
     service_type: str = "sd"
+    # todo will be removed
+    creator: str = ""
 
 
 def check_custom_extensions(event: CreateEndpointEvent):

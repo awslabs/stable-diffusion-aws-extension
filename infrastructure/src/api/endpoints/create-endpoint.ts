@@ -257,9 +257,6 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_type',
@@ -268,7 +265,6 @@ export class CreateEndpointApi {
           'initial_instance_count',
           'autoscaling_enabled',
           'assign_to_roles',
-          'creator',
         ],
       },
     });
