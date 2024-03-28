@@ -22,7 +22,7 @@ import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
-import { STACK_ID } from './shared/const';
+import {CF_ALL_DESC, CF_COMFY_DESC, CF_SD_DESC, STACK_ID} from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
 import { Inference } from './shared/inference';
@@ -46,7 +46,15 @@ export class Middleware extends Stack {
     },
   ) {
     super(scope, id, props);
-    this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
+
+    const solutionsParam = new CfnParameter(this, 'SolutionsParam', {
+      type: 'String',
+      description: 'Please select the solution you want to deploy',
+      default: CF_ALL_DESC,
+      allowedValues: [CF_ALL_DESC, CF_SD_DESC, CF_COMFY_DESC],
+    });
+
+    this.templateOptions.description = solutionsParam.valueAsString;
 
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
