@@ -4,7 +4,7 @@ import os
 
 import boto3
 from aws_lambda_powertools import Tracer
-from response import ok
+from common.response import ok
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)

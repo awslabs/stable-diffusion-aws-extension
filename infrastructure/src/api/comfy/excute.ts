@@ -6,7 +6,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -25,7 +24,6 @@ export interface ExecuteApiProps {
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class ExecuteApi {
@@ -35,7 +33,6 @@ export class ExecuteApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
@@ -50,7 +47,6 @@ export class ExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.executeApi();
   }
@@ -127,8 +123,6 @@ export class ExecuteApi {
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
-        BUCKET_NAME: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

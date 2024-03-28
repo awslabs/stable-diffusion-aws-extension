@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Optional
 
 from aws_lambda_powertools import Tracer
-from client import DynamoDbUtilsService
-from response import ok
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok
 
 from libs.comfy_data_types import ComfySyncTable
 from libs.data_types import EndpointDeploymentJob
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 inference_monitor_table = os.environ.get('INSTANCE_MONITOR_TABLE')
 sync_table = os.environ.get('SYNC_TABLE')
 endpoint_table = os.environ.get('ENDPOINT_TABLE')

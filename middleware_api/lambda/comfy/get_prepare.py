@@ -2,14 +2,14 @@ import logging
 import os
 
 from aws_lambda_powertools import Tracer
-from response import ok
+from common.response import ok
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 
 
 @tracer.capture_lambda_handler
