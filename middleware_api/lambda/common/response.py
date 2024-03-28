@@ -115,7 +115,7 @@ def get_debug():
     if _x_amzn_trace_id:
         trace_id = _x_amzn_trace_id.split(';')[0].split('=')[1]
         trace_url = (f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
-                     f"#xray:traces/{trace_id}?~(query~()~context~())")
+                     f"#xray:traces/{trace_id}")
 
     return {
         'function_url': function_url,
