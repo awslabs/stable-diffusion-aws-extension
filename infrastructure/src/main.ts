@@ -25,6 +25,7 @@ import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
+import { CF_DESC } from './shared/description';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
@@ -46,7 +47,8 @@ export class Middleware extends Stack {
     },
   ) {
     super(scope, id, props);
-    this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
+
+    this.templateOptions.description = CF_DESC;
 
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
