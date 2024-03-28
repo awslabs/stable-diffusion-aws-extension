@@ -201,7 +201,6 @@ export class ExecuteApi {
           'need_sync',
           'inference_type',
           'endpoint_name',
-          'need_sync',
         ],
       },
       contentType: 'application/json',
