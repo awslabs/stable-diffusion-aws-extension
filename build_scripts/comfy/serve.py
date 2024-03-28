@@ -3,7 +3,6 @@ import os
 import subprocess
 import threading
 import time
-import uuid
 from multiprocessing import Process
 from threading import Lock
 
@@ -106,9 +105,6 @@ if __name__ == "__main__":
 
     comfy_app.process.join()
     api_process.join()
-
-    unique_id = str(uuid.uuid4())
-    os.environ['INSTANCE_UNIQUE_ID'] = unique_id
 
     while True:
         response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")

@@ -25,6 +25,10 @@ if [ -n "$EXTENSIONS" ]; then
     export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 fi
 
+# create instance id named INSTANCE_UNIQUE_ID
+INSTANCE_UNIQUE_ID=""
+export INSTANCE_UNIQUE_ID=INSTANCE_UNIQUE_ID
+
 if [[ $IMAGE_URL == *"dev"* ]]; then
   export ESD_CODE_BRANCH="dev"
   # Enable dev mode
@@ -281,20 +285,20 @@ comfy_install(){
 
   cd /home/ubuntu || exit 1
 
+  # todo will use commit id
   git clone https://github.com/comfyanonymous/ComfyUI.git
 
   git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujuali_2.0" --single-branch
 
   cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
+
   cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
-  cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
-  cp stable-diffusion-aws-extension/build_scripts/comfy/backgroud_script.py ComfyUI/custom_nodes/
 }
 
 comfy_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting big unused files..."
-#  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
+  # remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
 
   echo "deleting git dir..."
   find /home/ubuntu/ComfyUI -type d \( -name '.git' -o -name '.github' \) | while read dir; do
@@ -324,6 +328,7 @@ comfy_build_for_launch(){
 
   echo "---------------------------------------------------------------------------------"
   echo "creating venv and install packages..."
+
   cd /home/ubuntu/ComfyUI || exit 1
 
   python3 -m venv venv
@@ -332,6 +337,7 @@ comfy_build_for_launch(){
 
   python -m pip install --upgrade pip
   python -m pip install -r requirements.txt
+  python -m pip install boto3
   python -m pip install fastapi
   python -m pip install uvicorn
   python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
@@ -339,7 +345,7 @@ comfy_build_for_launch(){
   python -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
   python -m pip install open-clip-torch==2.20.0
 
-  python serve.py
+  # todo maybe need to run build command
 }
 
 comfy_listen_ready() {
@@ -386,6 +392,8 @@ comfy_accelerate_launch(){
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
   source venv/bin/activate
+
+  # todo maybe need optimize
   python serve.py
 }
 
