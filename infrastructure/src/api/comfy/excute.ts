@@ -36,6 +36,8 @@ export class ExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
     this.scope = scope;
@@ -47,6 +49,8 @@ export class ExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.executeApi();
   }
@@ -127,7 +131,23 @@ export class ExecuteApi {
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -183,28 +203,16 @@ export class ExecuteApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator() {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-execute-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,
       });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator,
-      requestModels: {
-        'application/json': requestModel,
-      },
-    });
   }
 }
 

@@ -8,7 +8,6 @@ import {
   aws_sqs,
   Duration,
 } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -52,6 +51,7 @@ export class GetSyncMsgApi {
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
     this.queue = props.queue;
+
     this.getSyncMSGApi();
   }
 
@@ -148,25 +148,9 @@ export class GetSyncMsgApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        additionalProperties: true,
-      },
-      contentType: 'application/json',
-    });
-
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestModels: {
-        'application/json': requestModel,
-      },
     });
   }
 }
