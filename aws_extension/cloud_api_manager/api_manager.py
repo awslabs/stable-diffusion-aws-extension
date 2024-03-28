@@ -417,7 +417,8 @@ class CloudApiManager:
         params = {
             'username': username,
             'types': types,
-            'status': status
+            'status': status,
+            'per_page': 100,
         }
         headers = self._get_headers_by_user(username)
         raw_resp = api.list_checkpoints(params=params, headers=headers)
