@@ -25,7 +25,8 @@ if [ -n "$EXTENSIONS" ]; then
     export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 fi
 
-export INSTANCE_UNIQUE_ID="$ENDPOINT_NAME-$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)"
+random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
+export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
   export ESD_CODE_BRANCH="dev"
@@ -51,9 +52,9 @@ echo "CREATED_AT: $CREATED_AT"
 created_time_seconds=$(date -d "$CREATED_AT" +%s)
 current_time=$(date "+%Y-%m-%dT%H:%M:%S.%6N")
 current_time_seconds=$(date -d "$current_time" +%s)
-init_seconds=$(( current_time_seconds - created_time_seconds ))
+export INSTANCE_INIT_SECONDS=$(( current_time_seconds - created_time_seconds ))
 echo "NOW_AT: $current_time"
-echo "Init from Create: $init_seconds seconds"
+echo "Init from Create: $INSTANCE_INIT_SECONDS seconds"
 echo "---------------------------------------------------------------------------------"
 printenv
 echo "---------------------------------------------------------------------------------"
@@ -336,6 +337,7 @@ comfy_build_for_launch(){
   python -m pip install --upgrade pip
   python -m pip install -r requirements.txt
   python -m pip install boto3
+  python -m pip install altair
   python -m pip install fastapi
   python -m pip install uvicorn
   python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118

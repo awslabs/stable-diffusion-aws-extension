@@ -15,7 +15,7 @@ global prompt_id
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('BUCKET_NAME')
 QUEUE_URL = os.environ.get('QUEUE_URL')
-GEN_INSTANCE_ID = os.environ.get('INSTANCE_UNIQUE_ID')
+GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
 ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
 ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
@@ -193,7 +193,7 @@ def get_latest_ddb_instance_monitor_record():
 
 
 def save_sync_instance_count(last_sync_request_id: str, sync_status: str):
-    gen_instance_id = os.environ.get('INSTANCE_UNIQUE_ID')
+    gen_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
     endpoint_name = os.environ.get('ENDPOINT_NAME')
     endpoint_id = os.environ.get('ENDPOINT_ID')
 
