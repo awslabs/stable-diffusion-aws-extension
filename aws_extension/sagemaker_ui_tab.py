@@ -273,7 +273,7 @@ def api_setting_tab():
                                            variant='primary',
                                            elem_id="aws_config_save")
         with gr.Row():
-            update_extension_btn = gr.Button(value="Update Extension",
+            update_extension_btn = gr.Button(value="Update SageMaker Extension",
                                              elem_id="update_extension")
             restart_service = gr.Button(value="Restart WebUI",
                                         elem_id="restart_service")
