@@ -46,6 +46,10 @@ aws s3 sync local_folder_name s3://<bucket_name>/<folder_name>
 ```
 > **注意：** folder_name应以数字和下划线开头，例如100_demo。每个图像应与具有相同名称的txt文件配对，例如demo1.png，demo1.txt，demo1.txt包含demo1.png的标题。
 
+### 设置训练参数
+在训练界面**config_params**添加训练参数，图中给出了简单的一个参数示例，用户根据不同训练任务
+配置更多参数，参数内容参考https://github.com/kohya-ss/sd-scripts/blob/6b1520a46b1b6ee7c33092537dc9449d1cc4f56f/docs/train_network_README-zh.md
+**注意** 参数中"output_name": "model_name"，model_name 为训练后存储的模型名字，无需添加后缀。
 
 ### 训练LoRa模型
 
