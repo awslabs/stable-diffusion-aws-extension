@@ -19,6 +19,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
+from libs.utils import get_endpoint_by_name
 
 tracer = Tracer()
 region = os.environ.get('AWS_REGION')
@@ -65,6 +66,10 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 @tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
+
+    ep = get_endpoint_by_name(endpoint_name)
+    logger.info(f"endpoint: {ep}")
+
     # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
     #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
     payload = event.__dict__
