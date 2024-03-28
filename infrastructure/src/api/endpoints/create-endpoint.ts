@@ -135,6 +135,8 @@ export class CreateEndpointApi {
         'iam:CreateServiceLinkedRole',
         'iam:PassRole',
         'sts:AssumeRole',
+        'xray:PutTraceSegments',
+        'xray:PutTelemetryRecords',
       ],
       resources: ['*'],
     });
