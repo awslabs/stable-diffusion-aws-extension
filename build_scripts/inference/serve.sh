@@ -79,6 +79,12 @@ remove_unused(){
   rm -rf "$1"
 }
 
+get_device_count(){
+  echo "---------------------------------------------------------------------------------"
+  export CUDA_DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
+  echo "CUDA_DEVICE_COUNT: $CUDA_DEVICE_COUNT"
+}
+
 # -------------------- sd functions --------------------
 
 sd_install(){
@@ -219,6 +225,7 @@ sd_build_for_launch(){
   python -m pip install --upgrade pip
   python -m pip install onnxruntime-gpu
   python -m pip install insightface==0.7.3
+  python -m pip install boto3
 
   export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
   export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
@@ -234,6 +241,11 @@ sd_accelerate_launch(){
   echo "accelerate sd launch..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
+
+  get_device_count
+
+  python /metrics.py &
+
   accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
@@ -248,14 +260,14 @@ sd_launch_from_s3(){
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 
     start_at=$(date +%s)
-    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
+    # remove soft link
+    rm -rf /home/ubuntu/stable-diffusion-webui/models
+    tar --overwrite -xf "webui.tar" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
-    # remove soft link
-    rm -rf /home/ubuntu/stable-diffusion-webui/models
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
@@ -392,6 +404,10 @@ comfy_accelerate_launch(){
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
   source venv/bin/activate
+
+  get_device_count
+
+  python /metrics.py &
 
   # todo maybe need optimize
   python serve.py
