@@ -4,14 +4,14 @@ import os
 import boto3
 from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
-from response import ok
+from common.response import ok
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 
 
 def generate_presigned_url(bucket, key, expiration=3600):
