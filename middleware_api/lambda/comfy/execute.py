@@ -30,6 +30,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+index_name = "endpoint_name-startTime-index"
+
 
 @dataclass
 class ExecuteEvent:

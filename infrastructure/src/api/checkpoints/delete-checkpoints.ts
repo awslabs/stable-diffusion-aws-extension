@@ -111,7 +111,6 @@ export class DeleteCheckpointsApi {
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
           CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
-          MULTI_USER_TABLE: this.userTable.tableName,
         },
         layers: [this.layer],
       });
