@@ -25,9 +25,7 @@ if [ -n "$EXTENSIONS" ]; then
     export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 fi
 
-# create instance id named INSTANCE_UNIQUE_ID
-INSTANCE_UNIQUE_ID=""
-export INSTANCE_UNIQUE_ID=INSTANCE_UNIQUE_ID
+export INSTANCE_UNIQUE_ID="$ENDPOINT_NAME-$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)"
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
   export ESD_CODE_BRANCH="dev"
