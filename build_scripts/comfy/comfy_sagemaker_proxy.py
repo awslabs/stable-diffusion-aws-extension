@@ -244,13 +244,13 @@ async def sync_instance(request):
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
             print("no last sync record found do not need sync")
-            return True
+            return web.Response(status=200)
 
         if ('request_id' in last_sync_record and last_sync_record['request_id']
                 and os.environ.get('last_sync_request_id')
                 and os.environ.get('last_sync_request_id') == last_sync_record['request_id']):
             print("last sync record already sync by os check")
-            return True
+            return web.Response(status=200)
 
         instance_monitor_record = get_latest_ddb_instance_monitor_record()
         if not instance_monitor_record:
@@ -262,7 +262,7 @@ async def sync_instance(request):
             if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
                     and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
                 print("last sync record already sync")
-                return True
+                return web.Response(status=200)
 
             sync_already = await prepare_comfy_env(last_sync_record)
             instance_monitor_record['sync_status'] = 'success' if sync_already else 'failed'
@@ -273,10 +273,10 @@ async def sync_instance(request):
             instance_monitor_record['sync_list'] = sync_list
             print("should update prepare instance_monitor_record")
             update_sync_instance_monitor(instance_monitor_record)
-        return True
+        return web.Response(status=200)
     except Exception as e:
         print("exception occurred", e)
-        return False
+        return web.Response(status=500)
 
 
 def validate_prompt_proxy(func):
