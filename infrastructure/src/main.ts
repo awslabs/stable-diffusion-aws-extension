@@ -209,7 +209,6 @@ export class Middleware extends Stack {
       executeSuccessTopic: snsTopics.executeResultSuccessTopic,
       executeFailTopic: snsTopics.executeResultFailTopic,
       snsTopic: snsTopics.snsTopic,
-      logLevel: logLevel,
       accountId: accountId,
       queue: sqsStack.queue,
     });
