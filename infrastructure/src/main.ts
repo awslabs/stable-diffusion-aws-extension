@@ -22,9 +22,10 @@ import { ComfyDatabase } from './comfy/comfy-database';
 import { SqsStack } from './comfy/comfy-sqs';
 import { EndpointStack } from './endpoints/endpoint-stack';
 import { LambdaCommonLayer } from './shared/common-layer';
-import {CF_ALL_DESC, CF_COMFY_DESC, CF_SD_DESC, STACK_ID} from './shared/const';
+import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
+import { CF_DESC } from './shared/description';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
@@ -47,14 +48,7 @@ export class Middleware extends Stack {
   ) {
     super(scope, id, props);
 
-    const solutionsParam = new CfnParameter(this, 'SolutionsParam', {
-      type: 'String',
-      description: 'Please select the solution you want to deploy',
-      default: CF_ALL_DESC,
-      allowedValues: [CF_ALL_DESC, CF_SD_DESC, CF_COMFY_DESC],
-    });
-
-    this.templateOptions.description = solutionsParam.valueAsString;
+    this.templateOptions.description = CF_DESC;
 
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
