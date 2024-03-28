@@ -228,7 +228,7 @@ sd_build_for_launch(){
 
 sd_accelerate_launch(){
   echo "---------------------------------------------------------------------------------"
-  echo "accelerate launch..."
+  echo "accelerate sd launch..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
   accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
@@ -277,13 +277,13 @@ sd_launch_from_local(){
 
 comfy_install(){
   echo "---------------------------------------------------------------------------------"
-  echo "install esd..."
+  echo "install comfy ..."
 
   cd /home/ubuntu || exit 1
 
   git clone https://github.com/comfyanonymous/ComfyUI.git
 
-  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujuali2.0" --single-branch
+  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujuali_2.0" --single-branch
 
   cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
   cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
@@ -383,7 +383,7 @@ comfy_listen_ready() {
 
 comfy_accelerate_launch(){
   echo "---------------------------------------------------------------------------------"
-  echo "accelerate launch..."
+  echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
   source venv/bin/activate
   python serve.py
