@@ -58,7 +58,6 @@ export class GetTrainingJobApi {
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
         },
         layers: [this.layer],

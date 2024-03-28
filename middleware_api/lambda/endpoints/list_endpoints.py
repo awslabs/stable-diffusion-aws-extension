@@ -15,7 +15,7 @@ from libs.utils import get_user_roles, check_user_permissions, get_permissions_b
     response_error, decode_last_key, encode_last_key
 
 tracer = Tracer()
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 ddb = boto3.resource('dynamodb')
 table = ddb.Table(sagemaker_endpoint_table)

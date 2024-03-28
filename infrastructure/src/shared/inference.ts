@@ -1,6 +1,6 @@
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_dynamodb, aws_lambda, aws_sns, Duration, StackProps} from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_lambda, aws_sns, Duration, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -169,8 +169,6 @@ export class Inference {
       timeout: Duration.seconds(900),
       environment: {
         INFERENCE_JOB_TABLE: props.sd_inference_job_table.tableName,
-        DDB_TRAINING_TABLE_NAME: props?.training_table.tableName ?? '',
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: props.sd_endpoint_deployment_job_table.tableName,
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION_NAME: Aws.REGION,
         SNS_INFERENCE_SUCCESS: props.inferenceResultTopic.topicName,

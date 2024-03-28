@@ -18,7 +18,7 @@ from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
 tracer = Tracer()
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')

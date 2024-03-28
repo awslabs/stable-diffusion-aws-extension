@@ -294,8 +294,6 @@ export class CreateEndpointApi {
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         COMFY_QUEUE_URL: this.queue.queueUrl,
         COMFY_SYNC_TABLE: this.syncTable.tableName,
         COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,

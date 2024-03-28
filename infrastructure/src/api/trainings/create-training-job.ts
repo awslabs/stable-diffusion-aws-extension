@@ -259,7 +259,6 @@ export class CreateTrainingJobApi {
         MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.props.multiUserTable.tableName,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,
