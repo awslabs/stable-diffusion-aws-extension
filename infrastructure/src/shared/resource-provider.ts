@@ -118,6 +118,8 @@ export class ResourceProvider extends Construct {
         'logs:CreateLogStream',
         'logs:PutLogEvents',
         'kms:Decrypt',
+        'kms:CancelKeyDeletion',
+        'kms:EnableKey',
       ],
       resources: ['*'],
     }));
