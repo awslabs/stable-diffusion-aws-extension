@@ -5,6 +5,11 @@ if [ -z "$ESD_VERSION" ]; then
   exit 1
 fi
 
+if [ -z "$S3_BUCKET_NAME" ]; then
+  echo "S3_BUCKET_NAME is not set"
+  exit 1
+fi
+
 export ESD_CODE_BRANCH="main"
 export WEBUI_PORT=8080
 export TAR_FILE="webui.tar"
@@ -147,7 +152,7 @@ listen_ready() {
         big_files=$(find "/home/ubuntu/stable-diffusion-webui" -type f -size +2520k)
         for file in $big_files; do
           key=$(echo "$file" | cut -d'/' -f4-)
-          echo "sync $file s3://$BUCKET_NAME/$S3_LOCATION/$key" >> "$upload_files"
+          echo "sync $file s3://$S3_BUCKET_NAME/$S3_LOCATION/$key" >> "$upload_files"
         done
 
         echo "tar files..."
@@ -157,11 +162,11 @@ listen_ready() {
         find "./" \( -type f -o -type l \) -size -2530k > "$filelist"
         tar -cf $TAR_FILE -T "$filelist"
 
-        echo "sync $TAR_FILE s3://$BUCKET_NAME/$S3_LOCATION/" >> "$upload_files"
-        echo "sync /home/ubuntu/conda/* s3://$BUCKET_NAME/$S3_LOCATION/conda/" >> "$upload_files"
+        echo "sync $TAR_FILE s3://$S3_BUCKET_NAME/$S3_LOCATION/" >> "$upload_files"
+        echo "sync /home/ubuntu/conda/* s3://$S3_BUCKET_NAME/$S3_LOCATION/conda/" >> "$upload_files"
 
         # for ReActor
-        echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$BUCKET_NAME/$S3_LOCATION/insightface/" >> "$upload_files"
+        echo "sync /home/ubuntu/stable-diffusion-webui/models/insightface/* s3://$S3_BUCKET_NAME/$S3_LOCATION/insightface/" >> "$upload_files"
 
         echo "upload files..."
         s5cmd run "$upload_files"
@@ -221,7 +226,7 @@ accelerate_launch(){
 
 launch_from_s3(){
     start_at=$(date +%s)
-    s5cmd --log=error sync "s3://$BUCKET_NAME/$S3_LOCATION/*" /home/ubuntu/
+    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$S3_LOCATION/*" /home/ubuntu/
     end_at=$(date +%s)
     cost=$((end_at-start_at))
     echo "download file: $cost seconds"
@@ -238,7 +243,7 @@ launch_from_s3(){
 
     # remove soft link
     rm -rf /home/ubuntu/stable-diffusion-webui/models
-    s5cmd --log=error sync "s3://$BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
+    s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1
 
@@ -258,8 +263,8 @@ launch_from_local(){
   accelerate_launch
 }
 
-echo "Checking s3://$BUCKET_NAME/$S3_LOCATION files..."
-output=$(s5cmd ls "s3://$BUCKET_NAME/")
+echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
+output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$S3_LOCATION"; then
   launch_from_s3
 fi
