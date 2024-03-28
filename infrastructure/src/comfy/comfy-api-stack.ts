@@ -83,7 +83,7 @@ export class ComfyApiStack extends Construct {
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
 
-    const getSyncMsgApi = new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
+    new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
       httpMethod: 'GET',
       router: syncMsgGetRouter,
       srcRoot: srcRoot,
@@ -104,8 +104,6 @@ export class ComfyApiStack extends Construct {
       queue: this.queue,
       commonLayer: this.layer,
     });
-    synMsgApi.model.node.addDependency(getSyncMsgApi);
-    synMsgApi.requestValidator.node.addDependency(getSyncMsgApi);
 
     // POST /execute
     const executeAPi = new ExecuteApi(
