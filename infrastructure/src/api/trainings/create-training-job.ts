@@ -1,15 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  aws_sns,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -30,7 +20,6 @@ export interface CreateTrainingJobApiProps {
   checkpointTable: aws_dynamodb.Table;
   datasetInfoTable: aws_dynamodb.Table;
   userTopic: aws_sns.Topic;
-  logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
 }
@@ -265,13 +254,11 @@ export class CreateTrainingJobApi {
       role: this.lambdaRole(),
       memorySize: 4089,
       environment: {
-        S3_BUCKET: this.props.s3Bucket.bucketName,
         TRAIN_TABLE: this.props.trainTable.tableName,
         MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
         MULTI_USER_TABLE: this.props.multiUserTable.tableName,
-        LOG_LEVEL: this.props.logLevel.valueAsString,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,

@@ -37,7 +37,6 @@ export class ResourceProvider extends Construct {
       memorySize: 4048,
       environment: {
         ROLE_ARN: this.role.roleArn,
-        BUCKET_NAME: props.bucketName ?? '',
       },
     });
 
@@ -118,6 +117,8 @@ export class ResourceProvider extends Construct {
         'logs:CreateLogStream',
         'logs:PutLogEvents',
         'kms:Decrypt',
+        'kms:CancelKeyDeletion',
+        'kms:EnableKey',
       ],
       resources: ['*'],
     }));
