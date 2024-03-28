@@ -8,7 +8,7 @@ import {
   aws_sqs,
   Duration,
 } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -40,6 +40,8 @@ export class SyncMsgApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: SyncMsgApiProps) {
     this.scope = scope;
@@ -52,6 +54,9 @@ export class SyncMsgApi {
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
     this.queue = props.queue;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
+
     this.syncMSGApi();
   }
 
@@ -147,7 +152,16 @@ export class SyncMsgApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
+  }
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -159,14 +173,16 @@ export class SyncMsgApi {
       },
       contentType: 'application/json',
     });
+  }
 
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestModels: {
-        'application/json': requestModel,
-      },
-    });
+  private createRequestValidator() {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-sync-msg-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
   }
 }
 

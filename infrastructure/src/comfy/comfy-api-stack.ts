@@ -83,18 +83,7 @@ export class ComfyApiStack extends Construct {
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
 
-    new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
-      httpMethod: 'POST',
-      router: props.routers.sync,
-      srcRoot: srcRoot,
-      s3Bucket: props.s3Bucket,
-      configTable: this.configTable,
-      msgTable: this.msgTable,
-      queue: this.queue,
-      commonLayer: this.layer,
-    });
-
-    new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
+    const getSyncMsgApi = new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
       httpMethod: 'GET',
       router: syncMsgGetRouter,
       srcRoot: srcRoot,
@@ -105,8 +94,21 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
+    const synMsgApi = new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
+      httpMethod: 'POST',
+      router: props.routers.sync,
+      srcRoot: srcRoot,
+      s3Bucket: props.s3Bucket,
+      configTable: this.configTable,
+      msgTable: this.msgTable,
+      queue: this.queue,
+      commonLayer: this.layer,
+    });
+    synMsgApi.model.node.addDependency(getSyncMsgApi);
+    synMsgApi.requestValidator.node.addDependency(getSyncMsgApi);
+
     // POST /execute
-    new ExecuteApi(
+    const executeAPi = new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.execute,
@@ -117,9 +119,11 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
+    executeAPi.model.node.addDependency(synMsgApi.model);
+    executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // POST /execute
-    new QueryExecuteApi(
+    const queryExecuteApi = new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.queryExecute,
@@ -131,9 +135,11 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
+    queryExecuteApi.model.node.addDependency(executeAPi.model);
+    queryExecuteApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // POST /prepare
-    new PrepareApi(
+    const prepareApi = new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
@@ -147,6 +153,8 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
+    prepareApi.model.node.addDependency(queryExecuteApi.model);
+    prepareApi.requestValidator.node.addDependency(queryExecuteApi.requestValidator);
 
     // GET /execute/{id}
     new GetExecuteApi(
