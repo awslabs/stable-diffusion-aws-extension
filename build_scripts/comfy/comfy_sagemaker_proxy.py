@@ -237,10 +237,12 @@ def update_sync_instance_monitor(instance_monitor_record):
     return response
 
 
+# must be sync invoke and use the env to check
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance(request):
     print(f"sync_instance start ！！ {datetime.datetime.now()} {request}")
     try:
+        # TODO sync invoke check
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
             print("no last sync record found do not need sync")
