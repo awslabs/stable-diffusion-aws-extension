@@ -219,6 +219,7 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
             'INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
             'ESD_VERSION': ESD_VERSION,
             'SERVICE_TYPE': event.service_type,
+            'ON_DOCKER': 'true',
         },
     }
 
