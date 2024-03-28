@@ -11,7 +11,7 @@
 | [LoRa](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.2.1  | |
 | [ControlNet](https://github.com/Mikubill/sd-webui-controlnet){:target="_blank"}  | V1.1.410  | 支持SDXL + ControlNet推理 |
 | [Tiled Diffusion & VAE](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git){:target="_blank"}  | f9f8073e64f4e682838f255215039ba7884553bf  | 图片超分插件 |
-| [ReActor for Stable Diffusion](https://github.com/Gourieff/sd-webui-reactor{:target="_blank"}) | 0.6.1 | 目前效果最好且持续更新的人物换脸插件 |
+| [ReActor for Stable Diffusion](https://github.com/Gourieff/sd-webui-reactor){:target="_blank"} | 0.6.1 | 目前效果最好且持续更新的人物换脸插件 |
 | [Extras](https://github.com/AUTOMATIC1111/stable-diffusion-webui){:target="_blank"}  | V1.8.0  | API|
 | [rembg](https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git){:target="_blank"}  | 3d9eedbbf0d585207f97d5b21e42f32c0042df70  | API方式支持背景移除功能 |
 | [kohya_ss](https://github.com/bmaltais/kohya_ss){:target="_blank"}  |  支持基于SD 1.5 & SDXL的LoRa模型训练 |
