@@ -245,7 +245,7 @@ sd_launch_from_s3(){
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 
     start_at=$(date +%s)
-    tar --overwrite -xf "webui.tar" -C /home/ubuntu/stable-diffusion-webui/
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
@@ -400,7 +400,7 @@ comfy_launch_from_s3(){
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 
     start_at=$(date +%s)
-    tar --overwrite -xf "webui.tar" -C /home/ubuntu/ComfyUI/
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/ComfyUI/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
