@@ -7,7 +7,7 @@ import boto3
 import execution
 import server
 from aiohttp import web
-from altair import Key
+from boto3.dynamodb.conditions import Key
 
 global need_sync
 global prompt_id
@@ -237,8 +237,8 @@ def update_sync_instance_monitor(instance_monitor_record):
 
 
 @server.PromptServer.instance.routes.post("/sync_instance")
-async def sync_instance():
-    print(f"sync_instance start ！！ {datetime.datetime.now()}")
+async def sync_instance(request):
+    print(f"sync_instance start ！！ {datetime.datetime.now()} {request}")
     try:
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
