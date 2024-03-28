@@ -98,6 +98,7 @@ class CloudApiManager:
 
         payload = {
             "endpoint_name": endpoint_name,
+            "service_type": 'sd',
             "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,

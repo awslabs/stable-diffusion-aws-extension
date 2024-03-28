@@ -130,7 +130,7 @@ def handler(raw_event: dict, context: LambdaContext):
                            ckpts_to_upload]
                 return bad_request(message=' '.join(message))
 
-            # create inference job with param location in ddb, status set to Created
+            # create an inference job with param location in ddb, status set to Created
             used_models = {}
             for ckpt in ckpts:
                 if ckpt.checkpoint_type not in used_models:
@@ -218,6 +218,8 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
+            if endpoint.service_type != '' and endpoint.service_type != 'sd':
+                continue
             if endpoint.status == 'deleted':
                 continue
             if endpoint.endpoint_status != EndpointStatus.UPDATING.value and endpoint.endpoint_status != EndpointStatus.IN_SERVICE.value:
