@@ -60,6 +60,7 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
     return {'prompt_id': prompt_id, 'image_video_data': image_video_dict}
 
 
+@tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
     # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
