@@ -29,7 +29,9 @@ ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 COPY inference/serve.sh /
+COPY inference/metrics.py /
 
 RUN chmod +x /serve.sh
+RUN chmod +x /metrics.py
 
 ENTRYPOINT ["bash", "/serve.sh"]

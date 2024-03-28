@@ -225,6 +225,7 @@ sd_build_for_launch(){
   python -m pip install --upgrade pip
   python -m pip install onnxruntime-gpu
   python -m pip install insightface==0.7.3
+  python -m pip install boto3
 
   export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
   export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
@@ -242,6 +243,8 @@ sd_accelerate_launch(){
   source venv/bin/activate
 
   get_device_count
+
+  python /metrics.py &
 
   accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
@@ -403,6 +406,8 @@ comfy_accelerate_launch(){
   source venv/bin/activate
 
   get_device_count
+
+  python /metrics.py &
 
   # todo maybe need optimize
   python serve.py
