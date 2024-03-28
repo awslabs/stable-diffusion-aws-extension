@@ -106,6 +106,7 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         esdVersion: ESD_VERSION,
+        timestamp: new Date().toISOString(),
       },
     );
 
@@ -259,6 +260,7 @@ export class Middleware extends Stack {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
+        timestamp: new Date().toISOString(),
       },
     );
     resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
@@ -277,6 +279,8 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
+    this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
+    this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;

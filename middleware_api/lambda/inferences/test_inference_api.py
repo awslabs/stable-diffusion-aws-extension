@@ -12,7 +12,7 @@ os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
 
-os.environ.setdefault('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME', 'SDEndpointDeploymentJobTable')
+os.environ.setdefault('ENDPOINT_TABLE_NAME', 'SDEndpointDeploymentJobTable')
 os.environ.setdefault('INFERENCE_JOB_TABLE', 'SDInferenceJobTable')
 
 

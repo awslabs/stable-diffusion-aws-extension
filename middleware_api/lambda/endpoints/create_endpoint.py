@@ -18,7 +18,7 @@ from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
 tracer = Tracer()
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 aws_region = os.environ.get('AWS_REGION')
 S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
@@ -244,7 +244,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
             'InitialInstanceCount': initial_instance_count,
             'InstanceType': instance_type,
             "ModelDataDownloadTimeoutInSeconds": 60 * 30,  # Specify the model download timeout in seconds.
-            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 20,  # Specify the health checkup timeout in seconds
+            "ContainerStartupHealthCheckTimeoutInSeconds": 60 * 10,  # Specify the health checkup timeout in seconds
         }
     ]
 

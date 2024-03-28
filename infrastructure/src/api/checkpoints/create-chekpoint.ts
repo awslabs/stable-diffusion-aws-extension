@@ -65,7 +65,6 @@ export class CreateCheckPointApi {
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -226,7 +225,6 @@ export class CreateCheckPointApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
       },
       layers: [this.layer],

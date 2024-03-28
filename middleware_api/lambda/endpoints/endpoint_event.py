@@ -11,7 +11,7 @@ from delete_endpoints import get_endpoint_with_endpoint_name
 from libs.enums import EndpointStatus, EndpointType
 
 tracer = Tracer()
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)

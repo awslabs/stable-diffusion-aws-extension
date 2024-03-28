@@ -265,7 +265,6 @@ sd_launch_from_s3(){
     export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
 
     start_at=$(date +%s)
-    # remove soft link
     rm -rf /home/ubuntu/stable-diffusion-webui/models
     tar --overwrite -xf "webui.tar" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
@@ -273,6 +272,8 @@ sd_launch_from_s3(){
     cost=$((end_at-start_at))
     echo "decompress file: $cost seconds"
 
+    # remove soft link
+    rm -rf /home/ubuntu/stable-diffusion-webui/models
     s5cmd --log=error sync "s3://$S3_BUCKET_NAME/$S3_LOCATION/insightface/*" "/home/ubuntu/stable-diffusion-webui/models/insightface/"
 
     cd /home/ubuntu/stable-diffusion-webui/ || exit 1

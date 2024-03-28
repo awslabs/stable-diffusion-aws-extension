@@ -19,6 +19,7 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
+from libs.utils import get_endpoint_by_name, response_error
 
 tracer = Tracer()
 region = os.environ.get('AWS_REGION')
@@ -29,6 +30,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
+
+index_name = "endpoint_name-startTime-index"
 
 
 @dataclass
@@ -60,8 +63,13 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
     return {'prompt_id': prompt_id, 'image_video_data': image_video_dict}
 
 
+@tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
+
+    ep = get_endpoint_by_name(endpoint_name)
+    logger.info(f"endpoint: {ep}")
+
     # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
     #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
     payload = event.__dict__
@@ -106,13 +114,16 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
-    logger.info(f"execute start... Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-    event = ExecuteEvent(**json.loads(raw_event['body']))
-    invoke_sagemaker_inference(event)
-    # sync_param = build_s3_images_request(event.prompt_id, bucket_name, f'output/{event.prompt_id}')
-    # logger.info('sync_param : {}'.format(sync_param))
-    # response = requests.post(event.callback_url, json=sync_param)
-    # logger.info(f'call back url :{event.callback_url}, json:{json}, response:{response}')
-    # logger.info("execute end...")
-    return ok(data=event.prompt_id)
+    try:
+        logger.info(f"execute start... Received event: {raw_event}")
+        logger.info(f"Received ctx: {ctx}")
+        event = ExecuteEvent(**json.loads(raw_event['body']))
+        invoke_sagemaker_inference(event)
+        # sync_param = build_s3_images_request(event.prompt_id, bucket_name, f'output/{event.prompt_id}')
+        # logger.info('sync_param : {}'.format(sync_param))
+        # response = requests.post(event.callback_url, json=sync_param)
+        # logger.info(f'call back url :{event.callback_url}, json:{json}, response:{response}')
+        # logger.info("execute end...")
+        return ok(data=event.prompt_id)
+    except Exception as e:
+        return response_error(e)

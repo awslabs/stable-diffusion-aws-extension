@@ -4,7 +4,9 @@ import os
 import boto3
 from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
+
 from common.response import ok
+from libs.utils import response_error
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -50,9 +52,12 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
 
 @tracer.capture_lambda_handler
 def handler(event, ctx):
-    logger.info(f"get execute start... Received event: {event}")
-    logger.info(f"Received ctx: {ctx}")
-    prompt_id = event['pathParameters']['id']
-    response = build_s3_images_request(prompt_id, bucket_name, f'output/{prompt_id}')
-    logger.info(f"get execute end... response: {response}")
-    return ok(data=response)
+    try:
+        logger.info(f"get execute start... Received event: {event}")
+        logger.info(f"Received ctx: {ctx}")
+        prompt_id = event['pathParameters']['id']
+        response = build_s3_images_request(prompt_id, bucket_name, f'output/{prompt_id}')
+        logger.info(f"get execute end... response: {response}")
+        return ok(data=response)
+    except Exception as e:
+        return response_error(e)

@@ -160,10 +160,6 @@ export class DeleteEndpointsApi {
       role: this.iamRole(),
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-      },
       layers: [this.layer],
     });
 

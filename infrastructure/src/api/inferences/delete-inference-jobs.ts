@@ -110,7 +110,6 @@ export class DeleteInferenceJobsApi {
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.userTable.tableName,
           INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         },
         layers: [this.layer],

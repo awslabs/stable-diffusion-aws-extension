@@ -1,4 +1,4 @@
-import {aws_lambda, CfnParameter, CustomResource, Duration} from 'aws-cdk-lib';
+import { aws_lambda, CfnParameter, CustomResource, Duration } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
@@ -11,6 +11,7 @@ export interface ResourceWaiterProps {
   resourceProvider: ResourceProvider;
   restApiGateway: RestApiGateway;
   apiKeyParam: CfnParameter;
+  timestamp: string;
 }
 
 export class ResourceWaiter extends Construct {
@@ -44,6 +45,7 @@ export class ResourceWaiter extends Construct {
       properties: {
         apiUrl: props.restApiGateway.apiGateway.url,
         apiKey: props.apiKeyParam.valueAsString,
+        timestamp: props.timestamp,
       },
     });
 

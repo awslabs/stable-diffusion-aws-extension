@@ -7,11 +7,12 @@ from dataclasses import dataclass
 import boto3
 from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
+
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
-
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteRespType
+from libs.utils import response_error
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -92,11 +93,14 @@ def build_ddb_execute_response(prompt_id, resp_type):
 
 @tracer.capture_lambda_handler
 def handler(event, ctx):
-    logger.info(f"query execute start... Received event: {event}")
-    logger.info(f"Received ctx: {ctx}")
-    event = QueryExecuteEvent(**json.loads(event['body']))
-    prompt_id = event.prompt_id
-    resp_type = event.resp_type
-    response = build_ddb_execute_response(prompt_id, resp_type)
-    logger.info(f"query execute end... response: {response}")
-    return ok(data=response)
+    try:
+        logger.info(f"query execute start... Received event: {event}")
+        logger.info(f"Received ctx: {ctx}")
+        event = QueryExecuteEvent(**json.loads(event['body']))
+        prompt_id = event.prompt_id
+        resp_type = event.resp_type
+        response = build_ddb_execute_response(prompt_id, resp_type)
+        logger.info(f"query execute end... response: {response}")
+        return ok(data=response)
+    except Exception as e:
+        return response_error(e)

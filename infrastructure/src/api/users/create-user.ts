@@ -151,7 +151,6 @@ export class CreateUserApi {
       memorySize: 2048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
       },
       layers: [this.layer],

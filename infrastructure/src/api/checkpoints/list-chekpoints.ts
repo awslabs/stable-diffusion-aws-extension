@@ -79,7 +79,6 @@ export class ListCheckPointsApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });

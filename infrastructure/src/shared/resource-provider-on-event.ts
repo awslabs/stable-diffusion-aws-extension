@@ -42,7 +42,6 @@ const {
   S3_BUCKET_NAME,
 } = process.env;
 const accountId = ROLE_ARN?.split(':')[4] || '';
-export const INFER_INDEX_NAME = 'taskType-createTime-index';
 
 interface Event {
   RequestType: string;
@@ -77,9 +76,9 @@ async function createAndCheckResources() {
   await createTopics();
   await waitTableReady('MultiUserTable');
   await putItemUsersTable();
-  await waitTableReady('SDInferenceJobTable');
-  await createGlobalSecondaryIndex('SDInferenceJobTable');
-  // todo check kms key and enable sd-extension-password-key
+
+  await createGlobalSecondaryIndex('SDInferenceJobTable', 'taskType', 'createTime');
+  await createGlobalSecondaryIndex('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
 }
 
 async function waitTableReady(tableName: string) {
@@ -361,30 +360,33 @@ async function putItem(tableName: string, item: any) {
   }
 }
 
-async function createGlobalSecondaryIndex(tableName: string) {
+async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: string) {
+
+  await waitTableReady(tableName);
+
   const params: UpdateTableCommandInput = {
     TableName: tableName,
     AttributeDefinitions: [
       {
-        AttributeName: 'taskType',
+        AttributeName: pk,
         AttributeType: 'S',
       },
       {
-        AttributeName: 'createTime',
+        AttributeName: sk,
         AttributeType: 'S',
       },
     ],
     GlobalSecondaryIndexUpdates: [
       {
         Create: {
-          IndexName: INFER_INDEX_NAME,
+          IndexName: `${pk}-${sk}-index`,
           KeySchema: [
             {
-              AttributeName: 'taskType',
+              AttributeName: pk,
               KeyType: 'HASH',
             },
             {
-              AttributeName: 'createTime',
+              AttributeName: sk,
               KeyType: 'RANGE',
             },
           ],

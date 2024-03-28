@@ -1,4 +1,4 @@
-import {Aws, aws_lambda, CustomResource, Duration} from 'aws-cdk-lib';
+import { Aws, aws_lambda, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -7,8 +7,9 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
-  bucketName?: string;
-  esdVersion?: string;
+  bucketName: string;
+  esdVersion: string;
+  timestamp: string;
 }
 
 export class ResourceProvider extends Construct {

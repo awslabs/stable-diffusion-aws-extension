@@ -23,6 +23,7 @@ export interface ExecuteApiProps {
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
+  endpointTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
 }
 
@@ -36,6 +37,7 @@ export class ExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
+  private readonly endpointTable: aws_dynamodb.Table;
   public model: Model;
   public requestValidator: RequestValidator;
 
@@ -48,6 +50,7 @@ export class ExecuteApi {
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
+    this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -70,10 +73,13 @@ export class ExecuteApi {
         'dynamodb:PutItem',
         'dynamodb:UpdateItem',
         'dynamodb:DeleteItem',
+        'dynamodb:Query',
       ],
       resources: [
         this.configTable.tableArn,
         this.executeTable.tableArn,
+        `${this.endpointTable.tableArn}`,
+        `${this.endpointTable.tableArn}/*`,
       ],
     }));
 
@@ -199,6 +205,8 @@ export class ExecuteApi {
           'prompt_id',
           'prompt',
           'need_sync',
+          'inference_type',
+          'endpoint_name',
         ],
       },
       contentType: 'application/json',

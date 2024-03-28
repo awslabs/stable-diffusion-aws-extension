@@ -141,9 +141,6 @@ export class DeleteRolesApi {
         role: this.iamRole(),
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
-        environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
-        },
         layers: [this.layer],
       });
 

@@ -102,7 +102,6 @@ export class GetDatasetApi {
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });

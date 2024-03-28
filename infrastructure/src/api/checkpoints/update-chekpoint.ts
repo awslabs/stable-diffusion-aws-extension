@@ -190,7 +190,6 @@ export class UpdateCheckPointApi {
       memorySize: 4048,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
       },

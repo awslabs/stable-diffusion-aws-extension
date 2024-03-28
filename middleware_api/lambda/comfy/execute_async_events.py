@@ -4,6 +4,7 @@ import os
 
 import boto3
 from aws_lambda_powertools import Tracer
+
 from common.sns_util import send_message_to_sns
 
 tracer = Tracer()

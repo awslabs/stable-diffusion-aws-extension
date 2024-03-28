@@ -193,8 +193,6 @@ export class CreateInferenceJobApi {
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
       },

@@ -115,7 +115,6 @@ export class DeleteDatasetsApi {
         memorySize: 2048,
         tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
           DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
           DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         },

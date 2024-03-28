@@ -5,6 +5,7 @@ import os
 
 import boto3
 from aws_lambda_powertools import Tracer
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
@@ -21,6 +22,27 @@ user_table = os.environ.get('MULTI_USER_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 encode_type = "utf-8"
+
+ddb = boto3.resource('dynamodb')
+endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
+
+
+@tracer.capture_method
+def get_endpoint_by_name(endpoint_name: str):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+
+    scan_kwargs = {
+        'IndexName': "endpoint_name-startTime-index",
+        'KeyConditionExpression': Key('endpoint_name').eq(endpoint_name),
+    }
+
+    logger.info(scan_kwargs)
+
+    response = endpoint_table.query(**scan_kwargs)
+
+    tracer.put_metadata(key="endpoint_name", value=response)
+
+    return response.get('Items', [])
 
 
 def log_json(title, payload: any = None):

@@ -6,12 +6,13 @@ from datetime import datetime
 from typing import Optional
 
 from aws_lambda_powertools import Tracer
+
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-
 from libs.comfy_data_types import ComfySyncTable
 from libs.data_types import EndpointDeploymentJob
 from libs.enums import ComfySyncStatus
+from libs.utils import response_error
 
 tracer = Tracer()
 logger = logging.getLogger(__name__)
@@ -81,10 +82,13 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
 
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
-    logger.info(f"prepare env start... Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-    request_id = ctx.aws_request_id
+    try:
+        logger.info(f"prepare env start... Received event: {raw_event}")
+        logger.info(f"Received ctx: {ctx}")
+        request_id = ctx.aws_request_id
 
-    event = PrepareEnvEvent(**json.loads(raw_event['body']))
-    prepare_sagemaker_env(request_id, event)
-    return ok(data=event.endpoint_name)
+        event = PrepareEnvEvent(**json.loads(raw_event['body']))
+        prepare_sagemaker_env(request_id, event)
+        return ok(data=event.endpoint_name)
+    except Exception as e:
+        return response_error(e)

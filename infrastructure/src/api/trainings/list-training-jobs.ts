@@ -82,7 +82,6 @@ export class ListTrainingJobsApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.trainTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
