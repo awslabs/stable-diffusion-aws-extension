@@ -48,17 +48,16 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块的**Deploy New SageMaker Endpoint**区域。
 2. 方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击**Deploy**按钮启动Sagemaker endpoint的部署。
-3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Endpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:
+3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Endpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下表展示相关参数的名字和含义:
 
-   | 参数名                 | 描述                                                                                                                                         |
-       |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-   | Endpoint Name (可选)  | 如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为 esd-type-XXXXX                                                              |
-   | Endpoint Type       | 下拉框选择部署的Endpoint的推理类型 Async / Real-time                                                                                                    |
-   | Instance Type       | 下拉框选择部署的Endpoint的实例类型                                                                                                                      |
-   | Max Instance Number | 下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，异步推理会根据平均每个实例队列积压情况在 0-Max Instance Number 之间弹性伸缩，同步推理会根据平均每个实例调用数在 1-Max Instance Number 之间弹性伸缩 |
-   | Enable Autoscaling  | 如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在 0-Max Instance Number 之间弹性伸缩, 否则Endpoint对应的instance数会固定在 Max Instance Number                         |
-   | Min Instance Number  | 如果选择了 Enable Autoscaling，该值将是 Endpoint 实例数的最小数量                                                                                            |
-
+    | 参数名                 | 描述                                                                                                                                         |
+        |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+    | Endpoint Name (可选)  | 如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为 esd-type-XXXXX                                                              |
+    | Endpoint Type       | 下拉框选择部署的Endpoint的推理类型 Async / Real-time                                                                                                    |
+    | Instance Type       | 下拉框选择部署的Endpoint的实例类型                                                                                                                      |
+    | Max Instance Number | 下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，异步推理会根据平均每个实例队列积压情况在 0-Max Instance Number 之间弹性伸缩，同步推理会根据平均每个实例调用数在 1-Max Instance Number 之间弹性伸缩 |
+    | Enable Autoscaling  | 如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在 0-Max Instance Number 之间弹性伸缩, 否则Endpoint对应的instance数会固定在 Max Instance Number                         |
+    | Min Instance Number  | 如果选择了 Enable Autoscaling，该值将是 Endpoint 实例数的最小数量                                                                                            |
 
 4. 选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击**Deploy**, 可以在**Label**处看到**Endpoint deployment started**的提示信息。
 ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
