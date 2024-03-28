@@ -273,8 +273,8 @@ def api_setting_tab():
                                            variant='primary',
                                            elem_id="aws_config_save")
         with gr.Row():
-            # update_extension_btn = gr.Button(value="Update Extension",
-            #                                  elem_id="update_extension")
+            update_extension_btn = gr.Button(value="Update Extension",
+                                             elem_id="update_extension")
             restart_service = gr.Button(value="Restart WebUI",
                                         elem_id="restart_service")
 
@@ -323,7 +323,7 @@ def api_setting_tab():
                                      outputs=[connection_output, connection_output])
 
             restart_service.click(fn=restart_sd_webui_service, inputs=[], outputs=[connection_output])
-            # update_extension_btn.click(fn=update_extension, inputs=[], outputs=[connection_output])
+            update_extension_btn.click(fn=update_extension, inputs=[], outputs=[connection_output])
 
     with gr.Row(visible=has_config()) as disclaimer_tab:
         with gr.Accordion("Disclaimer", open=False):
