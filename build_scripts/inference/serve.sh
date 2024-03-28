@@ -422,8 +422,16 @@ comfy_launch_from_local(){
 echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$S3_LOCATION"; then
-  if [ "$SERVICE_TYPE" == "sd" ]; then sd_launch_from_s3; else comfy_launch_from_s3; fi
+  if [ "$SERVICE_TYPE" == "sd" ]; then
+    sd_launch_from_s3
+  else
+    comfy_launch_from_s3
+  fi
 fi
 
 echo "No files in S3, just install the environment and launch from local..."
-if [ "$SERVICE_TYPE" == "sd" ]; then sd_launch_from_local; else comfy_launch_from_local; fi
+if [ "$SERVICE_TYPE" == "sd" ]; then
+    sd_launch_from_local
+else
+    comfy_launch_from_local
+fi
