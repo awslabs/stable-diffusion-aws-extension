@@ -35,6 +35,7 @@ nav:
         - img2img guide: user-guide/img2img-guide.md
         - controlNet guide: user-guide/controlnet-guide.md
         - Training guide: user-guide/training-guide.md
+        - Other Extensions guide: user-guide/extensions-guide.md 
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md

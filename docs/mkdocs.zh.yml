@@ -37,6 +37,7 @@ nav:
         - img2img指南: user-guide/img2img-guide.md
         - controlNet指南: user-guide/controlnet-guide.md
         - 训练指南: user-guide/training-guide.md
+        - 其他插件指南: user-guide/extensions-guide.md 
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
     - 开发者指南:
         - 源代码: developer-guide/source.md

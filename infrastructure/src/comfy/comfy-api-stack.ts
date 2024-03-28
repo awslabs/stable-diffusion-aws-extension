@@ -1,6 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, Duration, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -37,7 +37,6 @@ export interface ComfyInferenceStackProps extends StackProps {
   executeSuccessTopic: sns.Topic;
   executeFailTopic: sns.Topic;
   snsTopic: aws_sns.Topic;
-  logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
   queue: sqs.Queue;
@@ -93,7 +92,6 @@ export class ComfyApiStack extends Construct {
       msgTable: this.msgTable,
       queue: this.queue,
       commonLayer: this.layer,
-      logLevel: props.logLevel,
     });
 
     new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
@@ -105,7 +103,6 @@ export class ComfyApiStack extends Construct {
       msgTable: this.msgTable,
       queue: this.queue,
       commonLayer: this.layer,
-      logLevel: props.logLevel,
     });
 
     // POST /execute
@@ -118,7 +115,6 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -133,7 +129,6 @@ export class ComfyApiStack extends Construct {
         executeTable: this.executeTable,
         queue: this.queue,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -150,7 +145,6 @@ export class ComfyApiStack extends Construct {
         endpointTable: this.endpointTable,
         queue: this.queue,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -164,7 +158,6 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -179,7 +172,6 @@ export class ComfyApiStack extends Construct {
         syncTable: this.syncTable,
         instanceMonitorTable: this.instanceMonitorTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -194,11 +186,9 @@ export class ComfyApiStack extends Construct {
       timeout: Duration.seconds(900),
       environment: {
         INFERENCE_JOB_TABLE: props.executeTable.tableName,
-        S3_BUCKET_NAME: props.s3Bucket.bucketName ?? '',
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION_NAME: Aws.REGION,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
-        LOG_LEVEL: props.logLevel.valueAsString,
       },
       layers: [props.commonLayer],
       logRetention: RetentionDays.ONE_WEEK,

@@ -22,7 +22,7 @@ from libs.enums import ComfyExecuteType
 
 tracer = Tracer()
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
 
 logger = logging.getLogger(__name__)

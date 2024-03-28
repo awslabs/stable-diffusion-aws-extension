@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import boto3
 from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
-from client import DynamoDbUtilsService
-from response import ok, not_found
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, not_found
 
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteRespType
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 

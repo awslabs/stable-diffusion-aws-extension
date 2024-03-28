@@ -6,7 +6,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -27,7 +26,6 @@ export interface PrepareApiProps {
   instanceMonitorTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class PrepareApi {
@@ -37,7 +35,6 @@ export class PrepareApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
@@ -56,7 +53,6 @@ export class PrepareApi {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.prepareApi();
   }
@@ -138,8 +134,6 @@ export class PrepareApi {
         CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         ENDPOINT_TABLE: this.endpointTable.tableName,
-        BUCKET_NAME: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

@@ -6,7 +6,6 @@ import {
   aws_iam,
   aws_lambda,
   aws_sqs,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
@@ -27,7 +26,6 @@ export interface GetSyncMsgApiProps {
   msgTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 
@@ -38,7 +36,6 @@ export class GetSyncMsgApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
@@ -54,7 +51,6 @@ export class GetSyncMsgApi {
     this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
     this.queue = props.queue;
     this.getSyncMSGApi();
   }
@@ -137,9 +133,7 @@ export class GetSyncMsgApi {
       environment: {
         MSG_TABLE: this.msgTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
-        BUCKET_NAME: this.s3Bucket.bucketName,
         SQS_URL: this.queue.queueUrl,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
