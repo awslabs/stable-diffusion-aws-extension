@@ -11,7 +11,8 @@ COPY comfyui/serve.py /opt/ml/code
 COPY comfyui/comfy_sagemaker_proxy.py /opt/ml/code/custom_nodes
 
 RUN pip install fastapi && \
-    pip install uvicorn
+    pip install uvicorn && \
+    pip install altair
 
 # download s5cmd
 RUN mkdir -p /opt/ml/code/tools

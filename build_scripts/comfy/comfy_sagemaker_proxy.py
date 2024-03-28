@@ -108,15 +108,16 @@ def sync_local_outputs_to_s3(s3_path, local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    global need_sync
     # TODO serve 级别加锁
-    global prompt_id
     json_data = await request.json()
     print(f"invocations start json_data:{json_data}")
-
+    global need_sync
+    need_sync = json_data["need_sync"]
+    global prompt_id
+    prompt_id = json_data["prompt_id"]
     try:
         print(
-            f'bucket_name: {BUCKET}, region: {REGION}, need_sync: {need_sync}')
+            f'bucket_name: {BUCKET}, region: {REGION}')
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
