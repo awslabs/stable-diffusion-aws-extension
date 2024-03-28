@@ -79,6 +79,12 @@ remove_unused(){
   rm -rf "$1"
 }
 
+get_device_count(){
+  echo "---------------------------------------------------------------------------------"
+  export CUDA_DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
+  echo "CUDA_DEVICE_COUNT: $CUDA_DEVICE_COUNT"
+}
+
 # -------------------- sd functions --------------------
 
 sd_install(){
@@ -392,6 +398,8 @@ comfy_accelerate_launch(){
   echo "accelerate comfy launch..."
   cd /home/ubuntu/ComfyUI || exit 1
   source venv/bin/activate
+
+  export DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
 
   # todo maybe need optimize
   python serve.py
