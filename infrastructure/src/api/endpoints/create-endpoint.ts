@@ -260,7 +260,6 @@ export class CreateEndpointApi {
         },
         required: [
           'endpoint_type',
-          'service_type',
           'instance_type',
           'initial_instance_count',
           'autoscaling_enabled',
