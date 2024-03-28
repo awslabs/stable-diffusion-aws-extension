@@ -1209,7 +1209,6 @@ def dataset_tab():
 
             file_output = gr.File()
             upload_button = gr.UploadButton("Click to Upload Files",
-                                            file_types=["image", "video", "text"],
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 
