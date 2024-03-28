@@ -336,6 +336,7 @@ comfy_build_for_launch(){
   python -m pip install --upgrade pip
   python -m pip install -r requirements.txt
   python -m pip install boto3
+  python -m pip install altair
   python -m pip install fastapi
   python -m pip install uvicorn
   python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
