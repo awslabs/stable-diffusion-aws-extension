@@ -24,9 +24,9 @@ S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
 ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
 ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
 INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-QUEUE_URL = os.environ.get('QUEUE_URL')
-SYNC_TABLE = os.environ.get('SYNC_TABLE')
-INSTANCE_MONITOR_TABLE = os.environ.get('INSTANCE_MONITOR_TABLE')
+QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
+SYNC_TABLE = os.environ.get('COMFY_SYNC_TABLE')
+INSTANCE_MONITOR_TABLE = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
 ESD_VERSION = os.environ.get("ESD_VERSION")
 
 logger = logging.getLogger(__name__)
@@ -215,9 +215,9 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
             'ENDPOINT_ID': endpoint_id,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
-            'QUEUE_URL': QUEUE_URL or '',
-            'SYNC_TABLE': SYNC_TABLE or '',
-            'INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
+            'COMFY_QUEUE_URL': QUEUE_URL or '',
+            'COMFY_SYNC_TABLE': SYNC_TABLE or '',
+            'COMFY_INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
             'ESD_VERSION': ESD_VERSION,
             'SERVICE_TYPE': event.service_type,
             'ON_DOCKER': 'true',

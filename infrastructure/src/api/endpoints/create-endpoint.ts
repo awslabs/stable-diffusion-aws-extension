@@ -296,9 +296,9 @@ export class CreateEndpointApi {
       environment: {
         DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         MULTI_USER_TABLE: this.multiUserTable.tableName,
-        QUEUE_URL: this.queue.queueUrl,
-        SYNC_TABLE: this.syncTable.tableName,
-        INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
+        COMFY_QUEUE_URL: this.queue.queueUrl,
+        COMFY_SYNC_TABLE: this.syncTable.tableName,
+        COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,

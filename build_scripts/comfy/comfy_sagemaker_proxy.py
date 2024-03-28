@@ -14,13 +14,14 @@ global prompt_id
 
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('BUCKET_NAME')
-QUEUE_URL = os.environ.get('QUEUE_URL')
+QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
+
 GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
 ENDPOINT_NAME = os.environ.get('ENDPOINT_NAME')
 ENDPOINT_ID = os.environ.get('ENDPOINT_ID')
 
-INSTANCE_MONITOR_TABLE_NAME = os.environ.get('INSTANCE_MONITOR_TABLE')
-SYNC_TABLE_NAME = os.environ.get('SYNC_TABLE')
+INSTANCE_MONITOR_TABLE_NAME = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
+SYNC_TABLE_NAME = os.environ.get('COMFY_SYNC_TABLE')
 
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 sync_table = dynamodb.Table(SYNC_TABLE_NAME)
