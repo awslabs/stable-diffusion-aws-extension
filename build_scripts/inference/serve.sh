@@ -240,6 +240,9 @@ sd_accelerate_launch(){
   echo "accelerate sd launch..."
   cd /home/ubuntu/stable-diffusion-webui || exit 1
   source venv/bin/activate
+
+  get_device_count
+
   accelerate launch --num_cpu_threads_per_process=$CUP_CORE_NUMS launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --skip-prepare-environment --skip-python-version-check --skip-install --skip-version-check --disable-nan-check
 }
 
@@ -399,7 +402,7 @@ comfy_accelerate_launch(){
   cd /home/ubuntu/ComfyUI || exit 1
   source venv/bin/activate
 
-  export DEVICE_COUNT=$(python -c "import torch; print(torch.cuda.device_count())")
+  get_device_count
 
   # todo maybe need optimize
   python serve.py
