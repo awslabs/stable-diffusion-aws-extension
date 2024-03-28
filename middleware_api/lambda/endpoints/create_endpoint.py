@@ -224,6 +224,8 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
         },
     }
 
+    tracer.put_metadata('primary_container', primary_container)
+
     logger.info(f"Creating model resource PrimaryContainer: {primary_container}")
 
     response = sagemaker.create_model(
