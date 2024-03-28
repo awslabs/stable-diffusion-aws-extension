@@ -11,9 +11,11 @@ import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/com
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import { GetRoleCommand, GetRoleCommandOutput, IAMClient } from '@aws-sdk/client-iam';
 import {
+  CancelKeyDeletionCommand,
   CreateAliasCommand,
   CreateKeyCommand,
   DisableKeyRotationCommand,
+  EnableKeyCommand,
   KMSClient,
   ListAliasesCommand,
 } from '@aws-sdk/client-kms';
@@ -476,6 +478,25 @@ async function createKms(aliasName: string, description: string) {
     TargetKeyId: key?.KeyMetadata?.KeyId,
   });
   await kmsClient.send(createAliasCommand);
+
+  // the key maybe pending deletion, so cancel and enable it
+  try {
+    const cancelKeyDeletionCommand = new CancelKeyDeletionCommand({
+      KeyId: key.KeyMetadata?.KeyId,
+    });
+    await kmsClient.send(cancelKeyDeletionCommand);
+  } catch (err: any) {
+    console.log(err);
+  }
+
+  try {
+    const enableKeyCommand = new EnableKeyCommand({
+      KeyId: key.KeyMetadata?.KeyId,
+    });
+    await kmsClient.send(enableKeyCommand);
+  } catch (err: any) {
+    console.log(err);
+  }
 
   console.log(`Kms ${aliasName} created.`);
   return true;
