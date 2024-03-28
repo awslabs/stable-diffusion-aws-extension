@@ -1056,6 +1056,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extensions-guide.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Other Extensions guide
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1578,8 +1599,8 @@ aws s3 cp *safetensors s3://&lt;bucket_path&gt;/&lt;model_path&gt;
 </blockquote>
 <h3 id="train-the-lora-model">Train the LoRa Model</h3>
 <p>After the base model and dataset have been uploaded successfully, please follow these steps:
-1. Navigate to <strong>Train Mangement</strong> tab, select desired training instance type in <strong>Training Instance Type</strong>, select the base model type for this training job in the <strong>FM Type</strong> field (i.e., based on Stable Diffusion 1.5 or Stable Diffusion XL). Then, choose the base model for this training session using the <strong>Model</strong> option. Finally, select the dataset that this training session will depend on using the <strong>Dataset</strong> option.
-2. Update the trianing parameters in <strong>config_params</strong>, and click <strong>Format config Params</strong> to check and correct updated params file format.
+1. Navigate to <strong>Train Management</strong> tab, select desired training instance type in <strong>Training Instance Type</strong>, select the base model type for this training job in the <strong>FM Type</strong> field (i.e., based on Stable Diffusion 1.5 or Stable Diffusion XL). Then, choose the base model for this training session using the <strong>Model</strong> option. Finally, select the dataset that this training session will depend on using the <strong>Dataset</strong> option.
+2. Update the training parameters in <strong>config_params</strong>, and click <strong>Format config Params</strong> to check and correct updated params file format.
 3. Click <strong>Create Training Job</strong> to submit training job.
 4. Refresh <strong>Trainings List</strong> to follow status of training job.
 5. The successfully trained LoRa model can be selected directly in <strong>txt2img</strong> or <strong>img2img</strong>, and used in image generation. More details refer to <a href="../txt2img-guide/">txt2img guide</a> or <a href="../img2img-guide/">img2img guide</a>.</p>

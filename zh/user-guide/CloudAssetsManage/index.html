@@ -1111,6 +1111,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extensions-guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    其他插件指南
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1714,8 +1735,8 @@
 <ol>
 <li>进入解决方案主标签页<strong>Amazon SageMaker</strong>，找到<strong>Cloud Assents Management</strong>模块的<strong>Deploy New SageMaker Endpoint</strong>区域。</li>
 <li>方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击<strong>Deploy</strong>按钮启动Sagemaker endpoint的部署。</li>
-<li>如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击<strong>Advanced Endpoint Configuration</strong>的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:</li>
-</ol>
+<li>
+<p>如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击<strong>Advanced Endpoint Configuration</strong>的checkbox，这时界面会显示更多的参数让用户输入，下表展示相关参数的名字和含义:</p>
 <table>
 <thead>
 <tr>
@@ -1750,9 +1771,11 @@
 </tr>
 </tbody>
 </table>
-<ol>
-<li>选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击<strong>Deploy</strong>, 可以在<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
-<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></li>
+</li>
+<li>
+<p>选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击<strong>Deploy</strong>, 可以在<strong>Label</strong>处看到<strong>Endpoint deployment started</strong>的提示信息。
+<img alt="Deploy new endpoint" src="../../images/Deploy-new-endpoint.png" /></p>
+</li>
 <li>您可进入<strong>txt2img</strong>或<strong>img2img</strong>的<strong>Amazon SageMaker Inference</strong>模块的下拉菜单<strong>Select Cloud SageMaker Endpoint</strong>，刷新并看到当前所有推理节点的部署状态。<blockquote>
 <p><strong>补充：</strong> 推理节点列表的名字的格式是：推理节点名字+部署状态：Creating/Failed/InService+部署结束时间。</p>
 </blockquote>
