@@ -37,8 +37,8 @@ aws s3 sync local_folder_name s3://<bucket_name>/<folder_name>
 
 ### Train the LoRa Model
 After the base model and dataset have been uploaded successfully, please follow these steps:
-1. Navigate to **Train Mangement** tab, select desired training instance type in **Training Instance Type**, select the base model type for this training job in the **FM Type** field (i.e., based on Stable Diffusion 1.5 or Stable Diffusion XL). Then, choose the base model for this training session using the **Model** option. Finally, select the dataset that this training session will depend on using the **Dataset** option.
-2. Update the trianing parameters in **config_params**, and click **Format config Params** to check and correct updated params file format.
+1. Navigate to **Train Management** tab, select desired training instance type in **Training Instance Type**, select the base model type for this training job in the **FM Type** field (i.e., based on Stable Diffusion 1.5 or Stable Diffusion XL). Then, choose the base model for this training session using the **Model** option. Finally, select the dataset that this training session will depend on using the **Dataset** option.
+2. Update the training parameters in **config_params**, and click **Format config Params** to check and correct updated params file format.
 3. Click **Create Training Job** to submit training job.
 4. Refresh **Trainings List** to follow status of training job.
 5. The successfully trained LoRa model can be selected directly in **txt2img** or **img2img**, and used in image generation. More details refer to [txt2img guide](./txt2img-guide.md) or [img2img guide](./img2img-guide.md).
