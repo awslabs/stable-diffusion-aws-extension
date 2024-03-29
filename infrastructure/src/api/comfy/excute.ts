@@ -1,18 +1,9 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_apigateway as apigw,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 
@@ -21,7 +12,6 @@ export interface ExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
   srcRoot: string;
-  s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
@@ -35,7 +25,6 @@ export class ExecuteApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
@@ -48,7 +37,6 @@ export class ExecuteApi {
     this.baseId = id;
     this.router = props.router;
     this.srcRoot = props.srcRoot;
-    this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
@@ -103,7 +91,7 @@ export class ExecuteApi {
         's3:CreateBucket',
       ],
       resources: [
-        `*`,
+        '*',
       ],
     }));
 
