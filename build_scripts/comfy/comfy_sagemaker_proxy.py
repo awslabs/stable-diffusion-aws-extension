@@ -194,15 +194,12 @@ def get_latest_ddb_instance_monitor_record():
     return None
 
 
-def save_sync_instance_count(last_sync_request_id: str, sync_status: str):
-    gen_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
-    endpoint_name = os.environ.get('ENDPOINT_NAME')
-    endpoint_id = os.environ.get('ENDPOINT_ID')
+def save_sync_instance_monitor(last_sync_request_id: str, sync_status: str):
 
     item = {
-        'endpoint_id': endpoint_id,
-        'endpoint_name': endpoint_name,
-        'gen_instance_id': gen_instance_id,
+        'endpoint_id': ENDPOINT_ID,
+        'endpoint_name': ENDPOINT_NAME,
+        'gen_instance_id': GEN_INSTANCE_ID,
         'sync_status': sync_status,
         'last_sync_request_id': last_sync_request_id,
         'last_sync_time': str(datetime.datetime.now()),
@@ -228,13 +225,33 @@ def update_sync_instance_monitor(instance_monitor_record):
     }
 
     response = sync_table.update_item(
-        Key={'endpoint_name': instance_monitor_record['endpoint_name'],
-             'gen_instance_id': instance_monitor_record['gen_instance_id']},
+        Key={'endpoint_name': ENDPOINT_NAME,
+             'gen_instance_id': GEN_INSTANCE_ID},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values
     )
     print(f"update_sync_instance_monitor :{response}")
     return response
+
+
+def sync_instance_monitor_status(need_save: bool):
+    try:
+        print(f"sync_instance_monitor_status {need_sync} {datetime.datetime.now()}")
+        if not need_save:
+            save_sync_instance_monitor('', 'init')
+        else:
+            update_expression = ("SET last_heartbeat_time = :heartbeat_time")
+            expression_attribute_values = {
+                ":heartbeat_time": str(datetime.datetime.now()),
+            }
+            sync_table.update_item(
+                Key={'endpoint_name': ENDPOINT_NAME,
+                     'gen_instance_id': GEN_INSTANCE_ID},
+                UpdateExpression=update_expression,
+                ExpressionAttributeValues=expression_attribute_values
+            )
+    except Exception as e:
+        print(f"sync_instance_monitor_status error :{e}")
 
 
 # must be sync invoke and use the env to check
@@ -246,24 +263,30 @@ async def sync_instance(request):
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
             print("no last sync record found do not need sync")
+            sync_instance_monitor_status(True)
             return web.Response(status=200)
 
         if ('request_id' in last_sync_record and last_sync_record['request_id']
                 and os.environ.get('last_sync_request_id')
                 and os.environ.get('last_sync_request_id') == last_sync_record['request_id']):
             print("last sync record already sync by os check")
+            sync_instance_monitor_status(False)
             return web.Response(status=200)
 
         instance_monitor_record = get_latest_ddb_instance_monitor_record()
         if not instance_monitor_record:
             sync_already = await prepare_comfy_env(last_sync_record)
-            print("should init prepare instance_monitor_record")
-            sync_status = 'success' if sync_already else 'failed'
-            save_sync_instance_count(last_sync_record['request_id'], sync_status)
+            if sync_already:
+                print("should init prepare instance_monitor_record")
+                sync_status = 'success' if sync_already else 'failed'
+                save_sync_instance_monitor(last_sync_record['request_id'], sync_status)
+            else:
+                sync_instance_monitor_status(False)
         else:
             if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
                     and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
                 print("last sync record already sync")
+                sync_instance_monitor_status(False)
                 return web.Response(status=200)
 
             sync_already = await prepare_comfy_env(last_sync_record)
