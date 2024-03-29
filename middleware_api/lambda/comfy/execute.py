@@ -105,9 +105,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     if ep.endpoint_type == 'Async':
         sm_out = async_inference(payload, inference_id, ep.endpoint_name)
-        resp = {
-            'output_path': sm_out.output_path,
-        }
     else:
         resp = real_time_inference(payload, inference_id, ep.endpoint_name)
         resp = InferenceResult(**resp)
