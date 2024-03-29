@@ -5,7 +5,6 @@ from aws_lambda_powertools import Tracer
 
 from client import DynamoDbUtilsService
 from common.response import ok, no_content
-from libs.comfy_data_types import ComfySyncTable
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -26,15 +25,21 @@ def check_sync_and_instance_from_ddb(endpoint_name):
     sync_record = ddb_service.get_item(sync_table, key_values={"endpoint_name": endpoint_name})
     logger.debug(f'sync_record is : {sync_record}')
     if sync_record is None or len(sync_record) == 0:
+        logger.info("No sync record for check_sync_and_instance_from_ddb return False")
         return False
     instance_count = int(sync_record['Item']['instance_count'])
     instance_monitor_records_resp = ddb_service.query_items(inference_monitor_table,
-                                                       key_values={"endpoint_name": endpoint_name})
+                                                            key_values={"endpoint_name": endpoint_name})
     if (instance_monitor_records_resp is None or 'Items' not in instance_monitor_records_resp
             or not instance_monitor_records_resp['Items']):
+        logger.info(f"No instance record for check_sync_and_instance_from_ddb return False")
+        logger.debug(f" {instance_monitor_records_resp}")
         return False
     if len(instance_monitor_records_resp['Items']) < instance_count:
+        logger.info(f"No enough instance record for check_sync_and_instance_from_ddb return False")
+        logger.debug(f" {instance_monitor_records_resp} {sync_record}")
         return False
+    logger.info(f"check_sync_and_instance_from_ddb return True")
     return True
 
 
