@@ -2,21 +2,17 @@ import base64
 import json
 import logging
 import os
-import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
 import boto3
-import sagemaker
 from aws_lambda_powertools import Tracer
-from sagemaker import Predictor
-from sagemaker.base_deserializers import JSONDeserializer
-from sagemaker.base_serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
+from inferences.start_inference_job import predictor_async_predict, get_real_time_predict_client
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
 from libs.utils import get_endpoint_by_name, response_error
@@ -87,18 +83,14 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
 
-    session = boto3.Session(region_name=region)
-    sagemaker_session = sagemaker.Session(boto_session=session)
-    predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)
     inference_id = str(uuid.uuid4())
-    predictor.serializer = JSONSerializer()
-    predictor.deserializer = JSONDeserializer()
-    logger.info("Start predict to get response:")
-    start = time.time()
-    prediction = predictor.predict(data=payload, inference_id=inference_id)
-    logger.info(f"Response object: {prediction}")
-    r = prediction
-    logger.info(r)
+
+    if ep.endpoint_type == 'Async':
+        resp = async_inference(payload, inference_id, ep.endpoint_name)
+    else:
+        resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+
+    logger.info(resp)
 
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
@@ -107,10 +99,11 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
         status=ComfyExecuteType.CREATED.value,
-        # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
-        prompt_params={'prompt': event.prompt, 'number': event.number, 'front': event.front,
-                       'extra_data': event.extra_data, 'client_id': event.client_id},
-        # 带后期再看是否要将参数统一变成s3的文件来管理 此处为入参路径 优先级不高 一期先放
+        prompt_params={'prompt': event.prompt,
+                       'number': event.number,
+                       'front': event.front,
+                       'extra_data': event.extra_data,
+                       'client_id': event.client_id},
         prompt_path='',
         create_time=datetime.now().isoformat(),
         start_time=datetime.now().isoformat(),
@@ -119,8 +112,9 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         output_files=None
     )
 
-    save_ddb_resp = ddb_service.put_items(execute_table, entries=inference_job.__dict__)
-    logger.info(f"Time taken: {time.time() - start}s save msg: {save_ddb_resp}")
+    ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+
+    return resp
 
 
 @tracer.capture_lambda_handler
@@ -129,37 +123,23 @@ def handler(raw_event, ctx):
         logger.info(f"execute start... Received event: {raw_event}")
         logger.info(f"Received ctx: {ctx}")
         event = ExecuteEvent(**json.loads(raw_event['body']))
-        invoke_sagemaker_inference(event)
-        # sync_param = build_s3_images_request(event.prompt_id, bucket_name, f'output/{event.prompt_id}')
-        # logger.info('sync_param : {}'.format(sync_param))
-        # response = requests.post(event.callback_url, json=sync_param)
-        # logger.info(f'call back url :{event.callback_url}, json:{json}, response:{response}')
-        # logger.info("execute end...")
-        return ok(data=event.prompt_id)
+        resp = invoke_sagemaker_inference(event)
+        return ok(data={
+            "prompt_id": event.prompt_id,
+            "resp": resp
+        })
     except Exception as e:
         return response_error(e)
 
+
 @tracer.capture_method
-def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
-    tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
-    prediction = predictor_async_predict(endpoint_name=endpoint_name,
-                                         data=payload.__dict__,
-                                         inference_id=job.InferenceJobId)
-    logger.info(f"prediction: {prediction}")
-    output_path = prediction.output_path
+def async_inference(payload: any, inference_id, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=inference_id)
+    return predictor_async_predict(endpoint_name=endpoint_name,
+                                   data=payload.__dict__,
+                                   inference_id=inference_id)
 
-    # update the ddb job status to 'inprogress' and save to ddb
-    job.status = 'inprogress'
-    job.params['output_path'] = output_path
-    ddb_service.put_items(inference_table_name, job.__dict__)
 
-    data = {
-        'inference': {
-            'inference_id': job.InferenceJobId,
-            'status': job.status,
-            'endpoint_name': endpoint_name,
-            'output_path': output_path
-        }
-    }
-
-    return accepted(data=data)
+@tracer.capture_method
+def real_time_inference(data: any, inference_id, endpoint_name):
+    return get_real_time_predict_client(endpoint_name).predict(data=data, inference_id=inference_id)
