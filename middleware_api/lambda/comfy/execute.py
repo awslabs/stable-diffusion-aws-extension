@@ -138,3 +138,28 @@ def handler(raw_event, ctx):
         return ok(data=event.prompt_id)
     except Exception as e:
         return response_error(e)
+
+@tracer.capture_method
+def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=job.InferenceJobId)
+    prediction = predictor_async_predict(endpoint_name=endpoint_name,
+                                         data=payload.__dict__,
+                                         inference_id=job.InferenceJobId)
+    logger.info(f"prediction: {prediction}")
+    output_path = prediction.output_path
+
+    # update the ddb job status to 'inprogress' and save to ddb
+    job.status = 'inprogress'
+    job.params['output_path'] = output_path
+    ddb_service.put_items(inference_table_name, job.__dict__)
+
+    data = {
+        'inference': {
+            'inference_id': job.InferenceJobId,
+            'status': job.status,
+            'endpoint_name': endpoint_name,
+            'output_path': output_path
+        }
+    }
+
+    return accepted(data=data)
