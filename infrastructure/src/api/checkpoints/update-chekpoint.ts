@@ -170,7 +170,7 @@ export class UpdateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 10240,
+      memorySize: 3070,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
@@ -186,7 +186,7 @@ export class UpdateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 4048,
+      memorySize: 3070,
       environment: {
         MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,

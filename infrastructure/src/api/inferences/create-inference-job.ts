@@ -187,7 +187,7 @@ export class CreateInferenceJobApi {
       runtime: Runtime.PYTHON_3_10,
       index: 'create_inference_job.py',
       handler: 'handler',
-      memorySize: 10240,
+      memorySize: 3070,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),

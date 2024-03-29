@@ -34,7 +34,7 @@ export class ResourceProvider extends Construct {
       },
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 4048,
+      memorySize: 3070,
       environment: {
         ROLE_ARN: this.role.roleArn,
       },

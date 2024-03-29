@@ -220,7 +220,7 @@ export class Inference {
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'inference_async_events.py',
-      memorySize: 10240,
+      memorySize: 3070,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {
