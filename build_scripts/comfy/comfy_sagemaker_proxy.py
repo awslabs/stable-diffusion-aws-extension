@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import os
@@ -35,6 +36,14 @@ class ComfyResponse:
     statusCode: int
     message: str
     body: Optional[dict]
+
+
+def ok(body: dict):
+    return web.Response(status=200, content_type='application/json', body=body)
+
+
+def error(msg: str):
+    return web.Response(status=500, content_type='application/json', text={"message": msg})
 
 
 async def prepare_comfy_env(sync_item: dict):
@@ -113,8 +122,31 @@ def sync_local_outputs_to_s3(s3_path, local_path):
         print(s5cmd_command)
         os.system(s5cmd_command)
         print(f'Files copied local to "s3://{BUCKET}/{s3_path}/" to "{local_path}/"')
+        clean_cmd = f'rm -rf {local_path}'
+        os.system(clean_cmd)
+        print(f'Files removed from local {local_path}')
     except Exception as e:
         print(f"Error executing s5cmd command: {e}")
+
+
+def sync_local_outputs_to_base64(local_path):
+    print("sync_local_outputs_to_base64 start")
+    try:
+        result = {}
+        for root, dirs, files in os.walk(local_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                with open(file_path, "rb") as f:
+                    file_content = f.read()
+                    base64_content = base64.b64encode(file_content).decode('utf-8')
+                    result[file] = base64_content
+        clean_cmd = f'rm -rf {local_path}'
+        os.system(clean_cmd)
+        print(f'Files removed from local {local_path}')
+        return result
+    except Exception as e:
+        print(f"Error executing s5cmd command: {e}")
+        return {}
 
 
 @server.PromptServer.instance.routes.post("/invocations")
@@ -133,7 +165,7 @@ async def invocations(request):
                 and 'prepare_props' in json_data and json_data['prepare_props']):
             sync_already = await prepare_comfy_env(json_data['prepare_props'])
             if not sync_already:
-                return web.Response(status=500, text="the environment is not ready with sync")
+                return error("the environment is not ready with sync")
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
@@ -147,28 +179,41 @@ async def invocations(request):
         valid = execution.validate_prompt(json_data['prompt'])
         if not valid[0]:
             print("the environment is not ready valid[0] is false, need to resync")
-            return web.Response(status=500, text="the environment is not ready valid[0] is false")
+            return error("the environment is not ready valid[0] is false")
         extra_data = {}
         if "extra_data" in json_data:
             extra_data = json_data["extra_data"]
         if "client_id" in json_data:
             extra_data["client_id"] = json_data["client_id"]
-        if valid[0]:
-            prompt_id = json_data['prompt_id']
-            e = execution.PromptExecutor(server_instance)
-            outputs_to_execute = valid[2]
-            e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
+
+        prompt_id = json_data['prompt_id']
+        e = execution.PromptExecutor(server_instance)
+        outputs_to_execute = valid[2]
+        e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
+
+        inference_type = json_data["inference_type"]
+        if inference_type == "Real-time":
+            response_body = {
+                "instance_id": GEN_INSTANCE_ID,
+                "status": "success",
+                "output_file_list": sync_local_outputs_to_base64('/opt/ml/code/output'),
+                "temp_file_list": sync_local_outputs_to_base64('/opt/ml/code/temp'),
+            }
+            return ok(response_body)
+        elif inference_type == "Async":
             # TODO 看下是否需要 调整为利用 sg 的 output path
             sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
-            clean_cmd = 'rm -rf /opt/ml/code/output'
-            os.system(clean_cmd)
-        # TODO 回写instance id 同步的放在body中 异步的放在s3的path中
-        # GEN_INSTANCE_ID
-
-        return web.Response(status=200)
+            sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
+            response_body = {
+                "instance_id": GEN_INSTANCE_ID,
+                "status": "success",
+                "output_path": f's3://{BUCKET}/output/{prompt_id}',
+                "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
+            }
+            return ok(response_body)
     except Exception as e:
         print("exception occurred", e)
-        return web.Response(status=500)
+        return error(f"exception occurred {e}")
 
 
 def get_last_ddb_sync_record():
@@ -279,7 +324,7 @@ async def sync_instance(request):
         if not last_sync_record:
             print("no last sync record found do not need sync")
             sync_instance_monitor_status(True)
-            return web.Response(status=200)
+            return web.Response(status=200, content_type='application/json')
 
         if ('request_id' in last_sync_record and last_sync_record['request_id']
                 and os.environ.get('last_sync_request_id')
