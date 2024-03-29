@@ -14,6 +14,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import {Size} from "aws-cdk-lib/core";
 
 
 export interface ExecuteApiProps {
@@ -100,6 +101,7 @@ export class ExecuteApi {
         's3:DeleteObject',
         's3:ListBucket',
         's3:CreateBucket',
+        's3:HeadBucket',
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
@@ -128,8 +130,9 @@ export class ExecuteApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 2048,
+      memorySize: 3070,
       tracing: aws_lambda.Tracing.ACTIVE,
+      ephemeralStorageSize: Size.gibibytes(10),
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,

@@ -252,7 +252,7 @@ export class CreateTrainingJobApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
-      memorySize: 4089,
+      memorySize: 3070,
       tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,

@@ -9,10 +9,13 @@ from typing import Optional
 
 import boto3
 from aws_lambda_powertools import Tracer
+from sagemaker import Predictor
+from sagemaker.deserializers import JSONDeserializer
+from sagemaker.predictor_async import AsyncPredictor
+from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from inferences.start_inference_job import predictor_async_predict, get_real_time_predict_client
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
 from libs.utils import get_endpoint_by_name, response_error
@@ -28,6 +31,7 @@ endpoint_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 index_name = "endpoint_name-startTime-index"
+predictors = {}
 
 
 @dataclass
@@ -135,11 +139,44 @@ def handler(raw_event, ctx):
 @tracer.capture_method
 def async_inference(payload: any, inference_id, endpoint_name):
     tracer.put_annotation(key="inference_id", value=inference_id)
-    return predictor_async_predict(endpoint_name=endpoint_name,
-                                   data=payload.__dict__,
-                                   inference_id=inference_id)
+    initial_args = {"InvocationTimeoutSeconds": 3600}
+    return get_async_predict_client(endpoint_name).predict_async(data=payload,
+                                                                 initial_args=initial_args,
+                                                                 inference_id=inference_id)
 
 
 @tracer.capture_method
 def real_time_inference(data: any, inference_id, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=inference_id)
     return get_real_time_predict_client(endpoint_name).predict(data=data, inference_id=inference_id)
+
+
+@tracer.capture_method
+def get_real_time_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
+    predictor = Predictor(endpoint_name)
+    predictor.serializer = JSONSerializer()
+    predictor.deserializer = JSONDeserializer()
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
+
+
+@tracer.capture_method
+def get_async_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
+    predictor = Predictor(endpoint_name)
+    predictor = AsyncPredictor(predictor, name=endpoint_name)
+    predictor.serializer = JSONSerializer()
+    predictor.deserializer = JSONDeserializer()
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
