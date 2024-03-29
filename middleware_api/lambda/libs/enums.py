@@ -4,7 +4,6 @@ from enum import Enum, unique
 @unique
 class EndpointType(Enum):
     RealTime = "Real-time"
-    Serverless = "Serverless"
     Async = "Async"
     List = [RealTime, Async]
 
@@ -75,14 +74,8 @@ class ComfyExecuteType(Enum):
 
 
 class ComfySyncStatus(Enum):
-    INIT = 'init'
     SUCCESS = 'success'
     FAILED = 'failed'
-
-
-class ComfyTaskType(Enum):
-    PREPARE = 'prepare'
-    INFERENCE = 'inference'
 
 
 class ComfyExecuteRespType(Enum):

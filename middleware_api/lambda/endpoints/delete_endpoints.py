@@ -4,13 +4,15 @@ import os
 from dataclasses import dataclass
 
 import boto3
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import BotoCoreError, ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import no_content
 from libs.utils import response_error
 
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+tracer = Tracer()
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -28,6 +30,7 @@ class DeleteEndpointEvent:
 
 
 # DELETE /endpoints
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
@@ -47,7 +50,9 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
+@tracer.capture_method
 def delete_endpoint(endpoint_item):
+    tracer.put_annotation("endpoint_item", endpoint_item)
     logger.info("endpoint_name")
     logger.info(json.dumps(endpoint_item))
 
@@ -80,6 +85,7 @@ def delete_endpoint(endpoint_item):
     delete_endpoint_item(endpoint_item)
 
 
+@tracer.capture_method
 def get_endpoint_in_sagemaker(endpoint_name):
     try:
         return sagemaker.describe_endpoint(EndpointName=endpoint_name)
@@ -95,7 +101,9 @@ def delete_endpoint_item(endpoint_item):
     )
 
 
+@tracer.capture_method
 def get_endpoint_with_endpoint_name(endpoint_name: str):
+    tracer.put_annotation("endpoint_name", endpoint_name)
     try:
         record_list = ddb_service.scan(table=sagemaker_endpoint_table, filters={
             'endpoint_name': endpoint_name,

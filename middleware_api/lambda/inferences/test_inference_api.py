@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 
 os.environ.setdefault('AWS_PROFILE', 'env')
-os.environ.setdefault('S3_BUCKET', 'your-bucket')
+os.environ.setdefault('S3_BUCKET_NAME', 'your-bucket')
 os.environ.setdefault('DATASET_ITEM_TABLE', 'DatasetItemTable')
 os.environ.setdefault('DATASET_INFO_TABLE', 'DatasetInfoTable')
 os.environ.setdefault('MULTI_USER_TABLE', 'MultiUserTable')
@@ -12,7 +12,7 @@ os.environ.setdefault('TRAIN_TABLE', 'TrainingTable')
 os.environ.setdefault('CHECKPOINT_TABLE', 'CheckpointTable')
 os.environ.setdefault('SAGEMAKER_ENDPOINT_NAME', 'aigc-utils-endpoint')
 
-os.environ.setdefault('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME', 'SDEndpointDeploymentJobTable')
+os.environ.setdefault('ENDPOINT_TABLE_NAME', 'SDEndpointDeploymentJobTable')
 os.environ.setdefault('INFERENCE_JOB_TABLE', 'SDInferenceJobTable')
 
 

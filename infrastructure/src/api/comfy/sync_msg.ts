@@ -6,10 +6,9 @@ import {
   aws_iam,
   aws_lambda,
   aws_sqs,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
+import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -27,7 +26,6 @@ export interface SyncMsgApiProps {
   msgTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 
@@ -38,11 +36,12 @@ export class SyncMsgApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: SyncMsgApiProps) {
     this.scope = scope;
@@ -54,8 +53,10 @@ export class SyncMsgApi {
     this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
     this.queue = props.queue;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
+
     this.syncMSGApi();
   }
 
@@ -131,13 +132,12 @@ export class SyncMsgApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MSG_TABLE: this.msgTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
         SQS_URL: this.queue.queueUrl,
-        BUCKET_NAME: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -152,7 +152,16 @@ export class SyncMsgApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
+  }
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -164,14 +173,16 @@ export class SyncMsgApi {
       },
       contentType: 'application/json',
     });
+  }
 
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestModels: {
-        'application/json': requestModel,
-      },
-    });
+  private createRequestValidator() {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-sync-msg-validator`,
+      {
+        restApi: this.router.api,
+        validateRequestBody: true,
+      });
   }
 }
 

@@ -273,7 +273,7 @@ def api_setting_tab():
                                            variant='primary',
                                            elem_id="aws_config_save")
         with gr.Row():
-            update_extension_btn = gr.Button(value="Update Extension",
+            update_extension_btn = gr.Button(value="Update SageMaker Extension",
                                              elem_id="update_extension")
             restart_service = gr.Button(value="Restart WebUI",
                                         elem_id="restart_service")
@@ -1052,6 +1052,8 @@ def _list_sagemaker_endpoints(username, last_key: str = ""):
 
     endpoints = []
     for endpoint in resp:
+        if 'service_type' in endpoint and endpoint['service_type'] != 'sd':
+            continue
         if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
             endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:
@@ -1209,7 +1211,6 @@ def dataset_tab():
 
             file_output = gr.File()
             upload_button = gr.UploadButton("Click to Upload Files",
-                                            file_types=["image", "video", "text"],
                                             file_count="multiple")
             upload_button.upload(fn=upload_file, inputs=[upload_button], outputs=[file_output])
 

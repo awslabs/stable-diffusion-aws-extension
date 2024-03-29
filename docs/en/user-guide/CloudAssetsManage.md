@@ -42,14 +42,14 @@ Method Three:
 2. The default deployment type for the solution is ml.g5.2xlarge, with 1 instance. The endpoint autoscaling feature is enabled by default. Simply click the **Deploy** button to initiate the deployment of the Sagemaker endpoint.
 3. If users wish to specify the endpoint name, instance type, and maximum instance count for the endpoint's instances, they can check the **Advanced Endpoint Configuration** checkbox. This will display additional parameters for user input. The following table lists the names and descriptions of these parameters:
 
-   | Parameter Name    | Description                                                                                                                                                                                                                                                                                   |
-                |-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-   | Endpoint Name (Optional) | If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be esd-type-XXXXX.                                                                                                                                      |
-   | Endpoint Type | Select the inference type Async/Real time for the deployed Endpoint                                                                                                                                                                                                                           |
-   | Instance Type     | Select the instance type for the deployed endpoint from the dropdown list.                                                                                                                                                                                                                    |
-   | Max Instance Number | Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Number based on average CPU usage.                                                                       |
-   | Enable Autoscaling | If this checkbox is selected, Async inference will scale elastically between 0 and Max Instance Numbers based on the average backlog of each instance, while Real-time inference will scale elastically between 1 and Max Instance Numbers based on the average number of calls per instance. |
-   | Min Instance Number | If Enable Autoscaling is true, This value will be the minimum number of Endpoint instances                                                                                                                                                                                                    |
+      | Parameter Name    | Description                                                                                                                                                                                                                                                                                   |
+                  |-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+      | Endpoint Name (Optional) | If you need to specify a name for the Sagemaker endpoint, enter it in this input box. If not modified, the default endpoint name will be esd-type-XXXXX.                                                                                                                                      |
+      | Endpoint Type | Select the inference type Async/Real time for the deployed Endpoint                                                                                                                                                                                                                           |
+      | Instance Type     | Select the instance type for the deployed endpoint from the dropdown list.                                                                                                                                                                                                                    |
+      | Max Instance Number | Choose the maximum number of instances for the deployed endpoint from the dropdown list. If Autoscaling is selected, Sagemaker will elastically scale between 0 and the Max Instance Number based on average CPU usage.                                                                       |
+      | Enable Autoscaling | If this checkbox is selected, Async inference will scale elastically between 0 and Max Instance Numbers based on the average backlog of each instance, while Real-time inference will scale elastically between 1 and Max Instance Numbers based on the average number of calls per instance. |
+      | Min Instance Number | If Enable Autoscaling is true, This value will be the minimum number of Endpoint instances                                                                                                                                                                                                    |
 
 4. After selecting the default endpoint configuration or setting up the advanced endpoint configuration, click **Deploy**. You'll see a message indicating **Endpoint deployment started** under **Label**.
    ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
@@ -67,13 +67,13 @@ Method Three:
 
 
 
-# AWS Dataset Management
 
+# AWS Dataset Management
 ## Create Dataset
 In functions such as model fine-tuning, it is necessary to provide a file of images for fine-tuning work. This functional module helps users quickly upload images to the cloud.
 
 1. Navigate to main tab **Amazon SageMaker**, section **AWS Dataset Management**，sub-tab **Create**.
-![Create Dataset to S3](../images/Dataset-management.png)
+![Create Dataset to S3](../images/Dataset_management.png)
 
 2. Click **Click to Upload a File**, in the local file browser that pops up, confirm to select all the images required for one model fine-tuning.
 3. Enter file name in **Dataset Name**, enter file description in **Dataset Description**, click **Create Dataset**.

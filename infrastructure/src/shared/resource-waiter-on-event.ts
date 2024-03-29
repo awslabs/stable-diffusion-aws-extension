@@ -1,5 +1,4 @@
 import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { INFER_INDEX_NAME } from './resource-provider-on-event';
 
 const ddbClient = new DynamoDBClient({});
 const lambdaStartTime = Date.now();
@@ -24,7 +23,8 @@ export async function handler(event: Event, context: Object) {
 
   if (allow_types.includes(event.RequestType)) {
     await waitApiReady(event);
-    await waitTableIndexReady('SDInferenceJobTable', INFER_INDEX_NAME);
+    await waitTableIndexReady('SDInferenceJobTable', 'taskType', 'createTime');
+    await waitTableIndexReady('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
   }
 
   return response(event, true);
@@ -80,7 +80,8 @@ async function waitApiReady(event: Event) {
 }
 
 
-async function waitTableIndexReady(tableName: string, indexName: string) {
+async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
+  const indexName = `${pk}-${sk}-index`;
 
   const startCheckTime = Date.now();
 

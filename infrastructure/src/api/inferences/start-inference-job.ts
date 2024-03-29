@@ -1,14 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -26,7 +17,6 @@ export interface StartInferenceJobApiProps {
   srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class StartInferenceJobApi {
@@ -42,7 +32,6 @@ export class StartInferenceJobApi {
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly checkpointTable: aws_dynamodb.Table;
   private readonly userTable: aws_dynamodb.Table;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: StartInferenceJobApiProps) {
     this.id = id;
@@ -56,7 +45,6 @@ export class StartInferenceJobApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
-    this.logLevel = props.logLevel;
 
     this.updateTrainJobLambda();
   }
@@ -103,12 +91,11 @@ export class StartInferenceJobApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:ListBuckets',
         's3:CreateBucket',
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
@@ -134,17 +121,14 @@ export class StartInferenceJobApi {
       runtime: Runtime.PYTHON_3_10,
       index: 'start_inference_job.py',
       handler: 'handler',
-      memorySize: 10240,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
       environment: {
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        MULTI_USER_TABLE: this.userTable.tableName,
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

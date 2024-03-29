@@ -5,7 +5,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -24,7 +23,6 @@ export interface QueryExecuteApiProps {
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 
@@ -35,10 +33,11 @@ export class QueryExecuteApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: QueryExecuteApiProps) {
     this.scope = scope;
@@ -50,7 +49,8 @@ export class QueryExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.queryExecuteApi();
   }
@@ -108,17 +108,31 @@ export class QueryExecuteApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         EXECUTE_TABLE: this.executeTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
-        BUCKET_NAME: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
+  }
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -143,28 +157,16 @@ export class QueryExecuteApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator() {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-qry-execute-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,
       });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator,
-      requestModels: {
-        'application/json': requestModel,
-      },
-    });
   }
 }
 

@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_USER_ALL, PERMISSION_USER_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
@@ -9,6 +11,7 @@ from common.util import get_query_param
 from libs.data_types import User, PARTITION_KEYS, Role
 from libs.utils import KeyEncryptService, get_permissions_by_username, response_error, permissions_check
 
+tracer = Tracer()
 user_table = os.environ.get('MULTI_USER_TABLE')
 kms_key_id = os.environ.get('KEY_ID')
 
@@ -20,6 +23,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 password_encryptor = KeyEncryptService()
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     # todo: if user has no list all, we should add username to self, prevent security issue
     _filter = {}

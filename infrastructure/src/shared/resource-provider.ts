@@ -1,4 +1,4 @@
-import { Aws, CustomResource, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, CustomResource, Duration } from 'aws-cdk-lib';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
@@ -7,8 +7,9 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 export interface ResourceProviderProps {
-  bucketName?: string;
-  ecrImageTag?: string;
+  bucketName: string;
+  esdVersion: string;
+  timestamp?: string;
 }
 
 export class ResourceProvider extends Construct {
@@ -34,10 +35,10 @@ export class ResourceProvider extends Construct {
       },
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 4048,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         ROLE_ARN: this.role.roleArn,
-        BUCKET_NAME: props.bucketName ?? '',
       },
     });
 
@@ -118,6 +119,8 @@ export class ResourceProvider extends Construct {
         'logs:CreateLogStream',
         'logs:PutLogEvents',
         'kms:Decrypt',
+        'kms:CancelKeyDeletion',
+        'kms:EnableKey',
       ],
       resources: ['*'],
     }));

@@ -1,14 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  Aws,
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_s3,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -25,7 +16,6 @@ export interface CreateCheckPointApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
-  logLevel: CfnParameter;
 }
 
 export class CreateCheckPointApi {
@@ -41,7 +31,6 @@ export class CreateCheckPointApi {
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly uploadByUrlLambda: PythonFunction;
   private readonly role: aws_iam.Role;
-  private readonly logLevel: CfnParameter;
   private readonly baseId: string;
 
   constructor(scope: Construct, id: string, props: CreateCheckPointApiProps) {
@@ -54,7 +43,6 @@ export class CreateCheckPointApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.logLevel = props.logLevel;
     this.role = this.iamRole();
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -72,13 +60,11 @@ export class CreateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 10240,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -118,8 +104,6 @@ export class CreateCheckPointApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -235,13 +219,11 @@ export class CreateCheckPointApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.role,
-      memorySize: 4048,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        S3_BUCKET: this.s3Bucket.bucketName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

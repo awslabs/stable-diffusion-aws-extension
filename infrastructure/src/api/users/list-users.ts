@@ -1,13 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_kms,
-  aws_lambda,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -21,7 +13,6 @@ export interface ListUsersApiProps {
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
-  logLevel: CfnParameter;
 }
 
 export class ListUsersApi {
@@ -33,7 +24,6 @@ export class ListUsersApi {
   private readonly layer: aws_lambda.LayerVersion;
   private readonly passwordKey: aws_kms.IKey;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: ListUsersApiProps) {
     this.scope = scope;
@@ -44,7 +34,6 @@ export class ListUsersApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.listUsersApi();
   }
@@ -100,10 +89,9 @@ export class ListUsersApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

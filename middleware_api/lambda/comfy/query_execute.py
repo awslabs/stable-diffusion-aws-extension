@@ -5,18 +5,21 @@ import os
 from dataclasses import dataclass
 
 import boto3
+from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
 
-from client import DynamoDbUtilsService
+from common.ddb_service.client import DynamoDbUtilsService
+from common.response import ok, not_found
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteRespType
-from response import ok, not_found
+from libs.utils import response_error
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
@@ -28,7 +31,6 @@ class QueryExecuteEvent:
 
 
 def generate_presigned_url(bucket, key, expiration=3600):
-    """Generate a presigned URL for the S3 object."""
     s3_client = boto3.client('s3', region_name=region)
     try:
         response = s3_client.generate_presigned_url(
@@ -89,12 +91,16 @@ def build_ddb_execute_response(prompt_id, resp_type):
     return response
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
-    logger.info(f"query execute start... Received event: {event}")
-    logger.info(f"Received ctx: {ctx}")
-    event = QueryExecuteEvent(**json.loads(event['body']))
-    prompt_id = event.prompt_id
-    resp_type = event.resp_type
-    response = build_ddb_execute_response(prompt_id, resp_type)
-    logger.info(f"query execute end... response: {response}")
-    return ok(data=response)
+    try:
+        logger.info(f"query execute start... Received event: {event}")
+        logger.info(f"Received ctx: {ctx}")
+        event = QueryExecuteEvent(**json.loads(event['body']))
+        prompt_id = event.prompt_id
+        resp_type = event.resp_type
+        response = build_ddb_execute_response(prompt_id, resp_type)
+        logger.info(f"query execute end... response: {response}")
+        return ok(data=response)
+    except Exception as e:
+        return response_error(e)

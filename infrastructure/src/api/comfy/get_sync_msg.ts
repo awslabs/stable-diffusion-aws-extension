@@ -6,10 +6,8 @@ import {
   aws_iam,
   aws_lambda,
   aws_sqs,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -27,7 +25,6 @@ export interface GetSyncMsgApiProps {
   msgTable: aws_dynamodb.Table;
   queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 
@@ -38,7 +35,6 @@ export class GetSyncMsgApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
@@ -54,8 +50,8 @@ export class GetSyncMsgApi {
     this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
     this.queue = props.queue;
+
     this.getSyncMSGApi();
   }
 
@@ -132,13 +128,12 @@ export class GetSyncMsgApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         MSG_TABLE: this.msgTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
-        BUCKET_NAME: this.s3Bucket.bucketName,
         SQS_URL: this.queue.queueUrl,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
@@ -153,25 +148,9 @@ export class GetSyncMsgApi {
       },
     );
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        additionalProperties: true,
-      },
-      contentType: 'application/json',
-    });
-
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestModels: {
-        'application/json': requestModel,
-      },
     });
   }
 }

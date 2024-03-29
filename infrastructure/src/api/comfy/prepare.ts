@@ -6,8 +6,6 @@ import {
   aws_dynamodb,
   aws_iam,
   aws_lambda,
-  aws_sqs,
-  CfnParameter,
   Duration,
 } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
@@ -27,9 +25,7 @@ export interface PrepareApiProps {
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
-  queue: aws_sqs.Queue;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class PrepareApi {
@@ -39,13 +35,13 @@ export class PrepareApi {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
-  private readonly logLevel: CfnParameter;
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
-  private queue: aws_sqs.Queue;
+  public model: Model;
+  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: PrepareApiProps) {
     this.scope = scope;
@@ -59,8 +55,8 @@ export class PrepareApi {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
-    this.queue = props.queue;
+    this.model = this.createModel();
+    this.requestValidator = this.createRequestValidator();
 
     this.prepareApi();
   }
@@ -123,13 +119,6 @@ export class PrepareApi {
       resources: ['*'],
     }));
 
-    newRole.addToPolicy(new aws_iam.PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'sqs:SendMessage',
-      ],
-      resources: [this.queue.queueArn],
-    }));
     return newRole;
   }
 
@@ -142,20 +131,34 @@ export class PrepareApi {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 1024,
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         SYNC_TABLE: this.syncTable.tableName,
         CONFIG_TABLE: this.configTable.tableName,
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         ENDPOINT_TABLE: this.endpointTable.tableName,
-        SQS_URL: this.queue.queueUrl,
-        BUCKET_NAME: this.s3Bucket.bucketName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });
 
-    const requestModel = new Model(this.scope, `${this.baseId}-model`, {
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
+  }
+
+  private createModel(): Model {
+    return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
@@ -191,28 +194,16 @@ export class PrepareApi {
       },
       contentType: 'application/json',
     });
+  }
 
-    const requestValidator = new RequestValidator(
+  private createRequestValidator() {
+    return new RequestValidator(
       this.scope,
-      `${this.baseId}-validator`,
+      `${this.baseId}-prepare-validator`,
       {
         restApi: this.router.api,
         validateRequestBody: true,
       });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator,
-      requestModels: {
-        'application/json': requestModel,
-      },
-    });
   }
 }
 

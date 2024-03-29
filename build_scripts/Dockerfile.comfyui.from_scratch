@@ -3,23 +3,24 @@ FROM 763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-inference:2.0.1-gpu-py
 # update environment
 RUN apt-get update -y
 
-RUN mkdir /opt/ml/code && \
-    git clone https://github.com/comfyanonymous/ComfyUI.git /opt/ml/code
-    # git -C /opt/ml/code checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf
+RUN mkdir /home/ubuntu && \
+    git clone https://github.com/comfyanonymous/ComfyUI.git /home/ubuntu
+    # git -C /home/ubuntu checkout cf1d67a6fd5ea1aa600c4df58e5b47da45f6bdbf
 
-COPY comfyui/serve.py /opt/ml/code
-COPY comfyui/comfy_sagemaker_proxy.py /opt/ml/code/custom_nodes
+COPY comfyui/serve.py /home/ubuntu
+COPY comfyui/comfy_sagemaker_proxy.py /home/ubuntu/custom_nodes
 
 RUN pip install fastapi && \
-    pip install uvicorn
+    pip install uvicorn && \
+    pip install altair
 
 # download s5cmd
-RUN mkdir -p /opt/ml/code/tools
-RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
-RUN tar xzvf /opt/ml/code/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /opt/ml/code/tools/
+RUN mkdir -p /home/ubuntu/tools
+RUN wget https://github.com/peak/s5cmd/releases/download/v2.0.0/s5cmd_2.0.0_Linux-64bit.tar.gz -O /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz
+RUN tar xzvf /home/ubuntu/tools/s5cmd_2.0.0_Linux-64bit.tar.gz -C /home/ubuntu/tools/
 
 # prepare environment fow ComfyUI
-RUN pip install -r /opt/ml/code/requirements.txt && \
+RUN pip install -r /home/ubuntu/requirements.txt && \
     pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118 && \
     pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip && \
     pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip && \
@@ -27,16 +28,16 @@ RUN pip install -r /opt/ml/code/requirements.txt && \
 
 # RUN apt-get update && apt-get install -y nfs-common
 
-# VOLUME ["/opt/ml/code/efs"]
-# CMD ["sh", "-c", "mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 fs-0662c75114e7eae65.efs.us-east-1.amazonaws.com:/ /opt/ml/code/efs"]
+# VOLUME ["/home/ubuntu/efs"]
+# CMD ["sh", "-c", "mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 fs-0662c75114e7eae65.efs.us-east-1.amazonaws.com:/ /home/ubuntu/efs"]
 
 RUN apt-get install -y libtcmalloc-minimal4
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
-RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
+RUN echo "/home/ubuntu" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
-WORKDIR /opt/ml/code
+WORKDIR /home/ubuntu
 
 ENV ON_DOCKER true
-#ENV SAGEMAKER_PROGRAM /opt/ml/code/main.py
-ENTRYPOINT ["python", "/opt/ml/code/serve.py"]
+#ENV SAGEMAKER_PROGRAM /home/ubuntu/main.py
+ENTRYPOINT ["python", "/home/ubuntu/serve.py"]

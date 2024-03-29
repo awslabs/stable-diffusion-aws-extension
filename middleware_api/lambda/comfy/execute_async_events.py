@@ -3,9 +3,11 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
-from sns_util import send_message_to_sns
+from common.sns_util import send_message_to_sns
 
+tracer = Tracer()
 s3_resource = boto3.resource('s3')
 
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
@@ -15,6 +17,7 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 
 # TODO
+@tracer.capture_lambda_handler
 def handler(event, context):
     logger.info(json.dumps(event))
     message = event['Records'][0]['Sns']['Message']
@@ -37,4 +40,3 @@ def handler(event, context):
     endpoint_name = message["requestParameters"]["endpointName"]
     output_location = message["responseParameters"]["outputLocation"]
     # TODO 将结果写入ddb中 sg的 output path
-

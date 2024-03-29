@@ -11,6 +11,7 @@ import boto3
 import sagemaker
 import tomli
 import tomli_w
+from aws_lambda_powertools import Tracer
 
 from checkpoints.create_checkpoint import check_ckpt_name_unique
 from common import const
@@ -30,7 +31,8 @@ from libs.data_types import (
 )
 from libs.utils import get_user_roles, permissions_check, response_error, log_json
 
-bucket_name = os.environ.get("S3_BUCKET")
+tracer = Tracer()
+bucket_name = os.environ.get("S3_BUCKET_NAME")
 train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
@@ -348,6 +350,7 @@ def _create_training_job(raw_event, context):
     return train_job.id
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     job_id = None
     try:

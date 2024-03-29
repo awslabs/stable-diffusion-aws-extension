@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
-import { aws_dynamodb, aws_sns, aws_sqs, CfnParameter, StackProps } from 'aws-cdk-lib';
+import { aws_dynamodb, aws_sns, aws_sqs, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
@@ -28,9 +28,9 @@ export interface EndpointStackProps extends StackProps {
   multiUserTable: dynamodb.Table;
   snsTopic: aws_sns.Topic;
   EndpointDeploymentJobTable: aws_dynamodb.Table;
+  syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  logLevel: CfnParameter;
-  ecrImageTag: CfnParameter;
   accountId: ICfnRuleConditionExpression;
   queue: aws_sqs.Queue;
 }
@@ -52,7 +52,6 @@ export class EndpointStack {
         multiUserTable: props.multiUserTable,
         httpMethod: 'GET',
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
 
@@ -64,7 +63,6 @@ export class EndpointStack {
         multiUserTable: props.multiUserTable,
         httpMethod: 'DELETE',
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
 
@@ -74,7 +72,6 @@ export class EndpointStack {
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
         srcRoot: srcRoot,
-        logLevel: props.logLevel,
       },
     );
 
@@ -84,15 +81,15 @@ export class EndpointStack {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
+        syncTable: props.syncTable,
+        instanceMonitorTable: props.instanceMonitorTable,
         httpMethod: 'POST',
         srcRoot: srcRoot,
-        s3Bucket: props.s3Bucket,
         userNotifySNS: props.snsTopic,
         queue: props.queue,
         accountId: props.accountId,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
-        logLevel: props.logLevel,
       },
     );
     createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);

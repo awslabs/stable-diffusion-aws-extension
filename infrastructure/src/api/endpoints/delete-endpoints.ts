@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -21,7 +21,6 @@ export interface DeleteEndpointsApiProps {
   multiUserTable: Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class DeleteEndpointsApi {
@@ -35,7 +34,6 @@ export class DeleteEndpointsApi {
   private readonly multiUserTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: DeleteEndpointsApiProps) {
     this.scope = scope;
@@ -46,7 +44,6 @@ export class DeleteEndpointsApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
@@ -162,11 +159,7 @@ export class DeleteEndpointsApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
+      tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
 

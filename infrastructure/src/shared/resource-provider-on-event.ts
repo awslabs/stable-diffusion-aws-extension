@@ -11,9 +11,11 @@ import { UpdateTableCommandInput } from '@aws-sdk/client-dynamodb/dist-types/com
 import { AttributeDefinition, KeySchemaElement } from '@aws-sdk/client-dynamodb/dist-types/models/models_0';
 import { GetRoleCommand, GetRoleCommandOutput, IAMClient } from '@aws-sdk/client-iam';
 import {
+  CancelKeyDeletionCommand,
   CreateAliasCommand,
   CreateKeyCommand,
   DisableKeyRotationCommand,
+  EnableKeyCommand,
   KMSClient,
   ListAliasesCommand,
 } from '@aws-sdk/client-kms';
@@ -37,10 +39,9 @@ const iamClient = new IAMClient({});
 const {
   AWS_REGION,
   ROLE_ARN,
-  BUCKET_NAME,
+  S3_BUCKET_NAME,
 } = process.env;
 const accountId = ROLE_ARN?.split(':')[4] || '';
-export const INFER_INDEX_NAME = 'taskType-createTime-index';
 
 interface Event {
   RequestType: string;
@@ -75,9 +76,9 @@ async function createAndCheckResources() {
   await createTopics();
   await waitTableReady('MultiUserTable');
   await putItemUsersTable();
-  await waitTableReady('SDInferenceJobTable');
-  await createGlobalSecondaryIndex('SDInferenceJobTable');
-  // todo check kms key and enable sd-extension-password-key
+
+  await createGlobalSecondaryIndex('SDInferenceJobTable', 'taskType', 'createTime');
+  await createGlobalSecondaryIndex('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
 }
 
 async function waitTableReady(tableName: string) {
@@ -122,8 +123,8 @@ function response(event: Event, isComplete: boolean) {
 }
 
 function getBucketName() {
-  if (BUCKET_NAME) {
-    return BUCKET_NAME;
+  if (S3_BUCKET_NAME) {
+    return S3_BUCKET_NAME;
   }
 
   return `ESD-${accountId}-${AWS_REGION}`;
@@ -233,13 +234,17 @@ async function createTables() {
     },
     ComfySyncTable: {
       partitionKey: {
-        name: 'request_id',
+        name: 'endpoint_name',
         type: AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'request_time',
+        type: AttributeType.NUMBER,
       },
     },
     ComfyInstanceMonitorTable: {
       partitionKey: {
-        name: 'endpoint_id',
+        name: 'endpoint_name',
         type: AttributeType.STRING,
       },
       sortKey: {
@@ -355,30 +360,33 @@ async function putItem(tableName: string, item: any) {
   }
 }
 
-async function createGlobalSecondaryIndex(tableName: string) {
+async function createGlobalSecondaryIndex(tableName: string, pk: string, sk: string) {
+
+  await waitTableReady(tableName);
+
   const params: UpdateTableCommandInput = {
     TableName: tableName,
     AttributeDefinitions: [
       {
-        AttributeName: 'taskType',
+        AttributeName: pk,
         AttributeType: 'S',
       },
       {
-        AttributeName: 'createTime',
+        AttributeName: sk,
         AttributeType: 'S',
       },
     ],
     GlobalSecondaryIndexUpdates: [
       {
         Create: {
-          IndexName: INFER_INDEX_NAME,
+          IndexName: `${pk}-${sk}-index`,
           KeySchema: [
             {
-              AttributeName: 'taskType',
+              AttributeName: pk,
               KeyType: 'HASH',
             },
             {
-              AttributeName: 'createTime',
+              AttributeName: sk,
               KeyType: 'RANGE',
             },
           ],
@@ -483,9 +491,13 @@ async function putBucketCors(bucketName: string) {
 
 async function createTopics() {
   const list = [
+    // SD
     'ReceiveSageMakerInferenceSuccess',
     'ReceiveSageMakerInferenceError',
     'StableDiffusionSnsUserTopic',
+    // comfy
+    'comfyExecuteFail',
+    'comfyExecuteSuccess',
   ];
 
   for (let Name of list) {
@@ -526,6 +538,25 @@ async function createKms(aliasName: string, description: string) {
     TargetKeyId: key?.KeyMetadata?.KeyId,
   });
   await kmsClient.send(createAliasCommand);
+
+  // the key maybe pending deletion, so cancel and enable it
+  try {
+    const cancelKeyDeletionCommand = new CancelKeyDeletionCommand({
+      KeyId: key.KeyMetadata?.KeyId,
+    });
+    await kmsClient.send(cancelKeyDeletionCommand);
+  } catch (err: any) {
+    console.log(err);
+  }
+
+  try {
+    const enableKeyCommand = new EnableKeyCommand({
+      KeyId: key.KeyMetadata?.KeyId,
+    });
+    await kmsClient.send(enableKeyCommand);
+  } catch (err: any) {
+    console.log(err);
+  }
 
   console.log(`Kms ${aliasName} created.`);
   return true;

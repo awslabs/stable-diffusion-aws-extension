@@ -98,6 +98,7 @@ class CloudApiManager:
 
         payload = {
             "endpoint_name": endpoint_name,
+            "service_type": 'sd',
             "endpoint_type": endpoint_type,
             "instance_type": instance_type,
             "initial_instance_count": initial_instance_count,
@@ -416,7 +417,8 @@ class CloudApiManager:
         params = {
             'username': username,
             'types': types,
-            'status': status
+            'status': status,
+            'per_page': 100,
         }
         headers = self._get_headers_by_user(username)
         raw_resp = api.list_checkpoints(params=params, headers=headers)

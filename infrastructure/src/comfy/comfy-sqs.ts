@@ -2,7 +2,7 @@ import { Duration } from 'aws-cdk-lib';
 import { AccountRootPrincipal, AnyPrincipal, Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
-import { SOLUTION_NAME } from '../shared/constant';
+import { SOLUTION_NAME } from '../shared/const';
 
 export interface SqsProps {
   name: string;

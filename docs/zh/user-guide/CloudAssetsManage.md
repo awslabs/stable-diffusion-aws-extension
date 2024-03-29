@@ -1,6 +1,6 @@
 本章节将详细介绍本解决方案提供的便捷云上资源管理方式。
 
-## 上传训练模型
+## 上传模型
 如需在txt2img或img2img使用非云端推理模型，您可以选择按下列两种方式的步骤完成推理模型上传，即可按[txt2img](./txt2img-guide.md)或[img2img](./img2img-guide.md)相应步骤完成模型调用及推理。
 
 ### 从原生webUI上传模型至云上
@@ -48,17 +48,16 @@
 
 1. 进入解决方案主标签页**Amazon SageMaker**，找到**Cloud Assents Management**模块的**Deploy New SageMaker Endpoint**区域。
 2. 方案默认部署的Endpoint类型为ml.g5.2xlarge, instance数量是1，默认会开启endpoint的autoscaling功能，直接点击**Deploy**按钮启动Sagemaker endpoint的部署。
-3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Endpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下列标哥列出了这几个参数的名字和含义:
+3. 如果用户需要自己指定Endpoint的名字，Instance类型以及Endpoint中instance的最大数量，可以点击**Advanced Endpoint Configuration**的checkbox，这时界面会显示更多的参数让用户输入，下表展示相关参数的名字和含义:
 
-   | 参数名                 | 描述                                                                                                                                         |
-       |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-   | Endpoint Name (可选)  | 如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为 esd-type-XXXXX                                                              |
-   | Endpoint Type       | 下拉框选择部署的Endpoint的推理类型 Async / Real-time                                                                                                    |
-   | Instance Type       | 下拉框选择部署的Endpoint的实例类型                                                                                                                      |
-   | Max Instance Number | 下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，异步推理会根据平均每个实例队列积压情况在 0-Max Instance Number 之间弹性伸缩，同步推理会根据平均每个实例调用数在 1-Max Instance Number 之间弹性伸缩 |
-   | Enable Autoscaling  | 如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在 0-Max Instance Number 之间弹性伸缩, 否则Endpoint对应的instance数会固定在 Max Instance Number                         |
-   | Min Instance Number  | 如果选择了 Enable Autoscaling，该值将是 Endpoint 实例数的最小数量                                                                                            |
-
+    | 参数名                 | 描述                                                                                                                                         |
+        |---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+    | Endpoint Name (可选)  | 如果需要指定Sagemaker endpoint的名字，在这个输入框中输入，如果不修改这个值，默认的Endpoint的名字为 esd-type-XXXXX                                                              |
+    | Endpoint Type       | 下拉框选择部署的Endpoint的推理类型 Async / Real-time                                                                                                    |
+    | Instance Type       | 下拉框选择部署的Endpoint的实例类型                                                                                                                      |
+    | Max Instance Number | 下拉框选择部署的Endpoint的实例最大值，如果选择了Autoscaling，异步推理会根据平均每个实例队列积压情况在 0-Max Instance Number 之间弹性伸缩，同步推理会根据平均每个实例调用数在 1-Max Instance Number 之间弹性伸缩 |
+    | Enable Autoscaling  | 如果选择了该checkbox，Sagemaker会根据CPU的平均占用率在 0-Max Instance Number 之间弹性伸缩, 否则Endpoint对应的instance数会固定在 Max Instance Number                         |
+    | Min Instance Number  | 如果选择了 Enable Autoscaling，该值将是 Endpoint 实例数的最小数量                                                                                            |
 
 4. 选择完默认的Endpoint配置或者设置完高级的Endpoint配置后，点击**Deploy**, 可以在**Label**处看到**Endpoint deployment started**的提示信息。
 ![Deploy new endpoint](../images/Deploy-new-endpoint.png)
@@ -79,11 +78,13 @@
 在模型微调等功能中，需要输入一个图片集，用以微调工作。该功能模块助力用户快速上传图片集到云端。
 
 1. 进入解决方案主标签页**Amazon SageMaker**，**AWS Dataset Management**区块，**Create**标签页。
-![Create Dataset to S3](../images/Dataset-management.png)
+![Create Dataset to S3](../images/Dataset_management.png)
 
 2. 点击**Click to Upload a File**，在弹出的本地文件列表中，确认选中一次模型微调所需的所有图片。
 3. 在**Dataset Name**输入该图片文件夹的名字，在**Dataset Description**输入该数据集的描述，点击**Create Dataset**。
 4. 等待几秒，下方的**Create Result**区域显示**Complete Dataset XXXX creation**，即表示该数据集已经成功上传到云上。
+
+
 
 ### 数据集浏览
 数据集上传完成后，通过此功能模块，能够帮助用户快速得到数据集对应的云上地址。用户可以复制此地址，粘贴到对应需要上传图片集的地址位置。

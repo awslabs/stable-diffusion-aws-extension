@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found, forbidden
@@ -10,9 +12,10 @@ from libs.data_types import DatasetItem, DatasetInfo
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
     response_error
 
+tracer = Tracer()
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
-bucket_name = os.environ.get('S3_BUCKET')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -22,6 +25,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 # GET /dataset/{name}
+@tracer.capture_lambda_handler
 def handler(event, context):
     _filter = {}
 
@@ -64,7 +68,8 @@ def handler(event, context):
                 'key': item.sort_key,
                 'name': item.name,
                 'type': item.type,
-                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(dataset_info.prefix), expires=3600 * 24,
+                'preview_url': generate_presign_url(bucket_name, item.get_s3_key(dataset_info.prefix),
+                                                    expires=3600 * 24,
                                                     method='get_object'),
                 'dataStatus': item.data_status.value,
                 **item.params

@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_iam, aws_sqs, CfnParameter, Duration } from 'aws-cdk-lib';
+import {Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -12,11 +12,10 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { ECR_IMAGE_TAG } from '../../common/dockerImageTag';
+import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -25,14 +24,14 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
+  syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: LayerVersion;
-  s3Bucket: Bucket;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   queue: aws_sqs.Queue;
-  logLevel: CfnParameter;
   accountId: ICfnRuleConditionExpression;
 }
 
@@ -45,15 +44,15 @@ export class CreateEndpointApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
+  private readonly syncTable: Table;
+  private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly accountId: ICfnRuleConditionExpression;
-  private readonly s3Bucket: Bucket;
   private readonly userNotifySNS: Topic;
   private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -62,14 +61,14 @@ export class CreateEndpointApi {
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
+    this.syncTable = props.syncTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.s3Bucket = props.s3Bucket;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
     this.queue = props.queue;
-    this.logLevel = props.logLevel;
     this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -98,6 +97,7 @@ export class CreateEndpointApi {
         's3:List*',
         's3:PutObject',
         's3:GetObject',
+        's3:DeleteObject',
       ],
       resources: [
         '*',
@@ -136,6 +136,8 @@ export class CreateEndpointApi {
         'iam:CreateServiceLinkedRole',
         'iam:PassRole',
         'sts:AssumeRole',
+        'xray:PutTraceSegments',
+        'xray:PutTelemetryRecords',
       ],
       resources: ['*'],
     });
@@ -223,11 +225,15 @@ export class CreateEndpointApi {
           },
           endpoint_type: {
             type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
+            enum: ['Real-time', 'Async'],
           },
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
+          },
+          service_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['sd', 'comfy'],
           },
           instance_type: {
             type: JsonSchemaType.STRING,
@@ -254,9 +260,6 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_type',
@@ -264,7 +267,6 @@ export class CreateEndpointApi {
           'initial_instance_count',
           'autoscaling_enabled',
           'assign_to_roles',
-          'creator',
         ],
       },
     });
@@ -291,17 +293,15 @@ export class CreateEndpointApi {
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        S3_BUCKET_NAME: this.s3Bucket.bucketName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ECR_IMAGE_TAG}`,
-        ECR_IMAGE_TAG: ECR_IMAGE_TAG,
-        QUEUE_URL: this.queue.queueUrl,
+        COMFY_QUEUE_URL: this.queue.queueUrl,
+        COMFY_SYNC_TABLE: this.syncTable.tableName,
+        COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
+        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

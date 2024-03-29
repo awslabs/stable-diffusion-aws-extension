@@ -1,12 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -19,7 +12,6 @@ export interface ListAllRolesApiProps {
   multiUserTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class ListRolesApi {
@@ -30,7 +22,6 @@ export class ListRolesApi {
   private readonly multiUserTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: ListAllRolesApiProps) {
     this.scope = scope;
@@ -40,7 +31,6 @@ export class ListRolesApi {
     this.multiUserTable = props.multiUserTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.listAllRolesApi();
   }
@@ -83,10 +73,7 @@ export class ListRolesApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
-      environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
-      },
+      tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
 

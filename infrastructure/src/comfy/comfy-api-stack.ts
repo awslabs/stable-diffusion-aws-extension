@@ -1,6 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, CfnParameter, Duration, StackProps } from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, Duration, StackProps } from 'aws-cdk-lib';
 
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -13,7 +13,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
-import { CreateSageMakerEndpoint, CreateSageMakerEndpointProps } from '../api/comfy/create_endpoint';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
@@ -26,7 +25,6 @@ import { ResourceProvider } from '../shared/resource-provider';
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
-  ecrImageTag: CfnParameter;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
@@ -39,7 +37,6 @@ export interface ComfyInferenceStackProps extends StackProps {
   executeSuccessTopic: sns.Topic;
   executeFailTopic: sns.Topic;
   snsTopic: aws_sns.Topic;
-  logLevel: CfnParameter;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
   queue: sqs.Queue;
@@ -58,9 +55,6 @@ export class ComfyApiStack extends Construct {
 
   constructor(scope: Construct, id: string, props: ComfyInferenceStackProps) {
     super(scope, id);
-    if (!props?.ecrImageTag) {
-      throw new Error('ecrImageTag is required');
-    }
     this.layer = props.commonLayer;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
@@ -70,10 +64,7 @@ export class ComfyApiStack extends Construct {
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
 
-    const srcImg = Aws.ACCOUNT_ID + '.dkr.ecr.' + Aws.REGION + '.amazonaws.com/comfyui-aws-extension/gen-ai-comfyui-inference:' + props?.ecrImageTag;
     const srcRoot = '../middleware_api/lambda';
-
-    const model_data_url = 's3://' + props.s3Bucket.bucketName + '/data/model.tar.gz';
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
@@ -92,19 +83,6 @@ export class ComfyApiStack extends Construct {
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
 
-
-    new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
-      httpMethod: 'POST',
-      router: props.routers.sync,
-      srcRoot: srcRoot,
-      s3Bucket: props.s3Bucket,
-      configTable: this.configTable,
-      msgTable: this.msgTable,
-      queue: this.queue,
-      commonLayer: this.layer,
-      logLevel: props.logLevel,
-    });
-
     new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
       httpMethod: 'GET',
       router: syncMsgGetRouter,
@@ -114,40 +92,36 @@ export class ComfyApiStack extends Construct {
       msgTable: this.msgTable,
       queue: this.queue,
       commonLayer: this.layer,
-      logLevel: props.logLevel,
     });
 
-    new CreateSageMakerEndpoint(scope, 'ComfyEndpoint', <CreateSageMakerEndpointProps>{
-      dockerImageUrl: srcImg,
-      modelDataUrl: model_data_url,
+    const synMsgApi = new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
+      httpMethod: 'POST',
+      router: props.routers.sync,
+      srcRoot: srcRoot,
       s3Bucket: props.s3Bucket,
-      machineType: 'ml.g4dn.2xlarge',
-      rootSrc: srcRoot,
       configTable: this.configTable,
-      syncTable: this.syncTable,
-      commonLayer: this.layer,
+      msgTable: this.msgTable,
       queue: this.queue,
-      logLevel: props.logLevel,
+      commonLayer: this.layer,
     });
-
 
     // POST /execute
-    new ExecuteApi(
+    const executeAPi = new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.execute,
         srcRoot: srcRoot,
-        s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         executeTable: this.executeTable,
-        queue: this.queue,
+        endpointTable: this.endpointTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
+    executeAPi.model.node.addDependency(synMsgApi.model);
+    executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // POST /execute
-    new QueryExecuteApi(
+    const queryExecuteApi = new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.queryExecute,
@@ -157,12 +131,13 @@ export class ComfyApiStack extends Construct {
         executeTable: this.executeTable,
         queue: this.queue,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
+    queryExecuteApi.model.node.addDependency(executeAPi.model);
+    queryExecuteApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // POST /prepare
-    new PrepareApi(
+    const prepareApi = new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
@@ -174,9 +149,10 @@ export class ComfyApiStack extends Construct {
         endpointTable: this.endpointTable,
         queue: this.queue,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
+    prepareApi.model.node.addDependency(queryExecuteApi.model);
+    prepareApi.requestValidator.node.addDependency(queryExecuteApi.requestValidator);
 
     // GET /execute/{id}
     new GetExecuteApi(
@@ -188,7 +164,6 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -203,7 +178,6 @@ export class ComfyApiStack extends Construct {
         syncTable: this.syncTable,
         instanceMonitorTable: this.instanceMonitorTable,
         commonLayer: this.layer,
-        logLevel: props.logLevel,
       },
     );
 
@@ -212,16 +186,15 @@ export class ComfyApiStack extends Construct {
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'execute_async_events.py',
-      memorySize: 10240,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {
         INFERENCE_JOB_TABLE: props.executeTable.tableName,
-        S3_BUCKET_NAME: props.s3Bucket.bucketName ?? '',
         ACCOUNT_ID: Aws.ACCOUNT_ID,
         REGION_NAME: Aws.REGION,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
-        LOG_LEVEL: props.logLevel.valueAsString,
       },
       layers: [props.commonLayer],
       logRetention: RetentionDays.ONE_WEEK,

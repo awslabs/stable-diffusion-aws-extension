@@ -38,7 +38,6 @@ export class DatasetStack {
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
     });
 
     // PUT /datasets/{id}
@@ -51,7 +50,6 @@ export class DatasetStack {
       router: routers.datasets,
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
     updateDatasetApi.model.node.addDependency(createDatasetApi.model);
     updateDatasetApi.requestValidator.node.addDependency(createDatasetApi.requestValidator);
@@ -62,10 +60,8 @@ export class DatasetStack {
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
       router: routers.datasets,
-      s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
-      logLevel: props.logLevel,
     });
 
     // GET /dataset/{dataset_name}
@@ -78,7 +74,6 @@ export class DatasetStack {
       router: updateDatasetApi.router,
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     });
 
     // DELETE /datasets
@@ -91,7 +86,6 @@ export class DatasetStack {
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
-      logLevel: props.logLevel,
     },
     );
     deleteDatasetsApi.model.node.addDependency(updateDatasetApi.model);

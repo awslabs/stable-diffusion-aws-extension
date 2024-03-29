@@ -1,12 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  CfnParameter,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -21,7 +14,6 @@ export interface ListInferencesApiProps {
   inferenceJobTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class ListInferencesApi {
@@ -34,7 +26,6 @@ export class ListInferencesApi {
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
 
   constructor(scope: Construct, id: string, props: ListInferencesApiProps) {
@@ -47,7 +38,6 @@ export class ListInferencesApi {
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.listAllSageMakerInferenceJobApi();
   }
@@ -95,11 +85,9 @@ export class ListInferencesApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
-        LOG_LEVEL: this.logLevel.valueAsString,
       },
       layers: [this.layer],
     });

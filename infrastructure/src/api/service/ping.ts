@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, CfnParameter, Duration } from 'aws-cdk-lib';
+import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
 import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -10,7 +10,6 @@ export interface PingApiProps {
   httpMethod: string;
   srcRoot: string;
   commonLayer: LayerVersion;
-  logLevel: CfnParameter;
 }
 
 export class PingApi {
@@ -20,7 +19,6 @@ export class PingApi {
   private readonly scope: Construct;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly logLevel: CfnParameter;
 
   constructor(scope: Construct, id: string, props: PingApiProps) {
     this.scope = scope;
@@ -29,7 +27,6 @@ export class PingApi {
     this.httpMethod = props.httpMethod;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.logLevel = props.logLevel;
 
     this.pingApi();
   }
@@ -71,10 +68,8 @@ export class PingApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         layers: [this.layer],
-        environment: {
-          LOG_LEVEL: this.logLevel.valueAsString,
-        },
       });
 
 

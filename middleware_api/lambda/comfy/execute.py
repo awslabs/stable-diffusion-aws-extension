@@ -2,32 +2,54 @@ import base64
 import json
 import logging
 import os
-import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from common.ddb_service.client import DynamoDbUtilsService
-
 import boto3
-import sagemaker
+from aws_lambda_powertools import Tracer
 from sagemaker import Predictor
-from sagemaker.base_deserializers import JSONDeserializer
-from sagemaker.base_serializers import JSONSerializer
+from sagemaker.deserializers import JSONDeserializer
+from sagemaker.predictor_async import AsyncPredictor
+from sagemaker.serializers import JSONSerializer
 
-from libs.comfy_data_types import ComfyExecuteTable
-from libs.enums import ComfyTaskType, ComfyExecuteType
+from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import BadRequestException
 from common.response import ok
+from libs.comfy_data_types import ComfyExecuteTable
+from libs.enums import ComfyExecuteType
+from libs.utils import get_endpoint_by_name, response_error
+
+tracer = Tracer()
+region = os.environ.get('AWS_REGION')
+bucket_name = os.environ.get('S3_BUCKET_NAME')
+execute_table = os.environ.get('EXECUTE_TABLE')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
-region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('BUCKET_NAME')
-sqs_url = os.environ.get('SQS_URL')
-execute_table = os.environ.get('EXECUTE_TABLE')
+endpoint_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
 ddb_service = DynamoDbUtilsService(logger=logger)
+
+index_name = "endpoint_name-startTime-index"
+predictors = {}
+
+
+@dataclass
+class InferenceResult:
+    instance_id: str
+    status: str
+    message: Optional[str] = None
+    output_path: Optional[str] = None
+    temp_path: Optional[str] = None
+
+
+@dataclass
+class PrepareProps:
+    prepare_type: Optional[str] = "inputs"
+    s3_source_path: Optional[str] = None
+    local_target_path: Optional[str] = None
+    sync_script: Optional[str] = None
 
 
 @dataclass
@@ -41,6 +63,8 @@ class ExecuteEvent:
     front: Optional[bool] = None
     extra_data: Optional[dict] = None
     client_id: Optional[str] = None
+    need_prepare: bool = False
+    prepare_props: Optional[PrepareProps] = None
 
 
 def build_s3_images_request(prompt_id, bucket_name, s3_path):
@@ -59,61 +83,122 @@ def build_s3_images_request(prompt_id, bucket_name, s3_path):
     return {'prompt_id': prompt_id, 'image_video_data': image_video_dict}
 
 
+@tracer.capture_method
 def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
-    # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
-    #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
+
+    ep = get_endpoint_by_name(endpoint_name)
+
+    if ep.endpoint_status != 'InService':
+        raise Exception(f"Endpoint {endpoint_name} is not in service")
+
+    logger.info(f"endpoint: {ep}")
+
     payload = event.__dict__
-    payload['task_type'] = ComfyTaskType.INFERENCE
-    payload["bucket_name"] = bucket_name
-    payload["sqs_url"] = sqs_url
     logger.info('inference payload: {}'.format(payload))
-    # TODO 同步异步推理的选择 以及endpoint的选择
-    session = boto3.Session(region_name=region)
-    sagemaker_session = sagemaker.Session(boto_session=session)
-    predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)
+
     inference_id = str(uuid.uuid4())
-    predictor.serializer = JSONSerializer()
-    predictor.deserializer = JSONDeserializer()
-    logger.info("Start predict to get response:")
-    start = time.time()
-    prediction = predictor.predict(data=payload, inference_id=inference_id)
-    logger.info(f"Response object: {prediction}")
-    r = prediction
-    logger.info(r)
-    # TODO 获取哪些可用的endpoint name 以及instance type 默认异步
+
+    job_status = ComfyExecuteType.CREATED.value
+    sagemaker_raw = {
+    }
+
+    if ep.endpoint_type == 'Async':
+        sm_out = async_inference(payload, inference_id, ep.endpoint_name)
+        resp = {
+            'output_path': sm_out.output_path,
+        }
+    else:
+        resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+        resp = InferenceResult(**resp)
+        job_status = resp.status
+        sagemaker_raw = resp.__dict__
+
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
         inference_type=event.inference_type,
-        # TODO shell脚本补全instanceId 补全id 知道推理环境
-        instance_id='',
+        instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
-        status=ComfyExecuteType.CREATED,
-        # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
-        prompt_params={'prompt': event.prompt, 'number': event.number, 'front': event.front,
-                       'extra_data': event.extra_data, 'client_id': event.client_id},
-        # 带后期再看是否要将参数统一变成s3的文件来管理 此处为入参路径 优先级不高 一期先放
+        status=job_status,
+        prompt_params={'prompt': event.prompt,
+                       'number': event.number,
+                       'front': event.front,
+                       'extra_data': event.extra_data,
+                       'client_id': event.client_id},
         prompt_path='',
-        create_time=datetime.now(),
-        start_time=datetime.now(),
+        create_time=datetime.now().isoformat(),
+        start_time=datetime.now().isoformat(),
         complete_time=None,
+        sagemaker_raw=sagemaker_raw,
         output_path='',
         output_files=None
     )
 
-    save_ddb_resp = ddb_service.put_items(execute_table, entries=inference_job.__dict__)
-    logger.info(f"Time taken: {time.time() - start}s save msg: {save_ddb_resp}")
+    ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+
+    return inference_job
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
-    logger.info(f"execute start... Received event: {raw_event}")
-    logger.info(f"Received ctx: {ctx}")
-    event = ExecuteEvent(**json.loads(raw_event['body']))
-    invoke_sagemaker_inference(event)
-    # sync_param = build_s3_images_request(event.prompt_id, bucket_name, f'output/{event.prompt_id}')
-    # logger.info('sync_param : {}'.format(sync_param))
-    # response = requests.post(event.callback_url, json=sync_param)
-    # logger.info(f'call back url :{event.callback_url}, json:{json}, response:{response}')
-    # logger.info("execute end...")
-    return ok(data=event.prompt_id)
+    try:
+        logger.info(f"execute start... Received event: {raw_event}")
+        logger.info(f"Received ctx: {ctx}")
+        event = ExecuteEvent(**json.loads(raw_event['body']))
+
+        if not event.prompt:
+            raise BadRequestException("Prompt is required")
+
+        resp = invoke_sagemaker_inference(event)
+
+        return ok(data=resp.__dict__)
+
+    except Exception as e:
+        return response_error(e)
+
+
+@tracer.capture_method
+def async_inference(payload: any, inference_id, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=inference_id)
+    initial_args = {"InvocationTimeoutSeconds": 3600}
+    return get_async_predict_client(endpoint_name).predict_async(data=payload,
+                                                                 initial_args=initial_args,
+                                                                 inference_id=inference_id)
+
+
+@tracer.capture_method
+def real_time_inference(data: any, inference_id, endpoint_name):
+    tracer.put_annotation(key="inference_id", value=inference_id)
+    return get_real_time_predict_client(endpoint_name).predict(data=data, inference_id=inference_id)
+
+
+@tracer.capture_method
+def get_real_time_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
+    predictor = Predictor(endpoint_name)
+    predictor.serializer = JSONSerializer()
+    predictor.deserializer = JSONDeserializer()
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
+
+
+@tracer.capture_method
+def get_async_predict_client(endpoint_name):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+    if endpoint_name in predictors:
+        return predictors[endpoint_name]
+
+    predictor = Predictor(endpoint_name)
+    predictor = AsyncPredictor(predictor, name=endpoint_name)
+    predictor.serializer = JSONSerializer()
+    predictor.deserializer = JSONDeserializer()
+
+    predictors[endpoint_name] = predictor
+
+    return predictor
