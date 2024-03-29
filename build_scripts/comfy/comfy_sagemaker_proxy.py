@@ -322,7 +322,7 @@ async def sync_instance(request):
     # if 'ALREADY_SYNC' in os.environ and os.environ.get('ALREADY_SYNC').lower() == 'false':
     #     time.sleep(60 * 1)
     #
-    os.environ['ALREADY_SYNC'] = False
+    os.environ['ALREADY_SYNC'] = 'false'
     print(f"sync_instance start ！！ {datetime.datetime.now().isoformat()} {request}")
     try:
         # TODO sync invoke check
