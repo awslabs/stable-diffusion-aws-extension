@@ -53,7 +53,6 @@ class ComfySyncTable:
     local_target_path: Optional[str]
     sync_script: Optional[str]
     endpoint_snapshot: Optional[Any]
-    sync_status: ComfySyncStatus
     request_time: int
     request_time_str: str
 

@@ -11,7 +11,6 @@ from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.comfy_data_types import ComfySyncTable
 from libs.data_types import EndpointDeploymentJob
-from libs.enums import ComfySyncStatus
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -72,7 +71,6 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
         local_target_path=event.local_target_path,
         sync_script=event.sync_script,
         endpoint_snapshot=json.dumps(endpoint_info),
-        sync_status=ComfySyncStatus.INIT,
         request_time=int(datetime.now().timestamp()),
         request_time_str=str(datetime.now()),
     )

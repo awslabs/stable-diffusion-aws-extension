@@ -84,28 +84,26 @@ class ComfyApp:
 #     cmd = "python main.py  --listen {} --port {}".format(host, port)
 #     os.system(cmd)
 def check_and_reboot():
-    try:
-        while True:
-            response = requests.get(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/queue")
-            if response.status_code == 200:
-                while True:
-                    response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
-                    print(f"sync response:{response} time : {datetime.datetime.now()}")
-                    need_reboot = os.environ.get('NEED_REBOOT')
-                    print(f'need_reboot value check: {need_reboot} ！')
-                    # for key, value in os.environ.items():
-                    #     print(f"{key}: {value}")
-                    if need_reboot and need_reboot.lower() == 'true':
-                        os.environ['NEED_REBOOT'] = 'false'
-                        print(f'need_reboot, reboot  start!')
-                        comfy_app.restart()
-                        print(f'need_reboot, reboot  finished!')
-                        time.sleep(60 * 3)
-            else:
-                print(f"check_and_reboot check status: {response}")
-                time.sleep(10)
-    except Exception as e:
-        print(f"check_and_reboot error:{e}")
+    print("start check_and_reboot!")
+    while True:
+        print("start check_and_reboot! checking server-------")
+        try:
+            print("start check_and_reboot! checking function-------")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
+            print(f"sync response:{response} time : {datetime.datetime.now()}")
+            need_reboot = os.environ.get('NEED_REBOOT')
+            print(f'need_reboot value check: {need_reboot} ！')
+            # for key, value in os.environ.items():
+            #     print(f"{key}: {value}")
+            if need_reboot and need_reboot.lower() == 'true':
+                os.environ['NEED_REBOOT'] = 'false'
+                print(f'need_reboot, reboot  start!')
+                comfy_app.restart()
+                print(f'need_reboot, reboot  finished!')
+            time.sleep(60 * 3)
+        except Exception as e:
+            print(f"check_and_reboot error:{e}")
+            time.sleep(10)
 
 
 
@@ -127,13 +125,12 @@ if __name__ == "__main__":
     comfy_app = ComfyApp()
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
 
-    start_event = threading.Event()
-    check_thread = threading.Thread(target=check_and_reboot, args=(start_event,))
+    check_thread = threading.Thread(target=check_and_reboot)
 
     comfy_app.start()
     api_process.start()
+    check_thread.start()
 
-    comfy_app.process.join()
     api_process.join()
     check_thread.join()
 
