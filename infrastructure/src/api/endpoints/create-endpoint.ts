@@ -97,6 +97,7 @@ export class CreateEndpointApi {
         's3:List*',
         's3:PutObject',
         's3:GetObject',
+        's3:HeadBucket',
       ],
       resources: [
         '*',
@@ -224,7 +225,7 @@ export class CreateEndpointApi {
           },
           endpoint_type: {
             type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
+            enum: ['Real-time', 'Async'],
           },
           cool_down_time: {
             type: JsonSchemaType.STRING,

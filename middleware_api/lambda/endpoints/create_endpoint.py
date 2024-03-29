@@ -45,7 +45,7 @@ class CreateEndpointEvent:
     max_instance_number: str = "1"
     min_instance_number: str = "0"
     endpoint_name: str = None
-    # real-time / serverless / async
+    # real-time / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
     custom_extensions: str = ""
@@ -149,8 +149,6 @@ def handler(raw_event, ctx):
             if event.endpoint_type == EndpointType.RealTime.value:
                 _create_endpoint_config_provisioned(endpoint_config_name, model_name,
                                                     initial_instance_count, instance_type)
-            elif event.endpoint_type == EndpointType.Serverless.value:
-                _create_endpoint_config_serverless(endpoint_config_name)
             elif event.endpoint_type == EndpointType.Async.value:
                 _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name,
                                               initial_instance_count, instance_type)
@@ -253,24 +251,6 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
 def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
                                         instance_type):
     production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
-
-    logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
-
-    response = sagemaker.create_endpoint_config(
-        EndpointConfigName=endpoint_config_name,
-        ProductionVariants=production_variants
-    )
-    logger.info(f"Successfully created endpoint configuration: {response}")
-
-
-@tracer.capture_method
-def _create_endpoint_config_serverless(endpoint_config_name):
-    production_variants = [
-        {
-            'MemorySizeInMB': 2048,
-            'MaxConcurrency': 100
-        }
-    ]
 
     logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
 

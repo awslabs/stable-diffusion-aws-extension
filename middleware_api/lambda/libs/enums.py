@@ -4,7 +4,6 @@ from enum import Enum, unique
 @unique
 class EndpointType(Enum):
     RealTime = "Real-time"
-    Serverless = "Serverless"
     Async = "Async"
     List = [RealTime, Async]
 

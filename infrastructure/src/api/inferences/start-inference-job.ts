@@ -96,8 +96,6 @@ export class StartInferenceJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
@@ -123,7 +121,7 @@ export class StartInferenceJobApi {
       runtime: Runtime.PYTHON_3_10,
       index: 'start_inference_job.py',
       handler: 'handler',
-      memorySize: 10240,
+      memorySize: 3070,
       tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),

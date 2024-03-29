@@ -93,7 +93,7 @@ export class SagemakerEndpointEvents {
       handler: 'handler',
       timeout: Duration.seconds(900),
       role: this.iamRole(),
-      memorySize: 4048,
+      memorySize: 3070,
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
