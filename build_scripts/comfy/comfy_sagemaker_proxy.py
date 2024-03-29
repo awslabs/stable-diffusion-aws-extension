@@ -152,71 +152,72 @@ def sync_local_outputs_to_base64(local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    # response_body = {
-    #     "instance_id": GEN_INSTANCE_ID,
-    #     "status": "success",
-    #     "output_path": f's3://{BUCKET}/output/11111111-1111-1111',
-    #     "temp_path": f's3://{BUCKET}/temp/11111111-1111-1111',
-    # }
-    # return ok(response_body)
-    # TODO serve 级别加锁
-    json_data = await request.json()
-    print(f"invocations start json_data:{json_data}")
-    global need_sync
-    need_sync = json_data["need_sync"]
-    global prompt_id
-    prompt_id = json_data["prompt_id"]
-    try:
-        print(
-            f'bucket_name: {BUCKET}, region: {REGION}')
-        if ('need_prepare' in json_data and json_data['need_prepare']
-                and 'prepare_props' in json_data and json_data['prepare_props']):
-            sync_already = await prepare_comfy_env(json_data['prepare_props'])
-            if not sync_already:
-                resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
-                        "message": "the environment is not ready with sync"}
-                return error(resp)
-        server_instance = server.PromptServer.instance
-        if "number" in json_data:
-            number = float(json_data['number'])
-            server_instance.number = number
-        else:
-            number = server_instance.number
-            if "front" in json_data:
-                if json_data['front']:
-                    number = -number
-            server_instance.number += 1
-        valid = execution.validate_prompt(json_data['prompt'])
-        if not valid[0]:
-            resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
-                    "message": "the environment is not ready valid[0] is false, need to resync"}
-            return error(resp)
-        extra_data = {}
-        if "extra_data" in json_data:
-            extra_data = json_data["extra_data"]
-        if "client_id" in json_data:
-            extra_data["client_id"] = json_data["client_id"]
-
-        prompt_id = json_data['prompt_id']
-        e = execution.PromptExecutor(server_instance)
-        outputs_to_execute = valid[2]
-        e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
-
-        sync_local_outputs_to_s3(f'output/{prompt_id}', '/home/ubuntu/output')
-        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/home/ubuntu/temp')
-        response_body = {
-            "prompt_id": prompt_id,
-            "instance_id": GEN_INSTANCE_ID,
-            "status": "success",
-            "output_path": f's3://{BUCKET}/output/{prompt_id}',
-            "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
-        }
-        return ok(response_body)
-    except Exception as e:
-        print("exception occurred", e)
-        resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
-                "message": f"exception occurred {e}"}
-        return error(resp)
+    response_body = {
+        "prompt_id": '11111111-1111-1111',
+        "instance_id": GEN_INSTANCE_ID,
+        "status": "success",
+        "output_path": f's3://{BUCKET}/output/11111111-1111-1111',
+        "temp_path": f's3://{BUCKET}/temp/11111111-1111-1111',
+    }
+    return ok(response_body)
+    # # TODO serve 级别加锁
+    # json_data = await request.json()
+    # print(f"invocations start json_data:{json_data}")
+    # global need_sync
+    # need_sync = json_data["need_sync"]
+    # global prompt_id
+    # prompt_id = json_data["prompt_id"]
+    # try:
+    #     print(
+    #         f'bucket_name: {BUCKET}, region: {REGION}')
+    #     if ('need_prepare' in json_data and json_data['need_prepare']
+    #             and 'prepare_props' in json_data and json_data['prepare_props']):
+    #         sync_already = await prepare_comfy_env(json_data['prepare_props'])
+    #         if not sync_already:
+    #             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+    #                     "message": "the environment is not ready with sync"}
+    #             return error(resp)
+    #     server_instance = server.PromptServer.instance
+    #     if "number" in json_data:
+    #         number = float(json_data['number'])
+    #         server_instance.number = number
+    #     else:
+    #         number = server_instance.number
+    #         if "front" in json_data:
+    #             if json_data['front']:
+    #                 number = -number
+    #         server_instance.number += 1
+    #     valid = execution.validate_prompt(json_data['prompt'])
+    #     if not valid[0]:
+    #         resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+    #                 "message": "the environment is not ready valid[0] is false, need to resync"}
+    #         return error(resp)
+    #     extra_data = {}
+    #     if "extra_data" in json_data:
+    #         extra_data = json_data["extra_data"]
+    #     if "client_id" in json_data:
+    #         extra_data["client_id"] = json_data["client_id"]
+    #
+    #     prompt_id = json_data['prompt_id']
+    #     e = execution.PromptExecutor(server_instance)
+    #     outputs_to_execute = valid[2]
+    #     e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
+    #
+    #     sync_local_outputs_to_s3(f'output/{prompt_id}', '/home/ubuntu/output')
+    #     sync_local_outputs_to_s3(f'temp/{prompt_id}', '/home/ubuntu/temp')
+    #     response_body = {
+    #         "prompt_id": prompt_id,
+    #         "instance_id": GEN_INSTANCE_ID,
+    #         "status": "success",
+    #         "output_path": f's3://{BUCKET}/output/{prompt_id}',
+    #         "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
+    #     }
+    #     return ok(response_body)
+    # except Exception as e:
+    #     print("exception occurred", e)
+    #     resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+    #             "message": f"exception occurred {e}"}
+    #     return error(resp)
 
 
 def get_last_ddb_sync_record():
