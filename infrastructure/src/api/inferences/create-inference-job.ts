@@ -72,7 +72,7 @@ export class CreateInferenceJobApi {
           },
           inference_type: {
             type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
+            enum: ['Real-time', 'Async'],
           },
           payload_string: {
             type: JsonSchemaType.STRING,
@@ -137,8 +137,6 @@ export class CreateInferenceJobApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -151,8 +149,6 @@ export class CreateInferenceJobApi {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 

@@ -13,8 +13,8 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import {Size} from "aws-cdk-lib/core";
 
 
 export interface ExecuteApiProps {
@@ -106,6 +106,7 @@ export class ExecuteApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `${this.s3Bucket.bucketArn}`,
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
       ],
     }));
 

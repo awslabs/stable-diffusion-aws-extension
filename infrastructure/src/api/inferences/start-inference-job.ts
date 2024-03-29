@@ -96,8 +96,6 @@ export class StartInferenceJobApi {
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
