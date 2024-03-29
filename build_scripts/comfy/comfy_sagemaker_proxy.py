@@ -54,8 +54,9 @@ async def prepare_comfy_env(sync_item: dict):
                                 or sync_script.startswith("os.environ")):
                 os.system(sync_script)
 
-        need_reboot = sync_item['need_reboot']
-        if need_reboot and need_reboot.lower() == 'true':
+        need_reboot = True if ('need_reboot' in sync_item and sync_item['need_reboot']
+                               and str(sync_item['need_reboot']).lower() == 'true')else False
+        if need_reboot:
             os.environ['NEED_REBOOT'] = 'true'
         else:
             os.environ['NEED_REBOOT'] = 'false'
@@ -119,6 +120,11 @@ async def invocations(request):
     try:
         print(
             f'bucket_name: {BUCKET}, region: {REGION}')
+        if ('need_prepare' in json_data and json_data['need_prepare']
+                and 'prepare_props' in json_data and json_data['prepare_props']):
+            sync_already = await prepare_comfy_env(json_data['prepare_props'])
+            if not sync_already:
+                return web.Response(status=500, text="the environment is not ready with sync")
         server_instance = server.PromptServer.instance
         if "number" in json_data:
             number = float(json_data['number'])
