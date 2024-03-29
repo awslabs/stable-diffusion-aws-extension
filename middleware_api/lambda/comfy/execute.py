@@ -121,7 +121,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    return resp
+    return inference_job
 
 
 @tracer.capture_lambda_handler
