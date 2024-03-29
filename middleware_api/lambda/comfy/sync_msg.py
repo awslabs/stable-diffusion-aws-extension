@@ -54,9 +54,8 @@ def save_message_to_dynamodb(prompt_id, message):
 
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
+    logger.info(f"sync msg start... Received event: {raw_event}")
     try:
-        logger.info("sync msg start...")
-        logger.info(f"Received event: {raw_event}")
         if 'Records' not in raw_event or not raw_event['Records']:
             logger.error("ignore empty records msg")
             return ok()

@@ -39,11 +39,11 @@ class ComfyResponse:
 
 
 def ok(body: dict):
-    return web.Response(status=200, content_type='application/json', body=body)
+    return web.Response(status=200, content_type='application/json', body=json.dumps(body))
 
 
 def error(msg: str):
-    return web.Response(status=500, content_type='application/json', text={"message": msg})
+    return web.Response(status=500, content_type='application/json', text=json.dumps({"message": msg}))
 
 
 async def prepare_comfy_env(sync_item: dict):
@@ -151,67 +151,58 @@ def sync_local_outputs_to_base64(local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    print("invocations start!!")
-    response_body = {
-        "instance_id": GEN_INSTANCE_ID,
-        "status": "success",
-        "output_path": f's3://{BUCKET}/output/{prompt_id}',
-        "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
-    }
-    return ok(response_body)
+    # TODO serve 级别加锁
+    json_data = await request.json()
+    print(f"invocations start json_data:{json_data}")
+    global need_sync
+    need_sync = json_data["need_sync"]
+    global prompt_id
+    prompt_id = json_data["prompt_id"]
+    try:
+        print(
+            f'bucket_name: {BUCKET}, region: {REGION}')
+        if ('need_prepare' in json_data and json_data['need_prepare']
+                and 'prepare_props' in json_data and json_data['prepare_props']):
+            sync_already = await prepare_comfy_env(json_data['prepare_props'])
+            if not sync_already:
+                return error("the environment is not ready with sync")
+        server_instance = server.PromptServer.instance
+        if "number" in json_data:
+            number = float(json_data['number'])
+            server_instance.number = number
+        else:
+            number = server_instance.number
+            if "front" in json_data:
+                if json_data['front']:
+                    number = -number
+            server_instance.number += 1
+        valid = execution.validate_prompt(json_data['prompt'])
+        if not valid[0]:
+            print("the environment is not ready valid[0] is false, need to resync")
+            return error("the environment is not ready valid[0] is false")
+        extra_data = {}
+        if "extra_data" in json_data:
+            extra_data = json_data["extra_data"]
+        if "client_id" in json_data:
+            extra_data["client_id"] = json_data["client_id"]
 
-    # # TODO serve 级别加锁
-    # json_data = await request.json()
-    # print(f"invocations start json_data:{json_data}")
-    # global need_sync
-    # need_sync = json_data["need_sync"]
-    # global prompt_id
-    # prompt_id = json_data["prompt_id"]
-    # try:
-    #     print(
-    #         f'bucket_name: {BUCKET}, region: {REGION}')
-    #     if ('need_prepare' in json_data and json_data['need_prepare']
-    #             and 'prepare_props' in json_data and json_data['prepare_props']):
-    #         sync_already = await prepare_comfy_env(json_data['prepare_props'])
-    #         if not sync_already:
-    #             return error("the environment is not ready with sync")
-    #     server_instance = server.PromptServer.instance
-    #     if "number" in json_data:
-    #         number = float(json_data['number'])
-    #         server_instance.number = number
-    #     else:
-    #         number = server_instance.number
-    #         if "front" in json_data:
-    #             if json_data['front']:
-    #                 number = -number
-    #         server_instance.number += 1
-    #     valid = execution.validate_prompt(json_data['prompt'])
-    #     if not valid[0]:
-    #         print("the environment is not ready valid[0] is false, need to resync")
-    #         return error("the environment is not ready valid[0] is false")
-    #     extra_data = {}
-    #     if "extra_data" in json_data:
-    #         extra_data = json_data["extra_data"]
-    #     if "client_id" in json_data:
-    #         extra_data["client_id"] = json_data["client_id"]
-    #
-    #     prompt_id = json_data['prompt_id']
-    #     e = execution.PromptExecutor(server_instance)
-    #     outputs_to_execute = valid[2]
-    #     e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
-    #
-    #     sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
-    #     sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
-    #     response_body = {
-    #         "instance_id": GEN_INSTANCE_ID,
-    #         "status": "success",
-    #         "output_path": f's3://{BUCKET}/output/{prompt_id}',
-    #         "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
-    #     }
-    #     return ok(response_body)
-    # except Exception as e:
-    #     print("exception occurred", e)
-    #     return error(f"exception occurred {e}")
+        prompt_id = json_data['prompt_id']
+        e = execution.PromptExecutor(server_instance)
+        outputs_to_execute = valid[2]
+        e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
+
+        sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
+        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
+        response_body = {
+            "instance_id": GEN_INSTANCE_ID,
+            "status": "success",
+            "output_path": f's3://{BUCKET}/output/{prompt_id}',
+            "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
+        }
+        return ok(response_body)
+    except Exception as e:
+        print("exception occurred", e)
+        return error(f"exception occurred {e}")
 
 
 def get_last_ddb_sync_record():
@@ -294,7 +285,7 @@ def update_sync_instance_monitor(instance_monitor_record):
 
 def sync_instance_monitor_status(need_save: bool):
     try:
-        print(f"sync_instance_monitor_status {need_sync} {datetime.datetime.now()}")
+        print(f"sync_instance_monitor_status {datetime.datetime.now()}")
         if not need_save:
             save_sync_instance_monitor('', 'init')
         else:
