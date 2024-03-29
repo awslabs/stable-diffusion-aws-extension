@@ -51,11 +51,11 @@ async def prepare_comfy_env(sync_item: dict):
         print(f"prepare_environment start sync_item:{sync_item}")
         prepare_type = sync_item['prepare_type']
         if prepare_type in ['default', 'models']:
-            sync_s3_files_or_folders_to_local('models', '/opt/ml/code/models', False)
+            sync_s3_files_or_folders_to_local('models', '/home/ubuntu/models', False)
         if prepare_type in ['default', 'inputs']:
-            sync_s3_files_or_folders_to_local('input', '/opt/ml/code/input', False)
+            sync_s3_files_or_folders_to_local('input', '/home/ubuntu/input', False)
         if prepare_type in ['default', 'nodes']:
-            sync_s3_files_or_folders_to_local('nodes', '/opt/ml/code/custom_nodes', True)
+            sync_s3_files_or_folders_to_local('nodes', '/home/ubuntu/custom_nodes', True)
         if prepare_type == 'custom':
             sync_source_path = sync_item['s3_source_path']
             local_target_path = sync_item['local_target_path']
@@ -63,7 +63,7 @@ async def prepare_comfy_env(sync_item: dict):
                 print("s3_source_path and local_target_path should not be empty")
             else:
                 sync_s3_files_or_folders_to_local(sync_source_path,
-                                                  f'/opt/ml/code/{local_target_path}', False)
+                                                  f'/home/ubuntu/{local_target_path}', False)
         elif prepare_type == 'other':
             sync_script = sync_item['sync_script']
             print("sync_script")
@@ -95,8 +95,8 @@ async def prepare_comfy_env(sync_item: dict):
 
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     print("sync_s3_models_or_inputs_to_local start")
-    # s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
-    s5cmd_command = f'/opt/ml/code/tools/s5cmd sync "s3://{BUCKET}/{s3_path}/" "{local_path}/"'
+    # s5cmd_command = f'/home/ubuntu/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
+    s5cmd_command = f's5cmd sync "s3://{BUCKET}/{s3_path}/" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
         # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
@@ -117,7 +117,7 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
 
 def sync_local_outputs_to_s3(s3_path, local_path):
     print("sync_local_outputs_to_s3 start")
-    s5cmd_command = f'/opt/ml/code/tools/s5cmd cp "{local_path}/*" "s3://{BUCKET}/{s3_path}/" '
+    s5cmd_command = f's5cmd cp "{local_path}/*" "s3://{BUCKET}/{s3_path}/" '
     try:
         print(s5cmd_command)
         os.system(s5cmd_command)
@@ -198,8 +198,8 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
-        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
+        sync_local_outputs_to_s3(f'output/{prompt_id}', '/home/ubuntu/output')
+        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/home/ubuntu/temp')
         response_body = {
             "instance_id": GEN_INSTANCE_ID,
             "status": "success",
