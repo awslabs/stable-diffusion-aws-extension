@@ -101,12 +101,9 @@ export class ExecuteApi {
         's3:DeleteObject',
         's3:ListBucket',
         's3:CreateBucket',
-        's3:HeadBucket',
       ],
       resources: [
-        `${this.s3Bucket.bucketArn}/*`,
-        `${this.s3Bucket.bucketArn}`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
+        `*`,
       ],
     }));
 

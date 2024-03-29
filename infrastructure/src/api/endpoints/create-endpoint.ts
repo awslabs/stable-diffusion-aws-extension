@@ -97,7 +97,6 @@ export class CreateEndpointApi {
         's3:List*',
         's3:PutObject',
         's3:GetObject',
-        's3:HeadBucket',
       ],
       resources: [
         '*',
