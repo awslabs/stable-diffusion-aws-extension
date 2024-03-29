@@ -5,7 +5,7 @@ import os
 import boto3
 from aws_lambda_powertools import Tracer
 
-from common.response import ok
+from common.response import ok, no_content
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -103,31 +103,12 @@ def read_messages_from_dynamodb(prompt_id):
 @tracer.capture_lambda_handler
 def handler(event, ctx):
     try:
-        logger.info(f"get msg start... Received event: {event}")
-        logger.info(f"Received ctx: {ctx}")
-        # TODO 拆分方法职责
-        if 'Records' not in event or not event['Records']:
-            prompt_id = event['pathParameters']['id']
-            response = read_messages_from_dynamodb(prompt_id)
-            logger.info(f"get msg end... response: {response}")
-            return ok(data=response)
-        else:
-            msg_save = {}
-            for message in event['Records']:
-                if not message or 'body' not in message:
-                    logger.error("ignore empty body msg")
-                    return ok()
-                msg = json.loads(message['body'])
-                logger.info(f"msg body: {msg}")
-                if 'prompt_id' in msg and msg['prompt_id']:
-                    if msg['prompt_id'] in msg_save.keys():
-                        msg_save[msg['prompt_id']].append(msg)
-                    else:
-                        msg_save[msg['prompt_id']] = []
-                        msg_save[msg['prompt_id']].append(msg)
-            for item in msg_save.keys():
-                save_message_to_dynamodb(item, msg_save[item])
-        logger.info("execute end...")
-        return ok()
+        logger.info(f"get msg start... Received event: {event} ctx: {ctx}")
+        if 'pathParameters' not in event or not event['pathParameters'] or not event['pathParameters']['id']:
+            return no_content()
+        prompt_id = event['pathParameters']['id']
+        response = read_messages_from_dynamodb(prompt_id)
+        logger.info(f"get msg end... response: {response}")
+        return ok(data=response)
     except Exception as e:
         return response_error(e)
