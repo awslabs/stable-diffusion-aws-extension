@@ -20,7 +20,10 @@ fi
 export ESD_CODE_BRANCH="main"
 export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
-export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
+export S3_LOCATION="esd-$SERVICE_TYPE-$INSTANCE_TYPE-$ESD_VERSION"
+if [ -n "$EXTENSIONS" ]; then
+    export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
+fi
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"

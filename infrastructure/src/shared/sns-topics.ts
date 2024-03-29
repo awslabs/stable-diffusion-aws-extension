@@ -27,8 +27,8 @@ export class SnsTopics {
     this.inferenceResultErrorTopic = this.fromTopicArn('ReceiveSageMakerInferenceError');
 
     // comfy
-    this.executeResultSuccessTopic = this.fromTopicArn('sageMakerExecuteSuccess');
-    this.executeResultFailTopic = this.fromTopicArn('sageMakerExecuteFail');
+    this.executeResultSuccessTopic = this.fromTopicArn('comfyExecuteSuccess');
+    this.executeResultFailTopic = this.fromTopicArn('comfyExecuteFail');
   }
 
   private fromTopicArn(topicName: string): Topic {

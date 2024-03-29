@@ -15,6 +15,7 @@ from sagemaker.predictor_async import AsyncPredictor
 from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
+from common.excepts import BadRequestException
 from common.response import ok
 from libs.comfy_data_types import ComfyExecuteTable
 from libs.enums import ComfyExecuteType
@@ -32,6 +33,15 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 index_name = "endpoint_name-startTime-index"
 predictors = {}
+
+
+@dataclass
+class InferenceResult:
+    instance_id: str
+    status: str
+    message: Optional[str] = None
+    output_path: Optional[str] = None
+    temp_path: Optional[str] = None
 
 
 @dataclass
@@ -89,6 +99,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     inference_id = str(uuid.uuid4())
 
+    job_status = ComfyExecuteType.CREATED.value
+    sagemaker_raw = {
+    }
+
     if ep.endpoint_type == 'Async':
         sm_out = async_inference(payload, inference_id, ep.endpoint_name)
         resp = {
@@ -96,8 +110,9 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         }
     else:
         resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-
-    logger.info(resp)
+        resp = InferenceResult(**resp)
+        job_status = resp.status
+        sagemaker_raw = resp.__dict__
 
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
@@ -105,7 +120,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         inference_type=event.inference_type,
         instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
-        status=ComfyExecuteType.CREATED.value,
+        status=job_status,
         prompt_params={'prompt': event.prompt,
                        'number': event.number,
                        'front': event.front,
@@ -115,6 +130,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         create_time=datetime.now().isoformat(),
         start_time=datetime.now().isoformat(),
         complete_time=None,
+        sagemaker_raw=sagemaker_raw,
         output_path='',
         output_files=None
     )
@@ -130,11 +146,14 @@ def handler(raw_event, ctx):
         logger.info(f"execute start... Received event: {raw_event}")
         logger.info(f"Received ctx: {ctx}")
         event = ExecuteEvent(**json.loads(raw_event['body']))
+
+        if not event.prompt:
+            raise BadRequestException("Prompt is required")
+
         resp = invoke_sagemaker_inference(event)
-        return ok(data={
-            "prompt_id": event.prompt_id,
-            "resp": resp
-        })
+
+        return ok(data=resp.__dict__)
+
     except Exception as e:
         return response_error(e)
 
