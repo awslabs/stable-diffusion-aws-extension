@@ -72,7 +72,7 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
         sync_script=event.sync_script,
         endpoint_snapshot=json.dumps(endpoint_info),
         request_time=int(datetime.now().timestamp()),
-        request_time_str=str(datetime.now()),
+        request_time_str=datetime.now().isoformat(),
     )
     save_sync_ddb_resp = ddb_service.put_items(sync_table, entries=sync_job.__dict__)
     logger.info(str(save_sync_ddb_resp))

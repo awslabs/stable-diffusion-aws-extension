@@ -262,10 +262,10 @@ def save_sync_instance_monitor(last_sync_request_id: str, sync_status: str):
         'gen_instance_id': GEN_INSTANCE_ID,
         'sync_status': sync_status,
         'last_sync_request_id': last_sync_request_id,
-        'last_sync_time': str(datetime.datetime.now()),
+        'last_sync_time': datetime.datetime.now().isoformat(),
         'sync_list': [],
-        'create_time': str(datetime.datetime.now()),
-        'last_heartbeat_time': str(datetime.datetime.now())
+        'create_time': datetime.datetime.now().isoformat(),
+        'last_heartbeat_time': datetime.datetime.now().isoformat()
     }
     save_resp = instance_monitor_table.put_item(Item=item)
     print(f"save instance item {save_resp}")
@@ -280,8 +280,8 @@ def update_sync_instance_monitor(instance_monitor_record):
         ":new_sync_status": instance_monitor_record['sync_status'],
         ":sync_request_id": instance_monitor_record['last_sync_request_id'],
         ":sync_list": instance_monitor_record['sync_list'],
-        ":sync_time": str(datetime.datetime.now()),
-        ":heartbeat_time": str(datetime.datetime.now()),
+        ":sync_time": datetime.datetime.now().isoformat(),
+        ":heartbeat_time": datetime.datetime.now().isoformat(),
     }
 
     response = sync_table.update_item(
@@ -302,7 +302,7 @@ def sync_instance_monitor_status(need_save: bool):
         else:
             update_expression = ("SET last_heartbeat_time = :heartbeat_time")
             expression_attribute_values = {
-                ":heartbeat_time": str(datetime.datetime.now()),
+                ":heartbeat_time": datetime.datetime.now().isoformat(),
             }
             sync_table.update_item(
                 Key={'endpoint_name': ENDPOINT_NAME,
@@ -317,7 +317,7 @@ def sync_instance_monitor_status(need_save: bool):
 # must be sync invoke and use the env to check
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance(request):
-    print(f"sync_instance start ！！ {datetime.datetime.now()} {request}")
+    print(f"sync_instance start ！！ {datetime.datetime.now().isoformat()} {request}")
     try:
         # TODO sync invoke check
         last_sync_record = get_last_ddb_sync_record()
