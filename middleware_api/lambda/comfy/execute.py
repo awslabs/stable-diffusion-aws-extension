@@ -28,10 +28,18 @@ execute_table = os.environ.get('EXECUTE_TABLE')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
+endpoint_instance_id = os.environ.get('ENDPOINT_INSTANCE_ID')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 index_name = "endpoint_name-startTime-index"
+
+
+@dataclass
+class PrepareProps:
+    prepare_type: Optional[str] = "inputs"
+    s3_source_path: Optional[str] = None
+    local_target_path: Optional[str] = None
+    sync_script: Optional[str] = None
 
 
 @dataclass
@@ -45,6 +53,8 @@ class ExecuteEvent:
     front: Optional[bool] = None
     extra_data: Optional[dict] = None
     client_id: Optional[str] = None
+    need_prepare: bool = False
+    prepare_props: Optional[PrepareProps] = None
 
 
 def build_s3_images_request(prompt_id, bucket_name, s3_path):
@@ -68,13 +78,15 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     endpoint_name = event.endpoint_name
 
     ep = get_endpoint_by_name(endpoint_name)
+
+    if ep.endpoint_status != 'InService':
+        raise Exception(f"Endpoint {endpoint_name} is not in service")
+
     logger.info(f"endpoint: {ep}")
 
-    # payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
-    #            "endpoint_name": "ComfyEndpoint-endpoint", "need_sync": True}
     payload = event.__dict__
     logger.info('inference payload: {}'.format(payload))
-    # TODO 同步异步推理的选择 以及endpoint的选择
+
     session = boto3.Session(region_name=region)
     sagemaker_session = sagemaker.Session(boto_session=session)
     predictor = Predictor(endpoint_name=endpoint_name, sagemaker_session=sagemaker_session)
@@ -87,22 +99,21 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     logger.info(f"Response object: {prediction}")
     r = prediction
     logger.info(r)
-    # TODO 获取哪些可用的endpoint name 以及instance type 默认异步
+
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
         inference_type=event.inference_type,
-        # TODO shell脚本补全instanceId 补全id 知道推理环境
-        instance_id='',
+        instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
-        status=ComfyExecuteType.CREATED,
+        status=ComfyExecuteType.CREATED.value,
         # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
         prompt_params={'prompt': event.prompt, 'number': event.number, 'front': event.front,
                        'extra_data': event.extra_data, 'client_id': event.client_id},
         # 带后期再看是否要将参数统一变成s3的文件来管理 此处为入参路径 优先级不高 一期先放
         prompt_path='',
-        create_time=datetime.now(),
-        start_time=datetime.now(),
+        create_time=datetime.now().isoformat(),
+        start_time=datetime.now().isoformat(),
         complete_time=None,
         output_path='',
         output_files=None
