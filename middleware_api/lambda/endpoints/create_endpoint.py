@@ -154,7 +154,7 @@ def handler(raw_event, ctx):
                                                     initial_instance_count, instance_type)
             elif event.endpoint_type == EndpointType.Async.value:
                 _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name,
-                                              initial_instance_count, instance_type)
+                                              initial_instance_count, instance_type, event)
         except Exception as e:
             logger.error(f"error creating endpoint config with exception: {e}")
             sagemaker.delete_model(ModelName=model_name)
@@ -269,7 +269,11 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
 
 @tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
-                                  instance_type):
+                                  instance_type, event: CreateEndpointEvent):
+    if event.service_type != "sd":
+        async_success_topic = 'comfyExecuteSuccess'
+        async_error_topic = 'comfyExecuteFail'
+
     async_inference_config = {
         "OutputConfig": {
             "S3OutputPath": s3_output_path,

@@ -132,6 +132,7 @@ export class ExecuteApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
