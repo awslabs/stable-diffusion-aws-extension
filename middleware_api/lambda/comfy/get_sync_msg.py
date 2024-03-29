@@ -104,9 +104,8 @@ def read_messages_from_dynamodb(prompt_id):
 def handler(event, ctx):
     try:
         logger.info(f"get msg start... Received event: {event} ctx: {ctx}")
-        if 'Records' not in event or not event['Records']:
+        if 'pathParameters' not in event or not event['pathParameters'] or not event['pathParameters']['id']:
             return no_content()
-
         prompt_id = event['pathParameters']['id']
         response = read_messages_from_dynamodb(prompt_id)
         logger.info(f"get msg end... response: {response}")
