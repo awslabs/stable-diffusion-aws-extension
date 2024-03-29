@@ -39,6 +39,7 @@ class ComfyExecuteTable:
     create_time: str
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None
+    sagemaker_raw: Optional[Any] = None
 
 
 @dataclass

@@ -496,8 +496,8 @@ async function createTopics() {
     'ReceiveSageMakerInferenceError',
     'StableDiffusionSnsUserTopic',
     // comfy
-    'sageMakerExecuteFail',
-    'sageMakerExecuteSuccess',
+    'comfyExecuteFail',
+    'comfyExecuteSuccess',
   ];
 
   for (let Name of list) {
