@@ -111,7 +111,6 @@ export class ComfyApiStack extends Construct {
         httpMethod: 'POST',
         router: props.routers.execute,
         srcRoot: srcRoot,
-        s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,

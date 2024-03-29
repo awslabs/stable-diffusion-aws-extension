@@ -20,20 +20,23 @@ from libs.utils import response_error, permissions_check
 tracer = Tracer()
 sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 aws_region = os.environ.get('AWS_REGION')
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
-ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
-INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
-SYNC_TABLE = os.environ.get('COMFY_SYNC_TABLE')
-INSTANCE_MONITOR_TABLE = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
-ESD_VERSION = os.environ.get("ESD_VERSION")
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
+async_success_topic = os.environ.get('SNS_INFERENCE_SUCCESS')
+async_error_topic = os.environ.get('SNS_INFERENCE_ERROR')
+inference_ecr_image_url = os.environ.get("INFERENCE_ECR_IMAGE_URL")
+queue_url = os.environ.get('COMFY_QUEUE_URL')
+sync_table = os.environ.get('COMFY_SYNC_TABLE')
+instance_monitor_table = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
+esd_version = os.environ.get("ESD_VERSION")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
+
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(s3_bucket_name)
 
 
 @dataclass
@@ -86,7 +89,7 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    return INFERENCE_ECR_IMAGE_URL
+    return inference_ecr_image_url
 
 
 # POST /endpoints
@@ -126,9 +129,9 @@ def handler(raw_event, ctx):
         endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
         endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
-        model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
+        model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 
-        s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
+        s3_output_path = f"s3://{s3_bucket_name}/sagemaker_output/"
 
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
@@ -188,6 +191,9 @@ def handler(raw_event, ctx):
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
 
+        # delete all files in s3 for startup
+        bucket.objects.filter(Prefix=f"{endpoint_name}-{esd_version}").delete()
+
         return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
             data=data
@@ -206,17 +212,17 @@ def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, ev
         'ModelDataUrl': model_data_url,
         'Environment': {
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
-            'S3_BUCKET_NAME': S3_BUCKET_NAME,
+            'S3_BUCKET_NAME': s3_bucket_name,
             'IMAGE_URL': image_url,
             'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
-            'COMFY_QUEUE_URL': QUEUE_URL or '',
-            'COMFY_SYNC_TABLE': SYNC_TABLE or '',
-            'COMFY_INSTANCE_MONITOR_TABLE': INSTANCE_MONITOR_TABLE or '',
-            'ESD_VERSION': ESD_VERSION,
+            'COMFY_QUEUE_URL': queue_url or '',
+            'COMFY_SYNC_TABLE': sync_table or '',
+            'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
+            'ESD_VERSION': esd_version,
             'SERVICE_TYPE': event.service_type,
             'ON_DOCKER': 'true',
         },
@@ -268,8 +274,8 @@ def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_na
         "OutputConfig": {
             "S3OutputPath": s3_output_path,
             "NotificationConfig": {
-                "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                "ErrorTopic": ASYNC_ERROR_TOPIC
+                "SuccessTopic": async_success_topic,
+                "ErrorTopic": async_error_topic
             }
         },
         "ClientConfig": {

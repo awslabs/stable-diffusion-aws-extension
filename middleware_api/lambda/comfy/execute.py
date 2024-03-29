@@ -90,7 +90,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     inference_id = str(uuid.uuid4())
 
     if ep.endpoint_type == 'Async':
-        resp = async_inference(payload, inference_id, ep.endpoint_name)
+        sm_out = async_inference(payload, inference_id, ep.endpoint_name)
+        resp = {
+            'output_path': sm_out.output_path,
+        }
     else:
         resp = real_time_inference(payload, inference_id, ep.endpoint_name)
 
@@ -118,7 +121,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    return resp
+    return inference_job
 
 
 @tracer.capture_lambda_handler
