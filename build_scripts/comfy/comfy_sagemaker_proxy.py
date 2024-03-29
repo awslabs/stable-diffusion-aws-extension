@@ -191,26 +191,15 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        inference_type = json_data["inference_type"]
-        if inference_type == "Real-time":
-            response_body = {
-                "instance_id": GEN_INSTANCE_ID,
-                "status": "success",
-                "output_file_list": sync_local_outputs_to_base64('/opt/ml/code/output'),
-                "temp_file_list": sync_local_outputs_to_base64('/opt/ml/code/temp'),
-            }
-            return ok(response_body)
-        elif inference_type == "Async":
-            # TODO 看下是否需要 调整为利用 sg 的 output path
-            sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
-            sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
-            response_body = {
-                "instance_id": GEN_INSTANCE_ID,
-                "status": "success",
-                "output_path": f's3://{BUCKET}/output/{prompt_id}',
-                "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
-            }
-            return ok(response_body)
+        sync_local_outputs_to_s3(f'output/{prompt_id}', '/opt/ml/code/output')
+        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/opt/ml/code/temp')
+        response_body = {
+            "instance_id": GEN_INSTANCE_ID,
+            "status": "success",
+            "output_path": f's3://{BUCKET}/output/{prompt_id}',
+            "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
+        }
+        return ok(response_body)
     except Exception as e:
         print("exception occurred", e)
         return error(f"exception occurred {e}")
