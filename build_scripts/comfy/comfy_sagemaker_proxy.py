@@ -2,6 +2,8 @@ import datetime
 import json
 import os
 import tarfile
+from dataclasses import dataclass
+from typing import Optional
 
 import boto3
 import execution
@@ -26,6 +28,13 @@ SYNC_TABLE_NAME = os.environ.get('COMFY_SYNC_TABLE')
 dynamodb = boto3.resource('dynamodb', region_name=REGION)
 sync_table = dynamodb.Table(SYNC_TABLE_NAME)
 instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
+
+
+@dataclass
+class ComfyResponse:
+    statusCode: int
+    message: str
+    body: Optional[dict]
 
 
 async def prepare_comfy_env(sync_item: dict):
