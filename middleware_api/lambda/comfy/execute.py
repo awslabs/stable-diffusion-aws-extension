@@ -49,7 +49,6 @@ class ExecuteEvent:
     prompt_id: str
     prompt: dict
     endpoint_name: Optional[str] = ''
-    inference_type: Optional[str] = None
     need_sync: bool = True
     number: Optional[str] = None
     front: Optional[bool] = None
@@ -96,7 +95,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
-        inference_type=event.inference_type,
+        inference_type=ep.endpoint_type,
         instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
         status=job_status,

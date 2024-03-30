@@ -159,10 +159,21 @@ def generate_presigned_url_for_key(key, expiration=3600):
 
 
 @tracer.capture_method
-def generate_presigned_url_for_job(prefix, keys, expiration=3600):
+def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
     prefix = prefix.replace(f"s3://{bucket_name}/", '')
     new_list = []
     for key in keys:
         new_list.append(generate_presigned_url_for_key(f"{prefix}{key}", expiration))
 
     return new_list
+
+
+@tracer.capture_method
+def generate_presigned_url_for_job(job):
+    if 'output_path' in job and 'output_files' in job:
+        job['output_files'] = generate_presigned_url_for_keys(job['output_path'], job['output_files'])
+
+    if 'temp_path' in job and 'temp_files' in job:
+        job['temp_files'] = generate_presigned_url_for_keys(job['temp_path'], job['temp_files'])
+
+    return job

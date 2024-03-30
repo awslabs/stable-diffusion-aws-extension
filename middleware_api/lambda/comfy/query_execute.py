@@ -48,12 +48,12 @@ def handler(event, ctx):
         logger.info(f"query execute start... Received event: {event}")
         logger.info(f"Received ctx: {ctx}")
 
+        new_list = []
         for item in items:
-            item['output_files'] = generate_presigned_url_for_job(item['output_path'], item['output_files'])
-            item['temp_files'] = generate_presigned_url_for_job(item['temp_path'], item['temp_files'])
+            new_list.append(generate_presigned_url_for_job(item))
 
         data = {
-            'executes': items,
+            'executes': new_list,
             'last_evaluated_key': last_evaluated_key
         }
 
