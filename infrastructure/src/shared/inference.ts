@@ -49,7 +49,7 @@ export class Inference {
     const inferV2Router = props.routers.inferences.addResource('{id}');
     const srcRoot = '../middleware_api/lambda';
 
-    const createInferenceJobApi = new CreateInferenceJobApi(
+    new CreateInferenceJobApi(
       scope, 'CreateInferenceJob', {
         checkpointTable: props.checkpointTable,
         commonLayer: props.commonLayer,
@@ -144,7 +144,7 @@ export class Inference {
     },
     );
 
-    const deleteInferenceJobsApi = new DeleteInferenceJobsApi(
+    new DeleteInferenceJobsApi(
       scope, 'DeleteInferenceJobs', {
         router: props.routers.inferences,
         commonLayer: props.commonLayer,
@@ -155,8 +155,6 @@ export class Inference {
         srcRoot: srcRoot,
       },
     );
-    deleteInferenceJobsApi.model.node.addDependency(createInferenceJobApi.model);
-    deleteInferenceJobsApi.requestValidator.node.addDependency(createInferenceJobApi.requestValidator);
 
     const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
       entry: `${srcRoot}/inferences`,

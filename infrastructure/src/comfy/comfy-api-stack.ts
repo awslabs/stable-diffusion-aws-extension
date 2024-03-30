@@ -106,7 +106,7 @@ export class ComfyApiStack extends Construct {
     });
 
     // POST /executes
-    const executeAPi = new ExecuteApi(
+    new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,
@@ -117,8 +117,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    executeAPi.model.node.addDependency(synMsgApi.model);
-    executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes
     new QueryExecuteApi(
@@ -135,7 +133,7 @@ export class ComfyApiStack extends Construct {
     );
 
     // POST /prepare
-    const prepareApi = new PrepareApi(
+    new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
@@ -149,8 +147,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(synMsgApi.model);
-    prepareApi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes/{id}
     new GetExecuteApi(

@@ -39,7 +39,7 @@ export class CheckpointStack {
     });
 
     // POST /checkpoint
-    const createCheckPointApi = new CreateCheckPointApi(scope, 'CreateCheckPoint', {
+    new CreateCheckPointApi(scope, 'CreateCheckPoint', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -50,7 +50,7 @@ export class CheckpointStack {
     });
 
     // PUT /checkpoints/{id}
-    const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
+    new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
       checkpointTable: checkPointTable,
       userTable: multiUserTable,
       commonLayer: commonLayer,
@@ -59,11 +59,9 @@ export class CheckpointStack {
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
     });
-    updateCheckPointApi.model.node.addDependency(createCheckPointApi.model);
-    updateCheckPointApi.requestValidator.node.addDependency(createCheckPointApi.requestValidator);
 
     // DELETE /checkpoints
-    const deleteCheckpointsApi = new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
+    new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
       router: props.routers.checkpoints,
       commonLayer: props.commonLayer,
       checkPointsTable: checkPointTable,
@@ -73,7 +71,5 @@ export class CheckpointStack {
       srcRoot: this.srcRoot,
     },
     );
-    deleteCheckpointsApi.model.node.addDependency(updateCheckPointApi.model);
-    deleteCheckpointsApi.requestValidator.node.addDependency(updateCheckPointApi.requestValidator);
   }
 }
