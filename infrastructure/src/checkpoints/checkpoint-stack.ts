@@ -29,7 +29,7 @@ export class CheckpointStack {
     const multiUserTable = props.multiUserTable;
 
     // GET /checkpoints
-    const listCheckPointsApi = new ListCheckPointsApi(scope, 'ListCheckPoints', {
+    new ListCheckPointsApi(scope, 'ListCheckPoints', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'GET',
@@ -48,9 +48,6 @@ export class CheckpointStack {
       srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
     });
-    createCheckPointApi.model.node.addDependency(listCheckPointsApi.router);
-    createCheckPointApi.requestValidator.node.addDependency(listCheckPointsApi.router);
-    createCheckPointApi.router.node.addDependency(listCheckPointsApi.router);
 
     // PUT /checkpoints/{id}
     const updateCheckPointApi = new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
@@ -64,7 +61,6 @@ export class CheckpointStack {
     });
     updateCheckPointApi.model.node.addDependency(createCheckPointApi.model);
     updateCheckPointApi.requestValidator.node.addDependency(createCheckPointApi.requestValidator);
-    updateCheckPointApi.router.node.addDependency(createCheckPointApi.router);
 
     // DELETE /checkpoints
     const deleteCheckpointsApi = new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
@@ -79,6 +75,5 @@ export class CheckpointStack {
     );
     deleteCheckpointsApi.model.node.addDependency(updateCheckPointApi.model);
     deleteCheckpointsApi.requestValidator.node.addDependency(updateCheckPointApi.requestValidator);
-    deleteCheckpointsApi.router.node.addDependency(updateCheckPointApi.router);
   }
 }
