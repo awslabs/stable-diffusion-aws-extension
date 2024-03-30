@@ -83,7 +83,7 @@ export class ComfyApiStack extends Construct {
       iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
     );
 
-    new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
+    const getSyncMsgApi = new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
       httpMethod: 'GET',
       router: syncMsgGetRouter,
       srcRoot: srcRoot,
@@ -104,6 +104,8 @@ export class ComfyApiStack extends Construct {
       queue: this.queue,
       commonLayer: this.layer,
     });
+    synMsgApi.model.node.addDependency(getSyncMsgApi.lambdaIntegration);
+    synMsgApi.requestValidator.node.addDependency(getSyncMsgApi.lambdaIntegration);
 
     // POST /executes
     const executeAPi = new ExecuteApi(
@@ -121,7 +123,7 @@ export class ComfyApiStack extends Construct {
     executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes
-    new QueryExecuteApi(
+    const queryExecuteApi = new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
         httpMethod: 'GET',
         router: props.routers.executes,
@@ -149,8 +151,10 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(executeAPi.model);
-    prepareApi.requestValidator.node.addDependency(executeAPi.requestValidator);
+    prepareApi.model.node.addDependency(queryExecuteApi.lambdaIntegration);
+    prepareApi.requestValidator.node.addDependency(queryExecuteApi.lambdaIntegration);
+    prepareApi.model.node.addDependency(synMsgApi.model);
+    prepareApi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes/{id}
     new GetExecuteApi(

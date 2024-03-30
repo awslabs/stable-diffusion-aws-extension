@@ -30,6 +30,7 @@ export class GetPrepareApi {
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
+  public readonly lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;
@@ -50,7 +51,34 @@ export class GetPrepareApi {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
 
-    this.getExecuteApi();
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/comfy`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'get_prepare.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        SYNC_TABLE: this.syncTable.tableName,
+        CONFIG_TABLE: this.configTable.tableName,
+        INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
+      },
+      layers: [this.layer],
+    });
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -98,34 +126,6 @@ export class GetPrepareApi {
     return newRole;
   }
 
-  private getExecuteApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'get_prepare.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 2048,
-      tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        SYNC_TABLE: this.syncTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
-        INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
-      },
-      layers: [this.layer],
-    });
 
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
-  }
 }
 
