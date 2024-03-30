@@ -11,6 +11,7 @@ interface Event {
     ServiceToken: string;
     apiUrl: string;
     apiKey: string;
+    name: string;
   };
 }
 
@@ -23,8 +24,8 @@ export async function handler(event: Event, context: Object) {
 
   if (allow_types.includes(event.RequestType)) {
     await waitApiReady(event);
-    await waitTableIndexReady('SDInferenceJobTable', 'taskType', 'createTime');
-    await waitTableIndexReady('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
+    await waitTableIndexReady(event, 'SDInferenceJobTable', 'taskType', 'createTime');
+    await waitTableIndexReady(event, 'SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
   }
 
   return response(event, true);
@@ -80,7 +81,7 @@ async function waitApiReady(event: Event) {
 }
 
 
-async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
+async function waitTableIndexReady(event: Event, tableName: string, pk: string, sk: string) {
   const indexName = `${pk}-${sk}-index`;
 
   const startCheckTime = Date.now();
@@ -89,7 +90,7 @@ async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log('Time exceeded 13 minutes. Exiting loop.');
+      console.log(`${event.ResourceProperties.name}Time exceeded 13 minutes. Exiting loop.`);
       break;
     }
 
@@ -97,16 +98,16 @@ async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
     const index = data.Table?.GlobalSecondaryIndexes?.find(idx => idx.IndexName === indexName);
 
     if (!index) {
-      throw new Error(`Index ${indexName} does not exist on table ${tableName}`);
+      throw new Error(`${event.ResourceProperties.name}Index ${indexName} does not exist on table ${tableName}`);
     }
 
     if (index.IndexStatus === 'ACTIVE') {
-      console.log(`Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
+      console.log(`${event.ResourceProperties.name} Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
-      console.log(`Index ${indexName} is still being created. Checking again in 1 second...`);
+      console.log(`${event.ResourceProperties.name}Index ${indexName} is still being created. Checking again in 1 second...`);
     } else {
-      throw new Error(`Index ${indexName} is in unknown state: ${index.IndexStatus}`);
+      throw new Error(`${event.ResourceProperties.name}Index ${indexName} is in unknown state: ${index.IndexStatus}`);
     }
 
     await new Promise(r => setTimeout(r, 1000));

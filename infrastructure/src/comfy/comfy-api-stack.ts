@@ -1,7 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, Duration, StackProps } from 'aws-cdk-lib';
-
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
