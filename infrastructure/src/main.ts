@@ -2,6 +2,7 @@ import {
   App,
   Aspects,
   Aws,
+  aws_apigateway,
   CfnCondition,
   CfnOutput,
   CfnParameter,
@@ -281,6 +282,31 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
     this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
     this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
+
+    // make order for api
+    let requestValidator: aws_apigateway.RequestValidator;
+    let model: aws_apigateway.Model;
+    this.node.children.forEach(child => {
+
+      if (child instanceof aws_apigateway.RequestValidator) {
+        if (!requestValidator) {
+          requestValidator = child;
+        } else {
+          child.node.addDependency(requestValidator);
+          requestValidator = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.Model) {
+        if (!model) {
+          model = child;
+        } else {
+          child.node.addDependency(model);
+          model = child;
+        }
+      }
+
+    });
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;

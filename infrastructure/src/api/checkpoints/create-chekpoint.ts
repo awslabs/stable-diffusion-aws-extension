@@ -22,8 +22,8 @@ export class CreateCheckPointApi {
   public model: Model;
   public requestValidator: RequestValidator;
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
+  public router: aws_apigateway.Resource;
   private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;

@@ -17,8 +17,8 @@ export interface ListCheckPointsApiProps {
 
 export class ListCheckPointsApi {
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
+  public router: aws_apigateway.Resource;
   private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -68,6 +68,7 @@ export class ListCheckPointsApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
