@@ -131,11 +131,17 @@ def split_s3_path(s3_path):
 @tracer.capture_method
 def s3_scan_files(job: InferenceResult):
     job.output_files = []
-    for obj in s3_bucket.objects.filter(Prefix=job.output_path.replace(f"s3://{bucket_name}/", '')):
-        job.output_files.append(obj.key)
+    prefix = job.output_path.replace(f"s3://{bucket_name}/", '')
+    for obj in s3_bucket.objects.filter(Prefix=prefix):
+        file = obj.key.replace(prefix, '')
+        if file:
+            job.output_files.append(obj.key.replace(prefix, ''))
 
     job.temp_files = []
-    for obj in s3_bucket.objects.filter(Prefix=job.temp_path.replace(f"s3://{bucket_name}/", '')):
-        job.temp_files.append(obj.key)
+    prefix = job.temp_path.replace(f"s3://{bucket_name}/", '')
+    for obj in s3_bucket.objects.filter(Prefix=prefix):
+        file = obj.key.replace(prefix, '')
+        if file:
+            job.temp_files.append(obj.key.replace(prefix, ''))
 
     return job

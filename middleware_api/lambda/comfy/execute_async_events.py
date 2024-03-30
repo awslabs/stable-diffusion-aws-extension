@@ -21,6 +21,9 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+ddb_client = boto3.resource('dynamodb')
+inference_table = ddb_client.Table(job_table)
+
 
 @tracer.capture_lambda_handler
 def handler(event, context):
@@ -43,8 +46,8 @@ def handler(event, context):
         "prompt_id": '11111111-1111-1111',
         "instance_id": 'esd-real-time-test-rgihbd',
         "status": 'success',
-        "output_path": f's3://{bucket_name}/template/',
-        "temp_path": f's3://{bucket_name}/template/'
+        "output_path": f's3://{bucket_name}/images/',
+        "temp_path": f's3://{bucket_name}/images/'
     }
 
     result = InferenceResult(**result)
@@ -56,13 +59,25 @@ def handler(event, context):
 
     logger.info(result)
 
-    key = {"prompt_id": result.prompt_id}
-    ddb_service.update_item(table=job_table, key=key, field_name="status", value=result.status)
-    ddb_service.update_item(table=job_table, key=key, field_name="output_path", value=result.output_path)
-    ddb_service.update_item(table=job_table, key=key, field_name="output_files", value=result.output_files)
-    ddb_service.update_item(table=job_table, key=key, field_name="temp_path", value=result.temp_path)
-    ddb_service.update_item(table=job_table, key=key, field_name="temp_files", value=result.temp_files)
-    ddb_service.update_item(table=job_table, key=key, field_name="complete_time",
-                            value=datetime.now().isoformat())
+    update_inference_job_table(prompt_id=result.prompt_id, key="status", value=result.status)
+    update_inference_job_table(prompt_id=result.prompt_id, key="output_path", value=result.output_path)
+    update_inference_job_table(prompt_id=result.prompt_id, key="output_files", value=result.output_files)
+    update_inference_job_table(prompt_id=result.prompt_id, key="temp_path", value=result.temp_path)
+    update_inference_job_table(prompt_id=result.prompt_id, key="temp_files", value=result.temp_files)
+    update_inference_job_table(prompt_id=result.prompt_id, key="complete_time", value=datetime.now().isoformat())
 
     return {}
+
+
+def update_inference_job_table(prompt_id, key, value):
+    logger.info(f"Update inference job table with prompt_id: {prompt_id}, key: {key}, value: {value}")
+
+    inference_table.update_item(
+        Key={
+            "prompt_id": prompt_id,
+        },
+        UpdateExpression=f"set #k = :r",
+        ExpressionAttributeNames={'#k': key},
+        ExpressionAttributeValues={':r': value},
+        ReturnValues="UPDATED_NEW"
+    )
