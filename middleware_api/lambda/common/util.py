@@ -146,3 +146,23 @@ def s3_scan_files_in_patch(patch: str):
             files.append(file)
 
     return files
+
+
+def generate_presigned_url_for_key(key, expiration=3600):
+    key = key.replace(f"s3://{bucket_name}/", '')
+
+    return s3.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': bucket_name, 'Key': key},
+        ExpiresIn=expiration
+    )
+
+
+@tracer.capture_method
+def generate_presigned_url_for_job(prefix, keys, expiration=3600):
+    prefix = prefix.replace(f"s3://{bucket_name}/", '')
+    new_list = []
+    for key in keys:
+        new_list.append(generate_presigned_url_for_key(f"{prefix}/{key}", expiration))
+
+    return new_list

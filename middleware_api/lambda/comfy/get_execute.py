@@ -6,7 +6,8 @@ from aws_lambda_powertools import Tracer
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
-from common.response import ok
+from common.response import ok, not_found
+from common.util import generate_presigned_url_for_job
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -43,6 +44,12 @@ def handler(event, ctx):
         prompt_id = event['pathParameters']['id']
 
         item = ddb_service.get_item(table=execute_table, key_values={"prompt_id": prompt_id})
+
+        if not item:
+            return not_found(f"execute not found for prompt_id: {prompt_id}")
+
+        item['output_files'] = generate_presigned_url_for_job(item['output_path'], item['output_files'])
+        item['temp_files'] = generate_presigned_url_for_job(item['temp_path'], item['temp_files'])
 
         return ok(data=item, decimal=True)
     except Exception as e:
