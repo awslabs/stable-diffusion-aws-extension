@@ -133,14 +133,14 @@ export class StartInferenceJobApi {
       layers: [this.layer],
     });
 
-    const runJobIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addResource('start').addMethod(this.httpMethod, runJobIntegration, <MethodOptions>{
+    this.router.addResource('start').addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });
 

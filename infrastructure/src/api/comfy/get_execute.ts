@@ -26,6 +26,7 @@ export interface GetExecuteApiProps {
 
 
 export class GetExecuteApi {
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
@@ -47,13 +48,40 @@ export class GetExecuteApi {
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
 
-    this.getExecuteApi();
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/comfy`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'get_execute.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        EXECUTE_TABLE: this.executeTable.tableName,
+        CONFIG_TABLE: this.configTable.tableName,
+      },
+      layers: [this.layer],
+    });
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -94,34 +122,5 @@ export class GetExecuteApi {
     return newRole;
   }
 
-  private getExecuteApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'get_execute.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 2048,
-      tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        EXECUTE_TABLE: this.executeTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
-      },
-      layers: [this.layer],
-    });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
-  }
 }
 

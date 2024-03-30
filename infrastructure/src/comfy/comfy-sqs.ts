@@ -20,6 +20,7 @@ export class SqsStack extends Construct {
       encryption: sqs.QueueEncryption.SQS_MANAGED,
       contentBasedDeduplication: true,
     });
+
     this.queue.addToResourcePolicy(
       new PolicyStatement({
         effect: Effect.DENY,
@@ -31,6 +32,7 @@ export class SqsStack extends Construct {
         },
       }),
     );
+
     const myselfStatement = new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -44,6 +46,7 @@ export class SqsStack extends Construct {
       resources: [this.queue.queueArn],
       principals: [new AccountRootPrincipal()],
     });
+
     this.queue.addToResourcePolicy(myselfStatement);
   }
 }

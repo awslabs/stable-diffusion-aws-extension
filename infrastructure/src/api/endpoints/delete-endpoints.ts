@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -163,15 +163,14 @@ export class DeleteEndpointsApi {
       layers: [this.layer],
     });
 
-
-    const deleteEndpointsIntegration = new LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

@@ -2,6 +2,7 @@ import {
   App,
   Aspects,
   Aws,
+  aws_apigateway,
   CfnCondition,
   CfnOutput,
   CfnParameter,
@@ -25,7 +26,6 @@ import { LambdaCommonLayer } from './shared/common-layer';
 import { STACK_ID } from './shared/const';
 import { Database } from './shared/database';
 import { DatasetStack } from './shared/dataset';
-import { CF_DESC } from './shared/description';
 import { Inference } from './shared/inference';
 import { MultiUsers } from './shared/multi-users';
 import { ResourceProvider } from './shared/resource-provider';
@@ -48,7 +48,7 @@ export class Middleware extends Stack {
   ) {
     super(scope, id, props);
 
-    this.templateOptions.description = CF_DESC;
+    this.templateOptions.description = '(SO8032) - Stable-Diffusion AWS Extension';
 
     const apiKeyParam = new CfnParameter(this, 'SdExtensionApiKey', {
       type: 'String',
@@ -281,6 +281,35 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
     this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
     this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
+
+    // make order for api
+    let requestValidator: aws_apigateway.RequestValidator;
+    let model: aws_apigateway.Model;
+    this.node.children.forEach(child => {
+
+      if (child instanceof aws_apigateway.RequestValidator) {
+        if (!requestValidator) {
+          requestValidator = child;
+        } else {
+          child.node.addDependency(requestValidator);
+          requestValidator = child;
+        }
+      }
+
+      if (child instanceof aws_apigateway.Model) {
+        if (!model) {
+          model = child;
+        } else {
+          child.node.addDependency(model);
+          model = child;
+        }
+      }
+
+      if (model && requestValidator) {
+        requestValidator.node.addDependency(model);
+      }
+
+    });
 
     // Add stackName tag to all resources
     const stackName = Stack.of(this).stackName;

@@ -263,14 +263,14 @@ export class CreateTrainingJobApi {
       layers: [this.props.commonLayer],
     });
 
-    const createTrainJobIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.props.router.addMethod(this.props.httpMethod, createTrainJobIntegration, <MethodOptions>{
+    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

@@ -94,7 +94,7 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
-    const synMsgApi = new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
+    new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
       httpMethod: 'POST',
       router: props.routers.sync,
       srcRoot: srcRoot,
@@ -106,7 +106,7 @@ export class ComfyApiStack extends Construct {
     });
 
     // POST /executes
-    const executeAPi = new ExecuteApi(
+    new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,
@@ -117,8 +117,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    executeAPi.model.node.addDependency(synMsgApi.model);
-    executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes
     new QueryExecuteApi(
@@ -135,7 +133,7 @@ export class ComfyApiStack extends Construct {
     );
 
     // POST /prepare
-    const prepareApi = new PrepareApi(
+    new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
@@ -149,8 +147,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(executeAPi.model);
-    prepareApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // GET /executes/{id}
     new GetExecuteApi(
@@ -222,6 +218,7 @@ export class ComfyApiStack extends Construct {
         props.executeFailTopic.topicArn,
       ],
     });
+
     const ddbStatement = new iam.PolicyStatement({
       actions: [
         'dynamodb:Query',

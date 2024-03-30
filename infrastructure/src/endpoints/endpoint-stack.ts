@@ -57,7 +57,7 @@ export class EndpointStack {
       },
     );
 
-    const deleteEndpointsApi = new DeleteEndpointsApi(
+    new DeleteEndpointsApi(
       scope, 'DeleteEndpoints', {
         router: props.routers.endpoints,
         commonLayer: props.commonLayer,
@@ -77,7 +77,7 @@ export class EndpointStack {
       },
     );
 
-    const createEndpointApi = new CreateEndpointApi(
+    new CreateEndpointApi(
       scope, 'CreateEndpoint', {
         router: props.routers.endpoints,
         commonLayer: props.commonLayer,
@@ -96,9 +96,6 @@ export class EndpointStack {
         executeResultFailTopic: props.executeResultFailTopic,
       },
     );
-    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
-    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
-
 
     //adding model to data directory of s3 bucket
     if (props?.s3Bucket != undefined) {

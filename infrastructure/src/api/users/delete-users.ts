@@ -71,6 +71,7 @@ export class DeleteUsersApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -124,15 +125,14 @@ export class DeleteUsersApi {
       layers: [this.layer],
     });
 
-
-    const upsertUserIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

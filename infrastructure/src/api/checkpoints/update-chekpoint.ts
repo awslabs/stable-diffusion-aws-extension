@@ -20,8 +20,8 @@ export interface UpdateCheckPointApiProps {
 export class UpdateCheckPointApi {
   public model: Model;
   public requestValidator: RequestValidator;
+  public router: aws_apigateway.Resource;
   private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -195,7 +195,7 @@ export class UpdateCheckPointApi {
       layers: [this.layer],
     });
 
-    const createModelIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -203,7 +203,7 @@ export class UpdateCheckPointApi {
     );
 
     this.router.addResource('{id}')
-      .addMethod(this.httpMethod, createModelIntegration,
+      .addMethod(this.httpMethod, lambdaIntegration,
         {
           apiKeyRequired: true,
           requestValidator: this.requestValidator,

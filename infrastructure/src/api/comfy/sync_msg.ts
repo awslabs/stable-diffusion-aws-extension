@@ -8,7 +8,7 @@ import {
   aws_sqs,
   Duration,
 } from 'aws-cdk-lib';
-import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -64,6 +64,7 @@ export class SyncMsgApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -120,6 +121,7 @@ export class SyncMsgApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 

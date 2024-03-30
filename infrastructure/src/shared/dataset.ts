@@ -29,7 +29,7 @@ export class DatasetStack {
 
 
     // POST /datasets
-    const createDatasetApi = new CreateDatasetApi(scope, 'CreateDataset', {
+    new CreateDatasetApi(scope, 'CreateDataset', {
       commonLayer: commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
       datasetItemTable: props.database.datasetItemTable,
@@ -51,8 +51,6 @@ export class DatasetStack {
       s3Bucket: props.s3Bucket,
       srcRoot: this.srcRoot,
     });
-    updateDatasetApi.model.node.addDependency(createDatasetApi.model);
-    updateDatasetApi.requestValidator.node.addDependency(createDatasetApi.requestValidator);
 
     // GET /datasets
     new ListDatasetsApi(scope, 'ListDatasets', {
@@ -77,7 +75,7 @@ export class DatasetStack {
     });
 
     // DELETE /datasets
-    const deleteDatasetsApi = new DeleteDatasetsApi(scope, 'DeleteDatasets', {
+    new DeleteDatasetsApi(scope, 'DeleteDatasets', {
       router: props.routers.datasets,
       commonLayer: props.commonLayer,
       datasetInfoTable: props.database.datasetInfoTable,
@@ -88,8 +86,6 @@ export class DatasetStack {
       srcRoot: this.srcRoot,
     },
     );
-    deleteDatasetsApi.model.node.addDependency(updateDatasetApi.model);
-    deleteDatasetsApi.requestValidator.node.addDependency(updateDatasetApi.requestValidator);
 
 
   }
