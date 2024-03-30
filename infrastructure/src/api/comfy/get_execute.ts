@@ -118,6 +118,7 @@ export class GetExecuteApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });

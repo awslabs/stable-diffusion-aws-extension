@@ -4,7 +4,7 @@ import os
 
 import boto3
 from aws_lambda_powertools import Tracer
-from sns_util import send_message_to_sns
+from common.sns_util import send_message_to_sns
 
 from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job
 from start_inference_job import update_inference_job_table

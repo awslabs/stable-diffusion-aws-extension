@@ -106,7 +106,7 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         esdVersion: ESD_VERSION,
-        // timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       },
     );
 
@@ -133,12 +133,10 @@ export class Middleware extends Stack {
       // comfy api
       'template',
       'model',
-      'execute',
-      'queryExecute',
+      'executes',
       'node',
       'config',
       'prepare',
-      'endpoint',
       'sync',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
@@ -220,6 +218,8 @@ export class Middleware extends Stack {
     new EndpointStack(this, {
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
+      executeResultSuccessTopic: snsTopics.executeResultSuccessTopic,
+      executeResultFailTopic: snsTopics.executeResultFailTopic,
       routers: restApi.routers,
       s3Bucket: s3Bucket,
       multiUserTable: ddbTables.multiUserTable,
@@ -260,7 +260,7 @@ export class Middleware extends Stack {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
-        // timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
       },
     );
     resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);

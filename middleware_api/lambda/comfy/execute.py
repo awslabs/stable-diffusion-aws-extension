@@ -17,7 +17,8 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok
-from libs.comfy_data_types import ComfyExecuteTable
+from common.util import s3_scan_files
+from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType
 from libs.utils import get_endpoint_by_name, response_error
 
@@ -33,15 +34,6 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 index_name = "endpoint_name-startTime-index"
 predictors = {}
-
-
-@dataclass
-class InferenceResult:
-    instance_id: str
-    status: str
-    message: Optional[str] = None
-    output_path: Optional[str] = None
-    temp_path: Optional[str] = None
 
 
 @dataclass
@@ -90,7 +82,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     ep = get_endpoint_by_name(endpoint_name)
 
     if ep.endpoint_status != 'InService':
-        raise Exception(f"Endpoint {endpoint_name} is not in service")
+        raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService.")
 
     logger.info(f"endpoint: {ep}")
 
@@ -100,19 +92,6 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     inference_id = str(uuid.uuid4())
 
     job_status = ComfyExecuteType.CREATED.value
-    sagemaker_raw = {
-    }
-
-    if ep.endpoint_type == 'Async':
-        sm_out = async_inference(payload, inference_id, ep.endpoint_name)
-        resp = {
-            'output_path': sm_out.output_path,
-        }
-    else:
-        resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-        resp = InferenceResult(**resp)
-        job_status = resp.status
-        sagemaker_raw = resp.__dict__
 
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
@@ -129,11 +108,34 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         prompt_path='',
         create_time=datetime.now().isoformat(),
         start_time=datetime.now().isoformat(),
-        complete_time=None,
-        sagemaker_raw=sagemaker_raw,
+        sagemaker_raw={},
         output_path='',
-        output_files=None
     )
+
+    if ep.endpoint_type == 'Async':
+        resp = async_inference(payload, inference_id, ep.endpoint_name)
+        # inference_job.sagemaker_raw = resp.__dict__
+    else:
+        # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+        resp = {
+            "prompt_id": '11111111-1111-1111',
+            "instance_id": 'esd-real-time-test-rgihbd',
+            "status": 'success',
+            "output_path": f's3://{bucket_name}/images/',
+            "temp_path": f's3://{bucket_name}/images/'
+        }
+        logger.info(f"real time inference response: ")
+        logger.info(resp)
+        resp = InferenceResult(**resp)
+        resp = s3_scan_files(resp)
+
+        inference_job.status = resp.status
+        inference_job.sagemaker_raw = resp.__dict__
+        inference_job.output_path = resp.output_path
+        inference_job.output_files = resp.output_files
+        inference_job.temp_path = resp.temp_path
+        inference_job.temp_files = resp.temp_files
+        inference_job.complete_time = datetime.now().isoformat()
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 

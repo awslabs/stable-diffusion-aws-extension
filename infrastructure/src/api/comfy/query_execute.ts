@@ -1,13 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_apigateway as apigw,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  Duration,
-} from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -36,8 +28,6 @@ export class QueryExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: QueryExecuteApiProps) {
     this.scope = scope;
@@ -49,8 +39,6 @@ export class QueryExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     this.queryExecuteApi();
   }
@@ -125,48 +113,9 @@ export class QueryExecuteApi {
     );
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-  }
-  private createModel(): Model {
-    return new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          prompt_id: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          resp_type: {
-            type: JsonSchemaType.BOOLEAN,
-            minLength: 1,
-          },
-        },
-        required: [
-          'prompt_id',
-          'resp_type',
-        ],
-      },
-      contentType: 'application/json',
     });
   }
 
-  private createRequestValidator() {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-qry-execute-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-  }
+
 }
 

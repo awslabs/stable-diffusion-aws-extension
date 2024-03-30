@@ -68,7 +68,7 @@ export class ComfyApiStack extends Construct {
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
-    const executeGetRouter = props.routers.execute.addResource('{id}');
+    const executeGetRouter = props.routers.executes.addResource('{id}');
 
     const prepareGetRouter = props.routers.prepare.addResource('{id}');
 
@@ -105,11 +105,11 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
-    // POST /execute
+    // POST /executes
     const executeAPi = new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
-        router: props.routers.execute,
+        router: props.routers.executes,
         srcRoot: srcRoot,
         configTable: this.configTable,
         executeTable: this.executeTable,
@@ -120,11 +120,11 @@ export class ComfyApiStack extends Construct {
     executeAPi.model.node.addDependency(synMsgApi.model);
     executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
-    // POST /execute
-    const queryExecuteApi = new QueryExecuteApi(
+    // GET /executes
+    new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
-        httpMethod: 'POST',
-        router: props.routers.queryExecute,
+        httpMethod: 'GET',
+        router: props.routers.executes,
         srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
@@ -133,8 +133,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    queryExecuteApi.model.node.addDependency(executeAPi.model);
-    queryExecuteApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // POST /prepare
     const prepareApi = new PrepareApi(
@@ -151,10 +149,10 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(queryExecuteApi.model);
-    prepareApi.requestValidator.node.addDependency(queryExecuteApi.requestValidator);
+    prepareApi.model.node.addDependency(executeAPi.model);
+    prepareApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
-    // GET /execute/{id}
+    // GET /executes/{id}
     new GetExecuteApi(
       scope, 'GetExecute', <GetExecuteApiProps>{
         httpMethod: 'GET',
@@ -192,8 +190,6 @@ export class ComfyApiStack extends Construct {
       timeout: Duration.seconds(900),
       environment: {
         INFERENCE_JOB_TABLE: props.executeTable.tableName,
-        ACCOUNT_ID: Aws.ACCOUNT_ID,
-        REGION_NAME: Aws.REGION,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
       },
       layers: [props.commonLayer],
