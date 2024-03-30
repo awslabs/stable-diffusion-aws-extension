@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_dynamodb, aws_sns, aws_sqs, StackProps } from 'aws-cdk-lib';
-
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
