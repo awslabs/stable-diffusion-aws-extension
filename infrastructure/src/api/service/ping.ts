@@ -72,14 +72,12 @@ export class PingApi {
         layers: [this.layer],
       });
 
-
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(
       this.httpMethod,

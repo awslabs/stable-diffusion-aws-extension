@@ -115,7 +115,6 @@ export class DeleteTrainingJobsApi {
         layers: [this.layer],
       });
 
-
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       { proxy: true },

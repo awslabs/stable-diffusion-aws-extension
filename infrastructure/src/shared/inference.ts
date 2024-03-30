@@ -182,7 +182,6 @@ export class Inference {
     handler.addToRolePolicy(ddbStatement);
     handler.addToRolePolicy(snsStatement);
 
-
     // Add the SNS topic as an event source for the Lambda function
     handler.addEventSource(
       new eventSources.SnsEventSource(props.inferenceResultTopic),

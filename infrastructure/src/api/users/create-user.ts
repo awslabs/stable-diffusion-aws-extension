@@ -46,6 +46,7 @@ export class CreateUserApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -86,6 +87,7 @@ export class CreateUserApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
@@ -155,7 +157,6 @@ export class CreateUserApi {
       },
       layers: [this.layer],
     });
-
 
     const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,

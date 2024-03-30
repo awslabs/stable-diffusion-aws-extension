@@ -71,6 +71,7 @@ export class CreateRoleApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
