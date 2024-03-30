@@ -121,7 +121,7 @@ export class ComfyApiStack extends Construct {
     executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
     // GET /executes
-    const queryExecuteApi = new QueryExecuteApi(
+    new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
         httpMethod: 'GET',
         router: props.routers.executes,
@@ -133,8 +133,6 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    queryExecuteApi.model.node.addDependency(executeAPi.model);
-    queryExecuteApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // POST /prepare
     const prepareApi = new PrepareApi(
@@ -151,8 +149,8 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(queryExecuteApi.model);
-    prepareApi.requestValidator.node.addDependency(queryExecuteApi.requestValidator);
+    prepareApi.model.node.addDependency(executeAPi.model);
+    prepareApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // GET /executes/{id}
     new GetExecuteApi(
