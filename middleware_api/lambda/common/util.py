@@ -163,6 +163,6 @@ def generate_presigned_url_for_job(prefix, keys, expiration=3600):
     prefix = prefix.replace(f"s3://{bucket_name}/", '')
     new_list = []
     for key in keys:
-        new_list.append(generate_presigned_url_for_key(f"{prefix}/{key}", expiration))
+        new_list.append(generate_presigned_url_for_key(f"{prefix}{key}", expiration))
 
     return new_list

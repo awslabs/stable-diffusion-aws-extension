@@ -7,7 +7,7 @@ from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
-from common.util import get_query_param
+from common.util import get_query_param, generate_presigned_url_for_job
 from libs.utils import response_error, decode_last_key, encode_last_key
 
 tracer = Tracer()
@@ -31,7 +31,6 @@ def handler(event, ctx):
 
         scan_kwargs = {
             'Limit': limit,
-            "ScanIndexForward": False
         }
 
         if exclusive_start_key:
@@ -39,7 +38,7 @@ def handler(event, ctx):
 
         logger.info(scan_kwargs)
 
-        response = table.query(**scan_kwargs)
+        response = table.scan(**scan_kwargs)
 
         logger.info(json.dumps(response, default=str))
 
@@ -49,8 +48,12 @@ def handler(event, ctx):
         logger.info(f"query execute start... Received event: {event}")
         logger.info(f"Received ctx: {ctx}")
 
+        for item in items:
+            item['output_files'] = generate_presigned_url_for_job(item['output_path'], item['output_files'])
+            item['temp_files'] = generate_presigned_url_for_job(item['temp_path'], item['temp_files'])
+
         data = {
-            'items': items,
+            'executes': items,
             'last_evaluated_key': last_evaluated_key
         }
 
