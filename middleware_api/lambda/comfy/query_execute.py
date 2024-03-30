@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-from dataclasses import dataclass
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -9,7 +8,6 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param
-from libs.enums import ComfyExecuteRespType
 from libs.utils import response_error, decode_last_key, encode_last_key
 
 tracer = Tracer()
@@ -23,12 +21,6 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 ddb = boto3.resource('dynamodb')
 table = ddb.Table(execute_table)
-
-
-@dataclass
-class QueryExecuteEvent:
-    prompt_id: str
-    resp_type: ComfyExecuteRespType
 
 
 @tracer.capture_lambda_handler
@@ -56,9 +48,6 @@ def handler(event, ctx):
 
         logger.info(f"query execute start... Received event: {event}")
         logger.info(f"Received ctx: {ctx}")
-        event = QueryExecuteEvent(**json.loads(event['body']))
-        prompt_id = event.prompt_id
-        resp_type = event.resp_type
 
         data = {
             'items': items,
