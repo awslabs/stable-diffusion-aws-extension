@@ -48,8 +48,7 @@ def handler(event, ctx):
         if not item:
             return not_found(f"execute not found for prompt_id: {prompt_id}")
 
-        item['output_files'] = generate_presigned_url_for_job(item['output_path'], item['output_files'])
-        item['temp_files'] = generate_presigned_url_for_job(item['temp_path'], item['temp_files'])
+        item = generate_presigned_url_for_job(item)
 
         return ok(data=item, decimal=True)
     except Exception as e:

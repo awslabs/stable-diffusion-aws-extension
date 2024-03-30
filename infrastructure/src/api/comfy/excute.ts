@@ -165,10 +165,6 @@ export class ExecuteApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
-          inference_type: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
           need_sync: {
             type: JsonSchemaType.BOOLEAN,
             minLength: 1,
@@ -195,7 +191,6 @@ export class ExecuteApi {
           'prompt_id',
           'prompt',
           'need_sync',
-          'inference_type',
           'endpoint_name',
         ],
       },
