@@ -26,7 +26,7 @@ async def invocations(request: Request):
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code,
                             detail=f"COMFY service returned an error: {response.text}")
-    return {"message": "Invocations endpoint"}
+    return response.json()
 
 
 def ping():
@@ -100,7 +100,7 @@ def check_and_reboot():
                 print(f'need_reboot, reboot  start!')
                 comfy_app.restart()
                 print(f'need_reboot, reboot  finished!')
-            time.sleep(60 * 3)
+            time.sleep(60 * 1)
         except Exception as e:
             print(f"check_and_reboot error:{e}")
             time.sleep(10)
