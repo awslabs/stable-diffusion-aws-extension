@@ -133,12 +133,10 @@ export class Middleware extends Stack {
       // comfy api
       'template',
       'model',
-      'execute',
-      'queryExecute',
+      'executes',
       'node',
       'config',
       'prepare',
-      'endpoint',
       'sync',
     ]);
     const cfnApi = restApi.apiGateway.node.defaultChild as CfnRestApi;
