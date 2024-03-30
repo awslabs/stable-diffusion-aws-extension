@@ -94,7 +94,7 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
-    const synMsgApi = new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
+    new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
       httpMethod: 'POST',
       router: props.routers.sync,
       srcRoot: srcRoot,
