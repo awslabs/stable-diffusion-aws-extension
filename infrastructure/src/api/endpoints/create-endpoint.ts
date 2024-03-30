@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -316,14 +316,12 @@ export class CreateEndpointApi {
       layers: [this.layer],
     });
 
-
     const integration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,

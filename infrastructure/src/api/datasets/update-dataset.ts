@@ -153,7 +153,7 @@ export class UpdateDatasetApi {
     });
 
 
-    const createModelIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -161,7 +161,7 @@ export class UpdateDatasetApi {
     );
 
     this.router.addResource('{id}')
-      .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
+      .addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
         requestValidator: this.requestValidator,
         requestModels: {

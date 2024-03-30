@@ -105,7 +105,7 @@ export class GetDatasetApi {
       layers: [this.layer],
     });
 
-    const listDatasetItemsIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -113,7 +113,7 @@ export class GetDatasetApi {
     );
 
     this.router.getResource('{id}')
-      ?.addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
+      ?.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
       });
   }

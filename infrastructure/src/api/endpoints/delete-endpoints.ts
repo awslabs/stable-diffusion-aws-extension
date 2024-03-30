@@ -164,14 +164,14 @@ export class DeleteEndpointsApi {
     });
 
 
-    const deleteEndpointsIntegration = new LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

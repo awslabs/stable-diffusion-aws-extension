@@ -83,14 +83,14 @@ export class ListEndpointsApi {
       layers: [this.layer],
     });
 
-    const listSagemakerEndpointsIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });
   }
