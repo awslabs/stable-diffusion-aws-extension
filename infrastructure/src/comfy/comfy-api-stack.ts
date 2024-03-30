@@ -192,8 +192,6 @@ export class ComfyApiStack extends Construct {
       timeout: Duration.seconds(900),
       environment: {
         INFERENCE_JOB_TABLE: props.executeTable.tableName,
-        ACCOUNT_ID: Aws.ACCOUNT_ID,
-        REGION_NAME: Aws.REGION,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
       },
       layers: [props.commonLayer],

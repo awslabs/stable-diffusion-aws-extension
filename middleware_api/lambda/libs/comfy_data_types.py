@@ -1,4 +1,3 @@
-import datetime
 from dataclasses import dataclass
 from typing import Optional, List, Any
 
@@ -24,6 +23,18 @@ class ComfyConfigTable:
 
 
 @dataclass
+class InferenceResult:
+    instance_id: str
+    status: str
+    prompt_id: str
+    message: Optional[str] = None
+    output_path: Optional[str] = None
+    output_files: Optional[List[str]] = None
+    temp_path: Optional[str] = None
+    temp_files: Optional[List[str]] = None
+
+
+@dataclass
 class ComfyExecuteTable:
     prompt_id: str
     endpoint_name: str
@@ -34,12 +45,14 @@ class ComfyExecuteTable:
     prompt_params: dict[str, Any]
     instance_id: Optional[str]
     prompt_path: Optional[str]
-    output_path: Optional[str]
-    output_files: Optional[List[str]]
     create_time: str
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None
     sagemaker_raw: Optional[Any] = None
+    output_path: Optional[str] = None
+    output_files: Optional[List[str]] = None
+    temp_path: Optional[str] = None
+    temp_files: Optional[List[str]] = None
 
 
 @dataclass
@@ -76,4 +89,3 @@ class ComfyInstanceMonitorTable:
 class ComfyMessageTable:
     prompt_id: str
     msg_list: Optional[List[str]] = None
-

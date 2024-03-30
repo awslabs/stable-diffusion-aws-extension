@@ -23,6 +23,8 @@ Note: Sync Inference is put here for reference, we use Async Inference now
 export interface EndpointStackProps extends StackProps {
   inferenceErrorTopic: sns.Topic;
   inferenceResultTopic: sns.Topic;
+  executeResultSuccessTopic: sns.Topic;
+  executeResultFailTopic: sns.Topic;
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
   multiUserTable: dynamodb.Table;
@@ -90,6 +92,8 @@ export class EndpointStack {
         accountId: props.accountId,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
+        executeResultSuccessTopic: props.executeResultSuccessTopic,
+        executeResultFailTopic: props.executeResultFailTopic,
       },
     );
     createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);

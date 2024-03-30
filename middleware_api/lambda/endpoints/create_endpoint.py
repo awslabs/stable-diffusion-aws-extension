@@ -271,8 +271,8 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type, event: CreateEndpointEvent):
     if event.service_type != "sd":
-        async_success_topic = 'comfyExecuteSuccess'
-        async_error_topic = 'comfyExecuteFail'
+        async_success_topic = os.environ.get('COMFY_SNS_INFERENCE_SUCCESS')
+        async_error_topic = os.environ.get('COMFY_SNS_INFERENCE_ERROR')
 
     async_inference_config = {
         "OutputConfig": {
