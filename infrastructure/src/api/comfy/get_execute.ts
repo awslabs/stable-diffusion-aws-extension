@@ -26,10 +26,10 @@ export interface GetExecuteApiProps {
 
 
 export class GetExecuteApi {
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
-  public readonly lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: aws_lambda.LayerVersion;

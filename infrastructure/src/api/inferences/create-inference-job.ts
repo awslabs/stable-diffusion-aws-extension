@@ -210,6 +210,7 @@ export class CreateInferenceJobApi {
         'application/json': this.model,
       },
     });
+
     return lambdaFunction;
   }
 }

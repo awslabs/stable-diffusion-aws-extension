@@ -124,7 +124,6 @@ export class DeleteUsersApi {
       layers: [this.layer],
     });
 
-
     const upsertUserIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {

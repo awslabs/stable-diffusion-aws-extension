@@ -89,6 +89,7 @@ export class ListEndpointsApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });

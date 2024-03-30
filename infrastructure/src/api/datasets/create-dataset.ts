@@ -206,6 +206,7 @@ export class CreateDatasetApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, createDatasetIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,

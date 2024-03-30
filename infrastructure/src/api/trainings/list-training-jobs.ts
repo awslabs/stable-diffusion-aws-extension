@@ -92,6 +92,7 @@ export class ListTrainingJobsApi {
         proxy: true,
       },
     );
+
     this.router.addMethod(this.httpMethod, listTrainJobsIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });

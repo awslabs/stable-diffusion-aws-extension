@@ -7,11 +7,8 @@ import { CreateCheckPointApi } from '../api/checkpoints/create-chekpoint';
 import { DeleteCheckpointsApi } from '../api/checkpoints/delete-checkpoints';
 import { ListCheckPointsApi } from '../api/checkpoints/list-chekpoints';
 import { UpdateCheckPointApi } from '../api/checkpoints/update-chekpoint';
-// import { Database } from '../shared/database';
 
-// ckpt -> create_model -> model -> training -> ckpt -> inference
 export interface CheckpointStackProps extends StackProps {
-  // database: Database;
   checkpointTable: Table;
   multiUserTable: Table;
   routers: { [key: string]: Resource };

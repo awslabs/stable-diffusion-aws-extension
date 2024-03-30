@@ -16,6 +16,7 @@ export interface ListCheckPointsApiProps {
 }
 
 export class ListCheckPointsApi {
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -35,7 +36,32 @@ export class ListCheckPointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listCheckpointsApi();
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'list_checkpoints.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+      },
+      layers: [this.layer],
+    });
+
+    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -66,33 +92,4 @@ export class ListCheckPointsApi {
     return newRole;
   }
 
-  private listCheckpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'list_checkpoints.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 2048,
-      tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-      },
-      layers: [this.layer],
-    });
-
-    const listCheckpointsIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, listCheckpointsIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
-  }
 }
-
