@@ -218,6 +218,7 @@ export class ComfyApiStack extends Construct {
         props.executeFailTopic.topicArn,
       ],
     });
+
     const ddbStatement = new iam.PolicyStatement({
       actions: [
         'dynamodb:Query',

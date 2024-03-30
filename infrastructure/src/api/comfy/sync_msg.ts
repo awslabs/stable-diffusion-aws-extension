@@ -8,7 +8,7 @@ import {
   aws_sqs,
   Duration,
 } from 'aws-cdk-lib';
-import {JsonSchemaType, JsonSchemaVersion, Model, RequestValidator} from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';

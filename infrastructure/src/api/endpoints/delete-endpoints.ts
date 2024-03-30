@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -162,7 +162,6 @@ export class DeleteEndpointsApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
-
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
