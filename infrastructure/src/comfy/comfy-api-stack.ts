@@ -196,7 +196,7 @@ export class ComfyApiStack extends Construct {
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {
-        INFERENCE_JOB_TABLE: props.executeTable.tableName,
+        EXECUTE_TABLE: props.executeTable.tableName,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
       },
       layers: [props.commonLayer],
