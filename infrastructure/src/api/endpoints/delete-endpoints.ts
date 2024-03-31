@@ -90,6 +90,19 @@ export class DeleteEndpointsApi {
     }));
 
     newRole.addToPolicy(new PolicyStatement({
+      actions: [
+        's3:Get*',
+        's3:List*',
+        's3:PutObject',
+        's3:GetObject',
+        's3:DeleteObject',
+      ],
+      resources: [
+        '*',
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
         'application-autoscaling:DeregisterScalableTarget',
