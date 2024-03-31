@@ -15,12 +15,13 @@ s3_resource = boto3.resource('s3')
 
 sns_topic = os.environ['NOTICE_SNS_TOPIC']
 bucket_name = os.environ['S3_BUCKET_NAME']
-job_table = os.environ['INFERENCE_JOB_TABLE']
+
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+job_table = os.environ['EXECUTE_TABLE']
 ddb_client = boto3.resource('dynamodb')
 inference_table = ddb_client.Table(job_table)
 

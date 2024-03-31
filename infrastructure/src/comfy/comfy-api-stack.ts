@@ -20,6 +20,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -113,6 +114,17 @@ export class ComfyApiStack extends Construct {
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
+        commonLayer: this.layer,
+      },
+    );
+
+    // DELETE /executes
+    new DeleteExecutesApi(
+      scope, 'DeleteExecutesApi', <DeleteExecutesApiProps>{
+        httpMethod: 'DELETE',
+        router: props.routers.executes,
+        srcRoot: srcRoot,
+        executeTable: this.executeTable,
         commonLayer: this.layer,
       },
     );
