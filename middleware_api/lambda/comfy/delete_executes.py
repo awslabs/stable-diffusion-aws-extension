@@ -46,11 +46,6 @@ def handler(event, ctx):
             if 'Item' not in execute:
                 continue
 
-            logger.info(f'execute: {execute}')
-
-            if 'params' not in execute['Item']:
-                continue
-
             item = execute['Item']
 
             logger.info(f'item: {item}')
