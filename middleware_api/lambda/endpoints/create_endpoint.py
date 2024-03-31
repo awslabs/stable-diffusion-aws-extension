@@ -35,9 +35,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-s3 = boto3.resource('s3')
-bucket = s3.Bucket(s3_bucket_name)
-
 
 @dataclass
 class CreateEndpointEvent:
@@ -190,9 +187,6 @@ def handler(raw_event, ctx):
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
-
-        # delete all files in s3 for startup
-        bucket.objects.filter(Prefix=f"{endpoint_name}-{esd_version}").delete()
 
         return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
