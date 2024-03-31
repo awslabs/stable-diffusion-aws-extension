@@ -32,10 +32,6 @@ def handler(event, ctx):
 
         body = DeleteEvent(**json.loads(event['body']))
 
-        # todo will be removed
-        # permissions_check(event, [PERMISSION_INFERENCE_ALL])
-
-        # unique list for preventing duplicate delete
         execute_id_list = list(set(body.execute_id_list))
 
         for prompt_id in execute_id_list:
