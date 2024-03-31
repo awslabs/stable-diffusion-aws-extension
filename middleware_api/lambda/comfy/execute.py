@@ -16,7 +16,7 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import ok
+from common.response import ok, created
 from common.util import s3_scan_files
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType
@@ -112,33 +112,35 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     )
 
     if ep.endpoint_type == 'Async':
-        resp = async_inference(payload, inference_id, ep.endpoint_name)
-        # inference_job.sagemaker_raw = resp.__dict__
-    else:
-        # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-        resp = {
-            "prompt_id": '11111111-1111-1111',
-            "instance_id": 'esd-real-time-test-rgihbd',
-            "status": 'success',
-            "output_path": f's3://{bucket_name}/images/',
-            "temp_path": f's3://{bucket_name}/images/'
-        }
-        logger.info(f"real time inference response: ")
-        logger.info(resp)
-        resp = InferenceResult(**resp)
-        resp = s3_scan_files(resp)
+        async_inference(payload, inference_id, ep.endpoint_name)
+        ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+        return created(data=inference_job.__dict__)
 
-        inference_job.status = resp.status
-        inference_job.sagemaker_raw = resp.__dict__
-        inference_job.output_path = resp.output_path
-        inference_job.output_files = resp.output_files
-        inference_job.temp_path = resp.temp_path
-        inference_job.temp_files = resp.temp_files
-        inference_job.complete_time = datetime.now().isoformat()
+    # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+    resp = {
+        "prompt_id": '11111111-1111-1111',
+        "instance_id": 'esd-real-time-test-rgihbd',
+        "status": 'success',
+        "output_path": f's3://{bucket_name}/images/',
+        "temp_path": f's3://{bucket_name}/images/'
+    }
+
+    logger.info(f"real time inference response: ")
+    logger.info(resp)
+    resp = InferenceResult(**resp)
+    resp = s3_scan_files(resp)
+
+    inference_job.status = resp.status
+    inference_job.sagemaker_raw = resp.__dict__
+    inference_job.output_path = resp.output_path
+    inference_job.output_files = resp.output_files
+    inference_job.temp_path = resp.temp_path
+    inference_job.temp_files = resp.temp_files
+    inference_job.complete_time = datetime.now().isoformat()
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    return inference_job
+    return ok(data=inference_job.__dict__)
 
 
 @tracer.capture_lambda_handler
@@ -151,9 +153,7 @@ def handler(raw_event, ctx):
         if not event.prompt:
             raise BadRequestException("Prompt is required")
 
-        resp = invoke_sagemaker_inference(event)
-
-        return ok(data=resp.__dict__)
+        return invoke_sagemaker_inference(event)
 
     except Exception as e:
         return response_error(e)
