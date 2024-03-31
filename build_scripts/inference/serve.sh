@@ -266,7 +266,7 @@ sd_launch_from_s3(){
 
     start_at=$(date +%s)
     rm -rf /home/ubuntu/stable-diffusion-webui/models
-    tar --overwrite -xf "webui.tar" -C /home/ubuntu/stable-diffusion-webui/
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
