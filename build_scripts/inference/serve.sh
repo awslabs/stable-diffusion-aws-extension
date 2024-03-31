@@ -112,14 +112,14 @@ sd_install(){
         commit_sha=${repo[2]}
 
         echo "rm -rf $repo_name for install $git_repo"
-        rm -rf $repo_name
+        rm -rf "$repo_name"
 
         start_at=$(date +%s)
 
         echo "git clone $git_repo"
         git clone "$git_repo"
 
-        cd $repo_name || exit 1
+        cd "$repo_name" || exit 1
 
         echo "git checkout $repo_branch"
         git checkout "$repo_branch"

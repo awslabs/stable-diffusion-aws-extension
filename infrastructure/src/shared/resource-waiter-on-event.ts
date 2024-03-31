@@ -1,7 +1,6 @@
 import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 const ddbClient = new DynamoDBClient({});
-const lambdaStartTime = Date.now();
 const timeoutMinutesInMilliseconds = 13 * 60 * 1000;
 
 interface Event {
@@ -34,6 +33,7 @@ export async function handler(event: Event, context: Object) {
 
 
 async function waitApiReady(event: Event) {
+  const lambdaStartTime = Date.now();
   const startCheckTime = Date.now();
 
   while (true) {
@@ -69,12 +69,12 @@ async function waitApiReady(event: Event) {
         break;
       }
 
-      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 2 seconds...`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 3 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {
       console.error(error);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 
@@ -82,6 +82,7 @@ async function waitApiReady(event: Event) {
 
 
 async function waitTableIndexReady(event: Event, tableName: string, pk: string, sk: string) {
+  const lambdaStartTime = Date.now();
   const indexName = `${pk}-${sk}-index`;
 
   const startCheckTime = Date.now();
@@ -105,12 +106,12 @@ async function waitTableIndexReady(event: Event, tableName: string, pk: string, 
       console.log(`${event.ResourceProperties.name} Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
-      console.log(`${event.ResourceProperties.name} Index ${indexName} is still being created. Checking again in 1 second...`);
+      console.log(`${event.ResourceProperties.name} Index ${indexName} is Creating, check again in 2 second...`);
     } else {
       throw new Error(`${event.ResourceProperties.name} Index ${indexName} is in unknown state: ${index.IndexStatus}`);
     }
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 2000));
 
   }
 }
