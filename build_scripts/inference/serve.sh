@@ -305,7 +305,7 @@ comfy_install(){
   # todo will use commit id
   git clone https://github.com/comfyanonymous/ComfyUI.git
 
-  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujuali_2.0" --single-branch
+  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 
   cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 
