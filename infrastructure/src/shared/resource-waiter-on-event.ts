@@ -41,12 +41,12 @@ async function waitApiReady(event: Event) {
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log('Time exceeded 13 minutes. Exiting loop.');
+      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes. Exiting loop.`);
       break;
     }
 
     try {
-      console.log('Checking API readiness...');
+      console.log(`${event.ResourceProperties.name} Checking API readiness...`);
 
       const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
         method: 'GET',
@@ -56,20 +56,20 @@ async function waitApiReady(event: Event) {
       });
 
       if (!resp.ok) {
-        throw new Error(`HTTP error! status: ${resp.status}`);
+        throw new Error(`${event.ResourceProperties.name} HTTP error! status: ${resp.status}`);
       }
 
       const data = await resp.json();
 
-      console.log('Received response from API: ', data);
+      console.log(`${event.ResourceProperties.name} Received response from API: `, data);
 
       // @ts-ignore
       if (data && data.message === 'pong') {
-        console.log(`Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
+        console.log(`${event.ResourceProperties.name} Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
-      console.log('Did not receive pong from API. Checking again in 2 seconds...');
+      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 2 seconds...`);
       await new Promise(resolve => setTimeout(resolve, 2000));
 
     } catch (error) {
@@ -90,7 +90,7 @@ async function waitTableIndexReady(event: Event, tableName: string, pk: string, 
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log(`${event.ResourceProperties.name}Time exceeded 13 minutes. Exiting loop.`);
+      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes. Exiting loop.`);
       break;
     }
 
@@ -98,16 +98,16 @@ async function waitTableIndexReady(event: Event, tableName: string, pk: string, 
     const index = data.Table?.GlobalSecondaryIndexes?.find(idx => idx.IndexName === indexName);
 
     if (!index) {
-      throw new Error(`${event.ResourceProperties.name}Index ${indexName} does not exist on table ${tableName}`);
+      throw new Error(`${event.ResourceProperties.name} Index ${indexName} does not exist on table ${tableName}`);
     }
 
     if (index.IndexStatus === 'ACTIVE') {
       console.log(`${event.ResourceProperties.name} Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
-      console.log(`${event.ResourceProperties.name}Index ${indexName} is still being created. Checking again in 1 second...`);
+      console.log(`${event.ResourceProperties.name} Index ${indexName} is still being created. Checking again in 1 second...`);
     } else {
-      throw new Error(`${event.ResourceProperties.name}Index ${indexName} is in unknown state: ${index.IndexStatus}`);
+      throw new Error(`${event.ResourceProperties.name} Index ${indexName} is in unknown state: ${index.IndexStatus}`);
     }
 
     await new Promise(r => setTimeout(r, 1000));
