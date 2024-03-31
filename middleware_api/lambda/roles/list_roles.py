@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_ROLE_ALL, PERMISSION_ROLE_LIST
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
@@ -9,6 +11,7 @@ from common.util import get_query_param
 from libs.data_types import Role, PARTITION_KEYS
 from libs.utils import get_permissions_by_username, get_user_roles, permissions_check, response_error
 
+tracer = Tracer()
 user_table = os.environ.get('MULTI_USER_TABLE')
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 # GET /roles?last_evaluated_key=xxx&limit=10&role=ROLE_NAME&filter=key:value,key:value
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     _filter = {}
 

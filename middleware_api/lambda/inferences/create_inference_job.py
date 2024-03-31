@@ -6,6 +6,9 @@ import random
 from datetime import datetime
 from typing import List, Any, Optional
 
+from aws_lambda_powertools import Tracer
+from aws_lambda_powertools.utilities.typing import LambdaContext
+
 from common.const import PERMISSION_INFERENCE_ALL, PERMISSION_INFERENCE_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, created
@@ -13,12 +16,13 @@ from common.util import generate_presign_url
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.data_types import InferenceJob, EndpointDeploymentJob
 from libs.enums import EndpointStatus
-from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_execution_time
+from libs.utils import get_user_roles, check_user_permissions, permissions_check, response_error, log_json
 from start_inference_job import inference_start
 
+tracer = Tracer()
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 inference_table_name = os.environ.get('INFERENCE_JOB_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 
@@ -41,7 +45,8 @@ class CreateInferenceEvent:
 
 
 # POST /inferences
-def handler(raw_event, context):
+@tracer.capture_lambda_handler
+def handler(raw_event: dict, context: LambdaContext):
     try:
         logger.info(json.dumps(raw_event, default=str))
         request_id = context.aws_request_id
@@ -125,7 +130,7 @@ def handler(raw_event, context):
                            ckpts_to_upload]
                 return bad_request(message=' '.join(message))
 
-            # create inference job with param location in ddb, status set to Created
+            # create an inference job with param location in ddb, status set to Created
             used_models = {}
             for ckpt in ckpts:
                 if ckpt.checkpoint_type not in used_models:
@@ -155,8 +160,9 @@ def handler(raw_event, context):
 
 
 # fixme: this is a very expensive function
-@log_execution_time
+@tracer.capture_method
 def _get_checkpoint_by_name(ckpt_name, model_type, status='Active') -> CheckPoint:
+    tracer.put_annotation('ckpt_name', ckpt_name)
     if model_type == 'VAE' and ckpt_name in ['None', 'Automatic']:
         return CheckPoint(
             id=model_type,
@@ -190,8 +196,9 @@ def get_base_inference_param_s3_key(_type: str, request_id: str) -> str:
 
 
 # currently only two scheduling ways: by endpoint name and by user
-@log_execution_time
+@tracer.capture_method
 def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
+    tracer.put_annotation('endpoint_name', endpoint_name)
     # fixme: endpoint is not indexed by name, and this is very expensive query
     # fixme: we can either add index for endpoint name or make endpoint as the partition key
     if endpoint_name:
@@ -211,6 +218,8 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
         available_endpoints = []
         for row in sagemaker_endpoint_raws:
             endpoint = EndpointDeploymentJob(**ddb_service.deserialize(row))
+            if endpoint.service_type != '' and endpoint.service_type != 'sd':
+                continue
             if endpoint.status == 'deleted':
                 continue
             if endpoint.endpoint_status != EndpointStatus.UPDATING.value and endpoint.endpoint_status != EndpointStatus.IN_SERVICE.value:
@@ -222,5 +231,7 @@ def _schedule_inference_endpoint(endpoint_name, inference_type, user_id):
 
         if len(available_endpoints) == 0:
             raise Exception(f'no available {inference_type} endpoints for user "{user_id}"')
+
+        log_json('available_endpoints', available_endpoints)
 
         return random.choice(available_endpoints)

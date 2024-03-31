@@ -3,12 +3,15 @@ import logging
 import os
 from dataclasses import dataclass
 
+from aws_lambda_powertools import Tracer
+
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from libs.data_types import DatasetItem, DatasetInfo, DatasetStatus, DataStatus
 from libs.utils import permissions_check, response_error
 
+tracer = Tracer()
 dataset_item_table = os.environ.get('DATASET_ITEM_TABLE')
 dataset_info_table = os.environ.get('DATASET_INFO_TABLE')
 
@@ -24,6 +27,7 @@ class UpdateDatasetStatusEvent:
 
 
 # PUT /dataset
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     try:
         logger.info(json.dumps(raw_event))

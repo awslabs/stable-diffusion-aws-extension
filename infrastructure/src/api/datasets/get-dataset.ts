@@ -71,8 +71,7 @@ export class GetDatasetApi {
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -98,15 +97,15 @@ export class GetDatasetApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemsTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
 
-    const listDatasetItemsIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -114,7 +113,7 @@ export class GetDatasetApi {
     );
 
     this.router.getResource('{id}')
-      ?.addMethod(this.httpMethod, listDatasetItemsIntegration, <MethodOptions>{
+      ?.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
       });
   }

@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -27,8 +27,8 @@ export interface DeleteCheckpointsApiProps {
 export class DeleteCheckpointsApi {
   public model: Model;
   public requestValidator: RequestValidator;
+  public router: Resource;
   private readonly src: string;
-  private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkPointsTable: Table;
@@ -108,9 +108,9 @@ export class DeleteCheckpointsApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
           CHECKPOINTS_TABLE: this.checkPointsTable.tableName,
-          MULTI_USER_TABLE: this.userTable.tableName,
         },
         layers: [this.layer],
       });
@@ -121,7 +121,6 @@ export class DeleteCheckpointsApi {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(
       this.httpMethod,

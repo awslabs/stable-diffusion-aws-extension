@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_CREATE
 from common.ddb_service.client import DynamoDbUtilsService
@@ -16,13 +17,17 @@ from libs.data_types import EndpointDeploymentJob
 from libs.enums import EndpointStatus, EndpointType
 from libs.utils import response_error, permissions_check
 
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+tracer = Tracer()
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 aws_region = os.environ.get('AWS_REGION')
-S3_BUCKET_NAME = os.environ.get('S3_BUCKET_NAME')
-ASYNC_SUCCESS_TOPIC = os.environ.get('SNS_INFERENCE_SUCCESS')
-ASYNC_ERROR_TOPIC = os.environ.get('SNS_INFERENCE_ERROR')
-INFERENCE_ECR_IMAGE_URL = os.environ.get("INFERENCE_ECR_IMAGE_URL")
-ESD_VERSION = os.environ.get("ESD_VERSION")
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
+async_success_topic = os.environ.get('SNS_INFERENCE_SUCCESS')
+async_error_topic = os.environ.get('SNS_INFERENCE_ERROR')
+inference_ecr_image_url = os.environ.get("INFERENCE_ECR_IMAGE_URL")
+queue_url = os.environ.get('COMFY_QUEUE_URL')
+sync_table = os.environ.get('COMFY_SYNC_TABLE')
+instance_monitor_table = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
+esd_version = os.environ.get("ESD_VERSION")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -30,21 +35,27 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(s3_bucket_name)
+
 
 @dataclass
 class CreateEndpointEvent:
     instance_type: str
     autoscaling_enabled: bool
     assign_to_roles: [str]
-    creator: str
     initial_instance_count: str
     max_instance_number: str = "1"
     min_instance_number: str = "0"
     endpoint_name: str = None
-    # real-time / serverless / async
+    # real-time / async
     endpoint_type: str = None
     custom_docker_image_uri: str = None
     custom_extensions: str = ""
+    # service for: sd / comfy
+    service_type: str = "sd"
+    # todo will be removed
+    creator: str = ""
 
 
 def check_custom_extensions(event: CreateEndpointEvent):
@@ -78,10 +89,11 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    return INFERENCE_ECR_IMAGE_URL
+    return inference_ecr_image_url
 
 
 # POST /endpoints
+@tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     try:
         logger.info(json.dumps(raw_event))
@@ -117,11 +129,9 @@ def handler(raw_event, ctx):
         endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
         endpoint_name = f"esd-{endpoint_type}-{short_id}"
 
-        image_url = get_docker_image_uri(event)
+        model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 
-        model_data_url = f"s3://{S3_BUCKET_NAME}/data/model.tar.gz"
-
-        s3_output_path = f"s3://{S3_BUCKET_NAME}/sagemaker_output/"
+        s3_output_path = f"s3://{s3_bucket_name}/sagemaker_output/"
 
         initial_instance_count = int(event.initial_instance_count) if event.initial_instance_count else 1
         instance_type = event.instance_type
@@ -136,17 +146,15 @@ def handler(raw_event, ctx):
                         return bad_request(
                             message=f"role [{role}] has a valid endpoint already, not allow to have another one")
 
-        _create_sagemaker_model(model_name, image_url, model_data_url, endpoint_name, endpoint_id, event)
+        _create_sagemaker_model(model_name, model_data_url, endpoint_name, endpoint_id, event)
 
         try:
             if event.endpoint_type == EndpointType.RealTime.value:
                 _create_endpoint_config_provisioned(endpoint_config_name, model_name,
                                                     initial_instance_count, instance_type)
-            elif event.endpoint_type == EndpointType.Serverless.value:
-                _create_endpoint_config_serverless(endpoint_config_name)
             elif event.endpoint_type == EndpointType.Async.value:
                 _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name,
-                                              initial_instance_count, instance_type)
+                                              initial_instance_count, instance_type, event)
         except Exception as e:
             logger.error(f"error creating endpoint config with exception: {e}")
             sagemaker.delete_model(ModelName=model_name)
@@ -176,11 +184,15 @@ def handler(raw_event, ctx):
             endpoint_type=event.endpoint_type,
             min_instance_number=event.min_instance_number,
             max_instance_number=event.max_instance_number,
-            custom_extensions=event.custom_extensions
+            custom_extensions=event.custom_extensions,
+            service_type=event.service_type,
         ).__dict__
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
+
+        # delete all files in s3 for startup
+        bucket.objects.filter(Prefix=f"{endpoint_name}-{esd_version}").delete()
 
         return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
@@ -190,22 +202,33 @@ def handler(raw_event, ctx):
         return response_error(e)
 
 
-def _create_sagemaker_model(name, image_url, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+@tracer.capture_method
+def _create_sagemaker_model(name, model_data_url, endpoint_name, endpoint_id, event: CreateEndpointEvent):
+    tracer.put_annotation('endpoint_name', endpoint_name)
+    image_url = get_docker_image_uri(event)
+
     primary_container = {
         'Image': image_url,
         'ModelDataUrl': model_data_url,
         'Environment': {
             'LOG_LEVEL': os.environ.get('LOG_LEVEL') or logging.ERROR,
-            'S3_BUCKET_NAME': S3_BUCKET_NAME,
+            'S3_BUCKET_NAME': s3_bucket_name,
             'IMAGE_URL': image_url,
             'INSTANCE_TYPE': event.instance_type,
             'ENDPOINT_NAME': endpoint_name,
             'ENDPOINT_ID': endpoint_id,
             'EXTENSIONS': event.custom_extensions,
             'CREATED_AT': datetime.utcnow().isoformat(),
-            'ESD_VERSION': ESD_VERSION,
+            'COMFY_QUEUE_URL': queue_url or '',
+            'COMFY_SYNC_TABLE': sync_table or '',
+            'COMFY_INSTANCE_MONITOR_TABLE': instance_monitor_table or '',
+            'ESD_VERSION': esd_version,
+            'SERVICE_TYPE': event.service_type,
+            'ON_DOCKER': 'true',
         },
     }
+
+    tracer.put_metadata('primary_container', primary_container)
 
     logger.info(f"Creating model resource PrimaryContainer: {primary_container}")
 
@@ -230,6 +253,7 @@ def get_production_variants(model_name, instance_type, initial_instance_count):
     ]
 
 
+@tracer.capture_method
 def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initial_instance_count,
                                         instance_type):
     production_variants = get_production_variants(model_name, instance_type, initial_instance_count)
@@ -243,31 +267,22 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
     logger.info(f"Successfully created endpoint configuration: {response}")
 
 
-def _create_endpoint_config_serverless(endpoint_config_name):
-    production_variants = [
-        {
-            'MemorySizeInMB': 2048,
-            'MaxConcurrency': 100
-        }
-    ]
-
-    logger.info(f"Creating endpoint configuration ProductionVariants: {production_variants}")
-
-    response = sagemaker.create_endpoint_config(
-        EndpointConfigName=endpoint_config_name,
-        ProductionVariants=production_variants
-    )
-    logger.info(f"Successfully created endpoint configuration: {response}")
-
-
+@tracer.capture_method
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
-                                  instance_type):
+                                  instance_type, event: CreateEndpointEvent):
+    if event.service_type != "sd":
+        success_topic = os.environ.get('COMFY_SNS_INFERENCE_SUCCESS')
+        error_topic = os.environ.get('COMFY_SNS_INFERENCE_ERROR')
+    else:
+        success_topic = async_success_topic
+        error_topic = async_error_topic
+
     async_inference_config = {
         "OutputConfig": {
             "S3OutputPath": s3_output_path,
             "NotificationConfig": {
-                "SuccessTopic": ASYNC_SUCCESS_TOPIC,
-                "ErrorTopic": ASYNC_ERROR_TOPIC
+                "SuccessTopic": success_topic,
+                "ErrorTopic": error_topic
             }
         },
         "ClientConfig": {

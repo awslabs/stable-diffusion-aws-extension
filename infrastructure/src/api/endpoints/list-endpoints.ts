@@ -43,6 +43,7 @@ export class ListEndpointsApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -79,20 +80,18 @@ export class ListEndpointsApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-      },
+      tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
 
-    const listSagemakerEndpointsIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, listSagemakerEndpointsIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });
   }

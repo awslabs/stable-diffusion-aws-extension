@@ -1052,6 +1052,8 @@ def _list_sagemaker_endpoints(username, last_key: str = ""):
 
     endpoints = []
     for endpoint in resp:
+        if 'service_type' in endpoint and endpoint['service_type'] != 'sd':
+            continue
         if 'endpoint_type' not in endpoint or not endpoint['endpoint_type']:
             endpoint['endpoint_type'] = 'Async'
         if 'owner_group_or_role' in endpoint and endpoint['owner_group_or_role']:

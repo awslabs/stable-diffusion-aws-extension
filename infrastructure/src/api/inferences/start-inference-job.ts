@@ -91,12 +91,11 @@ export class StartInferenceJobApi {
         's3:PutObject',
         's3:DeleteObject',
         's3:ListBucket',
+        's3:ListBuckets',
         's3:CreateBucket',
       ],
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
@@ -123,26 +122,25 @@ export class StartInferenceJobApi {
       index: 'start_inference_job.py',
       handler: 'handler',
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.getLambdaRole(),
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
       },
       layers: [this.layer],
     });
 
-    const runJobIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addResource('start').addMethod(this.httpMethod, runJobIntegration, <MethodOptions>{
+    this.router.addResource('start').addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
     });
 

@@ -30,7 +30,7 @@ export class MultiUsers {
     );
 
     // POST /roles
-    const createRoleApi = new CreateRoleApi(scope, 'CreateRole', {
+    new CreateRoleApi(scope, 'CreateRole', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
@@ -48,7 +48,7 @@ export class MultiUsers {
     });
 
     // POST /users
-    const createUserApi = new CreateUserApi(scope, 'CreateUser', {
+    new CreateUserApi(scope, 'CreateUser', {
       commonLayer: props.commonLayer,
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
@@ -56,19 +56,15 @@ export class MultiUsers {
       router: props.routers.users,
       srcRoot: this.srcRoot,
     });
-    createUserApi.model.node.addDependency(createRoleApi.model);
-    createUserApi.requestValidator.node.addDependency(createRoleApi.requestValidator);
 
     // DELETE /users
-    const deleteUsersApi = new DeleteUsersApi(scope, 'DeleteUsers', {
+    new DeleteUsersApi(scope, 'DeleteUsers', {
       commonLayer: props.commonLayer,
       httpMethod: 'DELETE',
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
       srcRoot: this.srcRoot,
     });
-    deleteUsersApi.model.node.addDependency(createUserApi.model);
-    deleteUsersApi.requestValidator.node.addDependency(createUserApi.requestValidator);
 
     // GET /roles
     new ListUsersApi(scope, 'ListUsers', {
@@ -81,7 +77,7 @@ export class MultiUsers {
     });
 
     // DELETE /roles
-    const deleteRolesApi = new DeleteRolesApi(scope, 'DeleteRoles', {
+    new DeleteRolesApi(scope, 'DeleteRoles', {
       router: props.routers.roles,
       commonLayer: props.commonLayer,
       multiUserTable: props.multiUserTable,
@@ -89,8 +85,6 @@ export class MultiUsers {
       srcRoot: this.srcRoot,
     },
     );
-    deleteRolesApi.model.node.addDependency(deleteUsersApi.model);
-    deleteRolesApi.requestValidator.node.addDependency(deleteUsersApi.requestValidator);
 
   }
 }

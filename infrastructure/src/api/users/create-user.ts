@@ -46,6 +46,7 @@ export class CreateUserApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -86,6 +87,7 @@ export class CreateUserApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
@@ -149,22 +151,21 @@ export class CreateUserApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
         KEY_ID: `alias/${this.passwordKey.keyId}`,
       },
       layers: [this.layer],
     });
 
-
-    const upsertUserIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, upsertUserIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

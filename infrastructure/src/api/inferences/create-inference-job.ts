@@ -72,7 +72,7 @@ export class CreateInferenceJobApi {
           },
           inference_type: {
             type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
+            enum: ['Real-time', 'Async'],
           },
           payload_string: {
             type: JsonSchemaType.STRING,
@@ -137,8 +137,6 @@ export class CreateInferenceJobApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -151,8 +149,6 @@ export class CreateInferenceJobApi {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
@@ -188,33 +184,32 @@ export class CreateInferenceJobApi {
       index: 'create_inference_job.py',
       handler: 'handler',
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       environment: {
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
         INFERENCE_JOB_TABLE: this.inferenceJobTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
       },
       layers: [this.layer],
     });
 
-
-    const createInferenceJobIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, createInferenceJobIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {
         'application/json': this.model,
       },
     });
+
     return lambdaFunction;
   }
 }

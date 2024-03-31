@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -108,13 +108,12 @@ export class DeleteTrainingJobsApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         environment: {
-          MULTI_USER_TABLE: this.multiUserTable.tableName,
           TRAINING_JOB_TABLE: this.trainingTable.tableName,
         },
         layers: [this.layer],
       });
-
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,

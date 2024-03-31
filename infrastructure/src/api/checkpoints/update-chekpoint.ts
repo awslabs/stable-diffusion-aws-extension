@@ -20,8 +20,8 @@ export interface UpdateCheckPointApiProps {
 export class UpdateCheckPointApi {
   public model: Model;
   public requestValidator: RequestValidator;
+  public router: aws_apigateway.Resource;
   private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -104,8 +104,7 @@ export class UpdateCheckPointApi {
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -171,6 +170,7 @@ export class UpdateCheckPointApi {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
@@ -187,15 +187,15 @@ export class UpdateCheckPointApi {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
         RENAME_LAMBDA_NAME: renameLambdaFunction.functionName,
       },
       layers: [this.layer],
     });
 
-    const createModelIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -203,7 +203,7 @@ export class UpdateCheckPointApi {
     );
 
     this.router.addResource('{id}')
-      .addMethod(this.httpMethod, createModelIntegration,
+      .addMethod(this.httpMethod, lambdaIntegration,
         {
           apiKeyRequired: true,
           requestValidator: this.requestValidator,

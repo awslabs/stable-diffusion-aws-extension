@@ -3,6 +3,7 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_TRAIN_ALL
 from common.ddb_service.client import DynamoDbUtilsService
@@ -12,6 +13,7 @@ from libs.data_types import TrainJob
 from libs.utils import get_permissions_by_username, get_user_roles, check_user_permissions, permissions_check, \
     response_error, decode_last_key, encode_last_key
 
+tracer = Tracer()
 train_table = os.environ.get('TRAIN_TABLE')
 user_table = os.environ.get('MULTI_USER_TABLE')
 ddb = boto3.resource('dynamodb')
@@ -22,7 +24,8 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
-# GET /trains
+# GET /trainings
+@tracer.capture_lambda_handler
 def handler(event, context):
     _filter = {}
 

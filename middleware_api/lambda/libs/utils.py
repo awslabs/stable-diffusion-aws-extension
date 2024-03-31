@@ -4,14 +4,16 @@ import logging
 import os
 
 import boto3
-import time
+from aws_lambda_powertools import Tracer
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import ForbiddenException, UnauthorizedException, NotFoundException, BadRequestException
 from common.response import unauthorized, forbidden, not_found, bad_request
-from libs.data_types import PARTITION_KEYS, User, Role
+from libs.data_types import PARTITION_KEYS, User, Role, EndpointDeploymentJob
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -21,22 +23,37 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 encode_type = "utf-8"
 
+ddb = boto3.resource('dynamodb')
+endpoint_table = ddb.Table(os.environ.get('ENDPOINT_TABLE_NAME'))
+
+
+@tracer.capture_method
+def get_endpoint_by_name(endpoint_name: str):
+    tracer.put_annotation(key="endpoint_name", value=endpoint_name)
+
+    scan_kwargs = {
+        'IndexName': "endpoint_name-startTime-index",
+        'KeyConditionExpression': Key('endpoint_name').eq(endpoint_name),
+    }
+
+    logger.info(scan_kwargs)
+
+    response = endpoint_table.query(**scan_kwargs)
+
+    tracer.put_metadata(key="endpoint_name", value=response)
+
+    items = response.get('Items', [])
+
+    if len(items) == 0:
+        raise NotFoundException(f'endpoint with name {endpoint_name} not found')
+
+    return EndpointDeploymentJob(**items[0])
+
 
 def log_json(title, payload: any = None):
     logger.info(f"{title}: ")
     if payload:
         logger.info(json.dumps(payload, default=str))
-
-
-def log_execution_time(func):
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        logger.info(f"executed {func.__name__} in {(end_time - start_time) * 1000:.2f}ms")
-        return result
-
-    return wrapper
 
 
 class KeyEncryptService:
@@ -82,7 +99,7 @@ class KeyEncryptService:
             return text
 
 
-@log_execution_time
+@tracer.capture_method
 def check_user_existence(ddb_service, user_table, username):
     creator = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -92,7 +109,7 @@ def check_user_existence(ddb_service, user_table, username):
     return not creator or len(creator) == 0
 
 
-@log_execution_time
+@tracer.capture_method
 def get_user_by_username(ddb_service, user_table, username):
     user_raw = ddb_service.query_items(table=user_table, key_values={
         'kind': PARTITION_KEYS.user,
@@ -105,8 +122,9 @@ def get_user_by_username(ddb_service, user_table, username):
     return User(**(ddb_service.deserialize(user_raw[0])))
 
 
-@log_execution_time
+@tracer.capture_method
 def get_user_roles(ddb_service, user_table_name, username):
+    tracer.put_annotation(key="username", value=username)
     user = ddb_service.query_items(table=user_table_name, key_values={
         'kind': PARTITION_KEYS.user,
         'sort_key': username,
@@ -153,9 +171,11 @@ def get_user_name(event: any):
     return username
 
 
-@log_execution_time
+@tracer.capture_method
 def permissions_check(event: any, permissions: [str]):
     username = get_user_name(event)
+
+    tracer.put_annotation(key="username", value=username)
 
     if not user_table:
         raise Exception("MULTI_USER_TABLE not set")
@@ -197,7 +217,7 @@ def check_user_permissions(checkpoint_owners: [str], user_roles: [str], user_nam
     return False
 
 
-@log_execution_time
+@tracer.capture_method
 def get_permissions_by_username(ddb_service, user_table, username):
     creator_roles = get_user_roles(ddb_service, user_table, username)
     roles = ddb_service.scan(table=user_table, filters={

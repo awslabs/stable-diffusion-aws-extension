@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -24,13 +24,17 @@ export interface CreateEndpointApiProps {
   httpMethod: string;
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  inferenceJobTable: Table;
+  syncTable: aws_dynamodb.Table;
+  instanceMonitorTable: aws_dynamodb.Table;
   srcRoot: string;
   commonLayer: LayerVersion;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
+  queue: aws_sqs.Queue;
   accountId: ICfnRuleConditionExpression;
+  executeResultSuccessTopic: Topic;
+  executeResultFailTopic: Topic;
 }
 
 export class CreateEndpointApi {
@@ -42,13 +46,17 @@ export class CreateEndpointApi {
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
-  private readonly inferenceJobTable: Table;
+  private readonly syncTable: Table;
+  private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
   private readonly accountId: ICfnRuleConditionExpression;
   private readonly userNotifySNS: Topic;
+  private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
+  private readonly executeResultSuccessTopic: Topic;
+  private readonly executeResultFailTopic: Topic;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -56,13 +64,17 @@ export class CreateEndpointApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.inferenceJobTable = props.inferenceJobTable;
     this.multiUserTable = props.multiUserTable;
+    this.syncTable = props.syncTable;
+    this.instanceMonitorTable = props.instanceMonitorTable;
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
+    this.executeResultSuccessTopic = props.executeResultSuccessTopic;
+    this.executeResultFailTopic = props.executeResultFailTopic;
+    this.queue = props.queue;
     this.accountId = props.accountId;
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
@@ -82,6 +94,8 @@ export class CreateEndpointApi {
         this.userNotifySNS.topicArn,
         this.inferenceResultTopic.topicArn,
         this.inferenceResultErrorTopic.topicArn,
+        this.executeResultSuccessTopic.topicArn,
+        this.executeResultFailTopic.topicArn,
       ],
     });
 
@@ -91,6 +105,7 @@ export class CreateEndpointApi {
         's3:List*',
         's3:PutObject',
         's3:GetObject',
+        's3:DeleteObject',
       ],
       resources: [
         '*',
@@ -129,6 +144,8 @@ export class CreateEndpointApi {
         'iam:CreateServiceLinkedRole',
         'iam:PassRole',
         'sts:AssumeRole',
+        'xray:PutTraceSegments',
+        'xray:PutTelemetryRecords',
       ],
       resources: ['*'],
     });
@@ -147,7 +164,6 @@ export class CreateEndpointApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.multiUserTable.tableArn,
-        this.inferenceJobTable.tableArn,
       ],
     });
 
@@ -159,6 +175,14 @@ export class CreateEndpointApi {
         'logs:PutLogEvents',
       ],
       resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
+    });
+
+    const sqsStatement = new aws_iam.PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'sqs:SendMessage',
+      ],
+      resources: [this.queue.queueArn],
     });
 
     const passStartDeployRole = new PolicyStatement({
@@ -183,6 +207,7 @@ export class CreateEndpointApi {
     lambdaStartDeployRole.addToPolicy(endpointStatement);
     lambdaStartDeployRole.addToPolicy(ddbStatement);
     lambdaStartDeployRole.addToPolicy(logStatement);
+    lambdaStartDeployRole.addToPolicy(sqsStatement);
     lambdaStartDeployRole.addToPolicy(passStartDeployRole);
 
     return lambdaStartDeployRole;
@@ -208,11 +233,15 @@ export class CreateEndpointApi {
           },
           endpoint_type: {
             type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Serverless', 'Async'],
+            enum: ['Real-time', 'Async'],
           },
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
+          },
+          service_type: {
+            type: JsonSchemaType.STRING,
+            enum: ['sd', 'comfy'],
           },
           instance_type: {
             type: JsonSchemaType.STRING,
@@ -239,9 +268,6 @@ export class CreateEndpointApi {
             minItems: 1,
             maxItems: 10,
           },
-          creator: {
-            type: JsonSchemaType.STRING,
-          },
         },
         required: [
           'endpoint_type',
@@ -249,7 +275,6 @@ export class CreateEndpointApi {
           'initial_instance_count',
           'autoscaling_enabled',
           'assign_to_roles',
-          'creator',
         ],
       },
     });
@@ -276,17 +301,20 @@ export class CreateEndpointApi {
       timeout: Duration.seconds(900),
       role: role,
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
+        COMFY_QUEUE_URL: this.queue.queueUrl,
+        COMFY_SYNC_TABLE: this.syncTable.tableName,
+        COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
+        COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
+        COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
       },
       layers: [this.layer],
     });
-
 
     const integration = new LambdaIntegration(
       lambdaFunction,
@@ -294,7 +322,6 @@ export class CreateEndpointApi {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,

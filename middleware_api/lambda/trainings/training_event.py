@@ -3,6 +3,7 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
@@ -10,6 +11,7 @@ from common.util import publish_msg
 from libs.common_tools import split_s3_path
 from libs.data_types import TrainJob, TrainJobStatus, CheckPoint, CheckPointStatus
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -23,6 +25,7 @@ s3 = boto3.client('s3')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     logger.info(json.dumps(event))
     train_job_name = event['detail']['TrainingJobName']

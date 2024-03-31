@@ -53,6 +53,7 @@ export class UpdateDatasetApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-update-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -92,10 +93,10 @@ export class UpdateDatasetApi {
         's3:ListMultipartUploadParts',
         's3:ListBucketMultipartUploads',
       ],
-      resources: [`${this.s3Bucket.bucketArn}/*`,
+      resources: [
+        `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      ],
     }));
     return newRole;
   }
@@ -144,8 +145,8 @@ export class UpdateDatasetApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
-        MULTI_USER_TABLE: this.userTable.tableName,
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
       },
@@ -153,7 +154,7 @@ export class UpdateDatasetApi {
     });
 
 
-    const createModelIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -161,7 +162,7 @@ export class UpdateDatasetApi {
     );
 
     this.router.addResource('{id}')
-      .addMethod(this.httpMethod, createModelIntegration, <MethodOptions>{
+      .addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
         requestValidator: this.requestValidator,
         requestModels: {

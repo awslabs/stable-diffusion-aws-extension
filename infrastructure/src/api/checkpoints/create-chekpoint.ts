@@ -21,8 +21,9 @@ export interface CreateCheckPointApiProps {
 export class CreateCheckPointApi {
   public model: Model;
   public requestValidator: RequestValidator;
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
+  public router: aws_apigateway.Resource;
   private readonly src: string;
-  private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -47,7 +48,38 @@ export class CreateCheckPointApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
-    this.createCheckpointApi();
+
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: `${this.src}/checkpoints`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'create_checkpoint.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.role,
+      memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        CHECKPOINT_TABLE: this.checkpointTable.tableName,
+        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
+      },
+      layers: [this.layer],
+    });
+
+    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+    });
   }
 
   private uploadByUrlLambdaFunction() {
@@ -61,10 +93,10 @@ export class CreateCheckPointApi {
       timeout: Duration.seconds(900),
       role: this.role,
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       ephemeralStorageSize: Size.mebibytes(10240),
       environment: {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
@@ -104,8 +136,6 @@ export class CreateCheckPointApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -212,38 +242,5 @@ export class CreateCheckPointApi {
       });
   }
 
-  private createCheckpointApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'create_checkpoint.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.role,
-      memorySize: 3070,
-      environment: {
-        CHECKPOINT_TABLE: this.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-        UPLOAD_BY_URL_LAMBDA_NAME: this.uploadByUrlLambda.functionName,
-      },
-      layers: [this.layer],
-    });
-
-    const createCheckpointIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, createCheckpointIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-  }
 }
 

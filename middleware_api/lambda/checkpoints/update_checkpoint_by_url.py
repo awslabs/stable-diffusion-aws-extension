@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import requests
+from aws_lambda_powertools import Tracer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import bad_request, forbidden
@@ -15,6 +16,7 @@ from libs.common_tools import get_base_checkpoint_s3_key, multipart_upload_from_
 from libs.data_types import CheckPoint, CheckPointStatus
 from libs.utils import get_user_roles, get_permissions_by_username
 
+tracer = Tracer()
 checkpoint_table = os.environ.get('CHECKPOINT_TABLE')
 bucket_name = os.environ.get('S3_BUCKET_NAME')
 checkpoint_type = ["Stable-diffusion", "embeddings", "Lora", "hypernetworks", "ControlNet", "VAE"]
@@ -28,6 +30,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 MAX_WORKERS = 10
 
 
+@tracer.capture_method
 def download_and_upload_models(url: str, base_key: str, file_names: list, multipart_upload: dict,
                                cannot_download: list):
     logger.info(f"download_and_upload_models: {url}, {base_key}, {file_names}")
@@ -68,6 +71,7 @@ class CreateCheckPointByUrlEvent:
     url: str
 
 
+@tracer.capture_lambda_handler
 def handler(raw_event, context):
     logger.info(json.dumps(raw_event))
 

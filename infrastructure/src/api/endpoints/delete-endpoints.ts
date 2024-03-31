@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -159,22 +159,18 @@ export class DeleteEndpointsApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
-      environment: {
-        DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME: this.endpointDeploymentTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
-      },
+      tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
 
-
-    const deleteEndpointsIntegration = new LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

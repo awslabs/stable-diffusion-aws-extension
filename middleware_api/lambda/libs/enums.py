@@ -4,7 +4,6 @@ from enum import Enum, unique
 @unique
 class EndpointType(Enum):
     RealTime = "Real-time"
-    Serverless = "Serverless"
     Async = "Async"
     List = [RealTime, Async]
 
@@ -57,3 +56,29 @@ class DatasetStatus(Enum):
     Initialed = 'Initialed'
     Enabled = 'Enabled'
     Disabled = 'Disabled'
+
+
+class ComfyEnvPrepareType(Enum):
+    ALL = 'default'
+    INPUTS = 'inputs'
+    NODES = 'nodes'
+    MODELS = 'models'
+    CUSTOM = 'custom'
+    OTHER = 'other'
+
+
+class ComfyExecuteType(Enum):
+    CREATED = 'created'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
+class ComfySyncStatus(Enum):
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+
+class ComfyExecuteRespType(Enum):
+    NAME_ONLY = 'name_only'
+    PRESIGN_URL = 'presign_url'
+    BASE64 = 'base64'

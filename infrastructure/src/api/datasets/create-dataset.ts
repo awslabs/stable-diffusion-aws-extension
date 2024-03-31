@@ -53,6 +53,7 @@ export class CreateDatasetApi {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -86,8 +87,6 @@ export class CreateDatasetApi {
       resources: [
         `${this.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -193,22 +192,23 @@ export class CreateDatasetApi {
       timeout: Duration.seconds(900),
       role: this.iamRole(),
       memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         DATASET_ITEM_TABLE: this.datasetItemTable.tableName,
         DATASET_INFO_TABLE: this.datasetInfoTable.tableName,
-        MULTI_USER_TABLE: this.multiUserTable.tableName,
       },
       layers: [this.layer],
     });
 
 
-    const createDatasetIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
-    this.router.addMethod(this.httpMethod, createDatasetIntegration, <MethodOptions>{
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

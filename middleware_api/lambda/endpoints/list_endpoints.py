@@ -3,6 +3,7 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.const import PERMISSION_ENDPOINT_ALL, PERMISSION_ENDPOINT_LIST
 from common.ddb_service.client import DynamoDbUtilsService
@@ -13,7 +14,8 @@ from libs.enums import EndpointStatus
 from libs.utils import get_user_roles, check_user_permissions, get_permissions_by_username, permissions_check, \
     response_error, decode_last_key, encode_last_key
 
-sagemaker_endpoint_table = os.environ.get('DDB_ENDPOINT_DEPLOYMENT_TABLE_NAME')
+tracer = Tracer()
+sagemaker_endpoint_table = os.environ.get('ENDPOINT_TABLE_NAME')
 user_table = os.environ.get('MULTI_USER_TABLE')
 ddb = boto3.resource('dynamodb')
 table = ddb.Table(sagemaker_endpoint_table)
@@ -24,6 +26,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 
 # GET /endpoints?name=SageMaker_Endpoint_Name&username=&filter=key:value,key:value
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     _filter = {}
 

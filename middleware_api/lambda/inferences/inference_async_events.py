@@ -3,10 +3,13 @@ import logging
 import os
 
 import boto3
+from aws_lambda_powertools import Tracer
+from common.sns_util import send_message_to_sns
 
-from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job, send_message_to_sns
+from inference_libs import parse_sagemaker_result, get_bucket_and_key, get_inference_job
 from start_inference_job import update_inference_job_table
 
+tracer = Tracer()
 s3_resource = boto3.resource('s3')
 
 SNS_TOPIC = os.environ['NOTICE_SNS_TOPIC']
@@ -15,6 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
 
+@tracer.capture_lambda_handler
 def handler(event, context):
     logger.info(json.dumps(event))
 

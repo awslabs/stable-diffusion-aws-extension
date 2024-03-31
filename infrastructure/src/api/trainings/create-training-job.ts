@@ -61,8 +61,6 @@ export class CreateTrainingJobApi {
       resources: [
         `${this.props.s3Bucket.bucketArn}/*`,
         `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
       ],
     }));
 
@@ -128,8 +126,6 @@ export class CreateTrainingJobApi {
         's3:CreateBucket',
       ],
       resources: [`${this.props.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-        `arn:${Aws.PARTITION}:s3:::*Sagemaker*`,
         `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
     }));
 
@@ -253,12 +249,12 @@ export class CreateTrainingJobApi {
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       memorySize: 3070,
+      tracing: aws_lambda.Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
         MODEL_TABLE: this.props.modelTable.tableName,
         DATASET_INFO_TABLE: this.props.datasetInfoTable.tableName,
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
-        MULTI_USER_TABLE: this.props.multiUserTable.tableName,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
         TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,
@@ -267,14 +263,14 @@ export class CreateTrainingJobApi {
       layers: [this.props.commonLayer],
     });
 
-    const createTrainJobIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.props.router.addMethod(this.props.httpMethod, createTrainJobIntegration, <MethodOptions>{
+    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

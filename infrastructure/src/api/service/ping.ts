@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, Duration } from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -68,9 +68,9 @@ export class PingApi {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
+        tracing: aws_lambda.Tracing.ACTIVE,
         layers: [this.layer],
       });
-
 
     const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
@@ -78,7 +78,6 @@ export class PingApi {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(
       this.httpMethod,

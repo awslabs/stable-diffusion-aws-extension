@@ -4,11 +4,13 @@ import os
 from dataclasses import dataclass
 
 import boto3
+from aws_lambda_powertools import Tracer
 
 from common.response import no_content, bad_request
 from libs.data_types import PARTITION_KEYS, Default_Role
 from libs.utils import response_error
 
+tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -21,6 +23,7 @@ class DeleteRolesEvent:
     role_name_list: [str]
 
 
+@tracer.capture_lambda_handler
 def handler(event, ctx):
     try:
         logger.info(json.dumps(event))
