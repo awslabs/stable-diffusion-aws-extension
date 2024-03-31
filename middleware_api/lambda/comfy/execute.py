@@ -112,7 +112,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     )
 
     if ep.endpoint_type == 'Async':
-        async_inference(payload, inference_id, ep.endpoint_name)
+        resp = async_inference(payload, inference_id, ep.endpoint_name)
+        logger.info(f"async inference response: {resp}")
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=inference_job.__dict__)
 
