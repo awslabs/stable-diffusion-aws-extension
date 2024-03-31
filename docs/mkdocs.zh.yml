@@ -37,7 +37,7 @@ nav:
         - img2img指南: user-guide/img2img-guide.md
         - controlNet指南: user-guide/controlnet-guide.md
         - 训练指南: user-guide/training-guide.md
-        - 其他插件指南: user-guide/extensions-guide.md 
+        - 其他插件指南: user-guide/extensions-guide.md
         # - Merge Checkpoint: user-guide/checkpoint-merge-guide.md
     - 开发者指南:
         - 源代码: developer-guide/source.md
@@ -47,6 +47,7 @@ nav:
         - API 推理调试器: developer-guide/api_debugger.md
         - API 验证: developer-guide/api_authentication.md
         - API 调用:
+            - Comfy 1.0.0: developer-guide/api/comfy-1.0.0.md
             - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md
         - OpenAPI Specification: developer-guide/oas.md
