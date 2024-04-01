@@ -171,7 +171,6 @@ Resources:
           cd /home/ubuntu/ComfyUI || exit 1
           
           pip install --upgrade pip
-          pip install -r requirements.txt
           pip install boto3 aws_xray_sdk fastapi uvicorn
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/ComfyUI
