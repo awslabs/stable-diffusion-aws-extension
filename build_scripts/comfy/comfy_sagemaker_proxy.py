@@ -156,8 +156,8 @@ async def invocations(request):
     #     "prompt_id": '11111111-1111-1111',
     #     "instance_id": GEN_INSTANCE_ID,
     #     "status": "success",
-    #     "output_path": f's3://{BUCKET}/output/11111111-1111-1111',
-    #     "temp_path": f's3://{BUCKET}/temp/11111111-1111-1111',
+    #     "output_path": f's3://{BUCKET}/comfy/output/11111111-1111-1111',
+    #     "temp_path": f's3://{BUCKET}/comfy/temp/11111111-1111-1111',
     # }
     # return ok(response_body)
     # TODO serve 级别加锁
@@ -209,8 +209,8 @@ async def invocations(request):
             "prompt_id": prompt_id,
             "instance_id": GEN_INSTANCE_ID,
             "status": "success",
-            "output_path": f's3://{BUCKET}/output/{prompt_id}',
-            "temp_path": f's3://{BUCKET}/temp/{prompt_id}',
+            "output_path": f's3://{BUCKET}/comfy/output/{prompt_id}',
+            "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
         }
         return ok(response_body)
     except Exception as e:
