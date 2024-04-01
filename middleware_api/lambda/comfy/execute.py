@@ -17,7 +17,7 @@ from sagemaker.serializers import JSONSerializer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
 from common.response import ok, created
-from common.util import s3_scan_files
+from common.util import s3_scan_files, generate_presigned_url_for_keys
 from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType
 from libs.utils import get_endpoint_by_name, response_error
@@ -122,10 +122,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     #     "prompt_id": '11111111-1111-1111',
     #     "instance_id": 'comfy-real-time-test-rgihbd',
     #     "status": 'success',
-    #     "output_path": f's3://{bucket_name}/template/',
-    #     "temp_path": f's3://{bucket_name}/template/'
+    #     "output_path": f's3://{bucket_name}/images/',
+    #     "temp_path": f's3://{bucket_name}/images/'
     # }
-    #
+
     logger.info(f"real time inference response: ")
     logger.info(resp)
     resp = InferenceResult(**resp)
@@ -141,7 +141,24 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    return ok(data=inference_job.__dict__)
+    if ep.endpoint_type == 'Real-time':
+        inference_job.output_files = generate_presigned_url_for_keys(inference_job.output_path,
+                                                                     inference_job.output_files)
+        inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
+                                                                   inference_job.temp_files)
+    data = {
+        'prompt_id': inference_job.prompt_id,
+        'status': inference_job.status,
+        'create_time': inference_job.create_time,
+        'start_time': inference_job.start_time,
+        'complete_time': inference_job.complete_time,
+        'output_path': inference_job.output_path,
+        'output_files': inference_job.output_files,
+        'temp_path': inference_job.temp_path,
+        'temp_files': inference_job.temp_files,
+    }
+
+    return ok(data=data, decimal=True)
 
 
 @tracer.capture_lambda_handler

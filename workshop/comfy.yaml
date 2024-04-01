@@ -113,8 +113,8 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 7860
-          ToPort: 7860
+          FromPort: 8188
+          ToPort: 8188
           CidrIp: 0.0.0.0/0
 
   ComfyInternetGateway:
@@ -237,4 +237,4 @@ Resources:
 Outputs:
   WebUIURL:
     Description: URL for Comfy WebUI
-    Value: !Sub http://${WebUiEIP}:8080
+    Value: !Sub http://${WebUiEIP}:8188

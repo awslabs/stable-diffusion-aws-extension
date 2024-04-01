@@ -2,21 +2,31 @@ import base64
 import concurrent.futures
 import os
 
-import folder_paths
 import requests
-import server
 from aiohttp import web
+
+import folder_paths
+import server
 from execution import PromptExecutor
 
-# api_url = os.environ.get('COMFY_API_URL')
-# api_token = os.environ.get('COMFY_API_TOKEN')
-# endpoint_name = os.environ.get('ENDPOINT_NAME')
-api_url = 'https://ps2j057bbg.execute-api.us-east-1.amazonaws.com/prod/'
-api_token = '09876543210987654321'
-endpoint_name = 'esd-real-time-test'
 
-if not api_url or not api_token:
-    raise ValueError("API_URL and API_TOKEN environment variables must be set.")
+api_url = os.environ.get('COMFY_API_URL')
+api_token = os.environ.get('COMFY_API_TOKEN')
+comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
+comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
+comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
+
+
+if not api_url:
+    raise ValueError("API_URL environment variables must be set.")
+
+if not api_token:
+    raise ValueError("API_TOKEN environment variables must be set.")
+
+if not comfy_endpoint:
+    raise ValueError("COMFY_ENDPOINT environment variables must be set.")
+
+headers = {"x-api-key": api_token, "Content-Type": "application/json"}
 
 
 def save_images_locally(response_json, local_folder):
@@ -55,9 +65,15 @@ def execute_proxy(func):
         prompt = args[1]
         prompt_id = args[2]
         extra_data = args[3]
-        payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
-                   "endpoint_name": endpoint_name, "need_prepare": False, "need_sync": True}
-        headers = {"x-api-key": api_token}
+        payload = {
+            "number": str(number),
+            "prompt": prompt,
+            "prompt_id": prompt_id,
+            "extra_data": extra_data,
+            "endpoint_name": comfy_endpoint,
+            "need_prepare": comfy_need_prepare,
+            "need_sync": comfy_need_sync,
+        }
 
         def send_post_request(url, params):
             response = requests.post(url, json=params, headers=headers)
@@ -67,13 +83,18 @@ def execute_proxy(func):
             response = requests.get(url, headers=headers)
             return response
 
+        def send_execute(url, params):
+            response = send_post_request(url, params=params)
+            images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
+            save_files(images_response.json(), 'temp_files', 'temp')
+            save_files(images_response.json(), 'output_files', 'output')
+            return response
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             already_synced = False
-            # 提交第一个请求
-            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
+            execute_future = executor.submit(send_execute, f"{api_url}/executes", payload)
 
-            # 循环获取第二个请求
-            while not execute_future.done():
+            while comfy_need_sync and not execute_future.done():
                 msg_future = executor.submit(send_get_request,
                                              f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
@@ -83,11 +104,7 @@ def execute_proxy(func):
                     if future == execute_future:
                         execute_resp = future.result()
                         if execute_resp.status_code == 200:
-                            images_response = send_get_request(
-                                f"{api_url}/executes/{prompt_id}")
-                            print(images_response)
-                            save_images_locally(images_response.json(), './output')
-                            save_images_locally(images_response.json(), './temp')
+                            break
                         print(execute_resp)
                     elif future == msg_future:
                         msg_response = future.result()
@@ -103,7 +120,8 @@ def execute_proxy(func):
                                 data = msg[0].get('data')
                                 sid = msg[0].get('sid') if 'sid' in msg else None
                                 server_use.send_sync(event, data, sid)
-            while not already_synced:
+
+            while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 print(msg_response)
                 already_synced = True
@@ -118,15 +136,28 @@ def execute_proxy(func):
                         data = msg[0].get('data')
                         sid = msg[0].get('sid') if 'sid' in msg else None
                         server_use.send_sync(event, data, sid)
-            # execute_resp = execute_future.result()
-            # if execute_resp.status_code == 200:
-            #     images_response = send_get_request(
-            #         f" https://0zdzfwqgm9.execute-api.us-east-1.amazonaws.com/prod/execute/{prompt_id}")
-            #     print(images_response)
-            #     save_images_locally(images_response.json(), './output')
-            # print(execute_resp)
 
     return wrapper
+
+
+def save_files(execute, key, target_dir):
+    if key in execute['data']:
+        temp_files = execute['data'][key]
+        for url in temp_files:
+            loca_file = get_file_name(url)
+            response = requests.get(url)
+            # if target_dir not exists, create it
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            print(f"Saving file {loca_file} to {target_dir}")
+            with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+                f.write(response.content)
+
+
+def get_file_name(url: str):
+    file_name = url.split('/')[-1]
+    file_name = file_name.split('?')[0]
+    return file_name
 
 
 PromptExecutor.execute = execute_proxy(PromptExecutor.execute)
