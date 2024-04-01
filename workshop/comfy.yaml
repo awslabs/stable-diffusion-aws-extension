@@ -184,11 +184,11 @@ Resources:
 
           [Service]
           WorkingDirectory=/home/ubuntu/ComfyUI
-          ExecStart=python3 main.py
+          ExecStart=python3 main.py --listen
           Type=simple
           Restart=always
           RestartSec=3
-          User=ubuntu
+          User=root
           StartLimitAction=reboot
 
           [Install]
@@ -212,7 +212,7 @@ Resources:
           Type=simple
           Restart=always
           RestartSec=3
-          User=ubuntu
+          User=root
           StartLimitAction=reboot
 
           [Install]
@@ -226,6 +226,7 @@ Resources:
           
           # tail -f /var/log/cloud-init-output.log
           # sudo journalctl -u comfy -f
+          # sudo journalctl -u comfy_upload -f
 
   WebUiEIP:
     Type: AWS::EC2::EIP
