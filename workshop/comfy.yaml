@@ -153,11 +153,11 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
   
-          echo "export COMFY_API_URL=${ApiGatewayUrl}" >> ~/.bashrc
-          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> ~/.bashrc
-          echo "export COMFY_BUCKET_NAME=${BucketName}" >> ~/.bashrc
-          echo "export COMFY_ENDPOINT=${EndpointName}" >> ~/.bashrc
-          source ~/.bashrc
+          echo "export COMFY_API_URL=${ApiGatewayUrl}" >> /etc/environment
+          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
+          echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
+          echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          source /etc/environment
           
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -183,7 +183,7 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/home/ubuntu/ComfyUI
+          WorkingDirectory=/ComfyUI
           ExecStart=python3 main.py --listen
           Type=simple
           Restart=always
@@ -207,8 +207,8 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/home/ubuntu
-          ExecStart=/home/ubuntu/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+          WorkingDirectory=/ComfyUI
+          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
           Type=simple
           Restart=always
           RestartSec=3
