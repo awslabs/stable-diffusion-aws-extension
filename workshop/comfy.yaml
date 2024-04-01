@@ -153,11 +153,11 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
   
-          echo "export COMFY_API_URL=${ApiGatewayUrl}" > /home/ubuntu/.bashrc
-          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> //home/ubuntu/.bashrc
-          echo "export COMFY_BUCKET_NAME=${BucketName}" >> //home/ubuntu/.bashrc
-          echo "export COMFY_ENDPOINT=${EndpointName}" >> //home/ubuntu/.bashrc
-          source /home/ubuntu/.bashrc
+          echo "export COMFY_API_URL=${ApiGatewayUrl}" >> ~/.bashrc
+          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> ~/.bashrc
+          echo "export COMFY_BUCKET_NAME=${BucketName}" >> ~/.bashrc
+          echo "export COMFY_ENDPOINT=${EndpointName}" >> ~/.bashrc
+          source ~/.bashrc
           
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
           tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -166,18 +166,15 @@ Resources:
           sudo apt-get update
           sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
           
-          cd /home/ubuntu
-          
           git clone https://github.com/comfyanonymous/ComfyUI.git
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch
           cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
           
-          cd /home/ubuntu/ComfyUI || exit 1
+          cd ComfyUI || exit 1
           
           pip install --upgrade pip
+          pip install -r requirements.txt
           pip install boto3 aws_xray_sdk fastapi uvicorn
-          
-          sudo chown -R ubuntu:ubuntu /home/ubuntu/ComfyUI
           
           cat > comfy.service <<EOF
           [Unit]
