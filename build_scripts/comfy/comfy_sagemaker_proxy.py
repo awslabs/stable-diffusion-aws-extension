@@ -97,13 +97,13 @@ async def prepare_comfy_env(sync_item: dict):
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     print("sync_s3_models_or_inputs_to_local start")
     # s5cmd_command = f'/home/ubuntu/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
-    s5cmd_command = f's5cmd sync "s3://{BUCKET}/{s3_path}/" "{local_path}/"'
+    s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{s3_path}/" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
         # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         print(s5cmd_command)
         os.system(s5cmd_command)
-        print(f'Files copied from "s3://{BUCKET}/{s3_path}/*" to "{local_path}/"')
+        print(f'Files copied from "s3://{BUCKET}/comfy/{s3_path}/*" to "{local_path}/"')
         if need_un_tar:
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
@@ -118,11 +118,11 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
 
 def sync_local_outputs_to_s3(s3_path, local_path):
     print("sync_local_outputs_to_s3 start")
-    s5cmd_command = f's5cmd cp "{local_path}/*" "s3://{BUCKET}/{s3_path}/" '
+    s5cmd_command = f's5cmd cp "{local_path}/*" "s3://{BUCKET}/comfy/{s3_path}/" '
     try:
         print(s5cmd_command)
         os.system(s5cmd_command)
-        print(f'Files copied local to "s3://{BUCKET}/{s3_path}/" to "{local_path}/"')
+        print(f'Files copied local to "s3://{BUCKET}/comfy/{s3_path}/" to "{local_path}/"')
         clean_cmd = f'rm -rf {local_path}'
         os.system(clean_cmd)
         print(f'Files removed from local {local_path}')
