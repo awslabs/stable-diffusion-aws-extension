@@ -8,11 +8,11 @@ Parameters:
       - main
       - dev
     Default: dev
-  ApiURL:
+  ApiGatewayUrl:
     Description: API URL
     Type: String
     MinLength: 1
-  ApiKey:
+  ApiGatewayUrlToken:
     Description: API Key
     Type: String
     MinLength: 1
@@ -141,8 +141,8 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           
-          echo "export COMFY_API_URL=${ApiURL}" > /home/ubuntu/.bashrc
-          echo "export COMFY_API_TOKEN=${ApiKey}" >> //home/ubuntu/.bashrc
+          echo "export COMFY_API_URL=${ApiGatewayUrl}" > /home/ubuntu/.bashrc
+          echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> //home/ubuntu/.bashrc
           source /home/ubuntu/.bashrc
           
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -150,8 +150,7 @@ Resources:
           cp s5cmd /usr/local/bin/
           
           sudo apt-get update
-          sudo apt install wget git python3.10 python3.10-venv python3-dev build-essential net-tools libgl1 libtcmalloc-minimal4 -y
-          sudo update-alternatives --install /usr/bin/python3 python /usr/bin/python3.10 1
+          sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
           
           cd /home/ubuntu
           
@@ -168,6 +167,10 @@ Resources:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install boto3 aws_xray_sdk fastapi uvicorn
+          python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
+          python -m pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
+          python -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
+          python -m pip install open-clip-torch==2.20.0
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/ComfyUI
           
@@ -190,10 +193,13 @@ Resources:
           WantedBy=default.target
 
           EOF
+          
           sudo mv comfy.service /etc/systemd/system
           sudo chown root:root /etc/systemd/system/comfy.service
           sudo systemctl enable comfy.service
           sudo systemctl start comfy.service
+          
+          # sudo journalctl -u comfy -f
 
   WebUiEIP:
     Type: AWS::EC2::EIP
