@@ -56,28 +56,40 @@ async def prepare_comfy_env(sync_item: dict):
         request_id = sync_item['request_id']
         logger.info(f"prepare_environment start sync_item:{sync_item}")
         prepare_type = sync_item['prepare_type']
+        rlt = True
         if prepare_type in ['default', 'models']:
-            sync_s3_files_or_folders_to_local(f'{request_id}/models/*', '/home/ubuntu/models', False)
+            sync_models_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/models/*', '/home/ubuntu/models', False)
+            if not sync_models_rlt:
+                rlt = False
         if prepare_type in ['default', 'inputs']:
-            sync_s3_files_or_folders_to_local(f'{request_id}/input/*', '/home/ubuntu/input', False)
+            sync_inputs_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/input/*', '/home/ubuntu/input', False)
+            if not sync_inputs_rlt:
+                rlt = False
         if prepare_type in ['default', 'nodes']:
-            sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes', '/home/ubuntu/custom_nodes', True)
+            sync_nodes_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes', '/home/ubuntu/custom_nodes', True)
+            if not sync_nodes_rlt:
+                rlt = False
         if prepare_type == 'custom':
             sync_source_path = sync_item['s3_source_path']
             local_target_path = sync_item['local_target_path']
             if not sync_source_path or not local_target_path:
                 logger.info("s3_source_path and local_target_path should not be empty")
             else:
-                sync_s3_files_or_folders_to_local(sync_source_path,
+                sync_rlt = sync_s3_files_or_folders_to_local(sync_source_path,
                                                   f'/home/ubuntu/{local_target_path}', False)
+                if not sync_rlt:
+                    rlt = False
         elif prepare_type == 'other':
             sync_script = sync_item['sync_script']
             logger.info("sync_script")
             # sync_script.startswith('s5cmd') 不允许
-            if sync_script and (sync_script.startswith("pip install") or sync_script.startswith("apt-get")
-                                or sync_script.startswith("os.environ")):
-                os.system(sync_script)
-
+            try:
+                if sync_script and (sync_script.startswith("pip install") or sync_script.startswith("apt-get")
+                                    or sync_script.startswith("os.environ")):
+                    os.system(sync_script)
+            except Exception as e:
+                logger.error(f"Exception while execute sync_scripts : {sync_script}")
+                rlt = False
         need_reboot = True if ('need_reboot' in sync_item and sync_item['need_reboot']
                                and str(sync_item['need_reboot']).lower() == 'true')else False
         if need_reboot:
@@ -86,7 +98,8 @@ async def prepare_comfy_env(sync_item: dict):
             os.environ['NEED_REBOOT'] = 'false'
         logger.info("prepare_environment end")
         os.environ['LAST_SYNC_REQUEST_ID'] = sync_item['request_id']
-        return True
+        os.environ['LAST_SYNC_REQUEST_TIME'] = sync_item['request_time']
+        return rlt
     except Exception as e:
         return False
 
@@ -117,8 +130,10 @@ def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
                         tar.extractall(path=local_path)
                     os.remove(tar_filepath)
                     logger.info(f'File {tar_filepath} extracted and removed')
+        return True
     except Exception as e:
         logger.info(f"Error executing s5cmd command: {e}")
+        return False
 
 
 def sync_local_outputs_to_s3(s3_path, local_path):
@@ -325,8 +340,14 @@ def sync_instance_monitor_status(need_save: bool):
 # must be sync invoke and use the env to check
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance(request):
+    if not BUCKET:
+        logger.error("No bucket provided ,wait and try again")
+        resp = {"status": "success", "message": "syncing"}
+        return ok(resp)
+
     if 'ALREADY_SYNC' in os.environ and os.environ.get('ALREADY_SYNC').lower() == 'false':
         resp = {"status": "success", "message": "syncing"}
+        logger.error("other process doing ,wait and try again")
         return ok(resp)
 
     os.environ['ALREADY_SYNC'] = 'false'
@@ -342,7 +363,9 @@ async def sync_instance(request):
 
         if ('request_id' in last_sync_record and last_sync_record['request_id']
                 and os.environ.get('LAST_SYNC_REQUEST_ID')
-                and os.environ.get('LAST_SYNC_REQUEST_ID') == last_sync_record['request_id']):
+                and os.environ.get('LAST_SYNC_REQUEST_ID') == last_sync_record['request_id']
+                and os.environ.get('LAST_SYNC_REQUEST_TIME')
+                and os.environ.get('LAST_SYNC_REQUEST_TIME') == last_sync_record['request_time']):
             logger.info("last sync record already sync by os check")
             sync_instance_monitor_status(False)
             resp = {"status": "success", "message": "no sync env"}
@@ -359,8 +382,11 @@ async def sync_instance(request):
             else:
                 sync_instance_monitor_status(False)
         else:
-            if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
-                    and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
+            if ('last_sync_request_id' in instance_monitor_record
+                    and instance_monitor_record['last_sync_request_id']
+                    and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']
+                    and instance_monitor_record['sync_status']
+                    and instance_monitor_record['sync_status'] == 'success'):
                 logger.info("last sync record already sync")
                 sync_instance_monitor_status(False)
                 resp = {"status": "success", "message": "no sync ddb"}
