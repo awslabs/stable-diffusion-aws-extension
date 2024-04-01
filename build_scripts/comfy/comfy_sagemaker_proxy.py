@@ -337,6 +337,7 @@ async def sync_instance(request):
             logger.info("no last sync record found do not need sync")
             sync_instance_monitor_status(True)
             resp = {"status": "success", "message": "no sync"}
+            os.environ['ALREADY_SYNC'] = 'true'
             return ok(resp)
 
         if ('request_id' in last_sync_record and last_sync_record['request_id']
@@ -345,6 +346,7 @@ async def sync_instance(request):
             logger.info("last sync record already sync by os check")
             sync_instance_monitor_status(False)
             resp = {"status": "success", "message": "no sync env"}
+            os.environ['ALREADY_SYNC'] = 'true'
             return ok(resp)
 
         instance_monitor_record = get_latest_ddb_instance_monitor_record()
@@ -362,6 +364,7 @@ async def sync_instance(request):
                 logger.info("last sync record already sync")
                 sync_instance_monitor_status(False)
                 resp = {"status": "success", "message": "no sync ddb"}
+                os.environ['ALREADY_SYNC'] = 'true'
                 return ok(resp)
 
             sync_already = await prepare_comfy_env(last_sync_record)
