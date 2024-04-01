@@ -340,8 +340,14 @@ def sync_instance_monitor_status(need_save: bool):
 # must be sync invoke and use the env to check
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance(request):
+    if not BUCKET:
+        logger.error("No bucket provided ,wait and try again")
+        resp = {"status": "success", "message": "syncing"}
+        return ok(resp)
+
     if 'ALREADY_SYNC' in os.environ and os.environ.get('ALREADY_SYNC').lower() == 'false':
         resp = {"status": "success", "message": "syncing"}
+        logger.error("other process doing ,wait and try again")
         return ok(resp)
 
     os.environ['ALREADY_SYNC'] = 'false'
