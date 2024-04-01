@@ -29,6 +29,7 @@ ddb_service = DynamoDbUtilsService(logger=logger)
 
 @dataclass
 class PrepareEnvEvent:
+    request_id: Optional[str]
     endpoint_name: str
     need_reboot: bool = False
     prepare_type: Optional[str] = 'default'
@@ -61,7 +62,7 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
         raise Exception(f'endpoint not found with name {endpoint_name}')
 
     sync_job = ComfySyncTable(
-        request_id=request_id,
+        request_id=request_id if event.request_id is None else event.request_id,
         endpoint_name=event.endpoint_name,
         endpoint_id=endpoint_info.EndpointDeploymentJobId,
         instance_count=endpoint_info.current_instance_count,

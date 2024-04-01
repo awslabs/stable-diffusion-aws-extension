@@ -53,14 +53,15 @@ def error(body: dict):
 
 async def prepare_comfy_env(sync_item: dict):
     try:
+        request_id = sync_item['request_id']
         logger.info(f"prepare_environment start sync_item:{sync_item}")
         prepare_type = sync_item['prepare_type']
         if prepare_type in ['default', 'models']:
-            sync_s3_files_or_folders_to_local('models', '/home/ubuntu/models', False)
+            sync_s3_files_or_folders_to_local(f'{request_id}/models', '/home/ubuntu/models', False)
         if prepare_type in ['default', 'inputs']:
-            sync_s3_files_or_folders_to_local('input', '/home/ubuntu/input', False)
+            sync_s3_files_or_folders_to_local(f'{request_id}/input', '/home/ubuntu/input', False)
         if prepare_type in ['default', 'nodes']:
-            sync_s3_files_or_folders_to_local('nodes', '/home/ubuntu/custom_nodes', True)
+            sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes', '/home/ubuntu/custom_nodes', True)
         if prepare_type == 'custom':
             sync_source_path = sync_item['s3_source_path']
             local_target_path = sync_item['local_target_path']
@@ -101,13 +102,13 @@ async def prepare_comfy_env(sync_item: dict):
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     logger.info("sync_s3_models_or_inputs_to_local start")
     # s5cmd_command = f'/home/ubuntu/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
-    s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{s3_path}/" "{local_path}/"'
+    s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}/" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
         # TODO 注意记录更新信息 避免冲突或者环境改坏被误会
         logger.info(s5cmd_command)
         os.system(s5cmd_command)
-        logger.info(f'Files copied from "s3://{BUCKET}/comfy/{s3_path}/*" to "{local_path}/"')
+        logger.info(f'Files copied from "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}/*" to "{local_path}/"')
         if need_un_tar:
             for filename in os.listdir(local_path):
                 if filename.endswith(".tar.gz"):
@@ -301,19 +302,20 @@ def update_sync_instance_monitor(instance_monitor_record):
     return response
 
 
-def sync_instance_monitor_status(need_save: bool):
+def sync_instance_monitor_status(need_save: bool, last_sync_record: dict):
     try:
         logger.info(f"sync_instance_monitor_status {datetime.datetime.now()}")
-        if not need_save:
+        if need_save:
             save_sync_instance_monitor('', 'init')
         else:
+            request_time = last_sync_record['request_time']
             update_expression = ("SET last_heartbeat_time = :heartbeat_time")
             expression_attribute_values = {
                 ":heartbeat_time": datetime.datetime.now().isoformat(),
             }
             sync_table.update_item(
                 Key={'endpoint_name': ENDPOINT_NAME,
-                     'gen_instance_id': GEN_INSTANCE_ID},
+                     'request_time': request_time},
                 UpdateExpression=update_expression,
                 ExpressionAttributeValues=expression_attribute_values
             )
@@ -334,7 +336,7 @@ async def sync_instance(request):
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
             logger.info("no last sync record found do not need sync")
-            sync_instance_monitor_status(True)
+            sync_instance_monitor_status(True, None)
             resp = {"status": "success", "message": "no sync"}
             return ok(resp)
 
@@ -342,7 +344,7 @@ async def sync_instance(request):
                 and os.environ.get('LAST_SYNC_REQUEST_ID')
                 and os.environ.get('LAST_SYNC_REQUEST_ID') == last_sync_record['request_id']):
             logger.info("last sync record already sync by os check")
-            sync_instance_monitor_status(False)
+            sync_instance_monitor_status(False, last_sync_record)
             resp = {"status": "success", "message": "no sync env"}
             return ok(resp)
 
@@ -354,12 +356,12 @@ async def sync_instance(request):
                 sync_status = 'success' if sync_already else 'failed'
                 save_sync_instance_monitor(last_sync_record['request_id'], sync_status)
             else:
-                sync_instance_monitor_status(False)
+                sync_instance_monitor_status(False, last_sync_record)
         else:
             if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
                     and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
                 logger.info("last sync record already sync")
-                sync_instance_monitor_status(False)
+                sync_instance_monitor_status(False, last_sync_record)
                 resp = {"status": "success", "message": "no sync ddb"}
                 return ok(resp)
 
