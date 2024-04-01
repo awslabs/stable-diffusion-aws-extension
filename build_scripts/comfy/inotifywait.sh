@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DIR3="/home/ubuntu/ComfyUI/input"
-DIR1="/home/ubuntu/ComfyUI/models"
-DIR2="/home/ubuntu/ComfyUI/custom_nodes"
+DIR3="/ComfyUI/input"
+DIR1="/ComfyUI/models"
+DIR2="/ComfyUI/custom_nodes"
 
 echo "listen start" > inotifywait.log
 
