@@ -292,7 +292,7 @@ def update_sync_instance_monitor(instance_monitor_record):
         ":heartbeat_time": datetime.datetime.now().isoformat(),
     }
 
-    response = sync_table.update_item(
+    response = instance_monitor_record.update_item(
         Key={'endpoint_name': ENDPOINT_NAME,
              'gen_instance_id': GEN_INSTANCE_ID},
         UpdateExpression=update_expression,
@@ -302,20 +302,19 @@ def update_sync_instance_monitor(instance_monitor_record):
     return response
 
 
-def sync_instance_monitor_status(need_save: bool, last_sync_record: dict):
+def sync_instance_monitor_status(need_save: bool):
     try:
         logger.info(f"sync_instance_monitor_status {datetime.datetime.now()}")
         if need_save:
             save_sync_instance_monitor('', 'init')
         else:
-            request_time = last_sync_record['request_time']
             update_expression = ("SET last_heartbeat_time = :heartbeat_time")
             expression_attribute_values = {
                 ":heartbeat_time": datetime.datetime.now().isoformat(),
             }
-            sync_table.update_item(
+            instance_monitor_table.update_item(
                 Key={'endpoint_name': ENDPOINT_NAME,
-                     'request_time': request_time},
+                     'gen_instance_id': GEN_INSTANCE_ID},
                 UpdateExpression=update_expression,
                 ExpressionAttributeValues=expression_attribute_values
             )
@@ -336,7 +335,7 @@ async def sync_instance(request):
         last_sync_record = get_last_ddb_sync_record()
         if not last_sync_record:
             logger.info("no last sync record found do not need sync")
-            sync_instance_monitor_status(True, None)
+            sync_instance_monitor_status(True)
             resp = {"status": "success", "message": "no sync"}
             return ok(resp)
 
@@ -344,7 +343,7 @@ async def sync_instance(request):
                 and os.environ.get('LAST_SYNC_REQUEST_ID')
                 and os.environ.get('LAST_SYNC_REQUEST_ID') == last_sync_record['request_id']):
             logger.info("last sync record already sync by os check")
-            sync_instance_monitor_status(False, last_sync_record)
+            sync_instance_monitor_status(False)
             resp = {"status": "success", "message": "no sync env"}
             return ok(resp)
 
@@ -356,19 +355,20 @@ async def sync_instance(request):
                 sync_status = 'success' if sync_already else 'failed'
                 save_sync_instance_monitor(last_sync_record['request_id'], sync_status)
             else:
-                sync_instance_monitor_status(False, last_sync_record)
+                sync_instance_monitor_status(False)
         else:
             if ('last_sync_request_id' in instance_monitor_record and instance_monitor_record['last_sync_request_id']
                     and instance_monitor_record['last_sync_request_id'] == last_sync_record['request_id']):
                 logger.info("last sync record already sync")
-                sync_instance_monitor_status(False, last_sync_record)
+                sync_instance_monitor_status(False)
                 resp = {"status": "success", "message": "no sync ddb"}
                 return ok(resp)
 
             sync_already = await prepare_comfy_env(last_sync_record)
             instance_monitor_record['sync_status'] = 'success' if sync_already else 'failed'
             instance_monitor_record['last_sync_request_id'] = last_sync_record['request_id']
-            sync_list = instance_monitor_record['sync_list'] if 'sync_list' in instance_monitor_record and instance_monitor_record['sync_list'] else []
+            sync_list = instance_monitor_record['sync_list'] if ('sync_list' in instance_monitor_record
+                                                                 and instance_monitor_record['sync_list']) else []
             sync_list.append(last_sync_record['request_id'])
 
             instance_monitor_record['sync_list'] = sync_list
