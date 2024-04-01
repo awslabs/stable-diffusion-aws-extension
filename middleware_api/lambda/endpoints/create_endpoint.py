@@ -35,9 +35,6 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
 
-s3 = boto3.resource('s3')
-bucket = s3.Bucket(s3_bucket_name)
-
 
 @dataclass
 class CreateEndpointEvent:
@@ -125,9 +122,9 @@ def handler(raw_event, ctx):
             short_id = event.endpoint_name
 
         endpoint_type = event.endpoint_type.lower()
-        model_name = f"esd-model-{endpoint_type}-{short_id}"
-        endpoint_config_name = f"esd-config-{endpoint_type}-{short_id}"
-        endpoint_name = f"esd-{endpoint_type}-{short_id}"
+        model_name = f"{event.service_type}-model-{endpoint_type}-{short_id}"
+        endpoint_config_name = f"{event.service_type}-config-{endpoint_type}-{short_id}"
+        endpoint_name = f"{event.service_type}-{endpoint_type}-{short_id}"
 
         model_data_url = f"s3://{s3_bucket_name}/data/model.tar.gz"
 
@@ -190,9 +187,6 @@ def handler(raw_event, ctx):
 
         ddb_service.put_items(table=sagemaker_endpoint_table, entries=data)
         logger.info(f"Successfully created endpoint deployment: {data}")
-
-        # delete all files in s3 for startup
-        bucket.objects.filter(Prefix=f"{endpoint_name}-{esd_version}").delete()
 
         return accepted(
             message=f"Endpoint deployment started: {endpoint_name}",
@@ -271,15 +265,18 @@ def _create_endpoint_config_provisioned(endpoint_config_name, model_name, initia
 def _create_endpoint_config_async(endpoint_config_name, s3_output_path, model_name, initial_instance_count,
                                   instance_type, event: CreateEndpointEvent):
     if event.service_type != "sd":
-        async_success_topic = 'comfyExecuteSuccess'
-        async_error_topic = 'comfyExecuteFail'
+        success_topic = os.environ.get('COMFY_SNS_INFERENCE_SUCCESS')
+        error_topic = os.environ.get('COMFY_SNS_INFERENCE_ERROR')
+    else:
+        success_topic = async_success_topic
+        error_topic = async_error_topic
 
     async_inference_config = {
         "OutputConfig": {
             "S3OutputPath": s3_output_path,
             "NotificationConfig": {
-                "SuccessTopic": async_success_topic,
-                "ErrorTopic": async_error_topic
+                "SuccessTopic": success_topic,
+                "ErrorTopic": error_topic
             }
         },
         "ClientConfig": {

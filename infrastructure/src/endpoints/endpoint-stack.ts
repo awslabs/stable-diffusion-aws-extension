@@ -1,7 +1,6 @@
 import * as path from 'path';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_dynamodb, aws_sns, aws_sqs, StackProps } from 'aws-cdk-lib';
-
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -23,6 +22,8 @@ Note: Sync Inference is put here for reference, we use Async Inference now
 export interface EndpointStackProps extends StackProps {
   inferenceErrorTopic: sns.Topic;
   inferenceResultTopic: sns.Topic;
+  executeResultSuccessTopic: sns.Topic;
+  executeResultFailTopic: sns.Topic;
   routers: { [key: string]: Resource };
   s3Bucket: s3.Bucket;
   multiUserTable: dynamodb.Table;
@@ -55,7 +56,7 @@ export class EndpointStack {
       },
     );
 
-    const deleteEndpointsApi = new DeleteEndpointsApi(
+    new DeleteEndpointsApi(
       scope, 'DeleteEndpoints', {
         router: props.routers.endpoints,
         commonLayer: props.commonLayer,
@@ -75,7 +76,7 @@ export class EndpointStack {
       },
     );
 
-    const createEndpointApi = new CreateEndpointApi(
+    new CreateEndpointApi(
       scope, 'CreateEndpoint', {
         router: props.routers.endpoints,
         commonLayer: props.commonLayer,
@@ -90,11 +91,10 @@ export class EndpointStack {
         accountId: props.accountId,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
+        executeResultSuccessTopic: props.executeResultSuccessTopic,
+        executeResultFailTopic: props.executeResultFailTopic,
       },
     );
-    createEndpointApi.model.node.addDependency(deleteEndpointsApi.model);
-    createEndpointApi.requestValidator.node.addDependency(deleteEndpointsApi.requestValidator);
-
 
     //adding model to data directory of s3 bucket
     if (props?.s3Bucket != undefined) {

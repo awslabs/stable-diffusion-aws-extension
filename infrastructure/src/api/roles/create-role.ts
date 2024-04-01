@@ -71,6 +71,7 @@ export class CreateRoleApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
@@ -132,14 +133,14 @@ export class CreateRoleApi {
     });
 
 
-    const upsertRoleIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, upsertRoleIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

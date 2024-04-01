@@ -29,6 +29,7 @@ export interface GetSyncMsgApiProps {
 
 
 export class GetSyncMsgApi {
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
@@ -38,7 +39,7 @@ export class GetSyncMsgApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
-  private queue: aws_sqs.Queue;
+  private readonly queue: aws_sqs.Queue;
 
   constructor(scope: Construct, id: string, props: GetSyncMsgApiProps) {
     this.scope = scope;
@@ -52,13 +53,44 @@ export class GetSyncMsgApi {
     this.layer = props.commonLayer;
     this.queue = props.queue;
 
-    this.getSyncMSGApi();
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/comfy`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'get_sync_msg.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        MSG_TABLE: this.msgTable.tableName,
+        CONFIG_TABLE: this.configTable.tableName,
+        SQS_URL: this.queue.queueUrl,
+      },
+      layers: [this.layer],
+    });
+
+    const syncMsgEventSource = new SqsEventSource(this.queue);
+    lambdaFunction.addEventSource(syncMsgEventSource);
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -119,39 +151,5 @@ export class GetSyncMsgApi {
     return newRole;
   }
 
-  private getSyncMSGApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'get_sync_msg.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 2048,
-      tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        MSG_TABLE: this.msgTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
-        SQS_URL: this.queue.queueUrl,
-      },
-      layers: [this.layer],
-    });
-
-    const syncMsgEventSource = new SqsEventSource(this.queue);
-    lambdaFunction.addEventSource(syncMsgEventSource);
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
-  }
 }
 

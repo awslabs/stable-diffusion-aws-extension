@@ -8,6 +8,12 @@ import server
 from aiohttp import web
 from execution import PromptExecutor
 
+api_url = os.environ.get('COMFY_API_URL')
+api_token = os.environ.get('COMFY_API_TOKEN')
+
+if not api_url or not api_token:
+    raise ValueError("API_URL and API_TOKEN environment variables must be set.")
+
 
 def save_images_locally(response_json, local_folder):
     try:
@@ -30,7 +36,8 @@ def save_images_locally(response_json, local_folder):
                     image_file.write(image_response.content)
                 print(f"Image '{image_name}' saved to {image_path}")
             else:
-                print(f"Failed to download image '{image_name}' from {image_url}. Status code: {image_response.status_code}")
+                print(
+                    f"Failed to download image '{image_name}' from {image_url}. Status code: {image_response.status_code}")
 
     except Exception as e:
         print(f"Error saving images locally: {e}")
@@ -61,12 +68,12 @@ def execute_proxy(func):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             already_synced = False
             # 提交第一个请求
-            execute_future = executor.submit(send_post_request, "https://915dm4666b.execute-api.us-east-1.amazonaws.com/prod/execute", payload)
+            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
 
             # 循环获取第二个请求
             while not execute_future.done():
                 msg_future = executor.submit(send_get_request,
-                                             f"https://915dm4666b.execute-api.us-east-1.amazonaws.com/prod/sync/{prompt_id}")
+                                             f"{api_url}/sync/{prompt_id}")
                 done, _ = concurrent.futures.wait([execute_future, msg_future],
                                                   return_when=concurrent.futures.FIRST_COMPLETED)
 
@@ -75,7 +82,7 @@ def execute_proxy(func):
                         execute_resp = future.result()
                         if execute_resp.status_code == 200:
                             images_response = send_get_request(
-                                f" https://915dm4666b.execute-api.us-east-1.amazonaws.com/prod/execute/{prompt_id}")
+                                f"{api_url}/executes/{prompt_id}")
                             print(images_response)
                             save_images_locally(images_response.json(), './output')
                         print(execute_resp)
@@ -83,7 +90,7 @@ def execute_proxy(func):
                         msg_response = future.result()
                         print(msg_response)
                         if msg_response.status_code == 200:
-                            if 'data' not in msg_response.json() or not  msg_response.json().get("data"):
+                            if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 continue
                             already_synced = True
                             msg_array = msg_response.json().get("data")[0]
@@ -94,7 +101,7 @@ def execute_proxy(func):
                                 sid = msg[0].get('sid') if 'sid' in msg else None
                                 server_use.send_sync(event, data, sid)
             while not already_synced:
-                msg_response = send_get_request(f"https://915dm4666b.execute-api.us-east-1.amazonaws.com/prod/sync/{prompt_id}")
+                msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
                 print(msg_response)
                 already_synced = True
                 if msg_response.status_code == 200:

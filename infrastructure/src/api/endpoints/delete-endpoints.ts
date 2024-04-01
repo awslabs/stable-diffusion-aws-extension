@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_lambda, Duration} from 'aws-cdk-lib';
+import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -90,6 +90,19 @@ export class DeleteEndpointsApi {
     }));
 
     newRole.addToPolicy(new PolicyStatement({
+      actions: [
+        's3:Get*',
+        's3:List*',
+        's3:PutObject',
+        's3:GetObject',
+        's3:DeleteObject',
+      ],
+      resources: [
+        '*',
+      ],
+    }));
+
+    newRole.addToPolicy(new PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
         'application-autoscaling:DeregisterScalableTarget',
@@ -163,15 +176,14 @@ export class DeleteEndpointsApi {
       layers: [this.layer],
     });
 
-
-    const deleteEndpointsIntegration = new LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, deleteEndpointsIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

@@ -1,7 +1,6 @@
 import { DescribeTableCommand, DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
 const ddbClient = new DynamoDBClient({});
-const lambdaStartTime = Date.now();
 const timeoutMinutesInMilliseconds = 13 * 60 * 1000;
 
 interface Event {
@@ -11,6 +10,7 @@ interface Event {
     ServiceToken: string;
     apiUrl: string;
     apiKey: string;
+    name: string;
   };
 }
 
@@ -23,8 +23,8 @@ export async function handler(event: Event, context: Object) {
 
   if (allow_types.includes(event.RequestType)) {
     await waitApiReady(event);
-    await waitTableIndexReady('SDInferenceJobTable', 'taskType', 'createTime');
-    await waitTableIndexReady('SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
+    await waitTableIndexReady(event, 'SDInferenceJobTable', 'taskType', 'createTime');
+    await waitTableIndexReady(event, 'SDEndpointDeploymentJobTable', 'endpoint_name', 'startTime');
   }
 
   return response(event, true);
@@ -33,6 +33,7 @@ export async function handler(event: Event, context: Object) {
 
 
 async function waitApiReady(event: Event) {
+  const lambdaStartTime = Date.now();
   const startCheckTime = Date.now();
 
   while (true) {
@@ -40,12 +41,12 @@ async function waitApiReady(event: Event) {
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log('Time exceeded 13 minutes. Exiting loop.');
+      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes. Exiting loop.`);
       break;
     }
 
     try {
-      console.log('Checking API readiness...');
+      console.log(`${event.ResourceProperties.name} Checking API readiness...`);
 
       const resp = await fetch(`${event.ResourceProperties.apiUrl}/ping`, {
         method: 'GET',
@@ -55,32 +56,33 @@ async function waitApiReady(event: Event) {
       });
 
       if (!resp.ok) {
-        throw new Error(`HTTP error! status: ${resp.status}`);
+        throw new Error(`${event.ResourceProperties.name} HTTP error! status: ${resp.status}`);
       }
 
       const data = await resp.json();
 
-      console.log('Received response from API: ', data);
+      console.log(`${event.ResourceProperties.name} Received response from API: `, data);
 
       // @ts-ignore
       if (data && data.message === 'pong') {
-        console.log(`Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
+        console.log(`${event.ResourceProperties.name} Received pong after ${(currentTime - startCheckTime) / 1000} seconds!`);
         break;
       }
 
-      console.log('Did not receive pong from API. Checking again in 2 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log(`${event.ResourceProperties.name} Did not receive pong from API. Checking again in 3 seconds...`);
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
     } catch (error) {
       console.error(error);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
   }
 
 }
 
 
-async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
+async function waitTableIndexReady(event: Event, tableName: string, pk: string, sk: string) {
+  const lambdaStartTime = Date.now();
   const indexName = `${pk}-${sk}-index`;
 
   const startCheckTime = Date.now();
@@ -89,7 +91,7 @@ async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
     const currentTime = Date.now();
 
     if (currentTime - lambdaStartTime > timeoutMinutesInMilliseconds) {
-      console.log('Time exceeded 13 minutes. Exiting loop.');
+      console.log(`${event.ResourceProperties.name} Time exceeded 13 minutes. Exiting loop.`);
       break;
     }
 
@@ -97,19 +99,19 @@ async function waitTableIndexReady(tableName: string, pk: string, sk: string) {
     const index = data.Table?.GlobalSecondaryIndexes?.find(idx => idx.IndexName === indexName);
 
     if (!index) {
-      throw new Error(`Index ${indexName} does not exist on table ${tableName}`);
+      throw new Error(`${event.ResourceProperties.name} Index ${indexName} does not exist on table ${tableName}`);
     }
 
     if (index.IndexStatus === 'ACTIVE') {
-      console.log(`Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
+      console.log(`${event.ResourceProperties.name} Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
-      console.log(`Index ${indexName} is still being created. Checking again in 1 second...`);
+      console.log(`${event.ResourceProperties.name} Index ${indexName} is Creating, check again in 2 second...`);
     } else {
-      throw new Error(`Index ${indexName} is in unknown state: ${index.IndexStatus}`);
+      throw new Error(`${event.ResourceProperties.name} Index ${indexName} is in unknown state: ${index.IndexStatus}`);
     }
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 2000));
 
   }
 }

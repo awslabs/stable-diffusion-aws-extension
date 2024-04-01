@@ -20,10 +20,7 @@ fi
 export ESD_CODE_BRANCH="main"
 export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
-export S3_LOCATION="esd-$SERVICE_TYPE-$INSTANCE_TYPE-$ESD_VERSION"
-if [ -n "$EXTENSIONS" ]; then
-    export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
-fi
+export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
 
 random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
@@ -112,14 +109,14 @@ sd_install(){
         commit_sha=${repo[2]}
 
         echo "rm -rf $repo_name for install $git_repo"
-        rm -rf $repo_name
+        rm -rf "$repo_name"
 
         start_at=$(date +%s)
 
         echo "git clone $git_repo"
         git clone "$git_repo"
 
-        cd $repo_name || exit 1
+        cd "$repo_name" || exit 1
 
         echo "git checkout $repo_branch"
         git checkout "$repo_branch"
@@ -266,7 +263,7 @@ sd_launch_from_s3(){
 
     start_at=$(date +%s)
     rm -rf /home/ubuntu/stable-diffusion-webui/models
-    tar --overwrite -xf "webui.tar" -C /home/ubuntu/stable-diffusion-webui/
+    tar --overwrite -xf "$TAR_FILE" -C /home/ubuntu/stable-diffusion-webui/
     rm -rf $TAR_FILE
     end_at=$(date +%s)
     cost=$((end_at-start_at))
@@ -305,7 +302,7 @@ comfy_install(){
   # todo will use commit id
   git clone https://github.com/comfyanonymous/ComfyUI.git
 
-  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "xiujuali_2.0" --single-branch
+  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 
   cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 
@@ -356,7 +353,6 @@ comfy_build_for_launch(){
   python -m pip install -r requirements.txt
   python -m pip install boto3
   python -m pip install aws_xray_sdk
-  python -m pip install altair
   python -m pip install fastapi
   python -m pip install uvicorn
   python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118

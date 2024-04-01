@@ -20,6 +20,11 @@ logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 cw_client = boto3.client('cloudwatch')
 sagemaker = boto3.client('sagemaker')
 ddb_service = DynamoDbUtilsService(logger=logger)
+esd_version = os.environ.get("ESD_VERSION")
+
+s3 = boto3.resource('s3')
+s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
+bucket = s3.Bucket(s3_bucket_name)
 
 
 @dataclass
@@ -99,6 +104,7 @@ def delete_endpoint_item(endpoint_item):
         table=sagemaker_endpoint_table,
         keys={'EndpointDeploymentJobId': endpoint_item['EndpointDeploymentJobId']['S']},
     )
+    # bucket.objects.filter(Prefix=f"{endpoint_item['endpoint_name']['S']}-{esd_version}").delete()
 
 
 @tracer.capture_method

@@ -1,7 +1,6 @@
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import * as python from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_lambda, aws_sns, aws_sqs, Duration, StackProps } from 'aws-cdk-lib';
-
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -21,6 +20,7 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
+import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -68,7 +68,7 @@ export class ComfyApiStack extends Construct {
 
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
-    const executeGetRouter = props.routers.execute.addResource('{id}');
+    const executeGetRouter = props.routers.executes.addResource('{id}');
 
     const prepareGetRouter = props.routers.prepare.addResource('{id}');
 
@@ -94,7 +94,7 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
-    const synMsgApi = new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
+    new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
       httpMethod: 'POST',
       router: props.routers.sync,
       srcRoot: srcRoot,
@@ -105,11 +105,11 @@ export class ComfyApiStack extends Construct {
       commonLayer: this.layer,
     });
 
-    // POST /execute
-    const executeAPi = new ExecuteApi(
+    // POST /executes
+    new ExecuteApi(
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
-        router: props.routers.execute,
+        router: props.routers.executes,
         srcRoot: srcRoot,
         configTable: this.configTable,
         executeTable: this.executeTable,
@@ -117,14 +117,23 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    executeAPi.model.node.addDependency(synMsgApi.model);
-    executeAPi.requestValidator.node.addDependency(synMsgApi.requestValidator);
 
-    // POST /execute
-    const queryExecuteApi = new QueryExecuteApi(
+    // DELETE /executes
+    new DeleteExecutesApi(
+      scope, 'DeleteExecutesApi', <DeleteExecutesApiProps>{
+        httpMethod: 'DELETE',
+        router: props.routers.executes,
+        srcRoot: srcRoot,
+        executeTable: this.executeTable,
+        commonLayer: this.layer,
+      },
+    );
+
+    // GET /executes
+    new QueryExecuteApi(
       scope, 'QueryExecute', <QueryExecuteApiProps>{
-        httpMethod: 'POST',
-        router: props.routers.queryExecute,
+        httpMethod: 'GET',
+        router: props.routers.executes,
         srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
@@ -133,11 +142,9 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    queryExecuteApi.model.node.addDependency(executeAPi.model);
-    queryExecuteApi.requestValidator.node.addDependency(executeAPi.requestValidator);
 
     // POST /prepare
-    const prepareApi = new PrepareApi(
+    new PrepareApi(
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
@@ -151,10 +158,8 @@ export class ComfyApiStack extends Construct {
         commonLayer: this.layer,
       },
     );
-    prepareApi.model.node.addDependency(queryExecuteApi.model);
-    prepareApi.requestValidator.node.addDependency(queryExecuteApi.requestValidator);
 
-    // GET /execute/{id}
+    // GET /executes/{id}
     new GetExecuteApi(
       scope, 'GetExecute', <GetExecuteApiProps>{
         httpMethod: 'GET',
@@ -191,9 +196,7 @@ export class ComfyApiStack extends Construct {
       ephemeralStorageSize: Size.gibibytes(10),
       timeout: Duration.seconds(900),
       environment: {
-        INFERENCE_JOB_TABLE: props.executeTable.tableName,
-        ACCOUNT_ID: Aws.ACCOUNT_ID,
-        REGION_NAME: Aws.REGION,
+        EXECUTE_TABLE: props.executeTable.tableName,
         NOTICE_SNS_TOPIC: props.snsTopic.topicArn ?? '',
       },
       layers: [props.commonLayer],
@@ -226,6 +229,7 @@ export class ComfyApiStack extends Construct {
         props.executeFailTopic.topicArn,
       ],
     });
+
     const ddbStatement = new iam.PolicyStatement({
       actions: [
         'dynamodb:Query',

@@ -55,7 +55,7 @@ export class TrainDeploy {
     });
 
     // POST /trainings
-    const createTrainingJobApi = new CreateTrainingJobApi(scope, 'CreateTrainingJob', {
+    new CreateTrainingJobApi(scope, 'CreateTrainingJob', {
       checkpointTable: checkPointTable,
       commonLayer: commonLayer,
       httpMethod: 'POST',
@@ -82,8 +82,6 @@ export class TrainDeploy {
       srcRoot: this.srcRoot,
     },
     );
-    this.deleteTrainingJobsApi.model.node.addDependency(createTrainingJobApi.model);
-    this.deleteTrainingJobsApi.requestValidator.node.addDependency(createTrainingJobApi.requestValidator);
 
     // DELETE /trainings/{id}
     new GetTrainingJobApi(scope, 'GetTrainingJob', {

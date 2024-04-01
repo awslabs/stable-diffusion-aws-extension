@@ -16,8 +16,9 @@ from sagemaker.serializers import JSONSerializer
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.excepts import BadRequestException
-from common.response import ok
-from libs.comfy_data_types import ComfyExecuteTable
+from common.response import ok, created
+from common.util import s3_scan_files
+from libs.comfy_data_types import ComfyExecuteTable, InferenceResult
 from libs.enums import ComfyExecuteType
 from libs.utils import get_endpoint_by_name, response_error
 
@@ -36,15 +37,6 @@ predictors = {}
 
 
 @dataclass
-class InferenceResult:
-    instance_id: str
-    status: str
-    message: Optional[str] = None
-    output_path: Optional[str] = None
-    temp_path: Optional[str] = None
-
-
-@dataclass
 class PrepareProps:
     prepare_type: Optional[str] = "inputs"
     s3_source_path: Optional[str] = None
@@ -57,7 +49,6 @@ class ExecuteEvent:
     prompt_id: str
     prompt: dict
     endpoint_name: Optional[str] = ''
-    inference_type: Optional[str] = None
     need_sync: bool = True
     number: Optional[str] = None
     front: Optional[bool] = None
@@ -90,7 +81,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     ep = get_endpoint_by_name(endpoint_name)
 
     if ep.endpoint_status != 'InService':
-        raise Exception(f"Endpoint {endpoint_name} is not in service")
+        raise Exception(f"Endpoint {endpoint_name} is {ep.endpoint_status} status, not InService.")
 
     logger.info(f"endpoint: {ep}")
 
@@ -100,24 +91,11 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     inference_id = str(uuid.uuid4())
 
     job_status = ComfyExecuteType.CREATED.value
-    sagemaker_raw = {
-    }
-
-    if ep.endpoint_type == 'Async':
-        sm_out = async_inference(payload, inference_id, ep.endpoint_name)
-        resp = {
-            'output_path': sm_out.output_path,
-        }
-    else:
-        resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-        resp = InferenceResult(**resp)
-        job_status = resp.status
-        sagemaker_raw = resp.__dict__
 
     inference_job = ComfyExecuteTable(
         prompt_id=event.prompt_id,
         endpoint_name=event.endpoint_name,
-        inference_type=event.inference_type,
+        inference_type=ep.endpoint_type,
         instance_id=endpoint_instance_id,
         need_sync=event.need_sync,
         status=job_status,
@@ -129,15 +107,41 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         prompt_path='',
         create_time=datetime.now().isoformat(),
         start_time=datetime.now().isoformat(),
-        complete_time=None,
-        sagemaker_raw=sagemaker_raw,
+        sagemaker_raw={},
         output_path='',
-        output_files=None
     )
+
+    if ep.endpoint_type == 'Async':
+        resp = async_inference(payload, inference_id, ep.endpoint_name)
+        logger.info(f"async inference response: {resp}")
+        ddb_service.put_items(execute_table, entries=inference_job.__dict__)
+        return created(data=inference_job.__dict__)
+
+    # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+    resp = {
+        "prompt_id": '11111111-1111-1111',
+        "instance_id": 'comfy-real-time-test-rgihbd',
+        "status": 'success',
+        "output_path": f's3://{bucket_name}/template/',
+        "temp_path": f's3://{bucket_name}/template/'
+    }
+
+    logger.info(f"real time inference response: ")
+    logger.info(resp)
+    resp = InferenceResult(**resp)
+    resp = s3_scan_files(resp)
+
+    inference_job.status = resp.status
+    inference_job.sagemaker_raw = resp.__dict__
+    inference_job.output_path = resp.output_path
+    inference_job.output_files = resp.output_files
+    inference_job.temp_path = resp.temp_path
+    inference_job.temp_files = resp.temp_files
+    inference_job.complete_time = datetime.now().isoformat()
 
     ddb_service.put_items(execute_table, entries=inference_job.__dict__)
 
-    return inference_job
+    return ok(data=inference_job.__dict__)
 
 
 @tracer.capture_lambda_handler
@@ -150,9 +154,7 @@ def handler(raw_event, ctx):
         if not event.prompt:
             raise BadRequestException("Prompt is required")
 
-        resp = invoke_sagemaker_inference(event)
-
-        return ok(data=resp.__dict__)
+        return invoke_sagemaker_inference(event)
 
     except Exception as e:
         return response_error(e)

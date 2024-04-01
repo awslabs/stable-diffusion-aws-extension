@@ -1,5 +1,5 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import {Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration} from 'aws-cdk-lib';
+import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import {
   JsonSchemaType,
   JsonSchemaVersion,
@@ -33,6 +33,8 @@ export interface CreateEndpointApiProps {
   inferenceResultErrorTopic: Topic;
   queue: aws_sqs.Queue;
   accountId: ICfnRuleConditionExpression;
+  executeResultSuccessTopic: Topic;
+  executeResultFailTopic: Topic;
 }
 
 export class CreateEndpointApi {
@@ -53,6 +55,8 @@ export class CreateEndpointApi {
   private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
   private readonly inferenceResultErrorTopic: Topic;
+  private readonly executeResultSuccessTopic: Topic;
+  private readonly executeResultFailTopic: Topic;
 
   constructor(scope: Construct, id: string, props: CreateEndpointApiProps) {
     this.scope = scope;
@@ -68,6 +72,8 @@ export class CreateEndpointApi {
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
     this.inferenceResultErrorTopic = props.inferenceResultErrorTopic;
+    this.executeResultSuccessTopic = props.executeResultSuccessTopic;
+    this.executeResultFailTopic = props.executeResultFailTopic;
     this.queue = props.queue;
     this.accountId = props.accountId;
     this.model = this.createModel();
@@ -88,6 +94,8 @@ export class CreateEndpointApi {
         this.userNotifySNS.topicArn,
         this.inferenceResultTopic.topicArn,
         this.inferenceResultErrorTopic.topicArn,
+        this.executeResultSuccessTopic.topicArn,
+        this.executeResultFailTopic.topicArn,
       ],
     });
 
@@ -97,7 +105,6 @@ export class CreateEndpointApi {
         's3:List*',
         's3:PutObject',
         's3:GetObject',
-        's3:DeleteObject',
       ],
       resources: [
         '*',
@@ -301,11 +308,12 @@ export class CreateEndpointApi {
         INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
+        COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,
+        COMFY_SNS_INFERENCE_ERROR: this.executeResultSuccessTopic.topicArn,
         EXECUTION_ROLE_ARN: role.roleArn,
       },
       layers: [this.layer],
     });
-
 
     const integration = new LambdaIntegration(
       lambdaFunction,
@@ -313,7 +321,6 @@ export class CreateEndpointApi {
         proxy: true,
       },
     );
-
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,

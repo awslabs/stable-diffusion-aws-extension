@@ -74,9 +74,12 @@ phases:
       - cat ../aws_extension/cloud_api_manager/api.py
       - sed -i "s/x_api_version = \"[0-9.]*\"/x_api_version = \"$TAG_NUMBER\"/" ../middleware_api/lambda/common/response.py
       - cat ../middleware_api/lambda/common/response.py
-      - echo "upload ec2 template to s3"
+      - echo "upload esd ec2 template to s3"
       - aws s3 cp --region us-east-1 ../workshop/ec2.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/
       - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/ec2.yaml" --acl public-read
+      - echo "upload comfy ec2 template to s3"
+      - aws s3 cp --region us-east-1 ../workshop/comfy.yaml s3://aws-gcr-solutions-us-east-1/extension-for-stable-diffusion-on-aws/
+      - aws s3api put-object-acl --region us-east-1 --bucket "aws-gcr-solutions-us-east-1" --key "extension-for-stable-diffusion-on-aws/comfy.yaml" --acl public-read
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
       - echo "Starting build `date` in `pwd`"

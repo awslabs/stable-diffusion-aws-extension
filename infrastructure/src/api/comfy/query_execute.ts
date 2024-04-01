@@ -1,13 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_apigateway as apigw,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  Duration,
-} from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -27,6 +19,7 @@ export interface QueryExecuteApiProps {
 
 
 export class QueryExecuteApi {
+  public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
   private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
@@ -36,8 +29,6 @@ export class QueryExecuteApi {
   private readonly s3Bucket: s3.Bucket;
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: QueryExecuteApiProps) {
     this.scope = scope;
@@ -49,16 +40,41 @@ export class QueryExecuteApi {
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.queryExecuteApi();
+    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+      entry: `${this.srcRoot}/comfy`,
+      architecture: Architecture.X86_64,
+      runtime: Runtime.PYTHON_3_10,
+      index: 'query_execute.py',
+      handler: 'handler',
+      timeout: Duration.seconds(900),
+      role: this.iamRole(),
+      memorySize: 2048,
+      tracing: aws_lambda.Tracing.ACTIVE,
+      environment: {
+        EXECUTE_TABLE: this.executeTable.tableName,
+        CONFIG_TABLE: this.configTable.tableName,
+      },
+      layers: [this.layer],
+    });
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -99,74 +115,5 @@ export class QueryExecuteApi {
     return newRole;
   }
 
-  private queryExecuteApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
-      architecture: Architecture.X86_64,
-      runtime: Runtime.PYTHON_3_10,
-      index: 'query_execute.py',
-      handler: 'handler',
-      timeout: Duration.seconds(900),
-      role: this.iamRole(),
-      memorySize: 2048,
-      tracing: aws_lambda.Tracing.ACTIVE,
-      environment: {
-        EXECUTE_TABLE: this.executeTable.tableName,
-        CONFIG_TABLE: this.configTable.tableName,
-      },
-      layers: [this.layer],
-    });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-  }
-  private createModel(): Model {
-    return new Model(this.scope, `${this.baseId}-model`, {
-      restApi: this.router.api,
-      modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT4,
-        title: this.baseId,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          prompt_id: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          resp_type: {
-            type: JsonSchemaType.BOOLEAN,
-            minLength: 1,
-          },
-        },
-        required: [
-          'prompt_id',
-          'resp_type',
-        ],
-      },
-      contentType: 'application/json',
-    });
-  }
-
-  private createRequestValidator() {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-qry-execute-validator`,
-      {
-        restApi: this.router.api,
-        validateRequestBody: true,
-      });
-  }
 }
 
