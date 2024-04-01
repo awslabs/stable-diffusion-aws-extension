@@ -84,6 +84,7 @@ def execute_proxy(func):
                                 f"{api_url}/executes/{prompt_id}")
                             print(images_response)
                             save_images_locally(images_response.json(), './output')
+                            save_images_locally(images_response.json(), './temp')
                         print(execute_resp)
                     elif future == msg_future:
                         msg_response = future.result()
