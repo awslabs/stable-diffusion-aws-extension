@@ -117,14 +117,14 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
         return created(data=inference_job.__dict__)
 
-    # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-    resp = {
-        "prompt_id": '11111111-1111-1111',
-        "instance_id": 'comfy-real-time-test-rgihbd',
-        "status": 'success',
-        "output_path": f's3://{bucket_name}/images/',
-        "temp_path": f's3://{bucket_name}/images/'
-    }
+    resp = real_time_inference(payload, inference_id, ep.endpoint_name)
+    # resp = {
+    #     "prompt_id": '11111111-1111-1111',
+    #     "instance_id": 'comfy-real-time-test-rgihbd',
+    #     "status": 'success',
+    #     "output_path": f's3://{bucket_name}/images/',
+    #     "temp_path": f's3://{bucket_name}/images/'
+    # }
 
     logger.info(f"real time inference response: ")
     logger.info(resp)

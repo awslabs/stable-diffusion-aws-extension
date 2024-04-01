@@ -9,11 +9,13 @@ import folder_paths
 import server
 from execution import PromptExecutor
 
+
 api_url = os.environ.get('COMFY_API_URL')
 api_token = os.environ.get('COMFY_API_TOKEN')
 comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
 comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
+
 
 if not api_url:
     raise ValueError("API_URL environment variables must be set.")
