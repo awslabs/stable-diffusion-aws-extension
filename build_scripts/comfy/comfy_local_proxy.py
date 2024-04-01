@@ -8,8 +8,8 @@ import server
 from aiohttp import web
 from execution import PromptExecutor
 
-api_url = os.environ.get('API_URL')
-api_token = os.environ.get('API_TOKEN')
+api_url = os.environ.get('COMFY_API_URL')
+api_token = os.environ.get('COMFY_API_TOKEN')
 
 if not api_url or not api_token:
     raise ValueError("API_URL and API_TOKEN environment variables must be set.")

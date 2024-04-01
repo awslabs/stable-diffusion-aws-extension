@@ -170,8 +170,8 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           
-          echo "export API_URL=${ApiURL}" > /home/ubuntu/.bashrc
-          echo "export API_TOKEN=${ApiToken}" >> //home/ubuntu/.bashrc
+          echo "export COMFY_API_URL=${ApiURL}" > /home/ubuntu/.bashrc
+          echo "export COMFY_API_TOKEN=${ApiToken}" >> //home/ubuntu/.bashrc
           source /home/ubuntu/.bashrc
           
           sudo apt-get update
