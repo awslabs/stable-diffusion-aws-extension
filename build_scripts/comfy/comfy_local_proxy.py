@@ -10,6 +10,7 @@ from execution import PromptExecutor
 
 api_url = os.environ.get('COMFY_API_URL')
 api_token = os.environ.get('COMFY_API_TOKEN')
+endpoint_name = os.environ.get('ENDPOINT_NAME')
 
 if not api_url or not api_token:
     raise ValueError("API_URL and API_TOKEN environment variables must be set.")
@@ -51,11 +52,9 @@ def execute_proxy(func):
         prompt = args[1]
         prompt_id = args[2]
         extra_data = args[3]
-        callback_url = 'http://44.216.137.218:8188'
         payload = {"number": str(number), "prompt": prompt, "prompt_id": prompt_id, "extra_data": extra_data,
-                   "endpoint_name": "ComfyEndpoint-endpoint", "need_prepare": False, "need_sync": True,
-                   'callback_url': callback_url}
-        headers = {"x-api-key": "09876743210987654322"}
+                   "endpoint_name": endpoint_name, "need_prepare": False, "need_sync": True}
+        headers = {"x-api-key": api_token}
 
         def send_post_request(url, params):
             response = requests.post(url, json=params, headers=headers)
