@@ -169,7 +169,7 @@ export class PrepareApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          request_id: {
+          prepare_id: {
             type: JsonSchemaType.STRING,
           },
           endpoint_name: {
