@@ -7,7 +7,7 @@ Parameters:
     AllowedValues:
       - main
       - dev
-    Default: main
+    Default: dev
   ApiURL:
     Description: API URL
     Type: String
@@ -66,21 +66,21 @@ Mappings:
       AMI: ami-008fe2fc65df48dac
 
 Resources:
-  WebUiVPC:
+  ComfyVPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
 
-  WebUiSubnet:
+  ComfySubnet:
     Type: AWS::EC2::Subnet
     Properties:
-      VpcId: !Ref WebUiVPC
+      VpcId: !Ref ComfyVPC
       CidrBlock: 10.0.1.0/24
       MapPublicIpOnLaunch: true
 
-  WebUiInstanceRole:
+  ComfyInstanceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -94,17 +94,17 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
-  WebUiInstanceProfile:
+  ComfyInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
       Roles:
-        - Ref: WebUiInstanceRole
+        - Ref: ComfyInstanceRole
 
-  WebUiSecurityGroup:
+  ComfySecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      VpcId: !Ref WebUiVPC
+      VpcId: !Ref ComfyVPC
       GroupName: !Sub ${AWS::StackName}-sg
       GroupDescription: Security group for SD WebUI EC2 instance
       SecurityGroupIngress:
@@ -113,47 +113,43 @@ Resources:
           ToPort: 22
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
           FromPort: 7860
           ToPort: 7860
           CidrIp: 0.0.0.0/0
 
-  WebUiInternetGateway:
+  ComfyInternetGateway:
     Type: AWS::EC2::InternetGateway
 
-  WebUiVPCGatewayAttachment:
+  ComfyVPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId: !Ref WebUiVPC
-      InternetGatewayId: !Ref WebUiInternetGateway
+      VpcId: !Ref ComfyVPC
+      InternetGatewayId: !Ref ComfyInternetGateway
 
-  WebUiRouteTable:
+  ComfyRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref WebUiVPC
+      VpcId: !Ref ComfyVPC
 
-  WebUiRoute:
+  ComfyRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref WebUiRouteTable
+      RouteTableId: !Ref ComfyRouteTable
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref WebUiInternetGateway
+      GatewayId: !Ref ComfyInternetGateway
 
-  WebUiSubnetRouteTableAssociation:
+  ComfySubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref WebUiSubnet
-      RouteTableId: !Ref WebUiRouteTable
+      SubnetId: !Ref ComfySubnet
+      RouteTableId: !Ref ComfyRouteTable
 
-  WebUiEC2Instance:
+  ComfyEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      IamInstanceProfile: !Ref WebUiInstanceProfile
-      SubnetId: !Ref WebUiSubnet
+      IamInstanceProfile: !Ref ComfyInstanceProfile
+      SubnetId: !Ref ComfySubnet
       ImageId: !FindInMap [ RegionToAmiId, !Ref AWS::Region, AMI ]
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -161,7 +157,7 @@ Resources:
             VolumeSize: 1024
             VolumeType: gp3
       SecurityGroupIds:
-        - !GetAtt WebUiSecurityGroup.GroupId
+        - !GetAtt ComfySecurityGroup.GroupId
       Tags: [
         { "Key": "Name", "Value": !Sub "comfy-on-aws-${Branch}" },
       ]
@@ -170,18 +166,11 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           
-          echo "export API_URL=${ApiURL}" > /home/ubuntu/.bashrc
-          echo "export API_TOKEN=${ApiToken}" >> //home/ubuntu/.bashrc
+          echo "export COMFY_API_URL=${ApiURL}" > /home/ubuntu/.bashrc
+          echo "export COMFY_API_TOKEN=${ApiToken}" >> //home/ubuntu/.bashrc
           source /home/ubuntu/.bashrc
           
           sudo apt-get update
-          
-          sudo apt install nginx -y
-          sudo ufw allow 'Nginx HTTP'
-          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502.html
-          sudo systemctl enable nginx
-          sudo systemctl restart nginx
           
           sudo apt install software-properties-common -y
           sudo add-apt-repository ppa:deadsnakes/ppa -y
@@ -190,9 +179,9 @@ Resources:
           
           cd /home/ubuntu
           
-          export ESD_CODE_BRANCH=${Branch}
           git clone https://github.com/comfyanonymous/ComfyUI.git
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch
+          cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
           cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
           
           cd /home/ubuntu/ComfyUI || exit 1
@@ -223,7 +212,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/home/ubuntu/ComfyUI
-          ExecStart=python serve.py
+          ExecStart=python3 serve.py
           Type=simple
           Restart=always
           RestartSec=3
@@ -245,13 +234,9 @@ Resources:
     Type: AWS::EC2::EIPAssociation
     Properties:
       AllocationId: !GetAtt WebUiEIP.AllocationId
-      InstanceId: !Ref WebUiEC2Instance
+      InstanceId: !Ref ComfyEC2Instance
 
 Outputs:
   WebUIURL:
-    Description: URL for Stable Diffusion WebUI
-    Value: !Sub http://${WebUiEIP}
-  WebUIRealURL:
-    Description: URL for Stable Diffusion WebUI
-    # add port 7860 to the end of the URL
+    Description: URL for Comfy WebUI
     Value: !Sub http://${WebUiEIP}:7860
