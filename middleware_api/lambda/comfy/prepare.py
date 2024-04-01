@@ -10,7 +10,6 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from libs.comfy_data_types import ComfySyncTable
-from libs.data_types import EndpointDeploymentJob
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -50,7 +49,7 @@ def get_endpoint_info(endpoint_name: str):
 
     if endpoint_info['endpoint_status'] != 'InService':
         raise Exception(f'sagemaker endpoint is not ready with status: {endpoint_info["endpoint_status"]}')
-    return EndpointDeploymentJob(**endpoint_info)
+    return endpoint_info
 
 
 def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
@@ -64,14 +63,14 @@ def prepare_sagemaker_env(request_id: str, event: PrepareEnvEvent):
     sync_job = ComfySyncTable(
         request_id=request_id if event.prepare_id is None else event.prepare_id,
         endpoint_name=event.endpoint_name,
-        endpoint_id=endpoint_info.EndpointDeploymentJobId,
-        instance_count=endpoint_info.current_instance_count,
+        endpoint_id=endpoint_info['EndpointDeploymentJobId'],
+        instance_count=endpoint_info['current_instance_count'],
         prepare_type=event.prepare_type,
         need_reboot=event.need_reboot,
         s3_source_path=event.s3_source_path,
         local_target_path=event.local_target_path,
         sync_script=event.sync_script,
-        endpoint_snapshot=json.dumps(endpoint_info),
+        endpoint_snapshot=endpoint_info,
         request_time=int(datetime.now().timestamp()),
         request_time_str=datetime.now().isoformat(),
     )
