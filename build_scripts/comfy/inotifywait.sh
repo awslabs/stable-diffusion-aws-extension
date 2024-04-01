@@ -1,20 +1,24 @@
 #!/bin/bash
 
+source /etc/environment
+
 DIR3="/ComfyUI/input"
 DIR1="/ComfyUI/models"
 DIR2="/ComfyUI/custom_nodes"
 
-echo "listen start" > /inotifywait.log
+echo "listen start"
+
+sync_files(){
+  directory=$1
+  events=$2
+  echo "Files changed in: $directory Events: $events"
+  timestamp=$(date +%s%3N)
+  s5cmd sync "/ComfyUI/input/*" "s3://$COMFY_BUCKET_NAME/comfy/$COMFY_ENDPOINT/$timestamp/input/"
+  s5cmd sync "/ComfyUI/models/*" "s3://$COMFY_BUCKET_NAME/comfy/$COMFY_ENDPOINT/$timestamp/models/"
+  s5cmd sync "/ComfyUI/custom_nodes/*" "s3://$COMFY_BUCKET_NAME/comfy/$COMFY_ENDPOINT/$timestamp/custom_nodes/"
+}
 
 inotifywait -m -e modify,create,delete --format '%w %e' "$DIR1" "$DIR2" "$DIR3" |
     while read -r directory events; do
-        echo "Directory changed: $directory Events: $events"
-        echo "Directory changed: $directory Events: $events" >> /inotifywait.log
-
-        random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6 | head -n 1)
-        echo "s5cmd sync $directory/* s3://$COMFY_BUCKET_NAME/comfy/$COMFY_ENDPOINT_NAME/$random_string/" >> /inotifywait.log
-
-        result=$(s5cmd sync "$directory/*" "s3://$COMFY_BUCKET_NAME/comfy/$COMFY_ENDPOINT_NAME/$random_string/")
-        echo "$result" >> /inotifywait.log
-
+        sync_files "$directory" "$events"
     done
