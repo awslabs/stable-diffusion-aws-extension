@@ -24,7 +24,7 @@ Parameters:
       - c5.4xlarge
       - g5.2xlarge
       - g5.4xlarge
-    Default: c5.4xlarge
+    Default: g5.2xlarge
 
 Mappings:
   RegionToAmiId:
@@ -181,7 +181,6 @@ Resources:
           
           git clone https://github.com/comfyanonymous/ComfyUI.git
           git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch
-          cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
           cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
           
           cd /home/ubuntu/ComfyUI || exit 1
@@ -212,7 +211,7 @@ Resources:
 
           [Service]
           WorkingDirectory=/home/ubuntu/ComfyUI
-          ExecStart=python3 serve.py
+          ExecStart=python3 main.py
           Type=simple
           Restart=always
           RestartSec=3
@@ -239,4 +238,4 @@ Resources:
 Outputs:
   WebUIURL:
     Description: URL for Comfy WebUI
-    Value: !Sub http://${WebUiEIP}:7860
+    Value: !Sub http://${WebUiEIP}:8080
