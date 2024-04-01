@@ -282,7 +282,7 @@ def save_sync_instance_monitor(last_sync_request_id: str, sync_status: str):
 
 def update_sync_instance_monitor(instance_monitor_record):
     # 更新记录
-    update_expression = ("SET sync_status = : new_sync_status, last_sync_request_id = :sync_request_id, "
+    update_expression = ("SET sync_status = :new_sync_status, last_sync_request_id = :sync_request_id, "
                          "sync_list = :sync_list, last_sync_time = :sync_time, last_heartbeat_time = :heartbeat_time")
     expression_attribute_values = {
         ":new_sync_status": instance_monitor_record['sync_status'],
