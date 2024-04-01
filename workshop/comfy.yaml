@@ -149,6 +149,10 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           
+          mkdir -p ~/.aws
+          echo "[default]
+          region = ${AWS::Region}" > ~/.aws/config
+  
           echo "export COMFY_API_URL=${ApiGatewayUrl}" > /home/ubuntu/.bashrc
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> //home/ubuntu/.bashrc
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> //home/ubuntu/.bashrc
