@@ -17,6 +17,8 @@ SAGEMAKER_PORT = 8080
 LOCALHOST = '0.0.0.0'
 PHY_LOCALHOST = '127.0.0.1'
 
+SLEEP_TIME = 30
+
 app = FastAPI()
 
 logger = logging.getLogger(__name__)
@@ -104,27 +106,15 @@ def check_and_reboot():
                 logger.info(f'need_reboot, reboot  start!')
                 comfy_app.restart()
                 logger.info(f'need_reboot, reboot  finished!')
-            time.sleep(60 * 1)
+            time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
-            time.sleep(10)
-
-
-
+            time.sleep(SLEEP_TIME)
 
 
 if __name__ == "__main__":
     queue_lock = threading.Lock()
     api = Api(app, queue_lock)
-
-    # api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
-    # comfy_process = Process(target=start_comfy_app, args=(LOCALHOST, COMFY_PORT))
-    #
-    # comfy_process.start()
-    # api_process.start()
-    #
-    # comfy_process.join()
-    # api_process.join()
 
     comfy_app = ComfyApp()
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))

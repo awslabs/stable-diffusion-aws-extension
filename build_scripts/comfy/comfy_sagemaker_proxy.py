@@ -35,6 +35,8 @@ instance_monitor_table = dynamodb.Table(INSTANCE_MONITOR_TABLE_NAME)
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
 
+ROOT_PATH = '/home/ubuntu/ComfyUI'
+
 
 @dataclass
 class ComfyResponse:
@@ -58,15 +60,16 @@ async def prepare_comfy_env(sync_item: dict):
         prepare_type = sync_item['prepare_type']
         rlt = True
         if prepare_type in ['default', 'models']:
-            sync_models_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/models/*', '/home/ubuntu/models', False)
+            sync_models_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/models/*', f'{ROOT_PATH}/models', False)
             if not sync_models_rlt:
                 rlt = False
         if prepare_type in ['default', 'inputs']:
-            sync_inputs_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/input/*', '/home/ubuntu/input', False)
+            sync_inputs_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/input/*', f'{ROOT_PATH}/input', False)
             if not sync_inputs_rlt:
                 rlt = False
         if prepare_type in ['default', 'nodes']:
-            sync_nodes_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes', '/home/ubuntu/custom_nodes', True)
+            sync_nodes_rlt = sync_s3_files_or_folders_to_local(f'{request_id}/custom_nodes/*',
+                                                               f'{ROOT_PATH}/custom_nodes', True)
             if not sync_nodes_rlt:
                 rlt = False
         if prepare_type == 'custom':
@@ -76,7 +79,7 @@ async def prepare_comfy_env(sync_item: dict):
                 logger.info("s3_source_path and local_target_path should not be empty")
             else:
                 sync_rlt = sync_s3_files_or_folders_to_local(sync_source_path,
-                                                  f'/home/ubuntu/{local_target_path}', False)
+                                                             f'{ROOT_PATH}/{local_target_path}', False)
                 if not sync_rlt:
                     rlt = False
         elif prepare_type == 'other':
@@ -114,7 +117,7 @@ async def prepare_comfy_env(sync_item: dict):
 
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     logger.info("sync_s3_models_or_inputs_to_local start")
-    # s5cmd_command = f'/home/ubuntu/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
+    # s5cmd_command = f'{ROOT_PATH}/tools/s5cmd cp "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
     s5cmd_command = f's5cmd sync "s3://{BUCKET}/comfy/{ENDPOINT_NAME}/{s3_path}" "{local_path}/"'
     try:
         # TODO 注意添加去重逻辑
@@ -223,8 +226,8 @@ async def invocations(request):
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
 
-        sync_local_outputs_to_s3(f'output/{prompt_id}', '/home/ubuntu/output')
-        sync_local_outputs_to_s3(f'temp/{prompt_id}', '/home/ubuntu/temp')
+        sync_local_outputs_to_s3(f'output/{prompt_id}', f'{ROOT_PATH}/output')
+        sync_local_outputs_to_s3(f'temp/{prompt_id}', f'{ROOT_PATH}/temp')
         response_body = {
             "prompt_id": prompt_id,
             "instance_id": GEN_INSTANCE_ID,
