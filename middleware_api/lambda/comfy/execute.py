@@ -120,7 +120,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
     # resp = real_time_inference(payload, inference_id, ep.endpoint_name)
     resp = {
         "prompt_id": '11111111-1111-1111',
-        "instance_id": 'esd-real-time-test-rgihbd',
+        "instance_id": 'comfy-real-time-test-rgihbd',
         "status": 'success',
         "output_path": f's3://{bucket_name}/template/',
         "temp_path": f's3://{bucket_name}/template/'
