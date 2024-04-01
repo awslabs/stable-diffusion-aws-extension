@@ -18,7 +18,7 @@ global need_sync
 global prompt_id
 
 REGION = os.environ.get('AWS_REGION')
-BUCKET = os.environ.get('BUCKET_NAME')
+BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
 
 GEN_INSTANCE_ID = os.environ.get('ENDPOINT_INSTANCE_ID')
