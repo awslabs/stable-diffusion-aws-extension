@@ -368,12 +368,12 @@ async def sync_instance(request):
             instance_monitor_record['sync_list'] = sync_list
             print("should update prepare instance_monitor_record")
             update_sync_instance_monitor(instance_monitor_record)
-        os.environ['ALREADY_SYNC'] = True
+        os.environ['ALREADY_SYNC'] = 'true'
         resp = {"status": "success", "message": "sync"}
         return ok(resp)
     except Exception as e:
         print("exception occurred", e)
-        os.environ['ALREADY_SYNC'] = True
+        os.environ['ALREADY_SYNC'] = 'true'
         resp = {"status": "fail", "message": "sync"}
         return error(resp)
 

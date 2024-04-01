@@ -8,9 +8,12 @@ import server
 from aiohttp import web
 from execution import PromptExecutor
 
-api_url = os.environ.get('COMFY_API_URL')
-api_token = os.environ.get('COMFY_API_TOKEN')
-endpoint_name = os.environ.get('ENDPOINT_NAME')
+# api_url = os.environ.get('COMFY_API_URL')
+# api_token = os.environ.get('COMFY_API_TOKEN')
+# endpoint_name = os.environ.get('ENDPOINT_NAME')
+api_url = 'https://ps2j057bbg.execute-api.us-east-1.amazonaws.com/prod/'
+api_token = '09876543210987654321'
+endpoint_name = 'esd-real-time-test'
 
 if not api_url or not api_token:
     raise ValueError("API_URL and API_TOKEN environment variables must be set.")
