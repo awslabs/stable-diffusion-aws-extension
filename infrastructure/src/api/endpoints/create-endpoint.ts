@@ -163,6 +163,8 @@ export class CreateEndpointApi {
       resources: [
         this.endpointDeploymentTable.tableArn,
         this.multiUserTable.tableArn,
+        this.syncTable.tableArn,
+        this.instanceMonitorTable.tableArn,
       ],
     });
 
