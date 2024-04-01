@@ -183,7 +183,7 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/home/ubuntu/ComfyUI
+          WorkingDirectory=/ComfyUI
           ExecStart=python3 main.py --listen
           Type=simple
           Restart=always
@@ -207,8 +207,8 @@ Resources:
           StartLimitIntervalSec=0
 
           [Service]
-          WorkingDirectory=/home/ubuntu
-          ExecStart=/home/ubuntu/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
+          WorkingDirectory=/ComfyUI
+          ExecStart=/stable-diffusion-aws-extension/build_scripts/comfy/inotifywait.sh
           Type=simple
           Restart=always
           RestartSec=3
