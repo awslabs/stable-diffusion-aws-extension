@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import subprocess
 import threading
@@ -18,10 +19,13 @@ PHY_LOCALHOST = '127.0.0.1'
 
 app = FastAPI()
 
+logger = logging.getLogger(__name__)
+logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
+
 
 async def invocations(request: Request):
     req = await request.json()
-    print(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{COMFY_PORT}/invocations")
+    logger.info(f"invocations start req:{req}  url:{PHY_LOCALHOST}:{COMFY_PORT}/invocations")
     response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/invocations", json=req)
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code,
@@ -72,7 +76,7 @@ class ComfyApp:
         #     self.process.terminate()
         #     self.start()
         # else:
-        #     print("Comfy app process is not running.")
+        #     logger.info("Comfy app process is not running.")
         if self.process and self.process.poll() is None:
             os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
@@ -84,25 +88,25 @@ class ComfyApp:
 #     cmd = "python main.py  --listen {} --port {}".format(host, port)
 #     os.system(cmd)
 def check_and_reboot():
-    print("start check_and_reboot!")
+    logger.info("start check_and_reboot!")
     while True:
-        print("start check_and_reboot! checking server-------")
+        logger.info("start check_and_reboot! checking server-------")
         try:
-            print("start check_and_reboot! checking function-------")
+            logger.info("start check_and_reboot! checking function-------")
             response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
-            print(f"sync response:{response} time : {datetime.datetime.now()}")
+            logger.info(f"sync response:{response} time : {datetime.datetime.now()}")
             need_reboot = os.environ.get('NEED_REBOOT')
-            print(f'need_reboot value check: {need_reboot} ！')
+            logger.info(f'need_reboot value check: {need_reboot} ！')
             # for key, value in os.environ.items():
-            #     print(f"{key}: {value}")
+            #     logger.info(f"{key}: {value}")
             if need_reboot and need_reboot.lower() == 'true':
                 os.environ['NEED_REBOOT'] = 'false'
-                print(f'need_reboot, reboot  start!')
+                logger.info(f'need_reboot, reboot  start!')
                 comfy_app.restart()
-                print(f'need_reboot, reboot  finished!')
+                logger.info(f'need_reboot, reboot  finished!')
             time.sleep(60 * 1)
         except Exception as e:
-            print(f"check_and_reboot error:{e}")
+            logger.info(f"check_and_reboot error:{e}")
             time.sleep(10)
 
 
