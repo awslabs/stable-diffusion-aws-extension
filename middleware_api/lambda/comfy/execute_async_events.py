@@ -47,8 +47,8 @@ def handler(event, context):
         "prompt_id": '11111111-1111-1111',
         "instance_id": 'comfy-real-time-test-rgihbd',
         "status": 'success',
-        "output_path": f's3://{bucket_name}/template/',
-        "temp_path": f's3://{bucket_name}/template/'
+        "output_path": f's3://{bucket_name}/images/',
+        "temp_path": f's3://{bucket_name}/images/'
     }
 
     result = InferenceResult(**result)
