@@ -292,7 +292,7 @@ def update_sync_instance_monitor(instance_monitor_record):
         ":heartbeat_time": datetime.datetime.now().isoformat(),
     }
 
-    response = instance_monitor_record.update_item(
+    response = instance_monitor_table.update_item(
         Key={'endpoint_name': ENDPOINT_NAME,
              'gen_instance_id': GEN_INSTANCE_ID},
         UpdateExpression=update_expression,
