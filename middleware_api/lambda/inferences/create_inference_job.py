@@ -71,7 +71,8 @@ def handler(raw_event: dict, context: LambdaContext):
             )
 
         # check if endpoint table for endpoint status and existence
-        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name, event.inference_type,
+        inference_endpoint = _schedule_inference_endpoint(event.sagemaker_endpoint_name,
+                                                          event.inference_type,
                                                           username)
         endpoint_name = inference_endpoint.endpoint_name
         endpoint_id = inference_endpoint.EndpointDeploymentJobId

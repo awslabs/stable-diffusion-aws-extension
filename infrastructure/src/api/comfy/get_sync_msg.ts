@@ -148,6 +148,7 @@ export class GetSyncMsgApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 

@@ -124,6 +124,7 @@ export class GetPrepareApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 

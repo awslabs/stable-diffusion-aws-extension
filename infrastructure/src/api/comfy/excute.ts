@@ -193,6 +193,7 @@ export class ExecuteApi {
           'need_sync',
           'endpoint_name',
         ],
+        additionalProperties: false,
       },
       contentType: 'application/json',
     });

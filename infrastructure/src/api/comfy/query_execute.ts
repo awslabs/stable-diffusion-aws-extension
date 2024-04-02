@@ -112,6 +112,7 @@ export class QueryExecuteApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
