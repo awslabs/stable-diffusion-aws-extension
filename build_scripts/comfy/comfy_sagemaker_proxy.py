@@ -435,12 +435,12 @@ execution.validate_prompt = validate_prompt_proxy(execution.validate_prompt)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
+        print(f"Sending sync request!!!!!!! {args}")
         global need_sync
         global prompt_id
-        logger.info(f"send_sync_proxy start... {need_sync},{prompt_id}")
-        if not need_sync:
-            func(*args, **kwargs)
-        elif QUEUE_URL and REGION:
+        logger.info(f"send_sync_proxy start... {need_sync},{prompt_id} {args}")
+        func(*args, **kwargs)
+        if need_sync and QUEUE_URL and REGION:
             logger.info(f"send_sync_proxy params... {QUEUE_URL},{REGION},{need_sync},{prompt_id}")
             event = args[1]
             data = args[2]
