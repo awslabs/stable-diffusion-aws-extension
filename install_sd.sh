@@ -102,11 +102,11 @@ python3 -m venv venv
 
 source venv/bin/activate
 
-python -m pip install --upgrade pip
-python -m pip install onnxruntime-gpu
-python -m pip install insightface==0.7.3
-python -m pip install boto3
-python -m pip install aws_xray_sdk
+pip install --upgrade pip
+pip install onnxruntime-gpu
+pip install insightface==0.7.3
+pip install boto3
+pip install aws_xray_sdk
 
 export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
 export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
