@@ -56,6 +56,7 @@ export class RestApiGateway {
         'application/json': JSON.stringify({
           statusCode: 400,
           message: '$context.error.validationErrorString',
+          requestId: '$context.requestId',
         }),
       },
     });
@@ -64,7 +65,9 @@ export class RestApiGateway {
       type: apigw.ResponseType.DEFAULT_4XX,
       templates: {
         'application/json': JSON.stringify({
+          statusCode: '$context.status',
           message: '$context.error.message',
+          requestId: '$context.requestId',
         }),
       },
     });
@@ -74,7 +77,9 @@ export class RestApiGateway {
       type: apigw.ResponseType.DEFAULT_5XX,
       templates: {
         'application/json': JSON.stringify({
+          statusCode: '$context.status',
           message: '$context.error.message',
+          requestId: '$context.requestId',
         }),
       },
     });
