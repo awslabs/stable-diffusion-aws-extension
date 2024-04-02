@@ -8,6 +8,7 @@ from aws_lambda_powertools import Tracer
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok
 from common.util import get_query_param, generate_presigned_url_for_job
+from libs.comfy_data_types import ComfyExecuteTable
 from libs.utils import response_error, decode_last_key, encode_last_key
 
 tracer = Tracer()
@@ -50,7 +51,20 @@ def handler(event, ctx):
 
         new_list = []
         for item in items:
-            new_list.append(generate_presigned_url_for_job(item))
+            job = generate_presigned_url_for_job(item)
+            new_list.append({
+                'prompt_id': job['prompt_id'],
+                'endpoint_name': job['endpoint_name'],
+                'status': job['status'],
+                'create_time': job['create_time'],
+                'start_time': job['start_time'],
+                'need_sync': job['need_sync'],
+                'complete_time': job['complete_time'],
+                'output_path': job['output_path'],
+                'output_files': job['output_files'],
+                'temp_path': job['temp_path'],
+                'temp_files': job['temp_files'],
+            })
 
         data = {
             'executes': new_list,
