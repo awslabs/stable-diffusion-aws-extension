@@ -136,6 +136,7 @@ def invoke_url_lambda(event: CreateCheckPointEvent):
     return accepted(message='Checkpoint creation in progress, please check later')
 
 
+@tracer.capture_method
 def check_filenames_unique(event: CreateCheckPointEvent):
     names = []
 
@@ -154,7 +155,6 @@ def check_filenames_unique(event: CreateCheckPointEvent):
     check_ckpt_name_unique(names)
 
 
-@tracer.capture_method
 def check_ckpt_name_unique(names: [str]):
     if len(names) == 0:
         return

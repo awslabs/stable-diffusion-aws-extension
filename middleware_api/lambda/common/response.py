@@ -5,14 +5,16 @@ import urllib.parse
 from decimal import Decimal
 from typing import Optional, Any
 
+from aws_lambda_powertools import Tracer
 from genson import SchemaBuilder
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
-
+tracer = Tracer()
 x_api_version = "1.5.0"
 
 
+@tracer.capture_method
 def json_to_schema(json_string):
     try:
         # Parse JSON string into a Python dictionary
@@ -73,6 +75,7 @@ def dumps_default(obj):
     raise TypeError("Object of type 'Decimal' is not JSON serializable")
 
 
+@tracer.capture_method
 def response(status_code: int, data=None, message: str = None, headers: Optional[dict[str, Any]] = None, decimal=None):
     payload = {
         'isBase64Encoded': False,
