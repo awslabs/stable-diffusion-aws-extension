@@ -195,7 +195,7 @@ Resources:
 
           cat > comfy_upload.service <<EOF
           [Unit]
-          Description=Comfy Service
+          Description=Comfy Upload Service
           After=network.target
           StartLimitIntervalSec=0
 
