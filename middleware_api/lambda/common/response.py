@@ -19,7 +19,9 @@ def json_to_schema(json_string):
         data = json.loads(json_string)
 
         # Use Genson SchemaBuilder to create a schema from the Python dictionary
-        builder = SchemaBuilder()
+        builder = SchemaBuilder(
+            schema_uri="http://json-schema.org/draft-07/schema#",
+        )
         builder.add_object(data)
         schema = builder.to_schema()
 

@@ -46,7 +46,6 @@ class TrainingItem(BaseModel):
 class TrainingCollection(BaseModel):
     items: Optional[List[TrainingItem]]
     links: Optional[List[TrainingLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:

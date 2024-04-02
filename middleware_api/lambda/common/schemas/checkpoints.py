@@ -36,7 +36,6 @@ class CheckpointItem(BaseModel):
 class CheckpointCollection(BaseModel):
     items: Optional[List[CheckpointItem]]
     links: Optional[List[CheckpointLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
     page: Optional[int]
     per_page: Optional[int]

@@ -148,16 +148,12 @@
                             ]
                           }
                         },
-                        "previous_evaluated_key": {
-                          "type": "string"
-                        },
                         "last_evaluated_key": {
                           "type": "null"
                         }
                       },
                       "required": [
                         "roles",
-                        "previous_evaluated_key",
                         "last_evaluated_key"
                       ]
                     },
@@ -206,7 +202,6 @@
                             ]
                           }
                         ],
-                        "previous_evaluated_key": "not_applicable",
                         "last_evaluated_key": null
                       },
                       "message": "OK"
@@ -446,16 +441,12 @@
                             ]
                           }
                         },
-                        "previous_evaluated_key": {
-                          "type": "string"
-                        },
                         "last_evaluated_key": {
                           "type": "string"
                         }
                       },
                       "required": [
                         "users",
-                        "previous_evaluated_key",
                         "last_evaluated_key"
                       ]
                     },
@@ -510,7 +501,6 @@
                             "password": "********"
                           }
                         ],
-                        "previous_evaluated_key": "not_applicable",
                         "last_evaluated_key": "not_applicable"
                       },
                       "message": "OK"

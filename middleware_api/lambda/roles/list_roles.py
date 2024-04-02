@@ -73,7 +73,6 @@ def handler(event, ctx):
 
         data = {
             'roles': result,
-            'previous_evaluated_key': 'not_applicable',
             'last_evaluated_key': last_token
         }
 

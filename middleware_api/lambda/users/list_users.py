@@ -98,7 +98,6 @@ def handler(event, ctx):
 
         data = {
             'users': result,
-            'previous_evaluated_key': "not_applicable",
             'last_evaluated_key': "not_applicable"
         }
 

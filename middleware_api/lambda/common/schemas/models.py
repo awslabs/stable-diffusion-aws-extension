@@ -54,7 +54,6 @@ class ModelItem(BaseModel):
 class ModelCollection(BaseModel):
     items: List[ModelItem]
     links: Optional[List[ModelLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:

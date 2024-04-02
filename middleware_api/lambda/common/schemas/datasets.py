@@ -36,7 +36,6 @@ class DatasetItem(BaseModel):
 class DatasetCollection(BaseModel):
     items: Optional[List[DatasetItem]]
     links: Optional[List[DatasetLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:

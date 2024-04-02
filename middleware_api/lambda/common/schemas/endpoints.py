@@ -32,7 +32,6 @@ class EndpointItem(BaseModel):
 class EndpointCollection(BaseModel):
     items: Optional[List[EndpointItem]]
     links: Optional[List[EndpointLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:

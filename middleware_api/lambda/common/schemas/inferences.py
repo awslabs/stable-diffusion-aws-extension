@@ -50,7 +50,6 @@ class InferenceItem(BaseModel):
 class InferenceCollection(BaseModel):
     items: Optional[List[InferenceItem]]
     links: Optional[List[InferenceLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:

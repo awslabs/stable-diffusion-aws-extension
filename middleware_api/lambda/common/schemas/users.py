@@ -27,7 +27,6 @@ class UserItem(BaseModel):
 class UserCollection(BaseModel):
     items: List[UserItem]
     links: Optional[List[UserLink]]
-    previous_evaluated_key: Optional[str]
     last_evaluated_key: Optional[str]
 
     class Config:
