@@ -84,54 +84,6 @@ get_device_count(){
 
 # -------------------- sd functions --------------------
 
-sd_install(){
-  echo "---------------------------------------------------------------------------------"
-  echo "install esd..."
-
-  cd /home/ubuntu || exit 1
-
-  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install.sh" | bash;
-
-  # if $EXTENSIONS is not empty, it will be executed
-  if [ -n "$EXTENSIONS" ]; then
-      echo "---------------------------------------------------------------------------------"
-      echo "install extensions..."
-      cd /home/ubuntu/stable-diffusion-webui/extensions/ || exit 1
-
-      read -ra array <<< "$(echo "$EXTENSIONS" | tr "," " ")"
-
-      for git_repo in "${array[@]}"; do
-        IFS='#' read -r -a repo <<< "$git_repo"
-
-        git_repo=${repo[0]}
-        repo_name=$(basename -s .git "$git_repo")
-        repo_branch=${repo[1]}
-        commit_sha=${repo[2]}
-
-        echo "rm -rf $repo_name for install $git_repo"
-        rm -rf "$repo_name"
-
-        start_at=$(date +%s)
-
-        echo "git clone $git_repo"
-        git clone "$git_repo"
-
-        cd "$repo_name" || exit 1
-
-        echo "git checkout $repo_branch"
-        git checkout "$repo_branch"
-
-        echo "git reset --hard $commit_sha"
-        git reset --hard "$commit_sha"
-        cd ..
-
-        end_at=$(date +%s)
-        cost=$((end_at-start_at))
-        echo "git clone $git_repo: $cost seconds"
-      done
-  fi
-}
-
 sd_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting big unused files..."
@@ -209,29 +161,8 @@ sd_listen_ready() {
 }
 
 sd_build_for_launch(){
-  sd_install
-
-  echo "---------------------------------------------------------------------------------"
-  echo "creating venv and install packages..."
-  cd /home/ubuntu/stable-diffusion-webui || exit 1
-
-  python3 -m venv venv
-
-  source venv/bin/activate
-
-  python -m pip install --upgrade pip
-  python -m pip install onnxruntime-gpu
-  python -m pip install insightface==0.7.3
-  python -m pip install boto3
-  python -m pip install aws_xray_sdk
-
-  export TORCH_INDEX_URL="https://download.pytorch.org/whl/cu118"
-  export TORCH_COMMAND="pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url $TORCH_INDEX_URL"
-  export XFORMERS_PACKAGE="xformers==0.0.20"
-
-  echo "---------------------------------------------------------------------------------"
-  echo "build for launch..."
-  python launch.py --enable-insecure-extension-access --api --api-log --log-startup --listen --port $WEBUI_PORT --xformers --no-half-vae --no-download-sd-model --no-hashing --nowebui --skip-torch-cuda-test --skip-load-model-at-start --disable-safe-unpickle --disable-nan-check --exit
+  cd /home/ubuntu || exit 1
+  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_sd.sh" | bash;
 }
 
 sd_accelerate_launch(){
@@ -293,22 +224,6 @@ sd_launch_from_local(){
 
 # -------------------- comfy functions --------------------
 
-comfy_install(){
-  echo "---------------------------------------------------------------------------------"
-  echo "install comfy ..."
-
-  cd /home/ubuntu || exit 1
-
-  # todo will use commit id
-  git clone https://github.com/comfyanonymous/ComfyUI.git
-
-  git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
-
-  cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
-
-  cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
-}
-
 comfy_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting big unused files..."
@@ -338,29 +253,8 @@ comfy_remove_unused_list(){
 }
 
 comfy_build_for_launch(){
-  comfy_install
-
-  echo "---------------------------------------------------------------------------------"
-  echo "creating venv and install packages..."
-
-  cd /home/ubuntu/ComfyUI || exit 1
-
-  python3 -m venv venv
-
-  source venv/bin/activate
-
-  python -m pip install --upgrade pip
-  python -m pip install -r requirements.txt
-  python -m pip install boto3
-  python -m pip install aws_xray_sdk
-  python -m pip install fastapi
-  python -m pip install uvicorn
-  python -m pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cu118
-  python -m pip install https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip
-  python -m pip install https://github.com/mlfoundations/open_clip/archive/bb6e834e9c70d9c27d0dc3ecedeebeaeb1ffad6b.zip
-  python -m pip install open-clip-torch==2.20.0
-
-  # todo maybe need to run build command
+  cd /home/ubuntu || exit 1
+  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_comfy.sh" | bash;
 }
 
 comfy_listen_ready() {
