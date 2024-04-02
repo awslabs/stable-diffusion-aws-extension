@@ -53,7 +53,10 @@ def handler(event, context):
         scan_rows = response.get('Items', [])
         last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))
         if not scan_rows or len(scan_rows) == 0:
-            return ok(data={'datasets': []})
+            return ok(data={
+                'datasets': [],
+                'last_evaluated_key': last_evaluated_key
+            })
 
         datasets = []
         for row in scan_rows:
