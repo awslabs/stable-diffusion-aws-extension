@@ -97,7 +97,7 @@ def handler(raw_event, context):
                 allowed_roles_or_users=user_roles
             ).__dict__)
 
-            if len(dataset) > 20:
+            if len(dataset) >= 25:
                 ddb_service.batch_put_items({dataset_item_table: dataset})
                 dataset = []
 
