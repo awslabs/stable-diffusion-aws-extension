@@ -184,7 +184,7 @@ Resources:
           
           cd /home/ubuntu
           
-          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_sd.sh" | bash;
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_sd.sh" | bash;
           
           cd stable-diffusion-webui/extensions
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
