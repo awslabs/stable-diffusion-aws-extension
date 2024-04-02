@@ -59,7 +59,7 @@ export class CreateInferenceJobApi {
       modelName: this.id,
       description: `${this.id} Request Model`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
         type: JsonSchemaType.OBJECT,
         properties: {

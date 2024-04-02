@@ -148,7 +148,7 @@ export class ExecuteApi {
       modelName: this.baseId,
       description: `${this.baseId} Request Model`,
       schema: {
-        schema: JsonSchemaVersion.DRAFT4,
+        schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
