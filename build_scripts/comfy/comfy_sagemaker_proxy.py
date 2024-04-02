@@ -18,6 +18,7 @@ from boto3.dynamodb.conditions import Key
 
 global need_sync
 global prompt_id
+global executing
 
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
@@ -169,7 +170,6 @@ def sync_local_outputs_to_base64(local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    # TODO serve 级别加锁
     json_data = await request.json()
     logger.info(f"invocations start json_data:{json_data}")
     global need_sync
@@ -177,6 +177,13 @@ async def invocations(request):
     global prompt_id
     prompt_id = json_data["prompt_id"]
     try:
+        global executing
+        if executing is None:
+            executing = True
+        elif executing is True:
+            resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
+                    "message": "the environment is not ready valid[0] is false, need to resync"}
+            return error(resp)
         logger.info(
             f'bucket_name: {BUCKET}, region: {REGION}')
         if ('need_prepare' in json_data and json_data['need_prepare']
@@ -185,6 +192,7 @@ async def invocations(request):
             if not sync_already:
                 resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                         "message": "the environment is not ready with sync"}
+                executing = False
                 return error(resp)
         server_instance = server.PromptServer.instance
         if "number" in json_data:
@@ -200,6 +208,7 @@ async def invocations(request):
         if not valid[0]:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
+            executing = False
             return error(resp)
         extra_data = {}
         client_id = ''
@@ -228,11 +237,13 @@ async def invocations(request):
             "output_path": f's3://{BUCKET}/comfy/output/{prompt_id}',
             "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
         }
+        executing = False
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
         resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                 "message": f"exception occurred {e}"}
+        executing = False
         return error(resp)
 
 
@@ -335,11 +346,17 @@ def sync_instance_monitor_status(need_save: bool):
 
 @server.PromptServer.instance.routes.get("/reboot")
 def restart(self):
+    global executing
+    if executing is True:
+        logger.info(f"other inference doing cannot reboot!!!!!!!!")
+        return {"message": "other inference doing cannot reboot"}
+
     logger.info("start to reboot!!!!!!!!")
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot")
         return {"message": "no need to reboot"}
+
     logger.info("rebooting !!!!!!!!")
     try:
         sys.stdout.close_log()
