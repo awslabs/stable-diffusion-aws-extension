@@ -172,9 +172,9 @@ Resources:
           sudo apt-get update
           
           sudo apt install nginx -y
-          sudo ufw allow 'Nginx HTTP'
           sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
           sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
+          sudo ufw allow 'Nginx HTTP'
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
