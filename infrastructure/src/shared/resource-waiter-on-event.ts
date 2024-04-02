@@ -99,16 +99,16 @@ async function waitTableIndexReady(event: Event, tableName: string, pk: string, 
     const index = data.Table?.GlobalSecondaryIndexes?.find(idx => idx.IndexName === indexName);
 
     if (!index) {
-      throw new Error(`${event.ResourceProperties.name} Index ${indexName} does not exist on table ${tableName}`);
+      throw new Error(`${event.ResourceProperties.name} ${indexName} does not exist on table ${tableName}`);
     }
 
     if (index.IndexStatus === 'ACTIVE') {
-      console.log(`${event.ResourceProperties.name} Index ${indexName} is active and ready to use after ${(currentTime - startCheckTime) / 1000} seconds!`);
+      console.log(`${event.ResourceProperties.name} ${indexName} is active after ${(currentTime - startCheckTime) / 1000} seconds!`);
       break;
     } else if (index.IndexStatus === 'CREATING') {
-      console.log(`${event.ResourceProperties.name} Index ${indexName} is Creating, check again in 2 second...`);
+      console.log(`${event.ResourceProperties.name} ${indexName} is Creating, check again in 2 second...`);
     } else {
-      throw new Error(`${event.ResourceProperties.name} Index ${indexName} is in unknown state: ${index.IndexStatus}`);
+      throw new Error(`${event.ResourceProperties.name} ${indexName} is in unknown state: ${index.IndexStatus}`);
     }
 
     await new Promise(r => setTimeout(r, 2000));
