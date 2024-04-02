@@ -157,6 +157,7 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
+          echo "export ESD_CODE_BRANCH=${Branch}" >> /etc/environment
           source /etc/environment
           
           wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
@@ -166,15 +167,7 @@ Resources:
           sudo apt-get update
           sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
           
-          git clone https://github.com/comfyanonymous/ComfyUI.git
-          git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch ${Branch} --single-branch
-          cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
-          
-          cd ComfyUI || exit 1
-          
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install boto3 aws_xray_sdk fastapi uvicorn
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_comfy.sh" | bash;
           
           cat > comfy.service <<EOF
           [Unit]

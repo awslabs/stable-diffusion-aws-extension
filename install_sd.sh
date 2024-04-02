@@ -55,7 +55,6 @@ cd sd-webui-reactor || exit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REACTOR}
 cd ..
 
-
 # if $EXTENSIONS is not empty, it will be executed
 if [ -n "$EXTENSIONS" ]; then
     echo "---------------------------------------------------------------------------------"
