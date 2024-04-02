@@ -379,7 +379,9 @@ async def sync_instance(request):
                 and os.environ.get('LAST_SYNC_REQUEST_TIME') == str(last_sync_record['request_time'])):
             logger.info("last sync record already sync by os check")
             sync_instance_monitor_status(False)
-            resp = {"status": "success", "message": "no sync env"}
+            need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
+                                   and str(last_sync_record['need_reboot']).lower() == 'true') else False
+            resp = {"status": "success", "message": "no sync env", "need_reboot": need_reboot}
             os.environ['ALREADY_SYNC'] = 'true'
             return ok(resp)
 
@@ -400,7 +402,9 @@ async def sync_instance(request):
                     and instance_monitor_record['sync_status'] == 'success'):
                 logger.info("last sync record already sync")
                 sync_instance_monitor_status(False)
-                resp = {"status": "success", "message": "no sync ddb"}
+                need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
+                                       and str(last_sync_record['need_reboot']).lower() == 'true') else False
+                resp = {"status": "success", "message": "no sync ddb", "need_reboot": need_reboot}
                 os.environ['ALREADY_SYNC'] = 'true'
                 return ok(resp)
 
@@ -415,7 +419,9 @@ async def sync_instance(request):
             logger.info("should update prepare instance_monitor_record")
             update_sync_instance_monitor(instance_monitor_record)
         os.environ['ALREADY_SYNC'] = 'true'
-        resp = {"status": "success", "message": "sync"}
+        need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
+                               and str(last_sync_record['need_reboot']).lower() == 'true') else False
+        resp = {"status": "success", "message": "sync", "need_reboot": need_reboot}
         return ok(resp)
     except Exception as e:
         logger.info("exception occurred", e)
