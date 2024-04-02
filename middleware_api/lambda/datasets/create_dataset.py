@@ -97,17 +97,11 @@ def handler(raw_event, context):
                 allowed_roles_or_users=user_roles
             ).__dict__)
 
-            if len(dataset) >= 25:
-                ddb_service.batch_put_items({dataset_item_table: dataset})
-                dataset = []
-
-        if len(dataset) > 0:
-            ddb_service.batch_put_items({dataset_item_table: dataset})
-
         logger.info(f"dataset_info: {new_dataset_info.__dict__}")
 
         ddb_service.batch_put_items({
-            dataset_info_table: [new_dataset_info.__dict__]
+            dataset_info_table: [new_dataset_info.__dict__],
+            dataset_item_table: dataset,
         })
 
         data = {

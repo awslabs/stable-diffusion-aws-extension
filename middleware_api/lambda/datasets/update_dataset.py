@@ -62,6 +62,7 @@ def handler(raw_event, context):
         ddb_service.batch_put_items(table_items={
             dataset_item_table: updates_items
         })
+
         return ok(data={
             'datasetName': dataset_info.dataset_name,
             'status': dataset_info.dataset_status.value,

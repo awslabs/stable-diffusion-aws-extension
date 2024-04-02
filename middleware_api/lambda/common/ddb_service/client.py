@@ -3,12 +3,12 @@ import enum
 import logging
 from decimal import Decimal
 from typing import Any, List, Dict
-
+from aws_lambda_powertools import Tracer
 import boto3
 from botocore.exceptions import ClientError
 
 from common.ddb_service.types_ import GetItemOutput, ScanOutput
-
+tracer = Tracer()
 
 class DynamoDbUtilsService:
 
@@ -40,17 +40,26 @@ class DynamoDbUtilsService:
             self.logger.error(f'table {table} put item failed -> {entries}: {e}')
             raise Exception(f'table {table} put item failed -> {entries}: {e}')
 
+    @tracer.capture_method
     def batch_put_items(self, table_items: Dict[str, List[Dict[str, Any]]]) -> Any:
         try:
             if not table_items or len(table_items) == 0:
                 return None
 
-            _items = {}
-            for table, items in table_items.items():
-                _items[table] = [{'PutRequest': {'Item': self._serialize(item)}} for item in items]
+            for table_name, items in table_items.items():
+                raws = [{'PutRequest': {'Item': self._serialize(item)}} for item in items]
 
-            resp = self.client.batch_write_item(RequestItems=_items)
-            return resp
+                batch = []
+
+                for raw in raws:
+                    batch.append(raw)
+                    if len(batch) == 25:
+                        self.client.batch_write_item(RequestItems={table_name: batch})
+                        batch = []
+
+                if len(batch) > 0:
+                    self.client.batch_write_item(RequestItems={table_name: batch})
+
         except Exception as e:
             self.logger.error(f'batch put failed: {e}')
             raise Exception(f'batch put failed: {e}')
