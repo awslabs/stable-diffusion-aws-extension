@@ -25,6 +25,7 @@ RUN apt-get update -y && \
 WORKDIR /home/ubuntu/
 
 ENV ON_DOCKER true
+ENV FULL_IMAGE false
 
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 

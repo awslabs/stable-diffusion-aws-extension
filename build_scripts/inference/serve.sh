@@ -446,6 +446,16 @@ comfy_launch_from_local(){
 
 # -------------------- startup --------------------
 
+if [ "$FULL_IMAGE" == "true" ]; then
+  echo "Running on full docker image..."
+  if [ "$SERVICE_TYPE" == "sd" ]; then
+    sd_accelerate_launch
+  else
+    comfy_accelerate_launch
+  fi
+  exit 0
+fi
+
 echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
 output=$(s5cmd ls "s3://$S3_BUCKET_NAME/")
 if echo "$output" | grep -q "$S3_LOCATION"; then
