@@ -164,10 +164,6 @@ Resources:
           echo "export ESD_CODE_BRANCH=${Branch}" >> /etc/environment
           source /etc/environment
           
-          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
-          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
-          cp s5cmd /usr/local/bin/
-          
           sudo apt-get update
           
           sudo apt install nginx -y
@@ -178,6 +174,10 @@ Resources:
           sudo systemctl restart nginx
           
           sudo apt install wget git python3.8-venv libgl1 libtcmalloc-minimal4 inotify-tools -y
+
+          wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+          tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+          cp s5cmd /usr/local/bin/
           
           curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash;
           
