@@ -101,7 +101,7 @@ async def prepare_comfy_env(sync_item: dict):
             os.environ['NEED_REBOOT'] = 'false'
         logger.info("prepare_environment end")
         os.environ['LAST_SYNC_REQUEST_ID'] = sync_item['request_id']
-        os.environ['LAST_SYNC_REQUEST_TIME'] = sync_item['request_time']
+        os.environ['LAST_SYNC_REQUEST_TIME'] = str(sync_item['request_time'])
         return rlt
     except Exception as e:
         return False
@@ -222,6 +222,7 @@ async def invocations(request):
             extra_data["client_id"] = json_data["client_id"]
 
         prompt_id = json_data['prompt_id']
+        server_instance.last_prompt_id = prompt_id
         e = execution.PromptExecutor(server_instance)
         outputs_to_execute = valid[2]
         e.execute(json_data['prompt'], prompt_id, extra_data, outputs_to_execute)
@@ -368,7 +369,7 @@ async def sync_instance(request):
                 and os.environ.get('LAST_SYNC_REQUEST_ID')
                 and os.environ.get('LAST_SYNC_REQUEST_ID') == last_sync_record['request_id']
                 and os.environ.get('LAST_SYNC_REQUEST_TIME')
-                and os.environ.get('LAST_SYNC_REQUEST_TIME') == last_sync_record['request_time']):
+                and os.environ.get('LAST_SYNC_REQUEST_TIME') == str(last_sync_record['request_time'])):
             logger.info("last sync record already sync by os check")
             sync_instance_monitor_status(False)
             resp = {"status": "success", "message": "no sync env"}
