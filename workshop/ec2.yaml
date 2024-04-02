@@ -173,8 +173,8 @@ Resources:
           
           sudo apt install nginx -y
           sudo ufw allow 'Nginx HTTP'
-          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/nginx_proxy.conf
-          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/custom_502.html
+          sudo wget -O /etc/nginx/sites-available/default https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_nginx_proxy.conf
+          sudo wget -O /usr/share/nginx/html/custom_502.html https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_custom_502.html
           sudo systemctl enable nginx
           sudo systemctl restart nginx
           
@@ -196,8 +196,8 @@ Resources:
           cp s5cmd /usr/local/bin/
           
           export AWS_REGION=us-east-1
-          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/models.txt
-          s5cmd run models.txt
+          wget https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/workshop/sd_models.txt
+          s5cmd run sd_models.txt
           
           sudo chown -R ubuntu:ubuntu /home/ubuntu/stable-diffusion-webui
           
