@@ -5,7 +5,6 @@ echo "install esd..."
 
 branch=main
 
-# if ESD_CODE_BRANCH is dev, then use dev branch
 if [[ $ESD_CODE_BRANCH == "dev" ]]; then
   branch=dev
 fi
@@ -21,12 +20,12 @@ rm -rf stable-diffusion-webui
 # Clone stable-diffusion-webui
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git --branch master --single-branch
 # Go to stable-diffusion-webui directory
-cd stable-diffusion-webui
+cd stable-diffusion-webui || exit
 # Reset to specific commit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 
 # Go to "extensions" directory
-cd extensions
+cd extensions || exit
 
 # Clone stable-diffusion-aws-extension
 git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "$branch" --single-branch
@@ -34,25 +33,25 @@ git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch
 # Clone sd-webui-controlnet
 git clone https://github.com/Mikubill/sd-webui-controlnet.git --branch main --single-branch
 # Go to sd-webui-controlnet directory and reset to specific commit
-cd sd-webui-controlnet
+cd sd-webui-controlnet || exit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_CONTROLNET}
 cd ..
 
 # Clone Tiled VAE
 git clone https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111.git --branch main --single-branch
-cd multidiffusion-upscaler-for-automatic1111
+cd multidiffusion-upscaler-for-automatic1111 || exit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_TILEDVAE}
 cd ..
 
 git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg.git --branch master --single-branch
-cd stable-diffusion-webui-rembg
+cd stable-diffusion-webui-rembg || exit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REMBG}
 cd ..
 
 # Clone sd-webui-reactor
 git clone https://github.com/Gourieff/sd-webui-reactor.git --branch main --single-branch
 # Go to reactor directory and reset to specific commit
-cd sd-webui-reactor
+cd sd-webui-reactor || exit
 git reset --hard ${INITIAL_SUPPORT_COMMIT_REACTOR}
 cd ..
 
@@ -96,7 +95,7 @@ if [ -n "$EXTENSIONS" ]; then
 fi
 
 echo "---------------------------------------------------------------------------------"
-echo "creating venv and install packages..."
+echo "build esd..."
 
 cd ../
 

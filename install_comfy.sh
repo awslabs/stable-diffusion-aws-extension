@@ -5,7 +5,6 @@ echo "install comfy..."
 
 branch=main
 
-# if ESD_CODE_BRANCH is dev, then use dev branch
 if [[ $ESD_CODE_BRANCH == "dev" ]]; then
   branch=dev
 fi
@@ -22,7 +21,7 @@ cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
 
 echo "---------------------------------------------------------------------------------"
-echo "creating venv and install packages..."
+echo "build comfy..."
 
 cd ComfyUI || exit 1
 
