@@ -57,89 +57,6 @@ def save_images_locally(response_json, local_folder):
         print(f"Error saving images locally: {e}")
 
 
-def execute_proxy(func):
-    def wrapper(*args, **kwargs):
-        number = server.PromptServer.instance.number
-        executor = args[0]
-        server_use = executor.server
-        prompt = args[1]
-        prompt_id = args[2]
-        extra_data = args[3]
-        payload = {
-            "number": str(number),
-            "prompt": prompt,
-            "prompt_id": prompt_id,
-            "extra_data": extra_data,
-            "endpoint_name": comfy_endpoint,
-            "need_prepare": comfy_need_prepare,
-            "need_sync": comfy_need_sync,
-        }
-
-        def send_post_request(url, params):
-            response = requests.post(url, json=params, headers=headers)
-            return response
-
-        def send_get_request(url):
-            response = requests.get(url, headers=headers)
-            return response
-
-        def send_execute(url, params):
-            response = send_post_request(url, params=params)
-            images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-            save_files(images_response.json(), 'temp_files', 'temp')
-            save_files(images_response.json(), 'output_files', 'output')
-            return response
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            already_synced = False
-            execute_future = executor.submit(send_execute, f"{api_url}/executes", payload)
-
-            while comfy_need_sync and not execute_future.done():
-                msg_future = executor.submit(send_get_request,
-                                             f"{api_url}/sync/{prompt_id}")
-                done, _ = concurrent.futures.wait([execute_future, msg_future],
-                                                  return_when=concurrent.futures.FIRST_COMPLETED)
-
-                for future in done:
-                    if future == execute_future:
-                        execute_resp = future.result()
-                        if execute_resp.status_code == 200:
-                            break
-                        print(execute_resp)
-                    elif future == msg_future:
-                        msg_response = future.result()
-                        print(msg_response)
-                        if msg_response.status_code == 200:
-                            if 'data' not in msg_response.json() or not msg_response.json().get("data"):
-                                continue
-                            already_synced = True
-                            msg_array = msg_response.json().get("data")[0]
-                            print(msg_array)
-                            for msg in msg_array:
-                                event = msg[0].get('event')
-                                data = msg[0].get('data')
-                                sid = msg[0].get('sid') if 'sid' in msg else None
-                                server_use.send_sync(event, data, sid)
-
-            while comfy_need_sync and not already_synced:
-                msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
-                print(msg_response)
-                already_synced = True
-                if msg_response.status_code == 200:
-                    if 'data' not in msg_response.json() or not msg_response.json().get("data"):
-                        continue
-                    already_synced = True
-                    msg_array = msg_response.json().get("data")[0]
-                    print(msg_array)
-                    for msg in msg_array:
-                        event = msg[0].get('event')
-                        data = msg[0].get('data')
-                        sid = msg[0].get('sid') if 'sid' in msg else None
-                        server_use.send_sync(event, data, sid)
-
-    return wrapper
-
-
 def save_files(execute, key, target_dir):
     if key in execute['data']:
         temp_files = execute['data'][key]
@@ -160,7 +77,101 @@ def get_file_name(url: str):
     return file_name
 
 
+def handle_sync_messages(server_use, msg_array):
+    for msg in msg_array:
+        event = msg[0].get('event')
+        data = msg[0].get('data')
+        sid = msg[0].get('sid') if 'sid' in msg else None
+        server_use.send_sync(event, data, sid)
+
+
+def execute_proxy(func):
+    def wrapper(*args, **kwargs):
+        executor = args[0]
+        server_use = executor.server
+        prompt = args[1]
+        prompt_id = args[2]
+        extra_data = args[3]
+
+        payload = {
+            "number": str(server.PromptServer.instance.number),
+            "prompt": prompt,
+            "prompt_id": prompt_id,
+            "extra_data": extra_data,
+            "endpoint_name": comfy_endpoint,
+            "need_prepare": comfy_need_prepare,
+            "need_sync": comfy_need_sync,
+        }
+
+        def send_post_request(url, params):
+            response = requests.post(url, json=params, headers=headers)
+            return response
+
+        def send_get_request(url):
+            response = requests.get(url, headers=headers)
+            return response
+
+        already_synced = False
+        save_already = False
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            execute_future = executor.submit(send_post_request, f"{api_url}/executes", payload)
+
+            while comfy_need_sync and not execute_future.done():
+                msg_future = executor.submit(send_get_request,
+                                             f"{api_url}/sync/{prompt_id}")
+                done, _ = concurrent.futures.wait([execute_future, msg_future],
+                                                  return_when=concurrent.futures.FIRST_COMPLETED)
+                for future in done:
+                    if future == execute_future:
+                        execute_resp = future.result()
+                        if execute_resp.status_code == 200:
+                            images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
+                            save_files(images_response.json(), 'temp_files', 'temp')
+                            save_files(images_response.json(), 'output_files', 'output')
+                            print(images_response.json())
+                            save_already = True
+                            break
+                        print(execute_resp.json())
+                    elif future == msg_future:
+                        msg_response = future.result()
+                        print(msg_response.json())
+                        if msg_response.status_code == 200:
+                            if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                                continue
+                            already_synced = True
+                            handle_sync_messages(server_use, msg_response.json().get("data")[0])
+
+            while comfy_need_sync and not already_synced:
+                msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
+                print(msg_response.json())
+                already_synced = True
+                if msg_response.status_code == 200:
+                    if 'data' not in msg_response.json() or not msg_response.json().get("data"):
+                        continue
+                    already_synced = True
+                    handle_sync_messages(server_use, msg_response.json().get("data")[0])
+
+            if not save_already:
+                execute_resp = execute_future.result()
+                if execute_resp.status_code == 200:
+                    images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
+                    save_files(images_response.json(), 'temp_files', 'temp')
+                    save_files(images_response.json(), 'output_files', 'output')
+
+    return wrapper
+
+
 PromptExecutor.execute = execute_proxy(PromptExecutor.execute)
+
+
+def send_sync_proxy(func):
+    def wrapper(*args, **kwargs):
+        print(f"Sending sync request!!!!!!! {args}")
+        return func(*args, **kwargs)
+    return wrapper
+
+
+server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
 
 @server.PromptServer.instance.routes.post("/sync_outputs")
