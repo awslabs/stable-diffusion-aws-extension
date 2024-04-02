@@ -186,7 +186,7 @@ export class PrepareApi {
           },
           prepare_type: {
             type: JsonSchemaType.STRING,
-            enum: ['default', 'inputs', 'nodes', 'models', 'custom'],
+            enum: ['default', 'inputs', 'nodes', 'models', 'custom', 'other'],
           },
           need_reboot: {
             type: JsonSchemaType.BOOLEAN,

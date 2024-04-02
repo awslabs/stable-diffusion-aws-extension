@@ -79,6 +79,7 @@ class ComfyApp:
         #     self.start()
         # else:
         #     logger.info("Comfy app process is not running.")
+        logger.info("Comfy app process is going to restart")
         if self.process and self.process.poll() is None:
             os.environ['ALREADY_INIT'] = 'false'
             self.process.terminate()
