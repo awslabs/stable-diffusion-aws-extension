@@ -79,6 +79,7 @@ def handler(raw_event, context):
             base_key=new_dataset_info.get_s3_key(),
             filenames=event.get_filenames()
         )
+
         dataset = []
         for f in event.content:
             params = f.params
@@ -96,8 +97,16 @@ def handler(raw_event, context):
                 allowed_roles_or_users=user_roles
             ).__dict__)
 
+            if len(dataset) > 20:
+                ddb_service.batch_put_items({dataset_item_table: dataset})
+                dataset = []
+
+        if len(dataset) > 0:
+            ddb_service.batch_put_items({dataset_item_table: dataset})
+
+        logger.info(f"dataset_info: {new_dataset_info.__dict__}")
+
         ddb_service.batch_put_items({
-            dataset_item_table: dataset,
             dataset_info_table: [new_dataset_info.__dict__]
         })
 
