@@ -9,12 +9,16 @@ if [[ $ESD_CODE_BRANCH == "dev" ]]; then
   branch=dev
 fi
 
-export INITIAL_COMFY_COMMIT_ROOT=bef51aed032c0aaa5cfd80445bc4cf0d85b408b5
+export INITIAL_COMFY_COMMIT_ROOT=e6482fbbfc83cd25add0532b2e4c51d305e8a232
 
 rm -rf ComfyUI
 rm -rf stable-diffusion-aws-extension
 
 git clone https://github.com/comfyanonymous/ComfyUI.git
+cd ComfyUI || exit 1
+git reset --hard ${INITIAL_COMFY_COMMIT_ROOT}
+cd ../
+
 git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "$branch" --single-branch
 
 cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
