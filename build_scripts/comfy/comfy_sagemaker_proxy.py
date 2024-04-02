@@ -224,7 +224,9 @@ async def invocations(request):
         if "client_id" in json_data and json_data["client_id"]:
             extra_data["client_id"] = json_data["client_id"]
             client_id = json_data["client_id"]
+
         server_instance.client_id = client_id
+
         prompt_id = json_data['prompt_id']
         server_instance.last_prompt_id = prompt_id
         e = execution.PromptExecutor(server_instance)
