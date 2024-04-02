@@ -435,7 +435,7 @@ execution.validate_prompt = validate_prompt_proxy(execution.validate_prompt)
 
 def send_sync_proxy(func):
     def wrapper(*args, **kwargs):
-        print(f"Sending sync request!!!!!!! {args}")
+        logger.info(f"Sending sync request!!!!!!! {args}")
         global need_sync
         global prompt_id
         logger.info(f"send_sync_proxy start... {need_sync},{prompt_id} {args}")
