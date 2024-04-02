@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import sys
 import tarfile
 import time
 from dataclasses import dataclass
@@ -108,14 +109,6 @@ async def prepare_comfy_env(sync_item: dict):
         return False
 
 
-# def create_tar_gz(source_file, target_tar_gz):
-#     # Example usage:
-#     # source_file_path = "/path/to/your/source/file.txt"
-#     # target_tar_gz_path = "/path/to/your/target/file.tar.gz"
-#     with tarfile.open(target_tar_gz, "w:gz") as tar:
-#         tar.add(source_file, arcname=os.path.basename(source_file))
-
-
 def sync_s3_files_or_folders_to_local(s3_path, local_path, need_un_tar):
     logger.info("sync_s3_models_or_inputs_to_local start")
     # s5cmd_command = f'{ROOT_PATH}/tools/s5cmd sync "s3://{bucket_name}/{s3_path}/*" "{local_path}/"'
@@ -176,14 +169,6 @@ def sync_local_outputs_to_base64(local_path):
 
 @server.PromptServer.instance.routes.post("/invocations")
 async def invocations(request):
-    # response_body = {
-    #     "prompt_id": '11111111-1111-1111',
-    #     "instance_id": GEN_INSTANCE_ID,
-    #     "status": "success",
-    #     "output_path": f's3://{BUCKET}/comfy/output/11111111-1111-1111',
-    #     "temp_path": f's3://{BUCKET}/comfy/temp/11111111-1111-1111',
-    # }
-    # return ok(response_body)
     # TODO serve 级别加锁
     json_data = await request.json()
     logger.info(f"invocations start json_data:{json_data}")
@@ -348,6 +333,22 @@ def sync_instance_monitor_status(need_save: bool):
         logger.info(f"sync_instance_monitor_status error :{e}")
 
 
+@server.PromptServer.instance.routes.get("/reboot")
+def restart(self):
+    logger.info("start to reboot!!!!!!!!")
+    need_reboot = os.environ.get('NEED_REBOOT')
+    if need_reboot and need_reboot.lower() != 'true':
+        logger.info("no need to reboot")
+        return {"message": "no need to reboot"}
+    logger.info("rebooting !!!!!!!!")
+    try:
+        sys.stdout.close_log()
+    except Exception as e:
+        logger.info(f"error reboot!!!!!!!! {e}")
+        pass
+    return os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
 # must be sync invoke and use the env to check
 @server.PromptServer.instance.routes.post("/sync_instance")
 async def sync_instance(request):
@@ -379,9 +380,7 @@ async def sync_instance(request):
                 and os.environ.get('LAST_SYNC_REQUEST_TIME') == str(last_sync_record['request_time'])):
             logger.info("last sync record already sync by os check")
             sync_instance_monitor_status(False)
-            need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
-                                   and str(last_sync_record['need_reboot']).lower() == 'true') else False
-            resp = {"status": "success", "message": "no sync env", "need_reboot": need_reboot}
+            resp = {"status": "success", "message": "no sync env"}
             os.environ['ALREADY_SYNC'] = 'true'
             return ok(resp)
 
@@ -402,9 +401,7 @@ async def sync_instance(request):
                     and instance_monitor_record['sync_status'] == 'success'):
                 logger.info("last sync record already sync")
                 sync_instance_monitor_status(False)
-                need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
-                                       and str(last_sync_record['need_reboot']).lower() == 'true') else False
-                resp = {"status": "success", "message": "no sync ddb", "need_reboot": need_reboot}
+                resp = {"status": "success", "message": "no sync ddb"}
                 os.environ['ALREADY_SYNC'] = 'true'
                 return ok(resp)
 
@@ -419,9 +416,7 @@ async def sync_instance(request):
             logger.info("should update prepare instance_monitor_record")
             update_sync_instance_monitor(instance_monitor_record)
         os.environ['ALREADY_SYNC'] = 'true'
-        need_reboot = True if ('need_reboot' in last_sync_record and last_sync_record['need_reboot']
-                               and str(last_sync_record['need_reboot']).lower() == 'true') else False
-        resp = {"status": "success", "message": "sync", "need_reboot": need_reboot}
+        resp = {"status": "success", "message": "sync"}
         return ok(resp)
     except Exception as e:
         logger.info("exception occurred", e)

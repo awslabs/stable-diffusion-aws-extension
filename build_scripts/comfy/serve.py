@@ -98,16 +98,11 @@ def check_and_reboot():
             logger.info("start check_and_reboot! checking function-------")
             response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
             logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
-            print(f"sync response:{response.json()} time : {datetime.datetime.now()}")
-            need_reboot = os.environ.get('NEED_REBOOT')
-            print(f'need_reboot value check: {need_reboot} ！')
-            # for key, value in os.environ.items():
-            #     logger.info(f"{key}: {value}")
+            need_reboot = response.json().get('need_reboot')
+            logger.info(f'need_reboot value check: {need_reboot} ！')
             if need_reboot and need_reboot.lower() == 'true':
-                os.environ['NEED_REBOOT'] = 'false'
-                logger.info(f'need_reboot, reboot  start!')
-                comfy_app.restart()
-                logger.info(f'need_reboot, reboot  finished!')
+                response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
+                logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")

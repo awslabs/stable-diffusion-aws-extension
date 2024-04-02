@@ -57,7 +57,7 @@ def save_images_locally(response_json, local_folder):
         print(f"Error saving images locally: {e}")
 
 
-def save_files(execute, key, target_dir):
+def save_files(prefix, execute, key, target_dir):
     if key in execute['data']:
         temp_files = execute['data'][key]
         for url in temp_files:
@@ -67,7 +67,7 @@ def save_files(execute, key, target_dir):
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
             print(f"Saving file {loca_file} to {target_dir}")
-            with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+            with open(f"./{target_dir}/{prefix}_{loca_file}", 'wb') as f:
                 f.write(response.content)
 
 
@@ -126,8 +126,8 @@ def execute_proxy(func):
                         execute_resp = future.result()
                         if execute_resp.status_code == 200:
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                            save_files(images_response.json(), 'temp_files', 'temp')
-                            save_files(images_response.json(), 'output_files', 'output')
+                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp')
+                            save_files(prompt_id, images_response.json(), 'output_files', 'output')
                             print(images_response.json())
                             save_already = True
                             break
@@ -155,8 +155,8 @@ def execute_proxy(func):
                 execute_resp = execute_future.result()
                 if execute_resp.status_code == 200:
                     images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                    save_files(images_response.json(), 'temp_files', 'temp')
-                    save_files(images_response.json(), 'output_files', 'output')
+                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp')
+                    save_files(prompt_id, images_response.json(), 'output_files', 'output')
 
     return wrapper
 
@@ -173,32 +173,3 @@ def send_sync_proxy(func):
 
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
 
-
-@server.PromptServer.instance.routes.post("/sync_outputs")
-async def invocations(request):
-    json_data = await request.json()
-    print(json_data)
-    prompt_id = json_data["prompt_id"]
-    image_data = json_data.get('image_video_data', {})
-    folder_path = f'{folder_paths.output_directory}/{prompt_id}'
-    os.makedirs(folder_path, exist_ok=True)
-
-    for image_name, encoded_image in image_data.items():
-        image_path = os.path.join(folder_path, image_name)
-        decoded_image = base64.b64decode(encoded_image)
-        with open(image_path, 'wb') as image_file:
-            print(f"saved image{decoded_image} to", image_path)
-            image_file.write(decoded_image)
-
-    return web.Response(status=200)
-
-
-@server.PromptServer.instance.routes.post("/send_sync")
-async def invocations(request):
-    json_data = await request.json()
-    print(json_data)
-    event = json_data['event']
-    data = json_data['data']
-    sid = json_data['sid']
-    server.PromptServer.instance.send_sync(event, data, sid)
-    return web.Response(status=200)
