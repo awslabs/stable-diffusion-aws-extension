@@ -162,6 +162,13 @@ Resources:
           #!/bin/bash
           set -euxo pipefail
           
+          mkdir -p ~/.aws
+          echo "[default]
+          region = ${AWS::Region}" > ~/.aws/config
+          
+          echo "export ESD_CODE_BRANCH=${Branch}" >> /etc/environment
+          source /etc/environment
+          
           sudo apt-get update
           
           sudo apt install nginx -y
@@ -177,8 +184,7 @@ Resources:
           
           cd /home/ubuntu
           
-          export ESD_CODE_BRANCH=${Branch}
-          curl -sSL https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/${Branch}/install.sh | bash
+          curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_sd.sh" | bash;
           
           cd stable-diffusion-webui/extensions
           git clone https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper.git
