@@ -216,11 +216,15 @@ async def invocations(request):
                     "message": "the environment is not ready valid[0] is false, need to resync"}
             return error(resp)
         extra_data = {}
+        client_id = ''
         if "extra_data" in json_data:
             extra_data = json_data["extra_data"]
-        if "client_id" in json_data:
+            if 'client_id' in extra_data and extra_data['client_id']:
+                client_id = extra_data['client_id']
+        if "client_id" in json_data and json_data["client_id"]:
             extra_data["client_id"] = json_data["client_id"]
-
+            client_id = json_data["client_id"]
+        server_instance.client_id = client_id
         prompt_id = json_data['prompt_id']
         server_instance.last_prompt_id = prompt_id
         e = execution.PromptExecutor(server_instance)
