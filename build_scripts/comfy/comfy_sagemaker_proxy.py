@@ -11,6 +11,7 @@ from typing import Optional
 import boto3
 import execution
 import server
+import folder_paths
 from aiohttp import web
 from boto3.dynamodb.conditions import Key
 
@@ -466,3 +467,18 @@ def send_sync_proxy(func):
 
 
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
+
+
+def get_save_imge_path_proxy(func):
+    def wrapper(*args, **kwargs):
+        logger.info(f"get_save_imge_path_proxy args : {args} kwargs : {kwargs}")
+        full_output_folder, filename, counter, subfolder, filename_prefix = func(*args, **kwargs)
+        global prompt_id
+        filename_prefix_new = filename_prefix + "_" + str(prompt_id)
+        logger.info(f"get_save_imge_path_proxy filename_prefix new : {filename_prefix_new}")
+        return full_output_folder, filename, counter, subfolder, filename_prefix_new
+
+    return wrapper
+
+
+folder_paths.get_save_image_path = get_save_imge_path_proxy(folder_paths.get_save_image_path)
