@@ -86,7 +86,7 @@ def process_sqs_messages_and_write_to_ddb(prompt_id):
 
 def read_messages_from_dynamodb(prompt_id):
     try:
-        process_sqs_messages_and_write_to_ddb(prompt_id)
+        # process_sqs_messages_and_write_to_ddb(prompt_id)
         response = ddb.query(
             TableName=msg_table_name,
             KeyConditionExpression='prompt_id = :pid',
