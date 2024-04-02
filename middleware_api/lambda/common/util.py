@@ -170,12 +170,10 @@ def generate_presigned_url_for_keys(prefix, keys, expiration=3600):
 
 @tracer.capture_method
 def generate_presigned_url_for_job(job):
-    resp = {}
     if 'output_path' in job and 'output_files' in job:
-        resp['output_files'] = generate_presigned_url_for_keys(job['output_path'], job['output_files'])
+        job['output_files'] = generate_presigned_url_for_keys(job['output_path'], job['output_files'])
 
     if 'temp_path' in job and 'temp_files' in job:
-        resp['temp_files'] = generate_presigned_url_for_keys(job['temp_path'], job['temp_files'])
+        job['temp_files'] = generate_presigned_url_for_keys(job['temp_path'], job['temp_files'])
 
-    resp['status'] = job['status']
-    return resp
+    return job
