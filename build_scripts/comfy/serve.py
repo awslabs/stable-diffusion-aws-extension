@@ -90,19 +90,28 @@ class ComfyApp:
 # def start_comfy_app(host=LOCALHOST, port=COMFY_PORT):
 #     cmd = "python main.py  --listen {} --port {}".format(host, port)
 #     os.system(cmd)
-def check_and_reboot():
-    logger.info("start check_and_reboot!")
+def check_sync():
+    logger.info("start check_sync!")
     while True:
-        print("start check_and_reboot! checking server-------")
         try:
-            logger.info("start check_and_reboot! checking function-------")
+            logger.info("start check_sync! checking function-------")
             response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
             logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
             need_reboot = response.json().get('need_reboot')
             logger.info(f'need_reboot value check: {need_reboot} ！')
-            if need_reboot and need_reboot.lower() == 'true':
-                response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
-                logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
+            time.sleep(SLEEP_TIME)
+        except Exception as e:
+            logger.info(f"check_and_reboot error:{e}")
+            time.sleep(SLEEP_TIME)
+
+
+def check_reboot():
+    logger.info("start check_reboot!")
+    while True:
+        try:
+            logger.info("start check_reboot! checking function-------")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
+            logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
@@ -116,13 +125,16 @@ if __name__ == "__main__":
     comfy_app = ComfyApp()
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
 
-    check_thread = threading.Thread(target=check_and_reboot)
+    check_sync_thread = threading.Thread(target=check_sync)
+    check_reboot_thread = threading.Thread(target=check_reboot)
 
     comfy_app.start()
     api_process.start()
-    check_thread.start()
+    check_sync_thread.start()
+    check_reboot_thread.start()
 
     api_process.join()
-    check_thread.join()
+    check_sync_thread.join()
+    check_reboot_thread.join()
 
 
