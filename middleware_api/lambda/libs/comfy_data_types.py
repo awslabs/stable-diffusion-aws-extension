@@ -43,9 +43,9 @@ class ComfyExecuteTable:
     status: str
     # prompt: str number: Optional[int] front: Optional[str] extra_data: Optional[str] client_id: Optional[str]
     prompt_params: dict[str, Any]
-    instance_id: Optional[str]
     prompt_path: Optional[str]
     create_time: str
+    instance_id: Optional[str] = None
     start_time: Optional[Any] = None
     complete_time: Optional[Any] = None
     sagemaker_raw: Optional[Any] = None

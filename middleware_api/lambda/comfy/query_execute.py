@@ -51,19 +51,19 @@ def handler(event, ctx):
 
         new_list = []
         for item in items:
-            job = generate_presigned_url_for_job(item)
+            job = ComfyExecuteTable(**generate_presigned_url_for_job(item))
             new_list.append({
-                'prompt_id': job['prompt_id'],
-                'endpoint_name': job['endpoint_name'],
-                'status': job['status'],
-                'create_time': job['create_time'],
-                'start_time': job['start_time'],
-                'need_sync': job['need_sync'],
-                'complete_time': job['complete_time'],
-                'output_path': job['output_path'],
-                'output_files': job['output_files'],
-                'temp_path': job['temp_path'],
-                'temp_files': job['temp_files'],
+                'prompt_id': job.prompt_id,
+                'endpoint_name': job.endpoint_name,
+                'status': job.status,
+                'create_time': job.create_time,
+                'start_time': job.start_time,
+                'need_sync': job.need_sync,
+                'complete_time': job.complete_time,
+                'output_path': job.output_path,
+                'output_files': job.output_files,
+                'temp_path': job.temp_path,
+                'temp_files': job.temp_files,
             })
 
         data = {
