@@ -53,7 +53,10 @@ def handler(event, context):
         last_evaluated_key = encode_last_key(response.get('LastEvaluatedKey'))
 
         if items is None or len(items) == 0:
-            return ok(data={'trainings': []})
+            return ok(data={
+                'trainings': [],
+                'last_evaluated_key': last_evaluated_key
+            })
 
         requestor_permissions = get_permissions_by_username(ddb_service, user_table, requestor_name)
         requestor_roles = get_user_roles(ddb_service=ddb_service, user_table_name=user_table, username=requestor_name)
