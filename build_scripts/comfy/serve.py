@@ -93,13 +93,14 @@ class ComfyApp:
 def check_and_reboot():
     logger.info("start check_and_reboot!")
     while True:
-        logger.info("start check_and_reboot! checking server-------")
+        print("start check_and_reboot! checking server-------")
         try:
             logger.info("start check_and_reboot! checking function-------")
             response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
-            logger.info(f"sync response:{response} time : {datetime.datetime.now()}")
+            logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
+            print(f"sync response:{response.json()} time : {datetime.datetime.now()}")
             need_reboot = os.environ.get('NEED_REBOOT')
-            logger.info(f'need_reboot value check: {need_reboot} ！')
+            print(f'need_reboot value check: {need_reboot} ！')
             # for key, value in os.environ.items():
             #     logger.info(f"{key}: {value}")
             if need_reboot and need_reboot.lower() == 'true':
