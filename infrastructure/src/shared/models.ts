@@ -1,59 +1,76 @@
 import { JsonSchema, Model, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { MethodResponse } from 'aws-cdk-lib/aws-apigateway/lib/methodresponse';
 import { Construct } from 'constructs';
-import { SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
 
 
 export class ApiModels {
 
-  public static get_400(scope: Construct, restApi: RestApi): Model {
-    if (!this.schema400) {
-      this.schema400 = this.createAPiModel(scope, restApi, SCHEMA_400, '400');
-    }
+  public static schema400: Model;
+  public static schema401: Model;
+  public static schema403: Model;
+  public static schema404: Model;
+  public static schema504: Model;
 
-    return this.schema400;
+  public static methodResponses(model200: Model): MethodResponse[] {
+    return [
+      {
+        statusCode: '200',
+        responseModels: {
+          'application/json': model200,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+      {
+        statusCode: '400',
+        responseModels: {
+          'application/json': this.schema400,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+      {
+        statusCode: '401',
+        responseModels: {
+          'application/json': this.schema401,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+      {
+        statusCode: '403',
+        responseModels: {
+          'application/json': this.schema403,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+      {
+        statusCode: '404',
+        responseModels: {
+          'application/json': this.schema404,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+      {
+        statusCode: '504',
+        responseModels: {
+          'application/json': this.schema504,
+        },
+        responseParameters: {
+          'method.response.header.Access-Control-Allow-Origin': true,
+        },
+      },
+    ];
   }
 
-  public static get_401(scope: Construct, restApi: RestApi): Model {
-    if (!this.schema401) {
-      this.schema401 = this.createAPiModel(scope, restApi, SCHEMA_401, '401');
-    }
-
-    return this.schema401;
-  }
-
-
-  public static get_403(scope: Construct, restApi: RestApi): Model {
-    if (!this.schema403) {
-      this.schema403 = this.createAPiModel(scope, restApi, SCHEMA_403, '403');
-    }
-
-    return this.schema403;
-  }
-
-
-  public static get_404(scope: Construct, restApi: RestApi): Model {
-    if (!this.schema404) {
-      this.schema404 = this.createAPiModel(scope, restApi, SCHEMA_404, '404');
-    }
-
-    return this.schema404;
-  }
-
-  public static get_504(scope: Construct, restApi: RestApi): Model {
-    if (!this.schema504) {
-      this.schema504 = this.createAPiModel(scope, restApi, SCHEMA_504, '504');
-    }
-
-    return this.schema504;
-  }
-
-  private static schema400: Model;
-  private static schema401: Model;
-  private static schema403: Model;
-  private static schema404: Model;
-  private static schema504: Model;
-
-  private static createAPiModel(scope: Construct, restApi: RestApi, schema: JsonSchema, modelName: string) {
+  public static createAPiModel(scope: Construct, restApi: RestApi, schema: JsonSchema, modelName: string) {
     return new Model(scope, `model-${modelName}`, {
       restApi: restApi,
       modelName: modelName,

@@ -4,6 +4,7 @@ import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource }
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface PingApiProps {
@@ -39,17 +40,7 @@ export class PingApi {
       {
         apiKeyRequired: true,
         operationName: 'PingResponse',
-        methodResponses: [
-          {
-            statusCode: '200',
-            responseModels: {
-              'application/json': this.responseModel(),
-            },
-            responseParameters: {
-              'method.response.header.Access-Control-Allow-Origin': true,
-            },
-          },
-        ],
+        methodResponses: ApiModels.methodResponses(this.responseModel()),
       });
   }
 

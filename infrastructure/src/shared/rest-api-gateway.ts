@@ -4,6 +4,7 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { ApiModels } from './models';
+import { SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
 import { ESD_VERSION } from './version';
 
 export class RestApiGateway {
@@ -51,11 +52,11 @@ export class RestApiGateway {
       },
     });
 
-    ApiModels.get_400(this.scope, api);
-    ApiModels.get_401(this.scope, api);
-    ApiModels.get_403(this.scope, api);
-    ApiModels.get_404(this.scope, api);
-    ApiModels.get_504(this.scope, api);
+    ApiModels.schema400 = ApiModels.createAPiModel(this.scope, api, SCHEMA_400, '400');
+    ApiModels.schema401 = ApiModels.createAPiModel(this.scope, api, SCHEMA_401, '401');
+    ApiModels.schema403 = ApiModels.createAPiModel(this.scope, api, SCHEMA_403, '403');
+    ApiModels.schema404 = ApiModels.createAPiModel(this.scope, api, SCHEMA_404, '404');
+    ApiModels.schema504 = ApiModels.createAPiModel(this.scope, api, SCHEMA_504, '504');
 
     // custom error response to return details of validation errors to the client.
     const responseBad = api.addGatewayResponse('BAD_REQUEST_BODY', {
