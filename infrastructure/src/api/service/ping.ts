@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -79,11 +79,72 @@ export class PingApi {
       },
     );
 
+    const responseModel = new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: this.baseId,
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              function_url: {
+                type: JsonSchemaType.STRING,
+                format: 'uri',
+              },
+              log_url: {
+                type: JsonSchemaType.STRING,
+                format: 'uri',
+              },
+              trace_url: {
+                type: JsonSchemaType.STRING,
+                format: 'uri',
+              },
+            },
+            required: [
+              'function_url',
+              'log_url',
+              'trace_url',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['pong'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
+
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
+        operationName: 'ServicePing',
+        methodResponses: [{
+          statusCode: '200',
+          responseModels: {
+            'application/json': responseModel,
+          },
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        }],
       });
 
   }
