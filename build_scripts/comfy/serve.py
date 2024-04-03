@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # check_reboot_thread.start()
 
     api_process.join()
-    check_sync_thread.join()
+    # check_sync_thread.join()
     # check_reboot_thread.join()
 
 
