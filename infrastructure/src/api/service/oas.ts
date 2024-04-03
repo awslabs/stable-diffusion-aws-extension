@@ -55,6 +55,14 @@ export class OasApi {
       resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
     }));
 
+    newRole.addToPolicy(new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: [
+        'apigateway:GET',
+      ],
+      resources: ['*'],
+    }));
+
     return newRole;
   }
 
