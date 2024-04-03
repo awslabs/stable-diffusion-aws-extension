@@ -38,6 +38,7 @@ predictors = {}
 
 @dataclass
 class PrepareProps:
+    need_reboot: Optional[bool] = False
     prepare_type: Optional[str] = "inputs"
     s3_source_path: Optional[str] = None
     local_target_path: Optional[str] = None
