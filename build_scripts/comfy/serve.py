@@ -22,7 +22,7 @@ SLEEP_TIME = 30
 app = FastAPI()
 
 logger = logging.getLogger(__name__)
-logger.setLevel(os.environ.get('LOG_LEVEL') or logging.INFO)
+logger.setLevel(logging.INFO)
 
 
 async def invocations(request: Request):
