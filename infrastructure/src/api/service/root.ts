@@ -1,28 +1,28 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 
-export interface OasAPiProps {
-  router: Resource;
+export interface RootAPIProps {
   httpMethod: string;
   commonLayer: LayerVersion;
+  restApi: RestApi;
 }
 
-export class OasApi {
-  private readonly router: Resource;
+export class RootAPI {
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly layer: LayerVersion;
+  private readonly restApi: RestApi;
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: OasAPiProps) {
+  constructor(scope: Construct, id: string, props: RootAPIProps) {
     this.scope = scope;
     this.baseId = id;
-    this.router = props.router;
+    this.restApi = props.restApi;
     this.httpMethod = props.httpMethod;
     this.layer = props.commonLayer;
 
@@ -30,9 +30,9 @@ export class OasApi {
 
     const lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
 
-    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+    this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      operationName: 'GetApiOAS',
+      operationName: 'RootAPI',
       methodResponses: [
         ApiModels.methodResponses403(),
       ],
@@ -59,14 +59,6 @@ export class OasApi {
       resources: [`arn:${Aws.PARTITION}:logs:${Aws.REGION}:${Aws.ACCOUNT_ID}:log-group:*:*`],
     }));
 
-    newRole.addToPolicy(new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'apigateway:GET',
-      ],
-      resources: ['*'],
-    }));
-
     return newRole;
   }
 
@@ -77,7 +69,7 @@ export class OasApi {
         entry: '../middleware_api/service',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
-        index: 'oas.py',
+        index: 'root.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),

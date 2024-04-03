@@ -19,7 +19,6 @@ export interface CreateCheckPointApiProps {
 }
 
 export class CreateCheckPointApi {
-  public requestValidator: RequestValidator;
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   public router: aws_apigateway.Resource;
   private readonly httpMethod: string;
@@ -42,7 +41,6 @@ export class CreateCheckPointApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.role = this.iamRole();
-    this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
 
     const lambdaFunction = this.apiLambda();
@@ -51,7 +49,7 @@ export class CreateCheckPointApi {
 
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
         'application/json': this.createRequestModel(),
       },

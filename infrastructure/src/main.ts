@@ -18,6 +18,7 @@ import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk
 import { Construct } from 'constructs';
 import { OasApi } from './api/service/oas';
 import { PingApi } from './api/service/ping';
+import { RootAPI } from './api/service/root';
 import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
 import { ComfyDatabase } from './comfy/comfy-database';
@@ -152,6 +153,12 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
+    });
+
+    new RootAPI(this, 'RootApi', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      restApi: restApi.apiGateway,
     });
 
     new OasApi(this, 'ApiDoc', {

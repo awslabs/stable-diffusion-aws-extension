@@ -17,4 +17,6 @@ def handler(event: dict, context: LambdaContext):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {context}')
 
-    return ok(message='pong')
+    data = os.environ.items()
+
+    return ok(data=data)
