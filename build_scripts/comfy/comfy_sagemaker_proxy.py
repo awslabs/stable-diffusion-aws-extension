@@ -350,8 +350,8 @@ def sync_instance_monitor_status(need_save: bool):
         logger.info(f"sync_instance_monitor_status error :{e}")
 
 
-@server.PromptServer.instance.routes.get("/reboot")
-def restart(self):
+@server.PromptServer.instance.routes.post("/reboot")
+async def restart(self):
     logger.info(f"start to reboot!!!!!!!! {self}")
     global executing
     if executing is True:

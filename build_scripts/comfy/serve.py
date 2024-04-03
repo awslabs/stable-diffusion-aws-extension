@@ -36,11 +36,6 @@ async def invocations(request: Request):
 
 
 def ping():
-    try:
-        response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
-        logger.info(f"reboot request response:{response}")
-    except Exception as e:
-        logger.error(f"error posting reboot request: {e}")
     init_already = os.environ.get('ALREADY_INIT')
     if init_already and init_already.lower() == 'false':
         raise HTTPException(status_code=500)
@@ -104,7 +99,7 @@ def check_sync():
             # logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
 
             # logger.info("start check_reboot! checking function-------")
-            # response2 = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
+            response2 = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
             # logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
