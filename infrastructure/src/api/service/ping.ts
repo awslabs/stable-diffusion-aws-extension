@@ -97,14 +97,17 @@ export class PingApi {
               function_url: {
                 type: JsonSchemaType.STRING,
                 format: 'uri',
+                description: 'URL to Lambda Function',
               },
               log_url: {
                 type: JsonSchemaType.STRING,
                 format: 'uri',
+                description: 'URL to CloudWatch Logs',
               },
               trace_url: {
                 type: JsonSchemaType.STRING,
                 format: 'uri',
+                description: 'URL to X-Ray Trace',
               },
             },
             required: [

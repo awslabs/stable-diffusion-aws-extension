@@ -175,6 +175,7 @@ export class CreateCheckPointApi {
         properties: {
           checkpoint_type: {
             type: JsonSchemaType.STRING,
+            description: 'Type of checkpoint',
             enum: [
               'Stable-diffusion',
               'embeddings',

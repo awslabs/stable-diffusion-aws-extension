@@ -88,6 +88,7 @@ export class CreateRoleApi {
           role_name: {
             type: JsonSchemaType.STRING,
             minLength: 1,
+            description: 'Role name',
           },
           permissions: {
             type: JsonSchemaType.ARRAY,
@@ -97,6 +98,7 @@ export class CreateRoleApi {
             },
             minItems: 1,
             maxItems: 20,
+            description: 'List of permissions',
           },
         },
         required: [
