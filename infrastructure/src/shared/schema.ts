@@ -70,7 +70,6 @@ export const SCHEMA_401: JsonSchema = {
         401,
       ],
     },
-    requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
     message: {
       type: JsonSchemaType.STRING,
@@ -79,7 +78,6 @@ export const SCHEMA_401: JsonSchema = {
   },
   required: [
     'statusCode',
-    'requestId',
     'debug',
     'message',
   ],
