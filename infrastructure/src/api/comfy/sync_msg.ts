@@ -13,7 +13,6 @@ import { ApiModels } from '../../shared/models';
 export interface SyncMsgApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   msgTable: aws_dynamodb.Table;
@@ -24,7 +23,6 @@ export interface SyncMsgApiProps {
 
 export class SyncMsgApi {
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -33,24 +31,43 @@ export class SyncMsgApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly msgTable: aws_dynamodb.Table;
   private readonly queue: aws_sqs.Queue;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: SyncMsgApiProps) {
     this.scope = scope;
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.msgTable = props.msgTable;
     this.layer = props.commonLayer;
     this.queue = props.queue;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.syncMSGApi();
+    const lambdaFunction = this.apiLambda();
+
+    const syncMsgEventSource = new SqsEventSource(this.queue);
+    lambdaFunction.addEventSource(syncMsgEventSource);
+
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createModel(),
+      },
+      operationName: 'SyncMsg',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -120,7 +137,7 @@ export class SyncMsgApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'sync_msg.py',
@@ -135,34 +152,6 @@ export class SyncMsgApi {
         SQS_URL: this.queue.queueUrl,
       },
       layers: [this.layer],
-    });
-  }
-
-  private syncMSGApi() {
-    const lambdaFunction = this.apiLambda();
-
-    const syncMsgEventSource = new SqsEventSource(this.queue);
-    lambdaFunction.addEventSource(syncMsgEventSource);
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-      operationName: 'SyncMsg',
-      methodResponses: [
-        ApiModels.methodResponses400(),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-      ],
     });
   }
 

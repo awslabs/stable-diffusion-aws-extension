@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -12,15 +11,11 @@ export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
 }
 
 export class CreateUserApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -35,13 +30,33 @@ export class CreateUserApi {
     this.baseId = id;
     this.passwordKey = props.passwordKey;
     this.router = props.router;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.upsertUserApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createModel(),
+      },
+      operationName: 'CreateUser',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -154,7 +169,7 @@ export class CreateUserApi {
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {
-            type:  JsonSchemaType.INTEGER,
+            type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
           message: {
@@ -171,9 +186,9 @@ export class CreateUserApi {
     });
   }
 
-  private upsertUserApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/users`,
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: '../middleware_api/users',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_user.py',
@@ -187,29 +202,7 @@ export class CreateUserApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-      operationName: 'CreateUser',
-      methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '201'),
-        ApiModels.methodResponses400(),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
-      ],
-    });
   }
+
 }
 

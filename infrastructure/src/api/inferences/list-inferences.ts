@@ -15,12 +15,10 @@ export interface ListInferencesApiProps {
   endpointDeploymentTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
   inferenceJobTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
 }
 
 export class ListInferencesApi {
-  private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -39,7 +37,6 @@ export class ListInferencesApi {
     this.multiUserTable = props.multiUserTable;
     this.inferenceJobTable = props.inferenceJobTable;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction =this.apiLambda();
@@ -291,7 +288,7 @@ export class ListInferencesApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/inferences`,
+      entry: '../middleware_api/inferences',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'list_inferences.py',

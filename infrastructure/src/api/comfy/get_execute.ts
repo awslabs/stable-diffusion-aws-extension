@@ -13,7 +13,6 @@ import { SCHEMA_DEBUG } from '../../shared/schema';
 export interface GetExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
@@ -24,7 +23,6 @@ export interface GetExecuteApiProps {
 export class GetExecuteApi {
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -38,7 +36,6 @@ export class GetExecuteApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
@@ -57,7 +54,7 @@ export class GetExecuteApi {
       apiKeyRequired: true,
       operationName: 'GetExecute',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
@@ -160,7 +157,7 @@ export class GetExecuteApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'get_execute.py',

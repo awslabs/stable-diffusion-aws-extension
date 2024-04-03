@@ -20,15 +20,11 @@ export interface DeleteTrainingJobsApiProps {
   httpMethod: string;
   trainingTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteTrainingJobsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -45,11 +41,8 @@ export class DeleteTrainingJobsApi {
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -63,9 +56,9 @@ export class DeleteTrainingJobsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createModel(),
         },
         operationName: 'DeleteTrainings',
         methodResponses: [
@@ -123,7 +116,7 @@ export class DeleteTrainingJobsApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/trainings`,
+        entry: '../middleware_api/trainings',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_training_jobs.py',

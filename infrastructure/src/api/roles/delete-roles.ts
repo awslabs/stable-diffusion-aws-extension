@@ -18,14 +18,10 @@ export interface DeleteRolesApiProps {
   router: Resource;
   httpMethod: string;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class DeleteRolesApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -39,10 +35,7 @@ export class DeleteRolesApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -58,9 +51,9 @@ export class DeleteRolesApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createModel(),
         },
         operationName: 'DeleteRoles',
         methodResponses: [
@@ -157,7 +150,7 @@ export class DeleteRolesApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/roles`,
+        entry: '../middleware_api/roles',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_roles.py',

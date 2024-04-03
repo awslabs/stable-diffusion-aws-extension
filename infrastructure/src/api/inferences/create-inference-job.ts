@@ -14,7 +14,6 @@ export interface CreateInferenceJobApiProps {
   httpMethod: string;
   endpointDeploymentTable: aws_dynamodb.Table;
   inferenceJobTable: aws_dynamodb.Table;
-  srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
@@ -23,11 +22,8 @@ export interface CreateInferenceJobApiProps {
 
 export class CreateInferenceJobApi {
 
-  public model: Model;
-  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
-  private readonly srcRoot: string;
   private readonly endpointDeploymentTable: aws_dynamodb.Table;
   private readonly inferenceJobTable: aws_dynamodb.Table;
   private readonly layer: aws_lambda.LayerVersion;
@@ -40,7 +36,6 @@ export class CreateInferenceJobApi {
   constructor(scope: Construct, id: string, props: CreateInferenceJobApiProps) {
     this.id = id;
     this.scope = scope;
-    this.srcRoot = props.srcRoot;
     this.checkpointTable = props.checkpointTable;
     this.multiUserTable = props.multiUserTable;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
@@ -49,8 +44,6 @@ export class CreateInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
     this.router = props.router;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -63,9 +56,9 @@ export class CreateInferenceJobApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createModel(),
       },
       operationName: 'CreateInferenceJob',
       methodResponses: [
@@ -296,7 +289,7 @@ export class CreateInferenceJobApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.id}-lambda`, {
-      entry: `${this.srcRoot}/inferences`,
+      entry: '../middleware_api/inferences',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_inference_job.py',

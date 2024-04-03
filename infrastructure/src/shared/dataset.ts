@@ -18,8 +18,6 @@ export interface DatasetProps extends StackProps {
 }
 
 export class DatasetStack {
-  private readonly srcRoot = '../middleware_api/lambda';
-
 
   constructor(scope: Construct, props: DatasetProps) {
 
@@ -36,7 +34,6 @@ export class DatasetStack {
       httpMethod: 'POST',
       router: routers.datasets,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
     });
 
@@ -49,7 +46,6 @@ export class DatasetStack {
       httpMethod: 'PUT',
       router: routers.datasets,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     });
 
     // GET /datasets
@@ -58,7 +54,6 @@ export class DatasetStack {
       datasetInfoTable: props.database.datasetInfoTable,
       httpMethod: 'GET',
       router: routers.datasets,
-      srcRoot: this.srcRoot,
       multiUserTable: multiUserTable,
     });
 
@@ -71,7 +66,6 @@ export class DatasetStack {
       httpMethod: 'GET',
       router: updateDatasetApi.router,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     });
 
     // DELETE /datasets
@@ -83,7 +77,6 @@ export class DatasetStack {
       multiUserTable: multiUserTable,
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     },
     );
 

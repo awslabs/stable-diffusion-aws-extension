@@ -15,7 +15,6 @@ export interface CreateCheckPointApiProps {
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
@@ -24,7 +23,6 @@ export class CreateCheckPointApi {
   public requestValidator: RequestValidator;
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   public router: aws_apigateway.Resource;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -42,7 +40,6 @@ export class CreateCheckPointApi {
     this.multiUserTable = props.multiUserTable;
     this.baseId = id;
     this.router = props.router;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.role = this.iamRole();
@@ -218,7 +215,7 @@ export class CreateCheckPointApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_checkpoint.py',
@@ -238,7 +235,7 @@ export class CreateCheckPointApi {
   private uploadByUrlLambdaFunction() {
     return new PythonFunction(this.scope, `${this.baseId}-url-lambda`, {
       functionName: `${this.baseId}-create-checkpoint-by-url`,
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint_by_url.py',

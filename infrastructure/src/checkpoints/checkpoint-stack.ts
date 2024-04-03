@@ -18,57 +18,46 @@ export interface CheckpointStackProps extends StackProps {
 }
 
 export class CheckpointStack {
-  private readonly srcRoot = '../middleware_api/lambda';
 
   constructor(scope: Construct, props: CheckpointStackProps) {
 
-    const commonLayer = props.commonLayer;
-    const routers = props.routers;
-
-    const checkPointTable = props.checkpointTable;
-    const multiUserTable = props.multiUserTable;
-
     // GET /checkpoints
     new ListCheckPointsApi(scope, 'ListCheckPoints', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
+      checkpointTable: props.checkpointTable,
+      commonLayer: props.commonLayer,
       httpMethod: 'GET',
-      router: routers.checkpoints,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
+      router: props.routers.checkpoints,
+      multiUserTable: props.multiUserTable,
     });
 
     // POST /checkpoint
     new CreateCheckPointApi(scope, 'CreateCheckPoint', {
-      checkpointTable: checkPointTable,
-      commonLayer: commonLayer,
+      checkpointTable: props.checkpointTable,
+      commonLayer: props.commonLayer,
       httpMethod: 'POST',
-      router: routers.checkpoints,
+      router: props.routers.checkpoints,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
-      multiUserTable: multiUserTable,
+      multiUserTable: props.multiUserTable,
     });
 
     // PUT /checkpoints/{id}
     new UpdateCheckPointApi(scope, 'UpdateCheckPoint', {
-      checkpointTable: checkPointTable,
-      userTable: multiUserTable,
-      commonLayer: commonLayer,
+      checkpointTable: props.checkpointTable,
+      userTable: props.multiUserTable,
+      commonLayer: props.commonLayer,
       httpMethod: 'PUT',
-      router: routers.checkpoints,
+      router: props.routers.checkpoints,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     });
 
     // DELETE /checkpoints
     new DeleteCheckpointsApi(scope, 'DeleteCheckpoints', {
       router: props.routers.checkpoints,
       commonLayer: props.commonLayer,
-      checkPointsTable: checkPointTable,
-      userTable: multiUserTable,
+      checkPointsTable: props.checkpointTable,
+      userTable: props.multiUserTable,
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     },
     );
   }

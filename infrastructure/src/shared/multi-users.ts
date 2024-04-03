@@ -18,7 +18,6 @@ export interface MultiUsersStackProps extends StackProps {
 }
 
 export class MultiUsers {
-  private readonly srcRoot: string = '../middleware_api/lambda';
   private readonly passwordKeyAlias: aws_kms.IKey;
 
   constructor(scope: Construct, props: MultiUsersStackProps) {
@@ -35,7 +34,6 @@ export class MultiUsers {
       httpMethod: 'POST',
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
-      srcRoot: this.srcRoot,
     });
 
     // GET /roles
@@ -44,7 +42,6 @@ export class MultiUsers {
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,
       router: props.routers.roles,
-      srcRoot: this.srcRoot,
     });
 
     // POST /users
@@ -54,7 +51,6 @@ export class MultiUsers {
       multiUserTable: props.multiUserTable,
       passwordKey: this.passwordKeyAlias,
       router: props.routers.users,
-      srcRoot: this.srcRoot,
     });
 
     // DELETE /users
@@ -63,7 +59,6 @@ export class MultiUsers {
       httpMethod: 'DELETE',
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
-      srcRoot: this.srcRoot,
     });
 
     // GET /roles
@@ -72,7 +67,6 @@ export class MultiUsers {
       httpMethod: 'GET',
       multiUserTable: props.multiUserTable,
       router: props.routers.users,
-      srcRoot: this.srcRoot,
       passwordKey: this.passwordKeyAlias,
     });
 
@@ -82,7 +76,6 @@ export class MultiUsers {
       commonLayer: props.commonLayer,
       multiUserTable: props.multiUserTable,
       httpMethod: 'DELETE',
-      srcRoot: this.srcRoot,
     },
     );
 

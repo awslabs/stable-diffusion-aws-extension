@@ -14,13 +14,11 @@ export interface GetInferenceJobApiProps {
   httpMethod: string;
   inferenceJobTable: Table;
   userTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class GetInferenceJobApi {
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -36,7 +34,6 @@ export class GetInferenceJobApi {
     this.router = props.router;
     this.httpMethod = props.httpMethod;
     this.inferenceJobTable = props.inferenceJobTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.userTable = props.userTable;
@@ -242,7 +239,7 @@ export class GetInferenceJobApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/inferences`,
+        entry: '../middleware_api/inferences',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'get_inference_job.py',

@@ -15,13 +15,11 @@ export interface GetDatasetApiProps {
   datasetInfoTable: aws_dynamodb.Table;
   datasetItemsTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class GetDatasetApi {
-  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -40,7 +38,6 @@ export class GetDatasetApi {
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemsTable = props.datasetItemsTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
@@ -58,7 +55,7 @@ export class GetDatasetApi {
         apiKeyRequired: true,
         operationName: 'GetDataset',
         methodResponses: [
-          ApiModels.methodResponse(this.responseModel(), '200'),
+          ApiModels.methodResponse(this.responseModel()),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
           ApiModels.methodResponses404(),
@@ -217,7 +214,7 @@ export class GetDatasetApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/datasets`,
+      entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'get_dataset.py',

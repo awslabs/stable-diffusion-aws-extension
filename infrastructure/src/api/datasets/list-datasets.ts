@@ -14,12 +14,10 @@ export interface ListDatasetsApiProps {
   httpMethod: string;
   datasetInfoTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
 }
 
 export class ListDatasetsApi {
-  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -35,7 +33,6 @@ export class ListDatasetsApi {
     this.httpMethod = props.httpMethod;
     this.datasetInfoTable = props.datasetInfoTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -51,7 +48,7 @@ export class ListDatasetsApi {
       apiKeyRequired: true,
       operationName: 'ListDatasets',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
       ],
@@ -171,7 +168,7 @@ export class ListDatasetsApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/datasets`,
+      entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'list_datasets.py',

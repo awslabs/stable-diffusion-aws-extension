@@ -47,7 +47,6 @@ export class Inference {
   ) {
 
     const inferV2Router = props.routers.inferences.addResource('{id}');
-    const srcRoot = '../middleware_api/lambda';
 
     new CreateInferenceJobApi(
       scope, 'CreateInferenceJob', {
@@ -58,7 +57,6 @@ export class Inference {
         inferenceJobTable: props.sd_inference_job_table,
         router: props.routers.inferences,
         s3Bucket: props.s3_bucket,
-        srcRoot: srcRoot,
         multiUserTable: props.multiUserTable,
       },
     );
@@ -73,7 +71,6 @@ export class Inference {
         inferenceJobTable: props.sd_inference_job_table,
         router: inferV2Router,
         s3Bucket: props.s3_bucket,
-        srcRoot: srcRoot,
       },
     );
 
@@ -86,7 +83,6 @@ export class Inference {
         multiUserTable: props.multiUserTable,
         httpMethod: 'GET',
         router: props.routers.inferences,
-        srcRoot: srcRoot,
       },
     );
 
@@ -140,7 +136,6 @@ export class Inference {
       userTable: props.multiUserTable,
       httpMethod: 'GET',
       s3Bucket: props.s3_bucket,
-      srcRoot: srcRoot,
     },
     );
 
@@ -152,12 +147,11 @@ export class Inference {
         inferenceJobTable: props.sd_inference_job_table,
         httpMethod: 'DELETE',
         s3Bucket: props.s3_bucket,
-        srcRoot: srcRoot,
       },
     );
 
     const handler = new python.PythonFunction(scope, 'InferenceResultNotification', {
-      entry: `${srcRoot}/inferences`,
+      entry: '../middleware_api/inferences',
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'inference_async_events.py',

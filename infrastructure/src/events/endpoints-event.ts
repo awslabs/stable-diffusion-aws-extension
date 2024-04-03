@@ -10,12 +10,10 @@ import { Construct } from 'constructs';
 export interface SagemakerEndpointEventsProps {
   endpointDeploymentTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class SagemakerEndpointEvents {
-  private readonly src: string;
   private readonly scope: Construct;
   private readonly endpointDeploymentTable: Table;
   private readonly multiUserTable: Table;
@@ -27,7 +25,6 @@ export class SagemakerEndpointEvents {
     this.baseId = id;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     this.createEndpointEventBridge();
@@ -86,7 +83,7 @@ export class SagemakerEndpointEvents {
   private createEndpointEventBridge() {
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/endpoints`,
+      entry: '../middleware_api/endpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'endpoint_event.py',

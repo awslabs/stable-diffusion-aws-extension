@@ -13,12 +13,10 @@ export interface CreateRoleApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
 }
 
 export class CreateRoleApi {
-  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -31,7 +29,6 @@ export class CreateRoleApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
 
@@ -173,7 +170,7 @@ export class CreateRoleApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/roles`,
+      entry: '../middleware_api/roles',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_role.py',

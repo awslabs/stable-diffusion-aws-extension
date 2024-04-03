@@ -21,15 +21,11 @@ export interface DeleteDatasetsApiProps {
   datasetInfoTable: Table;
   datasetItemTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteDatasetsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -48,11 +44,8 @@ export class DeleteDatasetsApi {
     this.datasetInfoTable = props.datasetInfoTable;
     this.datasetItemTable = props.datasetItemTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction =this.apiLambda();
 
@@ -68,9 +61,9 @@ export class DeleteDatasetsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createModel(),
         },
         operationName: 'DeleteDatasets',
         methodResponses: [
@@ -130,7 +123,7 @@ export class DeleteDatasetsApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/datasets`,
+        entry: '../middleware_api/datasets',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_datasets.py',

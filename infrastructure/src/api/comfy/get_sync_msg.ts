@@ -20,7 +20,6 @@ import { ApiModels } from '../../shared/models';
 export interface GetSyncMsgApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   msgTable: aws_dynamodb.Table;
@@ -32,7 +31,6 @@ export interface GetSyncMsgApiProps {
 export class GetSyncMsgApi {
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -47,7 +45,6 @@ export class GetSyncMsgApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.msgTable = props.msgTable;
@@ -79,7 +76,7 @@ export class GetSyncMsgApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'get_sync_msg.py',

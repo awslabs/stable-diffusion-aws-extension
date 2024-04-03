@@ -20,14 +20,12 @@ export interface DeleteCheckpointsApiProps {
   httpMethod: string;
   checkPointsTable: Table;
   userTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteCheckpointsApi {
   public router: Resource;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkPointsTable: Table;
@@ -43,7 +41,6 @@ export class DeleteCheckpointsApi {
     this.httpMethod = props.httpMethod;
     this.checkPointsTable = props.checkPointsTable;
     this.userTable = props.userTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
@@ -116,7 +113,7 @@ export class DeleteCheckpointsApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/checkpoints`,
+        entry: '../middleware_api/checkpoints',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_checkpoints.py',

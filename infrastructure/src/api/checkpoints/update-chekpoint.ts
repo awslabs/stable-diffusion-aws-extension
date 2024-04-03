@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
@@ -14,16 +14,12 @@ export interface UpdateCheckPointApiProps {
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
   userTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class UpdateCheckPointApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
   public router: aws_apigateway.Resource;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -35,7 +31,6 @@ export class UpdateCheckPointApi {
 
   constructor(scope: Construct, id: string, props: UpdateCheckPointApiProps) {
     this.scope = scope;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.baseId = id;
     this.router = props.router;
@@ -44,14 +39,12 @@ export class UpdateCheckPointApi {
     this.userTable = props.userTable;
     this.s3Bucket = props.s3Bucket;
     this.role = this.iamRole();
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const renameLambdaFunction = this.apiRenameLambda();
 
     const lambdaFunction = this.apiLambda(renameLambdaFunction);
 
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -62,9 +55,9 @@ export class UpdateCheckPointApi {
       .addMethod(this.httpMethod, lambdaIntegration,
         {
           apiKeyRequired: true,
-          requestValidator: this.requestValidator,
+          requestValidator: this.createRequestValidator(),
           requestModels: {
-            'application/json': this.model,
+            'application/json': this.createModel(),
           },
           operationName: 'UpdateCheckpoint',
           methodResponses: [
@@ -334,7 +327,7 @@ export class UpdateCheckPointApi {
 
   private apiRenameLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, {
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint_rename.py',
@@ -353,7 +346,7 @@ export class UpdateCheckPointApi {
 
   private apiLambda(renameLambdaFunction: PythonFunction) {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_checkpoint.py',

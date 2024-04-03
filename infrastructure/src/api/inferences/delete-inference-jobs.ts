@@ -20,15 +20,11 @@ export interface DeleteInferenceJobsApiProps {
   httpMethod: string;
   inferenceJobTable: Table;
   userTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class DeleteInferenceJobsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -45,11 +41,8 @@ export class DeleteInferenceJobsApi {
     this.httpMethod = props.httpMethod;
     this.inferenceJobTable = props.inferenceJobTable;
     this.userTable = props.userTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -65,9 +58,9 @@ export class DeleteInferenceJobsApi {
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createModel(),
         },
         operationName: 'DeleteInferenceJobs',
         methodResponses: [
@@ -124,7 +117,7 @@ export class DeleteInferenceJobsApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/inferences`,
+        entry: '../middleware_api/inferences',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'delete_inference_jobs.py',

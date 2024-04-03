@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -13,13 +12,11 @@ export interface ListUsersApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   passwordKey: aws_kms.IKey;
 }
 
 export class ListUsersApi {
-  private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -35,19 +32,18 @@ export class ListUsersApi {
     this.passwordKey = props.passwordKey;
     this.httpMethod = props.httpMethod;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
 
-    const integration = new aws_apigateway.LambdaIntegration(
+    const integration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
       operationName: 'ListUsers',
       methodResponses: [
@@ -188,7 +184,7 @@ export class ListUsersApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/users`,
+      entry: '../middleware_api/users',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'list_users.py',

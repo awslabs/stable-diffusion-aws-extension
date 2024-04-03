@@ -13,14 +13,12 @@ export interface ListCheckPointsApiProps {
   httpMethod: string;
   checkpointTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
 }
 
 export class ListCheckPointsApi {
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   public router: aws_apigateway.Resource;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly checkpointTable: aws_dynamodb.Table;
@@ -35,7 +33,6 @@ export class ListCheckPointsApi {
     this.httpMethod = props.httpMethod;
     this.checkpointTable = props.checkpointTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -203,7 +200,7 @@ export class ListCheckPointsApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/checkpoints`,
+      entry: '../middleware_api/checkpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'list_checkpoints.py',

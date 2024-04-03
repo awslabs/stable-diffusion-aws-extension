@@ -10,12 +10,10 @@ import { SCHEMA_DEBUG } from '../../shared/schema';
 export interface PingApiProps {
   router: Resource;
   httpMethod: string;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class PingApi {
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -27,7 +25,6 @@ export class PingApi {
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -106,7 +103,7 @@ export class PingApi {
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/service`,
+        entry: '../middleware_api/service',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'ping.py',

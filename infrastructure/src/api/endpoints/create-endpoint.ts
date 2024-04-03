@@ -21,7 +21,6 @@ export interface CreateEndpointApiProps {
   multiUserTable: Table;
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   userNotifySNS: Topic;
   inferenceResultTopic: Topic;
@@ -33,9 +32,6 @@ export interface CreateEndpointApiProps {
 }
 
 export class CreateEndpointApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -62,7 +58,6 @@ export class CreateEndpointApi {
     this.multiUserTable = props.multiUserTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.userNotifySNS = props.userNotifySNS;
     this.inferenceResultTopic = props.inferenceResultTopic;
@@ -71,8 +66,6 @@ export class CreateEndpointApi {
     this.executeResultFailTopic = props.executeResultFailTopic;
     this.queue = props.queue;
     this.accountId = props.accountId;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -85,9 +78,9 @@ export class CreateEndpointApi {
 
     this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createModel(),
       },
       operationName: 'CreateEndpoint',
       methodResponses: [
@@ -430,7 +423,7 @@ export class CreateEndpointApi {
   private apiLambda() {
     const role = this.iamRole();
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/endpoints`,
+      entry: '../middleware_api/endpoints',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_endpoint.py',

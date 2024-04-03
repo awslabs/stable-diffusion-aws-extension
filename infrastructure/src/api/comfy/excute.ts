@@ -13,7 +13,6 @@ import { SCHEMA_DEBUG } from '../../shared/schema';
 export interface ExecuteApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   configTable: aws_dynamodb.Table;
   executeTable: aws_dynamodb.Table;
   endpointTable: aws_dynamodb.Table;
@@ -22,7 +21,6 @@ export interface ExecuteApiProps {
 
 export class ExecuteApi {
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -38,7 +36,6 @@ export class ExecuteApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.configTable = props.configTable;
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
@@ -288,7 +285,7 @@ export class ExecuteApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'execute.py',
@@ -304,7 +301,6 @@ export class ExecuteApi {
       },
       layers: [this.layer],
     });
-    ;
   }
 
   private createModel(): Model {

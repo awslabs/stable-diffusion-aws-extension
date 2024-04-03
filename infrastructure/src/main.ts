@@ -158,14 +158,12 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       httpMethod: 'GET',
       router: restApi.routers.api,
-      srcRoot: '../middleware_api/lambda',
     });
 
     new PingApi(this, 'Ping', {
       commonLayer: commonLayers.commonLayer,
       httpMethod: 'GET',
       router: restApi.routers.ping,
-      srcRoot: '../middleware_api/lambda',
     });
 
     const snsTopics = new SnsTopics(this, 'sd-sns', emailParam);
@@ -243,7 +241,7 @@ export class Middleware extends Stack {
     },
     );
 
-    const train = new TrainDeploy(this, {
+    new TrainDeploy(this, {
       commonLayer: commonLayers.commonLayer,
       synthesizer: props.synthesizer,
       database: ddbTables,
@@ -263,7 +261,7 @@ export class Middleware extends Stack {
       logLevel,
     });
 
-    const resourceWaiter = new ResourceWaiter(
+    new ResourceWaiter(
       this,
       'ResourcesWaiter',
       {
@@ -273,7 +271,6 @@ export class Middleware extends Stack {
         timestamp: new Date().toISOString(),
       },
     );
-    resourceWaiter.node.addDependency(train.deleteTrainingJobsApi.requestValidator);
 
     // Add ResourcesProvider dependency to all resources
     for (const resource of this.node.children) {

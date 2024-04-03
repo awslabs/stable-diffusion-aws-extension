@@ -43,8 +43,6 @@ export class EndpointStack {
     props: EndpointStackProps,
   ) {
 
-    const srcRoot = '../middleware_api/lambda';
-
     new ListEndpointsApi(
       scope, 'ListEndpoints', {
         router: props.routers.endpoints,
@@ -52,7 +50,6 @@ export class EndpointStack {
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
         httpMethod: 'GET',
-        srcRoot: srcRoot,
       },
     );
 
@@ -63,7 +60,6 @@ export class EndpointStack {
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
         httpMethod: 'DELETE',
-        srcRoot: srcRoot,
       },
     );
 
@@ -72,7 +68,6 @@ export class EndpointStack {
         commonLayer: props.commonLayer,
         endpointDeploymentTable: props.EndpointDeploymentJobTable,
         multiUserTable: props.multiUserTable,
-        srcRoot: srcRoot,
       },
     );
 
@@ -85,7 +80,6 @@ export class EndpointStack {
         syncTable: props.syncTable,
         instanceMonitorTable: props.instanceMonitorTable,
         httpMethod: 'POST',
-        srcRoot: srcRoot,
         userNotifySNS: props.snsTopic,
         queue: props.queue,
         accountId: props.accountId,

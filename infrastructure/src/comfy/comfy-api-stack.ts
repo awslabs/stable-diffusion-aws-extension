@@ -12,6 +12,7 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
+import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
 import { GetExecuteApi, GetExecuteApiProps } from '../api/comfy/get_execute';
 import { GetPrepareApi, GetPrepareApiProps } from '../api/comfy/get_prepare';
@@ -20,7 +21,6 @@ import { PrepareApi, PrepareApiProps } from '../api/comfy/prepare';
 import { QueryExecuteApi, QueryExecuteApiProps } from '../api/comfy/query_execute';
 import { SyncMsgApi, SyncMsgApiProps } from '../api/comfy/sync_msg';
 import { ResourceProvider } from '../shared/resource-provider';
-import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
 
 export interface ComfyInferenceStackProps extends StackProps {
   routers: { [key: string]: Resource };
@@ -64,8 +64,6 @@ export class ComfyApiStack extends Construct {
     this.endpointTable = props.endpointTable;
     this.queue = props.queue;
 
-    const srcRoot = '../middleware_api/lambda';
-
     const syncMsgGetRouter = props.routers.sync.addResource('{id}');
 
     const executeGetRouter = props.routers.executes.addResource('{id}');
@@ -86,7 +84,6 @@ export class ComfyApiStack extends Construct {
     new GetSyncMsgApi(scope, 'GetSyncMsg', <GetSyncMsgApiProps>{
       httpMethod: 'GET',
       router: syncMsgGetRouter,
-      srcRoot: srcRoot,
       s3Bucket: props.s3Bucket,
       configTable: this.configTable,
       msgTable: this.msgTable,
@@ -97,7 +94,6 @@ export class ComfyApiStack extends Construct {
     new SyncMsgApi(scope, 'SyncMsg', <SyncMsgApiProps>{
       httpMethod: 'POST',
       router: props.routers.sync,
-      srcRoot: srcRoot,
       s3Bucket: props.s3Bucket,
       configTable: this.configTable,
       msgTable: this.msgTable,
@@ -110,7 +106,6 @@ export class ComfyApiStack extends Construct {
       scope, 'Execute', <ExecuteApiProps>{
         httpMethod: 'POST',
         router: props.routers.executes,
-        srcRoot: srcRoot,
         configTable: this.configTable,
         executeTable: this.executeTable,
         endpointTable: this.endpointTable,
@@ -123,7 +118,6 @@ export class ComfyApiStack extends Construct {
       scope, 'DeleteExecutesApi', <DeleteExecutesApiProps>{
         httpMethod: 'DELETE',
         router: props.routers.executes,
-        srcRoot: srcRoot,
         executeTable: this.executeTable,
         commonLayer: this.layer,
       },
@@ -134,7 +128,6 @@ export class ComfyApiStack extends Construct {
       scope, 'QueryExecute', <QueryExecuteApiProps>{
         httpMethod: 'GET',
         router: props.routers.executes,
-        srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         executeTable: this.executeTable,
@@ -148,7 +141,6 @@ export class ComfyApiStack extends Construct {
       scope, 'Prepare', <PrepareApiProps>{
         httpMethod: 'POST',
         router: props.routers.prepare,
-        srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         syncTable: this.syncTable,
@@ -164,7 +156,6 @@ export class ComfyApiStack extends Construct {
       scope, 'GetExecute', <GetExecuteApiProps>{
         httpMethod: 'GET',
         router: executeGetRouter,
-        srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         executeTable: this.executeTable,
@@ -177,7 +168,6 @@ export class ComfyApiStack extends Construct {
       scope, 'GetPrepare', <GetPrepareApiProps>{
         httpMethod: 'GET',
         router: prepareGetRouter,
-        srcRoot: srcRoot,
         s3Bucket: props.s3Bucket,
         configTable: this.configTable,
         syncTable: this.syncTable,
@@ -187,7 +177,7 @@ export class ComfyApiStack extends Construct {
     );
 
     const handler = new python.PythonFunction(scope, 'ComfyInferenceResultNotification', {
-      entry: `${srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'handler',
       index: 'execute_async_events.py',

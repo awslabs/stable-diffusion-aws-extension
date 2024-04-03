@@ -4,16 +4,15 @@ import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface OasAPiProps {
   router: Resource;
   httpMethod: string;
-  srcRoot: string;
   commonLayer: LayerVersion;
 }
 
 export class OasApi {
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -25,7 +24,6 @@ export class OasApi {
     this.baseId = id;
     this.router = props.router;
     this.httpMethod = props.httpMethod;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
     const lambdaFunction = this.apiLambda();
@@ -34,6 +32,11 @@ export class OasApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
+      operationName: 'GetApiOAS',
+      methodResponses: [
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
     });
   }
 
@@ -72,7 +75,7 @@ export class OasApi {
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/service`,
+        entry: '../middleware_api/service',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'oas.py',

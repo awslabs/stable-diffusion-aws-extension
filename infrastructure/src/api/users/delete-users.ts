@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -11,14 +10,10 @@ export interface DeleteUsersApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
 }
 
 export class DeleteUsersApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -29,15 +24,34 @@ export class DeleteUsersApi {
   constructor(scope: Construct, id: string, props: DeleteUsersApiProps) {
     this.scope = scope;
     this.httpMethod = props.httpMethod;
-    this.src = props.srcRoot;
     this.baseId = id;
     this.router = props.router;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
-    this.deleteUserApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createModel(),
+      },
+      operationName: 'DeleteUsers',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
   private createModel(): Model {
@@ -112,9 +126,9 @@ export class DeleteUsersApi {
       });
   }
 
-  private deleteUserApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/users`,
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+      entry: '../middleware_api/users',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'delete_users.py',
@@ -125,28 +139,7 @@ export class DeleteUsersApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-      operationName: 'DeleteUsers',
-      methodResponses: [
-        ApiModels.methodResponses400(),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
-      ],
-    });
   }
+
 }
 

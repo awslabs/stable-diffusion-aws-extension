@@ -16,7 +16,6 @@ export interface CreateTrainingJobApiProps {
   modelTable: aws_dynamodb.Table;
   trainTable: aws_dynamodb.Table;
   multiUserTable: aws_dynamodb.Table;
-  srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
   checkpointTable: aws_dynamodb.Table;
@@ -28,8 +27,6 @@ export interface CreateTrainingJobApiProps {
 
 export class CreateTrainingJobApi {
 
-  public model: Model;
-  public requestValidator: RequestValidator;
   private readonly id: string;
   private readonly scope: Construct;
   private readonly props: CreateTrainingJobApiProps;
@@ -40,8 +37,6 @@ export class CreateTrainingJobApi {
     this.id = id;
     this.scope = scope;
     this.props = props;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
     this.sagemakerTrainRole = this.sageMakerTrainRole();
 
     const lambdaFunction = this.apiLambda();
@@ -55,9 +50,9 @@ export class CreateTrainingJobApi {
 
     this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        $default: this.model,
+        $default: this.createModel(),
       },
       operationName: 'CreateTraining',
       methodResponses: [
@@ -381,7 +376,7 @@ export class CreateTrainingJobApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.id}-lambda`, {
-      entry: `${this.props.srcRoot}/trainings`,
+      entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'create_training_job.py',

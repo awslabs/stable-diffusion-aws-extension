@@ -20,7 +20,6 @@ import { ApiModels } from '../../shared/models';
 export interface PrepareApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
@@ -31,7 +30,6 @@ export interface PrepareApiProps {
 
 export class PrepareApi {
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -41,23 +39,18 @@ export class PrepareApi {
   private readonly syncTable: aws_dynamodb.Table;
   private readonly instanceMonitorTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: PrepareApiProps) {
     this.scope = scope;
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.syncTable = props.syncTable;
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -70,9 +63,9 @@ export class PrepareApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createModel(),
       },
       operationName: 'CreatePrepare',
       methodResponses: [
@@ -147,7 +140,7 @@ export class PrepareApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'prepare.py',

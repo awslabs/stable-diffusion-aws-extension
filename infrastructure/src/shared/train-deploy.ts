@@ -24,7 +24,6 @@ export interface TrainDeployProps extends StackProps {
 
 export class TrainDeploy {
   public readonly deleteTrainingJobsApi: DeleteTrainingJobsApi;
-  private readonly srcRoot = '../middleware_api/lambda';
   private readonly resourceProvider: ResourceProvider;
 
   constructor(scope: Construct, props: TrainDeployProps) {
@@ -33,7 +32,7 @@ export class TrainDeploy {
 
     // Upload api template file to the S3 bucket
     new s3deploy.BucketDeployment(scope, 'DeployApiTemplate', {
-      sources: [s3deploy.Source.asset(`${this.srcRoot}/common/template`)],
+      sources: [s3deploy.Source.asset('../middleware_api/common/template')],
       destinationBucket: props.s3Bucket,
       destinationKeyPrefix: 'template',
     });
@@ -49,7 +48,6 @@ export class TrainDeploy {
       commonLayer: commonLayer,
       httpMethod: 'GET',
       router: routers.trainings,
-      srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
     });
@@ -62,7 +60,6 @@ export class TrainDeploy {
       modelTable: props.database.modelTable,
       router: routers.trainings,
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
       trainTable: props.database.trainingTable,
       multiUserTable: multiUserTable,
       userTopic: props.snsTopic,
@@ -79,7 +76,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
       httpMethod: 'DELETE',
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     },
     );
 
@@ -91,7 +87,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
       httpMethod: 'GET',
       s3Bucket: props.s3Bucket,
-      srcRoot: this.srcRoot,
     },
     );
 
@@ -99,7 +94,6 @@ export class TrainDeploy {
       commonLayer: props.commonLayer,
       trainingTable: props.database.trainingTable,
       checkpointTable: props.database.checkpointTable,
-      srcRoot: this.srcRoot,
       userTopic: props.snsTopic,
       s3Bucket: props.s3Bucket,
     },

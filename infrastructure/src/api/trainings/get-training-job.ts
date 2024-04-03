@@ -14,13 +14,11 @@ export interface GetTrainingJobApiProps {
   httpMethod: string;
   trainingTable: Table;
   multiUserTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   s3Bucket: Bucket;
 }
 
 export class GetTrainingJobApi {
-  private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -37,7 +35,6 @@ export class GetTrainingJobApi {
     this.httpMethod = props.httpMethod;
     this.trainingTable = props.trainingTable;
     this.multiUserTable = props.multiUserTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
@@ -186,7 +183,7 @@ export class GetTrainingJobApi {
       this.scope,
       `${this.baseId}-lambda`,
       {
-        entry: `${this.src}/trainings`,
+        entry: '../middleware_api/trainings',
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
         index: 'get_training_job.py',

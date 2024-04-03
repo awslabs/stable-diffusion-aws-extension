@@ -4,7 +4,7 @@ import base64
 import time
 import os
 import sys
-sys.path.append("../../../middleware_api/lambda/inference")
+sys.path.append("../../../middleware_api/inference")
 from parse.parameter_parser import json_convert_to_payload
 
 from dotenv import load_dotenv
@@ -41,7 +41,7 @@ print(payload.keys())
 #     }
 # }
 
-# # 
+# #
 # response = requests.post(url=f'{url}/invocations', json=payload)
 
 # print(f"run time is {time.time()-start_time}")
@@ -62,7 +62,7 @@ print(payload.keys())
 #     }
 # }
 
-# # 
+# #
 # response = requests.post(url=f'{url}/invocations', json=payload)
 
 # print(f"run time is {time.time()-start_time}")

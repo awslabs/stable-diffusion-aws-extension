@@ -15,16 +15,12 @@ export interface UpdateDatasetApiProps {
   datasetInfoTable: aws_dynamodb.Table;
   datasetItemTable: aws_dynamodb.Table;
   userTable: aws_dynamodb.Table;
-  srcRoot: string;
   commonLayer: aws_lambda.LayerVersion;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class UpdateDatasetApi {
   public readonly router: aws_apigateway.Resource;
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src: string;
   private readonly httpMethod: string;
   private readonly scope: Construct;
   private readonly userTable: aws_dynamodb.Table;
@@ -36,7 +32,6 @@ export class UpdateDatasetApi {
 
   constructor(scope: Construct, id: string, props: UpdateDatasetApiProps) {
     this.scope = scope;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.baseId = id;
     this.router = props.router;
@@ -45,8 +40,6 @@ export class UpdateDatasetApi {
     this.userTable = props.userTable;
     this.httpMethod = props.httpMethod;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -60,13 +53,13 @@ export class UpdateDatasetApi {
     this.router.addResource('{id}')
       .addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createModel(),
         },
         operationName: 'UpdateDataset',
         methodResponses: [
-          ApiModels.methodResponse(this.responseModel(), '200'),
+          ApiModels.methodResponse(this.responseModel()),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
         ],
@@ -208,7 +201,7 @@ export class UpdateDatasetApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/datasets`,
+      entry: '../middleware_api/datasets',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'update_dataset.py',

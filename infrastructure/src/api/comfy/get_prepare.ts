@@ -18,7 +18,6 @@ import { ApiModels } from '../../shared/models';
 export interface GetPrepareApiProps {
   httpMethod: string;
   router: aws_apigateway.Resource;
-  srcRoot: string;
   s3Bucket: s3.Bucket;
   configTable: aws_dynamodb.Table;
   syncTable: aws_dynamodb.Table;
@@ -30,7 +29,6 @@ export interface GetPrepareApiProps {
 export class GetPrepareApi {
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   private readonly baseId: string;
-  private readonly srcRoot: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -45,7 +43,6 @@ export class GetPrepareApi {
     this.httpMethod = props.httpMethod;
     this.baseId = id;
     this.router = props.router;
-    this.srcRoot = props.srcRoot;
     this.s3Bucket = props.s3Bucket;
     this.configTable = props.configTable;
     this.syncTable = props.syncTable;
@@ -74,7 +71,7 @@ export class GetPrepareApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
-      entry: `${this.srcRoot}/comfy`,
+      entry: '../middleware_api/comfy',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'get_prepare.py',

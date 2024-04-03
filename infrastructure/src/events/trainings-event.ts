@@ -10,14 +10,12 @@ import { Construct } from 'constructs';
 export interface SagemakerTrainingEventsProps {
   trainingTable: Table;
   checkpointTable: Table;
-  srcRoot: string;
   commonLayer: LayerVersion;
   userTopic: aws_sns.Topic;
   s3Bucket: aws_s3.Bucket;
 }
 
 export class SagemakerTrainingEvents {
-  private readonly src: string;
   private readonly scope: Construct;
   private readonly trainingTable: Table;
   private readonly checkpointTable: Table;
@@ -32,7 +30,6 @@ export class SagemakerTrainingEvents {
     this.baseId = id;
     this.trainingTable = props.trainingTable;
     this.checkpointTable = props.checkpointTable;
-    this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.userSnsTopic = props.userTopic;
     this.s3Bucket = props.s3Bucket;
@@ -127,7 +124,7 @@ export class SagemakerTrainingEvents {
   private createTrainingEventsBridge() {
 
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
-      entry: `${this.src}/trainings`,
+      entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'training_event.py',

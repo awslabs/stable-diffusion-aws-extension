@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -17,7 +16,6 @@ export interface StartInferenceJobApiProps {
   inferenceJobTable: aws_dynamodb.Table;
   checkpointTable: aws_dynamodb.Table;
   userTable: aws_dynamodb.Table;
-  srcRoot: string;
   s3Bucket: aws_s3.Bucket;
   commonLayer: aws_lambda.LayerVersion;
 }
@@ -26,7 +24,6 @@ export class StartInferenceJobApi {
 
   private readonly id: string;
   private readonly scope: Construct;
-  private readonly srcRoot: string;
   private readonly layer: aws_lambda.LayerVersion;
   private readonly s3Bucket: aws_s3.Bucket;
   private readonly httpMethod: string;
@@ -39,7 +36,6 @@ export class StartInferenceJobApi {
   constructor(scope: Construct, id: string, props: StartInferenceJobApiProps) {
     this.id = id;
     this.scope = scope;
-    this.srcRoot = props.srcRoot;
     this.endpointDeploymentTable = props.endpointDeploymentTable;
     this.router = props.router;
     this.inferenceJobTable = props.inferenceJobTable;
@@ -58,16 +54,17 @@ export class StartInferenceJobApi {
       },
     );
 
-    this.router.addResource('start').addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      operationName: 'StartInferences',
-      methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '202'),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
-      ],
-    });
+    this.router.addResource('start')
+      .addMethod(this.httpMethod, lambdaIntegration, {
+        apiKeyRequired: true,
+        operationName: 'StartInferences',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel(), '202'),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
 
   }
 
@@ -203,7 +200,7 @@ export class StartInferenceJobApi {
 
   private apiLambda() {
     return new PythonFunction(this.scope, `${this.id}-lambda`, {
-      entry: `${this.srcRoot}/inferences`,
+      entry: '../middleware_api/inferences',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
       index: 'start_inference_job.py',
