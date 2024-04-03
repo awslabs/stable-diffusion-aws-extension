@@ -6,32 +6,11 @@ from decimal import Decimal
 from typing import Optional, Any
 
 from aws_lambda_powertools import Tracer
-from genson import SchemaBuilder
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 tracer = Tracer()
 x_api_version = "1.5.0"
-
-
-@tracer.capture_method
-def json_to_schema(json_string):
-    try:
-        # Parse JSON string into a Python dictionary
-        data = json.loads(json_string)
-
-        # Use Genson SchemaBuilder to create a schema from the Python dictionary
-        builder = SchemaBuilder(
-            schema_uri="http://json-schema.org/draft-07/schema#",
-        )
-        builder.add_object(data)
-        schema = builder.to_schema()
-
-        # Convert the schema dictionary back into a JSON string and return it
-        schema_json = json.dumps(schema, indent=2)
-        return schema_json
-    except json.JSONDecodeError as e:
-        return f"Invalid JSON string provided. Error: {e}"
 
 
 class HttpStatusCode:
@@ -115,10 +94,6 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
 
     logger.info("Lambda Response Payload:")
     logger.info(payload['body'])
-
-    schema = json_to_schema(payload['body'])
-    logger.info("Lambda Response Payload Schema:")
-    logger.info(schema)
 
     return payload
 
