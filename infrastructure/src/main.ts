@@ -342,6 +342,11 @@ export class Middleware extends Stack {
       description: 'API Gateway Token',
     });
 
+    new CfnOutput(this, 'ApiDoc', {
+      value: `${restApi.apiGateway.url}api`,
+      description: 'API Doc - OAS3',
+    });
+
     new CfnOutput(this, 'S3BucketName', {
       value: s3BucketName.valueAsString,
       description: 'S3 Bucket Name',
