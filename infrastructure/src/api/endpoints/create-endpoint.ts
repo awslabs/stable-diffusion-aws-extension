@@ -1,13 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
-import {
-  JsonSchemaType,
-  JsonSchemaVersion,
-  LambdaIntegration,
-  Model,
-  RequestValidator,
-  Resource,
-} from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
@@ -15,6 +8,8 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
@@ -79,7 +74,150 @@ export class CreateEndpointApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.createEndpointsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const integration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+      operationName: 'CreateEndpoint',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateEndpointResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [
+              202,
+            ],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              EndpointDeploymentJobId: {
+                type: JsonSchemaType.STRING,
+                format: 'uuid',
+              },
+              autoscaling: {
+                type: JsonSchemaType.BOOLEAN,
+              },
+              max_instance_number: {
+                type: JsonSchemaType.STRING,
+                pattern: '^[0-9]+$',
+              },
+              startTime: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              status: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+              instance_type: {
+                type: JsonSchemaType.STRING,
+              },
+              current_instance_count: {
+                type: JsonSchemaType.STRING,
+                pattern: '^[0-9]+$',
+              },
+              endTime: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+                format: 'date-time',
+              },
+              endpoint_status: {
+                type: JsonSchemaType.STRING,
+              },
+              endpoint_name: {
+                type: JsonSchemaType.STRING,
+              },
+              error: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+              endpoint_type: {
+                type: JsonSchemaType.STRING,
+              },
+              owner_group_or_role: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.STRING,
+                },
+              },
+              min_instance_number: {
+                type: JsonSchemaType.STRING,
+                pattern: '^[0-9]+$',
+              },
+              custom_extensions: {
+                type: JsonSchemaType.STRING,
+              },
+              service_type: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+            required: [
+              'EndpointDeploymentJobId',
+              'autoscaling',
+              'max_instance_number',
+              'startTime',
+              'instance_type',
+              'current_instance_count',
+              'endpoint_status',
+              'endpoint_name',
+              'endpoint_type',
+              'owner_group_or_role',
+              'min_instance_number',
+              'custom_extensions',
+              'service_type',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            pattern: '^Endpoint deployment started: .*',
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): Role {
@@ -289,11 +427,9 @@ export class CreateEndpointApi {
     });
   }
 
-  private createEndpointsApi() {
-
+  private apiLambda() {
     const role = this.iamRole();
-
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -316,21 +452,7 @@ export class CreateEndpointApi {
       },
       layers: [this.layer],
     });
-
-    const integration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-
   }
+
+
 }

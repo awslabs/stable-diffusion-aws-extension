@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface ListEndpointsApiProps {
@@ -36,7 +39,162 @@ export class ListEndpointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listAllSageMakerEndpointsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListEndpoints',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListEndpointsResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              endpoints: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    EndpointDeploymentJobId: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[a-f0-9\\-]{36}$',
+                    },
+                    autoscaling: {
+                      type: JsonSchemaType.BOOLEAN,
+                    },
+                    max_instance_number: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[0-9]+$',
+                    },
+                    startTime: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    status: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NUMBER,
+                      ],
+                    },
+                    instance_type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    current_instance_count: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[0-9]+$',
+                    },
+                    endTime: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NULL,
+                      ],
+                      format: 'date-time',
+                    },
+                    endpoint_status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    endpoint_name: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    error: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NUMBER,
+                      ],
+                    },
+                    endpoint_type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    owner_group_or_role: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    min_instance_number: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[0-9]+$',
+                    },
+                    custom_extensions: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    service_type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                  },
+                  required: [
+                    'EndpointDeploymentJobId',
+                    'autoscaling',
+                    'max_instance_number',
+                    'startTime',
+                    'instance_type',
+                    'current_instance_count',
+                    'endTime',
+                    'endpoint_status',
+                    'endpoint_name',
+                    'endpoint_type',
+                    'owner_group_or_role',
+                    'min_instance_number',
+                    'service_type',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NUMBER,
+                ],
+              },
+            },
+            required: [
+              'endpoints',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -70,8 +228,8 @@ export class ListEndpointsApi {
     return newRole;
   }
 
-  private listAllSageMakerEndpointsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/endpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -83,17 +241,7 @@ export class ListEndpointsApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
   }
+
 }
 
