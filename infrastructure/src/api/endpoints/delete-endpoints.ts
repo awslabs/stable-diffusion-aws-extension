@@ -1,14 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import {
-  JsonSchemaType,
-  JsonSchemaVersion,
-  LambdaIntegration,
-  Model,
-  RequestValidator,
-  Resource,
-} from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -50,7 +42,7 @@ export class DeleteEndpointsApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {

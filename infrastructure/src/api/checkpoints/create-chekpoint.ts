@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
@@ -48,9 +47,9 @@ export class CreateCheckPointApi {
 
     const lambdaFunction = this.apiLambda();
 
-    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(lambdaFunction, { proxy: true });
+    this.lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
 
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {

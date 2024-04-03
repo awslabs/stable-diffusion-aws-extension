@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator, Resource } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -76,7 +75,7 @@ export class CreateEndpointApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {

@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
@@ -42,14 +41,14 @@ export class CreateTrainingJobApi {
 
     const lambdaFunction = this.apiLambda();
 
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
       },
     );
 
-    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
+    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
@@ -186,6 +185,7 @@ export class CreateTrainingJobApi {
     const sagemakerRole = new aws_iam.Role(this.scope, `${this.id}-train-role`, {
       assumedBy: new aws_iam.ServicePrincipal('sagemaker.amazonaws.com'),
     });
+
     sagemakerRole.addManagedPolicy(aws_iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSageMakerFullAccess'));
 
     sagemakerRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -215,6 +215,7 @@ export class CreateTrainingJobApi {
     const newRole = new aws_iam.Role(this.scope, `${this.id}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [

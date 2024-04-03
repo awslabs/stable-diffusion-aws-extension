@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model } from 'aws-cdk-lib/aws-apigateway';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -43,7 +42,7 @@ export class GetDatasetApi {
 
     const lambdaFunction = this.apiLambda();
 
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+    const lambdaIntegration = new LambdaIntegration(
       lambdaFunction,
       {
         proxy: true,
@@ -51,7 +50,7 @@ export class GetDatasetApi {
     );
 
     this.router.getResource('{id}')
-      ?.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      ?.addMethod(this.httpMethod, lambdaIntegration, {
         apiKeyRequired: true,
         operationName: 'GetDataset',
         methodResponses: [
