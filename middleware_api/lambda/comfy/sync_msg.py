@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import os
+import time
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -55,12 +56,13 @@ def save_message_to_dynamodb(prompt_id, message):
 
 def save_message_to_dynamodb_by_one(prompt_id, message, i):
     try:
-        request_time = f'{datetime.datetime.now().isoformat()}_{i}'
+        # request_time = f'{datetime.datetime.now()}_{i}'
+        request_time = int(time.time() * 1000) + i
         ddb.put_item(
             TableName=msg_table_name,
             Item={
                 'prompt_id': {'S': prompt_id},
-                'request_time': {'S': request_time},
+                'request_time': {'N': str(request_time)},
                 'message_body': {'S': json.dumps([message])}
             }
         )

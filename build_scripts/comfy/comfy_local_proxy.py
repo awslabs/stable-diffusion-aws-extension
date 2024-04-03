@@ -146,7 +146,7 @@ def execute_proxy(func):
                             if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                                 continue
                             already_synced = True
-                            handle_sync_messages(server_use, msg_response.json().get("data")[0])
+                            handle_sync_messages(server_use, msg_response.json().get("data"))
 
             while comfy_need_sync and not already_synced:
                 msg_response = send_get_request(f"{api_url}/sync/{prompt_id}")
@@ -156,7 +156,7 @@ def execute_proxy(func):
                     if 'data' not in msg_response.json() or not msg_response.json().get("data"):
                         continue
                     already_synced = True
-                    handle_sync_messages(server_use, msg_response.json().get("data")[0])
+                    handle_sync_messages(server_use, msg_response.json().get("data"))
 
             if not save_already:
                 execute_resp = execute_future.result()
