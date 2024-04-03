@@ -32,7 +32,9 @@ export class OasApi {
 
     const lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
 
-    this.router.addMethod(this.httpMethod, lambdaIntegration);
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+    });
   }
 
   private iamRole(): Role {
