@@ -3,6 +3,7 @@ import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigate
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
+import { ApiModels } from './models';
 import { ESD_VERSION } from './version';
 
 export class RestApiGateway {
@@ -49,6 +50,12 @@ export class RestApiGateway {
         allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key', 'X-Amz-Security-Token', 'X-Amz-User-Agent'], // Customize as needed
       },
     });
+
+    ApiModels.get_400(this.scope, api);
+    ApiModels.get_401(this.scope, api);
+    ApiModels.get_403(this.scope, api);
+    ApiModels.get_404(this.scope, api);
+    ApiModels.get_504(this.scope, api);
 
     // custom error response to return details of validation errors to the client.
     const responseBad = api.addGatewayResponse('BAD_REQUEST_BODY', {
