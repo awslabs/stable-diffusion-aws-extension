@@ -316,7 +316,7 @@ export class CreateCheckPointApi {
   private createRequestModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
-      modelName: this.baseId,
+      modelName: `${this.baseId}Request`,
       description: `${this.baseId} Request Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
