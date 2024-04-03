@@ -69,7 +69,7 @@ export class CreateCheckPointApi {
   }
 
   private responseUrlModel() {
-    return new Model(this.scope, `${this.baseId}-resp-model`, {
+    return new Model(this.scope, `${this.baseId}-url-model`, {
       restApi: this.router.api,
       modelName: 'CreateCheckpointUrlResponse',
       description: `${this.baseId} Response Model`,
@@ -97,7 +97,7 @@ export class CreateCheckPointApi {
   }
 
   private responseModel() {
-    return new Model(this.scope, `${this.baseId}-resp-model`, {
+    return new Model(this.scope, `${this.baseId}-update-model`, {
       restApi: this.router.api,
       modelName: 'CreateCheckpointResponse',
       description: `${this.baseId} Response Model`,
