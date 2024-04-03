@@ -1,11 +1,13 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface GetTrainingJobApiProps {
   router: Resource;
@@ -39,12 +41,148 @@ export class GetTrainingJobApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
-    this.getTrainingJobApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      { proxy: true },
+    );
+
+    this.router.addResource('{id}')
+      .addMethod(this.httpMethod, lambdaIntegration, {
+        apiKeyRequired: true,
+        operationName: 'GetTraining',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      },
+      );
   }
 
-  private getTrainingJobApi() {
 
-    const lambdaFunction = new PythonFunction(
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetTrainResponse',
+      description: 'GetTrain Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              trainings: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    id: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[a-f0-9\\-]{36}$',
+                    },
+                    modelName: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    trainType: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    created: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^\\d{10}(\\.\\d+)?$',
+                    },
+                    sagemakerTrainName: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    params: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        training_params: {
+                          type: JsonSchemaType.OBJECT,
+                        },
+                        training_type: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        config_params: {
+                          type: JsonSchemaType.OBJECT,
+                          properties: {
+                            saving_arguments: {
+                              type: JsonSchemaType.OBJECT,
+                            },
+                            training_arguments: {
+                              type: JsonSchemaType.OBJECT,
+                            },
+                          },
+                          required: [
+                            'saving_arguments',
+                            'training_arguments',
+                          ],
+                        },
+                      },
+                      required: [
+                        'training_params',
+                        'training_type',
+                        'config_params',
+                      ],
+                    },
+                  },
+                  required: [
+                    'id',
+                    'modelName',
+                    'status',
+                    'trainType',
+                    'created',
+                    'sagemakerTrainName',
+                    'params',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+            },
+            required: [
+              'trainings',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
+  }
+
+
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
@@ -62,16 +200,8 @@ export class GetTrainingJobApi {
         },
         layers: [this.layer],
       });
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      { proxy: true },
-    );
-
-    this.router.addResource('{id}')
-      .addMethod(this.httpMethod, lambdaIntegration, { apiKeyRequired: true });
-
   }
+
 
   private iamRole(): Role {
 

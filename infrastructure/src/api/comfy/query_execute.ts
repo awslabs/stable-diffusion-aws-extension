@@ -1,10 +1,13 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface QueryExecuteApiProps {
@@ -41,7 +44,140 @@ export class QueryExecuteApi {
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = this.apiLambda();
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListExecutes',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListExecutesResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              executes: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    prompt_id: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    endpoint_name: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    create_time: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    start_time: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    need_sync: {
+                      type: JsonSchemaType.BOOLEAN,
+                    },
+                    complete_time: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NULL,
+                      ],
+                      format: 'date-time',
+                    },
+                    output_path: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    output_files: {
+                      type: [
+                        JsonSchemaType.ARRAY,
+                        JsonSchemaType.NULL,
+                      ],
+                    },
+                    temp_path: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NULL,
+                      ],
+                    },
+                    temp_files: {
+                      type: [
+                        JsonSchemaType.ARRAY,
+                        JsonSchemaType.NULL,
+                      ],
+                    },
+                  },
+                  required: [
+                    'prompt_id',
+                    'endpoint_name',
+                    'status',
+                    'create_time',
+                    'start_time',
+                    'need_sync',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NUMBER,
+                ],
+              },
+            },
+            required: [
+              'executes',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -56,17 +192,6 @@ export class QueryExecuteApi {
         CONFIG_TABLE: this.configTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    this.lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
     });
   }
 

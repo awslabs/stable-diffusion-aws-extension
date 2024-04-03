@@ -6,6 +6,8 @@ import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -50,7 +52,123 @@ export class CreateInferenceJobApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.createInferenceJobLambda();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+      operationName: 'CreateInferenceJob',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobResponse',
+      description: 'CreateInferenceJob Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              inference: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  id: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uuid',
+                  },
+                  type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  api_params_s3_location: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  api_params_s3_upload_url: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  models: {
+                    type: JsonSchemaType.ARRAY,
+                    items: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        id: {
+                          type: JsonSchemaType.STRING,
+                          format: 'uuid',
+                        },
+                        name: {
+                          type: JsonSchemaType.ARRAY,
+                          items: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        type: {
+                          type: JsonSchemaType.STRING,
+                        },
+                      },
+                      required: [
+                        'id',
+                        'name',
+                        'type',
+                      ],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: [
+                  'id',
+                  'type',
+                  'api_params_s3_location',
+                  'api_params_s3_upload_url',
+                  'models',
+                ],
+                additionalProperties: false,
+              },
+            },
+            required: [
+              'inference',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
   }
 
   private createModel(): Model {
@@ -176,8 +294,8 @@ export class CreateInferenceJobApi {
       });
   }
 
-  private createInferenceJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -194,22 +312,6 @@ export class CreateInferenceJobApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
-    });
-
-    return lambdaFunction;
   }
+
 }

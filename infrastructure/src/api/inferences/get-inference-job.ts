@@ -1,11 +1,13 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface GetInferenceJobApiProps {
   router: Resource;
@@ -39,12 +41,204 @@ export class GetInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.userTable = props.userTable;
 
-    this.getInferenceJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        operationName: 'GetInferenceJob',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
   }
 
-  private getInferenceJobsApi() {
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetInferenceJobResponse',
+      description: 'GetInferenceJob Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'GetInferenceJob',
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              img_presigned_urls: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.STRING,
+                  format: 'uri',
+                },
+              },
+              output_presigned_urls: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.STRING,
+                  format: 'uri',
+                },
+              },
+              startTime: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              taskType: {
+                type: JsonSchemaType.STRING,
+              },
+              inference_info_name: {
+                type: JsonSchemaType.STRING,
+              },
+              completeTime: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              image_names: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.STRING,
+                  pattern: '^.+\\.*$',
+                },
+              },
+              params: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  input_body_presign_url: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  used_models: {
+                    type: JsonSchemaType.OBJECT,
+                    additionalProperties: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          s3: {
+                            type: JsonSchemaType.STRING,
+                            format: 'uri',
+                          },
+                          id: {
+                            type: JsonSchemaType.STRING,
+                            format: 'uuid',
+                          },
+                          model_name: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        required: [
+                          's3',
+                          'id',
+                          'model_name',
+                          'type',
+                        ],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  input_body_s3: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  output_path: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  sagemaker_inference_instance_type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  sagemaker_inference_endpoint_id: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uuid',
+                  },
+                  sagemaker_inference_endpoint_name: {
+                    type: JsonSchemaType.STRING,
+                  },
+                },
+                required: [
+                  'input_body_presign_url',
+                  'used_models',
+                  'input_body_s3',
+                  'sagemaker_inference_instance_type',
+                  'sagemaker_inference_endpoint_id',
+                  'sagemaker_inference_endpoint_name',
+                ],
+                additionalProperties: false,
+              },
+              InferenceJobId: {
+                type: JsonSchemaType.STRING,
+                format: 'uuid',
+              },
+              status: {
+                type: JsonSchemaType.STRING,
+              },
+              inference_type: {
+                type: JsonSchemaType.STRING,
+              },
+              createTime: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              owner_group_or_role: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.STRING,
+                },
+              },
+            },
+            required: [
+              'img_presigned_urls',
+              'output_presigned_urls',
+              'startTime',
+              'taskType',
+              'params',
+              'InferenceJobId',
+              'status',
+              'inference_type',
+              'image_names',
+              'completeTime',
+              'createTime',
+              'owner_group_or_role',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
+  }
 
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
@@ -62,22 +256,6 @@ export class GetInferenceJobApi {
         },
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-      });
-
   }
 
   private iamRole(): Role {

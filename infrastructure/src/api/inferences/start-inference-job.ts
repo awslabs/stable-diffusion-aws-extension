@@ -1,11 +1,14 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface StartInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -46,7 +49,91 @@ export class StartInferenceJobApi {
     this.s3Bucket = props.s3Bucket;
     this.httpMethod = props.httpMethod;
 
-    this.updateTrainJobLambda();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addResource('start').addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'StartInferences',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobResponse',
+      description: 'CreateInferenceJob Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              inference: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  inference_id: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uuid',
+                  },
+                  status: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  endpoint_name: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  output_path: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                },
+                required: [
+                  'inference_id',
+                  'status',
+                  'endpoint_name',
+                  'output_path',
+                ],
+                additionalProperties: false,
+              },
+            },
+            required: [
+              'inference',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
   }
 
 
@@ -114,8 +201,8 @@ export class StartInferenceJobApi {
     return newRole;
   }
 
-  private updateTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.srcRoot}/inferences`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -132,18 +219,7 @@ export class StartInferenceJobApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addResource('start').addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
-
-    return lambdaFunction;
   }
+
+
 }

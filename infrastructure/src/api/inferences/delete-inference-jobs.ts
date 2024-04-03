@@ -13,6 +13,7 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteInferenceJobsApiProps {
   router: Resource;
@@ -50,7 +51,31 @@ export class DeleteInferenceJobsApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.deleteInferenceJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.requestValidator,
+        requestModels: {
+          'application/json': this.model,
+        },
+        operationName: 'DeleteInferenceJobs',
+        methodResponses: [
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+        ],
+      });
   }
 
   private createModel(): Model {
@@ -94,9 +119,8 @@ export class DeleteInferenceJobsApi {
       });
   }
 
-  private deleteInferenceJobsApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
@@ -114,26 +138,6 @@ export class DeleteInferenceJobsApi {
         },
         layers: [this.layer],
       });
-
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
 
   private iamRole(): Role {

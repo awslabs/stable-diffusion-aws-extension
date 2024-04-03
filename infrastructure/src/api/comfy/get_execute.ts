@@ -1,17 +1,13 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_apigateway as apigw,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface GetExecuteApiProps {
@@ -48,7 +44,122 @@ export class GetExecuteApi {
     this.executeTable = props.executeTable;
     this.layer = props.commonLayer;
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = this.apiLambda();
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'GetExecute',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetExecuteResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [
+              200,
+            ],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              prompt_id: {
+                type: JsonSchemaType.STRING,
+                format: 'uuid',
+              },
+              need_sync: {
+                type: JsonSchemaType.BOOLEAN,
+              },
+              sagemaker_raw: {
+                type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
+              },
+              prompt_path: {
+                type: JsonSchemaType.STRING,
+              },
+              endpoint_name: {
+                type: JsonSchemaType.STRING,
+              },
+              status: {
+                type: JsonSchemaType.STRING,
+              },
+              create_time: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              inference_type: {
+                type: JsonSchemaType.STRING,
+              },
+              start_time: {
+                type: JsonSchemaType.STRING,
+                format: 'date-time',
+              },
+              prompt_params: {
+                type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
+              },
+              output_path: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+            required: [
+              'prompt_id',
+              'need_sync',
+              'sagemaker_raw',
+              'prompt_path',
+              'endpoint_name',
+              'status',
+              'create_time',
+              'inference_type',
+              'start_time',
+              'prompt_params',
+              'output_path',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: [
+              'OK',
+            ],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -63,17 +174,6 @@ export class GetExecuteApi {
         CONFIG_TABLE: this.configTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    this.lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
     });
   }
 

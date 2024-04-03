@@ -6,6 +6,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 
 export interface DeleteExecutesApiProps {
@@ -38,7 +39,28 @@ export class DeleteExecutesApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.executeApi();
+    const lambdaFunction =this.apiLambda();
+
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+      operationName: 'DeleteExecutes',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -94,8 +116,8 @@ export class DeleteExecutesApi {
     return newRole;
   }
 
-  private executeApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -110,21 +132,6 @@ export class DeleteExecutesApi {
         EXECUTE_TABLE: this.executeTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
     });
   }
 

@@ -12,6 +12,7 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteRolesApiProps {
   router: Resource;
@@ -43,7 +44,32 @@ export class DeleteRolesApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.deleteRolesApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.requestValidator,
+        requestModels: {
+          'application/json': this.model,
+        },
+        operationName: 'DeleteRoles',
+        methodResponses: [
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
   }
 
   private iamRole(): Role {
@@ -126,9 +152,8 @@ export class DeleteRolesApi {
       });
   }
 
-  private deleteRolesApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
@@ -143,24 +168,6 @@ export class DeleteRolesApi {
         tracing: aws_lambda.Tracing.ACTIVE,
         layers: [this.layer],
       });
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
+
 }

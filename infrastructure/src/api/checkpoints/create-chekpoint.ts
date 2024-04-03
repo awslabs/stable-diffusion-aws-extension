@@ -21,7 +21,6 @@ export interface CreateCheckPointApiProps {
 }
 
 export class CreateCheckPointApi {
-  public model: Model;
   public requestValidator: RequestValidator;
   public lambdaIntegration: aws_apigateway.LambdaIntegration;
   public router: aws_apigateway.Resource;
@@ -47,28 +46,22 @@ export class CreateCheckPointApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
     this.role = this.iamRole();
-    this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
     this.uploadByUrlLambda = this.uploadByUrlLambdaFunction();
 
     const lambdaFunction = this.apiLambda();
 
-    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
+    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(lambdaFunction, { proxy: true });
 
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
       requestValidator: this.requestValidator,
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createRequestModel(),
       },
       operationName: 'CreateCheckpoint',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponse(this.responseModel(), '201'),
         ApiModels.methodResponse(this.responseUrlModel(), '202'),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
@@ -100,8 +93,8 @@ export class CreateCheckPointApi {
           'message',
           'statusCode',
         ],
-      }
-      ,
+        additionalProperties: false,
+      },
       contentType: 'application/json',
     });
   }
@@ -323,7 +316,7 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,

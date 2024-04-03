@@ -12,6 +12,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 
 export interface GetPrepareApiProps {
@@ -51,7 +52,28 @@ export class GetPrepareApi {
     this.instanceMonitorTable = props.instanceMonitorTable;
     this.layer = props.commonLayer;
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+    const lambdaFunction = this.apiLambda();
+
+    this.lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'GetPrepare',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -67,17 +89,6 @@ export class GetPrepareApi {
         INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    this.lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
     });
   }
 

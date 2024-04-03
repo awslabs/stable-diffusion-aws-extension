@@ -13,6 +13,7 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteCheckpointsApiProps {
   router: Resource;
@@ -25,8 +26,6 @@ export interface DeleteCheckpointsApiProps {
 }
 
 export class DeleteCheckpointsApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
   public router: Resource;
   private readonly src: string;
   private readonly httpMethod: string;
@@ -47,32 +46,31 @@ export class DeleteCheckpointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
+    const lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
 
     this.router.addMethod(
       this.httpMethod,
       lambdaIntegration,
       {
         apiKeyRequired: true,
-        requestValidator: this.requestValidator,
+        requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.model,
+          'application/json': this.createRequestModel(),
         },
         operationName: 'DeleteCheckpoints',
+        methodResponses: [
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses504(),
+        ],
       });
   }
 
-  private createModel() {
+  private createRequestModel() {
     return new Model(
       this.scope,
       `${this.baseId}-model`,

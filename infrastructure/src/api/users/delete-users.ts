@@ -5,6 +5,7 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 export interface DeleteUsersApiProps {
   router: aws_apigateway.Resource;
@@ -138,6 +139,13 @@ export class DeleteUsersApi {
       requestModels: {
         'application/json': this.model,
       },
+      operationName: 'DeleteUsers',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
     });
   }
 }

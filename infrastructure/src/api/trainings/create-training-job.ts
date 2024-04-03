@@ -6,7 +6,9 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -42,9 +44,147 @@ export class CreateTrainingJobApi {
     this.requestValidator = this.createRequestValidator();
     this.sagemakerTrainRole = this.sageMakerTrainRole();
 
-    this.createTrainJobLambda();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        $default: this.model,
+      },
+      operationName: 'CreateTraining',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
+  private responseModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.props.router.api,
+      modelName: 'CreateTrainResponse',
+      description: 'CreateTrain Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              trainings: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    id: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[a-f0-9\\-]{36}$',
+                    },
+                    modelName: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    trainType: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    created: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^\\d{10}(\\.\\d+)?$',
+                    },
+                    sagemakerTrainName: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    params: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        training_params: {
+                          type: JsonSchemaType.OBJECT,
+                        },
+                        training_type: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        config_params: {
+                          type: JsonSchemaType.OBJECT,
+                          properties: {
+                            saving_arguments: {
+                              type: JsonSchemaType.OBJECT,
+                            },
+                            training_arguments: {
+                              type: JsonSchemaType.OBJECT,
+                            },
+                          },
+                          required: [
+                            'saving_arguments',
+                            'training_arguments',
+                          ],
+                        },
+                      },
+                      required: [
+                        'training_params',
+                        'training_type',
+                        'config_params',
+                      ],
+                    },
+                  },
+                  required: [
+                    'id',
+                    'modelName',
+                    'status',
+                    'trainType',
+                    'created',
+                    'sagemakerTrainName',
+                    'params',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+            },
+            required: [
+              'trainings',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
+  }
 
   private sageMakerTrainRole(): aws_iam.Role {
     const sagemakerRole = new aws_iam.Role(this.scope, `${this.id}-train-role`, {
@@ -239,8 +379,8 @@ export class CreateTrainingJobApi {
       });
   }
 
-  private createTrainJobLambda(): aws_lambda.IFunction {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.id}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.id}-lambda`, {
       entry: `${this.props.srcRoot}/trainings`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -262,23 +402,6 @@ export class CreateTrainingJobApi {
       },
       layers: [this.props.commonLayer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.props.router.addMethod(this.props.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        $default: this.model,
-      },
-    });
-
-    return lambdaFunction;
   }
 
 }

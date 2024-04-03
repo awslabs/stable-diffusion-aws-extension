@@ -1,7 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
-import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -48,7 +47,7 @@ export class ListCheckPointsApi {
       },
     );
 
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListCheckpoints',
       methodResponses: [
@@ -246,6 +245,7 @@ export class ListCheckPointsApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 

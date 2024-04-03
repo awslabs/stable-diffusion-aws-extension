@@ -80,7 +80,7 @@ export class UpdateCheckPointApi {
   private responseRenameModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'UpdateCheckpointResponse',
+      modelName: 'UpdateCheckpointNameResponse',
       description: `${this.baseId} Response Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

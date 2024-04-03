@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface ListInferencesApiProps {
@@ -39,7 +42,217 @@ export class ListInferencesApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listAllSageMakerInferenceJobApi();
+    const lambdaFunction =this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListInferences',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobResponse',
+      description: 'CreateInferenceJob Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              inferences: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    InferenceJobId: {
+                      type: JsonSchemaType.STRING,
+                      pattern: '^[a-f0-9\\-]{36}$',
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    taskType: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    owner_group_or_role: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    inference_info_name: {
+                      type: [
+                        JsonSchemaType.STRING,
+                        JsonSchemaType.NULL,
+                      ],
+                    },
+                    startTime: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    createTime: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    image_names: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    sagemakerRaw: {
+                      type: [
+                        JsonSchemaType.NULL,
+                        JsonSchemaType.OBJECT,
+                      ],
+                    },
+                    completeTime: {
+                      type: JsonSchemaType.STRING,
+                      format: 'date-time',
+                    },
+                    params: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        input_body_s3: {
+                          type: JsonSchemaType.STRING,
+                          format: 'uri',
+                        },
+                        sagemaker_inference_endpoint_id: {
+                          type: JsonSchemaType.STRING,
+                          pattern: '^[a-f0-9\\-]{36}$',
+                        },
+                        input_body_presign_url: {
+                          type: JsonSchemaType.STRING,
+                          format: 'uri',
+                        },
+                        used_models: {
+                          type: JsonSchemaType.OBJECT,
+                          additionalProperties: {
+                            type: JsonSchemaType.ARRAY,
+                            items: {
+                              type: JsonSchemaType.OBJECT,
+                              properties: {
+                                s3: {
+                                  type: JsonSchemaType.STRING,
+                                  format: 'uri',
+                                },
+                                id: {
+                                  type: JsonSchemaType.STRING,
+                                  pattern: '^[a-f0-9\\-]{36}$',
+                                },
+                                model_name: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                                type: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                              },
+                              required: [
+                                's3',
+                                'id',
+                                'model_name',
+                                'type',
+                              ],
+                              additionalProperties: false,
+                            },
+                          },
+                        },
+                        output_path: {
+                          type: JsonSchemaType.STRING,
+                          format: 'uri',
+                        },
+                        sagemaker_inference_instance_type: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        sagemaker_inference_endpoint_name: {
+                          type: JsonSchemaType.STRING,
+                        },
+                      },
+                      required: [
+                        'input_body_s3',
+                        'sagemaker_inference_endpoint_id',
+                        'used_models',
+                        'sagemaker_inference_instance_type',
+                        'sagemaker_inference_endpoint_name',
+                      ],
+                      additionalProperties: false,
+                    },
+                    inference_type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    payload_string: {
+                      type: [
+                        JsonSchemaType.NULL,
+                        JsonSchemaType.STRING,
+                      ],
+                    },
+                  },
+                  required: [
+                    'InferenceJobId',
+                    'status',
+                    'taskType',
+                    'owner_group_or_role',
+                    'inference_info_name',
+                    'startTime',
+                    'createTime',
+                    'image_names',
+                    'completeTime',
+                    'params',
+                    'inference_type',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+            },
+            required: [
+              'inferences',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -76,8 +289,8 @@ export class ListInferencesApi {
     return newRole;
   }
 
-  private listAllSageMakerInferenceJobApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/inferences`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -92,17 +305,7 @@ export class ListInferencesApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
   }
+
 }
 

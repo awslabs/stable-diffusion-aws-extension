@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_kms, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface ListUsersApiProps {
@@ -35,7 +38,26 @@ export class ListUsersApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listUsersApi();
+    const lambdaFunction = this.apiLambda();
+
+    const integration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListUsers',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -80,8 +102,92 @@ export class ListUsersApi {
     return newRole;
   }
 
-  private listUsersApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListUsersResponse',
+      description: 'ListUsers Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              users: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    username: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    roles: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    creator: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    permissions: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    password: {
+                      type: JsonSchemaType.STRING,
+                    },
+                  },
+                  required: [
+                    'creator',
+                    'password',
+                    'permissions',
+                    'roles',
+                    'username',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+            },
+            required: [
+              'last_evaluated_key',
+              'users',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'data',
+          'debug',
+          'message',
+          'statusCode',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/users`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -96,17 +202,7 @@ export class ListUsersApi {
       },
       layers: [this.layer],
     });
-
-    const integration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, integration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
   }
+
 }
 

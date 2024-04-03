@@ -5,6 +5,8 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface CreateRoleApiProps {
@@ -33,7 +35,60 @@ export class CreateRoleApi {
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
 
-    this.createRoleApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.createRequestValidator(),
+      requestModels: {
+        'application/json': this.createModel(),
+      },
+      operationName: 'CreateRole',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateRoleResponse',
+      description: 'CreateRole Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          debug: SCHEMA_DEBUG,
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['role created'],
+          },
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [201],
+          },
+        },
+        required: [
+          'debug',
+          'message',
+          'statusCode',
+        ],
+        additionalProperties: false,
+      },
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -116,8 +171,8 @@ export class CreateRoleApi {
       });
   }
 
-  private createRoleApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/roles`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -129,21 +184,7 @@ export class CreateRoleApi {
       tracing: aws_lambda.Tracing.ACTIVE,
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.createRequestValidator(),
-      requestModels: {
-        'application/json': this.createModel(),
-      },
-    });
   }
+
 }
 

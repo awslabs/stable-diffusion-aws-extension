@@ -14,6 +14,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 
 export interface PrepareApiProps {
@@ -58,7 +59,28 @@ export class PrepareApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.prepareApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new apigw.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      requestValidator: this.requestValidator,
+      requestModels: {
+        'application/json': this.model,
+      },
+      operationName: 'CreatePrepare',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -123,8 +145,8 @@ export class PrepareApi {
     return newRole;
   }
 
-  private prepareApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -141,21 +163,6 @@ export class PrepareApi {
         ENDPOINT_TABLE: this.endpointTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    const lambdaIntegration = new apigw.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-      requestValidator: this.requestValidator,
-      requestModels: {
-        'application/json': this.model,
-      },
     });
   }
 

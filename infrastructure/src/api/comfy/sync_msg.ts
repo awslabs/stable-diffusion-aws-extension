@@ -1,13 +1,5 @@
 import { PythonFunction, PythonFunctionProps } from '@aws-cdk/aws-lambda-python-alpha';
-import {
-  aws_apigateway,
-  aws_apigateway as apigw,
-  aws_dynamodb,
-  aws_iam,
-  aws_lambda,
-  aws_sqs,
-  Duration,
-} from 'aws-cdk-lib';
+import { aws_apigateway, aws_apigateway as apigw, aws_dynamodb, aws_iam, aws_lambda, aws_sqs, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
@@ -15,6 +7,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
 
 
 export interface SyncMsgApiProps {
@@ -125,8 +118,8 @@ export class SyncMsgApi {
     return newRole;
   }
 
-  private syncMSGApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, <PythonFunctionProps>{
       entry: `${this.srcRoot}/comfy`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -143,6 +136,10 @@ export class SyncMsgApi {
       },
       layers: [this.layer],
     });
+  }
+
+  private syncMSGApi() {
+    const lambdaFunction = this.apiLambda();
 
     const syncMsgEventSource = new SqsEventSource(this.queue);
     lambdaFunction.addEventSource(syncMsgEventSource);
@@ -160,8 +157,15 @@ export class SyncMsgApi {
       requestModels: {
         'application/json': this.model,
       },
+      operationName: 'SyncMsg',
+      methodResponses: [
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
     });
   }
+
   private createModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,

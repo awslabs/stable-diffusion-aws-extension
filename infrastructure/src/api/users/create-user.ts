@@ -5,6 +5,8 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -141,6 +143,34 @@ export class CreateUserApi {
       });
   }
 
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateUserResponse',
+      description: 'CreateUser Response Model',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type:  JsonSchemaType.INTEGER,
+          },
+          debug: SCHEMA_DEBUG,
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'debug',
+          'message',
+          'statusCode',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
   private upsertUserApi() {
     const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/users`,
@@ -171,6 +201,14 @@ export class CreateUserApi {
       requestModels: {
         'application/json': this.model,
       },
+      operationName: 'CreateUser',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
     });
   }
 }
