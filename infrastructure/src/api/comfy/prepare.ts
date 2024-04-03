@@ -191,6 +191,10 @@ export class PrepareApi {
           need_reboot: {
             type: JsonSchemaType.BOOLEAN,
           },
+          sync_script: {
+            type: JsonSchemaType.STRING,
+            minLength: 1,
+          },
         },
         required: [
           'endpoint_name',

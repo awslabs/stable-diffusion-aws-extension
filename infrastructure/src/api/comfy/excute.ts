@@ -186,6 +186,15 @@ export class ExecuteApi {
             type: JsonSchemaType.STRING,
             minLength: 1,
           },
+          need_prepare: {
+            type: JsonSchemaType.BOOLEAN,
+            minLength: 1,
+          },
+          prepare_props: {
+            type: JsonSchemaType.OBJECT,
+            minItems: 1,
+            additionalProperties: true,
+          },
         },
         required: [
           'prompt_id',
