@@ -21,6 +21,9 @@ global prompt_id
 global executing
 executing = False
 
+global reboot
+reboot = False
+
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
 QUEUE_URL = os.environ.get('COMFY_QUEUE_URL')
@@ -99,6 +102,8 @@ async def prepare_comfy_env(sync_item: dict):
                 rlt = False
         need_reboot = True if ('need_reboot' in sync_item and sync_item['need_reboot']
                                and str(sync_item['need_reboot']).lower() == 'true')else False
+        global reboot
+        reboot = need_reboot
         if need_reboot:
             os.environ['NEED_REBOOT'] = 'true'
         else:
@@ -238,6 +243,7 @@ async def invocations(request):
             "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
         }
         executing = False
+        server.PromptServer.send_sync("finish", {"prompt_id": prompt_id}, server.client_id)
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
@@ -354,8 +360,12 @@ def restart(self):
     logger.info("start to reboot!!!!!!!!")
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
-        logger.info("no need to reboot")
-        return {"message": "no need to reboot"}
+        logger.info("no need to reboot by os")
+        return {"message": "no need to reboot by os"}
+    global reboot
+    if reboot is False:
+        logger.info("no need to reboot by global constant")
+        return {"message": "no need to reboot by constant"}
 
     logger.info("rebooting !!!!!!!!")
     try:

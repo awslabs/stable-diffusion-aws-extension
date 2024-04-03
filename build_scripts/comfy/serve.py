@@ -97,8 +97,10 @@ def check_sync():
             logger.info("start check_sync! checking function-------")
             response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
             logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
-            need_reboot = response.json().get('need_reboot')
-            logger.info(f'need_reboot value check: {need_reboot} ！')
+            logger.info("start check_reboot! checking function-------")
+            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
+            logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
+            time.sleep(SLEEP_TIME)
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
@@ -126,15 +128,15 @@ if __name__ == "__main__":
     api_process = Process(target=api.launch, args=(LOCALHOST, SAGEMAKER_PORT))
 
     check_sync_thread = threading.Thread(target=check_sync)
-    check_reboot_thread = threading.Thread(target=check_reboot)
+    # check_reboot_thread = threading.Thread(target=check_reboot)
 
     comfy_app.start()
     api_process.start()
     check_sync_thread.start()
-    check_reboot_thread.start()
+    # check_reboot_thread.start()
 
     api_process.join()
     check_sync_thread.join()
-    check_reboot_thread.join()
+    # check_reboot_thread.join()
 
 

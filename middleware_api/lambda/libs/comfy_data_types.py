@@ -88,4 +88,5 @@ class ComfyInstanceMonitorTable:
 @dataclass
 class ComfyMessageTable:
     prompt_id: str
-    msg_list: Optional[List[str]] = None
+    request_time: str
+    message_body: str

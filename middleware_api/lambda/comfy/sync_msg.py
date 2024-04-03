@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -52,6 +53,22 @@ def save_message_to_dynamodb(prompt_id, message):
         logger.error(f"Error saving message to DynamoDB: {e}")
 
 
+def save_message_to_dynamodb_by_one(prompt_id, message, i):
+    try:
+        request_time = f'{datetime.datetime.now().isoformat()}_{i}'
+        ddb.put_item(
+            TableName=msg_table_name,
+            Item={
+                'prompt_id': {'S': prompt_id},
+                'request_time': {'S': request_time},
+                'message_body': {'S': json.dumps([message])}
+            }
+        )
+        logger.info(f"New record created for prompt_id: {prompt_id}")
+    except Exception as e:
+        logger.error(f"Error saving message to DynamoDB: {e}")
+
+
 @tracer.capture_lambda_handler
 def handler(raw_event, ctx):
     logger.info(f"sync msg start... Received event: {raw_event}")
@@ -59,7 +76,8 @@ def handler(raw_event, ctx):
         if 'Records' not in raw_event or not raw_event['Records']:
             logger.error("ignore empty records msg")
             return ok()
-        msg_save = {}
+        # msg_save = {}
+        i = 0
         for message in raw_event['Records']:
             if not message or 'body' not in message:
                 logger.error("ignore empty body msg")
@@ -67,13 +85,18 @@ def handler(raw_event, ctx):
             msg = json.loads(message['body'])
             logger.info(f"msg body: {msg}")
             if 'prompt_id' in msg and msg['prompt_id']:
-                if msg['prompt_id'] in msg_save.keys():
-                    msg_save[msg['prompt_id']].append(msg)
-                else:
-                    msg_save[msg['prompt_id']] = []
-                    msg_save[msg['prompt_id']].append(msg)
-        for item in msg_save.keys():
-            save_message_to_dynamodb(item, msg_save[item])
+                prompt_id = msg['prompt_id']
+                # TODO batch save with no request_time
+                save_message_to_dynamodb_by_one(prompt_id, msg, i)
+                i = i+1
+            # if 'prompt_id' in msg and msg['prompt_id']:
+            #     if msg['prompt_id'] in msg_save.keys():
+            #         msg_save[msg['prompt_id']].append(msg)
+            #     else:
+            #         msg_save[msg['prompt_id']] = []
+            #         msg_save[msg['prompt_id']].append(msg)
+        # for item in msg_save.keys():
+        #     save_message_to_dynamodb(item, msg_save[item])
         logger.info("execute end...")
         return ok()
     except Exception as e:

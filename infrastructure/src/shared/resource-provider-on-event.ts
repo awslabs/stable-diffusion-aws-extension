@@ -257,6 +257,10 @@ async function createTables() {
         name: 'prompt_id',
         type: AttributeType.STRING,
       },
+      sortKey: {
+        name: 'request_time',
+        type: AttributeType.NUMBER,
+      },
     },
   };
 
