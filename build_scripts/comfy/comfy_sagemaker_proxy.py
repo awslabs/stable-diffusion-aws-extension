@@ -19,6 +19,7 @@ from boto3.dynamodb.conditions import Key
 global need_sync
 global prompt_id
 global executing
+executing = False
 
 REGION = os.environ.get('AWS_REGION')
 BUCKET = os.environ.get('S3_BUCKET_NAME')
@@ -178,12 +179,11 @@ async def invocations(request):
     prompt_id = json_data["prompt_id"]
     try:
         global executing
-        if executing is None:
-            executing = True
-        elif executing is True:
+        if executing is True:
             resp = {"prompt_id": prompt_id, "instance_id": GEN_INSTANCE_ID, "status": "fail",
                     "message": "the environment is not ready valid[0] is false, need to resync"}
             return error(resp)
+        executing = True
         logger.info(
             f'bucket_name: {BUCKET}, region: {REGION}')
         if ('need_prepare' in json_data and json_data['need_prepare']
