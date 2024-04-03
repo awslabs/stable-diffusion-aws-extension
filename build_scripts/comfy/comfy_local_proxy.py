@@ -85,10 +85,11 @@ def get_file_name(url: str):
 
 def handle_sync_messages(server_use, msg_array):
     for msg in msg_array:
-        event = msg[0].get('event')
-        data = msg[0].get('data')
-        sid = msg[0].get('sid') if 'sid' in msg else None
-        server_use.send_sync(event, data, sid)
+        for item in msg:
+            event = item.get('event')
+            data = item.get('data')
+            sid = item.get('sid') if 'sid' in item else None
+            server_use.send_sync(event, data, sid)
 
 
 def execute_proxy(func):
@@ -178,4 +179,3 @@ def send_sync_proxy(func):
 
 
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
-
