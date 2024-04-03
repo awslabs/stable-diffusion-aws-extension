@@ -60,6 +60,17 @@ def error(body: dict):
     return web.Response(status=500, content_type='application/json', body=json.dumps(body))
 
 
+def sen_sqs_msg(message_body, prompt_id_key):
+    sqs_client = boto3.client('sqs', region_name=REGION)
+    response = sqs_client.send_message(
+        QueueUrl=QUEUE_URL,
+        MessageBody=json.dumps(message_body),
+        MessageGroupId=prompt_id_key
+    )
+    message_id = response['MessageId']
+    return message_id
+
+
 async def prepare_comfy_env(sync_item: dict):
     try:
         request_id = sync_item['request_id']
@@ -243,7 +254,8 @@ async def invocations(request):
             "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
         }
         executing = False
-        server.PromptServer.send_sync(server_instance, event="finish", data={"node": None, "prompt_id": prompt_id}, sid=None)
+        message_body = {'prompt_id': prompt_id, 'event': 'finish', 'data': {"node": None, "prompt_id": prompt_id}, 'sid': None}
+        sen_sqs_msg(message_body, prompt_id)
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
@@ -479,14 +491,8 @@ def send_sync_proxy(func):
             event = args[1]
             data = args[2]
             sid = args[3] if len(args) == 4 else None
-            sqs_client = boto3.client('sqs', region_name=REGION)
             message_body = {'prompt_id': prompt_id, 'event': event, 'data': data, 'sid': sid}
-            response = sqs_client.send_message(
-                QueueUrl=QUEUE_URL,
-                MessageBody=json.dumps(message_body),
-                MessageGroupId=prompt_id
-            )
-            message_id = response['MessageId']
+            message_id = sen_sqs_msg(message_body, prompt_id)
             logger.info(f'send_sync_proxy message_id :{message_id} message_body: {message_body}')
         logger.info(f"send_sync_proxy end...")
 
