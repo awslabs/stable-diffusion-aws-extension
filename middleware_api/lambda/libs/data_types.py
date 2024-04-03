@@ -13,7 +13,6 @@ Default_Role = 'IT Operator'
 class _PartitionKeys:
     user = 'user'
     role = 'role'
-    # permission = 'permission'
 
 
 PARTITION_KEYS = _PartitionKeys()
@@ -27,18 +26,13 @@ class Model:
     checkpoint_id: str
     model_type: str
     job_status: CreateModelStatus
-    output_s3_location: Optional[str] = ''  # output location
+    output_s3_location: Optional[str] = ''
     params: Optional[dict[str, Any]] = None
     allowed_roles_or_users: Optional[list[str]] = None
 
     def __post_init__(self):
         if type(self.job_status) == str:
             self.job_status = CreateModelStatus[self.job_status]
-
-        # if self.params is not None and len(self.params) > 0:
-        #     for key, val in self.params.items():
-        #         if type(val) == Decimal:
-        #             self.params[key] = float(val)
 
 
 @dataclasses.dataclass

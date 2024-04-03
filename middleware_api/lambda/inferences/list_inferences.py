@@ -67,6 +67,10 @@ def handler(event, ctx):
 
         for row in items:
             inference = InferenceJob(**row)
+
+            if not inference.image_names:
+                inference.image_names = []
+
             if username:
                 if check_user_permissions(inference.owner_group_or_role, user_roles, username):
                     results.append(inference.__dict__)
