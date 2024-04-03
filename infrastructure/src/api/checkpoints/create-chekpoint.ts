@@ -207,8 +207,7 @@ export class CreateCheckPointApi {
           'message',
           'statusCode',
         ],
-      }
-      ,
+      },
       contentType: 'application/json',
     });
   }
@@ -367,9 +366,6 @@ export class CreateCheckPointApi {
             type: JsonSchemaType.OBJECT,
             properties: {
               message: {
-                type: JsonSchemaType.STRING,
-              },
-              creator: {
                 type: JsonSchemaType.STRING,
               },
             },

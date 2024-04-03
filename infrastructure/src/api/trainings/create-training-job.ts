@@ -1,9 +1,10 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
+import { Aws, aws_apigateway, aws_iam, aws_s3, aws_sns, Duration } from 'aws-cdk-lib';
 import { JsonSchemaType, JsonSchemaVersion, Model, RequestValidator } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
+import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
@@ -13,13 +14,13 @@ import { SCHEMA_DEBUG } from '../../shared/schema';
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
   httpMethod: string;
-  modelTable: aws_dynamodb.Table;
-  trainTable: aws_dynamodb.Table;
-  multiUserTable: aws_dynamodb.Table;
+  modelTable: Table;
+  trainTable: Table;
+  multiUserTable: Table;
   s3Bucket: aws_s3.Bucket;
-  commonLayer: aws_lambda.LayerVersion;
-  checkpointTable: aws_dynamodb.Table;
-  datasetInfoTable: aws_dynamodb.Table;
+  commonLayer: LayerVersion;
+  checkpointTable: Table;
+  datasetInfoTable: Table;
   userTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
   accountId: ICfnRuleConditionExpression;
@@ -384,7 +385,7 @@ export class CreateTrainingJobApi {
       timeout: Duration.seconds(900),
       role: this.lambdaRole(),
       memorySize: 3070,
-      tracing: aws_lambda.Tracing.ACTIVE,
+      tracing: Tracing.ACTIVE,
       environment: {
         TRAIN_TABLE: this.props.trainTable.tableName,
         MODEL_TABLE: this.props.modelTable.tableName,
