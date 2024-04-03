@@ -71,7 +71,7 @@ export class UpdateCheckPointApi {
   }
 
   private responseRenameModel() {
-    return new Model(this.scope, `${this.baseId}-resp-model`, {
+    return new Model(this.scope, `${this.baseId}-rename-model`, {
       restApi: this.router.api,
       modelName: 'UpdateCheckpointNameResponse',
       description: `${this.baseId} Response Model`,
@@ -102,7 +102,7 @@ export class UpdateCheckPointApi {
   }
 
   private responseUpdateModel() {
-    return new Model(this.scope, `${this.baseId}-resp-model`, {
+    return new Model(this.scope, `${this.baseId}-update-model`, {
       restApi: this.router.api,
       modelName: 'UpdateCheckpointResponse',
       description: `${this.baseId} Response Model`,
