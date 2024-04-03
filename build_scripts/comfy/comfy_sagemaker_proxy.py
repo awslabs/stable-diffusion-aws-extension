@@ -352,12 +352,11 @@ def sync_instance_monitor_status(need_save: bool):
 
 @server.PromptServer.instance.routes.get("/reboot")
 def restart(self):
+    logger.info(f"start to reboot!!!!!!!! {self}")
     global executing
     if executing is True:
         logger.info(f"other inference doing cannot reboot!!!!!!!!")
         return {"message": "other inference doing cannot reboot"}
-
-    logger.info("start to reboot!!!!!!!!")
     need_reboot = os.environ.get('NEED_REBOOT')
     if need_reboot and need_reboot.lower() != 'true':
         logger.info("no need to reboot by os")
