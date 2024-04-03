@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, aws_s3, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface GetDatasetApiProps {
@@ -41,13 +44,139 @@ export class GetDatasetApi {
     this.layer = props.commonLayer;
     this.s3Bucket = props.s3Bucket;
 
-    this.getDatasetApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.getResource('{id}')
+      ?.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+        apiKeyRequired: true,
+        operationName: 'GetDataset',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel(), '200'),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+          ApiModels.methodResponses404(),
+        ],
+      });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetDatasetResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              dataset_name: {
+                type: JsonSchemaType.STRING,
+              },
+              datasetName: {
+                type: JsonSchemaType.STRING,
+              },
+              prefix: {
+                type: JsonSchemaType.STRING,
+              },
+              s3: {
+                type: JsonSchemaType.STRING,
+                format: 'uri',
+              },
+              status: {
+                type: JsonSchemaType.STRING,
+              },
+              timestamp: {
+                type: JsonSchemaType.STRING,
+              },
+              data: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    key: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    name: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    preview_url: {
+                      type: JsonSchemaType.STRING,
+                      format: 'uri',
+                    },
+                    dataStatus: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    original_file_name: {
+                      type: JsonSchemaType.STRING,
+                    },
+                  },
+                  required: [
+                    'key',
+                    'name',
+                    'type',
+                    'preview_url',
+                    'dataStatus',
+                    'original_file_name',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              description: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+            required: [
+              'dataset_name',
+              'datasetName',
+              'prefix',
+              's3',
+              'status',
+              'timestamp',
+              'data',
+              'description',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.baseId}-role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
     });
+
     newRole.addToPolicy(new aws_iam.PolicyStatement({
       effect: Effect.ALLOW,
       actions: [
@@ -70,8 +199,7 @@ export class GetDatasetApi {
         's3:ListBucket',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-      ],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -87,8 +215,8 @@ export class GetDatasetApi {
     return newRole;
   }
 
-  private getDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -104,18 +232,8 @@ export class GetDatasetApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.getResource('{id}')
-      ?.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-        apiKeyRequired: true,
-      });
   }
+
+
 }
 

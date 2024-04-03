@@ -5,6 +5,8 @@ import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface UpdateDatasetApiProps {
@@ -46,7 +48,77 @@ export class UpdateDatasetApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.updateDatasetApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addResource('{id}')
+      .addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+        apiKeyRequired: true,
+        requestValidator: this.requestValidator,
+        requestModels: {
+          'application/json': this.model,
+        },
+        operationName: 'UpdateDataset',
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel(), '200'),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+        ],
+      });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListDatasetsResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              datasetName: {
+                type: JsonSchemaType.STRING,
+              },
+              status: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+            required: [
+              'datasetName',
+              'status',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -134,9 +206,8 @@ export class UpdateDatasetApi {
       });
   }
 
-
-  private updateDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -152,23 +223,8 @@ export class UpdateDatasetApi {
       },
       layers: [this.layer],
     });
-
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addResource('{id}')
-      .addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
   }
+
+
 }
 

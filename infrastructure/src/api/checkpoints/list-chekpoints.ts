@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface ListCheckPointsApiProps {
@@ -36,7 +39,171 @@ export class ListCheckPointsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+    const lambdaFunction = this.apiLambda();
+
+    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListCheckpoints',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses504(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListCheckpointsResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              page: {
+                type: JsonSchemaType.INTEGER,
+              },
+              per_page: {
+                type: JsonSchemaType.INTEGER,
+              },
+              pages: {
+                type: JsonSchemaType.INTEGER,
+              },
+              total: {
+                type: JsonSchemaType.INTEGER,
+              },
+              checkpoints: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    id: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    s3Location: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    type: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    name: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                    created: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    params: {
+                      type: JsonSchemaType.OBJECT,
+                      properties: {
+                        creator: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        multipart_upload: {
+                          type: JsonSchemaType.OBJECT,
+                          properties: {
+                            '.*': {
+                              type: JsonSchemaType.OBJECT,
+                              properties: {
+                                uploadId: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                                bucket: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                                key: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                              },
+                              required: [
+                                'bucket',
+                                'key',
+                                'uploadId',
+                              ],
+                            },
+                          },
+                        },
+                        message: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        created: {
+                          type: JsonSchemaType.STRING,
+                        },
+                      },
+                      required: [
+                        'created',
+                        'creator',
+                        'message',
+                        'multipart_upload',
+                      ],
+                    },
+                    allowed_roles_or_users: {
+                      type: JsonSchemaType.ARRAY,
+                      items: {
+                        type: JsonSchemaType.STRING,
+                      },
+                    },
+                  },
+                  required: [
+                    'allowed_roles_or_users',
+                    'created',
+                    'id',
+                    'name',
+                    'params',
+                    's3Location',
+                    'status',
+                    'type',
+                  ],
+                },
+              },
+            },
+            required: [
+              'checkpoints',
+              'page',
+              'pages',
+              'per_page',
+              'total',
+            ],
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'data',
+          'debug',
+          'message',
+          'statusCode',
+        ],
+      }
+      ,
+      contentType: 'application/json',
+    });
+  }
+
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -50,17 +217,6 @@ export class ListCheckPointsApi {
         CHECKPOINT_TABLE: this.checkpointTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    this.lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, this.lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
     });
   }
 

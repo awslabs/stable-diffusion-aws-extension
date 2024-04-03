@@ -50,7 +50,26 @@ export class DeleteCheckpointsApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.deleteCheckpointsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(
+      this.httpMethod,
+      lambdaIntegration,
+      {
+        apiKeyRequired: true,
+        requestValidator: this.requestValidator,
+        requestModels: {
+          'application/json': this.model,
+        },
+        operationName: 'DeleteCheckpoints',
+      });
   }
 
   private createModel() {
@@ -94,9 +113,8 @@ export class DeleteCheckpointsApi {
       });
   }
 
-  private deleteCheckpointsApi() {
-
-    const lambdaFunction = new PythonFunction(
+  private apiLambda() {
+    return new PythonFunction(
       this.scope,
       `${this.baseId}-lambda`,
       {
@@ -114,25 +132,6 @@ export class DeleteCheckpointsApi {
         },
         layers: [this.layer],
       });
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        requestValidator: this.requestValidator,
-        requestModels: {
-          'application/json': this.model,
-        },
-      });
-
   }
 
   private iamRole(): Role {

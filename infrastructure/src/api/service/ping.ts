@@ -40,7 +40,12 @@ export class PingApi {
       {
         apiKeyRequired: true,
         operationName: 'PingResponse',
-        methodResponses: ApiModels.methodResponses(this.responseModel()),
+        methodResponses: [
+          ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses400(),
+          ApiModels.methodResponses401(),
+          ApiModels.methodResponses403(),
+        ],
       });
   }
 

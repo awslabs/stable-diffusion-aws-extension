@@ -1,9 +1,12 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_apigateway, aws_dynamodb, aws_iam, aws_lambda, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, Model } from 'aws-cdk-lib/aws-apigateway';
 import { MethodOptions } from 'aws-cdk-lib/aws-apigateway/lib/method';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface ListDatasetsApiProps {
@@ -35,7 +38,104 @@ export class ListDatasetsApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
 
-    this.listAllDatasetApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
+      apiKeyRequired: true,
+      operationName: 'ListDatasets',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel(), '200'),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+      ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'ListDatasetsResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              datasets: {
+                type: JsonSchemaType.ARRAY,
+                items: {
+                  type: JsonSchemaType.OBJECT,
+                  properties: {
+                    datasetName: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    s3: {
+                      type: JsonSchemaType.STRING,
+                      format: 'uri',
+                    },
+                    status: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    timestamp: {
+                      type: JsonSchemaType.STRING,
+                    },
+                    description: {
+                      type: JsonSchemaType.STRING,
+                    },
+                  },
+                  required: [
+                    'datasetName',
+                    's3',
+                    'status',
+                    'timestamp',
+                    'description',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+              last_evaluated_key: {
+                type: [
+                  JsonSchemaType.STRING,
+                  JsonSchemaType.NULL,
+                ],
+              },
+            },
+            required: [
+              'datasets',
+              'last_evaluated_key',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+            enum: ['OK'],
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -69,8 +169,8 @@ export class ListDatasetsApi {
     return newRole;
   }
 
-  private listAllDatasetApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/datasets`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -85,17 +185,7 @@ export class ListDatasetsApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
-      apiKeyRequired: true,
-    });
   }
+
 }
 

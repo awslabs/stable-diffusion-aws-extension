@@ -5,6 +5,8 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
+import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG } from '../../shared/schema';
 
 
 export interface UpdateCheckPointApiProps {
@@ -45,7 +47,179 @@ export class UpdateCheckPointApi {
     this.model = this.createModel();
     this.requestValidator = this.createRequestValidator();
 
-    this.updateCheckpointApi();
+    const renameLambdaFunction = this.apiRenameLambda();
+
+    const lambdaFunction = this.apiLambda(renameLambdaFunction);
+
+    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addResource('{id}')
+      .addMethod(this.httpMethod, lambdaIntegration,
+        {
+          apiKeyRequired: true,
+          requestValidator: this.requestValidator,
+          requestModels: {
+            'application/json': this.model,
+          },
+          operationName: 'UpdateCheckpoint',
+          methodResponses: [
+            ApiModels.methodResponse(this.responseUpdateModel(), '200'),
+            ApiModels.methodResponse(this.responseRenameModel(), '202'),
+            ApiModels.methodResponses401(),
+            ApiModels.methodResponses403(),
+            ApiModels.methodResponses504(),
+          ],
+        });
+  }
+
+  private responseRenameModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'UpdateCheckpointResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+            description: 'The HTTP status code of the response.',
+          },
+          debug: SCHEMA_DEBUG,
+          message: {
+            type: JsonSchemaType.STRING,
+            description: 'A human-readable message about the status of the operation.',
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
+  }
+
+  private responseUpdateModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'UpdateCheckpointResponse',
+      description: `${this.baseId} Response Model`,
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.NUMBER,
+          },
+          debug: SCHEMA_DEBUG,
+          data: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              checkpoint: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  id: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uuid',
+                  },
+                  type: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  s3_location: {
+                    type: JsonSchemaType.STRING,
+                    format: 'uri',
+                  },
+                  status: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  params: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      creator: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      multipart_upload: {
+                        type: JsonSchemaType.OBJECT,
+                        patternProperties: {
+                          '.*': {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              bucket: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              upload_id: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              key: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: [
+                              'bucket',
+                              'upload_id',
+                              'key',
+                            ],
+                            additionalProperties: false,
+                          },
+                        },
+                        additionalProperties: false,
+                      },
+                      message: {
+                        type: JsonSchemaType.STRING,
+                      },
+                      created: {
+                        type: JsonSchemaType.STRING,
+                        format: 'date-time',
+                      },
+                    },
+                    required: [
+                      'creator',
+                      'multipart_upload',
+                      'message',
+                      'created',
+                    ],
+                    additionalProperties: false,
+                  },
+                },
+                required: [
+                  'id',
+                  'type',
+                  's3_location',
+                  'status',
+                  'params',
+                ],
+                additionalProperties: false,
+              },
+            },
+            required: [
+              'checkpoint',
+            ],
+            additionalProperties: false,
+          },
+          message: {
+            type: JsonSchemaType.STRING,
+          },
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+        additionalProperties: false,
+      }
+      ,
+      contentType: 'application/json',
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -103,8 +277,7 @@ export class UpdateCheckPointApi {
         's3:ListBucketMultipartUploads',
       ],
       resources: [`${this.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*SageMaker*`,
-      ],
+        `arn:${Aws.PARTITION}:s3:::*SageMaker*`],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
@@ -159,9 +332,8 @@ export class UpdateCheckPointApi {
       });
   }
 
-  private updateCheckpointApi() {
-
-    const renameLambdaFunction = new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, {
+  private apiRenameLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-rename-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -177,8 +349,10 @@ export class UpdateCheckPointApi {
       },
       layers: [this.layer],
     });
+  }
 
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda(renameLambdaFunction: PythonFunction) {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: `${this.src}/checkpoints`,
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -194,23 +368,7 @@ export class UpdateCheckPointApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new aws_apigateway.LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addResource('{id}')
-      .addMethod(this.httpMethod, lambdaIntegration,
-        {
-          apiKeyRequired: true,
-          requestValidator: this.requestValidator,
-          requestModels: {
-            'application/json': this.model,
-          },
-        });
   }
+
 }
 
