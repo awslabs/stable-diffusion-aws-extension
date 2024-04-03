@@ -119,7 +119,7 @@ export class Middleware extends Stack {
 
     const ddbTables = new Database(this, 'sd-ddb');
 
-    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
+    const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api');
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
       // service
