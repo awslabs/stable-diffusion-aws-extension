@@ -16,6 +16,7 @@ import { Function } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { BootstraplessStackSynthesizer, CompositeECRRepositoryAspect } from 'cdk-bootstrapless-synthesizer';
 import { Construct } from 'constructs';
+import { OasApi } from './api/service/oas';
 import { PingApi } from './api/service/ping';
 import { CheckpointStack } from './checkpoints/checkpoint-stack';
 import { ComfyApiStack, ComfyInferenceStackProps } from './comfy/comfy-api-stack';
@@ -34,7 +35,6 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
-import { OasApi } from './api/service/oas';
 
 const app = new App();
 
@@ -342,9 +342,14 @@ export class Middleware extends Stack {
       description: 'API Gateway Token',
     });
 
-    new CfnOutput(this, 'ApiOas', {
+    new CfnOutput(this, 'ApiOAS3', {
       value: `${restApi.apiGateway.url}api`,
       description: 'API Doc - OAS3',
+    });
+
+    new CfnOutput(this, 'ApiOAS3Editor', {
+      value: 'https://editor.swagger.io/',
+      description: 'OAS - Editor',
     });
 
     new CfnOutput(this, 'S3BucketName', {
