@@ -34,6 +34,7 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
+import { OasApi } from './api/service/oas';
 
 const app = new App();
 
@@ -121,6 +122,8 @@ export class Middleware extends Stack {
     const commonLayers = new LambdaCommonLayer(this, 'sd-common-layer', '../middleware_api/lambda');
 
     const restApi = new RestApiGateway(this, apiKeyParam.valueAsString, [
+      // service
+      'api',
       'ping',
       // sd api
       'checkpoints',
@@ -149,6 +152,13 @@ export class Middleware extends Stack {
       commonLayer: commonLayers.commonLayer,
       multiUserTable: ddbTables.multiUserTable,
       routers: restApi.routers,
+    });
+
+    new OasApi(this, 'ApiDoc', {
+      commonLayer: commonLayers.commonLayer,
+      httpMethod: 'GET',
+      router: restApi.routers.api,
+      srcRoot: '../middleware_api/lambda',
     });
 
     new PingApi(this, 'Ping', {

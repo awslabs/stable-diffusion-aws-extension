@@ -16,9 +16,7 @@ export interface CreateRoleApiProps {
 }
 
 export class CreateRoleApi {
-  public model: Model;
-  public requestValidator: RequestValidator;
-  private readonly src;
+  private readonly src: string;
   private readonly router: aws_apigateway.Resource;
   private readonly httpMethod: string;
   private readonly scope: Construct;
@@ -34,8 +32,6 @@ export class CreateRoleApi {
     this.src = props.srcRoot;
     this.layer = props.commonLayer;
     this.multiUserTable = props.multiUserTable;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     this.createRoleApi();
   }
@@ -134,7 +130,6 @@ export class CreateRoleApi {
       layers: [this.layer],
     });
 
-
     const lambdaIntegration = new aws_apigateway.LambdaIntegration(
       lambdaFunction,
       {
@@ -144,9 +139,9 @@ export class CreateRoleApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, <MethodOptions>{
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createModel(),
       },
     });
   }

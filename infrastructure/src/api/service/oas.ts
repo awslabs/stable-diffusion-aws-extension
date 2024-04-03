@@ -1,19 +1,18 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import { SCHEMA_DEBUG } from '../../shared/schema';
 
-export interface PingApiProps {
+export interface OasAPiProps {
   router: Resource;
   httpMethod: string;
   srcRoot: string;
   commonLayer: LayerVersion;
 }
 
-export class PingApi {
+export class OasApi {
   private readonly src: string;
   private readonly router: Resource;
   private readonly httpMethod: string;
@@ -21,7 +20,7 @@ export class PingApi {
   private readonly layer: LayerVersion;
   private readonly baseId: string;
 
-  constructor(scope: Construct, id: string, props: PingApiProps) {
+  constructor(scope: Construct, id: string, props: OasAPiProps) {
     this.scope = scope;
     this.baseId = id;
     this.router = props.router;
@@ -33,24 +32,7 @@ export class PingApi {
 
     const lambdaIntegration = new LambdaIntegration(lambdaFunction, { proxy: true });
 
-    this.router.addMethod(
-      this.httpMethod,
-      lambdaIntegration,
-      {
-        apiKeyRequired: true,
-        operationName: 'PingResponse',
-        methodResponses: [
-          {
-            statusCode: '200',
-            responseModels: {
-              'application/json': this.responseModel(),
-            },
-            responseParameters: {
-              'method.response.header.Access-Control-Allow-Origin': true,
-            },
-          },
-        ],
-      });
+    this.router.addMethod(this.httpMethod, lambdaIntegration);
   }
 
   private iamRole(): Role {
@@ -76,36 +58,6 @@ export class PingApi {
     return newRole;
   }
 
-  private responseModel() {
-    return new Model(this.scope, `${this.baseId}-resp-model`, {
-      restApi: this.router.api,
-      modelName: 'PingResponse',
-      description: `${this.baseId} Response Model`,
-      schema: {
-        schema: JsonSchemaVersion.DRAFT7,
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          statusCode: {
-            type: JsonSchemaType.INTEGER,
-            enum: [200],
-          },
-          debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['pong'],
-          },
-        },
-        required: [
-          'statusCode',
-          'debug',
-          'message',
-        ],
-        additionalProperties: false,
-      },
-      contentType: 'application/json',
-    });
-  }
-
   private apiLambda() {
     return new PythonFunction(this.scope,
       `${this.baseId}-lambda`,
@@ -113,7 +65,7 @@ export class PingApi {
         entry: `${this.src}/service`,
         architecture: Architecture.X86_64,
         runtime: Runtime.PYTHON_3_10,
-        index: 'ping.py',
+        index: 'oas.py',
         handler: 'handler',
         timeout: Duration.seconds(900),
         role: this.iamRole(),
