@@ -243,7 +243,7 @@ async def invocations(request):
             "temp_path": f's3://{BUCKET}/comfy/temp/{prompt_id}',
         }
         executing = False
-        server.PromptServer.send_sync(event="finish", data={"prompt_id": prompt_id}, sid=None)
+        server_instance.send_sync(event="finish", data={"prompt_id": prompt_id}, sid=None)
         return ok(response_body)
     except Exception as e:
         logger.info("exception occurred", e)
