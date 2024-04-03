@@ -3,6 +3,7 @@ import { AccessLogFormat, LogGroupLogDestination } from 'aws-cdk-lib/aws-apigate
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
+import { ESD_VERSION } from './version';
 
 export class RestApiGateway {
   public apiGateway: apigw.RestApi;
@@ -34,7 +35,7 @@ export class RestApiGateway {
     // Create an API Gateway, will merge with existing API Gateway
     const api = new apigw.RestApi(this.scope, 'sd-extension-deploy-api', {
       restApiName: this.scope.node.id,
-      description: 'Extension for Stable Diffusion on AWS API',
+      description: `Extension for Stable Diffusion on AWS API - ${ESD_VERSION}`,
       deployOptions: {
         accessLogDestination: new LogGroupLogDestination(apiAccessLogGroup),
         accessLogFormat: AccessLogFormat.clf(),
