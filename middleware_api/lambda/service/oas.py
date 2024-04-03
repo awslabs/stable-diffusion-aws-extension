@@ -45,7 +45,7 @@ def handler(event: dict, context: LambdaContext):
             'isBase64Encoded': False,
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps(oas, default=dumps_default)
+            'body': json.dumps(json.loads(oas), default=dumps_default)
         }
 
         return payload
