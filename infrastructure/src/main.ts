@@ -342,7 +342,7 @@ export class Middleware extends Stack {
       description: 'API Gateway Token',
     });
 
-    new CfnOutput(this, 'ApiDoc', {
+    new CfnOutput(this, 'ApiOas', {
       value: `${restApi.apiGateway.url}api`,
       description: 'API Doc - OAS3',
     });
