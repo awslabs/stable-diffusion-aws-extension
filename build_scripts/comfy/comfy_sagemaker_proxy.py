@@ -106,6 +106,7 @@ async def prepare_comfy_env(sync_item: dict):
         reboot = need_reboot
         if need_reboot:
             os.environ['NEED_REBOOT'] = 'true'
+            restart()
         else:
             os.environ['NEED_REBOOT'] = 'false'
         logger.info("prepare_environment end")
