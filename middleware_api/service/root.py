@@ -17,6 +17,4 @@ def handler(event: dict, context: LambdaContext):
     logger.info(f'event: {event}')
     logger.info(f'ctx: {context}')
 
-    data = os.environ.items()
-
-    return ok(data=data)
+    return ok()
