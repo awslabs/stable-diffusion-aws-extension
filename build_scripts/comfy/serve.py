@@ -94,13 +94,13 @@ def check_sync():
     logger.info("start check_sync!")
     while True:
         try:
-            logger.info("start check_sync! checking function-------")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
-            logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
+            # logger.info("start check_sync! checking function-------")
+            response1 = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/sync_instance")
+            # logger.info(f"sync response:{response.json()} time : {datetime.datetime.now()}")
 
-            logger.info("start check_reboot! checking function-------")
-            response = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
-            logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
+            # logger.info("start check_reboot! checking function-------")
+            response2 = requests.post(f"http://{PHY_LOCALHOST}:{COMFY_PORT}/reboot")
+            # logger.info(f"reboot response:{response.json()} time : {datetime.datetime.now()}")
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.info(f"check_and_reboot error:{e}")
