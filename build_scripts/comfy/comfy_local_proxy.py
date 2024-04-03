@@ -57,7 +57,7 @@ def save_images_locally(response_json, local_folder):
         print(f"Error saving images locally: {e}")
 
 
-def save_files(prefix, execute, key, target_dir):
+def save_files(prefix, execute, key, target_dir, need_prefix):
     if key in execute['data']:
         temp_files = execute['data'][key]
         for url in temp_files:
@@ -67,8 +67,14 @@ def save_files(prefix, execute, key, target_dir):
             if not os.path.exists(target_dir):
                 os.makedirs(target_dir)
             print(f"Saving file {loca_file} to {target_dir}")
-            with open(f"./{target_dir}/{prefix}_{loca_file}", 'wb') as f:
-                f.write(response.content)
+            if loca_file.endswith("output_images_will_be_put_here"):
+                continue
+            if need_prefix:
+                with open(f"./{target_dir}/{prefix}_{loca_file}", 'wb') as f:
+                    f.write(response.content)
+            else:
+                with open(f"./{target_dir}/{loca_file}", 'wb') as f:
+                    f.write(response.content)
 
 
 def get_file_name(url: str):
@@ -126,8 +132,8 @@ def execute_proxy(func):
                         execute_resp = future.result()
                         if execute_resp.status_code == 200:
                             images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp')
-                            save_files(prompt_id, images_response.json(), 'output_files', 'output')
+                            save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                            save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
                             print(images_response.json())
                             save_already = True
                             break
@@ -155,8 +161,8 @@ def execute_proxy(func):
                 execute_resp = execute_future.result()
                 if execute_resp.status_code == 200:
                     images_response = send_get_request(f"{api_url}/executes/{prompt_id}")
-                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp')
-                    save_files(prompt_id, images_response.json(), 'output_files', 'output')
+                    save_files(prompt_id, images_response.json(), 'temp_files', 'temp', False)
+                    save_files(prompt_id, images_response.json(), 'output_files', 'output', True)
 
     return wrapper
 
