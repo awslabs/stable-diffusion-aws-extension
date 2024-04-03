@@ -69,7 +69,7 @@ export class UpdateDatasetApi {
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
-      modelName: 'ListDatasetsResponse',
+      modelName: 'UpdateDatasetsResponse',
       description: `${this.baseId} Response Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,

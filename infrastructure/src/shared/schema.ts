@@ -29,6 +29,12 @@ export const SCHEMA_DEBUG: JsonSchema = {
 };
 
 
+export const SCHEMA_REQUEST_ID: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Request ID by API Gateway',
+  format: 'uuid',
+};
+
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   properties: {
@@ -38,10 +44,7 @@ export const SCHEMA_400: JsonSchema = {
         400,
       ],
     },
-    requestId: {
-      type: JsonSchemaType.STRING,
-      pattern: '^[a-f0-9\\-]{36}$',
-    },
+    requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
     message: {
       type: JsonSchemaType.STRING,
@@ -49,6 +52,8 @@ export const SCHEMA_400: JsonSchema = {
   },
   required: [
     'statusCode',
+    'requestId',
+    'debug',
     'message',
   ],
   additionalProperties: false,
@@ -65,10 +70,7 @@ export const SCHEMA_401: JsonSchema = {
         401,
       ],
     },
-    requestId: {
-      type: JsonSchemaType.STRING,
-      pattern: '^[a-f0-9\\-]{36}$',
-    },
+    requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
     message: {
       type: JsonSchemaType.STRING,
@@ -77,6 +79,8 @@ export const SCHEMA_401: JsonSchema = {
   },
   required: [
     'statusCode',
+    'requestId',
+    'debug',
     'message',
   ],
   additionalProperties: false,
@@ -87,16 +91,14 @@ export const SCHEMA_401: JsonSchema = {
 export const SCHEMA_403: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   properties: {
-    requestId: {
-      type: JsonSchemaType.STRING,
-      pattern: '^[a-f0-9\\-]{36}$',
-    },
+    requestId: SCHEMA_REQUEST_ID,
     message: {
       type: JsonSchemaType.STRING,
       enum: ['Forbidden'],
     },
   },
   required: [
+    'requestId',
     'message',
   ],
   additionalProperties: false,
@@ -112,16 +114,16 @@ export const SCHEMA_404: JsonSchema = {
         404,
       ],
     },
-    requestId: {
-      type: JsonSchemaType.STRING,
-      pattern: '^[a-f0-9\\-]{36}$',
-    },
+    requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
     message: {
       type: JsonSchemaType.STRING,
     },
   },
   required: [
+    'statusCode',
+    'requestId',
+    'debug',
     'message',
   ],
   additionalProperties: false,
@@ -134,10 +136,7 @@ export const SCHEMA_504: JsonSchema = {
     message: {
       type: JsonSchemaType.STRING,
     },
-    requestId: {
-      type: JsonSchemaType.STRING,
-      format: 'uuid',
-    },
+    requestId: SCHEMA_REQUEST_ID,
   },
   required: [
     'message',
