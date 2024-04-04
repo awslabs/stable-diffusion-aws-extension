@@ -7,7 +7,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import {SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_MESSAGE} from '../../shared/schema';
 
 export interface GetInferenceJobApiProps {
   router: Resource;
@@ -80,122 +80,7 @@ export class GetInferenceJobApi {
           data: {
             type: JsonSchemaType.OBJECT,
             additionalProperties: true,
-            properties: {
-              img_presigned_urls: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.STRING,
-                  format: 'uri',
-                },
-              },
-              output_presigned_urls: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.STRING,
-                  format: 'uri',
-                },
-              },
-              startTime: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
-              taskType: {
-                type: JsonSchemaType.STRING,
-              },
-              image_names: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.STRING,
-                  pattern: '^.+\\.*$',
-                },
-              },
-              params: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
-                properties: {
-                  input_body_presign_url: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uri',
-                  },
-                  used_models: {
-                    type: JsonSchemaType.OBJECT,
-                    additionalProperties: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.OBJECT,
-                        properties: {
-                          s3: {
-                            type: JsonSchemaType.STRING,
-                            format: 'uri',
-                          },
-                          id: {
-                            type: JsonSchemaType.STRING,
-                            format: 'uuid',
-                          },
-                          model_name: {
-                            type: JsonSchemaType.STRING,
-                          },
-                          type: {
-                            type: JsonSchemaType.STRING,
-                          },
-                        },
-                        required: [
-                          's3',
-                          'id',
-                          'model_name',
-                          'type',
-                        ],
-                      },
-                    },
-                  },
-                  input_body_s3: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uri',
-                  },
-                  output_path: {
-                    type: JsonSchemaType.STRING,
-                  },
-                  sagemaker_inference_instance_type: {
-                    type: JsonSchemaType.STRING,
-                  },
-                  sagemaker_inference_endpoint_id: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uuid',
-                  },
-                  sagemaker_inference_endpoint_name: {
-                    type: JsonSchemaType.STRING,
-                  },
-                },
-                required: [
-                  'input_body_presign_url',
-                  'used_models',
-                  'input_body_s3',
-                  'sagemaker_inference_instance_type',
-                  'sagemaker_inference_endpoint_id',
-                  'sagemaker_inference_endpoint_name',
-                ],
-              },
-              InferenceJobId: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
-              inference_type: {
-                type: JsonSchemaType.STRING,
-              },
-              createTime: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
-              owner_group_or_role: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.STRING,
-                },
-              },
-            },
+            properties: SCHEMA_INFERENCE,
             required: [
               'img_presigned_urls',
               'output_presigned_urls',

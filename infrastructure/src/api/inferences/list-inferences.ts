@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import {SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE} from '../../shared/schema';
 
 
 export interface ListInferencesApiProps {
@@ -89,112 +89,7 @@ export class ListInferencesApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   additionalProperties: true,
-                  properties: {
-                    InferenceJobId: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    taskType: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    owner_group_or_role: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    startTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    createTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    image_names: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    sagemakerRaw: {
-                      type: JsonSchemaType.OBJECT,
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        input_body_s3: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        sagemaker_inference_endpoint_id: {
-                          type: JsonSchemaType.STRING,
-                          pattern: '^[a-f0-9\\-]{36}$',
-                        },
-                        input_body_presign_url: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        used_models: {
-                          type: JsonSchemaType.OBJECT,
-                          additionalProperties: {
-                            type: JsonSchemaType.ARRAY,
-                            items: {
-                              type: JsonSchemaType.OBJECT,
-                              properties: {
-                                s3: {
-                                  type: JsonSchemaType.STRING,
-                                  format: 'uri',
-                                },
-                                id: {
-                                  type: JsonSchemaType.STRING,
-                                  pattern: '^[a-f0-9\\-]{36}$',
-                                },
-                                model_name: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                type: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                              },
-                              required: [
-                                's3',
-                                'id',
-                                'model_name',
-                                'type',
-                              ],
-                            },
-                          },
-                        },
-                        output_path: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        sagemaker_inference_instance_type: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        sagemaker_inference_endpoint_name: {
-                          type: JsonSchemaType.STRING,
-                        },
-                      },
-                      required: [
-                        'input_body_s3',
-                        'sagemaker_inference_endpoint_id',
-                        'used_models',
-                        'sagemaker_inference_instance_type',
-                        'sagemaker_inference_endpoint_name',
-                      ],
-                    },
-                    inference_type: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    payload_string: {
-                      type: JsonSchemaType.STRING,
-                    },
-                  },
+                  properties: SCHEMA_INFERENCE,
                   required: [
                     'InferenceJobId',
                     'status',
