@@ -36,7 +36,7 @@ def handler(event, ctx):
 
         exclusive_start_key = get_query_param(event, 'exclusive_start_key')
         limit = int(get_query_param(event, 'limit', 10))
-        last_evaluated_key = ''
+        last_evaluated_key = None
 
         scan_kwargs = {
             'Limit': limit,

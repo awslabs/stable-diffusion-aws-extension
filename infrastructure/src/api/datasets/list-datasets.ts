@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_LAST_KEY } from '../../shared/schema';
 
 
 export interface ListDatasetsApiProps {
@@ -103,9 +103,7 @@ export class ListDatasetsApi {
                   additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: JsonSchemaType.STRING,
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'datasets',

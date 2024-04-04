@@ -34,7 +34,7 @@ def handler(event, ctx):
 
         role = get_query_param(event, 'role', 0)
 
-        last_evaluated_key = ''
+        last_evaluated_key = None
         if not role:
             result = ddb_service.query_items(user_table,
                                              key_values={

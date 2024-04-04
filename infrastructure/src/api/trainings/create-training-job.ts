@@ -8,7 +8,7 @@ import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition'
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_LAST_KEY } from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -151,9 +151,7 @@ export class CreateTrainingJobApi {
                   additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: JsonSchemaType.STRING,
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'trainings',

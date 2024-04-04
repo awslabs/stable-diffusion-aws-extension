@@ -7,7 +7,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_LAST_KEY } from '../../shared/schema';
 
 export interface GetTrainingJobApiProps {
   router: Resource;
@@ -147,9 +147,7 @@ export class GetTrainingJobApi {
                   additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: JsonSchemaType.STRING,
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'trainings',
