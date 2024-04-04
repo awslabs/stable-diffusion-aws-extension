@@ -130,10 +130,6 @@ export class ExecuteApi {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
               },
-              complete_time: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
               sagemaker_raw: {
                 type: JsonSchemaType.OBJECT,
                 additionalProperties: true,

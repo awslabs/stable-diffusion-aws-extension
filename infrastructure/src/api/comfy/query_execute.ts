@@ -104,10 +104,6 @@ export class QueryExecuteApi {
                     need_sync: {
                       type: JsonSchemaType.BOOLEAN,
                     },
-                    complete_time: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
                     output_path: {
                       type: JsonSchemaType.STRING,
                     },
