@@ -101,10 +101,6 @@ export class GetInferenceJobApi {
               taskType: {
                 type: JsonSchemaType.STRING,
               },
-              completeTime: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
               image_names: {
                 type: JsonSchemaType.ARRAY,
                 items: {

@@ -116,10 +116,6 @@ export class ListInferencesApi {
                     sagemakerRaw: {
                       type: JsonSchemaType.OBJECT,
                     },
-                    completeTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
                     params: {
                       type: JsonSchemaType.OBJECT,
                       properties: {
