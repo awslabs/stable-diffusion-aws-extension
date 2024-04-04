@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_CHECKPOINT_ID } from '../../shared/schema';
 
 export interface DeleteCheckpointsApiProps {
   router: Resource;
@@ -82,10 +83,7 @@ export class DeleteCheckpointsApi {
           properties: {
             checkpoint_id_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
+              items: SCHEMA_CHECKPOINT_ID,
               minItems: 1,
               maxItems: 100,
             },

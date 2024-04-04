@@ -285,11 +285,13 @@ export const SCHEMA_PERMISSIONS: JsonSchema = {
   items: {
     type: JsonSchemaType.STRING,
   },
+  description: 'Permissions for user',
 };
 
 export const SCHEMA_USERNAME: JsonSchema = {
   type: JsonSchemaType.STRING,
   minLength: 1,
+  description: 'Username for user',
 };
 
 export const SCHEMA_USER_ROLES: JsonSchema = {
@@ -300,47 +302,77 @@ export const SCHEMA_USER_ROLES: JsonSchema = {
   },
   minItems: 1,
   maxItems: 20,
+  description: 'Roles for user',
 };
 
 export const SCHEMA_PASSWORD: JsonSchema = {
   type: JsonSchemaType.STRING,
   minLength: 1,
+  description: 'Password for user',
 };
 
 export const SCHEMA_CREATOR: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Creator of the dataset',
 };
 
 export const SCHEMA_INFER_TYPE: JsonSchema = {
   type: JsonSchemaType.STRING,
   enum: ['Real-time', 'Async'],
+  description: 'Inference type',
 };
 
 export const SCHEMA_ENDPOINT_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Name of endpoint',
 };
 
 export const SCHEMA_DATASET_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Name of dataset',
 };
 
 export const SCHEMA_DATASET_STATUS: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Status of dataset',
 };
 
 export const SCHEMA_DATASET_DESCRIPTION: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Description of dataset',
 };
 
 export const SCHEMA_DATASET_TIMESTAMP: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Timestamp of dataset',
 };
 
 export const SCHEMA_DATASET_PREFIX: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Prefix of dataset',
 };
 
 export const SCHEMA_DATASET_S3: JsonSchema = {
   type: JsonSchemaType.STRING,
   format: 'uri',
+  description: 'S3 location of dataset',
+};
+
+export const SCHEMA_CHECKPOINT_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Type of checkpoint',
+  enum: [
+    'Stable-diffusion',
+    'embeddings',
+    'Lora',
+    'hypernetworks',
+    'ControlNet',
+    'VAE',
+  ],
+};
+
+export const SCHEMA_CHECKPOINT_ID: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  format: 'uuid',
+  description: 'ID of checkpoint',
 };

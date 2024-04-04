@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateCheckPointApiProps {
@@ -317,18 +317,7 @@ export class CreateCheckPointApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          checkpoint_type: {
-            type: JsonSchemaType.STRING,
-            description: 'Type of checkpoint',
-            enum: [
-              'Stable-diffusion',
-              'embeddings',
-              'Lora',
-              'hypernetworks',
-              'ControlNet',
-              'VAE',
-            ],
-          },
+          checkpoint_type: SCHEMA_CHECKPOINT_TYPE,
           filenames: {
             type: JsonSchemaType.ARRAY,
             items: {

@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ListCheckPointsApiProps {
@@ -98,15 +98,11 @@ export class ListCheckPointsApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    id: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    id: SCHEMA_CHECKPOINT_ID,
                     s3Location: {
                       type: JsonSchemaType.STRING,
                     },
-                    type: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    type: SCHEMA_CHECKPOINT_TYPE,
                     status: {
                       type: JsonSchemaType.STRING,
                     },
