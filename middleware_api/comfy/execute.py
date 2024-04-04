@@ -110,6 +110,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         start_time=datetime.now().isoformat(),
         sagemaker_raw={},
         output_path='',
+        temp_path='',
     )
 
     if ep.endpoint_type == 'Async':
