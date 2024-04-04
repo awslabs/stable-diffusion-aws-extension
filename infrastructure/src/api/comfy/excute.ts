@@ -130,10 +130,7 @@ export class ExecuteApi {
                 type: JsonSchemaType.STRING,
               },
               output_files: {
-                type: [
-                  JsonSchemaType.ARRAY,
-                  JsonSchemaType.NUMBER,
-                ],
+                type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.STRING,
                 },
