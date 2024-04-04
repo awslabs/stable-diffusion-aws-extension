@@ -225,7 +225,6 @@ export class ListInferencesApi {
             },
             required: [
               'inferences',
-              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

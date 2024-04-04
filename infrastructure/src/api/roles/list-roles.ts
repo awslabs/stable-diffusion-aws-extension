@@ -100,7 +100,6 @@ export class ListRolesApi {
             },
             required: [
               'roles',
-              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

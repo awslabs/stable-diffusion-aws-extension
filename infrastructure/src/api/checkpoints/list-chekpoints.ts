@@ -111,56 +111,48 @@ export class ListCheckPointsApi {
                       type: JsonSchemaType.STRING,
                     },
                     params: {
-                      oneOf: [
-                        {
-                          type: JsonSchemaType.NULL,
-                          description: 'Checkpoint Params',
+                      type: JsonSchemaType.OBJECT,
+                      description: 'Checkpoint Params',
+                      properties: {
+                        creator: {
+                          type: JsonSchemaType.STRING,
                         },
-                        {
+                        multipart_upload: {
                           type: JsonSchemaType.OBJECT,
-                          description: 'Checkpoint Params',
                           properties: {
-                            creator: {
-                              type: JsonSchemaType.STRING,
-                            },
-                            multipart_upload: {
+                            '.*': {
                               type: JsonSchemaType.OBJECT,
                               properties: {
-                                '.*': {
-                                  type: JsonSchemaType.OBJECT,
-                                  properties: {
-                                    uploadId: {
-                                      type: JsonSchemaType.STRING,
-                                    },
-                                    bucket: {
-                                      type: JsonSchemaType.STRING,
-                                    },
-                                    key: {
-                                      type: JsonSchemaType.STRING,
-                                    },
-                                  },
-                                  required: [
-                                    'bucket',
-                                    'key',
-                                    'uploadId',
-                                  ],
+                                uploadId: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                                bucket: {
+                                  type: JsonSchemaType.STRING,
+                                },
+                                key: {
+                                  type: JsonSchemaType.STRING,
                                 },
                               },
-                            },
-                            message: {
-                              type: JsonSchemaType.STRING,
-                            },
-                            created: {
-                              type: JsonSchemaType.STRING,
+                              required: [
+                                'bucket',
+                                'key',
+                                'uploadId',
+                              ],
                             },
                           },
-                          required: [
-                            'created',
-                            'creator',
-                            'message',
-                            'multipart_upload',
-                          ],
                         },
+                        message: {
+                          type: JsonSchemaType.STRING,
+                        },
+                        created: {
+                          type: JsonSchemaType.STRING,
+                        },
+                      },
+                      required: [
+                        'created',
+                        'creator',
+                        'message',
+                        'multipart_upload',
                       ],
                     },
                     allowed_roles_or_users: {
@@ -175,7 +167,6 @@ export class ListCheckPointsApi {
                     'created',
                     'id',
                     'name',
-                    'params',
                     's3Location',
                     'status',
                     'type',

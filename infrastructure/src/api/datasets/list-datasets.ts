@@ -107,7 +107,6 @@ export class ListDatasetsApi {
             },
             required: [
               'datasets',
-              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

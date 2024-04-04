@@ -196,7 +196,6 @@ export class ListTrainingJobsApi {
             },
             required: [
               'trainings',
-              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

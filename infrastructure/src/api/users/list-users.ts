@@ -156,7 +156,6 @@ export class ListUsersApi {
               last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
-              'last_evaluated_key',
               'users',
             ],
             additionalProperties: false,

@@ -155,7 +155,6 @@ export class CreateTrainingJobApi {
             },
             required: [
               'trainings',
-              'last_evaluated_key',
             ],
             additionalProperties: false,
           },
