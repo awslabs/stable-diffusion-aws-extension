@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import {SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_MESSAGE} from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -90,10 +90,7 @@ export class CreateInferenceJobApi {
               inference: {
                 type: JsonSchemaType.OBJECT,
                 properties: {
-                  id: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uuid',
-                  },
+                  id: SCHEMA_INFERENCE.InferenceJobId,
                   type: {
                     type: JsonSchemaType.STRING,
                   },
