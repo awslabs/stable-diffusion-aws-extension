@@ -200,10 +200,7 @@ export class ListInferencesApi {
                       type: JsonSchemaType.STRING,
                     },
                     payload_string: {
-                      type: [
-                        JsonSchemaType.NULL,
-                        JsonSchemaType.STRING,
-                      ],
+                      type: JsonSchemaType.STRING,
                     },
                   },
                   required: [
