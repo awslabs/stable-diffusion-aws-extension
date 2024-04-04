@@ -134,7 +134,6 @@ export class CreateInferenceJobApi {
                   'type',
                   'api_params_s3_location',
                   'api_params_s3_upload_url',
-                  'models',
                 ],
               },
             },
