@@ -71,6 +71,9 @@ def handler(event, ctx):
             if not inference.payload_string:
                 inference.payload_string = "{}"
 
+            if not inference.sagemakerRaw:
+                inference.sagemakerRaw = {}
+
             if not inference.image_names:
                 inference.image_names = []
 

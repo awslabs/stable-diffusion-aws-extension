@@ -120,10 +120,7 @@ export class ListInferencesApi {
                       },
                     },
                     sagemakerRaw: {
-                      type: [
-                        JsonSchemaType.NULL,
-                        JsonSchemaType.OBJECT,
-                      ],
+                      type: JsonSchemaType.OBJECT,
                     },
                     completeTime: {
                       type: JsonSchemaType.STRING,
