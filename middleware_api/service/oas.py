@@ -27,29 +27,23 @@ def handler(event: dict, context: LambdaContext):
             restApiId=event['requestContext']['apiId'],
             stageName='prod',
             exportType='oas30',
-            # parameters={
-            #     'extensions': 'integrations'
-            # }
         )
 
         oas = response['body'].read()
-        logger.info(oas)
-
-        headers = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': '*',
-            'Access-Control-Allow-Methods': '*',
-            'Access-Control-Allow-v': True,
-        }
-
-        json_schema = replace_null(oas)
+        json_schema = json.loads(oas)
+        json_schema = replace_null(json_schema)
 
         payload = {
             'isBase64Encoded': False,
             'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps(json.loads(json_schema), default=dumps_default)
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': '*',
+                'Access-Control-Allow-Methods': '*',
+                'Access-Control-Allow-v': True,
+            },
+            'body': json.dumps(json_schema, default=dumps_default)
         }
 
         return payload
@@ -64,6 +58,7 @@ def replace_null(data):
             if value is None:
                 data[key] = {
                     "type": "null",
+                    "description": "Last Key for Pagination"
                 }
             else:
                 data[key] = replace_null(value)
@@ -72,6 +67,7 @@ def replace_null(data):
             if item is None:
                 data[i] = {
                     "type": "null",
+                    "description": "Last Key for Pagination"
                 }
             else:
                 data[i] = replace_null(item)
