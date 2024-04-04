@@ -205,8 +205,6 @@ def save_inference_parameters(sagemaker_out, inference_id, endpoint_name):
     upload_file_to_s3(json_file_name, S3_BUCKET_NAME, f"out/{inference_id}/result",
                       f"{inference_id}_param.json")
 
-    update_inference_job_table(inference_id, 'inference_info_name', json_file_name)
-
     log_json(f"Complete inference parameters", inference_parameters)
 
 

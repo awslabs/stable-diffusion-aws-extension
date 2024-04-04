@@ -51,9 +51,6 @@ def get_infer_data(inference_id: str):
     else:
         item['image_names'] = []
 
-    if 'completeTime' not in item:
-        item['completeTime'] = None
-
     output_presigned_urls = generate_presigned_url(
         s3_bucket_name,
         f"out/{inference_id}/result/{inference_id}_param.json")

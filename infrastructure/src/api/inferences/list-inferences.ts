@@ -99,9 +99,6 @@ export class ListInferencesApi {
                         type: JsonSchemaType.STRING,
                       },
                     },
-                    inference_info_name: {
-                      type: JsonSchemaType.STRING,
-                    },
                     startTime: {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
@@ -202,11 +199,9 @@ export class ListInferencesApi {
                     'status',
                     'taskType',
                     'owner_group_or_role',
-                    'inference_info_name',
                     'startTime',
                     'createTime',
                     'image_names',
-                    'completeTime',
                     'params',
                     'inference_type',
                   ],

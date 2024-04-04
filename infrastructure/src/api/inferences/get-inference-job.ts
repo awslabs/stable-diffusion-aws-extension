@@ -101,9 +101,6 @@ export class GetInferenceJobApi {
               taskType: {
                 type: JsonSchemaType.STRING,
               },
-              inference_info_name: {
-                type: JsonSchemaType.STRING,
-              },
               completeTime: {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
@@ -150,7 +147,6 @@ export class GetInferenceJobApi {
                           'model_name',
                           'type',
                         ],
-                        additionalProperties: false,
                       },
                     },
                   },
@@ -180,7 +176,6 @@ export class GetInferenceJobApi {
                   'sagemaker_inference_endpoint_id',
                   'sagemaker_inference_endpoint_name',
                 ],
-                additionalProperties: false,
               },
               InferenceJobId: {
                 type: JsonSchemaType.STRING,
@@ -213,11 +208,9 @@ export class GetInferenceJobApi {
               'status',
               'inference_type',
               'image_names',
-              'completeTime',
               'createTime',
               'owner_group_or_role',
             ],
-            additionalProperties: false,
           },
         },
         required: [
