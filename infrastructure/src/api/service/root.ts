@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { LambdaIntegration, RequestValidator, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -33,11 +33,7 @@ export class RootAPI {
     this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'RootAPI',
-      requestValidatorOptions: {
-        requestValidatorName: 'RootAPIRequestValidator',
-        validateRequestBody: true,
-        validateRequestParameters: true,
-      },
+      requestValidator: this.createRequestValidator(),
       requestParameters: {
         'method.request.header.MyHeader': false,
         'method.request.header.MyHeader2': true,
@@ -48,6 +44,16 @@ export class RootAPI {
         ApiModels.methodResponses403(),
       ],
     });
+  }
+
+  private createRequestValidator(): RequestValidator {
+    return new RequestValidator(
+      this.scope,
+      `${this.baseId}-root-validator`,
+      {
+        restApi: this.restApi.root.api,
+        validateRequestBody: true,
+      });
   }
 
   private iamRole(): Role {
