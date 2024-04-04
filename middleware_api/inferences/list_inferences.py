@@ -81,7 +81,20 @@ def handler(event, ctx):
                 if check_user_permissions(inference.owner_group_or_role, user_roles, username):
                     results.append(inference.__dict__)
             else:
-                results.append(inference.__dict__)
+                results.append({
+                    "InferenceJobId": inference.InferenceJobId,
+                    "status": inference.status,
+                    "taskType": inference.taskType,
+                    "owner_group_or_role": inference.owner_group_or_role,
+                    "startTime": inference.startTime,
+                    "createTime": inference.createTime,
+                    "image_names": inference.image_names,
+                    "sagemakerRaw": inference.sagemakerRaw,
+                    "completeTime": inference.completeTime,
+                    "params": inference.params,
+                    "inference_type": inference.inference_type,
+                    "payload_string": inference.payload_string,
+                })
 
         results = sort_inferences(results)
 
