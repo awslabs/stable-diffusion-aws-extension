@@ -68,6 +68,9 @@ def handler(event, ctx):
         for row in items:
             inference = InferenceJob(**row)
 
+            if not inference.payload_string:
+                inference.payload_string = "{}"
+
             if not inference.image_names:
                 inference.image_names = []
 
