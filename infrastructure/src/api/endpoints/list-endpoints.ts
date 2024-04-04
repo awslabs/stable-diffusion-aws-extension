@@ -101,10 +101,6 @@ export class ListEndpointsApi {
                       type: JsonSchemaType.STRING,
                       pattern: '^[0-9]+$',
                     },
-                    endTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
                     endpoint_status: {
                       type: JsonSchemaType.STRING,
                     },
@@ -138,7 +134,6 @@ export class ListEndpointsApi {
                     'startTime',
                     'instance_type',
                     'current_instance_count',
-                    'endTime',
                     'endpoint_status',
                     'endpoint_name',
                     'endpoint_type',

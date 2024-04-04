@@ -137,10 +137,6 @@ export class CreateEndpointApi {
                 type: JsonSchemaType.STRING,
                 pattern: '^[0-9]+$',
               },
-              endTime: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
               endpoint_status: {
                 type: JsonSchemaType.STRING,
               },
