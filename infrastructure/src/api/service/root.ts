@@ -33,6 +33,17 @@ export class RootAPI {
     this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'RootAPI',
+      requestValidatorOptions: {
+        requestValidatorName: `${this.baseId}-validator`,
+        validateRequestBody: true,
+        validateRequestParameters: true,
+      },
+      requestParameters: {
+        'method.request.header.MyHeader': false,
+        'method.request.header.MyHeader2': true,
+        'method.request.querystring.myQuery': true,
+        'method.request.querystring.myQuery2': false,
+      },
       methodResponses: [
         ApiModels.methodResponses403(),
       ],
