@@ -242,7 +242,7 @@ def get_permissions_by_username(ddb_service, user_table, username):
 
 def encode_last_key(last_evaluated_key):
     if not last_evaluated_key:
-        return None
+        return ""
     return base64.b64encode(json.dumps(last_evaluated_key).encode(encode_type)).decode(encode_type)
 
 

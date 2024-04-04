@@ -148,10 +148,7 @@ export class GetTrainingJobApi {
                 },
               },
               last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
             },
             required: [
