@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_USER } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_PASSWORD, SCHEMA_USER_ROLES, SCHEMA_USERNAME } from '../../shared/schema';
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -118,9 +118,9 @@ export class CreateUserApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          username: SCHEMA_USER.username,
-          password: SCHEMA_USER.password,
-          roles: SCHEMA_USER.roles,
+          username: SCHEMA_USERNAME,
+          password: SCHEMA_PASSWORD,
+          roles: SCHEMA_USER_ROLES,
         },
         required: [
           'username',

@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_CREATOR, SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE, SCHEMA_PERMISSIONS } from '../../shared/schema';
 
 
 export interface ListAllRolesApiProps {
@@ -79,15 +79,8 @@ export class ListRolesApi {
                     role_name: {
                       type: JsonSchemaType.STRING,
                     },
-                    creator: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    permissions: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
+                    creator: SCHEMA_CREATOR,
+                    permissions: SCHEMA_PERMISSIONS,
                   },
                   required: [
                     'role_name',

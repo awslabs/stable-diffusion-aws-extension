@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import {SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE} from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ListInferencesApiProps {

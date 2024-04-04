@@ -5,7 +5,15 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE, SCHEMA_USER } from '../../shared/schema';
+import {
+  SCHEMA_CREATOR,
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE, SCHEMA_PASSWORD,
+  SCHEMA_PERMISSIONS,
+  SCHEMA_USER_ROLES,
+  SCHEMA_USERNAME,
+} from '../../shared/schema';
 
 
 export interface ListUsersApiProps {
@@ -126,11 +134,11 @@ export class ListUsersApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    username: SCHEMA_USER.username,
-                    roles: SCHEMA_USER.roles,
-                    creator: SCHEMA_USER.creator,
-                    permissions: SCHEMA_USER.permissions,
-                    password: SCHEMA_USER.password,
+                    username: SCHEMA_USERNAME,
+                    roles: SCHEMA_USER_ROLES,
+                    creator: SCHEMA_CREATOR,
+                    permissions: SCHEMA_PERMISSIONS,
+                    password: SCHEMA_PASSWORD,
                   },
                   required: [
                     'creator',

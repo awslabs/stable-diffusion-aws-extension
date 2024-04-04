@@ -283,31 +283,34 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
 };
 
 
-export const SCHEMA_USER: Record<string, JsonSchema> = {
-  username: {
+export const SCHEMA_PERMISSIONS: JsonSchema = {
+  type: JsonSchemaType.ARRAY,
+  items: {
     type: JsonSchemaType.STRING,
-    minLength: 1,
-  },
-  password: {
-    type: JsonSchemaType.STRING,
-    minLength: 1,
-  },
-  permissions: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-    },
-  },
-  creator: {
-    type: JsonSchemaType.STRING,
-  },
-  roles: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-      minLength: 1,
-    },
-    minItems: 1,
-    maxItems: 20,
   },
 };
+
+export const SCHEMA_USERNAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  minLength: 1,
+};
+
+export const SCHEMA_USER_ROLES: JsonSchema = {
+  type: JsonSchemaType.ARRAY,
+  items: {
+    type: JsonSchemaType.STRING,
+    minLength: 1,
+  },
+  minItems: 1,
+  maxItems: 20,
+};
+
+export const SCHEMA_PASSWORD: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  minLength: 1,
+};
+
+export const SCHEMA_CREATOR: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
