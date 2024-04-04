@@ -107,35 +107,20 @@ export class ExecuteApi {
                 additionalProperties: true,
               },
               number: {
-                type: [
-                  JsonSchemaType.INTEGER,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.INTEGER,
               },
               front: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               extra_data: {
-                type: [
-                  JsonSchemaType.OBJECT,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.OBJECT,
                 additionalProperties: true,
               },
               client_id: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               instance_id: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               prompt_path: {
                 type: JsonSchemaType.STRING,
@@ -149,10 +134,7 @@ export class ExecuteApi {
                 format: 'date-time',
               },
               complete_time: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
                 format: 'date-time',
               },
               sagemaker_raw: {
@@ -172,16 +154,10 @@ export class ExecuteApi {
                 },
               },
               temp_path: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               temp_files: {
-                type: [
-                  JsonSchemaType.ARRAY,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
                   additionalProperties: false,

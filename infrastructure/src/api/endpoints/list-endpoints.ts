@@ -107,10 +107,7 @@ export class ListEndpointsApi {
                       pattern: '^[0-9]+$',
                     },
                     endTime: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.STRING,
                       format: 'date-time',
                     },
                     endpoint_status: {
@@ -120,10 +117,7 @@ export class ListEndpointsApi {
                       type: JsonSchemaType.STRING,
                     },
                     error: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NUMBER,
-                      ],
+                      type: JsonSchemaType.STRING,
                     },
                     endpoint_type: {
                       type: JsonSchemaType.STRING,

@@ -127,10 +127,7 @@ export class CreateEndpointApi {
                 format: 'date-time',
               },
               status: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               instance_type: {
                 type: JsonSchemaType.STRING,
@@ -140,10 +137,7 @@ export class CreateEndpointApi {
                 pattern: '^[0-9]+$',
               },
               endTime: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
                 format: 'date-time',
               },
               endpoint_status: {
@@ -153,10 +147,7 @@ export class CreateEndpointApi {
                 type: JsonSchemaType.STRING,
               },
               error: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               endpoint_type: {
                 type: JsonSchemaType.STRING,

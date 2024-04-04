@@ -104,32 +104,20 @@ export class QueryExecuteApi {
                       type: JsonSchemaType.BOOLEAN,
                     },
                     complete_time: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.STRING,
                       format: 'date-time',
                     },
                     output_path: {
                       type: JsonSchemaType.STRING,
                     },
                     output_files: {
-                      type: [
-                        JsonSchemaType.ARRAY,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.ARRAY,
                     },
                     temp_path: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.STRING,
                     },
                     temp_files: {
-                      type: [
-                        JsonSchemaType.ARRAY,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.ARRAY,
                     },
                   },
                   required: [
