@@ -1,9 +1,7 @@
 import logging
 import os
 
-import boto3
 from aws_lambda_powertools import Tracer
-from botocore.exceptions import ClientError
 
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
@@ -15,26 +13,8 @@ tracer = Tracer()
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
-region = os.environ.get('AWS_REGION')
-bucket_name = os.environ.get('S3_BUCKET_NAME')
 execute_table = os.environ.get('EXECUTE_TABLE')
 ddb_service = DynamoDbUtilsService(logger=logger)
-
-
-def generate_presigned_url(bucket, key, expiration=3600):
-    """Generate a presigned URL for the S3 object."""
-    s3_client = boto3.client('s3', region_name=region)
-    try:
-        response = s3_client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': bucket, 'Key': key},
-            ExpiresIn=expiration
-        )
-    except ClientError as e:
-        logger.error(f"Error generating presigned URL: {e}")
-        return None
-
-    return response
 
 
 @tracer.capture_lambda_handler
