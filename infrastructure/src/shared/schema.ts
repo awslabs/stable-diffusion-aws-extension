@@ -35,6 +35,7 @@ export const SCHEMA_REQUEST_ID: JsonSchema = {
   format: 'uuid',
 };
 
+// API Gateway Validator or Lambda Response
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   properties: {
