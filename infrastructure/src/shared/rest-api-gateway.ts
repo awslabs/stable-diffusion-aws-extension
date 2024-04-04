@@ -83,7 +83,8 @@ export class RestApiGateway {
         'application/json': JSON.stringify({
           statusCode: 400,
           message: '$context.error.validationErrorString',
-          requestId: '$context.requestId',
+          requestId: '$context.extendedRequestId',
+          status: '$context.responseOverride.status',
         }),
       },
     });
@@ -93,7 +94,7 @@ export class RestApiGateway {
       templates: {
         'application/json': JSON.stringify({
           message: '$context.error.message',
-          requestId: '$context.requestId',
+          requestId: '$context.extendedRequestId',
         }),
       },
     });
@@ -103,7 +104,7 @@ export class RestApiGateway {
       templates: {
         'application/json': JSON.stringify({
           message: '$context.error.message',
-          requestId: '$context.requestId',
+          requestId: '$context.extendedRequestId',
         }),
       },
     });
