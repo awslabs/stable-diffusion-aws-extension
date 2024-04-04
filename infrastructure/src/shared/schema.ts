@@ -138,7 +138,6 @@ export const SCHEMA_404: JsonSchema = {
   },
   required: [
     'statusCode',
-    'requestId',
     'debug',
     'message',
   ],
@@ -159,5 +158,4 @@ export const SCHEMA_504: JsonSchema = {
   ],
   additionalProperties: false,
 }
-
 ;
