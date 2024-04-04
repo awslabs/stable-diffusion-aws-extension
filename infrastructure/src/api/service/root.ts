@@ -33,16 +33,6 @@ export class RootAPI {
     this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'RootAPI',
-      requestParameters: {
-        // description: 'Request parameters for RootAPI',
-        'method.request.header.MyHeader': false,
-        // description: 'Request parameters for RootAPI',
-        'method.request.header.MyHeader2': true,
-        // description: 'Request parameters for RootAPI',
-        'method.request.querystring.myQuery': true,
-
-        'method.request.querystring.myQuery2': false,
-      },
       methodResponses: [
         ApiModels.methodResponses403(),
       ],
