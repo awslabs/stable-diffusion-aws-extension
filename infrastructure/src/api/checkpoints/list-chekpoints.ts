@@ -111,7 +111,7 @@ export class ListCheckPointsApi {
                       type: JsonSchemaType.STRING,
                     },
                     params: {
-                      type: JsonSchemaType.OBJECT,
+                      type: [JsonSchemaType.OBJECT, JsonSchemaType.NULL],
                       properties: {
                         creator: {
                           type: JsonSchemaType.STRING,
