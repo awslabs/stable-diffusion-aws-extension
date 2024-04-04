@@ -111,6 +111,8 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         sagemaker_raw={},
         output_path='',
         temp_path='',
+        output_files=[],
+        temp_files=[]
     )
 
     if ep.endpoint_type == 'Async':
