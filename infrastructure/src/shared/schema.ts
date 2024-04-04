@@ -132,7 +132,6 @@ export const SCHEMA_404: JsonSchema = {
         404,
       ],
     },
-    requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
     message: SCHEMA_MESSAGE,
   },
