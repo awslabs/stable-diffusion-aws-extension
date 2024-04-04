@@ -100,10 +100,7 @@ export class ListInferencesApi {
                       },
                     },
                     inference_info_name: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.STRING,
                     },
                     startTime: {
                       type: JsonSchemaType.STRING,

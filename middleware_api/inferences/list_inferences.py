@@ -77,6 +77,9 @@ def handler(event, ctx):
             if not inference.image_names:
                 inference.image_names = []
 
+            if not inference.inference_info_name:
+                inference.inference_info_name = ""
+
             if username:
                 if check_user_permissions(inference.owner_group_or_role, user_roles, username):
                     results.append(inference.__dict__)
