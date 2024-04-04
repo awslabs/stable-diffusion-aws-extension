@@ -147,9 +147,6 @@ export class CreateEndpointApi {
               endpoint_name: {
                 type: JsonSchemaType.STRING,
               },
-              error: {
-                type: JsonSchemaType.STRING,
-              },
               endpoint_type: {
                 type: JsonSchemaType.STRING,
               },
@@ -185,7 +182,6 @@ export class CreateEndpointApi {
               'custom_extensions',
               'service_type',
             ],
-            additionalProperties: false,
           },
         },
         required: [
