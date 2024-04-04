@@ -89,10 +89,6 @@ export class GetExecuteApi {
               need_sync: {
                 type: JsonSchemaType.BOOLEAN,
               },
-              sagemaker_raw: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
-              },
               prompt_path: {
                 type: JsonSchemaType.STRING,
               },
@@ -124,7 +120,6 @@ export class GetExecuteApi {
             required: [
               'prompt_id',
               'need_sync',
-              'sagemaker_raw',
               'prompt_path',
               'endpoint_name',
               'status',
@@ -134,7 +129,6 @@ export class GetExecuteApi {
               'prompt_params',
               'output_path',
             ],
-            additionalProperties: false,
           },
         },
         required: [
