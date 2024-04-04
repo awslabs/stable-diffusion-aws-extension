@@ -147,6 +147,13 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
                                                                      inference_job.output_files)
         inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
                                                                    inference_job.temp_files)
+
+    if not inference_job.output_files:
+        inference_job.output_files = []
+
+    if not inference_job.temp_files:
+        inference_job.temp_files = []
+
     data = {
         'prompt_id': inference_job.prompt_id,
         'status': inference_job.status,
