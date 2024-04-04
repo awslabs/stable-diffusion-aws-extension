@@ -111,7 +111,7 @@ export class ListCheckPointsApi {
                       type: JsonSchemaType.STRING,
                     },
                     params: {
-                      anyOf: [
+                      oneOf: [
                         {
                           type: JsonSchemaType.NULL,
                           description: 'Checkpoint Params',

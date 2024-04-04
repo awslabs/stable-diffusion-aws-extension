@@ -36,7 +36,7 @@ export const SCHEMA_REQUEST_ID: JsonSchema = {
 };
 
 export const SCHEMA_LAST_KEY: JsonSchema = {
-  anyOf: [
+  oneOf: [
     {
       type: JsonSchemaType.STRING,
       description: 'Last Key for Pagination',
