@@ -145,7 +145,7 @@ export class QueryExecuteApi {
               last_evaluated_key: {
                 type: [
                   JsonSchemaType.STRING,
-                  JsonSchemaType.NUMBER,
+                  JsonSchemaType.NULL,
                 ],
               },
             },

@@ -165,7 +165,7 @@ export class ListEndpointsApi {
               last_evaluated_key: {
                 type: [
                   JsonSchemaType.STRING,
-                  JsonSchemaType.NUMBER,
+                  JsonSchemaType.NULL,
                 ],
               },
             },
