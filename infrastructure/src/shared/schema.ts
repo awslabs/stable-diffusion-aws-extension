@@ -52,7 +52,6 @@ export const SCHEMA_400: JsonSchema = {
   },
   required: [
     'statusCode',
-    'requestId',
     'message',
   ],
   additionalProperties: false,
