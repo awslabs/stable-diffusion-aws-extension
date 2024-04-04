@@ -111,7 +111,7 @@ export class ListCheckPointsApi {
                       type: JsonSchemaType.STRING,
                     },
                     params: {
-                      type: [JsonSchemaType.OBJECT, JsonSchemaType.NULL],
+                      type: JsonSchemaType.OBJECT,
                       properties: {
                         creator: {
                           type: JsonSchemaType.STRING,
@@ -166,7 +166,6 @@ export class ListCheckPointsApi {
                     'created',
                     'id',
                     'name',
-                    'params',
                     's3Location',
                     'status',
                     'type',
