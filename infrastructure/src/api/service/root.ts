@@ -53,6 +53,7 @@ export class RootAPI {
       {
         restApi: this.restApi.root.api,
         validateRequestBody: true,
+        validateRequestParameters: true,
       });
   }
 
