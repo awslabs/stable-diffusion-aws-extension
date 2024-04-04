@@ -147,6 +147,7 @@ export class QueryExecuteApi {
             },
             required: [
               'executes',
+              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

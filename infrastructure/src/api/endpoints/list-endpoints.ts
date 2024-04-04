@@ -167,6 +167,7 @@ export class ListEndpointsApi {
             },
             required: [
               'endpoints',
+              'last_evaluated_key',
             ],
             additionalProperties: false,
           },

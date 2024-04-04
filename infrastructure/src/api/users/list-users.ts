@@ -158,6 +158,7 @@ export class ListUsersApi {
             },
             required: [
               'users',
+              'last_evaluated_key',
             ],
             additionalProperties: false,
           },
