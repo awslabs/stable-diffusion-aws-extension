@@ -110,50 +110,6 @@ export class ListCheckPointsApi {
                     created: {
                       type: JsonSchemaType.STRING,
                     },
-                    params: {
-                      type: ['object', 'null'],
-                      properties: {
-                        creator: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        multipart_upload: {
-                          type: JsonSchemaType.OBJECT,
-                          properties: {
-                            '.*': {
-                              type: JsonSchemaType.OBJECT,
-                              properties: {
-                                uploadId: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                bucket: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                key: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                              },
-                              required: [
-                                'bucket',
-                                'key',
-                                'uploadId',
-                              ],
-                            },
-                          },
-                        },
-                        message: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        created: {
-                          type: JsonSchemaType.STRING,
-                        },
-                      },
-                      required: [
-                        'created',
-                        'creator',
-                        'message',
-                        'multipart_upload',
-                      ],
-                    },
                     allowed_roles_or_users: {
                       type: JsonSchemaType.ARRAY,
                       items: {
@@ -166,7 +122,6 @@ export class ListCheckPointsApi {
                     'created',
                     'id',
                     'name',
-                    'params',
                     's3Location',
                     'status',
                     'type',
