@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import {SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_MESSAGE} from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_INFER_TYPE, SCHEMA_INFERENCE, SCHEMA_MESSAGE } from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -171,10 +171,7 @@ export class CreateInferenceJobApi {
           custom_extensions: {
             type: JsonSchemaType.STRING,
           },
-          inference_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Async'],
-          },
+          inference_type: SCHEMA_INFER_TYPE,
           payload_string: {
             type: JsonSchemaType.STRING,
           },

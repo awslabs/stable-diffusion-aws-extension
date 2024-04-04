@@ -261,9 +261,6 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
   status: {
     type: JsonSchemaType.STRING,
   },
-  inference_type: {
-    type: JsonSchemaType.STRING,
-  },
   createTime: {
     type: JsonSchemaType.STRING,
     format: 'date-time',
@@ -314,3 +311,36 @@ export const SCHEMA_CREATOR: JsonSchema = {
   type: JsonSchemaType.STRING,
 };
 
+export const SCHEMA_INFER_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  enum: ['Real-time', 'Async'],
+};
+
+export const SCHEMA_ENDPOINT_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_DESCRIPTION: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_TIMESTAMP: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_PREFIX: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_DATASET_S3: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  format: 'uri',
+};

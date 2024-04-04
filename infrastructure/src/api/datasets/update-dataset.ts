@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_STATUS, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateDatasetApiProps {
@@ -84,12 +84,8 @@ export class UpdateDatasetApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
+              datasetName: SCHEMA_DATASET_NAME,
+              status: SCHEMA_DATASET_STATUS,
             },
             required: [
               'datasetName',

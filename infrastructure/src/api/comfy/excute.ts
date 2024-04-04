@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_INFER_TYPE, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ExecuteApiProps {
@@ -87,12 +87,8 @@ export class ExecuteApi {
               prompt_id: {
                 type: JsonSchemaType.STRING,
               },
-              endpoint_name: {
-                type: JsonSchemaType.STRING,
-              },
-              inference_type: {
-                type: JsonSchemaType.STRING,
-              },
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
+              inference_type: SCHEMA_INFER_TYPE,
               need_sync: {
                 type: JsonSchemaType.BOOLEAN,
               },
@@ -268,10 +264,7 @@ export class ExecuteApi {
             minItems: 1,
             additionalProperties: true,
           },
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           need_sync: {
             type: JsonSchemaType.BOOLEAN,
             minLength: 1,

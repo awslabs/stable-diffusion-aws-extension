@@ -5,7 +5,15 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DATASET_DESCRIPTION,
+  SCHEMA_DATASET_NAME,
+  SCHEMA_DATASET_S3,
+  SCHEMA_DATASET_STATUS, SCHEMA_DATASET_TIMESTAMP,
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface ListDatasetsApiProps {
@@ -83,22 +91,11 @@ export class ListDatasetsApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    datasetName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    s3: {
-                      type: JsonSchemaType.STRING,
-                      format: 'uri',
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    timestamp: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    description: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    datasetName: SCHEMA_DATASET_NAME,
+                    s3: SCHEMA_DATASET_S3,
+                    status: SCHEMA_DATASET_STATUS,
+                    timestamp: SCHEMA_DATASET_TIMESTAMP,
+                    description: SCHEMA_DATASET_DESCRIPTION,
                   },
                   required: [
                     'datasetName',

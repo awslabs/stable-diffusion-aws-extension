@@ -8,7 +8,7 @@ import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_MESSAGE } from '../../shared/schema';
 import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
@@ -137,9 +137,7 @@ export class CreateEndpointApi {
               endpoint_status: {
                 type: JsonSchemaType.STRING,
               },
-              endpoint_name: {
-                type: JsonSchemaType.STRING,
-              },
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
               endpoint_type: {
                 type: JsonSchemaType.STRING,
               },
@@ -332,10 +330,7 @@ export class CreateEndpointApi {
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            maxLength: 20,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           custom_docker_image_uri: {
             type: JsonSchemaType.STRING,
           },

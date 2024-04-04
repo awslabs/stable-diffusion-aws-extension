@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_INFER_TYPE, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ListInferencesApiProps {
@@ -98,7 +98,7 @@ export class ListInferencesApi {
                     createTime: SCHEMA_INFERENCE.createTime,
                     image_names: SCHEMA_INFERENCE.image_names,
                     params: SCHEMA_INFERENCE.params,
-                    inference_type: SCHEMA_INFERENCE.inference_type,
+                    inference_type: SCHEMA_INFER_TYPE,
                   },
                   required: [
                     'InferenceJobId',

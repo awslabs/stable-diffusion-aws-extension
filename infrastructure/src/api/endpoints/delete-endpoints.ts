@@ -6,6 +6,7 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
 
 export interface DeleteEndpointsApiProps {
   router: Resource;
@@ -146,10 +147,7 @@ export class DeleteEndpointsApi {
         properties: {
           endpoint_name_list: {
             type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
+            items: SCHEMA_ENDPOINT_NAME,
             minItems: 1,
             maxItems: 10,
           },

@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface QueryExecuteApiProps {
@@ -91,9 +91,7 @@ export class QueryExecuteApi {
                     prompt_id: {
                       type: JsonSchemaType.STRING,
                     },
-                    endpoint_name: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    endpoint_name: SCHEMA_ENDPOINT_NAME,
                     status: {
                       type: JsonSchemaType.STRING,
                     },

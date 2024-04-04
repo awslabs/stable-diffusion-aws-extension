@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_DATASET_NAME } from '../../shared/schema';
 
 export interface DeleteDatasetsApiProps {
   router: Resource;
@@ -90,12 +91,7 @@ export class DeleteDatasetsApi {
           properties: {
             dataset_name_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-                maxLength: 20,
-                pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-              },
+              items: SCHEMA_DATASET_NAME,
               minItems: 1,
               maxItems: 10,
             },

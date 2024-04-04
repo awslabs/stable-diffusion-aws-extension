@@ -6,6 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
 
 
 export interface PrepareApiProps {
@@ -163,10 +164,7 @@ export class PrepareApi {
           prepare_id: {
             type: JsonSchemaType.STRING,
           },
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           s3_source_path: {
             type: JsonSchemaType.STRING,
             minLength: 1,

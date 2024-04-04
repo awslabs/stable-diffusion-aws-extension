@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateDatasetApiProps {
@@ -84,15 +84,14 @@ export class CreateDatasetApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
+              datasetName: SCHEMA_DATASET_NAME,
               s3PresignUrl: {
                 type: JsonSchemaType.OBJECT,
                 patternProperties: {
                   '.*': {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
+                    description: 'S3 Presign URL',
                   },
                 },
               },

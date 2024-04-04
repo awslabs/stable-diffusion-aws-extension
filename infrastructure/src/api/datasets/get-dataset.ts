@@ -5,7 +5,14 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DATASET_DESCRIPTION,
+  SCHEMA_DATASET_NAME, SCHEMA_DATASET_PREFIX,
+  SCHEMA_DATASET_S3,
+  SCHEMA_DATASET_STATUS, SCHEMA_DATASET_TIMESTAMP,
+  SCHEMA_DEBUG,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface GetDatasetApiProps {
@@ -81,25 +88,12 @@ export class GetDatasetApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              dataset_name: {
-                type: JsonSchemaType.STRING,
-              },
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
-              prefix: {
-                type: JsonSchemaType.STRING,
-              },
-              s3: {
-                type: JsonSchemaType.STRING,
-                format: 'uri',
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
-              timestamp: {
-                type: JsonSchemaType.STRING,
-              },
+              dataset_name: SCHEMA_DATASET_NAME,
+              datasetName: SCHEMA_DATASET_NAME,
+              prefix: SCHEMA_DATASET_PREFIX,
+              s3: SCHEMA_DATASET_S3,
+              status: SCHEMA_DATASET_STATUS,
+              timestamp: SCHEMA_DATASET_TIMESTAMP,
               data: {
                 type: JsonSchemaType.ARRAY,
                 items: {
@@ -135,9 +129,7 @@ export class GetDatasetApi {
                   ],
                 },
               },
-              description: {
-                type: JsonSchemaType.STRING,
-              },
+              description: SCHEMA_DATASET_DESCRIPTION,
             },
             required: [
               'dataset_name',
