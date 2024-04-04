@@ -34,6 +34,7 @@ export class RootAPI {
       apiKeyRequired: true,
       operationName: 'RootAPI',
       requestValidatorOptions: {
+        requestValidatorName: 'RootAPIRequestValidator',
         validateRequestBody: true,
         validateRequestParameters: true,
       },
