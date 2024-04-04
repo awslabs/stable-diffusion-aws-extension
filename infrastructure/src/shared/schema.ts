@@ -1,7 +1,8 @@
-import { JsonSchema, JsonSchemaType } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchema, JsonSchemaType, JsonSchemaVersion } from 'aws-cdk-lib/aws-apigateway';
 
 export const SCHEMA_DEBUG: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   description: 'Debugging information for Lambda Function',
   properties: {
     function_url: {
@@ -56,6 +57,7 @@ export const SCHEMA_MESSAGE: JsonSchema = {
 // API Gateway Validator or Lambda Response
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   properties: {
     statusCode: {
       type: JsonSchemaType.INTEGER,
@@ -78,6 +80,7 @@ export const SCHEMA_400: JsonSchema = {
 
 export const SCHEMA_401: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   properties: {
     statusCode: {
       type: JsonSchemaType.INTEGER,
@@ -103,6 +106,7 @@ export const SCHEMA_401: JsonSchema = {
 
 export const SCHEMA_403: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   properties: {
     requestId: SCHEMA_REQUEST_ID,
     message: {
@@ -120,6 +124,7 @@ export const SCHEMA_403: JsonSchema = {
 
 export const SCHEMA_404: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   properties: {
     statusCode: {
       type: JsonSchemaType.INTEGER,
@@ -143,6 +148,7 @@ export const SCHEMA_404: JsonSchema = {
 
 export const SCHEMA_504: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
   properties: {
     message: SCHEMA_MESSAGE,
     requestId: SCHEMA_REQUEST_ID,
