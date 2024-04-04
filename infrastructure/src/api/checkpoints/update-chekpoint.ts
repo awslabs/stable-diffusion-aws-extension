@@ -91,7 +91,6 @@ export class UpdateCheckPointApi {
           'debug',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -160,10 +159,8 @@ export class UpdateCheckPointApi {
                               'upload_id',
                               'key',
                             ],
-                            additionalProperties: false,
                           },
                         },
-                        additionalProperties: false,
                       },
                       message: {
                         type: JsonSchemaType.STRING,
@@ -179,7 +176,6 @@ export class UpdateCheckPointApi {
                       'message',
                       'created',
                     ],
-                    additionalProperties: false,
                   },
                 },
                 required: [
@@ -189,13 +185,11 @@ export class UpdateCheckPointApi {
                   'status',
                   'params',
                 ],
-                additionalProperties: false,
               },
             },
             required: [
               'checkpoint',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -204,7 +198,6 @@ export class UpdateCheckPointApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

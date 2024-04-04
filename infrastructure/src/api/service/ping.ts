@@ -91,7 +91,6 @@ export class PingApi {
           'debug',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

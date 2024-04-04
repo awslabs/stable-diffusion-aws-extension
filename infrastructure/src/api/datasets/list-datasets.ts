@@ -107,7 +107,6 @@ export class ListDatasetsApi {
                     'timestamp',
                     'description',
                   ],
-                  additionalProperties: false,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,
@@ -116,7 +115,6 @@ export class ListDatasetsApi {
               'datasets',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -125,7 +123,6 @@ export class ListDatasetsApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

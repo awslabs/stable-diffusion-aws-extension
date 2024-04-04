@@ -137,7 +137,6 @@ export class QueryExecuteApi {
               'executes',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -146,7 +145,6 @@ export class QueryExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

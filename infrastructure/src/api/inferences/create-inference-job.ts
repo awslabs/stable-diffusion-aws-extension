@@ -129,7 +129,6 @@ export class CreateInferenceJobApi {
                         'name',
                         'type',
                       ],
-                      additionalProperties: false,
                     },
                   },
                 },
@@ -140,13 +139,11 @@ export class CreateInferenceJobApi {
                   'api_params_s3_upload_url',
                   'models',
                 ],
-                additionalProperties: false,
               },
             },
             required: [
               'inference',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -155,7 +152,6 @@ export class CreateInferenceJobApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

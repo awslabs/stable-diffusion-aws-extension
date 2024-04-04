@@ -215,7 +215,6 @@ export class GetInferenceJobApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

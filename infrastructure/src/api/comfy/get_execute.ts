@@ -137,7 +137,6 @@ export class GetExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

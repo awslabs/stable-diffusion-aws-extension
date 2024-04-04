@@ -142,7 +142,6 @@ export class ExecuteApi {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
-                  additionalProperties: false,
                 },
               },
             },
@@ -164,7 +163,6 @@ export class ExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -311,7 +309,6 @@ export class ExecuteApi {
           'need_sync',
           'endpoint_name',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

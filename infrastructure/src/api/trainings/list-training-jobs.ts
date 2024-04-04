@@ -194,7 +194,6 @@ export class ListTrainingJobsApi {
                     'sagemakerTrainName',
                     'params',
                   ],
-                  additionalProperties: false,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,
@@ -203,7 +202,6 @@ export class ListTrainingJobsApi {
               'trainings',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -212,7 +210,6 @@ export class ListTrainingJobsApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

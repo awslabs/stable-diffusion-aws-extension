@@ -94,7 +94,6 @@ export class ListRolesApi {
                     'creator',
                     'permissions',
                   ],
-                  additionalProperties: false,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,
@@ -103,7 +102,6 @@ export class ListRolesApi {
               'roles',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -112,7 +110,6 @@ export class ListRolesApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

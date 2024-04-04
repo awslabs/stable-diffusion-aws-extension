@@ -85,7 +85,6 @@ export class CreateCheckPointApi {
           'message',
           'statusCode',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

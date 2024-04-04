@@ -133,7 +133,6 @@ export class GetDatasetApi {
                     'dataStatus',
                     'original_file_name',
                   ],
-                  additionalProperties: false,
                 },
               },
               description: {
@@ -150,7 +149,6 @@ export class GetDatasetApi {
               'data',
               'description',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -159,7 +157,6 @@ export class GetDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

@@ -95,14 +95,12 @@ export class CreateDatasetApi {
                     format: 'uri',
                   },
                 },
-                additionalProperties: false,
               },
             },
             required: [
               'datasetName',
               's3PresignUrl',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -111,7 +109,6 @@ export class CreateDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

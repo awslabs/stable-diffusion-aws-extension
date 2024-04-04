@@ -164,7 +164,6 @@ export class ListInferencesApi {
                                 'model_name',
                                 'type',
                               ],
-                              additionalProperties: false,
                             },
                           },
                         },
@@ -186,7 +185,6 @@ export class ListInferencesApi {
                         'sagemaker_inference_instance_type',
                         'sagemaker_inference_endpoint_name',
                       ],
-                      additionalProperties: false,
                     },
                     inference_type: {
                       type: JsonSchemaType.STRING,
@@ -214,7 +212,6 @@ export class ListInferencesApi {
               'inferences',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -223,7 +220,6 @@ export class ListInferencesApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

@@ -191,7 +191,6 @@ export class PrepareApi {
           'endpoint_name',
           'need_reboot',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

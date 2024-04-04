@@ -78,7 +78,6 @@ export class CreateRoleApi {
           'message',
           'statusCode',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

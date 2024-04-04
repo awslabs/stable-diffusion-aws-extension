@@ -154,7 +154,6 @@ export class DeleteExecutesApi {
           required: [
             'execute_id_list',
           ],
-          additionalProperties: false,
         },
         contentType: 'application/json',
       });

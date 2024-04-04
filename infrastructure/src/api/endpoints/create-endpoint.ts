@@ -183,7 +183,6 @@ export class CreateEndpointApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

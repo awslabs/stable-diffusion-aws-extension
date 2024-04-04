@@ -95,7 +95,6 @@ export class UpdateDatasetApi {
               'datasetName',
               'status',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -104,7 +103,6 @@ export class UpdateDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

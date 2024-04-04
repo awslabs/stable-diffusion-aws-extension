@@ -110,13 +110,11 @@ export class StartInferenceJobApi {
                   'endpoint_name',
                   'output_path',
                 ],
-                additionalProperties: false,
               },
             },
             required: [
               'inference',
             ],
-            additionalProperties: false,
           },
         },
         required: [
@@ -125,7 +123,6 @@ export class StartInferenceJobApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
