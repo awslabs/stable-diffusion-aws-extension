@@ -319,9 +319,9 @@ export class Middleware extends Stack {
         }
       }
 
-      if (model && requestValidator) {
-        requestValidator.node.addDependency(model);
-      }
+      // if (model && requestValidator) {
+      //   requestValidator.node.addDependency(model);
+      // }
 
     });
 
