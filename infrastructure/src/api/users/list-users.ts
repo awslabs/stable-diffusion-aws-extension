@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE, SCHEMA_USER } from '../../shared/schema';
 
 
 export interface ListUsersApiProps {
@@ -126,27 +126,11 @@ export class ListUsersApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    username: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    roles: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    creator: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    permissions: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    password: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    username: SCHEMA_USER.username,
+                    roles: SCHEMA_USER.roles,
+                    creator: SCHEMA_USER.creator,
+                    permissions: SCHEMA_USER.permissions,
+                    password: SCHEMA_USER.password,
                   },
                   required: [
                     'creator',
