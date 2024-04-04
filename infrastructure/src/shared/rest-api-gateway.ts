@@ -84,7 +84,6 @@ export class RestApiGateway {
           statusCode: 400,
           message: '$context.error.validationErrorString',
           requestId: '$context.extendedRequestId',
-          status: '$context.responseOverride.status',
         }),
       },
     });
@@ -96,7 +95,6 @@ export class RestApiGateway {
           statusCode: 400,
           message: '$context.error.validationErrorString',
           requestId: '$context.extendedRequestId',
-          status: '$context.responseOverride.status',
         }),
       },
     });
