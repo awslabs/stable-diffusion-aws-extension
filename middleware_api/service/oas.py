@@ -43,14 +43,36 @@ def handler(event: dict, context: LambdaContext):
             'Access-Control-Allow-v': True,
         }
 
+        json_schema = replace_null(oas)
+
         payload = {
             'isBase64Encoded': False,
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps(json.loads(oas), default=dumps_default)
+            'body': json.dumps(json.loads(json_schema), default=dumps_default)
         }
 
         return payload
     except Exception as e:
 
         return response_error(e)
+
+
+def replace_null(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if value is None:
+                data[key] = {
+                    "type": "null",
+                }
+            else:
+                data[key] = replace_null(value)
+    elif isinstance(data, list):
+        for i, item in enumerate(data):
+            if item is None:
+                data[i] = {
+                    "type": "null",
+                }
+            else:
+                data[i] = replace_null(item)
+    return data
