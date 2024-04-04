@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from common.ddb_service.client import DynamoDbUtilsService
 from common.response import ok, not_found
 from common.util import generate_presigned_url_for_job
+from libs.comfy_data_types import ComfyExecuteTable
 from libs.utils import response_error
 
 tracer = Tracer()
@@ -48,7 +49,12 @@ def handler(event, ctx):
         if not item:
             return not_found(f"execute not found for prompt_id: {prompt_id}")
 
-        item = generate_presigned_url_for_job(item)
+        job = ComfyExecuteTable(**generate_presigned_url_for_job(item))
+        if not job.output_files:
+            job.output_files = []
+
+        if not job.temp_files:
+            job.temp_files = []
 
         return ok(data=item, decimal=True)
     except Exception as e:
