@@ -51,7 +51,7 @@ export class CreateCheckPointApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createRequestModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateCheckpoint',
       methodResponses: [
@@ -306,7 +306,7 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createRequestModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: `${this.baseId}Request`,

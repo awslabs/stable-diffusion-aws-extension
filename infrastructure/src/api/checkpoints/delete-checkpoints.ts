@@ -55,7 +55,7 @@ export class DeleteCheckpointsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createRequestModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteCheckpoints',
         methodResponses: [
@@ -67,7 +67,7 @@ export class DeleteCheckpointsApi {
       });
   }
 
-  private createRequestModel() {
+  private createRequestBodyModel() {
     return new Model(
       this.scope,
       `${this.baseId}-model`,

@@ -44,7 +44,7 @@ export class DeleteExecutesApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'DeleteExecutes',
       methodResponses: [
@@ -128,7 +128,7 @@ export class DeleteExecutesApi {
     });
   }
 
-  private createModel() {
+  private createRequestBodyModel() {
     return new Model(
       this.scope,
       `${this.baseId}-model`,

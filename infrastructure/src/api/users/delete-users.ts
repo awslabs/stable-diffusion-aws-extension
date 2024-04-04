@@ -42,7 +42,7 @@ export class DeleteUsersApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'DeleteUsers',
       methodResponses: [
@@ -54,7 +54,7 @@ export class DeleteUsersApi {
     });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,

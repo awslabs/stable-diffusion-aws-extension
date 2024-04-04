@@ -54,7 +54,7 @@ export class UpdateDatasetApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'UpdateDataset',
         methodResponses: [
@@ -163,7 +163,7 @@ export class UpdateDatasetApi {
     return newRole;
   }
 
-  private createModel() {
+  private createRequestBodyModel() {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,

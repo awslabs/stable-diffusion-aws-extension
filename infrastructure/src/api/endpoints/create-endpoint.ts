@@ -79,7 +79,7 @@ export class CreateEndpointApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateEndpoint',
       methodResponses: [
@@ -322,7 +322,7 @@ export class CreateEndpointApi {
     return lambdaStartDeployRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',

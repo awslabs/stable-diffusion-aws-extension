@@ -57,7 +57,7 @@ export class CreateInferenceJobApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateInferenceJob',
       methodResponses: [
@@ -161,7 +161,7 @@ export class CreateInferenceJobApi {
     });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
       modelName: this.id,

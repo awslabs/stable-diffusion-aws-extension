@@ -53,7 +53,7 @@ export class DeleteRolesApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteRoles',
         methodResponses: [
@@ -104,7 +104,7 @@ export class DeleteRolesApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,

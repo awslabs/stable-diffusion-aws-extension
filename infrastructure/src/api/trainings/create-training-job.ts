@@ -52,7 +52,7 @@ export class CreateTrainingJobApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        $default: this.createModel(),
+        $default: this.createRequestBodyModel(),
       },
       operationName: 'CreateTraining',
       methodResponses: [
@@ -272,7 +272,7 @@ export class CreateTrainingJobApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.props.router.api,
       modelName: this.id,

@@ -60,7 +60,7 @@ export class DeleteInferenceJobsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteInferenceJobs',
         methodResponses: [
@@ -71,7 +71,7 @@ export class DeleteInferenceJobsApi {
       });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,

@@ -63,7 +63,7 @@ export class DeleteDatasetsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteDatasets',
         methodResponses: [
@@ -75,7 +75,7 @@ export class DeleteDatasetsApi {
 
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
