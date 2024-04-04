@@ -120,7 +120,10 @@ export class StartInferenceJobApi {
           data: {
             type: JsonSchemaType.OBJECT,
             additionalProperties: true,
-            properties: SCHEMA_INFERENCE,
+            properties: {
+              InferenceJobId: SCHEMA_INFERENCE.InferenceJobId,
+              status: SCHEMA_INFERENCE.status,
+            },
             required: [
               'InferenceJobId',
               'status',

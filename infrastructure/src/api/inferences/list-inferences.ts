@@ -89,7 +89,17 @@ export class ListInferencesApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   additionalProperties: true,
-                  properties: SCHEMA_INFERENCE,
+                  properties: {
+                    InferenceJobId: SCHEMA_INFERENCE.InferenceJobId,
+                    status: SCHEMA_INFERENCE.status,
+                    taskType: SCHEMA_INFERENCE.taskType,
+                    owner_group_or_role: SCHEMA_INFERENCE.owner_group_or_role,
+                    startTime: SCHEMA_INFERENCE.startTime,
+                    createTime: SCHEMA_INFERENCE.createTime,
+                    image_names: SCHEMA_INFERENCE.image_names,
+                    params: SCHEMA_INFERENCE.params,
+                    inference_type: SCHEMA_INFERENCE.inference_type,
+                  },
                   required: [
                     'InferenceJobId',
                     'status',
