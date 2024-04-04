@@ -99,10 +99,6 @@ export class ExecuteApi {
               status: {
                 type: JsonSchemaType.STRING,
               },
-              prompt_params: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
-              },
               number: {
                 type: JsonSchemaType.INTEGER,
               },
@@ -129,10 +125,6 @@ export class ExecuteApi {
               start_time: {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
-              },
-              sagemaker_raw: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
               },
               output_path: {
                 type: JsonSchemaType.STRING,
@@ -163,11 +155,8 @@ export class ExecuteApi {
               'inference_type',
               'need_sync',
               'status',
-              'prompt_params',
-              'prompt_path',
               'create_time',
               'start_time',
-              'sagemaker_raw',
               'output_path',
             ],
           },
