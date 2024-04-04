@@ -69,6 +69,7 @@ export class QueryExecuteApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'ListExecutesResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

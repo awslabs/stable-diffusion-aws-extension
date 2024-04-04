@@ -34,7 +34,25 @@ export class ListTrainingJobsApi {
     this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
 
-    this.listAllTrainJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      operationName: 'ListTrainings',
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -69,8 +87,8 @@ export class ListTrainingJobsApi {
     return newRole;
   }
 
-  private listAllTrainJobsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -84,24 +102,6 @@ export class ListTrainingJobsApi {
         TRAIN_TABLE: this.trainTable.tableName,
       },
       layers: [this.layer],
-    });
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, {
-      apiKeyRequired: true,
-      operationName: 'ListTrainings',
-      methodResponses: [
-        ApiModels.methodResponse(this.responseModel()),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
-      ],
     });
   }
 

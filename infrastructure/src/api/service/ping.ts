@@ -76,6 +76,7 @@ export class PingApi {
       description: `${this.baseId} Response Model`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
+        title: 'PingResponse',
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {

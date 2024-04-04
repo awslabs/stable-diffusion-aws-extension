@@ -63,6 +63,7 @@ export class ListEndpointsApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'ListEndpointsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

@@ -73,6 +73,7 @@ export class CreateDatasetApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateDatasetResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

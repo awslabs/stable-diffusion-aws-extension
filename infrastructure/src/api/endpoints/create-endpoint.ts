@@ -99,6 +99,7 @@ export class CreateEndpointApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateEndpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

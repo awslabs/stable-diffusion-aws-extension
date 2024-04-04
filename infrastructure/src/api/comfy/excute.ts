@@ -27,8 +27,6 @@ export class ExecuteApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
     this.scope = scope;
@@ -39,8 +37,6 @@ export class ExecuteApi {
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -53,9 +49,9 @@ export class ExecuteApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createModel(),
       },
       operationName: 'CreateExecute',
       methodResponses: [
@@ -75,6 +71,7 @@ export class ExecuteApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateExecuteResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

@@ -62,6 +62,7 @@ export class ListDatasetsApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'ListDatasetsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
