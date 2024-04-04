@@ -5,6 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_USERNAME } from '../../shared/schema';
 
 export interface DeleteUsersApiProps {
   router: aws_apigateway.Resource;
@@ -66,10 +67,7 @@ export class DeleteUsersApi {
         properties: {
           user_name_list: {
             type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
+            items: SCHEMA_USERNAME,
             minItems: 1,
             maxItems: 100,
           },
