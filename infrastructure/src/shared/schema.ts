@@ -27,7 +27,6 @@ export const SCHEMA_DEBUG: JsonSchema = {
     'log_url',
     'trace_url',
   ],
-  additionalProperties: false,
 };
 
 
@@ -75,7 +74,6 @@ export const SCHEMA_400: JsonSchema = {
     'statusCode',
     'message',
   ],
-  additionalProperties: false,
 }
 ;
 
@@ -102,7 +100,6 @@ export const SCHEMA_401: JsonSchema = {
     'debug',
     'message',
   ],
-  additionalProperties: false,
 }
 ;
 
@@ -122,7 +119,6 @@ export const SCHEMA_403: JsonSchema = {
     'requestId',
     'message',
   ],
-  additionalProperties: false,
 }
 ;
 
@@ -145,7 +141,6 @@ export const SCHEMA_404: JsonSchema = {
     'debug',
     'message',
   ],
-  additionalProperties: false,
 }
 ;
 
@@ -161,6 +156,5 @@ export const SCHEMA_504: JsonSchema = {
     'message',
     'requestId',
   ],
-  additionalProperties: false,
 }
 ;
