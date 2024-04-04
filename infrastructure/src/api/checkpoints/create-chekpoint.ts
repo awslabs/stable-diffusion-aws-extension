@@ -99,6 +99,7 @@ export class CreateCheckPointApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateCheckpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,

@@ -116,9 +116,6 @@ export class ListEndpointsApi {
                     endpoint_name: {
                       type: JsonSchemaType.STRING,
                     },
-                    error: {
-                      type: JsonSchemaType.STRING,
-                    },
                     endpoint_type: {
                       type: JsonSchemaType.STRING,
                     },
@@ -154,7 +151,7 @@ export class ListEndpointsApi {
                     'min_instance_number',
                     'service_type',
                   ],
-                  additionalProperties: false,
+                  additionalProperties: true,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,

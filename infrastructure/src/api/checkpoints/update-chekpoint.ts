@@ -106,6 +106,7 @@ export class UpdateCheckPointApi {
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'UpdateCheckpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.NUMBER,

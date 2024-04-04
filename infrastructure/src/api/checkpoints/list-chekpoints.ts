@@ -62,6 +62,7 @@ export class ListCheckPointsApi {
       modelName: 'ListCheckpointsResponse',
       description: `${this.baseId} Response Model`,
       schema: {
+        title: 'ListCheckpointsResponse',
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
         properties: {
