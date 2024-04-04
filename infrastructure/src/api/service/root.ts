@@ -1,8 +1,8 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, RequestValidator, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, Duration } from 'aws-cdk-lib';
+import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 
@@ -33,7 +33,7 @@ export class RootAPI {
     this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'RootAPI',
-      requestValidator: this.createRequestValidator(),
+      // requestValidator: this.createRequestValidator(),
       requestParameters: {
         'method.request.header.MyHeader': false,
         'method.request.header.MyHeader2': true,
@@ -46,16 +46,16 @@ export class RootAPI {
     });
   }
 
-  private createRequestValidator(): RequestValidator {
-    return new RequestValidator(
-      this.scope,
-      `${this.baseId}-root-validator`,
-      {
-        restApi: this.restApi.root.api,
-        validateRequestBody: true,
-        validateRequestParameters: true,
-      });
-  }
+  // private createRequestValidator(): RequestValidator {
+  //   return new RequestValidator(
+  //     this.scope,
+  //     `${this.baseId}-root-validator`,
+  //     {
+  //       restApi: this.restApi.root.api,
+  //       validateRequestBody: true,
+  //       validateRequestParameters: true,
+  //     });
+  // }
 
   private iamRole(): Role {
 
@@ -92,7 +92,7 @@ export class RootAPI {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
-        tracing: aws_lambda.Tracing.ACTIVE,
+        tracing: Tracing.ACTIVE,
         layers: [this.layer],
       });
   }
