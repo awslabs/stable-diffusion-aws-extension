@@ -33,11 +33,14 @@ export class RootAPI {
     this.restApi.root.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'RootAPI',
-      // requestValidator: this.createRequestValidator(),
       requestParameters: {
+        // description: 'Request parameters for RootAPI',
         'method.request.header.MyHeader': false,
+        // description: 'Request parameters for RootAPI',
         'method.request.header.MyHeader2': true,
+        // description: 'Request parameters for RootAPI',
         'method.request.querystring.myQuery': true,
+
         'method.request.querystring.myQuery2': false,
       },
       methodResponses: [
@@ -45,17 +48,6 @@ export class RootAPI {
       ],
     });
   }
-
-  // private createRequestValidator(): RequestValidator {
-  //   return new RequestValidator(
-  //     this.scope,
-  //     `${this.baseId}-root-validator`,
-  //     {
-  //       restApi: this.restApi.root.api,
-  //       validateRequestBody: true,
-  //       validateRequestParameters: true,
-  //     });
-  // }
 
   private iamRole(): Role {
 
