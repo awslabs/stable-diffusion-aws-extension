@@ -132,6 +132,7 @@ export class ListTrainingJobsApi {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
+                  additionalProperties: true,
                   properties: {
                     id: {
                       type: JsonSchemaType.STRING,
@@ -155,6 +156,7 @@ export class ListTrainingJobsApi {
                     },
                     params: {
                       type: JsonSchemaType.OBJECT,
+                      additionalProperties: true,
                       properties: {
                         training_params: {
                           type: JsonSchemaType.OBJECT,

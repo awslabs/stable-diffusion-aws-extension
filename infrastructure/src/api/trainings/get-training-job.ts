@@ -78,11 +78,13 @@ export class GetTrainingJobApi {
           message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               trainings: {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
+                  additionalProperties: true,
                   properties: {
                     id: {
                       type: JsonSchemaType.STRING,
@@ -106,6 +108,7 @@ export class GetTrainingJobApi {
                     },
                     params: {
                       type: JsonSchemaType.OBJECT,
+                      additionalProperties: true,
                       properties: {
                         training_params: {
                           type: JsonSchemaType.OBJECT,

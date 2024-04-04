@@ -81,6 +81,7 @@ export class GetExecuteApi {
           message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               prompt_id: {
                 type: JsonSchemaType.STRING,

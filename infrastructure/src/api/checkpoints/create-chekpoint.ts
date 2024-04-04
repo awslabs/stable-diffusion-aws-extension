@@ -109,6 +109,7 @@ export class CreateCheckPointApi {
             properties: {
               checkpoint: {
                 type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
                 properties: {
                   id: {
                     type: JsonSchemaType.STRING,
@@ -124,6 +125,7 @@ export class CreateCheckPointApi {
                   },
                   params: {
                     type: JsonSchemaType.OBJECT,
+                    additionalProperties: true,
                     properties: {
                       message: {
                         type: JsonSchemaType.STRING,

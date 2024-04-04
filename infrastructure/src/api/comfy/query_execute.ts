@@ -121,6 +121,7 @@ export class QueryExecuteApi {
                       type: JsonSchemaType.ARRAY,
                     },
                   },
+                  additionalProperties: true,
                   required: [
                     'prompt_id',
                     'endpoint_name',
@@ -129,7 +130,6 @@ export class QueryExecuteApi {
                     'start_time',
                     'need_sync',
                   ],
-                  additionalProperties: true,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,

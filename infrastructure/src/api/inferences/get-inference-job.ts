@@ -79,6 +79,7 @@ export class GetInferenceJobApi {
           message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               img_presigned_urls: {
                 type: JsonSchemaType.ARRAY,
@@ -110,6 +111,7 @@ export class GetInferenceJobApi {
               },
               params: {
                 type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
                 properties: {
                   input_body_presign_url: {
                     type: JsonSchemaType.STRING,

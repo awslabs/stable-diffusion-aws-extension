@@ -77,6 +77,7 @@ export class ListEndpointsApi {
           message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               endpoints: {
                 type: JsonSchemaType.ARRAY,
@@ -145,7 +146,6 @@ export class ListEndpointsApi {
                     'min_instance_number',
                     'service_type',
                   ],
-                  additionalProperties: true,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,

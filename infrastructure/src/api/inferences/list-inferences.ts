@@ -82,11 +82,13 @@ export class ListInferencesApi {
           message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               inferences: {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
+                  additionalProperties: true,
                   properties: {
                     InferenceJobId: {
                       type: JsonSchemaType.STRING,
