@@ -76,7 +76,7 @@ export class CreateInferenceJobApi {
       description: 'CreateInferenceJob Response Model',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: this.id,
+        title: 'CreateInferenceJobResponse',
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {
@@ -89,6 +89,7 @@ export class CreateInferenceJobApi {
             properties: {
               inference: {
                 type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
                 properties: {
                   id: SCHEMA_INFERENCE.InferenceJobId,
                   type: {
