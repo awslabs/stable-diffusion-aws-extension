@@ -201,7 +201,6 @@ export class ListInferencesApi {
                     'params',
                     'inference_type',
                   ],
-                  additionalProperties: false,
                 },
               },
               last_evaluated_key: SCHEMA_LAST_KEY,
