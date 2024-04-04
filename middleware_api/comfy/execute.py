@@ -116,16 +116,9 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         resp = async_inference(payload, inference_id, ep.endpoint_name)
         logger.info(f"async inference response: {resp}")
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
-        return created(data=inference_job.__dict__)
+        return created(data=response_schema(inference_job), decimal=True)
 
     resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-    # resp = {
-    #     "prompt_id": '11111111-1111-1111',
-    #     "instance_id": 'comfy-real-time-test-rgihbd',
-    #     "status": 'success',
-    #     "output_path": f's3://{bucket_name}/images/',
-    #     "temp_path": f's3://{bucket_name}/images/'
-    # }
 
     logger.info(f"real time inference response: ")
     logger.info(resp)
@@ -148,6 +141,10 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
                                                                    inference_job.temp_files)
 
+    return ok(data=response_schema(inference_job), decimal=True)
+
+
+def response_schema(inference_job: ComfyExecuteTable):
     if not inference_job.output_files:
         inference_job.output_files = []
 
@@ -166,7 +163,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         'temp_files': inference_job.temp_files,
     }
 
-    return ok(data=data, decimal=True)
+    return data
 
 
 @tracer.capture_lambda_handler
