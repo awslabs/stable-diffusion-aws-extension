@@ -47,6 +47,9 @@ export class ListEndpointsApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListEndpoints',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),

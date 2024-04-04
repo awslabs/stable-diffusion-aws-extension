@@ -47,6 +47,9 @@ export class ListCheckPointsApi {
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListCheckpoints',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '200'),
         ApiModels.methodResponses401(),

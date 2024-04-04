@@ -52,6 +52,9 @@ export class QueryExecuteApi {
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListExecutes',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),

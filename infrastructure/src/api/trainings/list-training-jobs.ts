@@ -46,6 +46,9 @@ export class ListTrainingJobsApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListTrainings',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),

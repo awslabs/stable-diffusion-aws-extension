@@ -50,6 +50,9 @@ export class ListInferencesApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListInferences',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),
