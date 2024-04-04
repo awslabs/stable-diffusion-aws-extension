@@ -49,6 +49,10 @@ export class ListCheckPointsApi {
       operationName: 'ListCheckpoints',
       requestParameters: {
         'method.request.querystring.limit': false,
+        'method.request.querystring.page': false,
+        'method.request.querystring.per_page': false,
+        'method.request.querystring.username': false,
+        'method.request.querystring.status': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '200'),

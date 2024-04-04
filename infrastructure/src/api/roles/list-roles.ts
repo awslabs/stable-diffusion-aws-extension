@@ -43,9 +43,6 @@ export class ListRolesApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListRoles',
-      requestParameters: {
-        'method.request.querystring.limit': false,
-      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),

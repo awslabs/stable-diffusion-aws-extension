@@ -48,6 +48,8 @@ export class ListDatasetsApi {
       operationName: 'ListDatasets',
       requestParameters: {
         'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+        'method.request.querystring.dataset_status': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),

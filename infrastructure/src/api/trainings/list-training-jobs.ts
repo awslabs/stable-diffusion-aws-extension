@@ -48,6 +48,7 @@ export class ListTrainingJobsApi {
       operationName: 'ListTrainings',
       requestParameters: {
         'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),

@@ -47,7 +47,7 @@ export class ListUsersApi {
       apiKeyRequired: true,
       operationName: 'ListUsers',
       requestParameters: {
-        'method.request.querystring.limit': false,
+        'method.request.querystring.show_password': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),

@@ -52,6 +52,8 @@ export class ListInferencesApi {
       operationName: 'ListInferences',
       requestParameters: {
         'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+        'method.request.querystring.type': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),

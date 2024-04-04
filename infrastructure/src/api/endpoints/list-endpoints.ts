@@ -49,6 +49,7 @@ export class ListEndpointsApi {
       operationName: 'ListEndpoints',
       requestParameters: {
         'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
       },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
