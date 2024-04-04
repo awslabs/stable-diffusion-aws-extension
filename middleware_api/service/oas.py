@@ -27,7 +27,9 @@ def handler(event: dict, context: LambdaContext):
             restApiId=event['requestContext']['apiId'],
             stageName='prod',
             exportType='oas30',
-            parameters={'extensions': 'integrations'}
+            parameters={
+                # 'extensions': 'integrations'
+            }
         )
 
         oas = response['body'].read()
