@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface GetExecuteApiProps {
@@ -77,6 +77,7 @@ export class GetExecuteApi {
             ],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -133,12 +134,6 @@ export class GetExecuteApi {
               'output_path',
             ],
             additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: [
-              'OK',
-            ],
           },
         },
         required: [

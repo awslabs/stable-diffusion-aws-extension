@@ -7,7 +7,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 export interface GetInferenceJobApiProps {
   router: Resource;
@@ -76,6 +76,7 @@ export class GetInferenceJobApi {
             type: JsonSchemaType.NUMBER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -217,9 +218,6 @@ export class GetInferenceJobApi {
               'owner_group_or_role',
             ],
             additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [

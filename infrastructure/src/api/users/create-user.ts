@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -172,9 +172,7 @@ export class CreateUserApi {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'debug',

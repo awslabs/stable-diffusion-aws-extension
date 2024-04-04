@@ -40,6 +40,11 @@ export const SCHEMA_LAST_KEY: JsonSchema = {
   description: 'Last Key for Pagination',
 };
 
+export const SCHEMA_MESSAGE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'API Operate Message',
+};
+
 // API Gateway Validator or Lambda Response
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
@@ -52,9 +57,7 @@ export const SCHEMA_400: JsonSchema = {
     },
     requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
-    message: {
-      type: JsonSchemaType.STRING,
-    },
+    message: SCHEMA_MESSAGE,
   },
   required: [
     'statusCode',
@@ -118,9 +121,7 @@ export const SCHEMA_404: JsonSchema = {
     },
     requestId: SCHEMA_REQUEST_ID,
     debug: SCHEMA_DEBUG,
-    message: {
-      type: JsonSchemaType.STRING,
-    },
+    message: SCHEMA_MESSAGE,
   },
   required: [
     'statusCode',
@@ -135,9 +136,7 @@ export const SCHEMA_404: JsonSchema = {
 export const SCHEMA_504: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   properties: {
-    message: {
-      type: JsonSchemaType.STRING,
-    },
+    message: SCHEMA_MESSAGE,
     requestId: SCHEMA_REQUEST_ID,
   },
   required: [

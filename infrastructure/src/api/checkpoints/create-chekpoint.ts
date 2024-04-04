@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateCheckPointApiProps {
@@ -78,9 +78,7 @@ export class CreateCheckPointApi {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'debug',
@@ -194,9 +192,7 @@ export class CreateCheckPointApi {
               's3PresignUrl',
             ],
           },
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'data',

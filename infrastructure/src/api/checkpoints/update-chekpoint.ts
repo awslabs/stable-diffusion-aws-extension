@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateCheckPointApiProps {
@@ -84,10 +84,7 @@ export class UpdateCheckPointApi {
             description: 'The HTTP status code of the response.',
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-            description: 'A human-readable message about the status of the operation.',
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'statusCode',
@@ -114,6 +111,7 @@ export class UpdateCheckPointApi {
             type: JsonSchemaType.NUMBER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -197,9 +195,6 @@ export class UpdateCheckPointApi {
               'checkpoint',
             ],
             additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [

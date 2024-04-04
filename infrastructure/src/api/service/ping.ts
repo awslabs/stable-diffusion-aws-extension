@@ -5,7 +5,7 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 export interface PingApiProps {
   router: Resource;
@@ -83,10 +83,7 @@ export class PingApi {
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['pong'],
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'statusCode',
