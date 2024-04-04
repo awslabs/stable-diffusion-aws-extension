@@ -156,6 +156,8 @@ def response_schema(inference_job: ComfyExecuteTable):
         'status': inference_job.status,
         'create_time': inference_job.create_time,
         'endpoint_name': inference_job.endpoint_name,
+        'inference_type': inference_job.inference_type,
+        'need_sync': inference_job.need_sync,
         'start_time': inference_job.start_time,
         'complete_time': inference_job.complete_time,
         'output_path': inference_job.output_path,
