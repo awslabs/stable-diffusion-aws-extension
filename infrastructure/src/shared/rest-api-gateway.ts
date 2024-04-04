@@ -89,6 +89,18 @@ export class RestApiGateway {
       },
     });
 
+    api.addGatewayResponse('BAD_REQUEST_PARAMETERS', {
+      type: ResponseType.BAD_REQUEST_PARAMETERS,
+      templates: {
+        'application/json': JSON.stringify({
+          statusCode: 400,
+          message: '$context.error.validationErrorString',
+          requestId: '$context.extendedRequestId',
+          status: '$context.responseOverride.status',
+        }),
+      },
+    });
+
     api.addGatewayResponse('DEFAULT_4XX', {
       type: ResponseType.DEFAULT_4XX,
       templates: {
