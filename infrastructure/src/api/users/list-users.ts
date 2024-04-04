@@ -95,6 +95,7 @@ export class ListUsersApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 

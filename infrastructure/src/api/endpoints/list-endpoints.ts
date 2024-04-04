@@ -94,12 +94,6 @@ export class ListEndpointsApi {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
                     },
-                    status: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NUMBER,
-                      ],
-                    },
                     instance_type: {
                       type: JsonSchemaType.STRING,
                     },
