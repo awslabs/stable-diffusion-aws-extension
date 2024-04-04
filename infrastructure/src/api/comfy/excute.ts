@@ -170,7 +170,6 @@ export class ExecuteApi {
               'sagemaker_raw',
               'output_path',
             ],
-            additionalProperties: false,
           },
         },
         required: [
