@@ -5,7 +5,7 @@ botocore~=1.34.1
 numpy~=1.26.2
 fastapi~=0.109.1
 pydantic~=1.10.13
-Pillow==10.2.0
+Pillow==10.3.0
 tomli==2.0.1
 tomli-w==1.0.0
 aws-lambda-powertools==2.35.1
