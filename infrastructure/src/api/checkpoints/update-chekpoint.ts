@@ -63,6 +63,7 @@ export class UpdateCheckPointApi {
           methodResponses: [
             ApiModels.methodResponse(this.responseUpdateModel(), '200'),
             ApiModels.methodResponse(this.responseRenameModel(), '202'),
+            ApiModels.methodResponses400(),
             ApiModels.methodResponses401(),
             ApiModels.methodResponses403(),
             ApiModels.methodResponses504(),
