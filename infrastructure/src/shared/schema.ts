@@ -251,7 +251,6 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
       },
     },
     required: [
-      'used_models',
       'input_body_s3',
       'sagemaker_inference_instance_type',
       'sagemaker_inference_endpoint_id',
@@ -456,4 +455,76 @@ export const SCHEMA_TRAIN_CREATED: JsonSchema = {
 export const SCHEMA_TRAIN_SAGEMAKER_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
   description: 'Name of SageMaker Training Job',
+};
+
+export const SCHEMA_ENDPOINT_ID: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'ID of Endpoint',
+  pattern: '^[a-f0-9\\-]{36}$',
+};
+
+export const SCHEMA_ENDPOINT_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Endpoint Type',
+  enum: ['Real-time', 'Async'],
+};
+
+export const SCHEMA_ENDPOINT_SERVICE_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Service Type',
+  enum: ['sd', 'comfy'],
+};
+
+export const SCHEMA_ENDPOINT_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Status of Endpoint',
+};
+
+export const SCHEMA_ENDPOINT_INSTANCE_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Instance Type',
+};
+
+export const SCHEMA_ENDPOINT_AUTOSCALING: JsonSchema = {
+  type: JsonSchemaType.BOOLEAN,
+  description: 'Autoscaling',
+};
+
+
+export const SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Maximum number of instances',
+  pattern: '^[0-9]+$',
+};
+
+
+export const SCHEMA_ENDPOINT_START_TIME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Start Time of Endpoint',
+  format: 'date-time',
+};
+
+export const SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Current number of instances',
+  pattern: '^[0-9]+$',
+};
+
+export const SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE: JsonSchema = {
+  type: JsonSchemaType.ARRAY,
+  description: 'Owner Group or Role',
+  items: {
+    type: JsonSchemaType.STRING,
+  },
+};
+
+export const SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  pattern: '^[0-9]+$',
+  description: 'Minimum number of instances',
+};
+
+export const SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Custom Extensions',
 };

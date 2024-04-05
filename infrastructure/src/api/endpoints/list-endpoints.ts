@@ -5,7 +5,15 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG, SCHEMA_ENDPOINT_AUTOSCALING, SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT, SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
+  SCHEMA_ENDPOINT_ID,
+  SCHEMA_ENDPOINT_INSTANCE_TYPE, SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER, SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE, SCHEMA_ENDPOINT_SERVICE_TYPE, SCHEMA_ENDPOINT_START_TIME, SCHEMA_ENDPOINT_STATUS,
+  SCHEMA_ENDPOINT_TYPE,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface ListEndpointsApiProps {
@@ -84,51 +92,19 @@ export class ListEndpointsApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    EndpointDeploymentJobId: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    autoscaling: {
-                      type: JsonSchemaType.BOOLEAN,
-                    },
-                    max_instance_number: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[0-9]+$',
-                    },
-                    startTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    instance_type: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    current_instance_count: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[0-9]+$',
-                    },
-                    endpoint_status: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    EndpointDeploymentJobId: SCHEMA_ENDPOINT_ID,
+                    autoscaling: SCHEMA_ENDPOINT_AUTOSCALING,
+                    max_instance_number: SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
+                    startTime: SCHEMA_ENDPOINT_START_TIME,
+                    instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
+                    current_instance_count: SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
+                    endpoint_status: SCHEMA_ENDPOINT_STATUS,
                     endpoint_name: SCHEMA_ENDPOINT_NAME,
-                    endpoint_type: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    owner_group_or_role: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    min_instance_number: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[0-9]+$',
-                    },
-                    custom_extensions: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    service_type: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    endpoint_type: SCHEMA_ENDPOINT_TYPE,
+                    service_type: SCHEMA_ENDPOINT_SERVICE_TYPE,
+                    owner_group_or_role: SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
+                    min_instance_number: SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+                    custom_extensions: SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
                   },
                   required: [
                     'EndpointDeploymentJobId',
