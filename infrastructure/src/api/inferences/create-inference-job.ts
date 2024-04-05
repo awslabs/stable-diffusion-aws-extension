@@ -86,7 +86,7 @@ export class CreateInferenceJobApi {
       description: 'Response Model CreateInferenceJobRealtimeResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: this.id,
+        title: 'CreateInferenceJobRealtimeResponse',
         type: JsonSchemaType.OBJECT,
         properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
         required: [
@@ -107,7 +107,7 @@ export class CreateInferenceJobApi {
       description: 'Response Model CreateInferenceJobAsyncResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: 'StartInferenceJobAsyncResponse',
+        title: 'CreateInferenceJobAsyncResponse',
         type: JsonSchemaType.OBJECT,
         properties: SCHEMA_INFERENCE_ASYNC_MODEL,
         required: [
