@@ -11,6 +11,11 @@ COPY --from=builder /s5cmd /usr/local/bin/
 
 SHELL ["/bin/bash", "-c"]
 
+WORKDIR /home/ubuntu/
+
+ENV ON_DOCKER true
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
 RUN adduser --disabled-password --gecos '' ubuntu
 
 RUN apt-get update -y && \
@@ -22,23 +27,19 @@ RUN apt-get update -y && \
     # clean up
     rm -rf /var/lib/apt/lists/*
 
-RUN cd /home/ubuntu || exit 1 && \
-    export ESD_CODE_BRANCH="dev" && \
-    curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash
+ENV FULL_IMAGE true
+
+COPY inference/serve.sh /
+RUN chmod +x /serve.sh
+
+ENTRYPOINT ["bash", "/serve.sh"]
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
     cd /home/ubuntu/conda/lib/ && \
     wget https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
     wget https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10
 
-WORKDIR /home/ubuntu/
+RUN cd /home/ubuntu || exit 1 && \
+    export ESD_CODE_BRANCH="dev" && \
+    curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash
 
-ENV ON_DOCKER true
-ENV FULL_IMAGE true
-
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
-
-COPY inference/serve.sh /
-RUN chmod +x /serve.sh
-
-ENTRYPOINT ["bash", "/serve.sh"]
