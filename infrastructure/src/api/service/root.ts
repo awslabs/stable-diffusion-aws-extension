@@ -58,15 +58,10 @@ export class RootAPI {
           },
           debug: SCHEMA_DEBUG,
           message: SCHEMA_MESSAGE,
-          data: {
-            type: JsonSchemaType.OBJECT,
-            additionalProperties: true,
-          },
         },
         required: [
           'statusCode',
           'debug',
-          'data',
           'message',
         ],
       },
