@@ -469,37 +469,6 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
         type: JsonSchemaType.STRING,
         format: 'uri',
       },
-      used_models: {
-        type: JsonSchemaType.OBJECT,
-        additionalProperties: {
-          type: JsonSchemaType.ARRAY,
-          items: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              s3: {
-                type: JsonSchemaType.STRING,
-                format: 'uri',
-              },
-              id: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              model_name: {
-                type: JsonSchemaType.STRING,
-              },
-              type: {
-                type: JsonSchemaType.STRING,
-              },
-            },
-            required: [
-              's3',
-              'id',
-              'model_name',
-              'type',
-            ],
-          },
-        },
-      },
       input_body_s3: {
         type: JsonSchemaType.STRING,
         format: 'uri',
