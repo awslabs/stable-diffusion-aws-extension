@@ -60,7 +60,7 @@ export class CreateRoleApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateRoleResponse',
-      description: 'CreateRole Response Model',
+      description: 'Response Model CreateRoleResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

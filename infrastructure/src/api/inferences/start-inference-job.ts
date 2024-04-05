@@ -74,7 +74,7 @@ export class StartInferenceJobApi {
     return new Model(this.scope, `${this.id}-rt-resp-model`, {
       restApi: this.router.api,
       modelName: 'StartInferenceJobRealtimeResponse',
-      description: 'StartInferenceJobRealtime Response Model',
+      description: 'Response Model StartInferenceJobRealtime',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
@@ -106,7 +106,7 @@ export class StartInferenceJobApi {
     return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.router.api,
       modelName: 'StartInferenceJobAsyncResponse',
-      description: 'StartInferenceJobAsync Response Model',
+      description: 'Response Model StartInferenceJobAsync',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: 'StartInferenceJobAsyncResponse',

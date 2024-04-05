@@ -67,7 +67,7 @@ export class ListCheckPointsApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListCheckpointsResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         title: 'ListCheckpointsResponse',
         schema: JsonSchemaVersion.DRAFT7,

@@ -66,7 +66,7 @@ export class GetInferenceJobApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'GetInferenceJobResponse',
-      description: 'GetInferenceJob Response Model',
+      description: 'Response Model GetInferenceJob',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: 'GetInferenceJob',

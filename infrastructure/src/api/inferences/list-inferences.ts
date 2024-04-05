@@ -68,7 +68,7 @@ export class ListInferencesApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListInferencesResponse',
-      description: 'ListInferences Response Model',
+      description: 'Response Model ListInferences',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

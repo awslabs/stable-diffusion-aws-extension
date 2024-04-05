@@ -144,7 +144,7 @@ export class CreateUserApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateUserResponse',
-      description: 'CreateUser Response Model',
+      description: 'Response Model CreateUserResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

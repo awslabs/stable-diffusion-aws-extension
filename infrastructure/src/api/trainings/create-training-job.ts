@@ -79,7 +79,7 @@ export class CreateTrainingJobApi {
     return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.props.router.api,
       modelName: 'CreateTrainResponse',
-      description: 'CreateTrain Response Model',
+      description: 'Response Model CreateTrainResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,

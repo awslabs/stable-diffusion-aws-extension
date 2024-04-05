@@ -114,7 +114,7 @@ export class ListUsersApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListUsersResponse',
-      description: 'ListUsers Response Model',
+      description: 'Response Model ListUsersResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

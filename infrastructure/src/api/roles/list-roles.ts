@@ -56,7 +56,7 @@ export class ListRolesApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListRolesResponse',
-      description: 'ListRoles Response Model',
+      description: 'Response Model ListRolesResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

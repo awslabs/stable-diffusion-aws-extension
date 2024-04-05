@@ -75,7 +75,7 @@ export class GetTrainingJobApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'GetTrainResponse',
-      description: 'GetTrain Response Model',
+      description: 'Response Model GetTrainResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
