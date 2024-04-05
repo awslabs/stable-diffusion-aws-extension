@@ -1,0 +1,47 @@
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
+
+RUN apt-get update -y
+RUN apt-get install -y wget
+RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
+
+FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
+
+COPY --from=builder /s5cmd /usr/local/bin/
+
+SHELL ["/bin/bash", "-c"]
+
+RUN adduser --disabled-password --gecos '' ubuntu
+
+RUN apt-get update -y && \
+    apt-get install --no-install-recommends -y git libgl1 libtcmalloc-minimal4 libglib2.0-0 python3.10 python3.10-venv net-tools bc && \
+    # may not needed in endpoint
+    apt-get install --no-install-recommends -y pkg-config file curl protobuf-compiler mesa-utils && \
+    # for env install
+    apt-get install --no-install-recommends -y tar python3-dev libcairo2-dev libprotobuf-dev build-essential cmake wget && \
+    # clean up
+    rm -rf /var/lib/apt/lists/*
+
+RUN cd /home/ubuntu || exit 1 && \
+    curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_sd.sh" | bash
+
+COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
+RUN python /home/ubuntu/stable-diffusion-webui/clip_init.py
+
+RUN wget -O /home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt
+
+WORKDIR /home/ubuntu/
+
+ENV ON_DOCKER true
+ENV FULL_IMAGE false
+
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+
+COPY inference/serve.sh /
+
+
+RUN chmod +x /serve.sh
+
+COPY inference/cn_serve /home/ubuntu/stable-diffusion-webui/
+
+ENTRYPOINT ["python", "/home/ubuntu/stable-diffusion-webui/cn_serve"]
