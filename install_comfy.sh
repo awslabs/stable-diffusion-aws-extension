@@ -24,6 +24,8 @@ git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch
 cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
 
+rm -rf stable-diffusion-aws-extension
+
 echo "---------------------------------------------------------------------------------"
 echo "build comfy..."
 

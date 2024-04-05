@@ -23,11 +23,15 @@ aws_region = os.environ.get('AWS_REGION')
 s3_bucket_name = os.environ.get('S3_BUCKET_NAME')
 async_success_topic = os.environ.get('SNS_INFERENCE_SUCCESS')
 async_error_topic = os.environ.get('SNS_INFERENCE_ERROR')
-inference_ecr_image_url = os.environ.get("INFERENCE_ECR_IMAGE_URL")
+
 queue_url = os.environ.get('COMFY_QUEUE_URL')
 sync_table = os.environ.get('COMFY_SYNC_TABLE')
 instance_monitor_table = os.environ.get('COMFY_INSTANCE_MONITOR_TABLE')
 esd_version = os.environ.get("ESD_VERSION")
+
+account_id = os.environ.get("ACCOUNT_ID")
+region = os.environ.get("AWS_REGION")
+url_suffix = os.environ.get("URL_SUFFIX")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
@@ -86,7 +90,7 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    return inference_ecr_image_url
+    return f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{esd_version}"
 
 
 # POST /endpoints

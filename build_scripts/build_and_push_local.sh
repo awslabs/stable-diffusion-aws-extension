@@ -10,6 +10,12 @@ image=$2
 mode=$3
 tag=$4
 
+# if AWS_DEFAULT_REGION start with cn, AWS_SUFIX == amazon.com.cn
+if [[ $AWS_DEFAULT_REGION == cn* ]]; then
+    AWS_DOMAIN="amazonaws.com.cn"
+else
+    AWS_DOMAIN="amazonaws.com"
+fi
 
 if [ "$image" = "" ] || [ "$dockerfile" = "" ]
 then
@@ -40,7 +46,7 @@ region=$(aws configure get region)
 # region=${region:-us-west-2}
 
 image_name="${image}"
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
+fullname="${account}.dkr.ecr.${region}.${AWS_DOMAIN}/${image_name}:${tag}"
 
 # If the repository doesn't exist in ECR, create it.
 
@@ -56,7 +62,7 @@ then
     fi
 fi
 
-aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+aws ecr get-login-password --region ${region} | docker login -u AWS --password-stdin ${account}.dkr.ecr.${region}.${AWS_DOMAIN}
 
 cp ${dockerfile} .
 

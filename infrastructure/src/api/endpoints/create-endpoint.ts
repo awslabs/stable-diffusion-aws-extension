@@ -5,7 +5,6 @@ import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { CompositePrincipal, Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Topic } from 'aws-cdk-lib/aws-sns';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import {
@@ -16,7 +15,6 @@ import {
   SCHEMA_ENDPOINT_TYPE,
   SCHEMA_MESSAGE,
 } from '../../shared/schema';
-import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
 
@@ -32,7 +30,6 @@ export interface CreateEndpointApiProps {
   inferenceResultTopic: Topic;
   inferenceResultErrorTopic: Topic;
   queue: aws_sqs.Queue;
-  accountId: ICfnRuleConditionExpression;
   executeResultSuccessTopic: Topic;
   executeResultFailTopic: Topic;
 }
@@ -47,7 +44,6 @@ export class CreateEndpointApi {
   private readonly instanceMonitorTable: Table;
   private readonly layer: LayerVersion;
   private readonly baseId: string;
-  private readonly accountId: ICfnRuleConditionExpression;
   private readonly userNotifySNS: Topic;
   private readonly queue: aws_sqs.Queue;
   private readonly inferenceResultTopic: Topic;
@@ -71,7 +67,6 @@ export class CreateEndpointApi {
     this.executeResultSuccessTopic = props.executeResultSuccessTopic;
     this.executeResultFailTopic = props.executeResultFailTopic;
     this.queue = props.queue;
-    this.accountId = props.accountId;
 
     const lambdaFunction = this.apiLambda();
 
@@ -378,7 +373,6 @@ export class CreateEndpointApi {
         COMFY_QUEUE_URL: this.queue.queueUrl,
         COMFY_SYNC_TABLE: this.syncTable.tableName,
         COMFY_INSTANCE_MONITOR_TABLE: this.instanceMonitorTable.tableName,
-        INFERENCE_ECR_IMAGE_URL: `${this.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-inference:${ESD_VERSION}`,
         SNS_INFERENCE_SUCCESS: this.inferenceResultTopic.topicArn,
         SNS_INFERENCE_ERROR: this.inferenceResultErrorTopic.topicArn,
         COMFY_SNS_INFERENCE_SUCCESS: this.executeResultFailTopic.topicArn,

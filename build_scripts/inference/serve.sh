@@ -343,6 +343,8 @@ comfy_launch_from_local(){
 if [ "$FULL_IMAGE" == "true" ]; then
   echo "Running on full docker image..."
   if [ "$SERVICE_TYPE" == "sd" ]; then
+    export LD_LIBRARY_PATH=/home/ubuntu/conda/lib:$LD_LIBRARY_PATH
+    # wget -P /home/ubuntu/stable-diffusion-webui/models/Stable-diffusion/ https://aws-gcr-solutions.s3.cn-north-1.amazonaws.com.cn/stable-diffusion-aws-extension-github-mainline/models/v1-5-pruned-emaonly.safetensors
     sd_accelerate_launch
   else
     comfy_accelerate_launch

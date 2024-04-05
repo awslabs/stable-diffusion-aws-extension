@@ -37,10 +37,15 @@ train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
 dataset_info_table = os.environ.get("DATASET_INFO_TABLE")
-region = os.environ.get("AWS_REGION")
+
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
-image_uri = os.environ.get("TRAIN_ECR_URL")
+
+account_id = os.environ.get("ACCOUNT_ID")
+region = os.environ.get("AWS_REGION")
+url_suffix = os.environ.get("URL_SUFFIX")
+
+image_uri = f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-training:kohya-65bf90a"
 
 ddb_client = boto3.client('dynamodb')
 
