@@ -34,6 +34,7 @@ export class RootAPI {
       apiKeyRequired: true,
       operationName: 'RootAPI',
       methodResponses: [
+        ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
       ],
     });
