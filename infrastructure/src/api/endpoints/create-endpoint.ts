@@ -299,7 +299,7 @@ export class CreateEndpointApi {
       restApi: this.router.api,
       contentType: 'application/json',
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
