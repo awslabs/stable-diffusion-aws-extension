@@ -55,6 +55,16 @@ export const SCHEMA_MESSAGE: JsonSchema = {
 };
 
 // API Gateway Validator or Lambda Response
+export const SCHEMA_204: JsonSchema = {
+  type: JsonSchemaType.OBJECT,
+  schema: JsonSchemaVersion.DRAFT7,
+  title: 'Response Model 204',
+  description: 'Schema for an API response with a 204 No Content status. Since the 204 status indicates that there is no content in the response, this schema does not define any properties for the response body.',
+  properties: {},
+  additionalProperties: false,
+}
+;
+
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Bad Request',
@@ -512,7 +522,7 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
   },
 };
 
-export const SCHEMA_INFERENCE_ASYNC_MODEL: Record<string, JsonSchema> ={
+export const SCHEMA_INFERENCE_ASYNC_MODEL: Record<string, JsonSchema> = {
   statusCode: {
     type: JsonSchemaType.NUMBER,
   },
@@ -532,7 +542,7 @@ export const SCHEMA_INFERENCE_ASYNC_MODEL: Record<string, JsonSchema> ={
   },
 };
 
-export const SCHEMA_INFERENCE_REAL_TIME_MODEL: Record<string, JsonSchema> ={
+export const SCHEMA_INFERENCE_REAL_TIME_MODEL: Record<string, JsonSchema> = {
   statusCode: {
     type: JsonSchemaType.NUMBER,
   },

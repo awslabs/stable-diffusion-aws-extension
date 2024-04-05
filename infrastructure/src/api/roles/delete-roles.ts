@@ -57,6 +57,7 @@ export class DeleteRolesApi {
         },
         operationName: 'DeleteRoles',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),

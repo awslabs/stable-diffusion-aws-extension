@@ -3,7 +3,7 @@ import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { ApiModels } from './models';
-import { SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
+import { SCHEMA_204, SCHEMA_400, SCHEMA_401, SCHEMA_403, SCHEMA_404, SCHEMA_504 } from './schema';
 import { ESD_VERSION } from './version';
 
 export class RestApiGateway {
@@ -53,6 +53,7 @@ export class RestApiGateway {
 
     this.createResponses(api);
 
+    ApiModels.schema204 = ApiModels.createAPiModel(this.scope, api, SCHEMA_204, '204');
     ApiModels.schema400 = ApiModels.createAPiModel(this.scope, api, SCHEMA_400, '400');
     ApiModels.schema401 = ApiModels.createAPiModel(this.scope, api, SCHEMA_401, '401');
     ApiModels.schema403 = ApiModels.createAPiModel(this.scope, api, SCHEMA_403, '403');

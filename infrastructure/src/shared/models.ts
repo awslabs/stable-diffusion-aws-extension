@@ -5,6 +5,7 @@ import { Construct } from 'constructs';
 
 export class ApiModels {
 
+  public static schema204: Model;
   public static schema400: Model;
   public static schema401: Model;
   public static schema403: Model;
@@ -29,6 +30,18 @@ export class ApiModels {
       statusCode: '400',
       responseModels: {
         'application/json': this.schema400,
+      },
+      responseParameters: {
+        'method.response.header.Access-Control-Allow-Origin': true,
+      },
+    };
+  }
+
+  public static methodResponses204(): MethodResponse {
+    return {
+      statusCode: '204',
+      responseModels: {
+        'application/json': this.schema204,
       },
       responseParameters: {
         'method.response.header.Access-Control-Allow-Origin': true,

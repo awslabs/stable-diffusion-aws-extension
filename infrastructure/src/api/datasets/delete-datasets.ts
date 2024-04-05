@@ -68,6 +68,7 @@ export class DeleteDatasetsApi {
         },
         operationName: 'DeleteDatasets',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
           ApiModels.methodResponses404(),

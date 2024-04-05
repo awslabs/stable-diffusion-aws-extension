@@ -48,6 +48,7 @@ export class DeleteExecutesApi {
       },
       operationName: 'DeleteExecutes',
       methodResponses: [
+        ApiModels.methodResponses204(),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),

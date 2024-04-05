@@ -60,6 +60,7 @@ export class DeleteCheckpointsApi {
         },
         operationName: 'DeleteCheckpoints',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),

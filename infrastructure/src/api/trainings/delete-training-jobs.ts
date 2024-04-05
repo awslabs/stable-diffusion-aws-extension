@@ -63,6 +63,7 @@ export class DeleteTrainingJobsApi {
         },
         operationName: 'DeleteTrainings',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
