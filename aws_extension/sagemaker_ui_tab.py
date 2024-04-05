@@ -31,25 +31,21 @@ endpoint_type_choices = ["Async", "Real-time"]
 
 page_key = {}
 
+inference_choices = ["ml.g4dn.2xlarge",
+                     "ml.g4dn.4xlarge",
+                     "ml.g4dn.8xlarge",
+                     "ml.g4dn.12xlarge",
+                     "ml.g5.2xlarge",
+                     "ml.g5.4xlarge",
+                     "ml.g5.8xlarge",
+                     "ml.g5.12xlarge",
+                     "ml.g5.24xlarge",
+                     "ml.p4d.24xlarge",
+                     ]
+
 if is_gcr():
-    inference_choices = ["ml.g4dn.2xlarge",
-                         "ml.g4dn.4xlarge",
-                         "ml.g4dn.8xlarge",
-                         "ml.g4dn.12xlarge"
-                         ]
     inference_choices_default = "ml.g4dn.2xlarge"
 else:
-    inference_choices = ["ml.g4dn.2xlarge",
-                         "ml.g4dn.4xlarge",
-                         "ml.g4dn.8xlarge",
-                         "ml.g4dn.12xlarge",
-                         "ml.g5.2xlarge",
-                         "ml.g5.4xlarge",
-                         "ml.g5.8xlarge",
-                         "ml.g5.12xlarge",
-                         "ml.g5.24xlarge",
-                         "ml.p4d.24xlarge",
-                         ]
     inference_choices_default = "ml.g5.2xlarge"
 
 user_table_size = 10
