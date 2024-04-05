@@ -246,7 +246,6 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
       },
     },
     required: [
-      'input_body_presign_url',
       'used_models',
       'input_body_s3',
       'sagemaker_inference_instance_type',
@@ -307,7 +306,6 @@ export const SCHEMA_USER_ROLES: JsonSchema = {
 
 export const SCHEMA_PASSWORD: JsonSchema = {
   type: JsonSchemaType.STRING,
-  minLength: 1,
   description: 'Password for user',
 };
 
