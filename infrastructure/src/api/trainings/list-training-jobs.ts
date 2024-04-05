@@ -13,7 +13,7 @@ import {
   SCHEMA_TRAIN_ID,
   SCHEMA_TRAIN_MODEL_NAME,
   SCHEMA_TRAIN_PARAMS,
-  SCHEMA_TRAIN_SM_NAME,
+  SCHEMA_TRAIN_SAGEMAKER_NAME,
   SCHEMA_TRAIN_STATUS,
   SCHEMA_TRAIN_TYPE,
 } from '../../shared/schema';
@@ -150,7 +150,7 @@ export class ListTrainingJobsApi {
                     status: SCHEMA_TRAIN_STATUS,
                     trainType: SCHEMA_TRAIN_TYPE,
                     created: SCHEMA_TRAIN_CREATED,
-                    sagemakerTrainName: SCHEMA_TRAIN_SM_NAME,
+                    sagemakerTrainName: SCHEMA_TRAIN_SAGEMAKER_NAME,
                     params: SCHEMA_TRAIN_PARAMS,
                   },
                   required: [

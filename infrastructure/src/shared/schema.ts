@@ -57,6 +57,7 @@ export const SCHEMA_MESSAGE: JsonSchema = {
 // API Gateway Validator or Lambda Response
 export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Bad Request',
   schema: JsonSchemaVersion.DRAFT7,
   title: '400',
   properties: {
@@ -80,6 +81,7 @@ export const SCHEMA_400: JsonSchema = {
 
 export const SCHEMA_401: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Unauthorized',
   schema: JsonSchemaVersion.DRAFT7,
   title: '401',
   properties: {
@@ -106,6 +108,7 @@ export const SCHEMA_401: JsonSchema = {
 
 export const SCHEMA_403: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Forbidden',
   title: '403',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
@@ -124,6 +127,7 @@ export const SCHEMA_403: JsonSchema = {
 
 export const SCHEMA_404: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Not Found',
   title: '404',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
@@ -146,6 +150,7 @@ export const SCHEMA_404: JsonSchema = {
 
 export const SCHEMA_504: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Gateway Timeout',
   title: '504',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
@@ -379,37 +384,46 @@ export const SCHEMA_CHECKPOINT_ID: JsonSchema = {
 export const SCHEMA_TRAIN_ID: JsonSchema = {
   type: JsonSchemaType.STRING,
   pattern: '^[a-f0-9\\-]{36}$',
+  description: 'ID of training job',
 };
 
 export const SCHEMA_TRAIN_STATUS: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Status of training job',
 };
 
 
 export const SCHEMA_TRAIN_MODEL_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Model Name',
 };
 
 export const SCHEMA_TRAIN_TYPE: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Training Type',
 };
 
 export const SCHEMA_TRAINING_TYPE: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Training Type',
 };
 
 export const SCHEMA_TRAINING_PARAMS: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Training Parameters',
 };
 
 export const SCHEMA_TRAIN_CONFIG_PARAMS: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Training Configuration Parameters',
   properties: {
     saving_arguments: {
       type: JsonSchemaType.OBJECT,
+      description: 'Saving Arguments',
     },
     training_arguments: {
       type: JsonSchemaType.OBJECT,
+      description: 'Training Arguments',
     },
   },
   required: [
@@ -420,6 +434,7 @@ export const SCHEMA_TRAIN_CONFIG_PARAMS: JsonSchema = {
 
 export const SCHEMA_TRAIN_PARAMS: JsonSchema = {
   type: JsonSchemaType.OBJECT,
+  description: 'Training Parameters',
   additionalProperties: true,
   properties: {
     training_type: SCHEMA_TRAINING_TYPE,
@@ -435,8 +450,10 @@ export const SCHEMA_TRAIN_PARAMS: JsonSchema = {
 
 export const SCHEMA_TRAIN_CREATED: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Created Time of Training Job',
 };
 
-export const SCHEMA_TRAIN_SM_NAME: JsonSchema = {
+export const SCHEMA_TRAIN_SAGEMAKER_NAME: JsonSchema = {
   type: JsonSchemaType.STRING,
+  description: 'Name of SageMaker Training Job',
 };
