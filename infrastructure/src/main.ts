@@ -188,7 +188,6 @@ export class Middleware extends Stack {
       synthesizer: props.synthesizer,
       inferenceErrorTopic: snsTopics.inferenceResultErrorTopic,
       inferenceResultTopic: snsTopics.inferenceResultTopic,
-      accountId,
       resourceProvider,
     });
 
@@ -225,7 +224,6 @@ export class Middleware extends Stack {
       executeSuccessTopic: snsTopics.executeResultSuccessTopic,
       executeFailTopic: snsTopics.executeResultFailTopic,
       snsTopic: snsTopics.snsTopic,
-      accountId: accountId,
       queue: sqsStack.queue,
     });
     apis.node.addDependency(ddbComfyTables);
@@ -243,7 +241,6 @@ export class Middleware extends Stack {
       syncTable: ddbComfyTables.syncTable,
       instanceMonitorTable: ddbComfyTables.instanceMonitorTable,
       commonLayer: commonLayers.commonLayer,
-      accountId: accountId,
       queue: sqsStack.queue,
     },
     );
@@ -256,7 +253,6 @@ export class Middleware extends Stack {
       s3Bucket: s3Bucket,
       snsTopic: snsTopics.snsTopic,
       resourceProvider,
-      accountId,
     });
 
     new DatasetStack(this, {
@@ -295,6 +291,8 @@ export class Middleware extends Stack {
     this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
     this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
     this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
+    this.addEnvironmentVariableToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
+    this.addEnvironmentVariableToAllLambdas('ACCOUNT_ID', accountId.toString());
 
     // make order for api
     let requestValidator: aws_apigateway.RequestValidator;

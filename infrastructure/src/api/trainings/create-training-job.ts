@@ -4,7 +4,6 @@ import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RequestVal
 import { Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
@@ -22,7 +21,6 @@ export interface CreateTrainingJobApiProps {
   datasetInfoTable: Table;
   userTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
-  accountId: ICfnRuleConditionExpression;
 }
 
 export class CreateTrainingJobApi {
@@ -388,7 +386,6 @@ export class CreateTrainingJobApi {
         CHECKPOINT_TABLE: this.props.checkpointTable.tableName,
         INSTANCE_TYPE: this.instanceType,
         TRAIN_JOB_ROLE: this.sagemakerTrainRole.roleArn,
-        TRAIN_ECR_URL: `${this.props.accountId.toString()}.dkr.ecr.${Aws.REGION}.${Aws.URL_SUFFIX}/esd-training:kohya-65bf90a`,
         USER_EMAIL_TOPIC_ARN: this.props.userTopic.topicArn,
       },
       layers: [this.props.commonLayer],

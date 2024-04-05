@@ -10,7 +10,6 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Size } from 'aws-cdk-lib/core';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { DeleteExecutesApi, DeleteExecutesApiProps } from '../api/comfy/delete_excutes';
 import { ExecuteApi, ExecuteApiProps } from '../api/comfy/excute';
@@ -38,7 +37,6 @@ export interface ComfyInferenceStackProps extends StackProps {
   executeFailTopic: sns.Topic;
   snsTopic: aws_sns.Topic;
   resourceProvider: ResourceProvider;
-  accountId: ICfnRuleConditionExpression;
   queue: sqs.Queue;
 }
 

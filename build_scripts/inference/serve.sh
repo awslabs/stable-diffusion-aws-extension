@@ -368,5 +368,3 @@ if [ "$SERVICE_TYPE" == "sd" ]; then
 else
     comfy_launch_from_local
 fi
-
-# todo https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/creator/inswapper_128.onnx

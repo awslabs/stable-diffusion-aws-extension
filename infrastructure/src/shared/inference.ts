@@ -8,7 +8,6 @@ import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Size } from 'aws-cdk-lib/core';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ResourceProvider } from './resource-provider';
 import { CreateInferenceJobApi } from '../api/inferences/create-inference-job';
@@ -36,7 +35,6 @@ export interface InferenceProps extends StackProps {
   checkpointTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
   resourceProvider: ResourceProvider;
-  accountId: ICfnRuleConditionExpression;
 }
 
 export class Inference {

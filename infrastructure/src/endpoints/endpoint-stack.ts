@@ -6,7 +6,6 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as sns from 'aws-cdk-lib/aws-sns';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { CreateEndpointApi } from '../api/endpoints/create-endpoint';
 import { DeleteEndpointsApi } from '../api/endpoints/delete-endpoints';
@@ -32,7 +31,6 @@ export interface EndpointStackProps extends StackProps {
   syncTable: aws_dynamodb.Table;
   instanceMonitorTable: aws_dynamodb.Table;
   commonLayer: PythonLayerVersion;
-  accountId: ICfnRuleConditionExpression;
   queue: aws_sqs.Queue;
 }
 
@@ -82,7 +80,6 @@ export class EndpointStack {
         httpMethod: 'POST',
         userNotifySNS: props.snsTopic,
         queue: props.queue,
-        accountId: props.accountId,
         inferenceResultTopic: props.inferenceResultTopic,
         inferenceResultErrorTopic: props.inferenceErrorTopic,
         executeResultSuccessTopic: props.executeResultSuccessTopic,

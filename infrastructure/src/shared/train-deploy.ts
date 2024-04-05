@@ -2,7 +2,6 @@ import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 import { aws_s3, aws_sns, StackProps } from 'aws-cdk-lib';
 import { Resource } from 'aws-cdk-lib/aws-apigateway/lib/resource';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
-import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { Database } from './database';
 import { ResourceProvider } from './resource-provider';
@@ -19,7 +18,6 @@ export interface TrainDeployProps extends StackProps {
   snsTopic: aws_sns.Topic;
   commonLayer: PythonLayerVersion;
   resourceProvider: ResourceProvider;
-  accountId: ICfnRuleConditionExpression;
 }
 
 export class TrainDeploy {
@@ -64,7 +62,6 @@ export class TrainDeploy {
       multiUserTable: multiUserTable,
       userTopic: props.snsTopic,
       resourceProvider: this.resourceProvider,
-      accountId: props.accountId,
       datasetInfoTable: props.database.datasetInfoTable,
     });
 
