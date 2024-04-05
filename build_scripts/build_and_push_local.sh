@@ -10,7 +10,7 @@ image=$2
 mode=$3
 tag=$4
 
-# if AWS_DEFAULT_REGION start with cn, AWS_SUFIX == amazon.com.cn
+# if AWS_DEFAULT_REGION start with cn, AWS_DOMAIN == amazon.com.cn
 if [[ $AWS_DEFAULT_REGION == cn* ]]; then
     AWS_DOMAIN="amazonaws.com.cn"
 else

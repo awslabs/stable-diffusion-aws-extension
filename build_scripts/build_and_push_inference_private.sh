@@ -30,6 +30,12 @@ fi
 # Get the region defined in the current configuration (default to us-west-2 if none defined)
 region="${region}"
 
+if [[ $region == cn* ]]; then
+    AWS_DOMAIN="amazonaws.com.cn"
+else
+    AWS_DOMAIN="amazonaws.com"
+fi
+
 image_name="${image}"
 
 # If the repository doesn't exist in ECR, create it.
@@ -46,18 +52,18 @@ then
     fi
 fi
 
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.amazonaws.com
-aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account}.dkr.ecr.${region}.amazonaws.com
+#aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.$AWS_DOMAIN
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account}.dkr.ecr.${region}.$AWS_DOMAIN
 
 cp ${dockerfile} .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
+fullname="${account}.dkr.ecr.${region}.$AWS_DOMAIN/${image_name}:${tag}"
 echo $fullname
 
 docker build -t ${image_name}:${tag} -f ${dockerfile} .
 docker tag ${image_name}:${tag} ${fullname}
 docker push ${fullname}
-echo "docker push ${account}.dkr.ecr.${region}.amazonaws.com/${image_name}:${tag}"
+echo "docker push ${account}.dkr.ecr.${region}.$AWS_DOMAIN/${image_name}:${tag}"
 echo "Completed"
