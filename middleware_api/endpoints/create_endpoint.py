@@ -33,8 +33,6 @@ account_id = os.environ.get("ACCOUNT_ID")
 region = os.environ.get("AWS_REGION")
 url_suffix = os.environ.get("URL_SUFFIX")
 
-inference_ecr_image_url = f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{esd_version}"
-
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 
@@ -92,7 +90,10 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    return inference_ecr_image_url
+    if region.startswith("cn-"):
+        return f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{event.service_type}-cn"
+
+    return f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{esd_version}"
 
 
 # POST /endpoints
