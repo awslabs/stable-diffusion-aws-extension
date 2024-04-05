@@ -2,7 +2,7 @@ import { JsonSchema, JsonSchemaType, JsonSchemaVersion } from 'aws-cdk-lib/aws-a
 
 export const SCHEMA_DEBUG: JsonSchema = {
   type: JsonSchemaType.OBJECT,
-  title: 'Debug',
+  title: 'Debug Response Model',
   schema: JsonSchemaVersion.DRAFT7,
   description: 'Debugging information for Lambda Function',
   properties: {
@@ -59,7 +59,7 @@ export const SCHEMA_400: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Bad Request',
   schema: JsonSchemaVersion.DRAFT7,
-  title: '400',
+  title: '400 Response Model',
   properties: {
     statusCode: {
       type: JsonSchemaType.INTEGER,
@@ -83,7 +83,7 @@ export const SCHEMA_401: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Unauthorized',
   schema: JsonSchemaVersion.DRAFT7,
-  title: '401',
+  title: '401 Response Model',
   properties: {
     statusCode: {
       type: JsonSchemaType.INTEGER,
@@ -109,7 +109,7 @@ export const SCHEMA_401: JsonSchema = {
 export const SCHEMA_403: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Forbidden',
-  title: '403',
+  title: '403 Response Model',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
     requestId: SCHEMA_REQUEST_ID,
@@ -128,7 +128,7 @@ export const SCHEMA_403: JsonSchema = {
 export const SCHEMA_404: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Not Found',
-  title: '404',
+  title: '404 Response Model',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
     statusCode: {
@@ -151,7 +151,7 @@ export const SCHEMA_404: JsonSchema = {
 export const SCHEMA_504: JsonSchema = {
   type: JsonSchemaType.OBJECT,
   description: 'Gateway Timeout',
-  title: '504',
+  title: '504 Response Model',
   schema: JsonSchemaVersion.DRAFT7,
   properties: {
     message: SCHEMA_MESSAGE,
