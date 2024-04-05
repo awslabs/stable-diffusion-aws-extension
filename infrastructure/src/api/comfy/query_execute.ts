@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_EXECUTE_NEED_SYNC,
+  SCHEMA_EXECUTE_PROMPT_ID,
+  SCHEMA_EXECUTE_STATUS,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface QueryExecuteApiProps {
@@ -88,13 +95,10 @@ export class QueryExecuteApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    prompt_id: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    prompt_id: SCHEMA_EXECUTE_PROMPT_ID,
                     endpoint_name: SCHEMA_ENDPOINT_NAME,
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    status: SCHEMA_EXECUTE_STATUS,
+                    need_sync: SCHEMA_EXECUTE_NEED_SYNC,
                     create_time: {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
@@ -102,9 +106,6 @@ export class QueryExecuteApi {
                     start_time: {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
-                    },
-                    need_sync: {
-                      type: JsonSchemaType.BOOLEAN,
                     },
                     output_path: {
                       type: JsonSchemaType.STRING,

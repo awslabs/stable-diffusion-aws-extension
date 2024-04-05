@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_ENDPOINT_NAME, SCHEMA_INFER_TYPE, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_EXECUTE_NEED_SYNC,
+  SCHEMA_EXECUTE_PROMPT_ID, SCHEMA_EXECUTE_PROMPT_PATH,
+  SCHEMA_EXECUTE_STATUS,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface GetExecuteApiProps {
@@ -83,25 +90,16 @@ export class GetExecuteApi {
             type: JsonSchemaType.OBJECT,
             additionalProperties: true,
             properties: {
-              prompt_id: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              need_sync: {
-                type: JsonSchemaType.BOOLEAN,
-              },
-              prompt_path: {
-                type: JsonSchemaType.STRING,
-              },
+              prompt_id: SCHEMA_EXECUTE_PROMPT_ID,
+              need_sync: SCHEMA_EXECUTE_NEED_SYNC,
+              prompt_path: SCHEMA_EXECUTE_PROMPT_PATH,
               endpoint_name: SCHEMA_ENDPOINT_NAME,
-              status: {
-                type: JsonSchemaType.STRING,
-              },
+              status: SCHEMA_EXECUTE_STATUS,
+              inference_type: SCHEMA_INFER_TYPE,
               create_time: {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
               },
-              inference_type: SCHEMA_INFER_TYPE,
               start_time: {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',

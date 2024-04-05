@@ -528,3 +528,25 @@ export const SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS: JsonSchema = {
   type: JsonSchemaType.STRING,
   description: 'Custom Extensions',
 };
+
+export const SCHEMA_EXECUTE_PROMPT_ID: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Prompt ID',
+  format: 'uuid',
+};
+
+export const SCHEMA_EXECUTE_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Status of Execute',
+};
+
+
+export const SCHEMA_EXECUTE_NEED_SYNC: JsonSchema = {
+  type: JsonSchemaType.BOOLEAN,
+  description: 'Need Sync',
+};
+
+export const SCHEMA_EXECUTE_PROMPT_PATH: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  description: 'Prompt Path',
+};
