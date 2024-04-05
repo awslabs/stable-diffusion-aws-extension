@@ -317,9 +317,9 @@ export const SCHEMA_TRAIN_PARAMS: JsonSchema = {
   description: 'Training Parameters',
   additionalProperties: true,
   properties: {
-    training_type: SCHEMA_TRAINING_TYPE,
-    training_params: SCHEMA_TRAINING_PARAMS,
     config_params: SCHEMA_TRAIN_CONFIG_PARAMS,
+    training_params: SCHEMA_TRAINING_PARAMS,
+    training_type: SCHEMA_TRAINING_TYPE,
   },
   required: [
     'training_params',

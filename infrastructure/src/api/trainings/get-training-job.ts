@@ -7,17 +7,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import {
-  SCHEMA_DEBUG,
-  SCHEMA_MESSAGE,
-  SCHEMA_TRAIN_CREATED,
-  SCHEMA_TRAIN_ID,
-  SCHEMA_TRAIN_MODEL_NAME,
-  SCHEMA_TRAIN_PARAMS,
-  SCHEMA_TRAIN_SAGEMAKER_NAME,
-  SCHEMA_TRAIN_STATUS,
-  SCHEMA_TRAIN_TYPE,
-} from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_PARAMS, SCHEMA_TRAIN_STATUS, SCHEMA_TRAIN_TYPE } from '../../shared/schema';
 
 export interface GetTrainingJobApiProps {
   router: Resource;
@@ -91,22 +81,10 @@ export class GetTrainingJobApi {
             additionalProperties: true,
             properties: {
               id: SCHEMA_TRAIN_ID,
-              modelName: SCHEMA_TRAIN_MODEL_NAME,
-              status: SCHEMA_TRAIN_STATUS,
-              trainType: SCHEMA_TRAIN_TYPE,
-              created: SCHEMA_TRAIN_CREATED,
-              sagemakerTrainName: SCHEMA_TRAIN_SAGEMAKER_NAME,
+              job_status: SCHEMA_TRAIN_STATUS,
+              train_type: SCHEMA_TRAIN_TYPE,
               params: SCHEMA_TRAIN_PARAMS,
             },
-            required: [
-              'id',
-              'modelName',
-              'status',
-              'trainType',
-              'created',
-              'sagemakerTrainName',
-              'params',
-            ],
           },
         },
         required: [
