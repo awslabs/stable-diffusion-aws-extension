@@ -39,7 +39,7 @@ RUN mkdir -p /home/ubuntu/conda/lib/ && \
 WORKDIR /home/ubuntu/
 
 ENV ON_DOCKER true
-ENV FULL_IMAGE false
+ENV FULL_IMAGE true
 
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
