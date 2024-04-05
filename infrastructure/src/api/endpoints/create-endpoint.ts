@@ -91,6 +91,7 @@ export class CreateEndpointApi {
       operationName: 'CreateEndpoint',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses404(),

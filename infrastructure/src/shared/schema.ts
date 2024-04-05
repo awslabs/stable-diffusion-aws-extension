@@ -381,13 +381,11 @@ export const SCHEMA_ENDPOINT_AUTOSCALING: JsonSchema = {
   description: 'Autoscaling',
 };
 
-
 export const SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER: JsonSchema = {
   type: JsonSchemaType.STRING,
   description: 'Maximum number of instances',
   pattern: '^[0-9]+$',
 };
-
 
 export const SCHEMA_ENDPOINT_START_TIME: JsonSchema = {
   type: JsonSchemaType.STRING,

@@ -351,11 +351,6 @@ export class Middleware extends Stack {
       description: 'API Doc - OAS3',
     });
 
-    new CfnOutput(this, 'ApiOAS3Editor', {
-      value: 'https://editor.swagger.io/',
-      description: 'OAS - Editor',
-    });
-
     new CfnOutput(this, 'S3BucketName', {
       value: s3BucketName.valueAsString,
       description: 'S3 Bucket Name',
