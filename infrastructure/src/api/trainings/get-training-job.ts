@@ -82,8 +82,8 @@ export class GetTrainingJobApi {
             properties: {
               id: SCHEMA_TRAIN_ID,
               job_status: SCHEMA_TRAIN_STATUS,
-              train_type: SCHEMA_TRAIN_TYPE,
               params: SCHEMA_TRAIN_PARAMS,
+              train_type: SCHEMA_TRAIN_TYPE,
             },
           },
         },
