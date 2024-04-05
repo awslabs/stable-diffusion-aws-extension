@@ -101,7 +101,7 @@ export class CreateInferenceJobApi {
   }
 
   private responseAsyncModel() {
-    return new Model(this.scope, `${this.id}-resp-model`, {
+    return new Model(this.scope, `${this.id}-async-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateInferenceJobAsyncResponse',
       description: 'Response Model CreateInferenceJobAsyncResponse',
@@ -122,7 +122,7 @@ export class CreateInferenceJobApi {
   }
 
   private responseCreatedModel() {
-    return new Model(this.scope, `${this.id}-resp-model`, {
+    return new Model(this.scope, `${this.id}-created_resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateInferenceJobResponse',
       description: 'Response Model CreateInferenceJob',
