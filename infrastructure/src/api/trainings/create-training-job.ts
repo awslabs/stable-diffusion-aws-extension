@@ -8,18 +8,7 @@ import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition'
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import {
-  SCHEMA_DEBUG,
-  SCHEMA_LAST_KEY,
-  SCHEMA_MESSAGE,
-  SCHEMA_TRAIN_CREATED,
-  SCHEMA_TRAIN_ID,
-  SCHEMA_TRAIN_MODEL_NAME,
-  SCHEMA_TRAIN_PARAMS,
-  SCHEMA_TRAIN_SAGEMAKER_NAME,
-  SCHEMA_TRAIN_STATUS,
-  SCHEMA_TRAIN_TYPE,
-} from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -94,36 +83,84 @@ export class CreateTrainingJobApi {
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              trainings: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.OBJECT,
-                  properties: {
-                    id: SCHEMA_TRAIN_ID,
-                    modelName: SCHEMA_TRAIN_MODEL_NAME,
-                    status: SCHEMA_TRAIN_STATUS,
-                    trainType: SCHEMA_TRAIN_TYPE,
-                    created: SCHEMA_TRAIN_CREATED,
-                    sagemakerTrainName: SCHEMA_TRAIN_SAGEMAKER_NAME,
-                    params: SCHEMA_TRAIN_PARAMS,
-                  },
-                  required: [
-                    'id',
-                    'modelName',
-                    'status',
-                    'trainType',
-                    'created',
-                    'sagemakerTrainName',
-                    'params',
-                  ],
-                },
+              statusCode: {
+                type: JsonSchemaType.INTEGER,
               },
-              last_evaluated_key: SCHEMA_LAST_KEY,
+              debug: SCHEMA_DEBUG,
+              data: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  id: SCHEMA_TRAIN_ID,
+                  status: SCHEMA_TRAIN_STATUS,
+                  created: SCHEMA_TRAIN_CREATED,
+                  params: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      config_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          saving_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              output_name: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              save_every_n_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['output_name', 'save_every_n_epochs'],
+                          },
+                          training_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              max_train_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['max_train_epochs'],
+                          },
+                        },
+                        required: ['saving_arguments', 'training_arguments'],
+                      },
+                      training_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          s3_data_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          training_instance_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_model_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          fm_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_toml_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        required: ['s3_data_path', 'training_instance_type', 's3_model_path', 'fm_type', 's3_toml_path'],
+                      },
+                      training_type: SCHEMA_TRAINING_TYPE,
+                    },
+                    required: ['config_params', 'training_params', 'training_type'],
+                  },
+                  input_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  output_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                },
+                required: ['id', 'status', 'created', 'params', 'input_location', 'output_location'],
+              },
+              message: {
+                type: JsonSchemaType.STRING,
+              },
             },
-            required: [
-              'trainings',
-              'last_evaluated_key',
-            ],
           },
         },
         required: [
