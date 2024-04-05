@@ -122,7 +122,7 @@ export class CreateInferenceJobApi {
   }
 
   private responseCreatedModel() {
-    return new Model(this.scope, `${this.id}-created_resp-model`, {
+    return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateInferenceJobResponse',
       description: 'Response Model CreateInferenceJob',
