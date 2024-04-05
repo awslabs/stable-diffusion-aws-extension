@@ -76,7 +76,7 @@ export class CreateTrainingJobApi {
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
-            enum: [200],
+            enum: [201],
           },
           debug: SCHEMA_DEBUG,
           message: SCHEMA_MESSAGE,
