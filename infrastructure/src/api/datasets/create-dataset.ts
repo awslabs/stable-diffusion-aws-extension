@@ -58,6 +58,7 @@ export class CreateDatasetApi {
       operationName: 'CreateDataset',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses504(),

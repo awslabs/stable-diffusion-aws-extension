@@ -59,6 +59,7 @@ export class UpdateDatasetApi {
         operationName: 'UpdateDataset',
         methodResponses: [
           ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
         ],
