@@ -8,7 +8,18 @@ import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition'
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import { SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+  SCHEMA_TRAIN_CREATED,
+  SCHEMA_TRAIN_ID,
+  SCHEMA_TRAIN_MODEL_NAME,
+  SCHEMA_TRAIN_PARAMS,
+  SCHEMA_TRAIN_SM_NAME,
+  SCHEMA_TRAIN_STATUS,
+  SCHEMA_TRAIN_TYPE,
+} from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -88,57 +99,13 @@ export class CreateTrainingJobApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    id: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    modelName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    trainType: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    created: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^\\d{10}(\\.\\d+)?$',
-                    },
-                    sagemakerTrainName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        training_params: {
-                          type: JsonSchemaType.OBJECT,
-                        },
-                        training_type: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        config_params: {
-                          type: JsonSchemaType.OBJECT,
-                          properties: {
-                            saving_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                            training_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                          },
-                          required: [
-                            'saving_arguments',
-                            'training_arguments',
-                          ],
-                        },
-                      },
-                      required: [
-                        'training_params',
-                        'training_type',
-                        'config_params',
-                      ],
-                    },
+                    id: SCHEMA_TRAIN_ID,
+                    modelName: SCHEMA_TRAIN_MODEL_NAME,
+                    status: SCHEMA_TRAIN_STATUS,
+                    trainType: SCHEMA_TRAIN_TYPE,
+                    created: SCHEMA_TRAIN_CREATED,
+                    sagemakerTrainName: SCHEMA_TRAIN_SM_NAME,
+                    params: SCHEMA_TRAIN_PARAMS,
                   },
                   required: [
                     'id',

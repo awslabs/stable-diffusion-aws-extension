@@ -374,3 +374,69 @@ export const SCHEMA_CHECKPOINT_ID: JsonSchema = {
   format: 'uuid',
   description: 'ID of checkpoint',
 };
+
+
+export const SCHEMA_TRAIN_ID: JsonSchema = {
+  type: JsonSchemaType.STRING,
+  pattern: '^[a-f0-9\\-]{36}$',
+};
+
+export const SCHEMA_TRAIN_STATUS: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+
+export const SCHEMA_TRAIN_MODEL_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_TRAIN_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_TRAINING_TYPE: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_TRAINING_PARAMS: JsonSchema = {
+  type: JsonSchemaType.OBJECT,
+};
+
+export const SCHEMA_TRAIN_CONFIG_PARAMS: JsonSchema = {
+  type: JsonSchemaType.OBJECT,
+  properties: {
+    saving_arguments: {
+      type: JsonSchemaType.OBJECT,
+    },
+    training_arguments: {
+      type: JsonSchemaType.OBJECT,
+    },
+  },
+  required: [
+    'saving_arguments',
+    'training_arguments',
+  ],
+};
+
+export const SCHEMA_TRAIN_PARAMS: JsonSchema = {
+  type: JsonSchemaType.OBJECT,
+  additionalProperties: true,
+  properties: {
+    training_type: SCHEMA_TRAINING_TYPE,
+    training_params: SCHEMA_TRAINING_PARAMS,
+    config_params: SCHEMA_TRAIN_CONFIG_PARAMS,
+  },
+  required: [
+    'training_params',
+    'training_type',
+    'config_params',
+  ],
+};
+
+export const SCHEMA_TRAIN_CREATED: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};
+
+export const SCHEMA_TRAIN_SM_NAME: JsonSchema = {
+  type: JsonSchemaType.STRING,
+};

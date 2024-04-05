@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_TRAIN_ID } from '../../shared/schema';
 
 export interface DeleteTrainingJobsApiProps {
   router: Resource;
@@ -85,10 +86,7 @@ export class DeleteTrainingJobsApi {
           properties: {
             training_id_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
+              items: SCHEMA_TRAIN_ID,
               minItems: 1,
               maxItems: 100,
             },
