@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_INFER_TYPE, SCHEMA_INFERENCE, SCHEMA_MESSAGE } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_INFERENCE,
+  SCHEMA_INFERENCE_ASYNC_MODEL,
+  SCHEMA_INFERENCE_REAL_TIME_MODEL,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -61,12 +68,56 @@ export class CreateInferenceJobApi {
       },
       operationName: 'CreateInferenceJob',
       methodResponses: [
+        ApiModels.methodResponse(this.responseRealtimeModel(), '200'),
         ApiModels.methodResponse(this.responseCreatedModel(), '201'),
+        ApiModels.methodResponse(this.responseAsyncModel(), '202'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
         ApiModels.methodResponses504(),
       ],
+    });
+  }
+
+  private responseRealtimeModel() {
+    return new Model(this.scope, `${this.id}-rt-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobRealtimeResponse',
+      description: 'Response Model CreateInferenceJobRealtimeResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.id,
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseAsyncModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobAsyncResponse',
+      description: 'Response Model CreateInferenceJobAsyncResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'StartInferenceJobAsyncResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_ASYNC_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
     });
   }
 

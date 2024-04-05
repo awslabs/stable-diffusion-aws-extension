@@ -511,3 +511,37 @@ export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
     type: JsonSchemaType.STRING,
   },
 };
+
+export const SCHEMA_INFERENCE_ASYNC_MODEL: Record<string, JsonSchema> ={
+  statusCode: {
+    type: JsonSchemaType.NUMBER,
+  },
+  debug: SCHEMA_DEBUG,
+  message: SCHEMA_MESSAGE,
+  data: {
+    type: JsonSchemaType.OBJECT,
+    additionalProperties: true,
+    properties: {
+      InferenceJobId: SCHEMA_INFERENCE.InferenceJobId,
+      status: SCHEMA_INFERENCE.status,
+    },
+    required: [
+      'InferenceJobId',
+      'status',
+    ],
+  },
+};
+
+export const SCHEMA_INFERENCE_REAL_TIME_MODEL: Record<string, JsonSchema> ={
+  statusCode: {
+    type: JsonSchemaType.NUMBER,
+  },
+  debug: SCHEMA_DEBUG,
+  message: SCHEMA_MESSAGE,
+  data: {
+    type: JsonSchemaType.OBJECT,
+    additionalProperties: true,
+    properties: SCHEMA_INFERENCE,
+  },
+};
+

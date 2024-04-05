@@ -7,7 +7,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG, SCHEMA_INFERENCE, SCHEMA_MESSAGE } from '../../shared/schema';
+import { SCHEMA_INFERENCE_ASYNC_MODEL, SCHEMA_INFERENCE_REAL_TIME_MODEL } from '../../shared/schema';
 
 export interface StartInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -79,18 +79,7 @@ export class StartInferenceJobApi {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
         type: JsonSchemaType.OBJECT,
-        properties: {
-          statusCode: {
-            type: JsonSchemaType.NUMBER,
-          },
-          debug: SCHEMA_DEBUG,
-          message: SCHEMA_MESSAGE,
-          data: {
-            type: JsonSchemaType.OBJECT,
-            additionalProperties: true,
-            properties: SCHEMA_INFERENCE,
-          },
-        },
+        properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
         required: [
           'statusCode',
           'debug',
@@ -111,25 +100,7 @@ export class StartInferenceJobApi {
         schema: JsonSchemaVersion.DRAFT7,
         title: 'StartInferenceJobAsyncResponse',
         type: JsonSchemaType.OBJECT,
-        properties: {
-          statusCode: {
-            type: JsonSchemaType.NUMBER,
-          },
-          debug: SCHEMA_DEBUG,
-          message: SCHEMA_MESSAGE,
-          data: {
-            type: JsonSchemaType.OBJECT,
-            additionalProperties: true,
-            properties: {
-              InferenceJobId: SCHEMA_INFERENCE.InferenceJobId,
-              status: SCHEMA_INFERENCE.status,
-            },
-            required: [
-              'InferenceJobId',
-              'status',
-            ],
-          },
-        },
+        properties: SCHEMA_INFERENCE_ASYNC_MODEL,
         required: [
           'statusCode',
           'debug',
