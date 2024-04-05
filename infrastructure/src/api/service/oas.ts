@@ -1,6 +1,6 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
 import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, Resource } from 'aws-cdk-lib/aws-apigateway';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, Resource } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
@@ -34,8 +34,25 @@ export class OasApi {
       apiKeyRequired: true,
       operationName: 'GetApiOAS',
       methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
       ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'GetApiOASResponse',
+      description: 'Response Model GetApiOASResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        additionalProperties: true,
+      },
+      contentType: 'application/json',
     });
   }
 

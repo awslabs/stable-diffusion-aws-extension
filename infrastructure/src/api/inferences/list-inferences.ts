@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_INFER_TYPE, SCHEMA_INFERENCE, SCHEMA_LAST_KEY, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ListInferencesApiProps {
@@ -50,6 +50,11 @@ export class ListInferencesApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListInferences',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+        'method.request.querystring.type': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),
@@ -63,7 +68,7 @@ export class ListInferencesApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListInferencesResponse',
-      description: 'ListInferences Response Model',
+      description: 'Response Model ListInferences',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -74,169 +79,46 @@ export class ListInferencesApi {
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
               inferences: {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
+                  additionalProperties: true,
                   properties: {
-                    InferenceJobId: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    taskType: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    owner_group_or_role: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    inference_info_name: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
-                    },
-                    startTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    createTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    image_names: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    sagemakerRaw: {
-                      type: [
-                        JsonSchemaType.NULL,
-                        JsonSchemaType.OBJECT,
-                      ],
-                    },
-                    completeTime: {
-                      type: JsonSchemaType.STRING,
-                      format: 'date-time',
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        input_body_s3: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        sagemaker_inference_endpoint_id: {
-                          type: JsonSchemaType.STRING,
-                          pattern: '^[a-f0-9\\-]{36}$',
-                        },
-                        input_body_presign_url: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        used_models: {
-                          type: JsonSchemaType.OBJECT,
-                          additionalProperties: {
-                            type: JsonSchemaType.ARRAY,
-                            items: {
-                              type: JsonSchemaType.OBJECT,
-                              properties: {
-                                s3: {
-                                  type: JsonSchemaType.STRING,
-                                  format: 'uri',
-                                },
-                                id: {
-                                  type: JsonSchemaType.STRING,
-                                  pattern: '^[a-f0-9\\-]{36}$',
-                                },
-                                model_name: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                type: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                              },
-                              required: [
-                                's3',
-                                'id',
-                                'model_name',
-                                'type',
-                              ],
-                              additionalProperties: false,
-                            },
-                          },
-                        },
-                        output_path: {
-                          type: JsonSchemaType.STRING,
-                          format: 'uri',
-                        },
-                        sagemaker_inference_instance_type: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        sagemaker_inference_endpoint_name: {
-                          type: JsonSchemaType.STRING,
-                        },
-                      },
-                      required: [
-                        'input_body_s3',
-                        'sagemaker_inference_endpoint_id',
-                        'used_models',
-                        'sagemaker_inference_instance_type',
-                        'sagemaker_inference_endpoint_name',
-                      ],
-                      additionalProperties: false,
-                    },
-                    inference_type: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    payload_string: {
-                      type: [
-                        JsonSchemaType.NULL,
-                        JsonSchemaType.STRING,
-                      ],
-                    },
+                    InferenceJobId: SCHEMA_INFERENCE.InferenceJobId,
+                    status: SCHEMA_INFERENCE.status,
+                    taskType: SCHEMA_INFERENCE.taskType,
+                    owner_group_or_role: SCHEMA_INFERENCE.owner_group_or_role,
+                    startTime: SCHEMA_INFERENCE.startTime,
+                    createTime: SCHEMA_INFERENCE.createTime,
+                    image_names: SCHEMA_INFERENCE.image_names,
+                    params: SCHEMA_INFERENCE.params,
+                    inference_type: SCHEMA_INFER_TYPE,
                   },
                   required: [
                     'InferenceJobId',
                     'status',
                     'taskType',
                     'owner_group_or_role',
-                    'inference_info_name',
                     'startTime',
                     'createTime',
                     'image_names',
-                    'completeTime',
                     'params',
                     'inference_type',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'inferences',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -245,7 +127,6 @@ export class ListInferencesApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

@@ -7,7 +7,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_INFERENCE_ASYNC_MODEL, SCHEMA_INFERENCE_REAL_TIME_MODEL } from '../../shared/schema';
 
 export interface StartInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -59,80 +59,58 @@ export class StartInferenceJobApi {
         apiKeyRequired: true,
         operationName: 'StartInferences',
         methodResponses: [
-          ApiModels.methodResponse(this.responseModel(), '202'),
+          ApiModels.methodResponse(this.responseRealtimeModel(), '200'),
+          ApiModels.methodResponse(this.responseAsyncModel(), '202'),
+          ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
-          ApiModels.methodResponses404(),
+          ApiModels.methodResponses504(),
         ],
       });
 
   }
 
-  private responseModel() {
-    return new Model(this.scope, `${this.id}-resp-model`, {
+  private responseRealtimeModel() {
+    return new Model(this.scope, `${this.id}-rt-resp-model`, {
       restApi: this.router.api,
-      modelName: 'StartInferenceJobResponse',
-      description: 'StartInferenceJob Response Model',
+      modelName: 'StartInferenceJobRealtimeResponse',
+      description: 'Response Model StartInferenceJobRealtime',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
         type: JsonSchemaType.OBJECT,
-        properties: {
-          statusCode: {
-            type: JsonSchemaType.NUMBER,
-          },
-          debug: SCHEMA_DEBUG,
-          data: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              inference: {
-                type: JsonSchemaType.OBJECT,
-                properties: {
-                  inference_id: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uuid',
-                  },
-                  status: {
-                    type: JsonSchemaType.STRING,
-                  },
-                  endpoint_name: {
-                    type: JsonSchemaType.STRING,
-                  },
-                  output_path: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uri',
-                  },
-                },
-                required: [
-                  'inference_id',
-                  'status',
-                  'endpoint_name',
-                  'output_path',
-                ],
-                additionalProperties: false,
-              },
-            },
-            required: [
-              'inference',
-            ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-          },
-        },
+        properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
         required: [
           'statusCode',
           'debug',
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
   }
 
+  private responseAsyncModel() {
+    return new Model(this.scope, `${this.id}-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'StartInferenceJobAsyncResponse',
+      description: 'Response Model StartInferenceJobAsync',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'StartInferenceJobAsyncResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_ASYNC_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
 
   private getLambdaRole(): aws_iam.Role {
     const newRole = new aws_iam.Role(this.scope, `${this.id}-role`, {

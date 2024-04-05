@@ -5,7 +5,18 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+  SCHEMA_TRAIN_CREATED,
+  SCHEMA_TRAIN_ID,
+  SCHEMA_TRAIN_MODEL_NAME,
+  SCHEMA_TRAIN_PARAMS,
+  SCHEMA_TRAIN_SAGEMAKER_NAME,
+  SCHEMA_TRAIN_STATUS,
+  SCHEMA_TRAIN_TYPE,
+} from '../../shared/schema';
 
 
 export interface ListTrainingJobsApiProps {
@@ -34,7 +45,29 @@ export class ListTrainingJobsApi {
     this.multiUserTable = props.multiUserTable;
     this.layer = props.commonLayer;
 
-    this.listAllTrainJobsApi();
+    const lambdaFunction = this.apiLambda();
+
+    const lambdaIntegration = new LambdaIntegration(
+      lambdaFunction,
+      {
+        proxy: true,
+      },
+    );
+
+    this.router.addMethod(this.httpMethod, lambdaIntegration, {
+      apiKeyRequired: true,
+      operationName: 'ListTrainings',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+      },
+      methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
+        ApiModels.methodResponses403(),
+        ApiModels.methodResponses404(),
+      ],
+    });
   }
 
   private iamRole(): aws_iam.Role {
@@ -69,8 +102,8 @@ export class ListTrainingJobsApi {
     return newRole;
   }
 
-  private listAllTrainJobsApi() {
-    const lambdaFunction = new PythonFunction(this.scope, `${this.baseId}-lambda`, {
+  private apiLambda() {
+    return new PythonFunction(this.scope, `${this.baseId}-lambda`, {
       entry: '../middleware_api/trainings',
       architecture: Architecture.X86_64,
       runtime: Runtime.PYTHON_3_10,
@@ -85,31 +118,13 @@ export class ListTrainingJobsApi {
       },
       layers: [this.layer],
     });
-
-    const lambdaIntegration = new LambdaIntegration(
-      lambdaFunction,
-      {
-        proxy: true,
-      },
-    );
-
-    this.router.addMethod(this.httpMethod, lambdaIntegration, {
-      apiKeyRequired: true,
-      operationName: 'ListTrainings',
-      methodResponses: [
-        ApiModels.methodResponse(this.responseModel()),
-        ApiModels.methodResponses401(),
-        ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
-      ],
-    });
   }
 
   private responseModel() {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListTrainingsResponse',
-      description: 'ListTrainings Response Model',
+      description: 'Response Model ListTrainingsResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -120,6 +135,7 @@ export class ListTrainingJobsApi {
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -127,58 +143,15 @@ export class ListTrainingJobsApi {
                 type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
+                  additionalProperties: true,
                   properties: {
-                    id: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    modelName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    trainType: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    created: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^\\d{10}(\\.\\d+)?$',
-                    },
-                    sagemakerTrainName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        training_params: {
-                          type: JsonSchemaType.OBJECT,
-                        },
-                        training_type: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        config_params: {
-                          type: JsonSchemaType.OBJECT,
-                          properties: {
-                            saving_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                            training_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                          },
-                          required: [
-                            'saving_arguments',
-                            'training_arguments',
-                          ],
-                        },
-                      },
-                      required: [
-                        'training_params',
-                        'training_type',
-                        'config_params',
-                      ],
-                    },
+                    id: SCHEMA_TRAIN_ID,
+                    modelName: SCHEMA_TRAIN_MODEL_NAME,
+                    status: SCHEMA_TRAIN_STATUS,
+                    trainType: SCHEMA_TRAIN_TYPE,
+                    created: SCHEMA_TRAIN_CREATED,
+                    sagemakerTrainName: SCHEMA_TRAIN_SAGEMAKER_NAME,
+                    params: SCHEMA_TRAIN_PARAMS,
                   },
                   required: [
                     'id',
@@ -189,25 +162,14 @@ export class ListTrainingJobsApi {
                     'sagemakerTrainName',
                     'params',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'trainings',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -216,7 +178,6 @@ export class ListTrainingJobsApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

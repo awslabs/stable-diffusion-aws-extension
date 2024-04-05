@@ -5,7 +5,15 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_CREATOR,
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE, SCHEMA_PASSWORD,
+  SCHEMA_PERMISSIONS,
+  SCHEMA_USER_ROLES,
+  SCHEMA_USERNAME,
+} from '../../shared/schema';
 
 
 export interface ListUsersApiProps {
@@ -46,6 +54,9 @@ export class ListUsersApi {
     this.router.addMethod(this.httpMethod, integration, {
       apiKeyRequired: true,
       operationName: 'ListUsers',
+      requestParameters: {
+        'method.request.querystring.show_password': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),
@@ -95,6 +106,7 @@ export class ListUsersApi {
       ],
       resources: ['*'],
     }));
+
     return newRole;
   }
 
@@ -102,7 +114,7 @@ export class ListUsersApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListUsersResponse',
-      description: 'ListUsers Response Model',
+      description: 'Response Model ListUsersResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -113,6 +125,7 @@ export class ListUsersApi {
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -121,27 +134,11 @@ export class ListUsersApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    username: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    roles: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    creator: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    permissions: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
-                    password: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    username: SCHEMA_USERNAME,
+                    roles: SCHEMA_USER_ROLES,
+                    creator: SCHEMA_CREATOR,
+                    permissions: SCHEMA_PERMISSIONS,
+                    password: SCHEMA_PASSWORD,
                   },
                   required: [
                     'creator',
@@ -150,24 +147,14 @@ export class ListUsersApi {
                     'roles',
                     'username',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
-              'last_evaluated_key',
               'users',
+              'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [
@@ -176,7 +163,6 @@ export class ListUsersApi {
           'message',
           'statusCode',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

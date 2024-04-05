@@ -151,6 +151,7 @@ class InferenceJob:
     status: str
     taskType: str
     owner_group_or_role: Optional[List[str]] = None
+    # todo will delete
     inference_info_name: Optional[Any] = None
     startTime: Optional[Any] = None
     createTime: Optional[Any] = None

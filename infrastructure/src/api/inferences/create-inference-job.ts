@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_INFERENCE,
+  SCHEMA_INFERENCE_ASYNC_MODEL,
+  SCHEMA_INFERENCE_REAL_TIME_MODEL,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 export interface CreateInferenceJobApiProps {
   router: aws_apigateway.Resource;
@@ -57,42 +64,86 @@ export class CreateInferenceJobApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateInferenceJob',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponse(this.responseRealtimeModel(), '200'),
+        ApiModels.methodResponse(this.responseCreatedModel(), '201'),
+        ApiModels.methodResponse(this.responseAsyncModel(), '202'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
-        ApiModels.methodResponses404(),
+        ApiModels.methodResponses504(),
       ],
     });
   }
 
-  private responseModel() {
+  private responseRealtimeModel() {
+    return new Model(this.scope, `${this.id}-rt-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobRealtimeResponse',
+      description: 'Response Model CreateInferenceJobRealtimeResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'CreateInferenceJobRealtimeResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_REAL_TIME_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseAsyncModel() {
+    return new Model(this.scope, `${this.id}-async-resp-model`, {
+      restApi: this.router.api,
+      modelName: 'CreateInferenceJobAsyncResponse',
+      description: 'Response Model CreateInferenceJobAsyncResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: 'CreateInferenceJobAsyncResponse',
+        type: JsonSchemaType.OBJECT,
+        properties: SCHEMA_INFERENCE_ASYNC_MODEL,
+        required: [
+          'statusCode',
+          'debug',
+          'data',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
+    });
+  }
+
+  private responseCreatedModel() {
     return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateInferenceJobResponse',
-      description: 'CreateInferenceJob Response Model',
+      description: 'Response Model CreateInferenceJob',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
-        title: this.id,
+        title: 'CreateInferenceJobResponse',
         type: JsonSchemaType.OBJECT,
         properties: {
           statusCode: {
             type: JsonSchemaType.NUMBER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
               inference: {
                 type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
                 properties: {
-                  id: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uuid',
-                  },
+                  id: SCHEMA_INFERENCE.InferenceJobId,
                   type: {
                     type: JsonSchemaType.STRING,
                   },
@@ -128,7 +179,6 @@ export class CreateInferenceJobApi {
                         'name',
                         'type',
                       ],
-                      additionalProperties: false,
                     },
                   },
                 },
@@ -137,18 +187,12 @@ export class CreateInferenceJobApi {
                   'type',
                   'api_params_s3_location',
                   'api_params_s3_upload_url',
-                  'models',
                 ],
-                additionalProperties: false,
               },
             },
             required: [
               'inference',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [
@@ -157,17 +201,16 @@ export class CreateInferenceJobApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.router.api,
       modelName: this.id,
-      description: `${this.id} Request Model`,
+      description: `Request Model ${this.id}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
@@ -180,10 +223,7 @@ export class CreateInferenceJobApi {
           custom_extensions: {
             type: JsonSchemaType.STRING,
           },
-          inference_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Async'],
-          },
+          inference_type: SCHEMA_INFER_TYPE,
           payload_string: {
             type: JsonSchemaType.STRING,
           },

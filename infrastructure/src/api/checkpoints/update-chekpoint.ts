@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateCheckPointApiProps {
@@ -57,12 +57,13 @@ export class UpdateCheckPointApi {
           apiKeyRequired: true,
           requestValidator: this.createRequestValidator(),
           requestModels: {
-            'application/json': this.createModel(),
+            'application/json': this.createRequestBodyModel(),
           },
           operationName: 'UpdateCheckpoint',
           methodResponses: [
             ApiModels.methodResponse(this.responseUpdateModel(), '200'),
             ApiModels.methodResponse(this.responseRenameModel(), '202'),
+            ApiModels.methodResponses400(),
             ApiModels.methodResponses401(),
             ApiModels.methodResponses403(),
             ApiModels.methodResponses504(),
@@ -74,7 +75,7 @@ export class UpdateCheckPointApi {
     return new Model(this.scope, `${this.baseId}-rename-model`, {
       restApi: this.router.api,
       modelName: 'UpdateCheckpointNameResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
@@ -84,17 +85,13 @@ export class UpdateCheckPointApi {
             description: 'The HTTP status code of the response.',
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-            description: 'A human-readable message about the status of the operation.',
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'statusCode',
           'debug',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -105,28 +102,25 @@ export class UpdateCheckPointApi {
     return new Model(this.scope, `${this.baseId}-update-model`, {
       restApi: this.router.api,
       modelName: 'UpdateCheckpointResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'UpdateCheckpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.NUMBER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
               checkpoint: {
                 type: JsonSchemaType.OBJECT,
                 properties: {
-                  id: {
-                    type: JsonSchemaType.STRING,
-                    format: 'uuid',
-                  },
-                  type: {
-                    type: JsonSchemaType.STRING,
-                  },
+                  id: SCHEMA_CHECKPOINT_ID,
+                  type: SCHEMA_CHECKPOINT_TYPE,
                   s3_location: {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
@@ -161,10 +155,8 @@ export class UpdateCheckPointApi {
                               'upload_id',
                               'key',
                             ],
-                            additionalProperties: false,
                           },
                         },
-                        additionalProperties: false,
                       },
                       message: {
                         type: JsonSchemaType.STRING,
@@ -180,7 +172,6 @@ export class UpdateCheckPointApi {
                       'message',
                       'created',
                     ],
-                    additionalProperties: false,
                   },
                 },
                 required: [
@@ -190,16 +181,11 @@ export class UpdateCheckPointApi {
                   'status',
                   'params',
                 ],
-                additionalProperties: false,
               },
             },
             required: [
               'checkpoint',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [
@@ -208,7 +194,6 @@ export class UpdateCheckPointApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -286,11 +271,11 @@ export class UpdateCheckPointApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

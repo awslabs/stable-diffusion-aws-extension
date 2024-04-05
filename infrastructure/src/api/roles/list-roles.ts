@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_CREATOR, SCHEMA_DEBUG, SCHEMA_LAST_KEY, SCHEMA_MESSAGE, SCHEMA_PERMISSIONS } from '../../shared/schema';
 
 
 export interface ListAllRolesApiProps {
@@ -56,7 +56,7 @@ export class ListRolesApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListRolesResponse',
-      description: 'ListRoles Response Model',
+      description: 'Response Model ListRolesResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -67,6 +67,7 @@ export class ListRolesApi {
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -78,40 +79,22 @@ export class ListRolesApi {
                     role_name: {
                       type: JsonSchemaType.STRING,
                     },
-                    creator: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    permissions: {
-                      type: JsonSchemaType.ARRAY,
-                      items: {
-                        type: JsonSchemaType.STRING,
-                      },
-                    },
+                    creator: SCHEMA_CREATOR,
+                    permissions: SCHEMA_PERMISSIONS,
                   },
                   required: [
                     'role_name',
                     'creator',
                     'permissions',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'roles',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -120,7 +103,6 @@ export class ListRolesApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

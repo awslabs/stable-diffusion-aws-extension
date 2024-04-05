@@ -98,7 +98,7 @@ def handler(event, ctx):
 
         data = {
             'users': result,
-            'last_evaluated_key': "not_applicable"
+            'last_evaluated_key': None
         }
 
         return ok(data=data)

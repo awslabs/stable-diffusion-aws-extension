@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateDatasetApiProps {
@@ -53,11 +53,12 @@ export class CreateDatasetApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateDataset',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses504(),
@@ -69,42 +70,37 @@ export class CreateDatasetApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateDatasetResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateDatasetResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [201],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
+              datasetName: SCHEMA_DATASET_NAME,
               s3PresignUrl: {
                 type: JsonSchemaType.OBJECT,
                 patternProperties: {
                   '.*': {
                     type: JsonSchemaType.STRING,
                     format: 'uri',
+                    description: 'S3 Presign URL',
                   },
                 },
-                additionalProperties: false,
               },
             },
             required: [
               'datasetName',
               's3PresignUrl',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['Created'],
           },
         },
         required: [
@@ -113,7 +109,6 @@ export class CreateDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -174,11 +169,11 @@ export class CreateDatasetApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

@@ -8,7 +8,14 @@ import { Topic } from 'aws-cdk-lib/aws-sns';
 import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG, SCHEMA_ENDPOINT_AUTOSCALING, SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT, SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS, SCHEMA_ENDPOINT_ID,
+  SCHEMA_ENDPOINT_INSTANCE_TYPE, SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER, SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE, SCHEMA_ENDPOINT_SERVICE_TYPE, SCHEMA_ENDPOINT_START_TIME,
+  SCHEMA_ENDPOINT_STATUS,
+  SCHEMA_ENDPOINT_TYPE,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 import { ESD_VERSION } from '../../shared/version';
 
 export const ESDRoleForEndpoint = 'ESDRoleForEndpoint';
@@ -79,11 +86,12 @@ export class CreateEndpointApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateEndpoint',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '202'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses404(),
@@ -95,10 +103,11 @@ export class CreateEndpointApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateEndpointResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateEndpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -107,75 +116,23 @@ export class CreateEndpointApi {
             ],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              EndpointDeploymentJobId: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              autoscaling: {
-                type: JsonSchemaType.BOOLEAN,
-              },
-              max_instance_number: {
-                type: JsonSchemaType.STRING,
-                pattern: '^[0-9]+$',
-              },
-              startTime: {
-                type: JsonSchemaType.STRING,
-                format: 'date-time',
-              },
-              status: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
-              instance_type: {
-                type: JsonSchemaType.STRING,
-              },
-              current_instance_count: {
-                type: JsonSchemaType.STRING,
-                pattern: '^[0-9]+$',
-              },
-              endTime: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-                format: 'date-time',
-              },
-              endpoint_status: {
-                type: JsonSchemaType.STRING,
-              },
-              endpoint_name: {
-                type: JsonSchemaType.STRING,
-              },
-              error: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
-              endpoint_type: {
-                type: JsonSchemaType.STRING,
-              },
-              owner_group_or_role: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.STRING,
-                },
-              },
-              min_instance_number: {
-                type: JsonSchemaType.STRING,
-                pattern: '^[0-9]+$',
-              },
-              custom_extensions: {
-                type: JsonSchemaType.STRING,
-              },
-              service_type: {
-                type: JsonSchemaType.STRING,
-              },
+              EndpointDeploymentJobId: SCHEMA_ENDPOINT_ID,
+              autoscaling: SCHEMA_ENDPOINT_AUTOSCALING,
+              max_instance_number: SCHEMA_ENDPOINT_MAX_INSTANCE_NUMBER,
+              startTime: SCHEMA_ENDPOINT_START_TIME,
+              instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
+              current_instance_count: SCHEMA_ENDPOINT_CURRENT_INSTANCE_COUNT,
+              endpoint_status: SCHEMA_ENDPOINT_STATUS,
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
+              endpoint_type: SCHEMA_ENDPOINT_TYPE,
+              service_type: SCHEMA_ENDPOINT_SERVICE_TYPE,
+              owner_group_or_role: SCHEMA_ENDPOINT_OWNER_GROUP_OR_ROLE,
+              min_instance_number: SCHEMA_ENDPOINT_MIN_INSTANCE_NUMBER,
+              custom_extensions: SCHEMA_ENDPOINT_CUSTOM_EXTENSIONS,
             },
             required: [
               'EndpointDeploymentJobId',
@@ -192,11 +149,6 @@ export class CreateEndpointApi {
               'custom_extensions',
               'service_type',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            pattern: '^Endpoint deployment started: .*',
           },
         },
         required: [
@@ -205,7 +157,6 @@ export class CreateEndpointApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -344,28 +295,22 @@ export class CreateEndpointApi {
     return lambdaStartDeployRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       contentType: 'application/json',
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            maxLength: 20,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           custom_docker_image_uri: {
             type: JsonSchemaType.STRING,
           },
-          endpoint_type: {
-            type: JsonSchemaType.STRING,
-            enum: ['Real-time', 'Async'],
-          },
+          endpoint_type: SCHEMA_ENDPOINT_TYPE,
           cool_down_time: {
             type: JsonSchemaType.STRING,
             enum: ['15 minutes', '1 hour', '6 hours', '1 day'],
@@ -374,9 +319,7 @@ export class CreateEndpointApi {
             type: JsonSchemaType.STRING,
             enum: ['sd', 'comfy'],
           },
-          instance_type: {
-            type: JsonSchemaType.STRING,
-          },
+          instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
           initial_instance_count: {
             type: JsonSchemaType.NUMBER,
             minimum: 1,

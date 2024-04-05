@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_NAME,
+  SCHEMA_EXECUTE_NEED_SYNC,
+  SCHEMA_EXECUTE_PROMPT_ID,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface ExecuteApiProps {
@@ -27,8 +34,6 @@ export class ExecuteApi {
   private readonly configTable: aws_dynamodb.Table;
   private readonly executeTable: aws_dynamodb.Table;
   private readonly endpointTable: aws_dynamodb.Table;
-  public model: Model;
-  public requestValidator: RequestValidator;
 
   constructor(scope: Construct, id: string, props: ExecuteApiProps) {
     this.scope = scope;
@@ -39,8 +44,6 @@ export class ExecuteApi {
     this.executeTable = props.executeTable;
     this.endpointTable = props.endpointTable;
     this.layer = props.commonLayer;
-    this.model = this.createModel();
-    this.requestValidator = this.createRequestValidator();
 
     const lambdaFunction = this.apiLambda();
 
@@ -53,9 +56,9 @@ export class ExecuteApi {
 
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
-      requestValidator: this.requestValidator,
+      requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.model,
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateExecute',
       methodResponses: [
@@ -71,10 +74,11 @@ export class ExecuteApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateExecuteResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateExecuteResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -83,58 +87,36 @@ export class ExecuteApi {
             ],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
               prompt_id: {
                 type: JsonSchemaType.STRING,
               },
-              endpoint_name: {
-                type: JsonSchemaType.STRING,
-              },
-              inference_type: {
-                type: JsonSchemaType.STRING,
-              },
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
+              inference_type: SCHEMA_INFER_TYPE,
               need_sync: {
                 type: JsonSchemaType.BOOLEAN,
               },
               status: {
                 type: JsonSchemaType.STRING,
               },
-              prompt_params: {
+              number: {
+                type: JsonSchemaType.INTEGER,
+              },
+              front: {
+                type: JsonSchemaType.STRING,
+              },
+              extra_data: {
                 type: JsonSchemaType.OBJECT,
                 additionalProperties: true,
               },
-              number: {
-                type: [
-                  JsonSchemaType.INTEGER,
-                  JsonSchemaType.NULL,
-                ],
-              },
-              front: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
-              extra_data: {
-                type: [
-                  JsonSchemaType.OBJECT,
-                  JsonSchemaType.NULL,
-                ],
-                additionalProperties: true,
-              },
               client_id: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               instance_id: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               prompt_path: {
                 type: JsonSchemaType.STRING,
@@ -147,43 +129,22 @@ export class ExecuteApi {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
               },
-              complete_time: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-                format: 'date-time',
-              },
-              sagemaker_raw: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
-              },
               output_path: {
                 type: JsonSchemaType.STRING,
               },
               output_files: {
-                type: [
-                  JsonSchemaType.ARRAY,
-                  JsonSchemaType.NUMBER,
-                ],
+                type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.STRING,
                 },
               },
               temp_path: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.STRING,
               },
               temp_files: {
-                type: [
-                  JsonSchemaType.ARRAY,
-                  JsonSchemaType.NULL,
-                ],
+                type: JsonSchemaType.ARRAY,
                 items: {
                   type: JsonSchemaType.OBJECT,
-                  additionalProperties: false,
                 },
               },
             },
@@ -193,19 +154,9 @@ export class ExecuteApi {
               'inference_type',
               'need_sync',
               'status',
-              'prompt_params',
-              'prompt_path',
               'create_time',
               'start_time',
-              'sagemaker_raw',
               'output_path',
-            ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: [
-              'Created',
             ],
           },
         },
@@ -215,7 +166,6 @@ export class ExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -302,33 +252,24 @@ export class ExecuteApi {
     });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          prompt_id: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          prompt_id: SCHEMA_EXECUTE_PROMPT_ID,
           prompt: {
             type: JsonSchemaType.OBJECT,
             minItems: 1,
             additionalProperties: true,
           },
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          need_sync: {
-            type: JsonSchemaType.BOOLEAN,
-            minLength: 1,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
+          need_sync: SCHEMA_EXECUTE_NEED_SYNC,
           number: {
             type: JsonSchemaType.STRING,
             minLength: 1,
@@ -362,7 +303,6 @@ export class ExecuteApi {
           'need_sync',
           'endpoint_name',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

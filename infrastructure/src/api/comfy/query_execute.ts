@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_EXECUTE_NEED_SYNC,
+  SCHEMA_EXECUTE_PROMPT_ID,
+  SCHEMA_EXECUTE_STATUS,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface QueryExecuteApiProps {
@@ -52,6 +59,10 @@ export class QueryExecuteApi {
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListExecutes',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses400(),
@@ -65,15 +76,17 @@ export class QueryExecuteApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListExecutesResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'ListExecutesResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -82,15 +95,10 @@ export class QueryExecuteApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    prompt_id: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    endpoint_name: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    prompt_id: SCHEMA_EXECUTE_PROMPT_ID,
+                    endpoint_name: SCHEMA_ENDPOINT_NAME,
+                    status: SCHEMA_EXECUTE_STATUS,
+                    need_sync: SCHEMA_EXECUTE_NEED_SYNC,
                     create_time: {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
@@ -99,38 +107,20 @@ export class QueryExecuteApi {
                       type: JsonSchemaType.STRING,
                       format: 'date-time',
                     },
-                    need_sync: {
-                      type: JsonSchemaType.BOOLEAN,
-                    },
-                    complete_time: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
-                      format: 'date-time',
-                    },
                     output_path: {
                       type: JsonSchemaType.STRING,
                     },
                     output_files: {
-                      type: [
-                        JsonSchemaType.ARRAY,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.ARRAY,
                     },
                     temp_path: {
-                      type: [
-                        JsonSchemaType.STRING,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.STRING,
                     },
                     temp_files: {
-                      type: [
-                        JsonSchemaType.ARRAY,
-                        JsonSchemaType.NULL,
-                      ],
+                      type: JsonSchemaType.ARRAY,
                     },
                   },
+                  additionalProperties: true,
                   required: [
                     'prompt_id',
                     'endpoint_name',
@@ -139,24 +129,14 @@ export class QueryExecuteApi {
                     'start_time',
                     'need_sync',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'executes',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [
@@ -165,7 +145,6 @@ export class QueryExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

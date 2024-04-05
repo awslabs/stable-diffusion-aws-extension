@@ -6,7 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Size } from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateCheckPointApiProps {
@@ -51,7 +51,7 @@ export class CreateCheckPointApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createRequestModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateCheckpoint',
       methodResponses: [
@@ -69,7 +69,7 @@ export class CreateCheckPointApi {
     return new Model(this.scope, `${this.baseId}-url-model`, {
       restApi: this.router.api,
       modelName: 'CreateCheckpointUrlResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
@@ -78,16 +78,13 @@ export class CreateCheckPointApi {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'debug',
           'message',
           'statusCode',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
@@ -97,10 +94,11 @@ export class CreateCheckPointApi {
     return new Model(this.scope, `${this.baseId}-update-model`, {
       restApi: this.router.api,
       modelName: 'CreateCheckpointResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'CreateCheckpointResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -111,6 +109,7 @@ export class CreateCheckPointApi {
             properties: {
               checkpoint: {
                 type: JsonSchemaType.OBJECT,
+                additionalProperties: true,
                 properties: {
                   id: {
                     type: JsonSchemaType.STRING,
@@ -126,6 +125,7 @@ export class CreateCheckPointApi {
                   },
                   params: {
                     type: JsonSchemaType.OBJECT,
+                    additionalProperties: true,
                     properties: {
                       message: {
                         type: JsonSchemaType.STRING,
@@ -194,9 +194,7 @@ export class CreateCheckPointApi {
               's3PresignUrl',
             ],
           },
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'data',
@@ -309,28 +307,17 @@ export class CreateCheckPointApi {
     return newRole;
   }
 
-  private createRequestModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: `${this.baseId}Request`,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          checkpoint_type: {
-            type: JsonSchemaType.STRING,
-            description: 'Type of checkpoint',
-            enum: [
-              'Stable-diffusion',
-              'embeddings',
-              'Lora',
-              'hypernetworks',
-              'ControlNet',
-              'VAE',
-            ],
-          },
+          checkpoint_type: SCHEMA_CHECKPOINT_TYPE,
           filenames: {
             type: JsonSchemaType.ARRAY,
             items: {

@@ -6,6 +6,7 @@ import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws
 import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
 
 export interface DeleteEndpointsApiProps {
   router: Resource;
@@ -46,10 +47,11 @@ export class DeleteEndpointsApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'DeleteEndpoints',
       methodResponses: [
+        ApiModels.methodResponses204(),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
@@ -134,11 +136,11 @@ export class DeleteEndpointsApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -146,10 +148,7 @@ export class DeleteEndpointsApi {
         properties: {
           endpoint_name_list: {
             type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
+            items: SCHEMA_ENDPOINT_NAME,
             minItems: 1,
             maxItems: 10,
           },

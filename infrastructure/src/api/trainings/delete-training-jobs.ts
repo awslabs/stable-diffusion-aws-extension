@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_TRAIN_ID } from '../../shared/schema';
 
 export interface DeleteTrainingJobsApiProps {
   router: Resource;
@@ -58,10 +59,11 @@ export class DeleteTrainingJobsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteTrainings',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
@@ -70,14 +72,14 @@ export class DeleteTrainingJobsApi {
       });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
           schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
@@ -85,10 +87,7 @@ export class DeleteTrainingJobsApi {
           properties: {
             training_id_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
+              items: SCHEMA_TRAIN_ID,
               minItems: 1,
               maxItems: 100,
             },

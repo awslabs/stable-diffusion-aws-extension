@@ -34,7 +34,7 @@ def handler(event, ctx):
 
         role = get_query_param(event, 'role', 0)
 
-        last_token = None
+        last_evaluated_key = None
         if not role:
             result = ddb_service.query_items(user_table,
                                              key_values={
@@ -44,7 +44,7 @@ def handler(event, ctx):
             scan_rows = result
             if type(result) is tuple:
                 scan_rows = result[0]
-                last_token = result[1]
+                last_evaluated_key = result[1]
         else:
             scan_rows = ddb_service.query_items(user_table, key_values={
                 'kind': PARTITION_KEYS.role,
@@ -73,7 +73,7 @@ def handler(event, ctx):
 
         data = {
             'roles': result,
-            'last_evaluated_key': last_token
+            'last_evaluated_key': last_evaluated_key
         }
 
         return ok(data=data)

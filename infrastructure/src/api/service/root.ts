@@ -1,10 +1,11 @@
 import { PythonFunction } from '@aws-cdk/aws-lambda-python-alpha';
-import { Aws, aws_lambda, Duration } from 'aws-cdk-lib';
-import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { Aws, Duration } from 'aws-cdk-lib';
+import { JsonSchemaType, JsonSchemaVersion, LambdaIntegration, Model, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, LayerVersion, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 export interface RootAPIProps {
   httpMethod: string;
@@ -34,8 +35,37 @@ export class RootAPI {
       apiKeyRequired: true,
       operationName: 'RootAPI',
       methodResponses: [
+        ApiModels.methodResponse(this.responseModel()),
+        ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
       ],
+    });
+  }
+
+  private responseModel() {
+    return new Model(this.scope, `${this.baseId}-resp-model`, {
+      restApi: this.restApi.root.api,
+      modelName: 'RootAPIResponse',
+      description: 'Response Model RootAPIResponse',
+      schema: {
+        schema: JsonSchemaVersion.DRAFT7,
+        title: this.baseId,
+        type: JsonSchemaType.OBJECT,
+        properties: {
+          statusCode: {
+            type: JsonSchemaType.INTEGER,
+            enum: [200],
+          },
+          debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
+        },
+        required: [
+          'statusCode',
+          'debug',
+          'message',
+        ],
+      },
+      contentType: 'application/json',
     });
   }
 
@@ -74,7 +104,7 @@ export class RootAPI {
         timeout: Duration.seconds(900),
         role: this.iamRole(),
         memorySize: 2048,
-        tracing: aws_lambda.Tracing.ACTIVE,
+        tracing: Tracing.ACTIVE,
         layers: [this.layer],
       });
   }

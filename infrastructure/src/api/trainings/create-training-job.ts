@@ -8,7 +8,7 @@ import { ICfnRuleConditionExpression } from 'aws-cdk-lib/core/lib/cfn-condition'
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
 import { ResourceProvider } from '../../shared/resource-provider';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_TRAIN_CREATED, SCHEMA_TRAIN_ID, SCHEMA_TRAIN_STATUS, SCHEMA_TRAINING_TYPE } from '../../shared/schema';
 
 export interface CreateTrainingJobApiProps {
   router: aws_apigateway.Resource;
@@ -52,11 +52,12 @@ export class CreateTrainingJobApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        $default: this.createModel(),
+        $default: this.createRequestBodyModel(),
       },
       operationName: 'CreateTraining',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses404(),
@@ -68,7 +69,7 @@ export class CreateTrainingJobApi {
     return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.props.router.api,
       modelName: 'CreateTrainResponse',
-      description: 'CreateTrain Response Model',
+      description: 'Response Model CreateTrainResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,
@@ -76,97 +77,91 @@ export class CreateTrainingJobApi {
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
-            enum: [200],
+            enum: [201],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              trainings: {
-                type: JsonSchemaType.ARRAY,
-                items: {
-                  type: JsonSchemaType.OBJECT,
-                  properties: {
-                    id: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^[a-f0-9\\-]{36}$',
-                    },
-                    modelName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    trainType: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    created: {
-                      type: JsonSchemaType.STRING,
-                      pattern: '^\\d{10}(\\.\\d+)?$',
-                    },
-                    sagemakerTrainName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        training_params: {
-                          type: JsonSchemaType.OBJECT,
-                        },
-                        training_type: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        config_params: {
-                          type: JsonSchemaType.OBJECT,
-                          properties: {
-                            saving_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                            training_arguments: {
-                              type: JsonSchemaType.OBJECT,
-                            },
-                          },
-                          required: [
-                            'saving_arguments',
-                            'training_arguments',
-                          ],
-                        },
-                      },
-                      required: [
-                        'training_params',
-                        'training_type',
-                        'config_params',
-                      ],
-                    },
-                  },
-                  required: [
-                    'id',
-                    'modelName',
-                    'status',
-                    'trainType',
-                    'created',
-                    'sagemakerTrainName',
-                    'params',
-                  ],
-                  additionalProperties: false,
-                },
+              statusCode: {
+                type: JsonSchemaType.INTEGER,
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
+              debug: SCHEMA_DEBUG,
+              data: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                  id: SCHEMA_TRAIN_ID,
+                  status: SCHEMA_TRAIN_STATUS,
+                  created: SCHEMA_TRAIN_CREATED,
+                  params: {
+                    type: JsonSchemaType.OBJECT,
+                    properties: {
+                      config_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          saving_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              output_name: {
+                                type: JsonSchemaType.STRING,
+                              },
+                              save_every_n_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['output_name', 'save_every_n_epochs'],
+                          },
+                          training_arguments: {
+                            type: JsonSchemaType.OBJECT,
+                            properties: {
+                              max_train_epochs: {
+                                type: JsonSchemaType.STRING,
+                              },
+                            },
+                            required: ['max_train_epochs'],
+                          },
+                        },
+                        required: ['saving_arguments', 'training_arguments'],
+                      },
+                      training_params: {
+                        type: JsonSchemaType.OBJECT,
+                        properties: {
+                          s3_data_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          training_instance_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_model_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          fm_type: {
+                            type: JsonSchemaType.STRING,
+                          },
+                          s3_toml_path: {
+                            type: JsonSchemaType.STRING,
+                          },
+                        },
+                        required: ['s3_data_path', 'training_instance_type', 's3_model_path', 'fm_type', 's3_toml_path'],
+                      },
+                      training_type: SCHEMA_TRAINING_TYPE,
+                    },
+                    required: ['config_params', 'training_params', 'training_type'],
+                  },
+                  input_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                  output_location: {
+                    type: JsonSchemaType.STRING,
+                  },
+                },
+                required: ['id', 'status', 'created', 'params', 'input_location', 'output_location'],
+              },
+              message: {
+                type: JsonSchemaType.STRING,
               },
             },
-            required: [
-              'trainings',
-              'last_evaluated_key',
-            ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -175,7 +170,6 @@ export class CreateTrainingJobApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
@@ -280,11 +274,11 @@ export class CreateTrainingJobApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.id}-model`, {
       restApi: this.props.router.api,
       modelName: this.id,
-      description: `${this.id} Request Model`,
+      description: `Request Model ${this.id}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.id,

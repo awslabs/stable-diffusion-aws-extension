@@ -5,7 +5,15 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DATASET_DESCRIPTION,
+  SCHEMA_DATASET_NAME,
+  SCHEMA_DATASET_S3,
+  SCHEMA_DATASET_STATUS, SCHEMA_DATASET_TIMESTAMP,
+  SCHEMA_DEBUG,
+  SCHEMA_LAST_KEY,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface ListDatasetsApiProps {
@@ -46,6 +54,11 @@ export class ListDatasetsApi {
     this.router.addMethod(this.httpMethod, lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListDatasets',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.exclusive_start_key': false,
+        'method.request.querystring.dataset_status': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel()),
         ApiModels.methodResponses401(),
@@ -58,16 +71,18 @@ export class ListDatasetsApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListDatasetsResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'ListDatasetsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -76,22 +91,11 @@ export class ListDatasetsApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    datasetName: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    s3: {
-                      type: JsonSchemaType.STRING,
-                      format: 'uri',
-                    },
-                    status: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    timestamp: {
-                      type: JsonSchemaType.STRING,
-                    },
-                    description: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    datasetName: SCHEMA_DATASET_NAME,
+                    s3: SCHEMA_DATASET_S3,
+                    status: SCHEMA_DATASET_STATUS,
+                    timestamp: SCHEMA_DATASET_TIMESTAMP,
+                    description: SCHEMA_DATASET_DESCRIPTION,
                   },
                   required: [
                     'datasetName',
@@ -100,25 +104,14 @@ export class ListDatasetsApi {
                     'timestamp',
                     'description',
                   ],
-                  additionalProperties: false,
                 },
               },
-              last_evaluated_key: {
-                type: [
-                  JsonSchemaType.STRING,
-                  JsonSchemaType.NULL,
-                ],
-              },
+              last_evaluated_key: SCHEMA_LAST_KEY,
             },
             required: [
               'datasets',
               'last_evaluated_key',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -127,7 +120,6 @@ export class ListDatasetsApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

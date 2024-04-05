@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_DATASET_NAME } from '../../shared/schema';
 
 export interface DeleteDatasetsApiProps {
   router: Resource;
@@ -63,10 +64,12 @@ export class DeleteDatasetsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteDatasets',
         methodResponses: [
+          ApiModels.methodResponses204(),
+          ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
           ApiModels.methodResponses404(),
@@ -75,14 +78,14 @@ export class DeleteDatasetsApi {
 
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
           schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
@@ -90,12 +93,7 @@ export class DeleteDatasetsApi {
           properties: {
             dataset_name_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-                maxLength: 20,
-                pattern: '^[A-Za-z][A-Za-z0-9_-]*$',
-              },
+              items: SCHEMA_DATASET_NAME,
               minItems: 1,
               maxItems: 10,
             },

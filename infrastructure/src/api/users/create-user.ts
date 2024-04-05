@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE, SCHEMA_PASSWORD, SCHEMA_USER_ROLES, SCHEMA_USERNAME } from '../../shared/schema';
 
 export interface CreateUserApiProps {
   router: aws_apigateway.Resource;
@@ -46,7 +46,7 @@ export class CreateUserApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateUser',
       methodResponses: [
@@ -108,37 +108,19 @@ export class CreateUserApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
-          username: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          password: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
-          initial: {
-            type: JsonSchemaType.BOOLEAN,
-            default: false,
-          },
-          roles: {
-            type: JsonSchemaType.ARRAY,
-            items: {
-              type: JsonSchemaType.STRING,
-              minLength: 1,
-            },
-            minItems: 1,
-            maxItems: 20,
-          },
+          username: SCHEMA_USERNAME,
+          password: SCHEMA_PASSWORD,
+          roles: SCHEMA_USER_ROLES,
         },
         required: [
           'username',
@@ -162,7 +144,7 @@ export class CreateUserApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateUserResponse',
-      description: 'CreateUser Response Model',
+      description: 'Response Model CreateUserResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -172,9 +154,7 @@ export class CreateUserApi {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-          },
+          message: SCHEMA_MESSAGE,
         },
         required: [
           'debug',

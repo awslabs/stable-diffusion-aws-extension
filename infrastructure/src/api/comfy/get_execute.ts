@@ -6,7 +6,14 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DEBUG,
+  SCHEMA_ENDPOINT_NAME, SCHEMA_EXECUTE_NEED_SYNC,
+  SCHEMA_EXECUTE_PROMPT_ID, SCHEMA_EXECUTE_PROMPT_PATH,
+  SCHEMA_EXECUTE_STATUS,
+  SCHEMA_INFER_TYPE,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface GetExecuteApiProps {
@@ -65,10 +72,11 @@ export class GetExecuteApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'GetExecuteResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'GetExecuteResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
@@ -77,35 +85,20 @@ export class GetExecuteApi {
             ],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
+            additionalProperties: true,
             properties: {
-              prompt_id: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              need_sync: {
-                type: JsonSchemaType.BOOLEAN,
-              },
-              sagemaker_raw: {
-                type: JsonSchemaType.OBJECT,
-                additionalProperties: true,
-              },
-              prompt_path: {
-                type: JsonSchemaType.STRING,
-              },
-              endpoint_name: {
-                type: JsonSchemaType.STRING,
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
+              prompt_id: SCHEMA_EXECUTE_PROMPT_ID,
+              need_sync: SCHEMA_EXECUTE_NEED_SYNC,
+              prompt_path: SCHEMA_EXECUTE_PROMPT_PATH,
+              endpoint_name: SCHEMA_ENDPOINT_NAME,
+              status: SCHEMA_EXECUTE_STATUS,
+              inference_type: SCHEMA_INFER_TYPE,
               create_time: {
                 type: JsonSchemaType.STRING,
                 format: 'date-time',
-              },
-              inference_type: {
-                type: JsonSchemaType.STRING,
               },
               start_time: {
                 type: JsonSchemaType.STRING,
@@ -122,7 +115,6 @@ export class GetExecuteApi {
             required: [
               'prompt_id',
               'need_sync',
-              'sagemaker_raw',
               'prompt_path',
               'endpoint_name',
               'status',
@@ -132,13 +124,6 @@ export class GetExecuteApi {
               'prompt_params',
               'output_path',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: [
-              'OK',
-            ],
           },
         },
         required: [
@@ -147,7 +132,6 @@ export class GetExecuteApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

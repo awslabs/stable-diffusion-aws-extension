@@ -164,6 +164,9 @@ def async_inference(payload: InvocationsRequest, job: InferenceJob, endpoint_nam
     ddb_service.put_items(inference_table_name, job.__dict__)
 
     data = {
+        'InferenceJobId': job.InferenceJobId,
+        'status': job.status,
+        # todo inference will remove in the next version
         'inference': {
             'inference_id': job.InferenceJobId,
             'status': job.status,

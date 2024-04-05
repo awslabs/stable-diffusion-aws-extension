@@ -108,7 +108,7 @@ export class Middleware extends Stack {
         // if the resource manager is executed, it will recheck and create resources for stack
         bucketName: s3BucketName.valueAsString,
         esdVersion: ESD_VERSION,
-        timestamp: new Date().toISOString(),
+        // timestamp: new Date().toISOString(),
       },
     );
 
@@ -275,7 +275,7 @@ export class Middleware extends Stack {
         resourceProvider: resourceProvider,
         restApiGateway: restApi,
         apiKeyParam: apiKeyParam,
-        timestamp: new Date().toISOString(),
+        // timestamp: new Date().toISOString(),
       },
     );
 
@@ -319,9 +319,9 @@ export class Middleware extends Stack {
         }
       }
 
-      if (model && requestValidator) {
-        requestValidator.node.addDependency(model);
-      }
+      // if (model && requestValidator) {
+      //   requestValidator.node.addDependency(model);
+      // }
 
     });
 
@@ -349,11 +349,6 @@ export class Middleware extends Stack {
     new CfnOutput(this, 'ApiOAS3', {
       value: `${restApi.apiGateway.url}api`,
       description: 'API Doc - OAS3',
-    });
-
-    new CfnOutput(this, 'ApiOAS3Editor', {
-      value: 'https://editor.swagger.io/',
-      description: 'OAS - Editor',
     });
 
     new CfnOutput(this, 'S3BucketName', {

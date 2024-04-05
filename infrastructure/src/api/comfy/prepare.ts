@@ -6,6 +6,7 @@ import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_ENDPOINT_NAME } from '../../shared/schema';
 
 
 export interface PrepareApiProps {
@@ -56,7 +57,7 @@ export class PrepareApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreatePrepare',
       methodResponses: [
@@ -150,11 +151,11 @@ export class PrepareApi {
     });
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
@@ -163,10 +164,7 @@ export class PrepareApi {
           prepare_id: {
             type: JsonSchemaType.STRING,
           },
-          endpoint_name: {
-            type: JsonSchemaType.STRING,
-            minLength: 1,
-          },
+          endpoint_name: SCHEMA_ENDPOINT_NAME,
           s3_source_path: {
             type: JsonSchemaType.STRING,
             minLength: 1,
@@ -191,7 +189,6 @@ export class PrepareApi {
           'endpoint_name',
           'need_reboot',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });

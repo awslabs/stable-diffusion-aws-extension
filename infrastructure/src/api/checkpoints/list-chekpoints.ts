@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_CHECKPOINT_ID, SCHEMA_CHECKPOINT_TYPE, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface ListCheckPointsApiProps {
@@ -47,6 +47,13 @@ export class ListCheckPointsApi {
     this.router.addMethod(this.httpMethod, this.lambdaIntegration, {
       apiKeyRequired: true,
       operationName: 'ListCheckpoints',
+      requestParameters: {
+        'method.request.querystring.limit': false,
+        'method.request.querystring.page': false,
+        'method.request.querystring.per_page': false,
+        'method.request.querystring.username': false,
+        'method.request.querystring.status': false,
+      },
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '200'),
         ApiModels.methodResponses401(),
@@ -60,8 +67,9 @@ export class ListCheckPointsApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'ListCheckpointsResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
+        title: 'ListCheckpointsResponse',
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
         properties: {
@@ -69,6 +77,7 @@ export class ListCheckPointsApi {
             type: JsonSchemaType.INTEGER,
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
@@ -89,15 +98,11 @@ export class ListCheckPointsApi {
                 items: {
                   type: JsonSchemaType.OBJECT,
                   properties: {
-                    id: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    id: SCHEMA_CHECKPOINT_ID,
                     s3Location: {
                       type: JsonSchemaType.STRING,
                     },
-                    type: {
-                      type: JsonSchemaType.STRING,
-                    },
+                    type: SCHEMA_CHECKPOINT_TYPE,
                     status: {
                       type: JsonSchemaType.STRING,
                     },
@@ -109,50 +114,6 @@ export class ListCheckPointsApi {
                     },
                     created: {
                       type: JsonSchemaType.STRING,
-                    },
-                    params: {
-                      type: JsonSchemaType.OBJECT,
-                      properties: {
-                        creator: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        multipart_upload: {
-                          type: JsonSchemaType.OBJECT,
-                          properties: {
-                            '.*': {
-                              type: JsonSchemaType.OBJECT,
-                              properties: {
-                                uploadId: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                bucket: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                                key: {
-                                  type: JsonSchemaType.STRING,
-                                },
-                              },
-                              required: [
-                                'bucket',
-                                'key',
-                                'uploadId',
-                              ],
-                            },
-                          },
-                        },
-                        message: {
-                          type: JsonSchemaType.STRING,
-                        },
-                        created: {
-                          type: JsonSchemaType.STRING,
-                        },
-                      },
-                      required: [
-                        'created',
-                        'creator',
-                        'message',
-                        'multipart_upload',
-                      ],
                     },
                     allowed_roles_or_users: {
                       type: JsonSchemaType.ARRAY,
@@ -166,7 +127,6 @@ export class ListCheckPointsApi {
                     'created',
                     'id',
                     'name',
-                    'params',
                     's3Location',
                     'status',
                     'type',
@@ -181,9 +141,6 @@ export class ListCheckPointsApi {
               'per_page',
               'total',
             ],
-          },
-          message: {
-            type: JsonSchemaType.STRING,
           },
         },
         required: [

@@ -5,7 +5,14 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import {
+  SCHEMA_DATASET_DESCRIPTION,
+  SCHEMA_DATASET_NAME, SCHEMA_DATASET_PREFIX,
+  SCHEMA_DATASET_S3,
+  SCHEMA_DATASET_STATUS, SCHEMA_DATASET_TIMESTAMP,
+  SCHEMA_DEBUG,
+  SCHEMA_MESSAGE,
+} from '../../shared/schema';
 
 
 export interface GetDatasetApiProps {
@@ -66,38 +73,27 @@ export class GetDatasetApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'GetDatasetResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'GetDatasetResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              dataset_name: {
-                type: JsonSchemaType.STRING,
-              },
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
-              prefix: {
-                type: JsonSchemaType.STRING,
-              },
-              s3: {
-                type: JsonSchemaType.STRING,
-                format: 'uri',
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
-              timestamp: {
-                type: JsonSchemaType.STRING,
-              },
+              dataset_name: SCHEMA_DATASET_NAME,
+              datasetName: SCHEMA_DATASET_NAME,
+              prefix: SCHEMA_DATASET_PREFIX,
+              s3: SCHEMA_DATASET_S3,
+              status: SCHEMA_DATASET_STATUS,
+              timestamp: SCHEMA_DATASET_TIMESTAMP,
               data: {
                 type: JsonSchemaType.ARRAY,
                 items: {
@@ -131,12 +127,9 @@ export class GetDatasetApi {
                     'dataStatus',
                     'original_file_name',
                   ],
-                  additionalProperties: false,
                 },
               },
-              description: {
-                type: JsonSchemaType.STRING,
-              },
+              description: SCHEMA_DATASET_DESCRIPTION,
             },
             required: [
               'dataset_name',
@@ -148,11 +141,6 @@ export class GetDatasetApi {
               'data',
               'description',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -161,7 +149,6 @@ export class GetDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',

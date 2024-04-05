@@ -51,8 +51,8 @@ class ComfyExecuteTable:
     sagemaker_raw: Optional[Any] = None
     output_path: Optional[str] = None
     output_files: Optional[List[str]] = None
-    temp_path: Optional[str] = None
-    temp_files: Optional[List[str]] = None
+    temp_path: Optional[str] = ''
+    temp_files: Optional[List[str]] = ''
 
 
 @dataclass

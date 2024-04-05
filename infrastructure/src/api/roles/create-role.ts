@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface CreateRoleApiProps {
@@ -44,11 +44,12 @@ export class CreateRoleApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'CreateRole',
       methodResponses: [
         ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses404(),
@@ -60,17 +61,14 @@ export class CreateRoleApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateRoleResponse',
-      description: 'CreateRole Response Model',
+      description: 'Response Model CreateRoleResponse',
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
         type: JsonSchemaType.OBJECT,
         properties: {
           debug: SCHEMA_DEBUG,
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['role created'],
-          },
+          message: SCHEMA_MESSAGE,
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [201],
@@ -81,7 +79,6 @@ export class CreateRoleApi {
           'message',
           'statusCode',
         ],
-        additionalProperties: false,
       },
       contentType: 'application/json',
     });
@@ -122,11 +119,11 @@ export class CreateRoleApi {
     return newRole;
   }
 
-  private createModel(): Model {
+  private createRequestBodyModel(): Model {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,

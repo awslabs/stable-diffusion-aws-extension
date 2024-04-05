@@ -44,10 +44,11 @@ export class DeleteExecutesApi {
       apiKeyRequired: true,
       requestValidator: this.createRequestValidator(),
       requestModels: {
-        'application/json': this.createModel(),
+        'application/json': this.createRequestBodyModel(),
       },
       operationName: 'DeleteExecutes',
       methodResponses: [
+        ApiModels.methodResponses204(),
         ApiModels.methodResponses400(),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
@@ -128,14 +129,14 @@ export class DeleteExecutesApi {
     });
   }
 
-  private createModel() {
+  private createRequestBodyModel() {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
           schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
@@ -154,7 +155,6 @@ export class DeleteExecutesApi {
           required: [
             'execute_id_list',
           ],
-          additionalProperties: false,
         },
         contentType: 'application/json',
       });

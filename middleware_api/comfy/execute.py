@@ -110,22 +110,18 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         start_time=datetime.now().isoformat(),
         sagemaker_raw={},
         output_path='',
+        temp_path='',
+        output_files=[],
+        temp_files=[]
     )
 
     if ep.endpoint_type == 'Async':
         resp = async_inference(payload, inference_id, ep.endpoint_name)
         logger.info(f"async inference response: {resp}")
         ddb_service.put_items(execute_table, entries=inference_job.__dict__)
-        return created(data=inference_job.__dict__)
+        return created(data=response_schema(inference_job), decimal=True)
 
     resp = real_time_inference(payload, inference_id, ep.endpoint_name)
-    # resp = {
-    #     "prompt_id": '11111111-1111-1111',
-    #     "instance_id": 'comfy-real-time-test-rgihbd',
-    #     "status": 'success',
-    #     "output_path": f's3://{bucket_name}/images/',
-    #     "temp_path": f's3://{bucket_name}/images/'
-    # }
 
     logger.info(f"real time inference response: ")
     logger.info(resp)
@@ -147,10 +143,24 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
                                                                      inference_job.output_files)
         inference_job.temp_files = generate_presigned_url_for_keys(inference_job.temp_path,
                                                                    inference_job.temp_files)
+
+    return ok(data=response_schema(inference_job), decimal=True)
+
+
+def response_schema(inference_job: ComfyExecuteTable):
+    if not inference_job.output_files:
+        inference_job.output_files = []
+
+    if not inference_job.temp_files:
+        inference_job.temp_files = []
+
     data = {
         'prompt_id': inference_job.prompt_id,
         'status': inference_job.status,
         'create_time': inference_job.create_time,
+        'endpoint_name': inference_job.endpoint_name,
+        'inference_type': inference_job.inference_type,
+        'need_sync': inference_job.need_sync,
         'start_time': inference_job.start_time,
         'complete_time': inference_job.complete_time,
         'output_path': inference_job.output_path,
@@ -159,7 +169,7 @@ def invoke_sagemaker_inference(event: ExecuteEvent):
         'temp_files': inference_job.temp_files,
     }
 
-    return ok(data=data, decimal=True)
+    return data
 
 
 @tracer.capture_lambda_handler

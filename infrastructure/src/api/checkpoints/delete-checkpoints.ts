@@ -14,6 +14,7 @@ import { Architecture, LayerVersion, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
+import { SCHEMA_CHECKPOINT_ID } from '../../shared/schema';
 
 export interface DeleteCheckpointsApiProps {
   router: Resource;
@@ -55,10 +56,11 @@ export class DeleteCheckpointsApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createRequestModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'DeleteCheckpoints',
         methodResponses: [
+          ApiModels.methodResponses204(),
           ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
@@ -67,14 +69,14 @@ export class DeleteCheckpointsApi {
       });
   }
 
-  private createRequestModel() {
+  private createRequestBodyModel() {
     return new Model(
       this.scope,
       `${this.baseId}-model`,
       {
         restApi: this.router.api,
         modelName: this.baseId,
-        description: `${this.baseId} Request Model`,
+        description: `Request Model ${this.baseId}`,
         schema: {
           schema: JsonSchemaVersion.DRAFT7,
           title: this.baseId,
@@ -82,10 +84,7 @@ export class DeleteCheckpointsApi {
           properties: {
             checkpoint_id_list: {
               type: JsonSchemaType.ARRAY,
-              items: {
-                type: JsonSchemaType.STRING,
-                minLength: 1,
-              },
+              items: SCHEMA_CHECKPOINT_ID,
               minItems: 1,
               maxItems: 100,
             },

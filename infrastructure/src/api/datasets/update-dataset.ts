@@ -5,7 +5,7 @@ import { Effect } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiModels } from '../../shared/models';
-import { SCHEMA_DEBUG } from '../../shared/schema';
+import { SCHEMA_DATASET_NAME, SCHEMA_DATASET_STATUS, SCHEMA_DEBUG, SCHEMA_MESSAGE } from '../../shared/schema';
 
 
 export interface UpdateDatasetApiProps {
@@ -54,11 +54,12 @@ export class UpdateDatasetApi {
         apiKeyRequired: true,
         requestValidator: this.createRequestValidator(),
         requestModels: {
-          'application/json': this.createModel(),
+          'application/json': this.createRequestBodyModel(),
         },
         operationName: 'UpdateDataset',
         methodResponses: [
           ApiModels.methodResponse(this.responseModel()),
+          ApiModels.methodResponses400(),
           ApiModels.methodResponses401(),
           ApiModels.methodResponses403(),
         ],
@@ -69,35 +70,28 @@ export class UpdateDatasetApi {
     return new Model(this.scope, `${this.baseId}-resp-model`, {
       restApi: this.router.api,
       modelName: 'UpdateDatasetsResponse',
-      description: `${this.baseId} Response Model`,
+      description: `Response Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         type: JsonSchemaType.OBJECT,
+        title: 'UpdateDatasetsResponse',
         properties: {
           statusCode: {
             type: JsonSchemaType.INTEGER,
             enum: [200],
           },
           debug: SCHEMA_DEBUG,
+          message: SCHEMA_MESSAGE,
           data: {
             type: JsonSchemaType.OBJECT,
             properties: {
-              datasetName: {
-                type: JsonSchemaType.STRING,
-              },
-              status: {
-                type: JsonSchemaType.STRING,
-              },
+              datasetName: SCHEMA_DATASET_NAME,
+              status: SCHEMA_DATASET_STATUS,
             },
             required: [
               'datasetName',
               'status',
             ],
-            additionalProperties: false,
-          },
-          message: {
-            type: JsonSchemaType.STRING,
-            enum: ['OK'],
           },
         },
         required: [
@@ -106,7 +100,6 @@ export class UpdateDatasetApi {
           'data',
           'message',
         ],
-        additionalProperties: false,
       }
       ,
       contentType: 'application/json',
@@ -165,11 +158,11 @@ export class UpdateDatasetApi {
     return newRole;
   }
 
-  private createModel() {
+  private createRequestBodyModel() {
     return new Model(this.scope, `${this.baseId}-model`, {
       restApi: this.router.api,
       modelName: this.baseId,
-      description: `${this.baseId} Request Model`,
+      description: `Request Model ${this.baseId}`,
       schema: {
         schema: JsonSchemaVersion.DRAFT7,
         title: this.baseId,
