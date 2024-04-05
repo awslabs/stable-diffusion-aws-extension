@@ -62,7 +62,6 @@ phases:
       - echo "BUILD VERSION is ${BUILD_VERSION}"
       - echo "./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}"
       - ./build_and_push_inference_private.sh Dockerfile.inference.from_scratch esd-inference dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
-      # - ./build_and_push_training_private.sh Dockerfile.dreambooth.from_scratch esd-training dev ${REGION} ${BUILD_VERSION} ${CODEBUILD_RESOLVED_SOURCE_VERSION}
       - unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
       - set -x
 
