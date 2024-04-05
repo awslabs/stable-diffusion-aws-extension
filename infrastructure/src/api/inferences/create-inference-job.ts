@@ -61,7 +61,7 @@ export class CreateInferenceJobApi {
       },
       operationName: 'CreateInferenceJob',
       methodResponses: [
-        ApiModels.methodResponse(this.responseModel(), '201'),
+        ApiModels.methodResponse(this.responseCreatedModel(), '201'),
         ApiModels.methodResponses401(),
         ApiModels.methodResponses403(),
         ApiModels.methodResponses404(),
@@ -70,7 +70,7 @@ export class CreateInferenceJobApi {
     });
   }
 
-  private responseModel() {
+  private responseCreatedModel() {
     return new Model(this.scope, `${this.id}-resp-model`, {
       restApi: this.router.api,
       modelName: 'CreateInferenceJobResponse',
