@@ -164,125 +164,6 @@ export const SCHEMA_504: JsonSchema = {
 }
 ;
 
-export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
-  img_presigned_urls: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-      format: 'uri',
-    },
-  },
-  output_presigned_urls: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-      format: 'uri',
-    },
-  },
-  startTime: {
-    type: JsonSchemaType.STRING,
-    format: 'date-time',
-  },
-  taskType: {
-    type: JsonSchemaType.STRING,
-  },
-  image_names: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-      pattern: '^.+\\.*$',
-    },
-  },
-  params: {
-    type: JsonSchemaType.OBJECT,
-    additionalProperties: true,
-    properties: {
-      input_body_presign_url: {
-        type: JsonSchemaType.STRING,
-        format: 'uri',
-      },
-      used_models: {
-        type: JsonSchemaType.OBJECT,
-        additionalProperties: {
-          type: JsonSchemaType.ARRAY,
-          items: {
-            type: JsonSchemaType.OBJECT,
-            properties: {
-              s3: {
-                type: JsonSchemaType.STRING,
-                format: 'uri',
-              },
-              id: {
-                type: JsonSchemaType.STRING,
-                format: 'uuid',
-              },
-              model_name: {
-                type: JsonSchemaType.STRING,
-              },
-              type: {
-                type: JsonSchemaType.STRING,
-              },
-            },
-            required: [
-              's3',
-              'id',
-              'model_name',
-              'type',
-            ],
-          },
-        },
-      },
-      input_body_s3: {
-        type: JsonSchemaType.STRING,
-        format: 'uri',
-      },
-      output_path: {
-        type: JsonSchemaType.STRING,
-      },
-      sagemaker_inference_instance_type: {
-        type: JsonSchemaType.STRING,
-      },
-      sagemaker_inference_endpoint_id: {
-        type: JsonSchemaType.STRING,
-        format: 'uuid',
-      },
-      sagemaker_inference_endpoint_name: {
-        type: JsonSchemaType.STRING,
-      },
-    },
-    required: [
-      'input_body_s3',
-      'sagemaker_inference_instance_type',
-      'sagemaker_inference_endpoint_id',
-      'sagemaker_inference_endpoint_name',
-    ],
-  },
-  InferenceJobId: {
-    type: JsonSchemaType.STRING,
-    format: 'uuid',
-  },
-  status: {
-    type: JsonSchemaType.STRING,
-  },
-  createTime: {
-    type: JsonSchemaType.STRING,
-    format: 'date-time',
-  },
-  owner_group_or_role: {
-    type: JsonSchemaType.ARRAY,
-    items: {
-      type: JsonSchemaType.STRING,
-    },
-  },
-  sagemakerRaw: {
-    type: JsonSchemaType.OBJECT,
-  },
-  payload_string: {
-    type: JsonSchemaType.STRING,
-  },
-};
-
-
 export const SCHEMA_PERMISSIONS: JsonSchema = {
   type: JsonSchemaType.ARRAY,
   items: {
@@ -549,4 +430,115 @@ export const SCHEMA_EXECUTE_NEED_SYNC: JsonSchema = {
 export const SCHEMA_EXECUTE_PROMPT_PATH: JsonSchema = {
   type: JsonSchemaType.STRING,
   description: 'Prompt Path',
+};
+
+export const SCHEMA_INFERENCE: Record<string, JsonSchema> = {
+  img_presigned_urls: {
+    type: JsonSchemaType.ARRAY,
+    items: {
+      type: JsonSchemaType.STRING,
+      format: 'uri',
+    },
+  },
+  output_presigned_urls: {
+    type: JsonSchemaType.ARRAY,
+    items: {
+      type: JsonSchemaType.STRING,
+      format: 'uri',
+    },
+  },
+  startTime: {
+    type: JsonSchemaType.STRING,
+    format: 'date-time',
+  },
+  taskType: {
+    type: JsonSchemaType.STRING,
+  },
+  image_names: {
+    type: JsonSchemaType.ARRAY,
+    items: {
+      type: JsonSchemaType.STRING,
+      pattern: '^.+\\.*$',
+    },
+  },
+  params: {
+    type: JsonSchemaType.OBJECT,
+    additionalProperties: true,
+    properties: {
+      input_body_presign_url: {
+        type: JsonSchemaType.STRING,
+        format: 'uri',
+      },
+      used_models: {
+        type: JsonSchemaType.OBJECT,
+        additionalProperties: {
+          type: JsonSchemaType.ARRAY,
+          items: {
+            type: JsonSchemaType.OBJECT,
+            properties: {
+              s3: {
+                type: JsonSchemaType.STRING,
+                format: 'uri',
+              },
+              id: {
+                type: JsonSchemaType.STRING,
+                format: 'uuid',
+              },
+              model_name: {
+                type: JsonSchemaType.STRING,
+              },
+              type: {
+                type: JsonSchemaType.STRING,
+              },
+            },
+            required: [
+              's3',
+              'id',
+              'model_name',
+              'type',
+            ],
+          },
+        },
+      },
+      input_body_s3: {
+        type: JsonSchemaType.STRING,
+        format: 'uri',
+      },
+      output_path: {
+        type: JsonSchemaType.STRING,
+      },
+      sagemaker_inference_instance_type: SCHEMA_ENDPOINT_INSTANCE_TYPE,
+      sagemaker_inference_endpoint_id: SCHEMA_ENDPOINT_ID,
+      sagemaker_inference_endpoint_name: SCHEMA_ENDPOINT_NAME,
+    },
+    required: [
+      'input_body_s3',
+      'sagemaker_inference_instance_type',
+      'sagemaker_inference_endpoint_id',
+      'sagemaker_inference_endpoint_name',
+    ],
+  },
+  InferenceJobId: {
+    type: JsonSchemaType.STRING,
+    format: 'uuid',
+  },
+  status: {
+    type: JsonSchemaType.STRING,
+  },
+  createTime: {
+    type: JsonSchemaType.STRING,
+    format: 'date-time',
+  },
+  owner_group_or_role: {
+    type: JsonSchemaType.ARRAY,
+    items: {
+      type: JsonSchemaType.STRING,
+    },
+  },
+  sagemakerRaw: {
+    type: JsonSchemaType.OBJECT,
+  },
+  payload_string: {
+    type: JsonSchemaType.STRING,
+  },
 };
