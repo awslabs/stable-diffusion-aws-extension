@@ -46,7 +46,8 @@ RUN cd /home/ubuntu || exit 1 && \
 COPY inference/clip_init.py /home/ubuntu/stable-diffusion-webui
 RUN cd /home/ubuntu/stable-diffusion-webui/ && \
     source venv/bin/activate python && \
-    python3 /home/ubuntu/stable-diffusion-webui/clip_init.py && \
-    wget -O /home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt && \
-    mkdir -p /home/ubuntu/stable-diffusion-webui/models/insightface/ && \
-    wget -O /home/ubuntu/stable-diffusion-webui/models/insightface/ https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/creator/inswapper_128.onnx
+    python3 /home/ubuntu/stable-diffusion-webui/clip_init.py
+
+RUN wget -O /home/ubuntu/stable-diffusion-webui/models/VAE-approx/vaeapprox-sdxl.pt https://github.com/AUTOMATIC1111/stable-diffusion-webui/releases/download/v1.0.0-pre/vaeapprox-sdxl.pt
+
+RUN wget -O /home/ubuntu/stable-diffusion-webui/models/insightface/inswapper_128.onnx https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/creator/inswapper_128.onnx
