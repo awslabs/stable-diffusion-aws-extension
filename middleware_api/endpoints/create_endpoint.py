@@ -90,10 +90,6 @@ def get_docker_image_uri(event: CreateEndpointEvent):
     if event.custom_docker_image_uri:
         return event.custom_docker_image_uri
 
-    # todo will use commit id
-    if region.startswith("cn-"):
-        return f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{event.service_type}-cn"
-
     return f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-inference:{esd_version}"
 
 
