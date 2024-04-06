@@ -2,7 +2,7 @@ FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
 
 RUN apt-get update -y
 RUN apt-get install -y wget
-RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+RUN wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
 RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
 
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
@@ -26,8 +26,8 @@ RUN apt-get update -y && \
 
 RUN mkdir -p /home/ubuntu/conda/lib/ && \
     cd /home/ubuntu/conda/lib/ && \
-    wget https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
-    wget https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10 \
+    wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcufft.so.10 && \
+    wget -q https://aws-gcr-solutions-us-west-2.s3.us-west-2.amazonaws.com/extension-for-stable-diffusion-on-aws/1.5.0-g5/conda/libcurand.so.10 \
 
 ENV ON_DOCKER true
 ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
