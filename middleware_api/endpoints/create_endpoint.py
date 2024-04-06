@@ -91,7 +91,7 @@ def get_docker_image_uri(event: CreateEndpointEvent):
         return event.custom_docker_image_uri
 
     if region.startswith("cn-"):
-        f"{account_id}.dkr.ecr.{region}.{url_suffix}/stable-diffusion-aws-extension:{event.service_type}-{esd_version}"
+        return f"{account_id}.dkr.ecr.{region}.{url_suffix}/stable-diffusion-aws-extension:{event.service_type}-{esd_version}"
 
     return f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-inference:{esd_version}"
 
