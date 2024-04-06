@@ -7,6 +7,8 @@ from typing import Optional, Any
 
 from aws_lambda_powertools import Tracer
 
+url_suffix = os.environ.get("URL_SUFFIX")
+
 logger = logging.getLogger(__name__)
 logger.setLevel(os.environ.get('LOG_LEVEL') or logging.ERROR)
 tracer = Tracer()
@@ -108,16 +110,16 @@ def get_debug():
     log_group_name = urllib.parse.quote(aws_lambda_log_group_name, safe='')
     log_stream_name = urllib.parse.quote(aws_lambda_log_stream_name, safe='')
 
-    log_url = (f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
+    log_url = (f"https://{region}.console.{url_suffix}/cloudwatch/home?region={region}"
                f"#logsV2:log-groups/log-group/{log_group_name}/log-events/{log_stream_name}")
 
-    function_url = (f"https://{region}.console.aws.amazon.com/lambda/home?region={region}"
+    function_url = (f"https://{region}.console.{url_suffix}/lambda/home?region={region}"
                     f"#/functions/{aws_lambda_function_name}")
 
     trace_url = None
     if _x_amzn_trace_id:
         trace_id = _x_amzn_trace_id.split(';')[0].split('=')[1]
-        trace_url = (f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
+        trace_url = (f"https://{region}.console.{url_suffix}/cloudwatch/home?region={region}"
                      f"#xray:traces/{trace_id}")
 
     return {
