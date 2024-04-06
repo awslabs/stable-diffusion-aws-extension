@@ -8,7 +8,7 @@ region=$4
 tag=$5
 commit_id=$6
 
-if [ "$image" = "" ] || [ "$dockerfile" = "" ]
+if [ "$repo_name" = "" ] || [ "$dockerfile" = "" ]
 then
     echo "Usage: $0 <docker-file> <image-name>"
     exit 1
@@ -52,14 +52,14 @@ fi
 
 aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$account.dkr.ecr.$region.$AWS_DOMAIN"
 
-cp ${dockerfile} .
+cp $dockerfile .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="${account}.dkr.ecr.$region.$AWS_DOMAIN/${repo_name}:${tag}"
+fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
 echo "docker build $fullname"
-docker build -t ${fullname} -f ${dockerfile} .
+docker build -t "$fullname" -f "$dockerfile" .
 
-echo "docker push ${fullname}"
-docker push ${fullname}
-echo "docker push ${fullname} Completed"
+echo "docker push $fullname}"
+docker push "$fullname"
+echo "docker push $fullname} Completed"
