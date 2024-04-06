@@ -45,7 +45,7 @@ account_id = os.environ.get("ACCOUNT_ID")
 region = os.environ.get("AWS_REGION")
 url_suffix = os.environ.get("URL_SUFFIX")
 
-image_uri = f"{account_id}.dkr.ecr.${region}.${url_suffix}/esd-training:kohya-65bf90a"
+image_uri = f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-training:kohya-65bf90a"
 
 ddb_client = boto3.client('dynamodb')
 
