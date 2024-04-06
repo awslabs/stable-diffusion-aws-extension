@@ -6,7 +6,6 @@ repo_name=$2
 mode=$3
 region=$4
 tag=$5
-commit_id=$6
 
 if [ "$repo_name" = "" ] || [ "$dockerfile" = "" ]
 then
@@ -27,9 +26,6 @@ then
     exit 255
 fi
 
-# Get the region defined in the current configuration (default to us-west-2 if none defined)
-region="${region}"
-
 if [[ $region == cn* ]]; then
     AWS_DOMAIN="amazonaws.com.cn"
 else
@@ -38,13 +34,13 @@ fi
 
 # If the repository doesn't exist in ECR, create it.
 
-desc_output=$(aws ecr describe-repositories --region "$region" --repository-names ${repo_name} 2>&1)
+desc_output=$(aws ecr describe-repositories --region "$region" --repository-names "$repo_name" 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --region "$region" --repository-name "${repo_name}" > /dev/null
+        aws ecr create-repository --region "$region" --repository-name "$repo_name" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
@@ -52,14 +48,12 @@ fi
 
 aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$account.dkr.ecr.$region.$AWS_DOMAIN"
 
-cp $dockerfile .
-
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 fullname="$account.dkr.ecr.$region.$AWS_DOMAIN/$repo_name:$tag"
 echo "docker build $fullname"
 docker build -t "$fullname" -f "$dockerfile" .
 
-echo "docker push $fullname}"
+echo "docker push $fullname"
 docker push "$fullname"
 echo "docker push $fullname} Completed"
