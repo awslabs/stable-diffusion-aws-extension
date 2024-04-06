@@ -20,7 +20,7 @@ then
 fi
 
 # Get the account number associated with the current IAM credentials
-account=$(aws sts get-caller-identity --query Account --output text)
+account=$(aws sts get-caller-identity --region "$region" --query Account --output text)
 
 if [ $? -ne 0 ]
 then
@@ -40,27 +40,27 @@ image_name="${image}"
 
 # If the repository doesn't exist in ECR, create it.
 
-desc_output=$(aws ecr describe-repositories --repository-names ${image_name} 2>&1)
+desc_output=$(aws ecr describe-repositories --region "$region" --repository-names ${image_name} 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --repository-name "${image_name}" > /dev/null
+        aws ecr create-repository --region "$region" --repository-name "${image_name}" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
 fi
 
 #aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 763104351884.dkr.ecr.us-east-1.$AWS_DOMAIN
-aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${account}.dkr.ecr.${region}.$AWS_DOMAIN
+aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$account.dkr.ecr.$region.$AWS_DOMAIN"
 
 cp ${dockerfile} .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="${account}.dkr.ecr.${region}.$AWS_DOMAIN/${image_name}:${tag}"
-echo $fullname
+fullname="${account}.dkr.ecr.$region.$AWS_DOMAIN/${image_name}:${tag}"
+echo "$fullname"
 
 docker build -t ${image_name}:${tag} -f ${dockerfile} .
 docker tag ${image_name}:${tag} ${fullname}
