@@ -2,7 +2,7 @@
 
 # Build inference image and push it to private ECR repository
 dockerfile=$1
-image=$2
+repo_name=$2
 mode=$3
 region=$4
 tag=$5
@@ -36,17 +36,15 @@ else
     AWS_DOMAIN="amazonaws.com"
 fi
 
-image_name="${image}"
-
 # If the repository doesn't exist in ECR, create it.
 
-desc_output=$(aws ecr describe-repositories --region "$region" --repository-names ${image_name} 2>&1)
+desc_output=$(aws ecr describe-repositories --region "$region" --repository-names ${repo_name} 2>&1)
 
 if [ $? -ne 0 ]
 then
     if echo ${desc_output} | grep -q RepositoryNotFoundException
     then
-        aws ecr create-repository --region "$region" --repository-name "${image_name}" > /dev/null
+        aws ecr create-repository --region "$region" --repository-name "${repo_name}" > /dev/null
     else
         >&2 echo ${desc_output}
     fi
@@ -58,11 +56,9 @@ cp ${dockerfile} .
 
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
-fullname="${account}.dkr.ecr.$region.$AWS_DOMAIN/${image_name}:${tag}"
+fullname="${account}.dkr.ecr.$region.$AWS_DOMAIN/${repo_name}:${tag}"
 echo "$fullname"
 
-docker build -t ${image_name}:${tag} -f ${dockerfile} .
-docker tag ${image_name}:${tag} ${fullname}
+docker build -t ${fullname} -f ${dockerfile} .
 docker push ${fullname}
-echo "docker push ${account}.dkr.ecr.${region}.$AWS_DOMAIN/${image_name}:${tag}"
-echo "Completed"
+echo "docker push ${fullname} Completed"
