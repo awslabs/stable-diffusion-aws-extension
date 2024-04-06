@@ -57,8 +57,9 @@ cp ${dockerfile} .
 # Build the docker image locally with the image name and then push it to ECR
 # with the full name.
 fullname="${account}.dkr.ecr.$region.$AWS_DOMAIN/${repo_name}:${tag}"
-echo "$fullname"
-
+echo "docker build $fullname"
 docker build -t ${fullname} -f ${dockerfile} .
+
+echo "docker push ${fullname}"
 docker push ${fullname}
 echo "docker push ${fullname} Completed"
