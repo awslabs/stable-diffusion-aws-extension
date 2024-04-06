@@ -46,6 +46,8 @@ then
     fi
 fi
 
+aws ecr set-repository-policy --repository-name "$repo_name" --policy-text '{"Version": "2008-10-17", "Statement": [{"Sid": "public statement", "Effect": "Allow", "Principal": "*", "Action": ["ecr:BatchCheckLayerAvailability", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]}]}'
+
 aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$account.dkr.ecr.$region.$AWS_DOMAIN"
 
 # Build the docker image locally with the image name and then push it to ECR
