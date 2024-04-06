@@ -110,19 +110,20 @@ def get_debug():
     log_group_name = urllib.parse.quote(aws_lambda_log_group_name, safe='')
     log_stream_name = urllib.parse.quote(aws_lambda_log_stream_name, safe='')
 
+    console_url_suffix = url_suffix
     if url_suffix == "amazonaws.com.cn":
-        region = "amazonaws.cn"
+        console_url_suffix = "amazonaws.cn"
 
-    log_url = (f"https://{region}.console.{url_suffix}/cloudwatch/home?region={region}"
+    log_url = (f"https://{region}.console.{console_url_suffix}/cloudwatch/home?region={region}"
                f"#logsV2:log-groups/log-group/{log_group_name}/log-events/{log_stream_name}")
 
-    function_url = (f"https://{region}.console.{url_suffix}/lambda/home?region={region}"
+    function_url = (f"https://{region}.console.{console_url_suffix}/lambda/home?region={region}"
                     f"#/functions/{aws_lambda_function_name}")
 
     trace_url = None
     if _x_amzn_trace_id:
         trace_id = _x_amzn_trace_id.split(';')[0].split('=')[1]
-        trace_url = (f"https://{region}.console.{url_suffix}/cloudwatch/home?region={region}"
+        trace_url = (f"https://{region}.console.{console_url_suffix}/cloudwatch/home?region={region}"
                      f"#xray:traces/{trace_id}")
 
     return {
