@@ -569,8 +569,7 @@
                 "username": "username",
                 "password": "XXXXXXXXXXXXX",
                 "roles": [
-                  "IT Operator",
-                  "Designer"
+                  "IT Operator"
                 ]
               }
             }
@@ -1582,7 +1581,6 @@
                 "initial_instance_count": "1",
                 "autoscaling_enabled": false,
                 "assign_to_roles": [
-                  "Designer",
                   "IT Operator"
                 ]
               }
@@ -1631,7 +1629,6 @@
                         "endpoint_name": "infer-endpoint-prod",
                         "error": null,
                         "owner_group_or_role": [
-                          "Designer",
                           "IT Operator"
                         ]
                       }

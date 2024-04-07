@@ -46,8 +46,7 @@ nav:
         - API 推理流程: developer-guide/api_inference_process.md
         - API 推理调试器: developer-guide/api_debugger.md
         - API 验证: developer-guide/api_authentication.md
-        - API 调用:
-            - Comfy 1.0.0: developer-guide/api/comfy-1.0.0.md
+        - API 版本和详情:
             - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md
         - OpenAPI Specification: developer-guide/oas.md
