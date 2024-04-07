@@ -35,7 +35,7 @@ nav:
         - img2img guide: user-guide/img2img-guide.md
         - controlNet guide: user-guide/controlnet-guide.md
         - Training guide: user-guide/training-guide.md
-        - Other Extensions guide: user-guide/extensions-guide.md 
+        - Other Extensions guide: user-guide/extensions-guide.md
         #- Checkpoint Merger guide: user-guide/checkpoint-merge-guide.md
     - Developer guide:
         - Source code: developer-guide/source.md
@@ -44,7 +44,7 @@ nav:
         - API Inference Process: developer-guide/api_inference_process.md
         - API Inference Debugger: developer-guide/api_debugger.md
         - API Authentication: developer-guide/api_authentication.md
-        - API Call:
+        - API Version & Details:
             - 1.5.0: developer-guide/api/1.5.0.md
             - 1.4.0: developer-guide/api/1.4.0.md
         - OpenAPI Specification: developer-guide/oas.md
