@@ -110,9 +110,10 @@ def get_debug():
     log_group_name = urllib.parse.quote(aws_lambda_log_group_name, safe='')
     log_stream_name = urllib.parse.quote(aws_lambda_log_stream_name, safe='')
 
-    console_url_suffix = url_suffix
-    if url_suffix == "amazonaws.com.cn":
+    if url_suffix.endswith('.cn'):
         console_url_suffix = "amazonaws.cn"
+    else:
+        console_url_suffix = "aws.amazon.com"
 
     log_url = (f"https://{region}.console.{console_url_suffix}/cloudwatch/home?region={region}"
                f"#logsV2:log-groups/log-group/{log_group_name}/log-events/{log_stream_name}")

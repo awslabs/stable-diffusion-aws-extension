@@ -77,6 +77,7 @@ def handler(event, ctx):
             if 'status' in row and 'S' in row['status'] and row['status']['S'] == 'deleted':
                 row['endpoint_status']['S'] = EndpointStatus.DELETED.value
 
+            logger.info(f"row: {row}")
             endpoint = EndpointDeploymentJob(**row)
             if 'sagemaker_endpoint' in requestor_permissions and \
                     'list' in requestor_permissions['sagemaker_endpoint'] and \

@@ -166,9 +166,9 @@ class InferenceJob:
 @dataclass
 class EndpointDeploymentJob:
     EndpointDeploymentJobId: str
-    autoscaling: bool
-    max_instance_number: str
-    startTime: str
+    autoscaling: bool = None
+    max_instance_number: str = None
+    startTime: str = None
     status: str = None  # deprecated, but can't remove, avoid unexpected keyword argument
     instance_type: str = None
     current_instance_count: str = None
