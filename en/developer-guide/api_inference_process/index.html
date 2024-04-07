@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="https://s3.cn-north-1.amazonaws.com.cn/aws-assets-prod/libra-css/images/site/fav/favicon.ico">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.15">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.17">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bcfcd587.min.css">
       
       
 
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#asynchronous-inference" class="md-skip">
+        <a href="#how-to-inference-through-api" class="md-skip">
           Skip to content
         </a>
       
@@ -1144,20 +1144,35 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#asynchronous-inference" class="md-nav__link">
+  <a href="#how-to-inference-through-api" class="md-nav__link">
     <span class="md-ellipsis">
-      Asynchronous inference
+      How-to inference through API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to inference through API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#async-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Async inference
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#real-time-inference" class="md-nav__link">
     <span class="md-ellipsis">
       Real-time inference
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1466,20 +1481,35 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#asynchronous-inference" class="md-nav__link">
+  <a href="#how-to-inference-through-api" class="md-nav__link">
     <span class="md-ellipsis">
-      Asynchronous inference
+      How-to inference through API
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How-to inference through API">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#async-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Async inference
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#real-time-inference" class="md-nav__link">
     <span class="md-ellipsis">
       Real-time inference
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1503,16 +1533,22 @@
 
   <h1>API Inference Process</h1>
 
-<h3 id="asynchronous-inference">Asynchronous inference</h3>
+<h2 id="how-to-inference-through-api">How-to inference through API</h2>
 <ul>
-<li>Create inference job through <code>CreateInferenceJob</code></li>
+<li>Create Endpoint through <code>CreateEndpoint</code></li>
+<li>Upload model file through <code>CreateCheckpoint</code>, Please refer to: <code>API Upload Checkpoint Process</code></li>
+<li>Select <code>Async inference</code> or <code>Real-time inference</code></li>
+</ul>
+<h3 id="async-inference">Async inference</h3>
+<ul>
+<li>Create an inference job through <code>CreateInferenceJob</code></li>
 <li>Based on the presigned address <code>api_params_s3_upload_url</code> returned by <code>CreatInferenceJob</code> Upload inference parameters</li>
-<li>Start inference job through <code>StartInferenceJob</code></li>
-<li>Obtain inference job through <code>GetInferenceJob</code>, check the status, and stop the request if successful</li>
+<li>Start an inference job through <code>StartInferenceJob</code></li>
+<li>Obtain an inference job through <code>GetInferenceJob</code>, check the status, and stop the request if successful</li>
 </ul>
 <h3 id="real-time-inference">Real-time inference</h3>
 <ul>
-<li>Create inference job through <code>CreateInferenceJob</code></li>
+<li>Create an inference job through <code>CreateInferenceJob</code></li>
 <li>Based on the pre signed address <code>api_params_s3_upload_url</code> returned by <code>CreatInferenceJob</code> Upload inference parameters</li>
 <li>Starting the inference job through <code>StartInferenceJob</code>, the real-time inference job will obtain the inference result in this interface</li>
 </ul>
@@ -1560,7 +1596,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs"], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": "develop"}</script>
     
     
-      <script src="../../assets/javascripts/bundle.bd41221c.min.js"></script>
+      <script src="../../assets/javascripts/bundle.1e8ae164.min.js"></script>
       
     
   </body>
