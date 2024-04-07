@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # -------------------- common init --------------------
 
 if [ -z "$ESD_VERSION" ]; then
@@ -349,7 +351,6 @@ if [ "$FULL_IMAGE" == "true" ]; then
   else
     comfy_accelerate_launch
   fi
-  exit 0
 fi
 
 echo "Checking s3://$S3_BUCKET_NAME/$S3_LOCATION files..."
@@ -362,7 +363,7 @@ if echo "$output" | grep -q "$S3_LOCATION"; then
   fi
 fi
 
-echo "No files in S3, just install the environment and launch from local..."
+echo "No files found in S3, just install the environment and launch from local..."
 if [ "$SERVICE_TYPE" == "sd" ]; then
     sd_launch_from_local
 else
