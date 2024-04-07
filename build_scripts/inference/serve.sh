@@ -19,7 +19,9 @@ if [ -z "$SERVICE_TYPE" ]; then
   exit 1
 fi
 
-export ESD_CODE_BRANCH="main"
+# todo will recovery when merged into main
+#export ESD_CODE_BRANCH="main"
+export ESD_CODE_BRANCH="dev"
 export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
 export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
