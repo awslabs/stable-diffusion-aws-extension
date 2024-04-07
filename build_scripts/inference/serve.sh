@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # -------------------- common init --------------------
 
 if [ -z "$ESD_VERSION" ]; then
