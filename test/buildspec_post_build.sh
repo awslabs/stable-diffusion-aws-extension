@@ -163,8 +163,9 @@ aws sns publish \
         --message "{\"default\": \"$message\"}"
 
 source venv/bin/activate
-make testk test_7_api_clean
-make testk test_9_client_clean
+
+make testk test_10_client_clean
+make testk test_11_api_clean
 
 if [ "$result" = "Passed" ]; then
   echo "----------------------------------------------------------------"
