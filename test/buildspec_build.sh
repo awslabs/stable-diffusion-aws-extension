@@ -30,10 +30,10 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
    aws cloudformation deploy --stack-name "$STACK_NAME" \
                              --template-file cdk.out/Extension-for-Stable-Diffusion-on-AWS.template.json \
                              --capabilities CAPABILITY_NAMED_IAM \
-                             --parameters ParameterKey=Email,ParameterValue="example@example.com" \
-                                          ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
-                                          ParameterKey=LogLevel,ParameterValue="INFO" \
-                                          ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
+                             --parameter-overrides Email="example@example.com" \
+                                                   Bucket="$API_BUCKET" \
+                                                   LogLevel=="INFO" \
+                                                   SdExtensionApiKey=="09876743210987654322"
    popd
 else
    aws cloudformation create-stack --stack-name "$STACK_NAME" \
