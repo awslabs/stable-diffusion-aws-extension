@@ -69,6 +69,24 @@ set_conda(){
   export AWS_REGION=$AWS_DEFAULT_REGION
 }
 
+find_and_remove_dir(){
+  dir=$1
+  name=$2
+  echo "deleting dir $name in $dir ..."
+  find "$dir" -type d \( -name "$name" \) | while read file; do
+    remove_unused "$file";
+  done
+}
+
+find_and_remove_file(){
+  dir=$1
+  name=$2
+  echo "deleting file $name in $dir ..."
+  find "$dir" -type f \( -name "$name" \) | while read file; do
+    remove_unused "$file";
+  done
+}
+
 remove_unused(){
   echo "rm $1"
   rm -rf "$1"
@@ -84,7 +102,7 @@ get_device_count(){
 
 sd_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
-  echo "deleting big unused files..."
+  echo "deleting unused files..."
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
@@ -94,27 +112,24 @@ sd_remove_unused_list(){
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
 
-  echo "deleting git dir..."
-  find /home/ubuntu/stable-diffusion-webui -type d \( -name '.git' -o -name '.github' \) | while read dir; do
-    remove_unused "$dir";
-  done
+  find_and_remove_dir /home/ubuntu/stable-diffusion-webui ".git"
+  find_and_remove_dir /home/ubuntu/stable-diffusion-webui ".github"
 
-  echo "deleting unused files..."
-  find /home/ubuntu/stable-diffusion-webui -type f \( -name '.gitignore' -o -name 'README.md' -o -name 'CHANGELOG.md' \) | while read file; do
-    remove_unused "$file";
-  done
-
-  find /home/ubuntu/stable-diffusion-webui -type f \( -name 'CODE_OF_CONDUCT.md' -o -name 'LICENSE.md' -o -name 'NOTICE.md' \) | while read file; do
-    remove_unused "$file";
-  done
-
-  find /home/ubuntu/stable-diffusion-webui -type f \( -name 'CODEOWNERS' -o -name 'LICENSE.txt' -o -name 'LICENSE' \) | while read file; do
-    remove_unused "$file";
-  done
-
-  find /home/ubuntu/stable-diffusion-webui -type f \( -name '*.gif' -o -name '*.png' -o -name '*.jpg' \) | while read file; do
-    remove_unused "$file";
-  done
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui ".gitignore"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CHANGELOG"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CHANGELOG.md"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "README"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "README.md"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "NOTICE"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "NOTICE.md"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CODE_OF_CONDUCT.md"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE.md"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "LICENSE.txt"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "CODEOWNERS"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.jpg"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.png"
+  find_and_remove_file /home/ubuntu/stable-diffusion-webui "*.gif"
 }
 
 sd_listen_ready() {
@@ -225,30 +240,25 @@ sd_launch_from_local(){
 
 comfy_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
-  echo "deleting big unused files..."
-  # remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
-
-  echo "deleting git dir..."
-  find /home/ubuntu/ComfyUI -type d \( -name '.git' -o -name '.github' \) | while read dir; do
-    remove_unused "$dir";
-  done
-
   echo "deleting unused files..."
-  find /home/ubuntu/ComfyUI -type f \( -name '.gitignore' -o -name 'README.md' -o -name 'CHANGELOG.md' \) | while read file; do
-    remove_unused "$file";
-  done
 
-  find /home/ubuntu/ComfyUI -type f \( -name 'CODE_OF_CONDUCT.md' -o -name 'LICENSE.md' -o -name 'NOTICE.md' \) | while read file; do
-    remove_unused "$file";
-  done
+  find_and_remove_dir /home/ubuntu/ComfyUI ".git"
+  find_and_remove_dir /home/ubuntu/ComfyUI ".github"
 
-  find /home/ubuntu/ComfyUI -type f \( -name 'CODEOWNERS' -o -name 'LICENSE.txt' -o -name 'LICENSE' \) | while read file; do
-    remove_unused "$file";
-  done
-
-  find /home/ubuntu/ComfyUI -type f \( -name '*.gif' -o -name '*.png' -o -name '*.jpg' \) | while read file; do
-    remove_unused "$file";
-  done
+  find_and_remove_file /home/ubuntu/ComfyUI ".gitignore"
+  find_and_remove_file /home/ubuntu/ComfyUI "README.md"
+  find_and_remove_file /home/ubuntu/ComfyUI "CHANGELOG"
+  find_and_remove_file /home/ubuntu/ComfyUI "CHANGELOG.md"
+  find_and_remove_file /home/ubuntu/ComfyUI "CODE_OF_CONDUCT.md"
+  find_and_remove_file /home/ubuntu/ComfyUI "NOTICE"
+  find_and_remove_file /home/ubuntu/ComfyUI "NOTICE.md"
+  find_and_remove_file /home/ubuntu/ComfyUI "CODEOWNERS"
+  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE"
+  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE.md"
+  find_and_remove_file /home/ubuntu/ComfyUI "LICENSE.txt"
+  find_and_remove_file /home/ubuntu/ComfyUI "*.gif"
+  find_and_remove_file /home/ubuntu/ComfyUI "*.png"
+  find_and_remove_file /home/ubuntu/ComfyUI "*.jpg"
 }
 
 comfy_build_for_launch(){
