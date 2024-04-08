@@ -17,23 +17,24 @@ aws cloudformation delete-stack --stack-name "$STACK_NAME"
 python --version
 sudo yum install wget -y
 
+cd stable-diffusion-aws-extension/test
+make build
+
+aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
+
 echo "----------------------------------------------------------------"
 echo "$DEPLOY_STACK deploy start..."
 echo "----------------------------------------------------------------"
 STARTED_TIME=$(date +%s)
 if [ "$DEPLOY_STACK" = "cdk" ]; then
-   pushd "stable-diffusion-aws-extension/infrastructure"
+   pushd "../infrastructure"
    npm i -g pnpm
    pnpm i
-   npx cdk synth --output cdk.out
-   aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
-   aws cloudformation deploy --stack-name "$STACK_NAME" \
-                             --template-file cdk.out/Extension-for-Stable-Diffusion-on-AWS.template.json \
-                             --capabilities CAPABILITY_NAMED_IAM \
-                             --parameter-overrides Email="example@example.com" \
-                                                   Bucket="$API_BUCKET" \
-                                                   LogLevel=="INFO" \
-                                                   SdExtensionApiKey=="09876743210987654322"
+   npx cdk deploy --parameters Email="example@amazon.com" \
+                  --parameters Bucket="$API_BUCKET" \
+                  --parameters LogLevel="INFO" \
+                  --parameters SdExtensionApiKey="09876743210987654322" \
+                  --require-approval never
    popd
 else
    aws cloudformation create-stack --stack-name "$STACK_NAME" \
@@ -57,9 +58,6 @@ export API_GATEWAY_URL=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] | sele
 export API_GATEWAY_URL_TOKEN=$(echo "$stack_info" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey=="ApiGatewayUrlToken").OutputValue')
 echo "export API_GATEWAY_URL=$API_GATEWAY_URL" >> env.properties
 echo "export API_GATEWAY_URL_TOKEN=$API_GATEWAY_URL_TOKEN" >> env.properties
-
-cd stable-diffusion-aws-extension/test
-make build
 
 echo "----------------------------------------------------------------"
 echo "Running pytest..."
