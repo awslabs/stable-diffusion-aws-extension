@@ -2,7 +2,7 @@ import logging
 
 import boto3
 
-import config
+import config as config
 
 logger = logging.getLogger(__name__)
 client = boto3.client('cloudformation')
