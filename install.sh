@@ -1,12 +1,5 @@
 #!/bin/bash
 
-branch=main
-
-# if ESD_CODE_BRANCH is dev, then use dev branch
-if [[ $ESD_CODE_BRANCH == "dev" ]]; then
-  branch=dev
-fi
-
 # Warning: This script is used to install the initial support for client and workshop
 # Warning: For keeping the same version of the initial support
 

@@ -34,4 +34,13 @@ ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
 
+RUN cd /home/ubuntu || exit 1 && \
+    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
+    cd stable-diffusion-aws-extension && \
+    echo $(git rev-parse HEAD) > /home/ubuntu/esd.version && \
+    mv install_sd.sh ../ && \
+    mv install_comfy.sh ../ && \
+    cd ../ && \
+    rm -rf stable-diffusion-aws-extension
+
 ENTRYPOINT ["bash", "/serve.sh"]

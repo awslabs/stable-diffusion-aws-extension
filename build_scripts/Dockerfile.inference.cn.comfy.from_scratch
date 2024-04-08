@@ -38,5 +38,10 @@ RUN chmod +x /serve.sh
 ENTRYPOINT ["bash", "/serve.sh"]
 
 RUN cd /home/ubuntu || exit 1 && \
-    export ESD_CODE_BRANCH="dev" && \
-    curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/dev/install_comfy.sh" | bash
+    git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
+    cd stable-diffusion-aws-extension && \
+    echo $(git rev-parse HEAD) > /home/ubuntu/esd.version && \
+    mv install_comfy.sh ../ && \
+    cd ../ && \
+    rm -rf stable-diffusion-aws-extension && \
+    bash install_comfy.sh

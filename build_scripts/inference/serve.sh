@@ -20,8 +20,6 @@ if [ -z "$SERVICE_TYPE" ]; then
 fi
 
 # todo will recovery when merged into main
-#export ESD_CODE_BRANCH="main"
-export ESD_CODE_BRANCH="dev"
 export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
 export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
@@ -30,7 +28,6 @@ random_string=$(LC_ALL=C cat /dev/urandom | LC_ALL=C tr -dc 'a-z0-9' | fold -w 6
 export ENDPOINT_INSTANCE_ID="$ENDPOINT_NAME-$random_string"
 
 if [[ $IMAGE_URL == *"dev"* ]]; then
-  export ESD_CODE_BRANCH="dev"
   # Enable dev mode
   trap 'echo "error_lock" > /error_lock; exit 1' ERR
   if [ -f "/error_lock" ]; then
@@ -166,7 +163,7 @@ sd_listen_ready() {
 
 sd_build_for_launch(){
   cd /home/ubuntu || exit 1
-  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_sd.sh" | bash;
+  bash install_sd.sh
 }
 
 sd_accelerate_launch(){
@@ -258,7 +255,7 @@ comfy_remove_unused_list(){
 
 comfy_build_for_launch(){
   cd /home/ubuntu || exit 1
-  curl -sSL "https://raw.githubusercontent.com/awslabs/stable-diffusion-aws-extension/$ESD_CODE_BRANCH/install_comfy.sh" | bash;
+  bash install_comfy.sh
 }
 
 comfy_listen_ready() {

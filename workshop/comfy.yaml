@@ -161,7 +161,6 @@ Resources:
           echo "export COMFY_API_TOKEN=${ApiGatewayUrlToken}" >> /etc/environment
           echo "export COMFY_BUCKET_NAME=${BucketName}" >> /etc/environment
           echo "export COMFY_ENDPOINT=${EndpointName}" >> /etc/environment
-          echo "export ESD_CODE_BRANCH=${Branch}" >> /etc/environment
           source /etc/environment
           
           sudo apt-get update
