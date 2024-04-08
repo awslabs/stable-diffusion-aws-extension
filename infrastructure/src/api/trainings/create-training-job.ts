@@ -304,6 +304,18 @@ export class CreateTrainingJobApi {
                   fm_type: {
                     type: JsonSchemaType.STRING,
                   },
+                  enable_wd14_tagger: {
+                    type: JsonSchemaType.BOOLEAN,
+                    default: false,
+                  },
+                  general_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                  },
+                  character_threshold: {
+                    type: JsonSchemaType.STRING,
+                    default: '0',
+                  },
                 },
                 required: [
                   'training_instance_type',
