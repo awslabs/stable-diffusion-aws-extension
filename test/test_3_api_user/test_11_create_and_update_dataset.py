@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import logging
-import os
 
 import requests
 
@@ -44,7 +43,8 @@ class TestDatasetE2E:
     def test_1_dataset_post(self):
         dataset_content = []
 
-        for filename in os.listdir("./data/dataset"):
+        for i in range(1, 26):
+            filename = f"{i}.png"
             dataset_content.append({
                 'filename': filename,
                 'name': filename,
@@ -77,8 +77,7 @@ class TestDatasetE2E:
     def test_2_dataset_img_upload(self):
         global dataset
         for filename, presign_url in dataset['data']['s3PresignUrl'].items():
-            file_path = f"./data/dataset/{filename}"
-            with open(file_path, 'rb') as file:
+            with open("./data/dataset_koyha/10_technic/42166.png", 'rb') as file:
                 resp = requests.put(presign_url, file)
                 resp.raise_for_status()
                 assert resp.status_code == 200

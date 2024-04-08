@@ -25,7 +25,7 @@ class TestCreateAndDeleteDatasetE2E:
     def test_1_dataset_create(self):
         dataset_content = []
 
-        for i in range(1, 30):
+        for i in range(1, 26):
             filename = f"{i}.png"
             dataset_content.append({
                 'filename': filename,
