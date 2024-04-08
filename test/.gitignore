@@ -23,7 +23,6 @@ venv
 
 /detailed_report.json
 /report.html
-data/models
 tmp.png
 response.json
 schema.json

@@ -77,7 +77,7 @@ class TestCheckPointForTrainE2E:
 
     def test_3_update_checkpoint_v15(self):
         filename = "v1-5-pruned-emaonly.safetensors"
-        local_path = f"data/models/Stable-diffusion/{filename}"
+        local_path = f"/tmp/test/models/Stable-diffusion/{filename}"
         wget_file(
             local_path,
             'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors',

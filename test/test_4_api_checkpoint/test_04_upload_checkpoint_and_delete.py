@@ -12,7 +12,7 @@ signed_urls = None
 
 filename = "cartoony.safetensors"
 checkpoint_type = "Lora"
-local_path = f"data/models/{checkpoint_type}/{filename}"
+local_path = f"/tmp/test/models/{checkpoint_type}/{filename}"
 
 
 class TestCheckPointDeleteE2E:
