@@ -103,11 +103,13 @@ get_device_count(){
 sd_remove_unused_list(){
   echo "---------------------------------------------------------------------------------"
   echo "deleting unused files..."
+
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/docs
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/workshop
+
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
