@@ -93,7 +93,7 @@ class TestCheckPointE2E:
 
     def test_3_update_checkpoint_v15(self):
         filename = "v1-5-pruned-emaonly.safetensors"
-        local_path = f"data/models/Stable-diffusion/{filename}"
+        local_path = f"/tmp/test/models/Stable-diffusion/{filename}"
         wget_file(
             local_path,
             'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors',
@@ -173,7 +173,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def bak_test_6_update_checkpoint_cute(self):
         filename = "LahCuteCartoonSDXL_alpha.safetensors"
-        local_path = f"data/models/Stable-diffusion/{filename}"
+        local_path = f"/tmp/test/models/Stable-diffusion/{filename}"
         wget_file(
             local_path,
             'https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/LahCuteCartoonSDXL_alpha.safetensors',
@@ -254,7 +254,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_9_update_checkpoint_lora_nendoroid(self):
         filename = "nendoroid_xl_v7.safetensors"
-        local_path = f"data/models/Lora/{filename}"
+        local_path = f"/tmp/test/models/Lora/{filename}"
         wget_file(
             local_path,
             'https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/models/nendoroid_xl_v7.safetensors',
@@ -336,7 +336,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_9_update_checkpoint_lora_lcm_1_5(self):
         filename = "lcm_lora_1_5.safetensors"
-        local_path = f"data/models/Lora/{filename}"
+        local_path = f"/tmp/test/models/Lora/{filename}"
         wget_file(
             local_path,
             'https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_1_5.safetensors'
@@ -417,7 +417,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_9_update_checkpoint_lora_lcm_xl(self):
         filename = "lcm_lora_xl.safetensors"
-        local_path = f"data/models/Lora/{filename}"
+        local_path = f"/tmp/test/models/Lora/{filename}"
         wget_file(
             local_path,
             'https://aws-gcr-solutions-us-east-1.s3.us-east-1.amazonaws.com/extension-for-stable-diffusion-on-aws/models/Lora/lcm_lora_xl.safetensors'
@@ -498,7 +498,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_12_update_checkpoint_canny(self):
         filename = "control_v11p_sd15_canny.pth"
-        local_path = f"data/models/ControlNet/{filename}"
+        local_path = f"/tmp/test/models/ControlNet/{filename}"
         wget_file(
             local_path,
             'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_canny.pth',
@@ -580,7 +580,7 @@ class TestCheckPointE2E:
     @pytest.mark.skipif(config.test_fast, reason="test_fast")
     def test_15_update_checkpoint_openpose(self):
         filename = "control_v11p_sd15_openpose.pth"
-        local_path = f"data/models/ControlNet/{filename}"
+        local_path = f"/tmp/test/models/ControlNet/{filename}"
         wget_file(
             local_path,
             'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth',

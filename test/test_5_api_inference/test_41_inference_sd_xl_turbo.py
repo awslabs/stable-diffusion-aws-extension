@@ -82,7 +82,7 @@ class TestTurboE2E:
         signed_urls = resp.json()['data']["s3PresignUrl"][filename]
 
     def test_2_update_turbo_checkpoint(self):
-        local_path = f"data/models/Stable-diffusion/{filename}"
+        local_path = f"/tmp/test/models/Stable-diffusion/{filename}"
         wget_file(
             local_path,
             'https://huggingface.co/stabilityai/sdxl-turbo/resolve/main/sd_xl_turbo_1.0_fp16.safetensors',
