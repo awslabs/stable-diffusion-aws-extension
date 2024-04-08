@@ -234,7 +234,7 @@ Resources:
       InstanceId: !Ref WebUiEC2Instance
 
 Outputs:
-  WebUIURL:
+  WebUINginxURL:
     Description: URL for Stable Diffusion WebUI
     Value: !Sub http://${WebUiEIP}
   WebUIRealURL:

@@ -243,7 +243,7 @@ Resources:
       InstanceId: !Ref ComfyEC2Instance
 
 Outputs:
-  ComfyURL:
+  ComfyNginxURL:
     Description: URL for Comfy WebUI
     Value: !Sub http://${WebUiEIP}
   ComfyRealURL:
