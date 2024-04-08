@@ -1,4 +1,3 @@
-import base64
 import datetime
 import json
 import logging
@@ -37,7 +36,7 @@ train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
 dataset_info_table = os.environ.get("DATASET_INFO_TABLE")
-
+esd_version = os.environ.get("ESD_VERSION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 
@@ -45,7 +44,7 @@ account_id = os.environ.get("ACCOUNT_ID")
 region = os.environ.get("AWS_REGION")
 url_suffix = os.environ.get("URL_SUFFIX")
 
-image_uri = f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-training:kohya-65bf90a"
+image_uri = f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-training:{esd_version}"
 
 ddb_client = boto3.client('dynamodb')
 
@@ -62,9 +61,7 @@ class Event:
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
-def _update_toml_file_in_s3(
-        bucket_name: str, file_key: str, new_file_key: str, updated_params
-):
+def _update_toml_file_in_s3(bucket_name: str, file_key: str, new_file_key: str, updated_params):
     """Update and save a TOML file in an S3 bucket
 
     Args:
@@ -115,7 +112,7 @@ def _trigger_sagemaker_training_job(
         ],  # Available value: "kohya"
     }
 
-    train_params_file = f"/train/{train_job_name}.json"
+    train_params_file = f"train/param-{train_job.id}.json"
 
     s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4, cls=DecimalEncoder))
 
