@@ -140,7 +140,7 @@ def _trigger_sagemaker_training_job(
 
     train_params_file = f"/train/{train_job_name}.json"
 
-    s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4))
+    s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4, cls=DecimalEncoder))
 
     # todo will delete this
     hyperparameters = _json_encode_hyperparameters(data)
