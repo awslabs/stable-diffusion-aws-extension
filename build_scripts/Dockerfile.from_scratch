@@ -1,12 +1,5 @@
 FROM 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 
-# update environment
-RUN apt-get update -y
-
-# install pkg lib for proprocess in controlnet
-RUN apt-get install -y pkg-config
-RUN apt-get install -y libcairo2-dev
-
 COPY stable-diffusion-webui /opt/ml/code/
 COPY inference/cn_serve /opt/ml/code
 
@@ -68,9 +61,5 @@ RUN pip install trash-cli && \
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
 
 WORKDIR /opt/ml/code
-
-ENV ON_DOCKER true
-
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 
 ENTRYPOINT ["python", "/opt/ml/code/cn_serve"]

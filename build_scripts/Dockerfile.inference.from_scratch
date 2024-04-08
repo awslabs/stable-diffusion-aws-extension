@@ -2,7 +2,7 @@ FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable as builder
 
 RUN apt-get update -y
 RUN apt-get install -y wget
-RUN wget https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
+RUN wget -q https://github.com/peak/s5cmd/releases/download/v2.2.2/s5cmd_2.2.2_Linux-64bit.tar.gz
 RUN tar xzvf s5cmd_2.2.2_Linux-64bit.tar.gz
 
 FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
@@ -10,6 +10,8 @@ FROM public.ecr.aws/ubuntu/ubuntu:22.04_stable
 COPY --from=builder /s5cmd /usr/local/bin/
 
 SHELL ["/bin/bash", "-c"]
+
+WORKDIR /home/ubuntu/
 
 RUN adduser --disabled-password --gecos '' ubuntu && \
     apt-get update -y && \
@@ -21,15 +23,14 @@ RUN adduser --disabled-password --gecos '' ubuntu && \
     # clean up
     rm -rf /var/lib/apt/lists/*
 
-COPY inference/metrics.py /
-RUN chmod +x /metrics.py
-
-WORKDIR /home/ubuntu/
-
+ARG ESD_COMMIT_ID
+ENV ESD_COMMIT_ID=${ESD_COMMIT_ID}
 ENV ON_DOCKER true
+ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
 ENV FULL_IMAGE false
 
-ENV LD_PRELOAD /usr/lib/x86_64-linux-gnu/libtcmalloc_minimal.so.4
+COPY inference/metrics.py /
+RUN chmod +x /metrics.py
 
 COPY inference/serve.sh /
 RUN chmod +x /serve.sh
