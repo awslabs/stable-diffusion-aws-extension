@@ -127,17 +127,23 @@ def _trigger_sagemaker_training_job(
         ckpt_output_path (str): S3 path to store the trained model file
         train_job_name (str): training job name
     """
-    hyperparameters = _json_encode_hyperparameters(
-        {
-            "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
-            "params": train_job.params,
-            "s3-input-path": train_job.input_s3_location,
-            "s3-output-path": ckpt_output_path,
-            "training-type": train_job.params[
-                "training_type"
-            ],  # Available value: "kohya"
-        }
-    )
+
+    data = {
+        "sagemaker_program": "extensions/sd-webui-sagemaker/sagemaker_entrypoint_json.py",
+        "params": train_job.params,
+        "s3-input-path": train_job.input_s3_location,
+        "s3-output-path": ckpt_output_path,
+        "training-type": train_job.params[
+            "training_type"
+        ],  # Available value: "kohya"
+    }
+
+    train_params_file = f"/train/{train_job_name}.json"
+
+    s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4))
+
+    # todo will delete this
+    hyperparameters = _json_encode_hyperparameters(data)
 
     final_instance_type = instance_type
     if (

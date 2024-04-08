@@ -254,8 +254,10 @@ export class CreateTrainingJobApi {
         's3:ListBucket',
         's3:CreateBucket',
       ],
-      resources: [`${this.props.s3Bucket.bucketArn}/*`,
-        `arn:${Aws.PARTITION}:s3:::*sagemaker*`],
+      resources: [
+        `${this.props.s3Bucket.bucketArn}/*`,
+        `arn:${Aws.PARTITION}:s3:::*sagemaker*`,
+      ],
     }));
 
     newRole.addToPolicy(new aws_iam.PolicyStatement({
