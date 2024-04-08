@@ -166,9 +166,6 @@ Resources:
           echo "[default]
           region = ${AWS::Region}" > ~/.aws/config
           
-          echo "export ESD_CODE_BRANCH=${Branch}" >> /etc/environment
-          source /etc/environment
-          
           sudo apt-get update
           
           sudo apt install nginx -y

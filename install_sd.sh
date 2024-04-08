@@ -3,12 +3,6 @@
 echo "---------------------------------------------------------------------------------"
 echo "install esd..."
 
-branch=main
-
-if [[ $ESD_CODE_BRANCH == "dev" ]]; then
-  branch=dev
-fi
-
 export INITIAL_SUPPORT_COMMIT_ROOT=bef51aed032c0aaa5cfd80445bc4cf0d85b408b5
 export INITIAL_SUPPORT_COMMIT_CONTROLNET=2a210f0489a4484f55088159bbfa51aaf73e10d9
 export INITIAL_SUPPORT_COMMIT_TILEDVAE=f9f8073e64f4e682838f255215039ba7884553bf
@@ -28,7 +22,13 @@ git reset --hard ${INITIAL_SUPPORT_COMMIT_ROOT}
 cd extensions || exit
 
 # Clone stable-diffusion-aws-extension
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "$branch" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
+if [ -f /home/ubuntu/esd.version ]; then
+  cd stable-diffusion-aws-extension || exit 1
+  echo "reset ESD to $(cat /home/ubuntu/esd.version)"
+  git reset --hard $(cat /home/ubuntu/esd.version)
+  cd ../
+fi
 
 # Clone sd-webui-controlnet
 git clone https://github.com/Mikubill/sd-webui-controlnet.git --branch main --single-branch

@@ -3,12 +3,6 @@
 echo "---------------------------------------------------------------------------------"
 echo "install comfy..."
 
-branch=main
-
-if [[ $ESD_CODE_BRANCH == "dev" ]]; then
-  branch=dev
-fi
-
 export INITIAL_COMFY_COMMIT_ROOT=e6482fbbfc83cd25add0532b2e4c51d305e8a232
 
 rm -rf ComfyUI
@@ -19,7 +13,13 @@ cd ComfyUI || exit 1
 git reset --hard ${INITIAL_COMFY_COMMIT_ROOT}
 cd ../
 
-git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "$branch" --single-branch
+git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
+if [ -f /home/ubuntu/esd.version ]; then
+  cd stable-diffusion-aws-extension || exit 1
+  echo "reset ESD to $(cat /home/ubuntu/esd.version)"
+  git reset --hard $(cat /home/ubuntu/esd.version)
+  cd ../
+fi
 
 cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
