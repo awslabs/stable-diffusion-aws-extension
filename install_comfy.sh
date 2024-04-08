@@ -23,6 +23,7 @@ fi
 
 cp stable-diffusion-aws-extension/build_scripts/comfy/serve.py ComfyUI/
 cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_sagemaker_proxy.py ComfyUI/custom_nodes/
+cp stable-diffusion-aws-extension/build_scripts/comfy/comfy_local_proxy.py ComfyUI/custom_nodes/
 
 rm -rf stable-diffusion-aws-extension
 

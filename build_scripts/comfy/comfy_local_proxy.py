@@ -1,6 +1,8 @@
 import base64
 import concurrent.futures
 import os
+import signal
+import threading
 
 import requests
 from aiohttp import web
@@ -9,12 +11,44 @@ import folder_paths
 import server
 from execution import PromptExecutor
 
+import time
+import json
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import subprocess
+
+
+env_path = '/etc/environment'
+if 'ENV_FILE_PATH' in os.environ and os.environ.get('ENV_FILE_PATH'):
+    env_path = os.environ.get('ENV_FILE_PATH')
+# Source environment variables from /etc/environment
+try:
+    with open(env_path, 'r') as env_file:
+        for line in env_file:
+            parts = line.strip().split('=', 1)
+            if len(parts) == 2:
+                os.environ[parts[0]] = parts[1]
+except FileNotFoundError:
+    print("/etc/environment not found")
+
+DIR3 = "input"
+DIR1 = "models"
+DIR2 = "custom_nodes"
+
+if 'COMFY_INPUT_PATH' in os.environ and os.environ.get('COMFY_INPUT_PATH'):
+    DIR3 = os.environ.get('COMFY_INPUT_PATH')
+if 'COMFY_MODEL_PATH' in os.environ and os.environ.get('COMFY_MODEL_PATH'):
+    DIR1 = os.environ.get('COMFY_MODEL_PATH')
+if 'COMFY_NODE_PATH' in os.environ and os.environ.get('COMFY_NODE_PATH'):
+    DIR2 = os.environ.get('COMFY_NODE_PATH')
+
 
 api_url = os.environ.get('COMFY_API_URL')
 api_token = os.environ.get('COMFY_API_TOKEN')
 comfy_endpoint = os.environ.get('COMFY_ENDPOINT', 'comfy-real-time-comfy')
 comfy_need_sync = os.environ.get('COMFY_NEED_SYNC', False)
 comfy_need_prepare = os.environ.get('COMFY_NEED_PREPARE', False)
+bucket_name = os.environ.get('COMFY_BUCKET_NAME')
 
 
 if not api_url:
@@ -179,3 +213,76 @@ def send_sync_proxy(func):
 
 
 server.PromptServer.send_sync = send_sync_proxy(server.PromptServer.send_sync)
+
+
+def sync_files(filepath):
+    try:
+        directory = os.path.dirname(filepath)
+        print(f"Files changed in: {directory}")
+        timestamp = str(int(time.time() * 1000))
+
+        s5cmd_syn_input_command = f's5cmd sync {DIR3}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/input/"'
+        s5cmd_syn_model_command = f's5cmd sync {DIR1}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/models/"'
+        s5cmd_syn_node_command = f's5cmd sync {DIR2}/* "s3://{bucket_name}/comfy/{comfy_endpoint}/{timestamp}/custom_nodes/"'
+
+        os.system(s5cmd_syn_input_command)
+        os.system(s5cmd_syn_model_command)
+        os.system(s5cmd_syn_node_command)
+
+        url = api_url + "prepare"
+        print("URL:", url)
+        data = {"endpoint_name": comfy_endpoint, "need_reboot": True, "prepare_id": timestamp}
+        print("Data:")
+        print(json.dumps(data, indent=4))
+        result = subprocess.run(["curl", "--location", "--request", "POST", url, "--header",
+                                 f"x-api-key: {api_token}", "--data-raw", json.dumps(data)],
+                                capture_output=True, text=True)
+        print(result.stdout)
+    except Exception as e:
+        print(f"sync_files error {e}")
+
+
+class MyHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        sync_files(event.src_path)
+
+    def on_created(self, event):
+        sync_files(event.src_path)
+
+    def on_deleted(self, event):
+        sync_files(event.src_path)
+
+
+stop_event = threading.Event()
+
+
+def check_and_sync():
+    print("check_and_sync start")
+    event_handler = MyHandler()
+    observer = Observer()
+    try:
+        observer.schedule(event_handler, DIR1, recursive=True)
+        observer.schedule(event_handler, DIR2, recursive=True)
+        observer.schedule(event_handler, DIR3, recursive=True)
+        observer.start()
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("sync Shutting down please restart ComfyUI")
+        observer.stop()
+    observer.join()
+
+
+def signal_handler(sig, frame):
+    print("Received termination signal. Exiting...")
+    stop_event.set()
+
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
+check_sync_thread = threading.Thread(target=check_and_sync)
+check_sync_thread.start()
+
+
+
