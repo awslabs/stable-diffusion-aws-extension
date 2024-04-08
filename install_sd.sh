@@ -25,16 +25,18 @@ cd extensions || exit 1
 git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch
 cd stable-diffusion-aws-extension || exit 1
 
-# remove unused files for docker layer reuse
-rm -rf docs
-rm -rf infrastructure
-rm -rf middleware_api
-rm -rf test
-rm -rf workshop
-
 if [ -n "$ESD_COMMIT_ID" ]; then
   echo "reset ESD to $ESD_COMMIT_ID"
   git reset --hard "$ESD_COMMIT_ID"
+fi
+
+# remove unused files for docker layer reuse
+if [ "$ON_DOCKER" == "true" ]; then
+  rm -rf docs
+  rm -rf infrastructure
+  rm -rf middleware_api
+  rm -rf test
+  rm -rf workshop
 fi
 
 cd ../
