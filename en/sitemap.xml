@@ -86,11 +86,6 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/ecr_image_param/</loc>
-         <lastmod>2024-04-08</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/permissions/</loc>
          <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
