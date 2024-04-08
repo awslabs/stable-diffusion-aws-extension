@@ -2,217 +2,222 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/contributors/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/cost/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/faq/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/notices/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/revisions/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/troubleshooting/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/uninstall/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/update/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/architecture-overview/architecture-details/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/architecture-overview/architecture/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/architecture-overview/design-considerations/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/deployment/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/deployment_for_existing_users/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/ecr_image_param/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/permissions/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/deployment/template/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/access/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api_authentication/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api_debugger/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api_inference_process/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api_upload_ckpt/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/byoc/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/oas/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/source/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api/1.4.0/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api/1.5.0/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://awslabs.github.io/stable-diffusion-aws-extension/developer-guide/api/comfy-1.0.0/</loc>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/plan-deployment/quotas/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/plan-deployment/regions/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/plan-deployment/security/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/solution-overview/concepts/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/solution-overview/features-and-benefits/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/solution-overview/use-cases/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/CloudAssetsManage/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/checkpoint-merge-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/controlnet-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/endpoint-autoscaling/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/extensions-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/img2img-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/multi-user/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/preparation/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/training-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://awslabs.github.io/stable-diffusion-aws-extension/user-guide/txt2img-guide/</loc>
-         <lastmod>2024-04-07</lastmod>
+         <lastmod>2024-04-08</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
