@@ -1,7 +1,6 @@
 FROM 727897471807.dkr.ecr.cn-northwest-1.amazonaws.com.cn/pytorch-inference:2.0.1-gpu-py310-cu118-ubuntu20.04-sagemaker
 
 COPY stable-diffusion-webui /opt/ml/code/
-COPY inference/cn_serve /opt/ml/code
 
 # add accelerate
 RUN mkdir -p /root/.cache/huggingface/accelerate
@@ -59,7 +58,3 @@ RUN wget https://aws-gcr-solutions-us-east-1.s3.amazonaws.com/stable-diffusion-p
 RUN pip install trash-cli && \
     trash /opt/conda/lib/python3.10/site-packages/opencv_python*
 RUN echo "/opt/ml/code" > "/opt/conda/lib/python3.10/site-packages/packages.pth"
-
-WORKDIR /opt/ml/code
-
-ENTRYPOINT ["python", "/opt/ml/code/cn_serve"]

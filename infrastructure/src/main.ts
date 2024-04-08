@@ -287,14 +287,14 @@ export class Middleware extends Stack {
     this.addEnvToAllLambdas('ESD_COMMIT_ID', ESD_COMMIT_ID);
     this.addEnvToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
     this.addEnvToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
-    this.addEnvToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
-    this.addEnvToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
-    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
-    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
     this.addEnvToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
     this.addEnvToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
     this.addEnvToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
     this.addEnvToAllLambdas('ACCOUNT_ID', accountId.toString());
+    this.addEnvToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
 
     // make order for api
     let requestValidator: aws_apigateway.RequestValidator;
