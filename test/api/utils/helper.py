@@ -33,29 +33,6 @@ def wget_file(local_file: str, url: str, gcr_url: str = None):
             raise subprocess.CalledProcessError(wget_process.returncode, 'wget failed')
 
 
-def upload_db_config(s3_presign_url: str):
-    config_json = open("./data/train/db_config_cloud.json", "rb")
-    config_json = json.loads(config_json.read())
-
-    config_json['concepts_list'][0]["instance_data_dir"] = f"{config.bucket}-dataset-{config.dataset_name}"
-    config_json["model_dir"] = f"models/dreambooth/{config.model_name}"
-    config_json["pretrained_model_name_or_path"] = f"models/dreambooth/{config.model_name}/working"
-    config_json["model_name"] = config.model_name
-
-    logger.info(config_json)
-
-    file = create_tar(
-        json.dumps(config_json),
-        f"models/sagemaker_dreambooth/{config.model_name}/db_config_cloud.json"
-    )
-
-    response = requests.put(
-        s3_presign_url,
-        file
-    )
-    response.raise_for_status()
-
-
 def create_tar(json_string: str, path: str):
     with io.BytesIO() as tar_buffer:
         with tarfile.open(fileobj=tar_buffer, mode="w") as tar:

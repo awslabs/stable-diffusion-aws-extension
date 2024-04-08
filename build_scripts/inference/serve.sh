@@ -17,7 +17,6 @@ if [ -z "$SERVICE_TYPE" ]; then
   exit 1
 fi
 
-# todo will recovery when merged into main
 export WEBUI_PORT=8080
 export TAR_FILE="esd.tar"
 export S3_LOCATION="$ENDPOINT_NAME-$ESD_VERSION"
@@ -90,6 +89,7 @@ sd_remove_unused_list(){
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/infrastructure
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/middleware_api
   remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/test
+  remove_unused /home/ubuntu/stable-diffusion-webui/extensions/stable-diffusion-aws-extension/workshop
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/BLIP/BLIP.gif
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/generative-models/assets/
   remove_unused /home/ubuntu/stable-diffusion-webui/repositories/stable-diffusion-stability-ai/assets/
