@@ -43,10 +43,9 @@
 1. 打开 AWS 管理控制台[（https://console.aws.amazon.com）](https://console.aws.amazon.com)并登录。
 2. 在服务菜单中选择 "CloudFormation"，找到之前已经部署的本方案的堆栈，并选中它，点击页面右上方的“Update”。
 3. 在“Update Stack"中，选择 "Replace current template"，并在“Amazon S3 URL"部分填入最新[部署模版链接](https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json)，点击“Next”。
-4. 在“Specify Stack details"界面，选择EcrImageTag下拉列表中最新的版本号，点击“Next”。
-5. 在“Configure stack options"界面，选择“Next”。
-6. 在“Review”界面，勾选必要选择框并选择“Submit”。
-7. CloudFormation 将开始更新堆栈，这可能需要一些时间。你可以在 "Stacks" 页面上监视堆栈的状态。
+4. 在“Configure stack options"界面，选择“Next”。
+5. 在“Review”界面，勾选必要选择框并选择“Submit”。
+6. CloudFormation 将开始更新堆栈，这可能需要一些时间。你可以在 "Stacks" 页面上监视堆栈的状态。
 
 
 ## 注意事项

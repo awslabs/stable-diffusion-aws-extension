@@ -1,4 +1,3 @@
-import base64
 import datetime
 import json
 import logging
@@ -37,7 +36,7 @@ train_table = os.environ.get("TRAIN_TABLE")
 checkpoint_table = os.environ.get("CHECKPOINT_TABLE")
 user_table = os.environ.get("MULTI_USER_TABLE")
 dataset_info_table = os.environ.get("DATASET_INFO_TABLE")
-
+esd_version = os.environ.get("ESD_VERSION")
 instance_type = os.environ.get("INSTANCE_TYPE")
 sagemaker_role_arn = os.environ.get("TRAIN_JOB_ROLE")
 
@@ -45,7 +44,7 @@ account_id = os.environ.get("ACCOUNT_ID")
 region = os.environ.get("AWS_REGION")
 url_suffix = os.environ.get("URL_SUFFIX")
 
-image_uri = f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-training:kohya-65bf90a"
+image_uri = f"{account_id}.dkr.ecr.{region}.{url_suffix}/esd-training:{esd_version}"
 
 ddb_client = boto3.client('dynamodb')
 
@@ -62,9 +61,7 @@ class Event:
     lora_train_type: Optional[str] = LoraTrainType.KOHYA.value
 
 
-def _update_toml_file_in_s3(
-        bucket_name: str, file_key: str, new_file_key: str, updated_params
-):
+def _update_toml_file_in_s3(bucket_name: str, file_key: str, new_file_key: str, updated_params):
     """Update and save a TOML file in an S3 bucket
 
     Args:
@@ -94,29 +91,6 @@ def _update_toml_file_in_s3(
         logger.error(f"An error occurred when updating Kohya toml: {e}")
 
 
-def _json_encode_hyperparameters(hyperparameters):
-    """Encode hyperparameters
-
-    Args:
-        hyperparameters : hyperparameters to be encoded
-
-    Returns:
-        Encoded hyperparameters
-    """
-    new_params = {}
-    for k, v in hyperparameters.items():
-        if region.startswith("cn"):
-            new_params[k] = json.dumps(v, cls=DecimalEncoder)
-        else:
-            json_v = json.dumps(v, cls=DecimalEncoder)
-            v_bytes = json_v.encode("ascii")
-            base64_bytes = base64.b64encode(v_bytes)
-            base64_v = base64_bytes.decode("ascii")
-            new_params[k] = base64_v
-
-    return new_params
-
-
 def _trigger_sagemaker_training_job(
         train_job: TrainJob, ckpt_output_path: str, train_job_name: str
 ):
@@ -138,12 +112,9 @@ def _trigger_sagemaker_training_job(
         ],  # Available value: "kohya"
     }
 
-    train_params_file = f"/train/{train_job_name}.json"
+    train_params_file = f"train/param-{train_job.id}.json"
 
-    s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4))
-
-    # todo will delete this
-    hyperparameters = _json_encode_hyperparameters(data)
+    s3.put_object(Bucket=bucket_name, Key=train_params_file, Body=json.dumps(data, indent=4, cls=DecimalEncoder))
 
     final_instance_type = instance_type
     if (
@@ -162,7 +133,9 @@ def _trigger_sagemaker_training_job(
         instance_type=final_instance_type,
         volume_size=125,
         base_job_name=f"{train_job_name}",
-        hyperparameters=hyperparameters,
+        hyperparameters={
+            "s3_location": f"s3://{bucket_name}/{train_params_file}",
+        },
         job_id=train_job.id,
     )
     est.fit(wait=False)

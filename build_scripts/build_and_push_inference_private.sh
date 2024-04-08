@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euxo pipefail
+
 # Build inference image and push it to private ECR repository
 dockerfile=$1
 repo_name=$2

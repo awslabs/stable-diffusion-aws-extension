@@ -6,7 +6,7 @@ import boto3
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from common.response import dumps_default
+from libs.common_tools import DecimalEncoder
 from libs.utils import response_error
 
 client = boto3.client('apigateway')
@@ -43,7 +43,7 @@ def handler(event: dict, context: LambdaContext):
                 'Access-Control-Allow-Methods': '*',
                 'Access-Control-Allow-v': True,
             },
-            'body': json.dumps(json_schema, default=dumps_default)
+            'body': json.dumps(json_schema, cls=DecimalEncoder)
         }
 
         return payload

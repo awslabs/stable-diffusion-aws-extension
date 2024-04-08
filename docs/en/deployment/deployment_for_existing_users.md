@@ -52,10 +52,9 @@ Use the following steps to deploy this solution on AWS.
 1. Open the AWS Management Console [(https://console.aws.amazon.com)](https://console.aws.amazon.com) and log in.
 2. Select "CloudFormation" from the service menu, find the stack deployed for this solution, and select it, click **Update** in the upper right.
 3. In **Update Stack**, select **Replace current template**, enter latest CloudFormation [link](https://aws-gcr-solutions.s3.amazonaws.com/stable-diffusion-aws-extension-github-mainline/latest/custom-domain/Extension-for-Stable-Diffusion-on-AWS.template.json) in **Amazon S3 URL** and click **Next**.
-4. In **Specify Stack details**, select dropdown option under **EcrImageTag**, click **Next**.
-5. In **Configure stack options**, click **Next**.
-6. In **Review**, select acknowledge option and click **Submit**. 
-7. CloudFormation will start updating the stack, which may take some time. You can monitor the status of the stack on the **Stacks** page.
+4. In **Configure stack options**, click **Next**.
+5. In **Review**, select acknowledge option and click **Submit**. 
+6. CloudFormation will start updating the stack, which may take some time. You can monitor the status of the stack on the **Stacks** page.
 
 
 ## Notice

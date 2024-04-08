@@ -2,10 +2,11 @@ import json
 import logging
 import os
 import urllib.parse
-from decimal import Decimal
 from typing import Optional, Any
 
 from aws_lambda_powertools import Tracer
+
+from libs.common_tools import DecimalEncoder
 
 url_suffix = os.environ.get("URL_SUFFIX")
 
@@ -50,12 +51,6 @@ class StatusCode:
         return f"Status Code: {self.code} - {self.description}"
 
 
-def dumps_default(obj):
-    if isinstance(obj, Decimal):
-        return str(obj)
-    raise TypeError("Object of type 'Decimal' is not JSON serializable")
-
-
 @tracer.capture_method
 def response(status_code: int, data=None, message: str = None, headers: Optional[dict[str, Any]] = None, decimal=None):
     payload = {
@@ -90,7 +85,7 @@ def response(status_code: int, data=None, message: str = None, headers: Optional
         body['message'] = message
 
     if decimal:
-        payload['body'] = json.dumps(body, default=dumps_default)
+        payload['body'] = json.dumps(body, cls=DecimalEncoder)
     else:
         payload['body'] = json.dumps(body)
 
