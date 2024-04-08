@@ -25,7 +25,7 @@ if [ "$DEPLOY_STACK" = "cdk" ]; then
    pushd "stable-diffusion-aws-extension/infrastructure"
    npm i -g pnpm
    pnpm i
-   cdk synth --output cdk.out
+   npx cdk synth --output cdk.out
    aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
    aws cloudformation deploy --stack-name "$STACK_NAME" \
                              --template-file cdk.out/Extension-for-Stable-Diffusion-on-AWS.template.json \
@@ -43,8 +43,8 @@ else
                                                 ParameterKey=Bucket,ParameterValue="$API_BUCKET" \
                                                 ParameterKey=LogLevel,ParameterValue="INFO" \
                                                 ParameterKey=SdExtensionApiKey,ParameterValue="09876743210987654322"
+   aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 fi
-aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 FINISHED_TIME=$(date +%s)
 export DEPLOY_DURATION_TIME=$(( $FINISHED_TIME - $STARTED_TIME ))
 echo "export DEPLOY_DURATION_TIME=$DEPLOY_DURATION_TIME" >> env.properties
