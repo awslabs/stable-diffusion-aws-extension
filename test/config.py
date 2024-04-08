@@ -1,8 +1,12 @@
 import logging
 import os
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+load_dotenv()
 
 host_url = os.environ.get("API_GATEWAY_URL")
 if not host_url:
@@ -86,3 +90,6 @@ comfy_real_time_ep_name = "comfy-real-time-test"
 
 compare_content = os.environ.get("COMPARE_CONTENT", "true")
 logger.info(f"config.compare_content: {compare_content}")
+
+webui_stack = "webui-stack"
+comfy_stack = "comfy-stack"

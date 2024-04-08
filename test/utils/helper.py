@@ -1,3 +1,4 @@
+import decimal
 import io
 import json
 import logging
@@ -189,3 +190,14 @@ def update_oas(api_instance: Api):
 
     with open('oas.json', 'w') as f:
         f.write(json.dumps(resp.json(), indent=4))
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        # if passed in an object is instance of Decimal
+        # convert it to a string
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+
+        # ️ otherwise use the default behavior
+        return json.JSONEncoder.default(self, obj)

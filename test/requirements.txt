@@ -16,3 +16,4 @@ pydantic == 1.10.2
 tenacity==8.2.2
 jsonschema==4.21.1
 requests~=2.31.0
+python-dotenv==1.0.1
