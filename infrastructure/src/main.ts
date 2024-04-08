@@ -36,6 +36,7 @@ import { RestApiGateway } from './shared/rest-api-gateway';
 import { SnsTopics } from './shared/sns-topics';
 import { TrainDeploy } from './shared/train-deploy';
 import { ESD_VERSION } from './shared/version';
+import { ESD_COMMIT_ID } from './shared/commit';
 
 const app = new App();
 
@@ -282,17 +283,18 @@ export class Middleware extends Stack {
       }
     }
 
-    this.addEnvironmentVariableToAllLambdas('ESD_VERSION', ESD_VERSION);
-    this.addEnvironmentVariableToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
-    this.addEnvironmentVariableToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
-    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
-    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
-    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
-    this.addEnvironmentVariableToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
-    this.addEnvironmentVariableToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
-    this.addEnvironmentVariableToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
-    this.addEnvironmentVariableToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
-    this.addEnvironmentVariableToAllLambdas('ACCOUNT_ID', accountId.toString());
+    this.addEnvToAllLambdas('ESD_VERSION', ESD_VERSION);
+    this.addEnvToAllLambdas('ESD_COMMIT_ID', ESD_COMMIT_ID);
+    this.addEnvToAllLambdas('LOG_LEVEL', logLevel.valueAsString);
+    this.addEnvToAllLambdas('S3_BUCKET_NAME', s3BucketName.valueAsString);
+    this.addEnvToAllLambdas('POWERTOOLS_SERVICE_NAME', 'ESD');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACE_DISABLED', 'false');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_RESPONSE', 'true');
+    this.addEnvToAllLambdas('POWERTOOLS_TRACER_CAPTURE_ERROR', 'true');
+    this.addEnvToAllLambdas('MULTI_USER_TABLE', ddbTables.multiUserTable.tableName);
+    this.addEnvToAllLambdas('ENDPOINT_TABLE_NAME', ddbTables.sDEndpointDeploymentJobTable.tableName);
+    this.addEnvToAllLambdas('URL_SUFFIX', Aws.URL_SUFFIX);
+    this.addEnvToAllLambdas('ACCOUNT_ID', accountId.toString());
 
     // make order for api
     let requestValidator: aws_apigateway.RequestValidator;
@@ -360,7 +362,7 @@ export class Middleware extends Stack {
     });
   }
 
-  addEnvironmentVariableToAllLambdas(variableName: string, value: string) {
+  addEnvToAllLambdas(variableName: string, value: string) {
     this.node.children.forEach(child => {
       if (child instanceof Function) {
         child.addEnvironment(variableName, value);

@@ -39,9 +39,6 @@ ENTRYPOINT ["bash", "/serve.sh"]
 
 RUN cd /home/ubuntu || exit 1 && \
     git clone https://github.com/awslabs/stable-diffusion-aws-extension.git --branch "dev" --single-branch && \
-    cd stable-diffusion-aws-extension && \
-    echo $(git rev-parse HEAD) > /home/ubuntu/esd.version && \
-    mv install_comfy.sh ../ && \
-    cd ../ && \
+    mv stable-diffusion-aws-extension/install_comfy.sh ./ && \
     rm -rf stable-diffusion-aws-extension && \
     bash install_comfy.sh
