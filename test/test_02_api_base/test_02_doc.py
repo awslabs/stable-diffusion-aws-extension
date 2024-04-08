@@ -21,12 +21,17 @@ class TestApiDocExportApi:
     def teardown_class(self):
         pass
 
-    def test_1_get_root(self):
-        headers = {'x-api-key': config.api_key}
-        resp = self.api.root(headers)
-        assert resp.status_code == 200, resp.dumps
+    def test_1_doc_get_without_key(self):
+        resp = self.api.root()
+        assert resp.status_code == 403, resp.dumps()
 
-    def test_2_get_schema_by_id(self):
+    def test_2_doc_with_bad_key(self):
+        headers = {'x-api-key': "bad_key"}
+
+        resp = self.api.root(headers=headers)
+        assert resp.status_code == 403, resp.dumps()
+
+    def test_3_get_schema_by_id(self):
         operation_id = 'GetInferenceJob'
         code = 404
         get_schema_by_id_and_code(self.api, operation_id, code)
